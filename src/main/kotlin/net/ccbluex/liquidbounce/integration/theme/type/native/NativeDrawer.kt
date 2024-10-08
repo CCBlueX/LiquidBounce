@@ -52,18 +52,20 @@ class NativeDrawer(
 
     @Suppress("unused")
     val mouseScrollHandler = handler<MouseScrollEvent> {
-        // TODO: Implement mouse scroll
+        route?.mouseScrolled(it.horizontal, it.vertical)
     }
 
     @Suppress("unused")
     val mouseCursorHandler = handler<MouseCursorEvent> { event ->
-        val factorW = mc.window.framebufferWidth.toDouble() / mc.window.width.toDouble()
-        val factorV = mc.window.framebufferHeight.toDouble() / mc.window.height.toDouble()
+        val factorW = mc.window.scaledWidth.toDouble() / mc.window.width.toDouble()
+        val factorV = mc.window.scaledHeight.toDouble() / mc.window.height.toDouble()
         val mouseX = event.x * factorW
         val mouseY = event.y * factorV
 
         this.mouseX = mouseX
         this.mouseY = mouseY
+
+        route?.mouseMoved(mouseX, mouseY)
     }
 
     @Suppress("unused")

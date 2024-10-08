@@ -1,15 +1,18 @@
 package net.ccbluex.liquidbounce.integration.theme.type.native
 
+import net.ccbluex.liquidbounce.integration.browser.supports.tab.InputAware
 import net.minecraft.client.gui.DrawContext
 
-abstract class NativeDrawableRoute  {
+abstract class NativeDrawableRoute {
 
     abstract fun render(context: DrawContext, delta: Float)
 
-    abstract fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean
-    abstract fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean
-    abstract fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int): Boolean
-    abstract fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean
-    abstract fun charTyped(char: Char, modifiers: Int): Boolean
+    open fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) = false
+    open fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) = false
+    open fun mouseMoved(mouseX: Double, mouseY: Double) {}
+    open fun mouseScrolled(mouseX: Double, mouseY: Double) {}
+    open fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) = false
+    open fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) = false
+    open fun charTyped(char: Char, modifiers: Int) = false
 
 }

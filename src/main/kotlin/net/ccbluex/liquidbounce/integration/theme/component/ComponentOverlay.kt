@@ -29,10 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.integration.DrawerReference
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeTheme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.availableThemes
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
-import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
 
 var components: MutableList<Component> = mutableListOf(
     *availableThemes.map { theme -> theme.components.map { factory -> factory.new(theme) } }.flatten().toTypedArray()
@@ -61,7 +59,7 @@ object ComponentOverlay : Listenable {
             }
 
             val route = theme.route(VirtualScreenType.HUD)
-            drawerReferenceMap[theme] = DrawerReference.newRef(route)
+            drawerReferenceMap[theme] = DrawerReference.newComponentRef(route)
         }
     }
 

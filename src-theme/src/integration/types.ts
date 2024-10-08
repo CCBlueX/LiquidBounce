@@ -356,3 +356,24 @@ export interface ClientUpdate {
 export interface Browser {
     url: string
 }
+
+export interface Alignment {
+    horizontal: HorizontalAlignment,
+    vertical: VerticalAlignment,
+    horizontalOffset: number,
+    verticalOffset: number
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}

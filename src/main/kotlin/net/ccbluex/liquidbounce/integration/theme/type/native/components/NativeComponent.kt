@@ -10,5 +10,6 @@ abstract class NativeComponent(theme: Theme, name: String, enabled: Boolean, ali
     Component(theme, name, enabled, alignment, tweaks) {
 
     abstract fun render(context: DrawContext, delta: Float)
+    abstract fun size(): Pair<Int, Int>
 
 }

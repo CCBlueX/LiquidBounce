@@ -88,17 +88,7 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun isInitialized() = MCEF.INSTANCE.isInitialized
 
-    override fun createTab(url: String, position: TabPosition, frameRate: Int) =
-        JcefTab(this, url, position, frameRate) { false }.apply {
-            synchronized(tabs) {
-                tabs += this
-
-                // Sort tabs by preferOnTop
-                tabs.sortBy { it.preferOnTop }
-            }
-        }
-
-    override fun createInputAwareTab(url: String, position: TabPosition, frameRate: Int, takesInput: () -> Boolean) =
+    override fun createTab(url: String, position: TabPosition, frameRate: Int, takesInput: () -> Boolean) =
         JcefTab(this, url, position, frameRate, takesInput = takesInput).apply {
             synchronized(tabs) {
                 tabs += this

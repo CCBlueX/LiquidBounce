@@ -62,20 +62,20 @@ class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, A
     }
 
     override fun render(context: DrawContext, delta: Float) {
-        val matStack = MatrixStack()
+        val matStack = context.matrices
 
         val playerPos = player.interpolateCurrentPosition(delta)
         val playerRotation = player.interpolateCurrentRotation(delta)
 
         val minimapSize = size
 
-        val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val scissorBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
         val scaleFactor = mc.window.scaleFactor
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST)
         GL11.glScissor(
-            (boundingBox.xMin * scaleFactor).toInt(),
-            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
+            (scissorBox.xMin * scaleFactor).toInt(),
+            mc.framebuffer.viewportHeight - ((scissorBox.yMin + minimapSize) * scaleFactor).toInt(),
             (minimapSize * scaleFactor).toInt(),
             (minimapSize * scaleFactor).toInt(),
         )
@@ -92,7 +92,7 @@ class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, A
 
         matStack.push()
 
-        matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
+        matStack.translate(minimapSize * 0.5, minimapSize * 0.5, 0.0)
         matStack.scale(scale, scale, scale)
 
         matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
@@ -128,6 +128,7 @@ class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, A
 
         matStack.pop()
 
+        val boundingBox = BoundingBox2f(0f, 0f, minimapSize.toFloat(), minimapSize.toFloat())
         val centerBB = Vec2f(
             boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
             boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
@@ -160,6 +161,8 @@ class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, A
         }
 
     }
+
+    override fun size() = size to size
 
     private fun RenderEnvironment.drawShadowForBB(
         boundingBox: BoundingBox2f, from: Color4b, to: Color4b, offset: Float = 3.0F, width: Float = 3.0F

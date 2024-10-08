@@ -51,7 +51,7 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
         if (browserTabs.isEmpty()) {
             val browser = BrowserManager.browser ?: return
 
-            browser.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
+            browser.createTab(url, position, refreshRate) { mc.currentScreen == this }
                 .preferOnTop()
                 .also { browserTabs.add(it) }
             return

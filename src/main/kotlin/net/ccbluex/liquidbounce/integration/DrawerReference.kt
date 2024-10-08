@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
 import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlayEditor
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawer
 import net.minecraft.client.gui.screen.ChatScreen
@@ -25,23 +26,27 @@ sealed class DrawerReference : AutoCloseable {
         private val takesInputHandler: () -> Boolean
             get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
-        fun newRef(route: RouteType) =
+        private val takesInputOnEditor: () -> Boolean
+            get() = { mc.currentScreen is ComponentOverlayEditor  }
+
+        fun newComponentRef(route: RouteType) =
             when (route) {
                 is RouteType.Web -> Web(
                     BrowserManager.browser?.createTab(
                         route.url,
-                        frameRate = 60
+                        frameRate = 60,
+                        takesInput = takesInputOnEditor
                     ) ?: error("Browser is not initialized"),
                     route
                 )
 
-                is RouteType.Native -> Native(NativeDrawer(route.drawableRoute), route)
+                is RouteType.Native -> Native(NativeDrawer(route.drawableRoute, takesInputOnEditor), route)
             }
 
         fun newInputRef(route: RouteType) =
             when (route) {
                 is RouteType.Web -> Web(
-                    BrowserManager.browser?.createInputAwareTab(
+                    BrowserManager.browser?.createTab(
                         route.url,
                         frameRate = refreshRate,
                         takesInput = takesInputHandler

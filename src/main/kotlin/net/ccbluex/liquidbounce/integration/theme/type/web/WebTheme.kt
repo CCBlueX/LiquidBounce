@@ -1,18 +1,12 @@
 package net.ccbluex.liquidbounce.integration.theme.type.web
 
-import com.google.gson.GsonBuilder
-import net.ccbluex.liquidbounce.config.util.decode
-
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
-import net.ccbluex.liquidbounce.integration.theme.component.FriendlyAlignmentDeserializer
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.io.File
 
 class WebTheme(val folder: File) : Theme {
