@@ -499,6 +499,7 @@
   "liquidbounce.module.nameCollector.description": "Collects the names of all players on the server.",
   "liquidbounce.module.nameProtect.description": "Hides the player's real username client-side (useful for videos).",
   "liquidbounce.module.nametags.description": "Improves the visibility of player's name tags and show additional information.",
+  "liquidbounce.module.itemTags.description": "Display icons and quantities labels for dropped items.",
   "liquidbounce.module.noBob.description": "Disables the view bobbing effect.",
   "liquidbounce.module.noClip.description": "Allows you to move through blocks (let a sand block drop on your head first).",
   "liquidbounce.module.noClip.messages.setbackDetected": "You have been set back by the server! Make sure you are already standing inside of a block.",
