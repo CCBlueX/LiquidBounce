@@ -50,7 +50,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     val scale by float("Scale", 1.5f, 0.5f..3.0f)
     val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
 
-    val fontRenderer: FontRenderer
+    private val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT.get()
 
     val renderHandler = handler<OverlayRenderEvent> {
@@ -59,34 +59,34 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         renderEnvironmentForGUI {
             val playerPos = player.blockPos
 
+            val maxDistanceSquared = maxDistance * maxDistance
+
             try {
-                synchronized(BlockTracker.trackedBlockMap) {
-                    val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
-                        val bp = BlockPos(key.x, key.y, key.z)
+                val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
+                    val bp = BlockPos(key.x, key.y, key.z)
 
-                        bp.getSquaredDistance(playerPos) to value
-                    }.filter { (dist, _) ->
-                        dist < maxDistance * maxDistance
-                    }.sortedByDescending { (dist, _) ->
-                        dist
-                    }
+                    bp.getSquaredDistance(playerPos) to value
+                }.filter { (distSq, _) ->
+                    distSq < maxDistanceSquared
+                }.sortedByDescending { (distSq, _) ->
+                    distSq
+                }
 
-                    val env = this
+                val env = this
 
-                    trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
-                        val bedPlates = trackState.bedPlates
-                        with(matrixStack) {
-                            push()
-                            try {
-                                val z = idx.toFloat() / trackedBlockMap.size.toFloat()
+                trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
+                    val bedPlates = trackState.bedPlates
+                    with(matrixStack) {
+                        push()
+                        try {
+                            val z = idx.toFloat() / trackedBlockMap.size.toFloat()
 
-                                renderBedPlates(env, trackState, fontBuffers, bedPlates, z * 1000.0F)
-                            } finally {
-                                pop()
-                            }
+                            renderBedPlates(env, trackState, fontBuffers, bedPlates, z * 1000.0F)
+                        } finally {
+                            pop()
                         }
-
                     }
+
                 }
             } finally {
                 fontBuffers.draw(fontRenderer)
@@ -200,7 +200,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
                     // handle each block around the bed
                     val layer = manhattanDistanceTo(blockPos)
-                    if (layer !in 1..maxLayers) continue
+                    if (layer > maxLayers) continue
 
                     bedPlateTypes.compute(block) { _, value ->
                         value?.let { minOf(it, layer) } ?: layer
