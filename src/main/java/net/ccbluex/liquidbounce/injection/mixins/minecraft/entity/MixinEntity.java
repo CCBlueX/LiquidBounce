@@ -21,15 +21,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -151,4 +150,27 @@ public abstract class MixinEntity {
             ci.cancel();
         }
     }
+
+    @Inject(method = "updateMovementInFluid", at = @At("HEAD"), cancellable = true)
+    private void hookFluidMovement(TagKey<Fluid> tag, double speed, CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionEvent(tag));
+
+            if (event.isCancelled()) {
+                cir.setReturnValue(false);
+            }
+        }
+    }
+
+    @Inject(method = "isSubmergedIn", at = @At("HEAD"), cancellable = true)
+    private void hookIsSubmergedIn(TagKey<Fluid> fluidTag, CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionEvent(fluidTag));
+
+            if (event.isCancelled()) {
+                cir.setReturnValue(false);
+            }
+        }
+    }
+
 }
