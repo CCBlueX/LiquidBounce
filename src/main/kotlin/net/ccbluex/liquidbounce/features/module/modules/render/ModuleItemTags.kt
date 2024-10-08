@@ -42,14 +42,14 @@ private const val ITEM_SCALE: Float = 1.0F
 private const val BACKGROUND_PADDING: Int = 2
 
 /**
- * ItemTag module
+ * ItemTags module
  *
  * Show the names and quantities of items in several boxes.
  */
-object ModuleItemTag : Module("ItemTag", Category.RENDER) {
+object ModuleItemTags : Module("ItemTags", Category.RENDER) {
 
     override val translationBaseKey: String
-        get() = "liquidbounce.module.itemTag"
+        get() = "liquidbounce.module.itemTags"
 
     private val boxSize by float("BoxSize", 1.0F, 0.1F..10.0F)
     private val scale by float("Scale", 1.5F, 0.25F..4F)

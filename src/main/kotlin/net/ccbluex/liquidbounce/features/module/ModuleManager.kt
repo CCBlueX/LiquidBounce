@@ -267,7 +267,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleHoleESP,
             ModuleHud,
             ModuleItemESP,
-            ModuleItemTag,
+            ModuleItemTags,
             ModuleJumpEffect,
             ModuleMobOwners,
             ModuleMurderMystery,
