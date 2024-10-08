@@ -38,8 +38,7 @@ public class MixinBlock {
     private static boolean injectXRay(boolean original, BlockState state, BlockView world, BlockPos pos, Direction side, BlockPos otherPos) {
         var xRay = ModuleXRay.INSTANCE;
         if (xRay.getEnabled()) {
-            var blocks = xRay.getBlocks();
-            return blocks.contains(state.getBlock());
+            return xRay.shouldRender(state, pos);
         }
 
         return original;
