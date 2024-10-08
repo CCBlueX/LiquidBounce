@@ -52,12 +52,30 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
     private var y = 0.0
     private var z = 0.0
 
+    override fun enable() {
+        velocityX = player.velocity.x
+        velocityY = player.velocity.y
+        velocityZ = player.velocity.z
+        x = player.x
+        y = player.y
+        z = player.z
+    }
+
+    override fun disable() {
+        player.velocity.x = velocityX
+        player.velocity.y = velocityY
+        player.velocity.z = velocityZ
+    }
+
     // Cancels all packets
     object Legit : FreezeMode("Legit") {
         val moveHandler = handler<PlayerMoveEvent> { event ->
             event.movement.x = 0.0
             event.movement.y = 0.0
             event.movement.z = 0.0
+            player.pos.x = x
+            player.pos.y = y
+            player.pos.z = z
         }
 
         val packetHandler = handler<PacketEvent> { event ->
@@ -75,21 +93,6 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     // Only cancels PlayerMove packets sent by the client
     object Semi : FreezeMode("Semi") {
-        override fun enable() {
-            velocityX = player.velocity.x
-            velocityY = player.velocity.y
-            velocityZ = player.velocity.z
-            x = player.x
-            y = player.y
-            z = player.z
-        }
-
-        override fun disable() {
-            player.velocity.x = velocityX
-            player.velocity.y = velocityY
-            player.velocity.z = velocityZ
-        }
-
         val moveHandler = handler<PlayerMoveEvent> { event ->
             event.movement.x = 0.0
             event.movement.y = 0.0
