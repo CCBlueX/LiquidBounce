@@ -36,7 +36,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  */
 object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
-    var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch))
+    var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
     var notDuringMove by boolean("NotDuringMove", false)
 
     private object Legit : Choice("Legit") {

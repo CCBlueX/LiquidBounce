@@ -62,6 +62,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
+import kotlin.math.max
 
 /**
  * KillAura module
@@ -104,6 +105,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Rotation
     private val rotations = tree(object : RotationsConfigurable(this, combatSpecific = true) {
         val rotationTimingMode by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
+        val aimThroughWalls by boolean("ThroughWalls", false)
     })
     private val pointTracker = tree(PointTracker())
 
@@ -424,21 +426,40 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
         ModuleDebug.debugGeometry(this, "Point", ModuleDebug.DebuggedPoint(nextPoint, Color4b.WHITE))
 
+        val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, nextPoint)
+
         // find best spot
         val spot = raytraceBox(
             eyes, cutOffBox,
             // Since [range] is squared, we need to square root
             range = range,
             wallsRange = wallRange.toDouble(),
-            rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, nextPoint)
+            rotationPreference = rotationPreference
         ) ?: raytraceBox(
             eyes, box,
             range = range,
             wallsRange = wallRange.toDouble(),
-            rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, nextPoint)
-        ) ?: return null
+            rotationPreference = rotationPreference
+        )
 
-        return spot
+        return if (spot == null && rotations.aimThroughWalls) {
+            val throughSpot = raytraceBox(
+                eyes, cutOffBox,
+                // Since [range] is squared, we need to square root
+                range = range,
+                wallsRange = range,
+                rotationPreference = rotationPreference
+            ) ?: raytraceBox(
+                eyes, box,
+                range = range,
+                wallsRange = range,
+                rotationPreference = rotationPreference
+            )
+
+            throughSpot
+        } else {
+            spot
+        }
     }
 
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -38,13 +37,14 @@ internal object VelocityStrafe : Choice("Strafe") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    val delay by int("Delay", 2, 0..10, "ticks")
-    val strength by float("Strength", 1f, 0.1f..2f)
-    val untilGround by boolean("UntilGround", false)
+    private val delay by int("Delay", 2, 0..10, "ticks")
+    private val strength by float("Strength", 1f, 0.1f..2f)
+    private val untilGround by boolean("UntilGround", false)
 
-    var applyStrafe = false
+    private var applyStrafe = false
 
-    val packetHandler = sequenceHandler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
         // Check if this is a regular velocity update
@@ -61,14 +61,13 @@ internal object VelocityStrafe : Choice("Strafe") {
         }
     }
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.isOnGround) {
             applyStrafe = false
         } else if (applyStrafe) {
             event.movement.strafe(player.directionYaw, player.sqrtSpeed * strength)
         }
     }
-
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
 }

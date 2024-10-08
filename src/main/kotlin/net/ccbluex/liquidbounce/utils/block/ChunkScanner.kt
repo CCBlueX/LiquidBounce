@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
@@ -26,13 +30,16 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.chunk.WorldChunk
-import java.util.concurrent.ArrayBlockingQueue
-import kotlin.concurrent.thread
+import kotlin.coroutines.cancellation.CancellationException
 
 object ChunkScanner : Listenable {
-    private val subscriber = arrayListOf<BlockChangeSubscriber>()
+    private val subscriber = hashSetOf<BlockChangeSubscriber>()
 
     private val loadedChunks = hashSetOf<ChunkLocation>()
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private val mutex = Mutex()
 
     @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
@@ -68,20 +75,20 @@ object ChunkScanner : Listenable {
 
     @Suppress("unused")
     val disconnectHandler = handler<DisconnectEvent> {
-        synchronized(this) {
-            this.subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
+        scope.launch {
+            mutex.withLock {
+                subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
+            }
+            loadedChunks.clear()
         }
-
-        this.loadedChunks.clear()
     }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
-        check(!this.subscriber.contains(newSubscriber)) {
-            "Subscriber already registered"
+        check(newSubscriber !in this.subscriber) {
+            "Subscriber ${newSubscriber.javaClass.simpleName} already registered"
         }
 
         this.subscriber.add(newSubscriber)
-
 
         val world = mc.world ?: return
 
@@ -102,55 +109,65 @@ object ChunkScanner : Listenable {
 
     fun unsubscribe(oldSubscriber: BlockChangeSubscriber) {
         this.subscriber.remove(oldSubscriber)
-
-        synchronized(this) {
-            oldSubscriber.clearAllChunks()
+        scope.launch {
+            mutex.withLock {
+                oldSubscriber.clearAllChunks()
+            }
         }
     }
 
     object ChunkScannerThread {
-        private val chunkUpdateQueue = ArrayBlockingQueue<UpdateRequest>(600)
+        private val chunkUpdateChannel = Channel<UpdateRequest>(capacity = 600)
 
-        private val thread = thread {
-            while (true) {
-                try {
-                    val chunkUpdate = this.chunkUpdateQueue.take()
+        init {
+            scope.launch {
+                var retrying = 0
+                while (true) {
+                    try {
+                        val chunkUpdate = chunkUpdateChannel.receive()
 
-                    if (mc.world == null) {
-                        this.chunkUpdateQueue.clear()
-                        Thread.sleep(1000L)
-                        continue
-                    }
+                        if (mc.world == null) {
+                            chunkUpdateChannel.cancel()
+                            // max delay = 30s (1s, 2s, 4s, ...)
+                            delay((1000L shl retrying++).coerceAtMost(30000L))
+                            continue
+                        }
 
-                    synchronized(ChunkScanner) {
-                        when (chunkUpdate) {
-                            is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
-                            is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(
-                                chunkUpdate.x,
-                                chunkUpdate.z
-                            )
+                        retrying = 0
 
-                            is UpdateRequest.BlockUpdateEvent -> {
-                                for (sub in subscriber) {
-                                    sub.recordBlock(
-                                        chunkUpdate.blockPos,
-                                        chunkUpdate.newState,
-                                        cleared = false
-                                    )
+                        mutex.withLock {
+                            when (chunkUpdate) {
+                                is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
+                                is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(
+                                    chunkUpdate.x,
+                                    chunkUpdate.z
+                                )
+
+                                is UpdateRequest.BlockUpdateEvent -> {
+                                    for (sub in subscriber) {
+                                        sub.recordBlock(
+                                            chunkUpdate.blockPos,
+                                            chunkUpdate.newState,
+                                            cleared = false
+                                        )
+                                    }
                                 }
                             }
                         }
+                    } catch (e: CancellationException) {
+                        break // end loop if job has been canceled
+                    } catch (e: Throwable) {
+                        retrying++
+                        e.printStackTrace()
                     }
-                } catch (e: InterruptedException) {
-                    break
-                } catch (e: Throwable) {
-                    e.printStackTrace()
                 }
             }
         }
 
         fun enqueueChunkUpdate(request: UpdateRequest) {
-            this.chunkUpdateQueue.put(request)
+            scope.launch {
+                chunkUpdateChannel.send(request)
+            }
         }
 
         /**
@@ -163,11 +180,7 @@ object ChunkScanner : Listenable {
                 return
             }
 
-            val currentSubscriber = if (request.singleSubscriber != null) {
-                listOf(request.singleSubscriber)
-            } else {
-                subscriber
-            }
+            val currentSubscriber = request.singleSubscriber?.let { listOf(it) } ?: subscriber
 
             currentSubscriber.forEach {
                 it.chunkUpdate(request.chunk.pos.x, request.chunk.pos.z)
@@ -199,7 +212,8 @@ object ChunkScanner : Listenable {
         }
 
         fun stopThread() {
-            this.thread.interrupt()
+            scope.cancel()
+            chunkUpdateChannel.close()
         }
 
         sealed class UpdateRequest {

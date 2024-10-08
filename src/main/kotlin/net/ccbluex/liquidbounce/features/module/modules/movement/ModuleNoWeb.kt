@@ -43,7 +43,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14))
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14)).apply { tagBy(this) }
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {

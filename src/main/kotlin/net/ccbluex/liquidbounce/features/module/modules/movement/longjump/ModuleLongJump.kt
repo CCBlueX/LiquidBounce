@@ -43,7 +43,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
             NoCheatPlusBow,
             VulcanLongJump
         )
-    )
+    ).apply { tagBy(this) }
     private val autoJump by boolean("AutoJump", false)
     val autoDisable by boolean("DisableAfterFinished", false)
 

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
@@ -47,7 +46,7 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    private var packets by int("Packets", 4, 1..4)
+    private var alternativeBypass by boolean("AlternativeBypass", true)
 
     private var canCancel = false
 
@@ -55,7 +54,8 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
         canCancel = false
     }
 
-    val packetHandler = sequenceHandler<PacketEvent> {
+    @Suppress("unused")
+    private val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
         // Check for damage to make sure it will only cancel
@@ -68,7 +68,7 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
             && canCancel) {
             it.cancelEvent()
             waitTicks(1)
-            repeat(packets) {
+            repeat(if (alternativeBypass) 4 else 1) {
                 network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
             }
             network.sendPacket(
@@ -79,7 +79,5 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
             canCancel = false
         }
     }
-
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
 }
