@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
+import net.ccbluex.liquidbounce.integration.browser.BrowserScreen;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
-import net.ccbluex.liquidbounce.web.integration.BrowserScreen;
-import net.ccbluex.liquidbounce.web.integration.VrScreen;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
@@ -332,7 +332,7 @@ public abstract class MixinMinecraftClient {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(MinecraftClient instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !(this.currentScreen instanceof BrowserScreen || this.currentScreen instanceof VrScreen);
+        return !(this.currentScreen instanceof BrowserScreen || this.currentScreen instanceof VirtualDisplayScreen);
     }
 
 }
