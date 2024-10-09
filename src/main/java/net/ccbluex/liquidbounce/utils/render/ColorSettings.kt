@@ -13,9 +13,9 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import java.awt.Color
 
 class ColorSettingsFloat(owner: Any, name: String, val index: Int? = null, generalApply: () -> Boolean = { true }) {
-    private val r by FloatValue("$name-R${index ?: ""}", 255f, 0f..255f) { generalApply() }
-    private val g by FloatValue("$name-G${index ?: ""}", 0f, 0f..255f) { generalApply() }
-    private val b by FloatValue("$name-B${index ?: ""}", 0f, 0f..255f) { generalApply() }
+    private val r by FloatValue("$name-R${index ?: ""}", if ((index ?: 0) % 3 == 1) 255f else 0f, 0f..255f) { generalApply() }
+    private val g by FloatValue("$name-G${index ?: ""}", if ((index ?: 0) % 3 == 2) 255f else 0f, 0f..255f) { generalApply() }
+    private val b by FloatValue("$name-B${index ?: ""}", if ((index ?: 0) % 3 == 0) 255f else 0f, 0f..255f) { generalApply() }
 
     fun color() = Color(r / 255f, g / 255f, b / 255f)
 
