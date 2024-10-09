@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.integration.theme.component
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.ValueType
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 
@@ -33,13 +34,11 @@ open class Component(
     val theme: Theme,
     name: String,
     enabled: Boolean,
-    val alignment: Alignment,
+    alignment: Alignment,
     val tweaks: Array<ComponentTweak> = emptyArray()
 ) : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
 
-    init {
-        tree(alignment)
-    }
+    var alignment by value("Alignment", alignment, valueType = ValueType.ALIGNMENT)
 
     protected fun registerComponentListen(cfg: Configurable = this) {
         for (v in cfg.inner) {

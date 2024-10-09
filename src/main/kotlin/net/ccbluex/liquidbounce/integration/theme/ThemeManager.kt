@@ -27,19 +27,20 @@ import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
 import net.ccbluex.liquidbounce.integration.theme.type.web.WebTheme
 import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
-import net.ccbluex.liquidbounce.integration.theme.wallpaper.WallpaperManager
 import java.io.File
 
 object ThemeManager : Configurable("Theme") {
 
-    val themesFolder = File(ConfigSystem.rootFolder, "themes")
+    private val themeName by text("Name", "LiquidBounce")
+    private val wallpaperName by text("Wallpaper", "hills.png")
 
-    var activeWallpaper: Wallpaper? = null
+    val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
     init {
         extractDefault()
@@ -54,7 +55,7 @@ object ThemeManager : Configurable("Theme") {
             ?: emptyArray()
     )
 
-    var activeTheme: Theme = availableThemes.firstOrNull { it.name == "LiquidBounce" } ?: NativeTheme
+    var activeTheme: Theme = availableThemes.firstOrNull { it.name == themeName } ?: NativeTheme
         set(value) {
             field = value
 
@@ -63,9 +64,15 @@ object ThemeManager : Configurable("Theme") {
             ModuleHud.refresh()
         }
 
-    val wallpaper = tree(WallpaperManager)
+    val activeWallpaper: Wallpaper?
+        get() = activeTheme.wallpapers.find { it.name == wallpaperName }
+
+    var activeComponents: MutableList<Component> = mutableListOf(
+        *availableThemes.map { theme -> theme.components.map { factory -> factory.new(theme) } }.flatten().toTypedArray()
+    )
 
     init {
+        value("Components", activeComponents)
         ConfigSystem.root(this)
     }
 

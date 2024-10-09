@@ -25,7 +25,7 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
-import net.ccbluex.liquidbounce.integration.theme.component.components
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeComponents
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
@@ -34,16 +34,13 @@ import java.io.StringReader
 // GET /api/v1/client/components/:name
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
-    for ((index, component) in components.filter { it.theme.name.equals(requestObject.params["name"], true) }.withIndex()) {
+    for ((index, component) in activeComponents.filter { it.theme.name.equals(requestObject.params["name"], true) }.withIndex()) {
         add(JsonObject().apply {
             addProperty("id", index)
             addProperty("name", component.name)
             add("settings", JsonObject().apply {
                 for (v in component.inner) {
-                    add(v.name.lowercase(), protocolGson.toJsonTree(when (v) {
-                        is Alignment -> v
-                        else -> v.inner
-                    }))
+                    add(v.name.lowercase(), protocolGson.toJsonTree(v.inner))
                 }
             })
         })
@@ -53,7 +50,7 @@ fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
 // GET /api/v1/client/components/:name/:index
 @Suppress("UNUSED_PARAMETER")
 fun getComponentSettings(requestObject: RequestObject) = httpOk(ConfigSystem.serializeConfigurable(
-    components.filter { it.theme.name.equals(requestObject.params["name"], true) }[requestObject.params["index"]?.toInt() ?: error("No index provided")]
+    activeComponents.filter { it.theme.name.equals(requestObject.params["name"], true) }[requestObject.params["index"]?.toInt() ?: error("No index provided")]
 ))
 
 // POST /api/v1/client/components/:name/:index
@@ -61,7 +58,7 @@ fun updateComponentSettings(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.params["name"]
     val index = requestObject.params["index"]?.toInt() ?: error("No index provided")
 
-    val component = components.filter { it.theme.name == name }[index]
+    val component = activeComponents.filter { it.theme.name == name }[index]
     ConfigSystem.deserializeConfigurable(component, StringReader(requestObject.body), gson = protocolGson)
     return httpOk(JsonObject())
 }
@@ -71,16 +68,11 @@ fun moveComponent(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.params["name"]
     val index = requestObject.params["index"]?.toInt() ?: error("No index provided")
 
-    val component = components.filter { it.theme.name.equals(name, true) }[index]
+    val component = activeComponents.filter { it.theme.name.equals(name, true) }[index]
 
     // We copy the alignment to the existing because we do not want to replace the instance
     val newAlignment = protocolGson.fromJson(requestObject.body, Alignment::class.java)
-    component.alignment.apply {
-        horizontalAlignment = newAlignment.horizontalAlignment
-        horizontalOffset = newAlignment.horizontalOffset
-        verticalAlignment = newAlignment.verticalAlignment
-        verticalOffset = newAlignment.verticalOffset
-    }
+    component.alignment = newAlignment
 
     return httpOk(JsonObject())
 }

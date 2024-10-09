@@ -29,12 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.integration.DrawerReference
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.theme.ThemeManager.availableThemes
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeComponents
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
-
-var components: MutableList<Component> = mutableListOf(
-    *availableThemes.map { theme -> theme.components.map { factory -> factory.new(theme) } }.flatten().toTypedArray()
-)
 
 object ComponentOverlay : Listenable {
 
@@ -45,7 +41,7 @@ object ComponentOverlay : Listenable {
             return
         }
 
-        components.forEach { component ->
+        activeComponents.forEach { component ->
             val theme = component.theme
 
             if (!theme.doesAccept(VirtualScreenType.HUD)) {
@@ -69,11 +65,12 @@ object ComponentOverlay : Listenable {
         }
 
         drawerReferenceMap.forEach { (_, ref) -> ref.close() }
+        drawerReferenceMap.clear()
     }
 
     @JvmStatic
     fun isTweakEnabled(tweak: ComponentTweak) = handleEvents() && !HideAppearance.isHidingNow &&
-        components.any { it.enabled && it.tweaks.contains(tweak) }
+        activeComponents.any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
     fun getComponentWithTweak(tweak: ComponentTweak): Component? {
@@ -81,10 +78,10 @@ object ComponentOverlay : Listenable {
             return null
         }
 
-        return components.find { it.enabled && it.tweaks.contains(tweak) }
+        return activeComponents.find { it.enabled && it.tweaks.contains(tweak) }
     }
 
-    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components))
+    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(activeComponents))
 
     override fun parent() = ModuleHud
 

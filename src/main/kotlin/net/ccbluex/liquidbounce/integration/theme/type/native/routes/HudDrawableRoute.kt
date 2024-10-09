@@ -2,11 +2,10 @@ package net.ccbluex.liquidbounce.integration.theme.type.native.routes
 
 import net.ccbluex.liquidbounce.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.theme.component.components
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeComponents
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawableRoute
 import net.ccbluex.liquidbounce.integration.theme.type.native.components.NativeComponent
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 
 const val BORDER_GAP = 4
@@ -27,7 +26,7 @@ class HudDrawableRoute : NativeDrawableRoute() {
         }
 
         // Draw native components
-        components
+        activeComponents
             .filterIsInstance<NativeComponent>()
             .forEach { component ->
                 val (width, height) = component.size()
@@ -51,7 +50,7 @@ class HudDrawableRoute : NativeDrawableRoute() {
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        components
+        activeComponents
             .filterIsInstance<NativeComponent>()
             .forEach { component ->
                 val (width, height) = component.size()

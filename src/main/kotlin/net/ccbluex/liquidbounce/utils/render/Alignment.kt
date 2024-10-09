@@ -18,24 +18,18 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
-class Alignment(
-    horizontalAlignment: ScreenAxisX,
-    horizontalOffset: Int,
-    verticalAlignment: ScreenAxisY,
-    verticalOffset: Int,
-) : Configurable("Alignment") {
+data class Alignment(
+    var horizontalAlignment: ScreenAxisX,
+    var horizontalOffset: Int,
+    var verticalAlignment: ScreenAxisY,
+    var verticalOffset: Int,
+) {
 
     constructor() : this(ScreenAxisX.LEFT, 0, ScreenAxisY.TOP, 0)
-
-    var horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
-    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
-    var verticalAlignment by enumChoice("Vertical", verticalAlignment)
-    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
 
     fun getBounds(
         width: Float,
@@ -94,7 +88,6 @@ class Alignment(
         verticalOffset += when (verticalAlignment) {
             ScreenAxisY.BOTTOM -> -offsetY
             else -> offsetY
-
         }
     }
 }
