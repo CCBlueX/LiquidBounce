@@ -162,7 +162,7 @@ class ServerPingedEvent(val server: ServerInfo) : Event()
 
 @Nameable("componentsUpdate")
 @WebSocketEvent
-class ComponentsUpdate(val components: List<Component>) : Event()
+class ComponentsUpdate : Event()
 
 /**
  * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.

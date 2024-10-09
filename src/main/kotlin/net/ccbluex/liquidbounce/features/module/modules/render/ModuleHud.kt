@@ -61,18 +61,18 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) { event ->
         if (!enabled || !inGame || event.screen is DisconnectedScreen || isHidingNow) {
-            ComponentOverlay.hide()
+            ComponentOverlay.clear()
         } else {
-            ComponentOverlay.show()
+            ComponentOverlay.update()
         }
     }
 
     fun refresh() {
         // Should not happen, but in-case there is already a tab open, close it
-        ComponentOverlay.hide()
+        ComponentOverlay.clear()
 
         // Create a new tab and open it
-        ComponentOverlay.show()
+        ComponentOverlay.update()
     }
 
     override fun enable() {
@@ -88,7 +88,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     override fun disable() {
         // Closes tab entirely
-        ComponentOverlay.hide()
+        ComponentOverlay.clear()
 
         // Minimap
         ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)

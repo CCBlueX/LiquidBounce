@@ -36,11 +36,11 @@ object ComponentOverlay : Listenable {
 
     private val drawerReferenceMap = mutableMapOf<Theme, DrawerReference>()
 
-    fun show() {
-        if (drawerReferenceMap.isNotEmpty()) {
-            return
-        }
-
+    /**
+     * Update drawer references for the active components
+     * and clean-up the unused references
+     */
+    fun update() {
         activeComponents.forEach { component ->
             val theme = component.theme
 
@@ -57,9 +57,21 @@ object ComponentOverlay : Listenable {
             val route = theme.route(VirtualScreenType.HUD)
             drawerReferenceMap[theme] = DrawerReference.newComponentRef(route)
         }
+
+        // Clean-up the drawer references if it's not used by any component
+        drawerReferenceMap.entries.removeIf { (theme, ref) ->
+            val isUsed = activeComponents.any { it.theme == theme }
+            if (!isUsed) {
+                ref.close()
+            }
+            !isUsed
+        }
     }
 
-    fun hide() {
+    /**
+     * Clear all the drawer references
+     */
+    fun clear() {
         if (drawerReferenceMap.isEmpty()) {
             return
         }
@@ -81,7 +93,7 @@ object ComponentOverlay : Listenable {
         return activeComponents.filter { it.enabled && it.tweaks.contains(tweak) }
     }
 
-    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(activeComponents))
+    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate())
 
     override fun parent() = ModuleHud
 

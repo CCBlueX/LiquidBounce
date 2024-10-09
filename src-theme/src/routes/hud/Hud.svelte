@@ -29,7 +29,6 @@
         zoom = gameWindow.scaleFactor * 50;
 
         components = await getComponents();
-        console.log(JSON.stringify(components));
     });
 
     listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {

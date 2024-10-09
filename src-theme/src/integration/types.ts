@@ -341,6 +341,11 @@ export interface GameWindow {
     guiScale: number;
 }
 
+export interface ComponentFactories {
+    name: string;
+    components: string[];
+}
+
 export interface Component {
     id: number;
     name: string;

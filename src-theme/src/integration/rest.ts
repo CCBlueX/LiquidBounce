@@ -1,14 +1,17 @@
 import {REST_BASE} from "./host";
 import type {
-    Account, AlignmentSetting,
+    Account,
+    AlignmentSetting,
     Browser,
     ClientInfo,
     ClientUpdate,
     Component,
+    ComponentFactories,
     ConfigurableSetting,
     GameWindow,
     MinecraftKeybind,
-    Module, ModuleSetting,
+    Module,
+    ModuleSetting,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
@@ -17,7 +20,8 @@ import type {
     Registries,
     Server,
     Session,
-    VirtualScreen, Wallpaper,
+    VirtualScreen,
+    Wallpaper,
     World
 } from "./types";
 
@@ -511,6 +515,16 @@ export async function getGameWindow(): Promise<GameWindow> {
 // todo: get name from metadata
 const THEME_NAME = "LiquidBounce";
 
+export async function getAllComponents(): Promise<Component[]> {
+    const response = await fetch(`${API_BASE}/client/components`);
+    return await response.json();
+}
+
+export async function getComponentFactories(): Promise<ComponentFactories[]> {
+    const response = await fetch(`${API_BASE}/client/componentFactories`);
+    return await response.json();
+}
+
 export async function getComponents(): Promise<Component[]> {
     const response = await fetch(`${API_BASE}/client/components/${THEME_NAME}`);
     return await response.json();
@@ -521,9 +535,22 @@ export async function getComponent(index: number): Promise<ConfigurableSetting> 
     return await response.json();
 }
 
+export async function createComponent(theme: string, name: string) {
+    await fetch(`${API_BASE}/client/components/${theme}/${name}`, {
+        method: "POST"
+    });
+}
+
+// todo: use index of get all components
+export async function deleteComponent(index: number) {
+    await fetch(`${API_BASE}/client/component/${index}`, {
+        method: "DELETE"
+    });
+}
+
 export async function moveComponent(index: number, alignment: AlignmentSetting) {
     await fetch(`${API_BASE}/client/components/${THEME_NAME}/${index}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
             "Content-Type": "application/json"
         },
@@ -533,7 +560,7 @@ export async function moveComponent(index: number, alignment: AlignmentSetting) 
 
 export async function updateComponent(index: number, settings: ConfigurableSetting) {
     await fetch(`${API_BASE}/client/components/${THEME_NAME}/${index}`, {
-        method: "POST",
+        method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
