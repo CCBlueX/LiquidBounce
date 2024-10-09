@@ -6,7 +6,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
 import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlayEditor
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawer
 import net.minecraft.client.gui.screen.ChatScreen
@@ -27,7 +26,7 @@ sealed class DrawerReference : AutoCloseable {
             get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
         private val takesInputOnEditor: () -> Boolean
-            get() = { mc.currentScreen is ComponentOverlayEditor  }
+            get() = { IntegrationHandler.route.type == VirtualScreenType.EDITOR  }
 
         fun newComponentRef(route: RouteType) =
             when (route) {

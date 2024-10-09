@@ -16,9 +16,11 @@
     import None from "./routes/none/None.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
+    import Editor from "./routes/editor/Editor.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
+        "/editor": Editor,
         "/hud": Hud,
         "/inventory": Inventory,
         "/title": Title,

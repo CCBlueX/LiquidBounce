@@ -17,7 +17,8 @@
     "multiplayer",
     "altmanager",
     "customize",
-    "singleplayer"
+    "singleplayer",
+    "editor"
   ],
   "overlays": [
     "hud",

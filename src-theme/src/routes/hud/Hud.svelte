@@ -8,7 +8,7 @@
     import Scoreboard from "./elements/Scoreboard.svelte";
     import { onMount } from "svelte";
     import {moveComponent, getComponents, getGameWindow} from "../../integration/rest";
-    import { listen } from "../../integration/ws";
+    import {listen, listenAlways} from "../../integration/ws";
     import { type AlignmentSetting, type Component, HorizontalAlignment } from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type { ComponentsUpdateEvent, ScaleFactorChangeEvent } from "../../integration/events";
@@ -19,6 +19,8 @@
     let zoom = 100;
     let components: Component[] = [];
     let draggingComponent: Component | null = null;
+
+    let editor = false;
     let startX = 0;
     let startY = 0;
 
@@ -34,9 +36,14 @@
         zoom = data.scaleFactor * 50;
     });
 
-    listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
+    listen("componentsUpdate", async (data: ComponentsUpdateEvent) => {
         // todo: fix this
         // components = data.components;
+        components = await getComponents();
+    });
+
+    listen("virtualScreen", async (event: any) => {
+        editor = event.action == "open" && event.screenName == "editor";
     });
 
     const startDrag = (component: Component, event: MouseEvent) => {
@@ -109,7 +116,7 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         <div class="component"
-             style={toStyle(c.settings.alignment)}
+             style="border: {editor ? '4px solid white' : 'none'}; {toStyle(c.settings.alignment)}"
              on:mousedown={(event) => startDrag(c, event)}>
             {#if c.name === "Watermark"}
                 <Watermark/>
@@ -148,7 +155,6 @@
   }
 
   .component {
-    border: 1px solid red;
     cursor: move;
     position: fixed;
   }
