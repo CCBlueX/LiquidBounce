@@ -92,33 +92,13 @@
     },
     {
       "name": "BlockCounter",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Center"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": -20
-            },
-            {
-              "name": "Vertical",
-              "value": "CenterTranslated"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 0
-            }
-          ]
-        }
-      ]
+      "default": true,
+      "alignment": {
+        "horizontal": "Center",
+        "horizontalOffset": -20,
+        "vertical": "CenterTranslated",
+        "verticalOffset": 0
+      }
     },
     {
       "name": "Effects",
