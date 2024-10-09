@@ -50,18 +50,18 @@ class ColorSettingsInteger(
     zeroAlphaCheck: Boolean = false,
     alphaApply: Boolean? = null, applyMax: Boolean = false, generalApply: () -> Boolean = { true },
 ) {
-    val string = if (name == null) "" else "$name-"
-    val max = if (applyMax) 255 else 0
+    private val string = if (name == null) "" else "$name-"
+    private val max = if (applyMax) 255 else 0
 
-    var red = IntegerValue("${string}R${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var green = IntegerValue("${string}G${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var blue = IntegerValue("${string}B${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var alpha = IntegerValue("${string}Alpha${index ?: ""}", 255, 0..255) { alphaApply ?: generalApply() && withAlpha }
+    private var red = IntegerValue("${string}R${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    private var green = IntegerValue("${string}G${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    private var blue = IntegerValue("${string}B${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    private var alpha = IntegerValue("${string}Alpha${index ?: ""}", 255, 0..255) { alphaApply ?: generalApply() && withAlpha }
 
-    var r by red
-    var g by green
-    var b by blue
-    var a by alpha
+    private var r by red
+    private var g by green
+    private var b by blue
+    private var a by alpha
 
     fun color(a: Int = this.a) = Color(r, g, b, a)
 
@@ -73,6 +73,8 @@ class ColorSettingsInteger(
 
         return this
     }
+
+    fun with(color: Color) = with(color.red, color.green, color.blue, color.alpha)
 
     init {
         when (owner) {

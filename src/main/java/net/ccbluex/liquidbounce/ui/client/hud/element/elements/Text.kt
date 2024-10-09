@@ -84,7 +84,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
             text.displayString = "Blocks: %blockamount%"
             text.shadow = true
-            text.bgColors.a = 100
+            text.bgColors.with(a = 100)
             text.onScaffold = true
             text.showBlock = true
             text.backgroundScale = 3F
@@ -149,10 +149,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var color: Color
         get() = colors.color()
         set(value) {
-            colors.r = value.red
-            colors.g = value.green
-            colors.b = value.blue
-            colors.a = value.alpha
+            colors.with(value)
         }
 
     private fun getReplacement(str: String): Any? {
@@ -248,7 +245,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             val rainbow = textColorMode == "Rainbow"
             val gradient = textColorMode == "Gradient"
 
-            if (bgColors.a > 0) {
+            if (bgColors.color().alpha > 0) {
                 drawRoundedBorderRect(
                     (-2F - if (shouldRender) 6F else 0F) * backgroundScale,
                     -2F * backgroundScale,
