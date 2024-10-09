@@ -41,7 +41,7 @@ abstract class Wallpaper(val theme: Theme, val name: String, val file: File) {
             }
 
             val image = NativeImageBackedTexture(NativeImage.read(file.inputStream()))
-            imageId = mc.textureManager.registerDynamicTexture("liquidbounce-bg-$name", image)
+            imageId = mc.textureManager.registerDynamicTexture("liquidbounce-bg-${name.lowercase()}", image)
             logger.info("Loaded background image for theme $name")
             return true
         }
