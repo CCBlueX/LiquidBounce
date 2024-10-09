@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.integration.theme.type.native
 
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.NativeComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
@@ -11,7 +10,7 @@ import net.ccbluex.liquidbounce.integration.theme.type.native.components.ArrayLi
 import net.ccbluex.liquidbounce.integration.theme.type.native.routes.EmptyDrawableRoute
 import net.ccbluex.liquidbounce.integration.theme.type.native.routes.HudDrawableRoute
 import net.ccbluex.liquidbounce.integration.theme.type.native.routes.TitleDrawableRoute
-import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
+import net.ccbluex.liquidbounce.integration.theme.Wallpaper
 
 /**
  * A Theme based on native GL rendering.

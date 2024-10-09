@@ -1,10 +1,9 @@
 package net.ccbluex.liquidbounce.integration.theme.type
 
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawableRoute
-import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
+import net.ccbluex.liquidbounce.integration.theme.Wallpaper
 
 interface Theme {
     val name: String

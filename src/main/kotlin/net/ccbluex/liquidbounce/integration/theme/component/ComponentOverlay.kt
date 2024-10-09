@@ -73,12 +73,12 @@ object ComponentOverlay : Listenable {
         activeComponents.any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
-    fun getComponentWithTweak(tweak: ComponentTweak): Component? {
+    fun getComponentsWithTweak(tweak: ComponentTweak): List<Component> {
         if (!handleEvents() || HideAppearance.isHidingNow) {
-            return null
+            return emptyList()
         }
 
-        return activeComponents.find { it.enabled && it.tweaks.contains(tweak) }
+        return activeComponents.filter { it.enabled && it.tweaks.contains(tweak) }
     }
 
     fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(activeComponents))

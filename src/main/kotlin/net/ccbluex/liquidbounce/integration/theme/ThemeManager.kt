@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.extractZip
@@ -28,13 +27,10 @@ import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
 import net.ccbluex.liquidbounce.integration.theme.type.web.WebTheme
-import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
-import net.ccbluex.liquidbounce.utils.client.chat
 import java.io.File
 
 const val DEFAULT_THEME = "LiquidBounce"
@@ -72,7 +68,6 @@ object ThemeManager {
 
             // Update integration browser
             IntegrationHandler.sync()
-            ModuleHud.refresh()
         }
 
     /**
@@ -92,9 +87,7 @@ object ThemeManager {
      * display the components.
      *
      * The list can contain components from multiple themes and does not have to match the active theme.
-     *
-     * It should be populated with the standard components of the default theme, as well as
-     *
+     * It should be populated with the standard components of the default theme.
      */
     var activeComponents: MutableList<Component> = mutableListOf(
         // Weather we support web themes, it might also load native theme defaults instead

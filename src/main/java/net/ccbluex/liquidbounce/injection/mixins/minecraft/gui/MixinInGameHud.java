@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.integration.theme.component.Component;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay;
@@ -75,10 +76,10 @@ public abstract class MixinInGameHud {
         UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickCounter.getTickDelta(false));
 
         // Draw after overlay event
-        var component = ComponentOverlay.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);
-        if (component != null && component.getEnabled() &&
-                client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
-            drawHotbar(context, tickCounter, component);
+        if (client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+            for (var component : ComponentOverlay.getComponentsWithTweak(ComponentTweak.TWEAK_HOTBAR)) {
+                drawCustomHotbar(context, tickCounter, component);
+            }
         }
     }
 
@@ -167,7 +168,7 @@ public abstract class MixinInGameHud {
     }
 
     @Unique
-    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
+    private void drawCustomHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;

@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.integration.theme.wallpaper
+package net.ccbluex.liquidbounce.integration.theme
 
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.render.shader.Shader

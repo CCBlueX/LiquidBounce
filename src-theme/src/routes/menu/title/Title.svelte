@@ -17,7 +17,6 @@
     import {notification} from "../common/header/notification_store";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
     import type {Wallpaper} from "../../../integration/types";
-    import {it} from "@faker-js/faker";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -93,7 +92,7 @@
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
                 {#if wallpaper}
                     <SingleSelect title="Wallpaper" value={wallpaper.active?.name ?? ""} options={wallpaper.available.map(w => w.name)}
-                                  on:change={changeWallpaper}/>
+                                  on:change={changeWallpaper} />
                 {/if}
 <!--                <IconTextButton icon="icon-change-background.svg" title="Toggle Shader"/>-->
             </ButtonContainer>
