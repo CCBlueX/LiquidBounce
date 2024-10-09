@@ -33,11 +33,14 @@ class WebTheme(val folder: File) : Theme {
     override val wallpapers: List<Wallpaper> = folder.resolve("wallpapers").listFiles()
         ?.mapNotNull { file ->
             runCatching {
-                Wallpaper.fromFile(file)
+                Wallpaper.fromFile(this, file)
             }.onFailure { error ->
                 logger.error("Failed to load wallpaper from file ${file.name} ${error.message}")
             }.getOrNull()
         } ?: emptyList()
+
+    override val defaultWallpaper: Wallpaper?
+        get() = wallpapers.firstOrNull { it.name == metadata.wallpaper }
 
     override fun route(screenType: VirtualScreenType?) =
         "$url${screenType?.routeName ?: ""}".let { url ->

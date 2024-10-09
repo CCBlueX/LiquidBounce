@@ -8,5 +8,6 @@ data class ThemeMetadata(
     val version: String,
     val supports: List<String>,
     val overlays: List<String>,
+    val wallpaper: String,
     val components: List<ComponentFactory.JsonComponentFactory>
 )

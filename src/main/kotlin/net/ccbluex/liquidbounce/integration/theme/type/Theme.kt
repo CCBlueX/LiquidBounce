@@ -10,6 +10,7 @@ interface Theme {
     val name: String
     val components: List<ComponentFactory>
     val wallpapers: List<Wallpaper>
+    val defaultWallpaper: Wallpaper? get() = wallpapers.firstOrNull()
 
     fun route(screenType: VirtualScreenType? = null): RouteType
     fun doesAccept(type: VirtualScreenType?): Boolean = doesOverlay(type) || doesSupport(type)

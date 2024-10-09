@@ -42,6 +42,10 @@ internal fun v1Functions(node: Node) = node.run {
     // Theme Functions
     get("/api/v1/client/theme", ::getThemeInfo)
 
+    // Wallpaper Functions
+    get("/api/v1/client/wallpaper", ::getWallpaper)
+    put("/api/v1/client/wallpaper/:theme/:name", ::putWallpaper)
+
     // VirtualScreen Functions
     get("/api/v1/client/virtualScreen", ::getVirtualScreenInfo)
     get("/api/v1/client/screen", ::getScreenInfo)
@@ -62,7 +66,6 @@ internal fun v1Functions(node: Node) = node.run {
     put("/api/v1/client/components/:name/:index", ::moveComponent)
     get("/api/v1/client/components/:name/:index", ::getComponentSettings)
     post("/api/v1/client/components/:name/:index", ::updateComponentSettings)
-
 
     // Session Functions
     get("/api/v1/client/session", ::getSessionInfo)

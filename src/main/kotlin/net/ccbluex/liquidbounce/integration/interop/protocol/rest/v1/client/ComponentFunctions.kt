@@ -28,35 +28,45 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeComponents
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpOk
 import java.io.StringReader
 
 // GET /api/v1/client/components/:name
-@Suppress("UNUSED_PARAMETER")
-fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
-    for ((index, component) in activeComponents.filter { it.theme.name.equals(requestObject.params["name"], true) }.withIndex()) {
-        add(JsonObject().apply {
-            addProperty("id", index)
-            addProperty("name", component.name)
-            add("settings", JsonObject().apply {
-                for (v in component.inner) {
-                    add(v.name.lowercase(), protocolGson.toJsonTree(v.inner))
-                }
+fun getComponents(requestObject: RequestObject): FullHttpResponse {
+    val name = requestObject.params["name"] ?: return httpBadRequest("No name provided")
+    val components = activeComponents.filter { theme -> theme.theme.name.equals(name, true) }
+
+    return httpOk(JsonArray().apply {
+        for ((index, component) in components.withIndex()) {
+            add(JsonObject().apply {
+                addProperty("id", index)
+                addProperty("name", component.name)
+                add("settings", JsonObject().apply {
+                    for (v in component.inner) {
+                        add(v.name.lowercase(), protocolGson.toJsonTree(v.inner))
+                    }
+                })
             })
-        })
-    }
-})
+        }
+    })
+}
 
 // GET /api/v1/client/components/:name/:index
-@Suppress("UNUSED_PARAMETER")
-fun getComponentSettings(requestObject: RequestObject) = httpOk(ConfigSystem.serializeConfigurable(
-    activeComponents.filter { it.theme.name.equals(requestObject.params["name"], true) }[requestObject.params["index"]?.toInt() ?: error("No index provided")]
-))
+fun getComponentSettings(requestObject: RequestObject): FullHttpResponse {
+    val name = requestObject.params["name"]
+    val index = requestObject.params["index"]?.toInt() ?: return httpBadRequest("No index provided")
+
+    val component = activeComponents.filter { it.theme.name == name }[index]
+    val json = ConfigSystem.serializeConfigurable(component)
+
+    return httpOk(json)
+}
 
 // POST /api/v1/client/components/:name/:index
 fun updateComponentSettings(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.params["name"]
-    val index = requestObject.params["index"]?.toInt() ?: error("No index provided")
+    val index = requestObject.params["index"]?.toInt() ?: return httpBadRequest("No index provided")
 
     val component = activeComponents.filter { it.theme.name == name }[index]
     ConfigSystem.deserializeConfigurable(component, StringReader(requestObject.body), gson = protocolGson)
@@ -66,7 +76,7 @@ fun updateComponentSettings(requestObject: RequestObject): FullHttpResponse {
 // PUT /api/v1/client/components/:name/:index
 fun moveComponent(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.params["name"]
-    val index = requestObject.params["index"]?.toInt() ?: error("No index provided")
+    val index = requestObject.params["index"]?.toInt() ?: return httpBadRequest("No index provided")
 
     val component = activeComponents.filter { it.theme.name.equals(name, true) }[index]
 

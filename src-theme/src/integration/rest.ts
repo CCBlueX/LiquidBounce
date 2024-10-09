@@ -17,7 +17,7 @@ import type {
     Registries,
     Server,
     Session,
-    VirtualScreen,
+    VirtualScreen, Wallpaper,
     World
 } from "./types";
 
@@ -561,9 +561,16 @@ export async function reconnectToServer() {
     });
 }
 
-export async function toggleBackgroundShaderEnabled() {
-    await fetch(`${API_BASE}/client/theme/shader/switch`, {
-        method: "POST",
+export async function getWallpaper(): Promise<Wallpaper> {
+    const response = await fetch(`${API_BASE}/client/wallpaper`);
+    const data: Wallpaper = await response.json();
+
+    return data;
+}
+
+export async function putWallpaper(theme: string, name: string) {
+    await fetch(`${API_BASE}/client/wallpaper/${theme}/${name}`, {
+        method: "PUT",
     });
 }
 

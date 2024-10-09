@@ -379,3 +379,13 @@ export interface ClientUpdate {
 export interface Browser {
     url: string
 }
+
+export interface Wallpaper {
+    active: ThemeWallpaper | null;
+    available: ThemeWallpaper[];
+}
+
+export interface ThemeWallpaper {
+    theme: string;
+    name: string;
+}

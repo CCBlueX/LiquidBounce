@@ -34,10 +34,10 @@ import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
 import net.ccbluex.liquidbounce.integration.theme.type.web.WebTheme
 import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
+import net.ccbluex.liquidbounce.utils.client.chat
 import java.io.File
 
 const val DEFAULT_THEME = "LiquidBounce"
-const val DEFAULT_WALLPAPER = "hills.png"
 
 object ThemeManager {
 
@@ -67,6 +67,9 @@ object ThemeManager {
         set(value) {
             field = value
 
+            // Update active wallpaper
+            activeWallpaper = value.defaultWallpaper
+
             // Update integration browser
             IntegrationHandler.sync()
             ModuleHud.refresh()
@@ -82,8 +85,7 @@ object ThemeManager {
      * the standard Minecraft wallpaper will be displayed. The wallpaper does not have to match the active theme
      * and can be set independently.
      */
-    val activeWallpaper: Wallpaper?
-        get() = activeTheme.wallpapers.find { it.name == DEFAULT_WALLPAPER }
+    var activeWallpaper: Wallpaper? = fallbackTheme.defaultWallpaper
 
     /**
      * A list of all active components that are displayed by the [ComponentOverlay] and is used by [ModuleHud] to
