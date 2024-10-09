@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isPremium
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.processContent
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentSerializer
-import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.minecraft.SharedConstants
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
@@ -58,10 +56,6 @@ object ProtocolConfigurableWithComponentSerializer : JsonSerializer<Configurable
         typeOfSrc: Type,
         context: JsonSerializationContext
     ): JsonElement {
-        if (src is Component) {
-            return ComponentSerializer.serialize(src, typeOfSrc, context)
-        }
-
         return JsonObject().apply {
             addProperty("name", src.name)
             add("value", context.serialize(src.inner.filter {
@@ -206,7 +200,7 @@ class TextSerializer : JsonSerializer<Text> {
     }
 }
 
-internal val strippedProtocolGson = GsonBuilder()
+internal val genericProtocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
@@ -215,8 +209,7 @@ internal val strippedProtocolGson = GsonBuilder()
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
-    //.registerTypeHierarchyAdapter(Component::class.java, ComponentSerializer)
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableWithComponentSerializer)
+    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
     .registerTypeHierarchyAdapter(Text::class.java, TextSerializer())
     .registerTypeAdapter(Session::class.java, SessionSerializer())
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())

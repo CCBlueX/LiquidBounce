@@ -1,6 +1,6 @@
 import {REST_BASE} from "./host";
 import type {
-    Account,
+    Account, AlignmentSetting,
     Browser,
     ClientInfo,
     ClientUpdate,
@@ -8,7 +8,7 @@ import type {
     ConfigurableSetting,
     GameWindow,
     MinecraftKeybind,
-    Module,
+    Module, ModuleSetting,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
@@ -508,13 +508,37 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
+// todo: get name from metadata
+const THEME_NAME = "LiquidBounce";
+
 export async function getComponents(): Promise<Component[]> {
-    const response = await fetch(`${API_BASE}/client/components`);
+    const response = await fetch(`${API_BASE}/client/components/${THEME_NAME}`);
     return await response.json();
 }
 
-export async function updateComponent(index: number, component: Component) {
+export async function getComponent(index: number): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/components/${THEME_NAME}/${index}`);
+    return await response.json();
+}
 
+export async function moveComponent(index: number, alignment: AlignmentSetting) {
+    await fetch(`${API_BASE}/client/components/${THEME_NAME}/${index}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(alignment)
+    });
+}
+
+export async function updateComponent(index: number, settings: ConfigurableSetting) {
+    await fetch(`${API_BASE}/client/components/${THEME_NAME}/${index}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
 }
 
 export async function getClientInfo(): Promise<ClientInfo> {

@@ -88,7 +88,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
         // Minimap
         ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.unloadEverything()
+        // todo: fix that unloading it and re-enabling breaks it
+//        ChunkRenderer.unloadEverything()
     }
 
 }

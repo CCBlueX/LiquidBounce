@@ -54,7 +54,7 @@ object ThemeManager : Configurable("Theme") {
             ?: emptyArray()
     )
 
-    var activeTheme: Theme = availableThemes.firstOrNull { it.name == "Native" } ?: NativeTheme
+    var activeTheme: Theme = availableThemes.firstOrNull { it.name == "LiquidBounce" } ?: NativeTheme
         set(value) {
 //            if (!value.exists) {
 //                logger.warn("Unable to set theme to ${value.name}, theme does not exist")

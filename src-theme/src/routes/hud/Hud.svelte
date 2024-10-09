@@ -7,9 +7,9 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import { onMount } from "svelte";
-    import { getComponents, getGameWindow } from "../../integration/rest";
+    import {moveComponent, getComponents, getGameWindow} from "../../integration/rest";
     import { listen } from "../../integration/ws";
-    import { type Alignment, type Component, HorizontalAlignment } from "../../integration/types";
+    import { type AlignmentSetting, type Component, HorizontalAlignment } from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type { ComponentsUpdateEvent, ScaleFactorChangeEvent } from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
@@ -27,6 +27,7 @@
         zoom = gameWindow.scaleFactor * 50;
 
         components = await getComponents();
+        console.log(JSON.stringify(components));
     });
 
     listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
@@ -34,13 +35,14 @@
     });
 
     listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
-        components = data.components;
+        // todo: fix this
+        // components = data.components;
     });
 
     const startDrag = (component: Component, event: MouseEvent) => {
         draggingComponent = component;
-        startX = event.clientX - component.settings.alignment.horizontalOffset;
-        startY = event.clientY - component.settings.alignment.verticalOffset;
+        startX = event.clientX - component.alignment.horizontalOffset;
+        startY = event.clientY - component.alignment.verticalOffset;
         document.addEventListener("mousemove", onDrag);
         document.addEventListener("mouseup", stopDrag);
     };
@@ -49,8 +51,8 @@
         if (draggingComponent) {
             // todo: implement that top and bottom as well as left and right behaves differently
 
-            draggingComponent.settings.alignment = {
-                ...draggingComponent.settings.alignment,
+            draggingComponent.alignment = {
+                ...draggingComponent.alignment,
                 horizontalOffset: event.clientX - startX,
                 verticalOffset: event.clientY - startY
             };
@@ -59,15 +61,16 @@
     };
 
     // Stop dragging and log the final position
-    const stopDrag = () => {
+    const stopDrag = async () => {
         if (draggingComponent) {
+            await moveComponent(draggingComponent.id, draggingComponent.alignment);
             draggingComponent = null;
             document.removeEventListener("mousemove", onDrag);
             document.removeEventListener("mouseup", stopDrag);
         }
     };
 
-    function toStyle(alignment: Alignment): string {
+    function toStyle(alignment: AlignmentSetting): string {
         const { horizontal, vertical, horizontalOffset, verticalOffset } = alignment;
 
         const horizontalStyle = (() => {
@@ -105,39 +108,35 @@
 
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
-        {#if c.settings.enabled}
-            <div
-                    class="component"
-                    style={toStyle(c.settings.alignment)}
-                    on:mousedown={(event) => startDrag(c, event)}
-            >
-                {#if c.name === "Watermark"}
-                    <Watermark/>
-                {:else if c.name === "ArrayList"}
-                    <ArrayList/>
-                {:else if c.name === "TabGui"}
-                    <TabGui/>
-                {:else if c.name === "Notifications"}
-                    <Notifications/>
-                {:else if c.name === "TargetHud"}
-                    <TargetHud/>
-                {:else if c.name === "Hotbar"}
-                    <HotBar/>
-                {:else if c.name === "Scoreboard"}
-                    <Scoreboard/>
-                {:else if c.name === "Taco"}
-                    <Taco/>
-                {:else if c.name === "Keystrokes"}
-                    <Keystrokes/>
-                {:else if c.name === "Effects"}
-                    <Effects />
-                {:else if c.name === "Text"}
-                    <p>{c.settings.text}</p>
-                {:else if c.name === "Image"}
-                    <img alt="" src={c.settings.src} style="scale: {c.settings.scale};">
-                {/if}
-            </div>
-        {/if}
+        <div class="component"
+             style={toStyle(c.alignment)}
+             on:mousedown={(event) => startDrag(c, event)}>
+            {#if c.name === "Watermark"}
+                <Watermark/>
+            {:else if c.name === "ArrayList"}
+                <ArrayList/>
+            {:else if c.name === "TabGui"}
+                <TabGui/>
+            {:else if c.name === "Notifications"}
+                <Notifications/>
+            {:else if c.name === "TargetHud"}
+                <TargetHud/>
+            {:else if c.name === "Hotbar"}
+                <HotBar/>
+            {:else if c.name === "Scoreboard"}
+                <Scoreboard/>
+            {:else if c.name === "Taco"}
+                <Taco/>
+            {:else if c.name === "Keystrokes"}
+                <Keystrokes/>
+            {:else if c.name === "Effects"}
+                <Effects />
+            {:else if c.name === "Text"}
+                <p>{c.settings.text}</p>
+            {:else if c.name === "Image"}
+                <img alt="" src={c.settings.src} style="scale: {c.settings.scale};">
+            {/if}
+        </div>
     {/each}
 </div>
 

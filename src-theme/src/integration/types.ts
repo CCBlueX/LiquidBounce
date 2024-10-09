@@ -27,7 +27,8 @@ export type ModuleSetting =
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting;
+    | TextArraySetting
+    | AlignmentSetting;
 
 export interface BlocksSetting {
     valueType: string;
@@ -140,6 +141,27 @@ export interface TogglableSetting {
     valueType: string;
     name: string;
     value: ModuleSetting[];
+}
+
+export interface AlignmentSetting {
+    horizontal: HorizontalAlignment,
+    vertical: VerticalAlignment,
+    horizontalOffset: number,
+    verticalOffset: number
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
 }
 
 export interface PersistentStorageItem {
@@ -320,8 +342,9 @@ export interface GameWindow {
 }
 
 export interface Component {
+    id: number;
     name: string;
-    settings: { [name: string]: any };
+    alignment: AlignmentSetting;
 }
 
 export interface ClientInfo {
@@ -355,25 +378,4 @@ export interface ClientUpdate {
 
 export interface Browser {
     url: string
-}
-
-export interface Alignment {
-    horizontal: HorizontalAlignment,
-    vertical: VerticalAlignment,
-    horizontalOffset: number,
-    verticalOffset: number
-}
-
-export enum HorizontalAlignment {
-    LEFT = "Left",
-    RIGHT = "Right",
-    CENTER = "Center",
-    CENTER_TRANSLATED = "CenterTranslated",
-}
-
-export enum VerticalAlignment {
-    TOP = "Top",
-    BOTTOM = "Bottom",
-    CENTER = "Center",
-    CENTER_TRANSLATED = "CenterTranslated",
 }

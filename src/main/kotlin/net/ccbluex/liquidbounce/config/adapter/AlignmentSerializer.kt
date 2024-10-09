@@ -19,15 +19,15 @@
  *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component
+package net.ccbluex.liquidbounce.config.adapter
 
 import com.google.gson.*
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.ccbluex.liquidbounce.utils.render.Alignment.ScreenAxisX
 import java.lang.reflect.Type
-import java.util.*
 
-object AlignmentDeserializer : JsonDeserializer<Alignment> {
+object AlignmentSerializer : JsonDeserializer<Alignment>, JsonSerializer<Alignment> {
+
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,
@@ -47,9 +47,6 @@ object AlignmentDeserializer : JsonDeserializer<Alignment> {
 
     }
 
-}
-
-object AlignmentSerializer : JsonSerializer<Alignment> {
     override fun serialize(
         src: Alignment,
         typeOfSrc: Type,
@@ -59,25 +56,6 @@ object AlignmentSerializer : JsonSerializer<Alignment> {
         addProperty("horizontalOffset", src.horizontalOffset)
         addProperty("vertical", src.verticalAlignment.choiceName)
         addProperty("verticalOffset", src.verticalOffset)
-    }
-}
-
-object ComponentSerializer : JsonSerializer<Component> {
-
-    override fun serialize(
-        src: Component,
-        typeOfSrc: Type,
-        context: JsonSerializationContext
-    ) = JsonObject().apply {
-        addProperty("name", src.name)
-        add("settings", JsonObject().apply {
-            for (v in src.inner) {
-                add(v.name.lowercase(Locale.ROOT), when (v) {
-                    is Alignment -> AlignmentSerializer.serialize(v, typeOfSrc, context)
-                    else -> context.serialize(v.inner)
-                })
-            }
-        })
     }
 
 }

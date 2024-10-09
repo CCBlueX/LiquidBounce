@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
  */
 object NativeTheme : Theme {
 
-    override val name = "Native"
+    override val name = "Generic"
     override val components: List<ComponentFactory>
         get() = listOf(
             NativeComponentFactory { ArrayListNativeComponent(this) },

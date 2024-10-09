@@ -58,7 +58,11 @@ internal fun v1Functions(node: Node) = node.run {
     post("/api/v1/client/modules/panic", ::postPanic)
 
     // Component Functions
-    get("/api/v1/client/components", ::getComponents)
+    get("/api/v1/client/components/:name", ::getComponents)
+    put("/api/v1/client/components/:name/:index", ::moveComponent)
+    get("/api/v1/client/components/:name/:index", ::getComponentSettings)
+    post("/api/v1/client/components/:name/:index", ::updateComponentSettings)
+
 
     // Session Functions
     get("/api/v1/client/session", ::getSessionInfo)

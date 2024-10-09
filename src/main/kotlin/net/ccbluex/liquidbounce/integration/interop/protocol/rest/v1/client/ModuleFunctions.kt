@@ -34,7 +34,7 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
-import net.ccbluex.liquidbounce.integration.interop.protocol.strippedProtocolGson
+import net.ccbluex.liquidbounce.integration.interop.protocol.genericProtocolGson
 import java.io.StringReader
 
 // GET /api/v1/client/modules
@@ -123,7 +123,7 @@ data class ModuleRequest(val name: String) {
 
     fun acceptGetSettingsRequest(): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        return httpOk(ConfigSystem.serializeConfigurable(module, gson = strippedProtocolGson))
+        return httpOk(ConfigSystem.serializeConfigurable(module, gson = genericProtocolGson))
     }
 
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {
