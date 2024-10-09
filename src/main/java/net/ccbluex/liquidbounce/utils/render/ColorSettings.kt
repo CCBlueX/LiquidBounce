@@ -13,9 +13,18 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import java.awt.Color
 
 class ColorSettingsFloat(owner: Any, name: String, val index: Int? = null, generalApply: () -> Boolean = { true }) {
-    private val r by FloatValue("$name-R${index ?: ""}", if ((index ?: 0) % 3 == 1) 255f else 0f, 0f..255f) { generalApply() }
-    private val g by FloatValue("$name-G${index ?: ""}", if ((index ?: 0) % 3 == 2) 255f else 0f, 0f..255f) { generalApply() }
-    private val b by FloatValue("$name-B${index ?: ""}", if ((index ?: 0) % 3 == 0) 255f else 0f, 0f..255f) { generalApply() }
+    private val r by FloatValue("$name-R${index ?: ""}",
+        if ((index ?: 0) % 3 == 1) 255f else 0f,
+        0f..255f
+    ) { generalApply() }
+    private val g by FloatValue("$name-G${index ?: ""}",
+        if ((index ?: 0) % 3 == 2) 255f else 0f,
+        0f..255f
+    ) { generalApply() }
+    private val b by FloatValue("$name-B${index ?: ""}",
+        if ((index ?: 0) % 3 == 0) 255f else 0f,
+        0f..255f
+    ) { generalApply() }
 
     fun color() = Color(r / 255f, g / 255f, b / 255f)
 
@@ -37,7 +46,8 @@ class ColorSettingsFloat(owner: Any, name: String, val index: Int? = null, gener
 }
 
 class ColorSettingsInteger(
-    owner: Any, name: String? = null, val index: Int? = null, withAlpha: Boolean = true, zeroAlphaCheck: Boolean = false,
+    owner: Any, name: String? = null, val index: Int? = null, withAlpha: Boolean = true,
+    zeroAlphaCheck: Boolean = false,
     alphaApply: Boolean? = null, applyMax: Boolean = false, generalApply: () -> Boolean = { true },
 ) {
     val string = if (name == null) "" else "$name-"
@@ -54,12 +64,6 @@ class ColorSettingsInteger(
     var a by alpha
 
     fun color(a: Int = this.a) = Color(r, g, b, a)
-
-    fun withZeroAlpha(): ColorSettingsInteger {
-        alpha.set(0)
-
-        return this
-    }
 
     fun with(r: Int? = null, g: Int? = null, b: Int? = null, a: Int? = null): ColorSettingsInteger {
         r?.let { red.set(it) }
@@ -99,5 +103,9 @@ class ColorSettingsInteger(
 fun List<ColorSettingsFloat>.toColorArray(max: Int) = (0 until MAX_GRADIENT_COLORS).map {
     val colors = this[it].color()
 
-    floatArrayOf(colors.red.toFloat() / 255f, colors.green.toFloat() / 255f, colors.blue.toFloat() / 255f, if (it > max - 1) 0f else 1f)
+    floatArrayOf(colors.red.toFloat() / 255f,
+        colors.green.toFloat() / 255f,
+        colors.blue.toFloat() / 255f,
+        if (it > max - 1) 0f else 1f
+    )
 }

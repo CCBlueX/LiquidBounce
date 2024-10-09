@@ -79,7 +79,7 @@ class Arraylist(
         "Custom"
     )
     private val bgColors = ColorSettingsInteger(this, "Background", zeroAlphaCheck = true)
-    { backgroundMode == "Custom" }.withZeroAlpha()
+    { backgroundMode == "Custom" }.with(a = 0)
 
     private val gradientBackgroundSpeed by FloatValue("Background-Gradient-Speed", 1f, 0.5f..10f)
     { backgroundMode == "Gradient" }

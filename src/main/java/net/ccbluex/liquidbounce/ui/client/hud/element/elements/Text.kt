@@ -108,11 +108,11 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
     private var backgroundScale by FloatValue("Background-Scale", 2.5F, 2.5F..5F)
 
-    private val bgColors = ColorSettingsInteger(this, "Background", zeroAlphaCheck = true).withZeroAlpha()
+    private val bgColors = ColorSettingsInteger(this, "Background", zeroAlphaCheck = true).with(a = 0)
 
     private val backgroundBorder by FloatValue("BackgroundBorder-Width", 0F, 0F..5F)
 
-    private val bgBorderColors = ColorSettingsInteger(this, "BackgroundBorder", zeroAlphaCheck = true).withZeroAlpha()
+    private val bgBorderColors = ColorSettingsInteger(this, "BackgroundBorder", zeroAlphaCheck = true).with(a = 0)
 
     private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f) { textColorMode == "Gradient" }
 
