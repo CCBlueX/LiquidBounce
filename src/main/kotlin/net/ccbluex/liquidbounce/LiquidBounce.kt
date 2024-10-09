@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
+import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -132,7 +133,7 @@ object LiquidBounce : Listenable {
 
             ChunkScanner
             WorldChangeNotifier
-            MouseStateTracker
+            InputTracker
 
             // Features
             ModuleManager

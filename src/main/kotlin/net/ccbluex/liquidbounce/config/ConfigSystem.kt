@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.block.Block
+import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Item
 import java.io.File
 import java.io.Reader
@@ -111,6 +113,8 @@ object ConfigSystem {
             .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
             .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
             .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
+            .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilKeySerializer)
+            .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindSerializer)
             .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
             .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
             .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)

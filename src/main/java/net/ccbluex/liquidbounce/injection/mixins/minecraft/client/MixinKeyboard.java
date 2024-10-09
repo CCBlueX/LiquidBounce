@@ -51,8 +51,7 @@ public class MixinKeyboard {
         if (client.currentScreen == null) {
             var inputKey = InputUtil.fromKeyCode(key, scancode);
 
-            EventManager.INSTANCE.callEvent(new KeyEvent(new KeyEvent.Key(inputKey.getCode(),
-                    inputKey.getTranslationKey()), i, j));
+            EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, i));
         }
     }
 
