@@ -15,6 +15,7 @@ interface Theme {
     fun doesAccept(type: VirtualScreenType?): Boolean = doesOverlay(type) || doesSupport(type)
     fun doesSupport(type: VirtualScreenType?): Boolean
     fun doesOverlay(type: VirtualScreenType?): Boolean
+    fun canSplash(): Boolean
 
 }
 

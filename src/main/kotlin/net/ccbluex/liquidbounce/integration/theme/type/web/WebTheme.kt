@@ -55,4 +55,6 @@ class WebTheme(val folder: File) : Theme {
     override fun doesOverlay(type: VirtualScreenType?) =
         type != null && metadata.overlays.contains(type.routeName)
 
+    override fun canSplash() = metadata.overlays.contains("splash")
+
 }

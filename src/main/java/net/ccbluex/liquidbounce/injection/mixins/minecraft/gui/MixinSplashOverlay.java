@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.SplashOverlayEvent;
 import net.ccbluex.liquidbounce.event.events.SplashProgressEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
@@ -114,7 +115,7 @@ public class MixinSplashOverlay {
     private boolean drawTexture(DrawContext instance, Identifier texture, int x, int y, int width, int height,
                                 float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
         // do not draw texture - only when hiding
-        return HideAppearance.INSTANCE.isHidingNow();
+        return HideAppearance.INSTANCE.isHidingNow() || !ThemeManager.INSTANCE.getActiveTheme().canSplash();
     }
 
 

@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 
 abstract class ComponentFactory {
 
-    class DeserializedComponentFactory(
+    class JsonComponentFactory(
         private val name: String,
         private val alignment: Alignment,
         private val tweaks: Array<ComponentTweak>?

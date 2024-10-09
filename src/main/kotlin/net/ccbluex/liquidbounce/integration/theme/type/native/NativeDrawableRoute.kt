@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.integration.theme.type.native
 
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.InputAware
 import net.minecraft.client.gui.DrawContext
 
 abstract class NativeDrawableRoute {

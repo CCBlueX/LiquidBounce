@@ -15,5 +15,5 @@ data class ThemeMetadata(
     val version: String,
     val supports: List<String>,
     val overlays: List<String>,
-    val components: List<ComponentFactory.DeserializedComponentFactory>
+    val components: List<ComponentFactory.JsonComponentFactory>
 )

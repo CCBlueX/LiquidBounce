@@ -513,6 +513,10 @@ export async function getComponents(): Promise<Component[]> {
     return await response.json();
 }
 
+export async function updateComponent(index: number, component: Component) {
+
+}
+
 export async function getClientInfo(): Promise<ClientInfo> {
     const response = await fetch(`${API_BASE}/client/info`);
     const data: ClientInfo = await response.json();

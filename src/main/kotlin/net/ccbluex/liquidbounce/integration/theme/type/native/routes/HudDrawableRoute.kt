@@ -55,11 +55,8 @@ class HudDrawableRoute : NativeDrawableRoute() {
             .forEach { component ->
                 val (width, height) = component.size()
 
-                // todo: fix this
                 if (component.alignment.contains(mouseX.toFloat(), mouseY.toFloat(), width.toFloat(), height.toFloat())) {
                     draggingComponent = component
-                    this.lastX = mouseX
-                    this.lastY = mouseY
                     return true
                 }
             }

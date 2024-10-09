@@ -43,5 +43,6 @@ object NativeTheme : Theme {
 
     override fun doesSupport(type: VirtualScreenType?) = routes.containsKey(type)
     override fun doesOverlay(type: VirtualScreenType?) = overlayRoutes.containsKey(type)
+    override fun canSplash() = false
 
 }
