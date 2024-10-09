@@ -34,7 +34,7 @@ import java.io.StringReader
 // GET /api/v1/client/components/:name
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
-    for ((index, component) in components.filter { it.theme.name == requestObject.params["name"] }.withIndex()) {
+    for ((index, component) in components.filter { it.theme.name.equals(requestObject.params["name"], true) }.withIndex()) {
         add(JsonObject().apply {
             addProperty("id", index)
             addProperty("name", component.name)
@@ -46,7 +46,7 @@ fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
 // GET /api/v1/client/components/:name/:index
 @Suppress("UNUSED_PARAMETER")
 fun getComponentSettings(requestObject: RequestObject) = httpOk(ConfigSystem.serializeConfigurable(
-    components.filter { it.theme.name == requestObject.params["name"] }[requestObject.params["index"]?.toInt() ?: error("No index provided")]
+    components.filter { it.theme.name.equals(requestObject.params["name"], true) }[requestObject.params["index"]?.toInt() ?: error("No index provided")]
 ))
 
 // POST /api/v1/client/components/:name/:index
@@ -64,7 +64,7 @@ fun moveComponent(requestObject: RequestObject): FullHttpResponse {
     val name = requestObject.params["name"]
     val index = requestObject.params["index"]?.toInt() ?: error("No index provided")
 
-    val component = components.filter { it.theme.name == name }[index]
+    val component = components.filter { it.theme.name.equals(name, true) }[index]
 
     // We copy the alignment to the existing because we do not want to replace the instance
     val newAlignment = protocolGson.fromJson(requestObject.body, Alignment::class.java)
