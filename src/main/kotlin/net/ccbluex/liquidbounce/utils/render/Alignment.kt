@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
 data class Alignment(
-    var horizontalAlignment: ScreenAxisX,
-    var horizontalOffset: Int,
-    var verticalAlignment: ScreenAxisY,
-    var verticalOffset: Int,
+    val horizontalAlignment: ScreenAxisX,
+    val horizontalOffset: Int,
+    val verticalAlignment: ScreenAxisY,
+    val verticalOffset: Int,
 ) {
 
     constructor() : this(ScreenAxisX.LEFT, 0, ScreenAxisY.TOP, 0)
@@ -79,15 +79,15 @@ data class Alignment(
         return x >= bounds.xMin && x <= bounds.xMax && y >= bounds.yMin && y <= bounds.yMax
     }
 
-    fun move(offsetX: Int, offsetY: Int) {
-        horizontalOffset += when (horizontalAlignment) {
+    fun move(offsetX: Int, offsetY: Int) = copy(
+        horizontalOffset = horizontalOffset + when (horizontalAlignment) {
             ScreenAxisX.RIGHT -> -offsetX
             else -> offsetX
-        }
-
-        verticalOffset += when (verticalAlignment) {
+        },
+        verticalOffset = verticalOffset + when (verticalAlignment) {
             ScreenAxisY.BOTTOM -> -offsetY
             else -> offsetY
         }
-    }
+    )
+
 }

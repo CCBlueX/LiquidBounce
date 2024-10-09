@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager.activeComponents
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawableRoute
 import net.ccbluex.liquidbounce.integration.theme.type.native.components.NativeComponent
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gui.DrawContext
 
 const val BORDER_GAP = 4
@@ -13,9 +14,10 @@ const val BORDER_GAP = 4
 class HudDrawableRoute : NativeDrawableRoute() {
 
     private var draggingComponent: NativeComponent? = null
+    private var startAlignment: Alignment? = null
 
-    private var lastX = 0.0
-    private var lastY = 0.0
+    private var startX = 0.0
+    private var startY = 0.0
 
     override fun render(context: DrawContext, delta: Float) {
         val editorIsOpen = IntegrationHandler.route.type == VirtualScreenType.EDITOR
@@ -57,6 +59,9 @@ class HudDrawableRoute : NativeDrawableRoute() {
 
                 if (component.alignment.contains(mouseX.toFloat(), mouseY.toFloat(), width.toFloat(), height.toFloat())) {
                     draggingComponent = component
+                    startAlignment = component.alignment.copy()
+                    startX = mouseX
+                    startY = mouseY
                     return true
                 }
             }
@@ -65,16 +70,17 @@ class HudDrawableRoute : NativeDrawableRoute() {
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
         draggingComponent = null
+        startAlignment = null
         return true
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        val diffX = mouseX - this.lastX
-        val diffY = mouseY - this.lastY
-        // todo: fix awful dragging
-        draggingComponent?.alignment?.move(diffX.toInt(), diffY.toInt())
-        this.lastX = mouseX
-        this.lastY = mouseY
+        val component = draggingComponent ?: return
+        val startAlignment = startAlignment ?: return
+
+        val diffX = mouseX - startX
+        val diffY = mouseY - startY
+        component.alignment = startAlignment.move(diffX.toInt(), diffY.toInt())
 
         super.mouseMoved(mouseX, mouseY)
     }

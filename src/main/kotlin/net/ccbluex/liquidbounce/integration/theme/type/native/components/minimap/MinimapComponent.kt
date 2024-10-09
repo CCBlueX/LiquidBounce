@@ -162,7 +162,7 @@ class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, A
 
     }
 
-    override fun size() = size to size
+    override fun size() = size + 5 to size + 5
 
     private fun RenderEnvironment.drawShadowForBB(
         boundingBox: BoundingBox2f, from: Color4b, to: Color4b, offset: Float = 3.0F, width: Float = 3.0F
