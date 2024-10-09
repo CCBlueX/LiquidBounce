@@ -5,8 +5,12 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 
 abstract class ComponentFactory {
 
+    abstract val name: String
+    abstract val default: Boolean
+
     class JsonComponentFactory(
-        private val name: String,
+        override val name: String,
+        override val default: Boolean,
         private val alignment: Alignment,
         private val tweaks: Array<ComponentTweak>?
     ) : ComponentFactory() {
@@ -14,7 +18,9 @@ abstract class ComponentFactory {
     }
 
     class NativeComponentFactory(
-        private val function: () -> Component
+        override val name: String,
+        override val default: Boolean = false,
+        private val function: () -> Component,
     ) : ComponentFactory() {
         override fun new(theme: Theme) = function()
     }

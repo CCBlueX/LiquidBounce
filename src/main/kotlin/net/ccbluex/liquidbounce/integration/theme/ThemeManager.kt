@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
@@ -35,10 +36,10 @@ import net.ccbluex.liquidbounce.integration.theme.type.web.WebTheme
 import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
 import java.io.File
 
-object ThemeManager : Configurable("Theme") {
+const val DEFAULT_THEME = "LiquidBounce"
+const val DEFAULT_WALLPAPER = "hills.png"
 
-    private val themeName by text("Name", "LiquidBounce")
-    private val wallpaperName by text("Wallpaper", "hills.png")
+object ThemeManager {
 
     val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
@@ -46,6 +47,10 @@ object ThemeManager : Configurable("Theme") {
         extractDefault()
     }
 
+    /**
+     * List of available themes, which includes the native theme, the default that is extracted by [extractDefault]
+     * and any other themes that have been dropped into the themes folder.
+     */
     val availableThemes = arrayOf(
         NativeTheme,
         *themesFolder.listFiles()
@@ -55,7 +60,10 @@ object ThemeManager : Configurable("Theme") {
             ?: emptyArray()
     )
 
-    var activeTheme: Theme = availableThemes.firstOrNull { it.name == themeName } ?: NativeTheme
+    /**
+     * The preferred active theme which is used as UI of the client.
+     */
+    var activeTheme: Theme = availableThemes.firstOrNull { it.name == DEFAULT_THEME } ?: NativeTheme
         set(value) {
             field = value
 
@@ -64,29 +72,55 @@ object ThemeManager : Configurable("Theme") {
             ModuleHud.refresh()
         }
 
-    val activeWallpaper: Wallpaper?
-        get() = activeTheme.wallpapers.find { it.name == wallpaperName }
+    /**
+     * The fallback theme which is used when the active theme does not support a virtual screen type.
+     */
+    private var fallbackTheme = availableThemes.firstOrNull { it.name == DEFAULT_THEME } ?: NativeTheme
 
+    /**
+     * The active wallpaper that is displayed as replacement of the standard Minecraft wallpaper. If set to null,
+     * the standard Minecraft wallpaper will be displayed. The wallpaper does not have to match the active theme
+     * and can be set independently.
+     */
+    val activeWallpaper: Wallpaper?
+        get() = activeTheme.wallpapers.find { it.name == DEFAULT_WALLPAPER }
+
+    /**
+     * A list of all active components that are displayed by the [ComponentOverlay] and is used by [ModuleHud] to
+     * display the components.
+     *
+     * The list can contain components from multiple themes and does not have to match the active theme.
+     *
+     * It should be populated with the standard components of the default theme, as well as
+     *
+     */
     var activeComponents: MutableList<Component> = mutableListOf(
-        *availableThemes.map { theme -> theme.components.map { factory -> factory.new(theme) } }.flatten().toTypedArray()
+        // Weather we support web themes, it might also load native theme defaults instead
+        *fallbackTheme.components
+            // Check if the component is enabled by default
+            .filter { factory -> factory.default }
+            // Create a new component instance
+            .map { factory -> factory.new(fallbackTheme) }
+            .toTypedArray()
     )
 
-    init {
-        value("Components", activeComponents)
-        ConfigSystem.root(this)
-    }
-
+    /**
+     * Get the route for the given virtual screen type.
+     */
     fun route(virtualScreenType: VirtualScreenType? = null): RouteType {
-        val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType)) {
-            activeTheme
-        } else {
-            availableThemes.firstOrNull { theme -> theme.doesAccept(virtualScreenType) }
+        val theme = when {
+            virtualScreenType == null || activeTheme.doesAccept(virtualScreenType) -> activeTheme
+            fallbackTheme.doesAccept(virtualScreenType) -> fallbackTheme
+            else -> availableThemes.firstOrNull { theme -> theme.doesAccept(virtualScreenType) }
                 ?: error("No theme supports the route ${virtualScreenType.routeName}")
         }
 
         return theme.route(virtualScreenType)
     }
 
+    /**
+     * Choose a theme by name.
+     */
     fun chooseTheme(name: String) {
         activeTheme = availableThemes.firstOrNull { it.name == name }
             ?: error("Theme $name does not exist")

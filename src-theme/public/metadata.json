@@ -2,14 +2,6 @@
   "name": "LiquidBounce",
   "version": "0.1.0",
   "authors": ["CCBlueX"],
-  "enabledByDefault": [
-    "Watermark",
-    "ArrayList",
-    "Notifications",
-    "Hotbar",
-    "Scoreboard",
-    "Effects"
-  ],
   "supports": [
     "clickgui",
     "title",
@@ -31,6 +23,7 @@
   "components": [
     {
       "name": "Watermark",
+      "default": true,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -40,6 +33,7 @@
     },
     {
       "name": "TabGui",
+      "default": false,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -49,6 +43,7 @@
     },
     {
       "name": "ArrayList",
+      "default": true,
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 0,
@@ -58,6 +53,7 @@
     },
     {
       "name": "Notifications",
+      "default": true,
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 15,
@@ -67,6 +63,7 @@
     },
     {
       "name": "Hotbar",
+      "default": true,
       "alignment": {
         "horizontal": "CenterTranslated",
         "horizontalOffset": 0,
@@ -83,6 +80,7 @@
     },
     {
       "name": "Scoreboard",
+      "default": true,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -93,6 +91,7 @@
     },
     {
       "name": "Effects",
+      "default": true,
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 15,
@@ -103,6 +102,7 @@
     },
     {
       "name": "Keystrokes",
+      "default": true,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -112,6 +112,7 @@
     },
     {
       "name": "Taco",
+      "default": false,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 0,

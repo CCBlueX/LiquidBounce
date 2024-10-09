@@ -21,8 +21,8 @@ object NativeTheme : Theme {
     override val name = "Generic"
     override val components: List<ComponentFactory>
         get() = listOf(
-            NativeComponentFactory { ArrayListNativeComponent(this) },
-            NativeComponentFactory { MinimapComponent(this) }
+            NativeComponentFactory("ArrayList", true) { ArrayListNativeComponent(this) },
+            NativeComponentFactory("Minimap", false) { MinimapComponent(this) }
         )
     override val wallpapers: List<Wallpaper> = emptyList()
 

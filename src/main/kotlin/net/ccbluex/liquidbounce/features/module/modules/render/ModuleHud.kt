@@ -55,6 +55,10 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     val isBlurable
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
 
+    init {
+        ChunkRenderer
+    }
+
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) { event ->
         if (!enabled || !inGame || event.screen is DisconnectedScreen || isHidingNow) {
             ComponentOverlay.hide()
