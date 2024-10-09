@@ -15,6 +15,7 @@
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import Effects from "./elements/Effects.svelte";
     import { VerticalAlignment } from "../../integration/types.js";
+    import BlockCounter from "./elements/BlockCounter.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -127,6 +128,8 @@
                 <Notifications/>
             {:else if c.name === "TargetHud"}
                 <TargetHud/>
+            {:else if c.name === "BlockCounter"}
+                <BlockCounter/>
             {:else if c.name === "Hotbar"}
                 <HotBar/>
             {:else if c.name === "Scoreboard"}
