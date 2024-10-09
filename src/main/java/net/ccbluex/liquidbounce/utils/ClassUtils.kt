@@ -33,13 +33,17 @@ object ClassUtils {
     ): MutableSet<Value<*>> {
         if (element == null) return orderedValues
 
+        var list = orderedValues
+
         if (element::class.java in configurables) {
             /**
-             * For variables that hold a list of Value<*> (val variable: List<Value<*>>)
+             * For variables that hold a list of Value<*>
+             *
+             * Example: val variable: List<Value<*>>
              */
             if (element is Collection<*>) {
                 if (element.firstOrNull() is Value<*>) {
-                    element.forEach { orderedValues += it as Value<*> }
+                    element.forEach { list += it as Value<*> }
                 }
             }
 
@@ -48,22 +52,27 @@ object ClassUtils {
                 val fieldValue = it[element] ?: return@forEach
 
                 if (fieldValue is Value<*>) {
-                    orderedValues += fieldValue
+                    list += fieldValue
                 } else {
-                    findValues(fieldValue, configurables, orderedValues)
+                    list = findValues(fieldValue, configurables, orderedValues)
                 }
             }
         } else if (element is Value<*>) {
-            orderedValues += element
+            list += element
         } else {
+            /**
+             * For variables that hold a list of a possible class that contains Value<*>
+             *
+             * Example: val variable: List<ColorSettingsInt>
+             */
             if (element is Collection<*>) {
                 element.forEach {
-                    findValues(it, configurables, orderedValues)
+                    list = findValues(it, configurables, orderedValues)
                 }
             }
         }
 
-        return orderedValues
+        return list
     }
 
     fun hasForge() = hasClass("net.minecraftforge.common.MinecraftForge")
