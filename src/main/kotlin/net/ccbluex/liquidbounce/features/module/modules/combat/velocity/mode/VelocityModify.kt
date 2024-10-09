@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -52,7 +51,7 @@ internal object VelocityModify : Choice("Modify") {
 
         // Check if this is a regular velocity update
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            if (chance != 100 && Random.nextInt(100) <= chance) return@handler
+            if (chance != 100 && Random.nextInt(100) > chance) return@handler
             if (!filter.allow()) return@handler
 
             // It should just block the packet
@@ -83,7 +82,7 @@ internal object VelocityModify : Choice("Modify") {
 
             NoFallBlink.waitUntilGround = true
         } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
-            if (chance != 100 && Random.nextInt(100) <= chance) return@handler
+            if (chance != 100 && Random.nextInt(100) > chance) return@handler
             if (!filter.allow()) return@handler
 
             // note: explosion packets are being used by hypixel to trick poorly made cheats.
@@ -96,8 +95,6 @@ internal object VelocityModify : Choice("Modify") {
             NoFallBlink.waitUntilGround = true
         }
     }
-
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
     @Suppress("unused")
     private enum class VelocityTriggerFilter(

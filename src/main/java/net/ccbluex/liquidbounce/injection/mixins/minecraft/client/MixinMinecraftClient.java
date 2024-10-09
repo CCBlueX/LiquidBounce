@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
@@ -243,9 +244,29 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    @ModifyExpressionValue(method = "doAttack",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 0))
+    private int injectNoMissCooldown(int original) {
+        if (ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
+            return 0;
+        }
+
+        return original;
+    }
+
+    @WrapWithCondition(method = "doAttack", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 1))
+    private boolean disableAttackCooldown(MinecraftClient instance, int value) {
+        return !(ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
+    }
+
     @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
     private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
-        if (player == null || crosshairTarget == null) {
+        if (player == null || crosshairTarget == null || crosshairTarget.getType() == HitResult.Type.MISS) {
+            if (ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getCancelAttackOnMiss()) {
+                // Prevent swinging
+                cir.setReturnValue(true);
+            }
             return;
         }
 
