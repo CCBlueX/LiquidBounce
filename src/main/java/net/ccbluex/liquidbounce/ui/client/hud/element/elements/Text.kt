@@ -101,8 +101,11 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
     private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Custom")
 
-    private val colors = ColorSettingsInteger(this, zeroAlphaCheck = true, alphaApply = textColorMode != "Rainbow")
-    { textColorMode == "Custom" }
+    private val colors = ColorSettingsInteger(this,
+        zeroAlphaCheck = true,
+        alphaApply = textColorMode != "Rainbow",
+        applyMax = true
+    ) { textColorMode == "Custom" }
 
     private val roundedBackgroundRadius by FloatValue("RoundedBackGround-Radius", 3F, 0F..5F)
 
@@ -110,7 +113,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
     private val bgColors = ColorSettingsInteger(this, "Background", zeroAlphaCheck = true).with(a = 0)
 
-    private val backgroundBorder by FloatValue("BackgroundBorder-Width", 0F, 0F..5F)
+    private val backgroundBorder by FloatValue("BackgroundBorder-Width", 0.5F, 0.5F..5F)
 
     private val bgBorderColors = ColorSettingsInteger(this, "BackgroundBorder", zeroAlphaCheck = true).with(a = 0)
 
