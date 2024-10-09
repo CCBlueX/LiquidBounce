@@ -12,6 +12,7 @@ export function convertToSpacedString(name: string): string {
 
 async function updateSettings() {
     const hudSettings = await getModuleSettings("HUD");
+    // @ts-ignore
     spaceSeperatedNames.set(hudSettings.value.find(n => n.name === "SpaceSeperatedNames")?.value as boolean ?? true);
 }
 
