@@ -38,16 +38,37 @@ class ColorSettingsFloat(owner: Any, name: String, val index: Int? = null, gener
 
 class ColorSettingsInteger(
     owner: Any, name: String? = null, val index: Int? = null, withAlpha: Boolean = true, zeroAlphaCheck: Boolean = false,
-    alphaApply: Boolean? = null, generalApply: () -> Boolean = { true },
+    alphaApply: Boolean? = null, applyMax: Boolean = false, generalApply: () -> Boolean = { true },
 ) {
     val string = if (name == null) "" else "$name-"
+    val max = if (applyMax) 255 else 0
 
-    var r by IntegerValue("${string}R${index ?: ""}", 255, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var g by IntegerValue("${string}G${index ?: ""}", 0, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var b by IntegerValue("${string}B${index ?: ""}", 0, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
-    var a by IntegerValue("${string}Alpha${index ?: ""}", 255, 0..255) { alphaApply ?: generalApply() && withAlpha }
+    var red = IntegerValue("${string}R${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    var green = IntegerValue("${string}G${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    var blue = IntegerValue("${string}B${index ?: ""}", max, 0..255) { generalApply() && (!zeroAlphaCheck || a > 0) }
+    var alpha = IntegerValue("${string}Alpha${index ?: ""}", 255, 0..255) { alphaApply ?: generalApply() && withAlpha }
+
+    var r by red
+    var g by green
+    var b by blue
+    var a by alpha
 
     fun color(a: Int = this.a) = Color(r, g, b, a)
+
+    fun withZeroAlpha(): ColorSettingsInteger {
+        alpha.set(0)
+
+        return this
+    }
+
+    fun with(r: Int? = null, g: Int? = null, b: Int? = null, a: Int? = null): ColorSettingsInteger {
+        r?.let { red.set(it) }
+        g?.let { green.set(it) }
+        b?.let { blue.set(it) }
+        a?.let { alpha.set(it) }
+
+        return this
+    }
 
     init {
         when (owner) {
@@ -60,14 +81,15 @@ class ColorSettingsInteger(
     companion object {
         fun create(
             owner: Any, name: String, colors: Int, withAlpha: Boolean = true, zeroAlphaCheck: Boolean = true,
-            generalApply: (Int) -> Boolean = { true },
+            applyMax: Boolean = false, generalApply: (Int) -> Boolean = { true },
         ): List<ColorSettingsInteger> {
             return (1..colors).map {
                 ColorSettingsInteger(owner,
                     name,
                     it,
                     withAlpha,
-                    zeroAlphaCheck
+                    zeroAlphaCheck,
+                    applyMax = applyMax
                 ) { generalApply(it) }
             }
         }

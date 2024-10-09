@@ -30,7 +30,7 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
     private val onScaffold by BoolValue("ScaffoldOnly", true)
 
     private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Rainbow", "Gradient"), "Custom")
-    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false) { textColorMode == "Custom" }
+    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false, applyMax = true) { textColorMode == "Custom" }
 
     private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f) { textColorMode == "Gradient" }
 

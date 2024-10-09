@@ -58,7 +58,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
     private val scale by FloatValue("Scale", 3F, 1F..5F)
 
     private val textMode by ListValue("Text-Color", arrayOf("Custom", "Rainbow", "Gradient"), "Custom")
-    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false) { textMode == "Custom" }
+    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false, applyMax = true) { textMode == "Custom" }
 
     private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f) { textMode == "Gradient" }
 
@@ -70,7 +70,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
     private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
     private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Rainbow", "Gradient"), "Custom")
-    private val bgColors = ColorSettingsInteger(this, "Background") { backgroundMode == "Custom" }
+    private val bgColors = ColorSettingsInteger(this, "Background") { backgroundMode == "Custom" }.with(a = 100)
 
     private val gradientBackgroundSpeed by FloatValue("Background-Gradient-Speed", 1f, 0.5f..10f)
     { backgroundMode == "Gradient" }

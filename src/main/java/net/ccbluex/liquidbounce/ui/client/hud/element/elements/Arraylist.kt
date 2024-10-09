@@ -45,7 +45,8 @@ class Arraylist(
 ) : Element(x, y, scale, side) {
 
     private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Custom")
-    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false) { textColorMode == "Custom" }
+    private val textColors = ColorSettingsInteger(this, "Text", withAlpha = false)
+    { textColorMode == "Custom" }.with(0, 111, 255)
 
     private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f)
     { textColorMode == "Gradient" }
@@ -60,7 +61,7 @@ class Arraylist(
     { rectMode !in setOf("None", "Outline") }
     private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Rainbow")
     { rectMode != "None" }
-    private val rectColors = ColorSettingsInteger(this, "Rect", zeroAlphaCheck = true)
+    private val rectColors = ColorSettingsInteger(this, "Rect", zeroAlphaCheck = true, applyMax = true)
     { isCustomRectSupported }
 
     private val gradientRectSpeed by FloatValue("Rect-Gradient-Speed", 1f, 0.5f..10f)
@@ -78,7 +79,7 @@ class Arraylist(
         "Custom"
     )
     private val bgColors = ColorSettingsInteger(this, "Background", zeroAlphaCheck = true)
-    { backgroundMode == "Custom" }
+    { backgroundMode == "Custom" }.withZeroAlpha()
 
     private val gradientBackgroundSpeed by FloatValue("Background-Gradient-Speed", 1f, 0.5f..10f)
     { backgroundMode == "Gradient" }
