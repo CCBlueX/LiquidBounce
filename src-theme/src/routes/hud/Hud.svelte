@@ -41,8 +41,8 @@
 
     const startDrag = (component: Component, event: MouseEvent) => {
         draggingComponent = component;
-        startX = event.clientX - component.alignment.horizontalOffset;
-        startY = event.clientY - component.alignment.verticalOffset;
+        startX = event.clientX - component.settings.alignment.horizontalOffset;
+        startY = event.clientY - component.settings.alignment.verticalOffset;
         document.addEventListener("mousemove", onDrag);
         document.addEventListener("mouseup", stopDrag);
     };
@@ -51,8 +51,8 @@
         if (draggingComponent) {
             // todo: implement that top and bottom as well as left and right behaves differently
 
-            draggingComponent.alignment = {
-                ...draggingComponent.alignment,
+            draggingComponent.settings.alignment = {
+                ...draggingComponent.settings.alignment,
                 horizontalOffset: event.clientX - startX,
                 verticalOffset: event.clientY - startY
             };
@@ -63,7 +63,7 @@
     // Stop dragging and log the final position
     const stopDrag = async () => {
         if (draggingComponent) {
-            await moveComponent(draggingComponent.id, draggingComponent.alignment);
+            await moveComponent(draggingComponent.id, draggingComponent.settings.alignment);
             draggingComponent = null;
             document.removeEventListener("mousemove", onDrag);
             document.removeEventListener("mouseup", stopDrag);
@@ -109,7 +109,7 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         <div class="component"
-             style={toStyle(c.alignment)}
+             style={toStyle(c.settings.alignment)}
              on:mousedown={(event) => startDrag(c, event)}>
             {#if c.name === "Watermark"}
                 <Watermark/>

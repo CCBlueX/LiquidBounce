@@ -344,7 +344,7 @@ export interface GameWindow {
 export interface Component {
     id: number;
     name: string;
-    alignment: AlignmentSetting;
+    settings: { [name: string]: any };
 }
 
 export interface ClientInfo {

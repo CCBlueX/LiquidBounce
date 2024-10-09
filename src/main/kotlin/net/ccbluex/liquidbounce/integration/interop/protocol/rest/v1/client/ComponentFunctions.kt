@@ -38,7 +38,11 @@ fun getComponents(requestObject: RequestObject) = httpOk(JsonArray().apply {
         add(JsonObject().apply {
             addProperty("id", index)
             addProperty("name", component.name)
-            add("alignment", protocolGson.toJsonTree(component.alignment))
+            add("settings", JsonObject().apply {
+                for (v in component.inner) {
+                    add(v.name, protocolGson.toJsonTree(v.inner))
+                }
+            })
         })
     }
 })
