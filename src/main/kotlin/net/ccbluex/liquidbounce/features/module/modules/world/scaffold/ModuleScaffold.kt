@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -44,7 +45,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
@@ -193,6 +198,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
+    private object ShowCounter : ToggleableConfigurable(this, "ShowCounter", true) {
+        val counterY by float("CounterY", 2F, -50F..50F, "%")
+    }
+
     init {
         tree(ScaffoldRotationConfigurable)
         tree(SimulatePlacementAttempts)
@@ -200,6 +209,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldJumpStrafe)
         tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldBlinkFeature)
+        tree(ShowCounter)
     }
 
     private var ledge by boolean("Ledge", true)
@@ -279,6 +289,53 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
+    }
+
+    private val fontRenderer: FontRenderer
+        get() = Fonts.DEFAULT_FONT.get()
+
+    @Suppress("unused")
+    val renderHandler = handler<OverlayRenderEvent> {
+        if (!ShowCounter.enabled) return@handler
+
+        val fontBuffers = FontRendererBuffers()
+
+        renderEnvironmentForGUI {
+            try {
+                with(matrixStack) {
+                    push()
+                    try {
+                        val screenWidth = mc.window.scaledWidth
+                        val screenHeight = mc.window.scaledHeight
+
+                        val count = blockCount
+                        val text = fontRenderer.process(count.toString(), when {
+                            count <= 0 -> Color4b.RED
+                            count <= 60 -> Color4b(255, count * 255 / 60, 0)
+                            count <= 120 -> Color4b((120 - count) * 255 / 60, 255, 0)
+                            else -> Color4b.GREEN
+                        })
+
+                        translate(screenWidth * 0.5F, screenHeight * (0.5F + 0.01F * ShowCounter.counterY), 0F)
+                        scale(0.25F, 0.25F, 1F)
+
+                        fontRenderer.draw(
+                            text,
+                            -fontRenderer.getStringWidth(text, true) * 0.5F,
+                            0F,
+                            shadow = true,
+                        )
+
+                        fontRenderer.commit(fontBuffers)
+
+                    } finally {
+                        pop()
+                    }
+                }
+            } finally {
+                fontBuffers.draw(fontRenderer)
+            }
+        }
     }
 
     @Suppress("unused")
