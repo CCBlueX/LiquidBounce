@@ -56,11 +56,6 @@ object ThemeManager : Configurable("Theme") {
 
     var activeTheme: Theme = availableThemes.firstOrNull { it.name == "LiquidBounce" } ?: NativeTheme
         set(value) {
-//            if (!value.exists) {
-//                logger.warn("Unable to set theme to ${value.name}, theme does not exist")
-//                return
-//            }
-
             field = value
 
             // Update integration browser
@@ -68,11 +63,11 @@ object ThemeManager : Configurable("Theme") {
             ModuleHud.refresh()
         }
 
+    val wallpaper = tree(WallpaperManager)
+
     init {
         ConfigSystem.root(this)
     }
-
-    val wallpaper = tree(WallpaperManager)
 
     fun route(virtualScreenType: VirtualScreenType? = null): RouteType {
         val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType)) {
@@ -95,7 +90,7 @@ object ThemeManager : Configurable("Theme") {
      */
     private fun extractDefault() {
         runCatching {
-            val folder = themesFolder.resolve("default")
+            val folder = themesFolder.resolve("liquidbounce")
             val stream = resource("/assets/liquidbounce/default_theme.zip")
 
             if (folder.exists()) {
