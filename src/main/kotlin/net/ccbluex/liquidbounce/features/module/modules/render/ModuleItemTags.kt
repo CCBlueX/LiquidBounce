@@ -155,7 +155,7 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
             }
         }
 
-        fontRenderer.commit(this, fontBuffers)
+        fontRenderer.commit(fontBuffers)
         matrixStack.pop()
     }
 
