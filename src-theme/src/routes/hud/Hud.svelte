@@ -14,7 +14,7 @@
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import Effects from "./elements/Effects.svelte";
-    import BlockCounter from "./elements/blockcounter/BlockCounter.svelte";
+    import BlockCounter from "./elements/BlockCounter.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
