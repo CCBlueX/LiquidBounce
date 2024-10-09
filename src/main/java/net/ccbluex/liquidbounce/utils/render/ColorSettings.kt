@@ -77,5 +77,5 @@ class ColorSettingsInteger(
 fun List<ColorSettingsFloat>.toColorArray(max: Int) = (0 until MAX_GRADIENT_COLORS).map {
     val colors = this[it].color()
 
-    floatArrayOf(colors.red.toFloat() / 255f, colors.green.toFloat() / 255f, colors.blue.toFloat() / 255f, if (it > max) 0f else 1f)
+    floatArrayOf(colors.red.toFloat() / 255f, colors.green.toFloat() / 255f, colors.blue.toFloat() / 255f, if (it > max - 1) 0f else 1f)
 }
