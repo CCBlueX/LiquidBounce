@@ -208,7 +208,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
             drawRect(dialogX, dialogY + 10, dialogX + dialogWidth, dialogY + dialogHeight + 10, Color(0, 0, 0, 150).rgb)
 
-            val confirmationMessage = "You sure you want to reset?"
+            val confirmationMessage = "Are you sure you want to reset?"
             Fonts.font35.drawString(confirmationMessage, dialogX + 8f, dialogY.toFloat() + 12, Color.WHITE.rgb)
 
             val buttonWidth = 30
