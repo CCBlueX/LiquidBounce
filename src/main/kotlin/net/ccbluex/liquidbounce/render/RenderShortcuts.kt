@@ -24,6 +24,8 @@ import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.*
@@ -58,6 +60,8 @@ class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixS
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos
     }
+
+    fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@GUIRenderEnvironment, buffer)
 }
 
 class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
