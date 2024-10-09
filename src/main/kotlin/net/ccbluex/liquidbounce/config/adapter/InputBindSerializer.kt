@@ -33,6 +33,19 @@ object InputBindSerializer : JsonSerializer<InputBind>, JsonDeserializer<InputBi
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): InputBind {
+        if (json.isJsonPrimitive) {
+            val primitive = json.asJsonPrimitive
+
+            // We do not want to throw an error but simply unbind the key instead.
+            if (!primitive.isNumber) {
+                return InputBind(InputUtil.UNKNOWN_KEY, InputBind.BindAction.TOGGLE)
+            }
+
+            // Bind Action goes missing as we cannot access the action that is located
+            // one element above - Sorry!
+            return InputBind(InputUtil.Type.KEYSYM.createFromCode(primitive.asInt), InputBind.BindAction.TOGGLE)
+        }
+
         val jsonObject = json.asJsonObject
         val boundKey = context.deserialize<InputUtil.Key>(jsonObject.get("boundKey"), InputUtil.Key::class.java)
         val actionStr = jsonObject.get("action").asString
