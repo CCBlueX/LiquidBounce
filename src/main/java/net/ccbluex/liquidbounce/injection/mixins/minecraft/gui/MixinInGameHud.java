@@ -72,9 +72,6 @@ public abstract class MixinInGameHud {
     @Shadow
     protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
-    @Shadow
-    protected abstract void renderDemoTimer(DrawContext context, RenderTickCounter tickCounter);
-
     /**
      * Hook render hud event at the top layer
      */
