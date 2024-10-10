@@ -73,13 +73,14 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
             if (healthMap.containsKey(it)) {
                 val prevHealth = healthMap.getFloat(it)
                 val delta = abs(prevHealth - currentHealth)
-                if (delta > EPSILON)
+                if (delta > EPSILON) {
                     particles += Particle(
                         now,
                         FORMATTER.format(delta),
                         if (prevHealth > currentHealth) Color4b.RED else Color4b.GREEN,
                         it.box.center.add(it.movement),
                     )
+                }
             }
 
             healthMap.put(it, currentHealth)
