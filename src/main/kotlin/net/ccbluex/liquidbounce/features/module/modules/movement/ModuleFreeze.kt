@@ -103,17 +103,15 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
         }
 
         val packetHandler = handler<PacketEvent> { event ->
-            if (mc.world != null) {
-                when (event.packet) {
-                    is PlayerPositionLookS2CPacket -> {
-                        if (disableOnFlag) {
-                            enabled = false
-                            return@handler
-                        }
+            when (event.packet) {
+                is PlayerPositionLookS2CPacket -> {
+                    if (disableOnFlag) {
+                        enabled = false
+                        return@handler
                     }
-
-                    is PlayerMoveC2SPacket -> event.cancelEvent()
                 }
+
+                is PlayerMoveC2SPacket -> event.cancelEvent()
             }
         }
     }
