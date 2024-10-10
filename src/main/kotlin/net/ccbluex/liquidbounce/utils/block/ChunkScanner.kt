@@ -242,6 +242,7 @@ object ChunkScanner : Listenable {
         /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          *
+         * @param pos DON'T directly save it to a container Property (Field in Java), save a copy instead
          * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
