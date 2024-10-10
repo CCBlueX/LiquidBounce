@@ -34,6 +34,7 @@ import net.minecraft.util.Hand
 object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT, aliases = arrayOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
+    val hideShieldSlot by boolean("HideShieldSlot", true)
 
     val onPacket = sequenceHandler<PacketEvent> {
         if (onlyVisual) {
