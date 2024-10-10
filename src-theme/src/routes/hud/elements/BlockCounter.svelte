@@ -3,7 +3,7 @@
     import {fly} from "svelte/transition";
     import type {BlockCountChangeEvent} from "../../../integration/events";
 
-    let count: number | null = null;
+    let count: number | undefined;
 
     function mapToColor(value: number): string {
         if (value <= 0) {
@@ -23,8 +23,9 @@
 
 </script>
 
-{#if count !== null}
-    <div class="counter" style="color: {mapToColor(count)}" transition:fly={{ y: -5, duration: 200 }}>
+{#if count !== undefined}
+    <div class="counter" style="color: {mapToColor(count)}" in:fly={{ y: -5, duration: 200 }}
+         out:fly={{ y: -5, duration: 200 }}>
         {count}
     </div>
 {/if}
