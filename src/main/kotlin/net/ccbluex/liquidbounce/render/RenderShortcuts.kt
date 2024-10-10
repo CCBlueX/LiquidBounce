@@ -61,6 +61,7 @@ class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixS
         return pos
     }
 
+
     inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
         val fontBuffers = FontRendererBuffers()
         try {
@@ -69,6 +70,8 @@ class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixS
             fontBuffers.draw(this)
         }
     }
+
+    fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@GUIRenderEnvironment, buffer)
 }
 
 class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {

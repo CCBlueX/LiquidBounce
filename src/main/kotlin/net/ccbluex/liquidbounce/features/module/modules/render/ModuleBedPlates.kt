@@ -72,8 +72,6 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                     distSq
                 }
 
-                val env = this
-
                 trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
                     val bedPlates = trackState.bedPlates
                     with(matrixStack) {
@@ -81,7 +79,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                         try {
                             val z = idx.toFloat() / trackedBlockMap.size.toFloat()
 
-                            renderBedPlates(env, trackState, fontBuffers, bedPlates, z * 1000.0F)
+                            renderBedPlates(trackState, fontBuffers, bedPlates, z * 1000.0F)
                         } finally {
                             pop()
                         }
@@ -94,8 +92,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         }
     }
 
-    private fun renderBedPlates(
-        env: GUIRenderEnvironment,
+    private fun GUIRenderEnvironment.renderBedPlates(
         trackState: TrackedState,
         fontBuffers: FontRendererBuffers,
         bedPlates: Set<Block>,
@@ -141,15 +138,15 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             0.0f
         )
 
-        env.matrixStack.push()
+        matrixStack.push()
 
-        env.matrixStack.translate(screenPos.x, screenPos.y, z)
-        env.matrixStack.translate(0.0f, -height + fontRenderer.height * scale - 6.0F, 0.0f)
-        env.matrixStack.scale(scale, scale, 1.0F)
+        matrixStack.translate(screenPos.x, screenPos.y, z)
+        matrixStack.translate(0.0f, -height + fontRenderer.height * scale - 6.0F, 0.0f)
+        matrixStack.scale(scale, scale, 1.0F)
 
-        fontRenderer.commit(env, fontBuffers)
+        fontRenderer.commit(fontBuffers)
 
-        env.matrixStack.pop()
+        matrixStack.pop()
 
         // draw items
         val itemStartX = width / 2 - (bedPlates.size + 1) * ITEM_SIZE / 2
