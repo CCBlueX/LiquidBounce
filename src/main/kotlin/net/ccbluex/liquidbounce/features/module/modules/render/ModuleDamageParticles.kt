@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
+import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -27,15 +27,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
+import net.ccbluex.liquidbounce.utils.client.Curves
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sin
 
 /**
  * DamageParticles module
@@ -47,15 +44,9 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     private val scale by float("Scale", 1.5F, 0.25F..4F)
     private val ttl by float("TimeToLive", 1.5F, 0.5F..5.0F, "s")
     private val transitionY by float("TransitionY", 1.0F, -2.0F..2.0F)
-    private val transitionType = choices(
-        "TransitionType", Linear, arrayOf(
-            Linear, Sine, Exponential, EaseInOut, Cubic, Elastic, Back, Step
-        )
-    )
+    private val transitionType by curve("TransitionType", Curves.EASE_OUT)
 
-    private fun Double.doTransition() = transitionType.activeChoice(this)
-
-    private val healthMap = hashMapOf<LivingEntity, Float>()
+    private val healthMap = Object2FloatOpenHashMap<LivingEntity>()
     private val particles = hashSetOf<Particle>()
 
     private const val EPSILON = 0.05F
@@ -74,17 +65,13 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
         val entities = world.entities.filterIsInstanceTo(hashSetOf<LivingEntity>())
         entities.remove(player)
 
-        healthMap.keys.removeIf { it !in entities || it.isDead }
-
         val now = System.currentTimeMillis()
-
-        particles.removeIf { now - it.startTime > ttl * 1000F }
 
         entities.forEach {
             val currentHealth = it.health
-            val prevHealth = healthMap[it]
 
-            if (prevHealth != null) {
+            if (healthMap.containsKey(it)) {
+                val prevHealth = healthMap.getFloat(it)
                 val delta = abs(prevHealth - currentHealth)
                 if (delta > EPSILON)
                     particles += Particle(
@@ -95,8 +82,12 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
                     )
             }
 
-            healthMap[it] = currentHealth
+            healthMap.put(it, currentHealth)
         }
+
+        healthMap.keys.removeIf { it !in entities || it.isDead }
+
+        particles.removeIf { now - it.startTime > ttl * 1000F }
     }
 
     val renderHandler = handler<OverlayRenderEvent> {
@@ -104,8 +95,9 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
             fontRenderer.withBuffers { buf ->
                 val now = System.currentTimeMillis()
                 particles.forEachIndexed { i, particle ->
-                    val progress = (now - particle.startTime).toDouble() / (ttl * 1000.0)
-                    val currentPos = particle.pos.add(0.0, transitionY * progress.doTransition(), 0.0)
+                    val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
+
+                    val currentPos = particle.pos.add(0.0, (transitionY * transitionType(progress)).toDouble(), 0.0)
                     val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
                     val c = size
@@ -127,45 +119,5 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     }
 
     data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3d)
-
-    /**
-     * range = domain = 0.0..1.0
-     */
-    sealed class TransitionChoice(name: String) : Choice(name), (Double) -> Double {
-        override val parent
-            get() = transitionType
-    }
-
-    private object Linear : TransitionChoice("Linear") {
-        override fun invoke(t: Double): Double = t
-    }
-
-    private object Sine : TransitionChoice("Sine") {
-        override fun invoke(t: Double): Double = sin(PI * t * 0.5)
-    }
-
-    private object Exponential : TransitionChoice("Exponential") {
-        override fun invoke(t: Double): Double = if (t == 0.0) 0.0 else 2.0.pow(10 * (t - 1))
-    }
-
-    private object EaseInOut : TransitionChoice("EaseInOut") {
-        override fun invoke(t: Double): Double = if (t < 0.5) 2 * t * t else -1 + (4 - 2 * t) * t
-    }
-
-    private object Cubic : TransitionChoice("Cubic") {
-        override fun invoke(t: Double): Double = t * t * t
-    }
-
-    private object Elastic : TransitionChoice("Elastic") {
-        override fun invoke(t: Double): Double = sin(6.5 * Math.PI * t) * 2.0.pow(10 * (t - 1))
-    }
-
-    private object Back : TransitionChoice("Back") {
-        override fun invoke(t: Double): Double = t * t * (2.5 * t - 1.5)
-    }
-
-    private object Step : TransitionChoice("Step") {
-        override fun invoke(t: Double): Double = if (t < 0.5) 0.0 else 1.0
-    }
 
 }
