@@ -283,16 +283,16 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 glPopMatrix()
             }
 
-            val gradientOffset = System.currentTimeMillis() % 10000 / 10000F
             val gradientX = if (gradientX == 0f) 0f else 1f / gradientX
             val gradientY = if (gradientY == 0f) 0f else 1f / gradientY
 
             GradientFontShader.begin(textColorMode == "Gradient",
                 gradientX,
                 gradientY,
+                maxTextGradientColors,
                 textGradColors.toColorArray(maxTextGradientColors),
                 gradientTextSpeed,
-                gradientOffset
+                System.currentTimeMillis() % 10000 / 10000F
             ).use {
                 RainbowFontShader.begin(rainbow,
                     if (rainbowX == 0f) 0f else 1f / rainbowX,

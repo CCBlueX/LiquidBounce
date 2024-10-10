@@ -259,6 +259,7 @@ class Arraylist(
                         !markAsInactive && isCustomBgGradientSupported,
                         gradientX,
                         gradientY,
+                        maxBackgroundGradientColors,
                         bgGradColors.toColorArray(maxBackgroundGradientColors),
                         gradientBackgroundSpeed,
                         gradientOffset
@@ -284,6 +285,7 @@ class Arraylist(
                         !markAsInactive && textColorMode == "Gradient",
                         gradientX,
                         gradientY,
+                        maxTextGradientColors,
                         textGradColors.toColorArray(maxTextGradientColors),
                         gradientTextSpeed,
                         gradientOffset
@@ -311,6 +313,7 @@ class Arraylist(
                         !markAsInactive && isCustomRectGradientSupported,
                         gradientX,
                         gradientY,
+                        maxRectGradientColors,
                         rectGradColors.toColorArray(maxRectGradientColors),
                         gradientRectSpeed,
                         gradientOffset
@@ -383,6 +386,7 @@ class Arraylist(
                         !markAsInactive && isCustomBgGradientSupported,
                         gradientX,
                         gradientY,
+                        maxBackgroundGradientColors,
                         bgGradColors.toColorArray(maxBackgroundGradientColors),
                         gradientBackgroundSpeed,
                         gradientOffset
@@ -405,6 +409,7 @@ class Arraylist(
                         !markAsInactive && textColorMode == "Gradient",
                         gradientX,
                         gradientY,
+                        maxTextGradientColors,
                         textGradColors.toColorArray(maxTextGradientColors),
                         gradientTextSpeed,
                         gradientOffset
@@ -433,6 +438,7 @@ class Arraylist(
                         !markAsInactive && isCustomRectGradientSupported,
                         gradientX,
                         gradientY,
+                        maxRectGradientColors,
                         rectGradColors.toColorArray(maxRectGradientColors),
                         gradientRectSpeed,
                         gradientOffset

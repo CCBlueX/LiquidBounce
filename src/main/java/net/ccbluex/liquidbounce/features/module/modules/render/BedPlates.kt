@@ -231,6 +231,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
             backgroundMode == "Gradient",
             gradientX,
             gradientY,
+            maxBackgroundGradientColors,
             bgGradColors.toColorArray(maxBackgroundGradientColors),
             gradientBackgroundSpeed,
             gradientOffset
@@ -256,6 +257,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
             textMode == "Gradient",
             gradientX,
             gradientY,
+            maxTextGradientColors,
             textGradColors.toColorArray(maxTextGradientColors),
             gradientTextSpeed,
             gradientOffset

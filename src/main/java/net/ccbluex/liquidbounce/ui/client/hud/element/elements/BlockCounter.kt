@@ -83,6 +83,7 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
             GradientShader.begin(backgroundMode == "Gradient",
                 gradientX,
                 gradientY,
+                maxBackgroundGradientColors,
                 bgGradColors.toColorArray(maxBackgroundGradientColors),
                 gradientBackgroundSpeed,
                 gradientOffset
@@ -103,6 +104,7 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
             GradientFontShader.begin(textColorMode == "Gradient",
                 gradientX,
                 gradientY,
+                maxTextGradientColors,
                 textGradColors.toColorArray(maxTextGradientColors),
                 gradientTextSpeed,
                 gradientOffset
