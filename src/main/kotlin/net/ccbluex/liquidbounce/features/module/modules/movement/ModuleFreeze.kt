@@ -18,12 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag.LagResult
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -33,25 +37,99 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
+    private val modes = choices("Mode", Queue, arrayOf(Queue, Cancel, Stationary))
+        .apply { tagBy(this) }
+
     private val disableOnFlag by boolean("DisableOnFlag", true)
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Set motion to zero
-        event.movement.x = 0.0
-        event.movement.y = 0.0
-        event.movement.z = 0.0
+    /**
+     * Acts as timer = 0 replacement
+     */
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerTickEvent> { event ->
+        event.cancelEvent()
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (mc.world != null && event.origin == TransferOrigin.RECEIVE) {
-            if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
-                enabled = false
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
+            enabled = false
+        }
+    }
 
-                return@handler
+    /**
+     * Queue network communication - acts as network lag
+     */
+    object Queue : Choice("Queue") {
+
+        private val incoming by boolean("Incoming", false)
+        private val outgoing by boolean("Outgoing", true)
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        fun shouldLag(origin: TransferOrigin): LagResult? {
+            if (!enabled || !handleEvents()) {
+                return null
             }
 
-            event.cancelEvent()
+            val isQueue = when (origin) {
+                TransferOrigin.RECEIVE -> {
+                    incoming
+                }
+                TransferOrigin.SEND -> {
+                    outgoing
+                }
+            }
+
+            return if (isQueue) LagResult.QUEUE else LagResult.PASS
         }
+
+    }
+
+    /**
+     * Cancel network communication
+     */
+    object Cancel : Choice("Cancel") {
+
+        private val incoming by boolean("Incoming", false)
+        private val outgoing by boolean("Outgoing", true)
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
+            when (event.origin) {
+                TransferOrigin.RECEIVE -> if (incoming) {
+                    event.cancelEvent()
+                }
+
+                TransferOrigin.SEND -> if (outgoing) {
+                    event.cancelEvent()
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Stationary freeze - only cancel movement but keeps network communication intact
+     */
+    object Stationary : Choice("Stationary") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
+            // This might actually be useless since we cancel [PlayerTickEvent] which is responsible for movement
+            // as well, so this is just a double check
+            when (event.packet) {
+                is PlayerMoveC2SPacket -> event.cancelEvent()
+            }
+        }
+
     }
 
 }
