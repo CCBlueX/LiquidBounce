@@ -181,6 +181,8 @@
         "module.forceUnicodeChat.description": "允许你在聊天栏中发送unicode消息。",
         
         "module.freeCam.description": "允许你离开身体。(灵魂出窍)",
+
+        "module.freeLook.description": "UNTRANSLATED: Allows you to see around in third person view.",
         
         "module.freeze.description": "允许你停留在空中。",
         

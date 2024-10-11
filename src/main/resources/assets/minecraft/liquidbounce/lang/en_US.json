@@ -183,6 +183,8 @@
         "module.forceUnicodeChat.description": "Allows you to send unicode messages in chat.",
         
         "module.freeCam.description": "Allows you to move out of your body.",
+
+        "module.freeLook.description": "Allows you to see around in third person view.",
         
         "module.freeze.description": "Allows you to stay stuck in mid air.",
         

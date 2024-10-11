@@ -172,6 +172,8 @@
         "module.forceUnicodeChat.description": "Позволяет отправлять в чат сообщения в юникоде.",
         
         "module.freeCam.description": "Свободная летающая камера.",
+
+        "module.freeLook.description": "UNTRANSLATED: Allows you to see around in third person view.",
         
         "module.freeze.description": "Позволяет зависнуть в воздухе.",
         
