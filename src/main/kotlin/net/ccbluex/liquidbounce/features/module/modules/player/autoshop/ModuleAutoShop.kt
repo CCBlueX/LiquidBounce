@@ -254,13 +254,10 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
-        val currentShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
+        val currentShopStackSet = (mc.currentScreen as GenericContainerScreen).stacks().toHashSet()
+        val prevShopStackSet = prevShopStacks.toHashSet()
 
-        val difference = currentShopStacks
-            .filter { !prevShopStacks.contains(it) }
-            .union(prevShopStacks.filter { !currentShopStacks.contains(it) })
-
-        return difference.size > 1
+        return (currentShopStackSet - prevShopStackSet).union(prevShopStackSet - currentShopStackSet).size > 1
     }
 
     /**

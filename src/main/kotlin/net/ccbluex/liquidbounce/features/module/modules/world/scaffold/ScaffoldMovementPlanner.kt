@@ -129,7 +129,7 @@ object ScaffoldMovementPlanner {
     private fun findBlockPlayerStandsOn(): BlockPos? {
         val offsetsToTry = arrayOf(0.301, 0.0, -0.301)
         // Contains the blocks which the player is currently supported by
-        val candidates = mutableListOf<BlockPos>()
+        val candidates = linkedSetOf<BlockPos>()
 
         for (xOffset in offsetsToTry) {
             for (zOffset in offsetsToTry) {

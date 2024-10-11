@@ -64,17 +64,19 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private val flyingSet = mutableMapOf<Int, Int>()
+    private val flyingSet = hashMapOf<Int, Int>()
     private val hitListSet = hashSetOf<Int>()
     private val notAlwaysInRadiusSet = hashSetOf<Int>()
 
     private val swungSet = hashSetOf<Int>()
     private val crittedSet = hashSetOf<Int>()
-    private val attributesSet = mutableListOf<Int>()
+    private val attributesSet = hashSetOf<Int>()
 
     val repeatable = repeatable {
+        val rangeSquared = AlwaysInRadius.alwaysInRadiusRange
+
         for (entity in world.players) {
-            if (player.distanceTo(entity) > AlwaysInRadius.alwaysInRadiusRange) {
+            if (player.squaredDistanceTo(entity) > rangeSquared) {
                 notAlwaysInRadiusSet.add(entity.id)
             }
         }
@@ -123,8 +125,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 }
             }
 
-            is EntitiesDestroyS2CPacket -> {
-                for (entityId in packet.entityIds) {
+            is EntitiesDestroyS2CPacket -> with(packet.entityIds.intIterator()) {
+                // don't use forEach, it provides Integer instead of int
+                while (hasNext()) {
+                    val entityId = nextInt()
                     attributesSet -= entityId
                     flyingSet -= entityId
                     hitListSet -= entityId
@@ -144,13 +148,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         val validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
         val name = player.nameForScoreboard
 
-        if (name.length < 3 || name.length > 16) {
-            return true
-        }
-
-        val result = name.indices.find { !validChars.contains(name[it]) }
-
-        return result != null
+        return name.length !in 3..16 || name.any { it !in validChars }
     }
 
     @Suppress("all")

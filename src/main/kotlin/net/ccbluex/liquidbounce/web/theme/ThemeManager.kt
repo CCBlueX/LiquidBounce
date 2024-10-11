@@ -244,32 +244,25 @@ class Theme(val name: String) {
 
     fun doesOverlay(name: String?) = name != null && metadata.overlays.contains(name)
 
-    fun parseComponents(): MutableList<Component> {
-        val themeComponent = metadata.rawComponents
-            .map { it.asJsonObject }
-            .associateBy { it["name"].asString!! }
+    fun parseComponents(): List<Component> = metadata.rawComponents.mapNotNull {
+        val obj = it.asJsonObject
+        val name = obj["name"].asString!!
+        runCatching {
+            val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
+            val component = componentType.createComponent()
 
-        val componentList = mutableListOf<Component>()
-
-        for ((name, obj) in themeComponent) {
             runCatching {
-                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
-                val component = componentType.createComponent()
-
-                runCatching {
-                    ConfigSystem.deserializeConfigurable(component, obj)
-                }.onFailure {
-                    logger.error("Failed to deserialize component $name", it)
-                }
-
-                componentList.add(component)
+                ConfigSystem.deserializeConfigurable(component, obj)
             }.onFailure {
-                logger.error("Failed to create component $name", it)
+                logger.error("Failed to deserialize component $name", it)
             }
-        }
 
-        return componentList
+            component
+        }.onFailure {
+            logger.error("Failed to create component $name", it)
+        }.getOrNull()
     }
+
 
     companion object {
 
