@@ -18,12 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-class MutexWithContent<T>(val inner: T) {
-    val lockObject = Any()
+import kotlinx.coroutines.*
+import java.lang.Runnable
+import java.util.concurrent.Executors
 
-    inline fun lock(fn: (T) -> Unit) {
-        synchronized(this.lockObject) {
-            fn(this.inner)
-        }
-    }
+private val loomExecutor = Executors.newVirtualThreadPerTaskExecutor()
+
+private val loomDispatcher = loomExecutor.asCoroutineDispatcher()
+
+val Dispatchers.Loom: CoroutineDispatcher
+    get() = loomDispatcher
+
+private val loomBuilder = Thread.ofVirtual()
+
+fun virtualThread(
+    name: String? = null,
+    start: Boolean = true,
+    block: Runnable,
+): Thread = with(loomBuilder) {
+    if (name != null) name(name)
+
+    if (start) start(block) else unstarted(block)
 }

@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.web.socket
 
 import io.netty.channel.ChannelHandlerContext
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer
 import net.ccbluex.liquidbounce.web.socket.protocol.event.SocketEventHandler
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.RestApi
-import kotlin.concurrent.thread
 
 /**
  * A client websocket implementation.
@@ -101,7 +101,7 @@ object ClientSocket {
     )
 
     fun start() {
-        thread(name = "netty-websocket") {
+        virtualThread(name = "netty-websocket") {
             NettyServer().startServer()
         }
 
