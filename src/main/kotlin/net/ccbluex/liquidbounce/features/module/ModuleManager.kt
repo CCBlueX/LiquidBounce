@@ -261,6 +261,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,
+            ModuleDamageParticles,
             ModuleESP,
             ModuleFreeCam,
             ModuleFullBright,
