@@ -50,7 +50,7 @@ export interface TargetChangeEvent {
 }
 
 export interface BlockCountChangeEvent {
-    count: number | null;
+    count?: number;
 }
 
 export interface AccountManagerAdditionEvent {
