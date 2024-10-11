@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -62,12 +62,14 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
         particles.clear()
     }
 
-    val disconnectHandler = handler<DisconnectEvent> {
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         healthMap.clear()
         particles.clear()
     }
 
-    val tickHandler = repeatable {
+    @Suppress("unused")
+    private val tickHandler = repeatable {
         val entities = world.entities.filterIsInstanceTo(hashSetOf<LivingEntity>())
         entities.remove(player)
 
@@ -97,7 +99,8 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
         particles.removeIf { now - it.startTime > ttl * 1000F }
     }
 
-    val renderHandler = handler<OverlayRenderEvent> {
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 val now = System.currentTimeMillis()
