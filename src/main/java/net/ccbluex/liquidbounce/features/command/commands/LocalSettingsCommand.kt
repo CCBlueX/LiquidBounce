@@ -173,7 +173,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
             3 -> {
                 when (args[0].lowercase()) {
-                    "save" -> listOf("all", "default","values", "binds", "states").filter { it.startsWith(args[2], true) }
+                    "save" -> listOf("all", "default", "values", "binds", "states").filter { it.startsWith(args[2], true) }
                     else -> emptyList()
                 }
             }
