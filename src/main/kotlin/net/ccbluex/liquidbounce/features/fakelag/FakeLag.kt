@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusExperimental
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
@@ -80,7 +81,7 @@ object FakeLag : Listenable {
      * Implement your module here if you want to enable lag.
      */
     @Suppress("ReturnCount")
-    private fun shouldLag(packet: Packet<*>?): LagResult? {
+    private fun shouldLag(packet: Packet<*>?, origin: TransferOrigin): LagResult? {
         // need this to run even if not in-game
         if (DisablerVerusExperimental.shouldBlink(packet) || DisablerVerusExperimental.shouldPrepareToFlush(packet)) {
             return LagResult.QUEUE
@@ -101,6 +102,10 @@ object FakeLag : Listenable {
             return it
         }
 
+        ModuleFreeze.Queue.shouldLag(origin)?.let {
+            return it
+        }
+
         return null
     }
 
@@ -112,7 +117,7 @@ object FakeLag : Listenable {
             return@repeatable
         }
 
-        if (shouldLag(null) == null) {
+        if (shouldLag(null, TransferOrigin.SEND) == null) {
             flush()
         }
     }
@@ -126,7 +131,7 @@ object FakeLag : Listenable {
         val packet = event.packet
 
         // If we shouldn't lag, don't do anything
-        val lagResult = shouldLag(packet)
+        val lagResult = shouldLag(packet, event.origin)
         if (lagResult == null) {
             flush()
             return@handler

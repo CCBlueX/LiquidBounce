@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag.LagResult
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -37,7 +37,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Cancel, arrayOf(Cancel, Stationary))
+    private val modes = choices("Mode", Queue, arrayOf(Queue, Cancel, Stationary))
         .apply { tagBy(this) }
 
     private val disableOnFlag by boolean("DisableOnFlag", true)
@@ -58,12 +58,42 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
     }
 
     /**
+     * Queue network communication - acts as network lag
+     */
+    object Queue : Choice("Queue") {
+
+        private val incoming by boolean("Incoming", false)
+        private val outgoing by boolean("Outgoing", true)
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        fun shouldLag(origin: TransferOrigin): LagResult? {
+            if (!enabled || !handleEvents()) {
+                return null
+            }
+
+            val isQueue = when (origin) {
+                TransferOrigin.RECEIVE -> {
+                    incoming
+                }
+                TransferOrigin.SEND -> {
+                    outgoing
+                }
+            }
+
+            return if (isQueue) LagResult.QUEUE else LagResult.PASS
+        }
+
+    }
+
+    /**
      * Cancel network communication
      */
     object Cancel : Choice("Cancel") {
 
-        private val cancelIncoming by boolean("CancelIncoming", false)
-        private val cancelOutgoing by boolean("CancelOutgoing", true)
+        private val incoming by boolean("Incoming", false)
+        private val outgoing by boolean("Outgoing", true)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -71,11 +101,11 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
         @Suppress("unused")
         private val packetHandler = handler<PacketEvent> { event ->
             when (event.origin) {
-                TransferOrigin.RECEIVE -> if (cancelIncoming) {
+                TransferOrigin.RECEIVE -> if (incoming) {
                     event.cancelEvent()
                 }
 
-                TransferOrigin.SEND -> if (cancelOutgoing) {
+                TransferOrigin.SEND -> if (outgoing) {
                     event.cancelEvent()
                 }
             }
