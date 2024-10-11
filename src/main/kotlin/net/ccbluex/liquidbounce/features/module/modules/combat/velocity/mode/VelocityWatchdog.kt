@@ -58,7 +58,4 @@ internal object VelocityWatchdog : Choice("Watchdog") {
         }
     }
 
-    @Suppress("unused")
-    override fun handleEvents() = super.handleEvents() && pause == 0
-
 }

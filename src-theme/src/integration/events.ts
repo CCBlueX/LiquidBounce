@@ -49,6 +49,10 @@ export interface TargetChangeEvent {
     target: PlayerData | null;
 }
 
+export interface BlockCountChangeEvent {
+    count?: number;
+}
+
 export interface AccountManagerAdditionEvent {
     username: string | null;
     error: string | null;

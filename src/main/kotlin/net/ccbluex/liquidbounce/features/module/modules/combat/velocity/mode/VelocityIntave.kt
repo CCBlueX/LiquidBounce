@@ -27,17 +27,21 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 
 object VelocityIntave : Choice("Intave") {
 
-    private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack", true) {
+    private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack",
+        true) {
+
         private val reduceFactor by float("Factor", 0.97f, 0.6f..1f)
         var lastAttackTime = 0L
 
-        val attackHandler = handler<AttackEvent> {
+        @Suppress("unused")
+        private val attackHandler = handler<AttackEvent> {
             if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
                 player.velocity.x *= reduceFactor
                 player.velocity.z *= reduceFactor
             }
             lastAttackTime = System.currentTimeMillis()
         }
+
     }
 
     init {
@@ -50,8 +54,10 @@ object VelocityIntave : Choice("Intave") {
     private var intaveTick = 0
     private var intaveDamageTick = 0
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val repeatable = repeatable {
         intaveTick++
+
         if (player.hurtTime == 2) {
             intaveDamageTick++
             if (player.isOnGround && intaveTick % 2 == 0 && intaveDamageTick <= 10) {
