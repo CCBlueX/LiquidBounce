@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityWatchdog
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusExperimental
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
@@ -94,8 +93,7 @@ object FakeLag : Listenable {
         @Suppress("ComplexCondition")
         if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
-            || FlyNcpClip.shouldLag || VelocityWatchdog.shouldLag
-            || ScaffoldBlinkFeature.shouldBlink || FlyVerusB3869Flat.requiresLag) {
+            || FlyNcpClip.shouldLag || ScaffoldBlinkFeature.shouldBlink || FlyVerusB3869Flat.requiresLag) {
             return LagResult.QUEUE
         }
 
