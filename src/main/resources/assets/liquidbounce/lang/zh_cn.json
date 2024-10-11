@@ -394,7 +394,7 @@
   "liquidbounce.module.blink.description": "允许你看起来像是从一个地方闪现到另外一个地方。",
   "liquidbounce.module.blockBounce.description": "允许你在粘液块上跳的更高。",
   "liquidbounce.module.blockESP.description": "允许你透过墙壁看到选定的方块。",
-  "liquidbounce.module.blockOutline.description": "为准星指向的方块绘制边框线。\",
+  "liquidbounce.module.blockOutline.description": "为准星指向的方块绘制边框线。",
   "liquidbounce.module.blockWalk.description": "允许你在不完整方块上行走。",
   "liquidbounce.module.breadcrumbs.description": "在你身后形成一道轨迹。",
   "liquidbounce.module.antiVoid.description": "保护你免于落入虚空。",
