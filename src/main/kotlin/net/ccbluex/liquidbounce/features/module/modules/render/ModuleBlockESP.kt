@@ -31,12 +31,10 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 
 /**
  * BlockESP module
@@ -89,30 +87,27 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
             var dirty = false
 
             renderEnvironmentForWorld(matrixStack) {
-                synchronized(BlockTracker.trackedBlockMap) {
-                    val trackedBlockMap = BlockTracker.trackedBlockMap
-
-                    dirty = drawInternal(this, trackedBlockMap, colorMode, fullAlpha, drawOutline)
-                }
+                dirty = drawInternal(
+                    BlockTracker.trackedBlockMap.keys.mapTo(hashSetOf()) { it.asBlockPos() },
+                    colorMode,
+                    fullAlpha,
+                    drawOutline
+                )
             }
 
             return dirty
         }
 
         private fun WorldRenderEnvironment.drawInternal(
-            env: WorldRenderEnvironment,
-            blocks: MutableMap<AbstractBlockLocationTracker.TargetBlockPos, TrackedState>,
+            blocks: Set<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             fullAlpha: Boolean,
             drawOutline: Boolean
         ): Boolean {
             var dirty = false
 
-            BoxRenderer.drawWith(env) {
-                for (pos in blocks.keys) {
-                    val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-
-                    val blockPos = vec3d.toBlockPos()
+            BoxRenderer.drawWith(this) {
+                for (blockPos in blocks) {
                     val blockState = blockPos.getState() ?: continue
 
                     if (blockState.isAir) {
@@ -132,7 +127,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         color = color.alpha(255)
                     }
 
-                    withPositionRelativeToCamera(vec3d) {
+                    withPositionRelativeToCamera(blockPos.toVec3d()) {
                         drawBox(
                             boundingBox,
                             faceColor = color,

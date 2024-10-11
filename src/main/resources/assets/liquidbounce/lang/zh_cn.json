@@ -408,6 +408,7 @@
   "liquidbounce.module.criticals.description": "每次攻击实体的时候自动暴击。",
   "liquidbounce.module.crystalAura.description": "自动放置并摧毁末影水晶。",
   "liquidbounce.module.damage.description": "对自己造成特定伤害。",
+  "liquidbounce.module.damageParticles.description": "在实体生命值变化时显示变化情况。",
   "liquidbounce.module.dankBobbing.description": "增加视角摇晃效果的幅度。",
   "liquidbounce.module.debug.description": "只有开发者会感兴趣。",
   "liquidbounce.module.debugRecorder.description": "只有开发者会感兴趣。",

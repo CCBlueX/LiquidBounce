@@ -57,9 +57,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
-                val progress = animCurve
-                    .at((it.right + event.partialTicks) / lifetime)
-                    .coerceIn(0f..1f)
+                val progress = animCurve((it.right + event.partialTicks) / lifetime).coerceIn(0f..1f)
 
                 withPositionRelativeToCamera(it.left) {
                     drawGradientCircle(
