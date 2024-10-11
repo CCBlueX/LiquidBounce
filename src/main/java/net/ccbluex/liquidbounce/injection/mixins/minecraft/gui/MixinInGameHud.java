@@ -173,7 +173,7 @@ public abstract class MixinInGameHud {
 
     @ModifyExpressionValue(method = "renderHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private boolean hookOffhandItem(boolean original) {
-        return original || (ModuleSwordBlock.INSTANCE.handleEvents() || AutoBlock.INSTANCE.getBlockVisual())
+        return original || ModuleSwordBlock.INSTANCE.handleEvents()
                 && ModuleSwordBlock.INSTANCE.getHideShieldSlot()
                 && getCameraPlayer().getMainHandStack().getItem() instanceof SwordItem
                 && getCameraPlayer().getOffHandStack().getItem() instanceof ShieldItem;
