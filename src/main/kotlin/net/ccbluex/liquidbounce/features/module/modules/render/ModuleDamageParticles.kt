@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -57,6 +58,11 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     }
 
     override fun disable() {
+        healthMap.clear()
+        particles.clear()
+    }
+
+    val disconnectHandler = handler<DisconnectEvent> {
         healthMap.clear()
         particles.clear()
     }
