@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element
 
+import net.ccbluex.liquidbounce.utils.ClassUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.value.Value
@@ -15,10 +16,12 @@ import kotlin.math.min
 /**
  * CustomHUD element
  */
-abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F,
-                       var side: Side = Side.default()) : MinecraftInstance() {
+abstract class Element(
+    var x: Double = 2.0, var y: Double = 2.0, scale: Float = 1F, var side: Side = Side.default(),
+) : MinecraftInstance() {
+
     val info = javaClass.getAnnotation(ElementInfo::class.java)
-            ?: throw IllegalArgumentException("Passed element with missing element info")
+        ?: throw IllegalArgumentException("Passed element with missing element info")
 
     var scale = 1F
         set(value) {
@@ -50,6 +53,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
             Side.Horizontal.LEFT -> {
                 x += value
             }
+
             Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT -> {
                 x -= value
             }
@@ -65,6 +69,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
             Side.Vertical.UP -> {
                 y += value
             }
+
             Side.Vertical.MIDDLE, Side.Vertical.DOWN -> {
                 y -= value
             }
@@ -76,14 +81,28 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
     var prevMouseX = 0F
     var prevMouseY = 0F
 
+    private val configurables = mutableListOf<Class<*>>()
+
+    fun addConfigurable(provider: Any) {
+        configurables += provider::class.java
+    }
+
     /**
      * Get all values of element
      */
-    open val values: List<Value<*>>
-        get() = javaClass.declaredFields.map { valueField ->
-            valueField.isAccessible = true
-            valueField[this]
-        }.filterIsInstance<Value<*>>()
+    open val values: Set<Value<*>>
+        get() {
+            var orderedValues = mutableSetOf<Value<*>>()
+
+            javaClass.declaredFields.forEach { innerField ->
+                innerField.isAccessible = true
+                val element = innerField[this] ?: return@forEach
+
+                orderedValues = ClassUtils.findValues(element, configurables, orderedValues)
+            }
+
+            return orderedValues
+        }
 
     /**
      * Called when element created
@@ -130,12 +149,19 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
      */
     open fun handleKey(c: Char, keyCode: Int) {}
 
+    companion object {
+        const val MAX_GRADIENT_COLORS = 9
+    }
+
 }
 
 /**
  * Element info
  */
-annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false, val disableScale: Boolean = false, val priority: Int = 0)
+annotation class ElementInfo(
+    val name: String, val single: Boolean = false, val force: Boolean = false,
+    val disableScale: Boolean = false, val priority: Int = 0,
+)
 
 /**
  * CustomHUD Side

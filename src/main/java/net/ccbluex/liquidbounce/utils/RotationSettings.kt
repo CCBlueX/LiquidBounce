@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @Suppress("MemberVisibilityCanBePrivate")
-class RotationSettings(owner: Module, generalApply: () -> Boolean = { true }) : MinecraftInstance() {
+class RotationSettings(owner: Module, generalApply: () -> Boolean = { true }) {
 
     var rotationModeValue = ListValue("Rotations", arrayOf("Off", "On"), "On") { generalApply() }
     val smootherModeValue = ListValue("SmootherMode",
@@ -102,6 +102,6 @@ class RotationSettings(owner: Module, generalApply: () -> Boolean = { true }) : 
     }
 
     init {
-        owner.addClass(this)
+        owner.addConfigurable(this)
     }
 }

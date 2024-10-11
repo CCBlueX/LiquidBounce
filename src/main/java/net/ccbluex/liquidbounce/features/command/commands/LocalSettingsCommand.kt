@@ -86,11 +86,12 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
                 settingsFile.createNewFile()
 
-                val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "all"
+                val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "default"
                 val all = "all" in option
-                val values = all || "values" in option
+                val default = "default" in option
+                val values = all || default || "values" in option
                 val binds = all || "binds" in option
-                val states = all || "states" in option
+                val states = all || default || "states" in option
 
                 if (!values && !binds && !states) {
                     chatSyntaxError()
@@ -172,7 +173,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
             3 -> {
                 when (args[0].lowercase()) {
-                    "save" -> listOf("all", "values", "binds", "states").filter { it.startsWith(args[2], true) }
+                    "save" -> listOf("all", "default", "values", "binds", "states").filter { it.startsWith(args[2], true) }
                     else -> emptyList()
                 }
             }

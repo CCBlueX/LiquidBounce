@@ -126,7 +126,7 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
 
             2 ->
                 when (args[0].lowercase()) {
-                    "delete", "load" -> {
+                    "delete", "load", "save" -> {
                         val themes = getLocalThemes() ?: return emptyList()
 
                         themes
