@@ -54,13 +54,6 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         get() = matrixStack.peek().positionMatrix
 
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
-}
-
-class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
-    override fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos
-    }
-
 
     inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
         val fontBuffers = FontRendererBuffers()
@@ -72,6 +65,12 @@ class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixS
     }
 
     fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@GUIRenderEnvironment, buffer)
+}
+
+class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
+    override fun relativeToCamera(pos: Vec3d): Vec3d {
+        return pos
+    }
 }
 
 class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
