@@ -34,7 +34,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(range)
     }
-    private val hypixel by boolean("Hypixel", false)
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
@@ -43,6 +42,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
+        private val hypixel by boolean("Hypixel", false)
 
         init {
             tree(Validation)
@@ -173,7 +173,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             }
 
             // Perform the strafing movement
-
             if (hypixel && ModuleSpeed.enabled) {
                 val minSpeed = if (player.isOnGround) {
                     0.48
