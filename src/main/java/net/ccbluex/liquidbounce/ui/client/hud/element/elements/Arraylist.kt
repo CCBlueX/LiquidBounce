@@ -249,14 +249,12 @@ class Arraylist(
             val previousDisplayString = getDisplayString(modules[(if (index > 0) index else 1) - 1])
             val previousDisplayStringWidth = font.getStringWidth(previousDisplayString)
 
-            val isCustomBgGradientSupported = backgroundMode == "Gradient" && bgColors.color().alpha > 0 // You sure this makes sense @EclipsesDev?
-
             when (side.horizontal) {
                 Horizontal.RIGHT, Horizontal.MIDDLE -> {
                     val xPos = -module.slide - 2
 
                     GradientShader.begin(
-                        !markAsInactive && isCustomBgGradientSupported,
+                        !markAsInactive && backgroundMode == "Gradient",
                         gradientX,
                         gradientY,
                         maxBackgroundGradientColors,
@@ -383,7 +381,7 @@ class Arraylist(
                     val xPos = -(width - module.slide) + if (rectMode == "Left") 5 else 2
 
                     GradientShader.begin(
-                        !markAsInactive && isCustomBgGradientSupported,
+                        !markAsInactive && backgroundMode == "Gradient",
                         gradientX,
                         gradientY,
                         maxBackgroundGradientColors,

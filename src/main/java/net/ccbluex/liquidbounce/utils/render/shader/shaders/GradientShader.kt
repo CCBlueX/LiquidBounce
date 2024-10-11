@@ -73,7 +73,7 @@ object GradientShader : Shader("gradient_shader.frag"), Closeable {
             strengthX = x
             strengthY = y
             this.maxColors = maxColors
-            colors = gradient.take(maxColors.coerceAtMost(MAX_GRADIENT_COLORS)).toTypedArray()
+            colors = gradient.toTypedArray()
             this.speed = speed
             this.offset = offset
 
