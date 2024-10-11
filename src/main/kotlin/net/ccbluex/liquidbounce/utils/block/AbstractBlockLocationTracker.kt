@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscriber {
 
-    val trackedBlockMap: MutableMap<TargetBlockPos, T> = ConcurrentHashMap<TargetBlockPos, T>()
+    val trackedBlockMap = ConcurrentHashMap<TargetBlockPos, T>()
 
     abstract fun getStateFor(pos: BlockPos, state: BlockState): T?
 
@@ -62,5 +62,7 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
 
     data class TargetBlockPos(val x: Int, val y: Int, val z: Int) {
         constructor(pos: BlockPos) : this(pos.x, pos.y, pos.z)
+
+        fun asBlockPos() = BlockPos(x, y, z)
     }
 }
