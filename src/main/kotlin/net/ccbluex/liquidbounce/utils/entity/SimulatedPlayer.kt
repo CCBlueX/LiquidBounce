@@ -71,7 +71,7 @@ class SimulatedPlayer(
     var velocity: Vec3d,
     private var boundingBox: Box,
     var yaw: Float,
-    private val pitch: Float,
+    var pitch: Float,
     private var sprinting: Boolean,
 
     var fallDistance: Float,
@@ -915,12 +915,17 @@ class SimulatedPlayer(
         companion object {
             private const val MAX_WALKING_SPEED = 0.121
 
-            fun fromClientPlayer(directionalInput: DirectionalInput): SimulatedPlayerInput {
+            fun fromClientPlayer(
+                directionalInput: DirectionalInput,
+                jumping: Boolean = player.input.jumping,
+                sprinting: Boolean = player.isSprinting,
+                sneaking: Boolean = player.isSneaking
+            ): SimulatedPlayerInput {
                 val input = SimulatedPlayerInput(
                     directionalInput,
-                    player.input.jumping,
-                    player.isSprinting,
-                    player.isSneaking
+                    jumping,
+                    sprinting,
+                    sneaking
                 )
 
                 val safeWalkEvent = PlayerSafeWalkEvent()
