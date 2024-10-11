@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 internal object VelocityWatchdog : Choice("Watchdog") {
