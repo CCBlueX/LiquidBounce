@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
@@ -29,8 +29,13 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.Packet
-import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.*
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C12PacketUpdateSign
+import net.minecraft.network.play.client.C19PacketResourcePackStatus
+import net.minecraft.network.play.server.S06PacketUpdateHealth
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.network.play.server.S27PacketExplosion
 import java.awt.Color
 
 object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
@@ -263,13 +268,13 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         player.setPosAndPrevPos(simPlayer.pos)
 
-        val distance = searchCenter(boundingBox,
+        val distance = searchCenter(
+            boundingBox,
             outborder = false,
             random = false,
-            gaussianOffset = false,
             predict = true,
             lookRange = if (timerBoostMode == "Normal") rangeValue else randomRange,
-            attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f
+            attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f,
         )
 
         if (distance == null) {

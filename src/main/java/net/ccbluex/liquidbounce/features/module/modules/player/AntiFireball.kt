@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.event.TickEvent
+import net.ccbluex.liquidbounce.event.GameTickEvent
+import net.ccbluex.liquidbounce.event.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.EntityFireball
@@ -30,48 +31,21 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
     private val range by FloatValue("Range", 4.5f, 3f..8f)
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
 
-    private val rotations by BoolValue("Rotations", true)
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-    private val strafe by BoolValue("Strafe", false) { rotations }
+    private val options = RotationSettings(this).withoutKeepRotation()
 
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val fireballTickCheck by BoolValue("FireballTickCheck", true)
+    private val minFireballTick by IntegerValue("MinFireballTick", 10, 1..20) { fireballTickCheck }
 
     private var target: Entity? = null
 
     @EventTarget
-    private fun onMotion(event: MotionEvent) {
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         val player = mc.thePlayer ?: return
-
-        if (event.eventState != EventState.POST)
-            return
+        val world = mc.theWorld ?: return
 
         target = null
 
-        for (entity in mc.theWorld.loadedEntityList.filterIsInstance<EntityFireball>()
+        for (entity in world.loadedEntityList.filterIsInstance<EntityFireball>()
             .sortedBy { player.getDistanceToBox(it.hitBox) }) {
             val nearestPoint = getNearestPointBB(player.eyes, entity.hitBox)
 
@@ -92,16 +66,13 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
                 continue
             }
 
-            if (rotations) {
-                setTargetRotation(
-                    toRotation(nearestPoint, true),
-                    strafe = this.strafe,
-                    turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                    angleThresholdForReset = angleThresholdUntilReset,
-                    smootherMode = smootherMode,
-                    simulateShortStop = simulateShortStop,
-                    startOffSlow = startFirstRotationSlow
-                )
+            // Skip if the fireball entity tick exist is lower than minFireballTick
+            if (fireballTickCheck && entity.ticksExisted <= minFireballTick) {
+                continue
+            }
+
+            if (options.rotationsActive) {
+                setTargetRotation(toRotation(nearestPoint, true), options = options)
             }
 
             target = entity
@@ -110,13 +81,13 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         val player = mc.thePlayer ?: return
         val entity = target ?: return
 
         val rotation = currentRotation ?: player.rotation
 
-        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range
+        if (!options.rotationsActive && player.getDistanceToBox(entity.hitBox) <= range
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {

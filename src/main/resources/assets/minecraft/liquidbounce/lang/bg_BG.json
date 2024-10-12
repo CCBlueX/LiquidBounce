@@ -10,6 +10,8 @@
         "menu.configuration": "Конфигурация",
         "menu.contributors": "Сътрудници",
 
+        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+
         "notification.moduleEnabled": "%s се активира",
         "notification.moduleDisabled": "%s се деактивира",
 
@@ -33,7 +35,11 @@
 
         "module.backtrack.description": "Позволява ви да удряте играчи, като ги атакувате на техните предишни кеширани позиции.",
 
-        "module.bowAimbot.description": "Автоматично се прицелва в играчите, когато се използва лък.",
+        "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
+
+        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+
+        "module.projectileAimbot.description": "Автоматично насочва играчите, когато се използва снаряд.",
 
         "module.criticals.description": "Автоматично нанася критични удари.",
 
@@ -68,6 +74,8 @@
         "module.airJump.description": "Позволява ви да скачате във въздуха",
         
         "module.airLadder.description": "Позволява ви да се изкачвате по стълби/лиани, без да ги докосвате.",
+
+        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "Персонализира вашата блокираща анимация.",
         
@@ -76,10 +84,16 @@
         "module.antiBlind.description": "Отменя ефекта на слепотата (blindness) .",
         
         "module.antiBot.description": "Предотвратява KillAura да атакува AntiCheat ботове.",
+
+        "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
         "module.antiCactus.description": "Предотвратява кактусите да ви навредят.",
         
         "module.antiFireball.description": "Автоматично отблъсква огнени топки от вас.",
+
+        "module.antiVanish.description": "UNTRANSLATED: Automatically detects vanished players.",
+
+        "module.antiVoid.description": "Автоматично ви телепортира след падане на определено разстояние.",
         
         "module.atAllProvider.description": "Автоматично споменава всички на сървъра, когато използвате '@a' във вашето съобщение.",
         
@@ -114,8 +128,6 @@
         "module.breadcrumbs.description": "Оставя пътека зад теб.",
         
         "module.bufferSpeed.description": "Позволява ви да ходите по-бързо по плочи и стълби.",
-        
-        "module.bugUp.description": "Автоматично ви телепортира след падане на определено разстояние.",
         
         "module.cameraClip.description": "Позволява ви да виждате през стени в изглед от трето лице.",
         
@@ -152,12 +164,16 @@
         "module.fastStairs.description": "Позволява ви да се изкачвате по стълби по-бързо.",
         
         "module.fastUse.description": "Позволява ви да използвате артикули по-бързо.",
+
+        "module.flagCheck.description": "UNTRANSLATED: Detects if you get flagged by an AntiCheat.",
         
         "module.fly.description": "Позволява ви да летите в режим на оцеляване.",
         
         "module.forceUnicodeChat.description": "Позволява ви да изпращате съобщения на Unicode в чата.",
         
         "module.freeCam.description": "Позволява ви да се преместите от тялото си.",
+
+        "module.freeLook.description": "UNTRANSLATED: Allows you to see around in third person view.",
         
         "module.freeze.description": "Позволява ви да останете заседнали в средния въздух.",
         
@@ -192,6 +208,8 @@
         "module.keepAlive.description": "Опитва се да ви попречи да умрете.",
         
         "module.keepContainer.description": "Позволява ви да отворите бивш затворен контейнер за инвентаризация навсякъде. (Натиснете клавиша INSERT, за да отворите)",
+
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
 
         "module.keyPearl.description": "Позволява ви да хвърлите Ender перла от вашия Hotbar, като използвате определен бутон.",
 
@@ -250,6 +268,8 @@
         "module.noWeb.description": "Предотвратява ви да се забавите в паяжини.",
         
         "module.nuker.description": "Чупи всички блокове около вас.",
+
+        "module.packetDebugger.description": "UNTRANSLATED: Allows you to debug server/client packets that being sent/receive",
         
         "module.parkour.description": "Автоматично скача, когато достигате ръба на блок.",
         
@@ -333,6 +353,8 @@
 
         "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
 
-        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection.",
+
+        "module.tickBase.description": "UNTRANSLATED: Buffers ticks to get early hits of an enemy."
     }
 }

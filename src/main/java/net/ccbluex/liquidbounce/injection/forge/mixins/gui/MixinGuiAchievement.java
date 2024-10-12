@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -16,7 +21,17 @@ public class MixinGuiAchievement {
         final NoAchievement noachievement = (NoAchievement) LiquidBounce.INSTANCE.getModuleManager().getModule(NoAchievement.class);
 
         if (noachievement.getState()) {
-            // Cancel Achievement GUI Packet
+            // Cancel Achievement Display Packet
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "updateAchievementWindow", at = @At("HEAD"), cancellable = true)
+    private void injectAchievementWindows(CallbackInfo ci) {
+        final NoAchievement noachievement = (NoAchievement) LiquidBounce.INSTANCE.getModuleManager().getModule(NoAchievement.class);
+
+        if (noachievement.getState()) {
+            // Cancel Achievement Window Packet
             ci.cancel();
         }
     }

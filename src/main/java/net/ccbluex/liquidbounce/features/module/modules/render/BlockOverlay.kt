@@ -21,7 +21,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawSelectionBoundingBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.*
@@ -30,6 +32,10 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = false, hideModule = false) {
+    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Outline"), "Box")
+    private val depth3D by BoolValue("Depth3D", false)
+    private val thickness by FloatValue("Thickness", 2F, 1F..5F)
+
     val info by BoolValue("Info", false)
 
     private val colorRainbow by BoolValue("Rainbow", false)
@@ -57,15 +63,17 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         val color = if (colorRainbow) rainbow(alpha = 0.4F) else Color(colorRed,
                 colorGreen, colorBlue, (0.4F * 255).toInt())
 
-        enableBlend()
-        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glColor(color)
-        glLineWidth(2F)
-        disableTexture2D()
+        glLineWidth(thickness)
+        glDisable(GL_TEXTURE_2D)
+        if (depth3D) glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
 
         block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
-
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -77,11 +85,20 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 
-        drawSelectionBoundingBox(axisAlignedBB)
-        drawFilledBox(axisAlignedBB)
+        when (mode.lowercase()) {
+            "box" -> {
+                drawFilledBox(axisAlignedBB)
+                drawSelectionBoundingBox(axisAlignedBB)
+            }
+            "otherbox" -> drawFilledBox(axisAlignedBB)
+            "outline" -> drawSelectionBoundingBox(axisAlignedBB)
+        }
+
+        if (depth3D) glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
         glDepthMask(true)
-        enableTexture2D()
-        disableBlend()
         resetColor()
     }
 

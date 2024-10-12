@@ -1,15 +1,20 @@
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.play.client.C01PacketChatMessage
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.play.server.S29PacketSoundEffect
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.util.Vec3
@@ -26,41 +31,50 @@ object BlinkUtils {
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
-            return
+        val player = mc.thePlayer ?: return
 
-        if (event.isCancelled)
+        if (event.isCancelled || player.isDead)
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is C01PacketChatMessage -> {
                 return
+            }
+
+            is S29PacketSoundEffect -> {
+                if (packet.soundName == "game.player.hurt") {
+                    return
+                }
             }
         }
 
-        if (sent == true && receive == false) {
-            if (event.eventType == EventState.RECEIVE) {
-                synchronized(packetsReceived) {
-                    PacketUtils.queuedPackets.addAll(packetsReceived)
+
+        // Don't blink on singleplayer
+        if (mc.currentServerData != null) {
+            if (sent == true && receive == false) {
+                if (event.eventType == EventState.RECEIVE) {
+                    synchronized(packetsReceived) {
+                        PacketUtils.queuedPackets.addAll(packetsReceived)
+                    }
+                    packetsReceived.clear()
                 }
-                packetsReceived.clear()
-            }
-            if (event.eventType == EventState.SEND) {
-                event.cancelEvent()
-                synchronized(packets) {
-                    packets += packet
-                }
-                if (packet is C03PacketPlayer && packet.isMoving) {
-                    val packetPos = Vec3(packet.x, packet.y, packet.z)
-                    synchronized(positions) {
-                        positions += packetPos
+                if (event.eventType == EventState.SEND) {
+                    event.cancelEvent()
+                    synchronized(packets) {
+                        packets += packet
+                    }
+                    if (packet is C03PacketPlayer && packet.isMoving) {
+                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        synchronized(positions) {
+                            positions += packetPos
+                        }
                     }
                 }
             }
         }
 
         if (receive == true && sent == false) {
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -70,29 +84,35 @@ object BlinkUtils {
                 synchronized(packets) {
                     sendPackets(*packets.toTypedArray(), triggerEvents = false)
                 }
-                packets.clear()
-            }
-        }
-
-        if (sent == true && receive == true) {
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
-                event.cancelEvent()
-                synchronized(packetsReceived) {
-                    packetsReceived += packet
-                }
-            }
-            if (event.eventType == EventState.SEND) {
-                event.cancelEvent()
-                synchronized(packets) {
-                    packets += packet
-                }
                 if (packet is C03PacketPlayer && packet.isMoving) {
                     val packetPos = Vec3(packet.x, packet.y, packet.z)
                     synchronized(positions) {
                         positions += packetPos
                     }
-                    if (packet.rotating) {
-                        serverRotation = Rotation(packet.yaw, packet.pitch)
+                }
+                packets.clear()
+            }
+        }
+
+        // Don't blink on singleplayer
+        if (mc.currentServerData != null) {
+            if (sent == true && receive == true) {
+                if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
+                    event.cancelEvent()
+                    synchronized(packetsReceived) {
+                        packetsReceived += packet
+                    }
+                }
+                if (event.eventType == EventState.SEND) {
+                    event.cancelEvent()
+                    synchronized(packets) {
+                        packets += packet
+                    }
+                    if (packet is C03PacketPlayer && packet.isMoving) {
+                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        synchronized(positions) {
+                            positions += packetPos
+                        }
                     }
                 }
             }
@@ -106,24 +126,52 @@ object BlinkUtils {
     fun onWorld(event: WorldEvent) {
         // Clear packets on disconnect only
         if (event.worldClient == null) {
-            packets.clear()
-            packetsReceived.clear()
-            positions.clear()
+            clear()
         }
     }
 
     fun syncSent() {
         synchronized(packetsReceived) {
             PacketUtils.queuedPackets.addAll(packetsReceived)
+            packetsReceived.clear()
         }
-        packetsReceived.clear()
     }
 
     fun syncReceived() {
         synchronized(packets) {
             sendPackets(*packets.toTypedArray(), triggerEvents = false)
+            packets.clear()
         }
-        packets.clear()
+    }
+
+    fun cancel() {
+        val player = mc.thePlayer ?: return
+        val firstPosition = positions.firstOrNull() ?: return
+
+        player.setPositionAndUpdate(firstPosition.xCoord, firstPosition.yCoord, firstPosition.zCoord)
+
+        synchronized(packets) {
+            val iterator = packets.iterator()
+            while (iterator.hasNext()) {
+                val packet = iterator.next()
+                if (packet is C03PacketPlayer) {
+                    iterator.remove()
+                } else {
+                    sendPacket(packet)
+                    iterator.remove()
+                }
+            }
+        }
+
+        synchronized(positions) {
+            positions.clear()
+        }
+
+        // Remove fake player
+        fakePlayer?.apply {
+            fakePlayer?.entityId?.let { mc.theWorld?.removeEntityFromWorld(it) }
+            fakePlayer = null
+        }
     }
 
     fun unblink() {
@@ -134,28 +182,41 @@ object BlinkUtils {
             sendPackets(*packets.toTypedArray(), triggerEvents = false)
         }
 
-        packets.clear()
-        packetsReceived.clear()
-        positions.clear()
+        clear()
 
         // Remove fake player
-        fakePlayer?.let {
-            mc.theWorld?.removeEntityFromWorld(it.entityId)
+        fakePlayer?.apply {
+            fakePlayer?.entityId?.let { mc.theWorld?.removeEntityFromWorld(it) }
             fakePlayer = null
         }
     }
 
+    fun clear() {
+        synchronized(packetsReceived) {
+            packetsReceived.clear()
+        }
+
+        synchronized(packets) {
+            packets.clear()
+        }
+
+        synchronized(positions) {
+            positions.clear()
+        }
+    }
+
     fun addFakePlayer() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
 
-        val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
+        val faker = EntityOtherPlayerMP(world, player.gameProfile)
 
-        faker.rotationYawHead = thePlayer.rotationYawHead
-        faker.renderYawOffset = thePlayer.renderYawOffset
-        faker.copyLocationAndAnglesFrom(thePlayer)
-        faker.rotationYawHead = thePlayer.rotationYawHead
-        faker.inventory = thePlayer.inventory
-        mc.theWorld.addEntityToWorld(-1337, faker)
+        faker.rotationYawHead = player.rotationYawHead
+        faker.renderYawOffset = player.renderYawOffset
+        faker.copyLocationAndAnglesFrom(player)
+        faker.rotationYawHead = player.rotationYawHead
+        faker.inventory = player.inventory
+        world.addEntityToWorld(RandomUtils.nextInt(Int.MIN_VALUE, Int.MAX_VALUE), faker)
 
         fakePlayer = faker
 

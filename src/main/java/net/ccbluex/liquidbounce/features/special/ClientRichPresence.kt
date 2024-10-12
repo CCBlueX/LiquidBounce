@@ -13,11 +13,13 @@ import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.MINECRAFT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
+import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import org.json.JSONObject
 import java.io.IOException
@@ -26,7 +28,10 @@ import kotlin.concurrent.thread
 
 object ClientRichPresence : MinecraftInstance() {
 
-    var showRichPresenceValue = true
+    var showRPCValue = true
+    var showRPCServerIP = true
+    var showRPCModulesCount = true
+    var customRPCText = ""
 
     // IPC Client
     private var ipcClient: IPCClient? = null
@@ -47,38 +52,35 @@ object ClientRichPresence : MinecraftInstance() {
 
             loadConfiguration()
 
-            ipcClient = IPCClient(appID)
-            ipcClient?.setListener(object : IPCListener {
+            ipcClient = IPCClient(appID).apply {
+                setListener(object : IPCListener {
 
-                /**
-                 * Fired whenever an [IPCClient] is ready and connected to Discord.
-                 *
-                 * @param client The now ready IPCClient.
-                 */
-                override fun onReady(client: IPCClient?) {
-                    thread {
-                        while (running) {
-                            update()
-
-                            try {
+                    /**
+                     * Fired whenever an [IPCClient] is ready and connected to Discord.
+                     *
+                     * @param client The now ready IPCClient.
+                     */
+                    override fun onReady(client: IPCClient?) {
+                        thread {
+                            while (running) {
+                                update()
                                 Thread.sleep(1000L)
-                            } catch (ignored: InterruptedException) {
                             }
                         }
                     }
-                }
 
-                /**
-                 * Fired whenever an [IPCClient] has closed.
-                 *
-                 * @param client The now closed IPCClient.
-                 * @param json A [JSONObject] with close data.
-                 */
-                override fun onClose(client: IPCClient?, json: JSONObject?) {
-                    running = false
-                }
+                    /**
+                     * Fired whenever an [IPCClient] has closed.
+                     *
+                     * @param client The now closed IPCClient.
+                     * @param json A [JSONObject] with close data.
+                     */
+                    override fun onClose(client: IPCClient?, json: JSONObject?) {
+                        running = false
+                    }
 
-            })
+                })
+            }
             ipcClient?.connect()
         } catch (e: Throwable) {
             LOGGER.error("Failed to setup Discord RPC.", e)
@@ -90,22 +92,33 @@ object ClientRichPresence : MinecraftInstance() {
      * Update rich presence
      */
     fun update() {
-        val builder = RichPresence.Builder()
+        if (ipcClient?.status != PipeStatus.CONNECTED) return
 
-        // Set playing time
-        builder.setStartTimestamp(timestamp)
+        val builder = RichPresence.Builder().apply {
+            // Set playing time
+            setStartTimestamp(timestamp)
 
-        // Check assets contains logo and set logo
-        if ("logo" in assets)
-            builder.setLargeImage(assets["logo"], "MC $MINECRAFT_VERSION - $CLIENT_NAME $clientVersionText")
+            // Check assets contains logo and set logo
+            assets["logo"]?.let {
+                setLargeImage(it, "MC $MINECRAFT_VERSION - $CLIENT_NAME $clientVersionText $clientCommit")
+            }
 
-        // Check user is in-game
-        if (mc.thePlayer != null) {
-            val serverData = mc.currentServerData
+            // Check user is in-game
+            mc.thePlayer?.let {
+                val serverData = mc.currentServerData
 
-            // Set display info
-            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-            builder.setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
+                // Set server info
+                if (showRPCServerIP) {
+                    setDetails(customRPCText.ifEmpty {
+                        "Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else ServerUtils.hideSensitiveInformation(serverData.serverIP)}"
+                    })
+                }
+
+                // Set modules count info
+                if (showRPCModulesCount) {
+                    setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
+                }
+            }
         }
 
         // Check ipc client is connected and send rpc

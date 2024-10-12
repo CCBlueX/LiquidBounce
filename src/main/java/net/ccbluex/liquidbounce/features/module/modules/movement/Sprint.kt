@@ -7,13 +7,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback
-import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.RotationUtils.activeSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.rotationData
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -27,7 +27,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
     val onlyOnSprintPress by BoolValue("OnlyOnSprintPress", false)
-    val alwaysCorrect by BoolValue("AlwaysCorrectSprint", false)
+    private val alwaysCorrect by BoolValue("AlwaysCorrectSprint", false)
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
     val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
@@ -92,7 +92,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
 
         val isLegitModeActive = mode == "Legit"
 
-        val modifiedForward = if (currentRotation != null && rotationData?.strict == true) {
+        val modifiedForward = if (currentRotation != null && activeSettings?.strict == true) {
             player.movementInput.moveForward
         } else {
             movementInput.moveForward

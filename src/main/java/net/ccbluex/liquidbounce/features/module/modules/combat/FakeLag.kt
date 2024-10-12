@@ -6,21 +6,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
-import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
@@ -41,6 +41,29 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
     private val distanceToPlayers by FloatValue("AllowedDistanceToPlayers", 3.5f, 0.0f..6.0f)
 
+    private val blinkOnAction by BoolValue("BlinkOnAction", true)
+
+    private val pauseOnNoMove by BoolValue("PauseOnNoMove", true)
+    private val pauseOnChest by BoolValue("PauseOnChest", false)
+
+    private val line by BoolValue("Line", true, subjective = true)
+    private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
+    private val red by IntegerValue("R",
+        0,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
+    private val green by IntegerValue("G",
+        255,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
+    private val blue by IntegerValue("B",
+        0,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
+
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = LinkedHashMap<Vec3, Long>()
     private val resetTimer = MSTimer()
@@ -56,12 +79,13 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val player = mc.thePlayer ?: return
         val packet = event.packet
 
         if (!handleEvents())
             return
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (player.isDead)
             return
 
         if (event.isCancelled)
@@ -73,16 +97,32 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (ignoreWholeTick)
             return
 
-        // Check if player got damaged
-        if (mc.thePlayer.health < mc.thePlayer.maxHealth) {
-            if (mc.thePlayer.hurtTime != 0) {
+        if (pauseOnNoMove && !isMoving) {
+            blink()
+            return
+        }
+
+        // Flush on damaged received
+        if (player.health < player.maxHealth) {
+            if (player.hurtTime != 0) {
                 blink()
                 return
             }
         }
 
-        // Proper check to prevent FakeLag while using Scaffold
-        if (Scaffold.handleEvents() && (Scaffold.placeInfo != null || Scaffold.placeRotation != null)) {
+        // Flush on scaffold/tower usage
+        if (Scaffold.handleEvents() && Scaffold.placeRotation != null) {
+            blink()
+            return
+        }
+
+        // Flush on attack/interact
+        if (blinkOnAction && packet is C02PacketUseEntity) {
+            blink()
+            return
+        }
+
+        if (pauseOnChest && mc.currentScreen is GuiContainer) {
             blink()
             return
         }
@@ -96,15 +136,15 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                 return
             }
 
-            // Flush on doing action, getting action
-            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
+            // Flush on doing action/getting action
+            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                 blink()
                 return
             }
 
-            // Flush on kb
+            // Flush on knockback
             is S12PacketEntityVelocity -> {
-                if (mc.thePlayer.entityId == packet.entityID) {
+                if (player.entityId == packet.entityID) {
                     blink()
                     return
                 }
@@ -116,19 +156,6 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                     return
                 }
             }
-
-            /*
-             * Temporarily disabled (It seems like it only detects when player is healing??)
-             * And "packet.health < mc.thePlayer.health" check doesn't really work.
-             */
-
-            // Flush on damage
-//            is S06PacketUpdateHealth -> {
-//                if (packet.health < mc.thePlayer.health) {
-//                    blink()
-//                    return
-//                }
-//            }
         }
 
         if (!resetTimer.hasTimePassed(recoilTime))
@@ -140,9 +167,6 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                 val packetPos = Vec3(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()
-                }
-                if (packet.rotating) {
-                    RotationUtils.serverRotation = Rotation(packet.yaw, packet.pitch)
                 }
             }
             synchronized(packetQueue) {
@@ -165,16 +189,16 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         if (distanceToPlayers > 0) {
-            val playerPos = thePlayer.positionVector
+            val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != thePlayer }
+            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
 
             val (dx, dy, dz) = serverPos - playerPos
-            val playerBox = thePlayer.hitBox.offset(dx, dy, dz)
+            val playerBox = player.hitBox.offset(dx, dy, dz)
 
             wasNearPlayer = false
 
@@ -191,7 +215,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem) {
+        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
             blink()
             return
         }
@@ -205,9 +229,9 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color =
-            if (Breadcrumbs.colorRainbow) rainbow()
-            else Color(Breadcrumbs.colorRed, Breadcrumbs.colorGreen, Breadcrumbs.colorBlue)
+        if (!line) return
+
+        val color = if (rainbow) rainbow() else Color(red, green, blue)
 
         if (Blink.blinkingSend())
             return

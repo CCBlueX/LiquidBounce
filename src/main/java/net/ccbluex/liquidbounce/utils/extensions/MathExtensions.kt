@@ -9,6 +9,7 @@ import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import net.minecraft.util.Vec3i
 
@@ -56,12 +57,35 @@ operator fun Vec3.minus(vec: Vec3): Vec3 = subtract(vec)
 operator fun Vec3.times(number: Double) = Vec3(xCoord * number, yCoord * number, zCoord * number)
 operator fun Vec3.div(number: Double) = times(1 / number)
 
+fun Vec3.offset(direction: EnumFacing, value: Double): Vec3 {
+    val vec3i = direction.directionVec
+
+    return Vec3(
+        this.xCoord + value * vec3i.x.toDouble(),
+        this.yCoord + value * vec3i.y.toDouble(),
+        this.zCoord + value * vec3i.z.toDouble()
+    )
+}
+
+fun Vec3.withY(value: Double): Vec3 {
+    return Vec3(xCoord, value, zCoord)
+}
+
+val Vec3_ZERO: Vec3
+    get() = Vec3(0.0, 0.0, 0.0)
+
 fun Vec3.toFloatTriple() = Triple(xCoord.toFloat(), yCoord.toFloat(), zCoord.toFloat())
 
 fun Float.toRadians() = this * 0.017453292f
 fun Float.toRadiansD() = toRadians().toDouble()
 fun Float.toDegrees() = this * 57.29578f
 fun Float.toDegreesD() = toDegrees().toDouble()
+
+/**
+ * Prevents possible NaN / (-) Infinity results.
+ */
+infix fun Int.safeDiv(b: Int) = if (b == 0) 0f else this.toFloat() / b.toFloat()
+infix fun Float.safeDiv(b: Float) = if (b == 0f) 0f else this / b
 
 fun Double.toRadians() = this * 0.017453292
 fun Double.toRadiansF() = toRadians().toFloat()

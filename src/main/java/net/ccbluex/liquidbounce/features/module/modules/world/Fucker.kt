@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.performRaytrace
@@ -20,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockBBValid
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
@@ -37,8 +38,11 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3i
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
@@ -60,36 +64,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private val swing by BoolValue("Swing", true)
     val noHit by BoolValue("NoHit", false)
 
-    private val rotations by BoolValue("Rotations", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
-
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val options = RotationSettings(this).withoutKeepRotation()
 
     private val blockProgress by BoolValue("BlockProgress", true)
 
@@ -101,7 +76,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private val colorGreen by IntegerValue("G", 100, 0..255) { blockProgress }
     private val colorBlue by IntegerValue("B", 0, 0..255) { blockProgress }
 
-    private val ignoreOwnBed by BoolValue("IgnoreOwnBed", false)
+    private val ignoreOwnBed by BoolValue("IgnoreOwnBed", true)
+    private val ownBedDist by IntegerValue("MaxBedDistance", 16, 1..32) { ignoreOwnBed }
 
     /**
      * VALUES
@@ -142,11 +118,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     }
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
-        if (event.eventState != EventState.POST || noHit && KillAura.handleEvents() && KillAura.target != null) {
+        if (noHit && KillAura.handleEvents() && KillAura.target != null) {
             return
         }
 
@@ -210,17 +186,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         }
 
         // Face block
-        if (rotations) {
-            setTargetRotation(
-                spot.rotation,
-                strafe = strafe != "Off",
-                strict = strafe == "Strict",
-                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                angleThresholdForReset = angleThresholdUntilReset,
-                smootherMode = smootherMode,
-                simulateShortStop = simulateShortStop,
-                startOffSlow = startFirstRotationSlow
-            )
+        if (options.rotationsActive) {
+            setTargetRotation(spot.rotation, options = options)
         }
     }
 
@@ -233,7 +200,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         }
 
         val spawnPos = BlockPos(spawnLocation)
-        return currentPos.distanceSqToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
+        return currentPos.distanceSq(Vec3i(spawnPos.x, spawnPos.y, spawnPos.z)) < ownBedDist.toDouble().pow(2).roundToInt()
     }
 
     @EventTarget
@@ -245,7 +212,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
         val currentPos = pos ?: return
 
-        val targetRotation = if (rotations) {
+        val targetRotation = if (options.rotationsActive) {
             currentRotation ?: player.rotation
         } else {
             toRotation(currentPos.getVec(), false).fixedSensitivity()
@@ -442,7 +409,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }
 
-            "around" -> EnumFacing.values().any { !isFullBlock(blockPos.offset(it)) }
+            "around" -> EnumFacing.values().any { !isBlockBBValid(blockPos.offset(it)) }
 
             else -> true
         }

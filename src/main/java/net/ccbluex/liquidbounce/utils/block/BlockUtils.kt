@@ -9,8 +9,10 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityFallingBlock
+import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
+import net.minecraft.util.ResourceLocation
 
 typealias Collidable = (Block?) -> Boolean
 
@@ -43,7 +45,7 @@ object BlockUtils : MinecraftInstance() {
         val block = state.block ?: return false
 
         return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
-                && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
+                && !block.hasTileEntity(state) && isBlockBBValid(blockPos, state, supportSlabs = true, supportPartialBlocks = true)
                 && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null
                 && block !is BlockContainer && block !is BlockWorkbench
     }
@@ -54,12 +56,17 @@ object BlockUtils : MinecraftInstance() {
     fun getBlockName(id: Int): String = Block.getBlockById(id).localizedName
 
     /**
-     * Check if block is full block
+     * Check if block bounding box is full or partial (non-full)
      */
-    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
+    fun isBlockBBValid(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false, supportPartialBlocks: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
         val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state) ?: return false
+
+        // Support blocks like stairs, slab (1x), dragon-eggs, glass-panes, fences, etc
+        if (supportPartialBlocks && (box.maxY - box.minY < 1.0 || box.maxX - box.minX < 1.0 || box.maxZ - box.minZ < 1.0)) {
+            return true
+        }
 
         // The slab will only return true if it's placed at a level that can be placed like any normal full block
         return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
@@ -157,4 +164,35 @@ object BlockUtils : MinecraftInstance() {
         return false
     }
 
+    /**
+     * Bedwars Blocks List
+     */
+    val BEDWARS_BLOCKS = setOf(
+        Blocks.wool,
+        Blocks.stained_hardened_clay,
+        Blocks.stained_glass,
+        Blocks.planks,
+        Blocks.log,
+        Blocks.log2,
+        Blocks.end_stone,
+        Blocks.obsidian,
+        Blocks.water
+    )
+
+    /**
+     * Bedwars Blocks Texture List
+     */
+    fun getBlockTexture(block: Block): ResourceLocation {
+        return when (block) {
+            Blocks.bed -> ResourceLocation("minecraft:textures/items/bed.png")
+            Blocks.obsidian -> ResourceLocation("minecraft:textures/blocks/obsidian.png")
+            Blocks.end_stone -> ResourceLocation("minecraft:textures/blocks/end_stone.png")
+            Blocks.stained_hardened_clay -> ResourceLocation("minecraft:textures/blocks/hardened_clay_stained_white.png")
+            Blocks.stained_glass -> ResourceLocation("minecraft:textures/blocks/glass.png")
+            Blocks.water -> ResourceLocation("minecraft:textures/blocks/water_still.png")
+            Blocks.planks -> ResourceLocation("minecraft:textures/blocks/planks_oak.png")
+            Blocks.wool -> ResourceLocation("minecraft:textures/blocks/wool_colored_white.png")
+            else -> ResourceLocation("minecraft:textures/blocks/stone.png")
+        }
+    }
 }

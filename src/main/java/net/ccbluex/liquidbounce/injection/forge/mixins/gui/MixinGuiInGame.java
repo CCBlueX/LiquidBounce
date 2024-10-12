@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
@@ -120,19 +121,23 @@ public abstract class MixinGuiInGame extends Gui {
     @Overwrite
     protected void renderTooltip(ScaledResolution sr, float partialTicks) {
         final HUD hud = HUD.INSTANCE;
+        final RenderUtils render = RenderUtils.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
             int slot = entityPlayer.inventory.currentItem;
+
             if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
                 slot = FakeItemRender.INSTANCE.getFakeItem();
             }
+
             if (hud.handleEvents() && hud.getBlackHotbar()) {
                 int middleScreen = sr.getScaledWidth() / 2;
+                int height = sr.getScaledHeight() - 1;
 
-                color(1f, 1f, 1f, 1f);
-                GuiIngame.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-                GuiIngame.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+                resetColor();
+                render.drawRoundedRectInt(middleScreen - 91, height - 22, middleScreen + 91, height, Integer.MIN_VALUE, hud.getRoundedHotbarRadius());
+                render.drawRoundedRectInt(middleScreen - 91 - 1 + slot * 20 + 1, height - 22, middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24, Integer.MAX_VALUE, hud.getRoundedHotbarRadius());
 
                 enableRescaleNormal();
                 glEnable(GL_BLEND);
@@ -140,8 +145,8 @@ public abstract class MixinGuiInGame extends Gui {
                 RenderHelper.enableGUIStandardItemLighting();
 
                 for (int j = 0; j < 9; ++j) {
-                    int k = sr.getScaledWidth() / 2 - 92 + j * 20 + 2;
-                    int l = sr.getScaledHeight() - 17 - 3;
+                    int l = height - 16 - 3;
+                    int k = middleScreen - 90 + j * 20 + 2;
                     renderHotbarItem(j, k, l, partialTicks, entityPlayer);
                 }
 

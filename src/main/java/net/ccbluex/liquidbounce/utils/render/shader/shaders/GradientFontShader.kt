@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader.shaders
 
+import net.ccbluex.liquidbounce.ui.client.hud.element.Element.Companion.MAX_GRADIENT_COLORS
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import org.lwjgl.opengl.GL20.*
 import java.io.Closeable
@@ -18,30 +20,37 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
     var offset = 0f
     var speed = 1f
 
-    var color1: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
-    var color2: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
-    var color3: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
-    var color4: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
+    var maxColors = 4
+    var colors: Array<FloatArray> = Array(maxColors) { floatArrayOf(0f, 0f, 0f, 1f) }
 
     override fun setupUniforms() {
         setupUniform("offset")
         setupUniform("strength")
-        setupUniform("color1")
-        setupUniform("color2")
-        setupUniform("color3")
-        setupUniform("color4")
         setupUniform("speed")
+        setupUniform("maxColors")
+
+        for (i in 0 until MAX_GRADIENT_COLORS) {
+            try {
+                setupUniform("colors[$i]")
+            } catch (e: Exception) {
+                LOGGER.error("${javaClass.name} setup uniforms error.", e)
+            }
+        }
     }
 
     override fun updateUniforms() {
         glUniform2f(getUniform("strength"), strengthX, strengthY)
         glUniform1f(getUniform("offset"), offset)
-
-        glUniform4f(getUniform("color1"), color1[0], color1[1], color1[2], color1[3])
-        glUniform4f(getUniform("color2"), color2[0], color2[1], color2[2], color2[3])
-        glUniform4f(getUniform("color3"), color3[0], color3[1], color3[2], color3[3])
-        glUniform4f(getUniform("color4"), color4[0], color4[1], color4[2], color4[3])
         glUniform1f(getUniform("speed"), speed)
+        glUniform1i(getUniform("maxColors"), maxColors)
+
+        for (i in 0 until maxColors) {
+            try {
+                glUniform4f(getUniform("colors[$i]"), colors[i][0], colors[i][1], colors[i][2], colors[i][3])
+            } catch (e: Exception) {
+                LOGGER.error("${javaClass.name} update uniforms error.", e)
+            }
+        }
     }
 
     override fun startShader() {
@@ -59,14 +68,12 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
             stopShader()
     }
 
-    fun begin(enable: Boolean, x: Float, y: Float, gradient1: FloatArray, gradient2: FloatArray, gradient3: FloatArray, gradient4: FloatArray, speed: Float, offset: Float): GradientFontShader {
+    fun begin(enable: Boolean, x: Float, y: Float, maxColors: Int, gradient: List<FloatArray>, speed: Float, offset: Float): GradientFontShader {
         if (enable) {
             strengthX = x
             strengthY = y
-            color1 = gradient1
-            color2 = gradient2
-            color3 = gradient3
-            color4 = gradient4
+            this.maxColors = maxColors
+            colors = gradient.toTypedArray()
             this.speed = speed
             this.offset = offset
 

@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other
 
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -8,11 +13,10 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 /*
 * Working on Vulcan: 2.8.8
-* Tested on: eu.loysia.cn, anticheat-test.com
-* Credit: @Razzy52 / VulcanTP
+* Tested on: eu.loyisa.cn, anticheat-test.com
+* Credit: @ion1x & @Razzy52 / VulcanTP
 */
-
-object VulcanFast288 : NoFallMode("VulcanFast288") {
+object VulcanFast288 : NoFallMode("VulcanFast2.8.8") {
     override fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return
         val packet = event.packet

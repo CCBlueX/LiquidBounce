@@ -48,6 +48,9 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
     }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val onLook by BoolValue("OnLook", false)
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }

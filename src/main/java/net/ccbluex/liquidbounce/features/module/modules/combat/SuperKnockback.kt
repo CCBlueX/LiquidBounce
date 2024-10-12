@@ -6,16 +6,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.RotationUtils.angleDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
+import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase
@@ -26,10 +29,14 @@ import kotlin.math.abs
 
 object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = false) {
 
+    private val chance by IntegerValue("Chance", 100, 0..100)
     private val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
-    private val mode by ListValue("Mode", arrayOf("SprintTap", "SprintTap2", "WTap", "Old", "Silent", "Packet", "SneakPacket"), "Old")
+    private val mode by ListValue("Mode",
+        arrayOf("WTap", "SprintTap", "SprintTap2", "Old", "Silent", "Packet", "SneakPacket"),
+        "Old"
+    )
     private val maxTicksUntilBlock: IntegerValue = object : IntegerValue("MaxTicksUntilBlock", 2, 0..5) {
         override fun isSupported() = mode == "WTap"
 
@@ -65,6 +72,8 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(stopTicks.get())
     }
 
+    private val minEnemyRotDiffToIgnore by FloatValue("MinRotationDiffFromEnemyToIgnore", 180f, 0f..180f)
+
     private val onlyGround by BoolValue("OnlyGround", false)
     val onlyMove by BoolValue("OnlyMove", true)
     val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
@@ -99,14 +108,21 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
 
-        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || (onlyGround && !player.onGround)) return
+        val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
+        val angleDifferenceToPlayer = abs(angleDifference(rotationToPlayer, target.rotationYaw))
 
-        if (onlyMove && (!isMoving || (onlyMoveForward && player.movementInput.moveStrafe != 0f))) return
+        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
+                endExclusive = 100
+            ) > chance) return
+
+        if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
+
+        // Is the enemy facing his back on us?
+        if (angleDifferenceToPlayer > minEnemyRotDiffToIgnore && !target.hitBox.isVecInside(player.eyes)) return
 
         when (mode) {
             "Old" -> {
                 // Users reported that this mode is better than the other ones
-
                 if (player.isSprinting) {
                     sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING))
                 }
@@ -143,7 +159,9 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                 if (player.isSprinting && player.serverSprintState && !blockInput && !startWaiting) {
                     val delayMultiplier = 1.0 / (abs(targetDistance - distance) + 1)
 
-                    blockInputTicks = (randomDelay(minTicksUntilBlock.get(), maxTicksUntilBlock.get()) * delayMultiplier).toInt()
+                    blockInputTicks = (randomDelay(minTicksUntilBlock.get(),
+                        maxTicksUntilBlock.get()
+                    ) * delayMultiplier).toInt()
 
                     blockInput = blockInputTicks == 0
 
@@ -151,7 +169,9 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                         startWaiting = true
                     }
 
-                    allowInputTicks = (randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get()) * delayMultiplier).toInt()
+                    allowInputTicks = (randomDelay(reSprintMinTicks.get(),
+                        reSprintMaxTicks.get()
+                    ) * delayMultiplier).toInt()
                 }
             }
 
@@ -247,7 +267,6 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     override val tag
         get() = mode
-
 
     fun breakSprint() = handleEvents() && forceSprintState == 2 && mode == "SprintTap"
     fun startSprint() = handleEvents() && forceSprintState == 1 && mode == "SprintTap"

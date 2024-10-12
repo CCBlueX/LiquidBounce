@@ -10,6 +10,8 @@
         "menu.configuration": "Configuração",
         "menu.contributors": "Contribuidores",
 
+        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+
         "notification.moduleEnabled": "Ativado %s",
         "notification.moduleDisabled": "Desativado %s",
 
@@ -33,7 +35,11 @@
 
         "module.backtrack.description": "Permite que você atinja os jogadores atacando suas posições anteriores em cache.",
 
-        "module.bowAimbot.description": "Mira automaticamente os jogadores ao usar um arco.",
+        "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
+
+        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+
+        "module.projectileAimbot.description": "Mira automaticamente os jogadores quando utiliza um projétil.",
 
         "module.criticals.description": "Permite que você dê danos criticos.",
 
@@ -67,6 +73,8 @@
 
         "module.airLadder.description": "Permite subir escadas / videiras sem tocá-las.",
 
+        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
+
         "module.animations.description": "Personaliza sua animação de bloqueio.",
 
         "module.antiAFK.description": "Impede que você seja expulso por estar AFK (Inativo).",
@@ -75,9 +83,15 @@
 
         "module.antiBot.description": "Impede que o KillAura ataque bots de AntiCheat.",
 
+        "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
+
         "module.antiCactus.description": "Impede que cactos o danifiquem.",
 
         "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
+
+        "module.antiVanish.description": "UNTRANSLATED: Automatically detects vanished players.",
+
+        "module.antiVoid.description": "Automaticamente impulsiona você para cima após cair uma certa distância.",
 
         "module.atAllProvider.description": "Menciona automaticamente todos no servidor ao usar '@a' em sua mensagem.",
 
@@ -112,8 +126,6 @@
         "module.breadcrumbs.description": "Deixa um rastro atrás de você.",
 
         "module.bufferSpeed.description": "Permite caminhar mais rápido em lajes e escadas.",
-
-        "module.bugUp.description": "Automaticamente impulsiona você para cima após cair uma certa distância.",
 
         "module.cameraClip.description": "Permite ver através das paredes em vista de terceira pessoa.",
 
@@ -151,11 +163,15 @@
 
         "module.fastUse.description": "Permite que você use itens mais rapidamente.",
 
+        "module.flagCheck.description": "UNTRANSLATED: Detects if you get flagged by an AntiCheat.",
+
         "module.fly.description": "Permite que você voe no modo de sobrevivência.",
 
         "module.forceUnicodeChat.description": "Permite que você envie mensagens unicode no chat.",
 
         "module.freeCam.description": "Permite que você saia do seu corpo.",
+
+        "module.freeLook.description": "UNTRANSLATED: Allows you to see around in third person view.",
 
         "module.freeze.description": "Permite que você fique preso no ar.",
 
@@ -190,6 +206,8 @@
         "module.keepAlive.description": "Tenta impedir que você morra.",
 
         "module.keepContainer.description": "Permite que você abra um contêiner de inventário anteriormente fechado em qualquer lugar. (Pressione a tecla INSERT para abrir)",
+
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
 
         "module.kick.description": "Permite que você se expulse de um servidor.",
 
@@ -246,6 +264,8 @@
         "module.noWeb.description": "Impede que você seja desacelerado em teias.",
 
         "module.nuker.description": "Destroi todos os blocos ao seu redor.",
+
+        "module.packetDebugger.description": "UNTRANSLATED: Allows you to debug server/client packets that being sent/receive",
 
         "module.parkour.description": "Pula automaticamente ao chegar na borda de um bloco.",
 
@@ -329,6 +349,8 @@
 
         "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
 
-        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection.",
+
+        "module.tickBase.description": "UNTRANSLATED: Buffers ticks to get early hits of an enemy."
     }
 }

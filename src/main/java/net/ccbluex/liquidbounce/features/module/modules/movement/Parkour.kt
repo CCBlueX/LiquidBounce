@@ -6,21 +6,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.tryJump
+import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 
 object Parkour : Module("Parkour", Category.MOVEMENT, subjective = true, gameDetecting = false, hideModule = false) {
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    fun onMovementInput(event: MovementInputEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.gameSettings.keyBindSneak.isKeyDown &&
-                mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox
-                        .offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty())
-            thePlayer.tryJump()
+        val simPlayer = SimulatedPlayer.fromClientPlayer(event.originalInput)
+
+        simPlayer.tick()
+
+        if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.gameSettings.keyBindSneak.isKeyDown && !simPlayer.onGround) {
+            event.originalInput.jump = true
+        }
+
     }
 }

@@ -59,6 +59,9 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
     private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
@@ -163,10 +166,15 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glEnable(GL_LINE_SMOOTH)
                             glEnable(GL_BLEND)
                             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                            glColor(color)
                             glLineWidth(1.5f)
 
-                            // Render tiles the first time
+                            glColor(color)
+                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                                tileEntity,
+                                event.partialTicks,
+                                -1
+                            )
+                            glColor(color)
                             TileEntityRendererDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
@@ -175,13 +183,6 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                             glPopAttrib()
                             glPopMatrix()
-
-                            // Render tiles the second time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
-                                tileEntity,
-                                event.partialTicks,
-                                -1
-                            )
                         }
                     }
                 }

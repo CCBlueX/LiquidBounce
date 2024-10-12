@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -17,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.network.play.client.C07PacketPlayerDigging
@@ -33,36 +33,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val visualSwing by BoolValue("VisualSwing", true, subjective = false)
 
-    private val rotations by BoolValue("Rotations", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
-
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val options = RotationSettings(this).withoutKeepRotation()
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
@@ -84,11 +55,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     }
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.POST) {
-            return
-        }
-
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         val pos = blockPos ?: return
         val isAirBlock = getBlock(pos) == air
 
@@ -97,24 +64,15 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
             return
         }
 
-        if (rotations) {
+        if (options.rotationsActive) {
             val spot = faceBlock(pos) ?: return
 
-            setTargetRotation(
-                spot.rotation,
-                strafe = strafe != "Off",
-                strict = strafe == "Strict",
-                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                angleThresholdForReset = angleThresholdUntilReset,
-                smootherMode = smootherMode,
-                simulateShortStop = simulateShortStop,
-                startOffSlow = startFirstRotationSlow
-            )
+            setTargetRotation(spot.rotation, options = options)
         }
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         blockPos ?: return
         enumFacing ?: return
 

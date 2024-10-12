@@ -202,58 +202,6 @@ object BlackStyle : Style() {
                             }
                         }
 
-                        is MultiListValue -> {
-                            val text = value.name
-
-                            moduleElement.settingsWidth = font35.getStringWidth(text) + 16
-
-                            if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos..yPos + font35.fontHeight) {
-                                value.openList = !value.openList
-                                clickSound()
-                                return true
-                            }
-
-                            font35.drawString(text, minX + 2, yPos + 2, Color.WHITE.rgb)
-                            font35.drawString(
-                                if (value.openList) "-" else "+",
-                                maxX - 10,
-                                yPos + 2,
-                                Color.WHITE.rgb
-                            )
-
-                            yPos += font35.fontHeight + 1
-
-                            if (value.openList) {
-                                for (valueOfList in value.values) {
-                                    moduleElement.settingsWidth = font35.getStringWidth("> $valueOfList") + 12
-
-                                    val isSelected = value.value.contains(valueOfList)
-
-                                    if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos..yPos + font35.fontHeight) {
-                                        if (isSelected) {
-                                            value.changeValue(value.value - listOf(valueOfList).toSet())
-                                        } else {
-                                            value.changeValue(value.value + listOf(valueOfList))
-                                        }
-                                        clickSound()
-                                        return true
-                                    }
-
-                                    font35.drawString(
-                                        "> $valueOfList",
-                                        minX + 2,
-                                        yPos + 2,
-                                        if (isSelected) Color.WHITE.rgb else Int.MAX_VALUE
-                                    )
-
-                                    yPos += font35.fontHeight + 1
-                                }
-                            }
-                            if (!value.openList) {
-                                yPos += 1
-                            }
-                        }
-
                         is FloatValue -> {
                             val text = value.name + "§f: " + round(value.get())
 
@@ -265,10 +213,12 @@ object BlackStyle : Style() {
                             val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
-                            val sliderValue =
-                                (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
+                            val sliderValue = (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
 
-                            if ((mouseButton == 0 || sliderValueHeld == value) && mouseX in x..x + width && mouseY in y - 2..y + 5) {
+                            if ((mouseButton == 0 || sliderValueHeld == value)
+                                && mouseX in minX..maxX
+                                && mouseY in yPos + 15..yPos + 21
+                            ) {
                                 val percentage = (mouseX - x) / width.toFloat()
                                 value.set(
                                     round(value.minimum + (value.maximum - value.minimum) * percentage).coerceIn(

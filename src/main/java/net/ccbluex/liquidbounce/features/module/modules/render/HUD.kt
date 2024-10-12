@@ -12,11 +12,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.util.ResourceLocation
 
 object HUD : Module("HUD", Category.RENDER, defaultInArray = false, gameDetecting = false, hideModule = true) {
     val blackHotbar by BoolValue("BlackHotbar", true)
+    val roundedHotbarRadius by FloatValue("RoundedHotbar-Radius", 0F, 0F..5F) { blackHotbar }
     val inventoryParticle by BoolValue("InventoryParticle", false)
     private val blur by BoolValue("Blur", false)
     val fontChat by BoolValue("FontChat", false)

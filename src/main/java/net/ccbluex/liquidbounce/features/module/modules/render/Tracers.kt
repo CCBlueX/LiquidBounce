@@ -46,6 +46,9 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
     }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val bot by BoolValue("Bots", true)
     private val teams by BoolValue("Teams", false)

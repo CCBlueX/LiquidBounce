@@ -56,15 +56,6 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
         if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
-        if (event.isCancelled)
-            return
-
-        when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
-                return
-            }
-        }
-
         when (mode.lowercase()) {
             "sent" -> {
                 BlinkUtils.blink(packet, event, sent = true, receive = false)

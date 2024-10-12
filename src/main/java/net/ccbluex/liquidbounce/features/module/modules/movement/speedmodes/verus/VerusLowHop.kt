@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
@@ -32,7 +37,7 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
                 speed *= 0.98f
             }
 
-            strafe(speed, false)
+            strafe(speed)
         }
     }
 }

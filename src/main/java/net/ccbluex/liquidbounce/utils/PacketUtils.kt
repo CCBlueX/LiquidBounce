@@ -6,13 +6,14 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
+import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
+import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.*
 import kotlin.math.roundToInt
 
@@ -21,7 +22,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
     val queuedPackets = mutableListOf<Packet<*>>()
 
     @EventTarget(priority = 2)
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity is EntityLivingBase) {
                 (entity as? IMixinEntity)?.apply {
@@ -216,3 +217,10 @@ val S18PacketEntityTeleport.realY
     get() = y / 32.0
 val S18PacketEntityTeleport.realZ
     get() = z / 32.0
+
+var C03PacketPlayer.rotation
+    get() = Rotation(yaw, pitch)
+    set(value) {
+        yaw = value.yaw
+        pitch = value.pitch
+    }

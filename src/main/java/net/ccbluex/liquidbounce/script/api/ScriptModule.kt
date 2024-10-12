@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.script.api
 
 import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
@@ -37,7 +37,7 @@ class ScriptModule(name: String, category: Category, description: String, privat
     }
 
     override val values
-        get() = _values.values.toList()
+        get() = _values.values.toSet()
 
     override var tag
         get() = _tag

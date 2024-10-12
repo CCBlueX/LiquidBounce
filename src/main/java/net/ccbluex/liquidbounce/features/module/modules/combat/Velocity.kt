@@ -6,8 +6,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -15,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.PacketUtils.queuedPackets
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
@@ -33,15 +35,14 @@ import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing.DOWN
-import java.util.LinkedHashMap
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -56,7 +57,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
-            "Intave", "Delay", "GrimC03"
+            "Intave", "Delay", "GrimC03", "HypixelAir"
         ), "Simple"
     )
 
@@ -111,7 +112,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     private val spoofDelay by IntegerValue("SpoofDelay", 500, 0..5000) { mode == "Delay" }
     var delayMode = false
 
-    private val ignoreExplosion by BoolValue("IgnoreExplosion", true)
+    private val pauseOnExplosion by BoolValue("PauseOnExplosion", true)
+    private val ticksToPause by IntegerValue("TicksToPause", 20, 1..50) { pauseOnExplosion }
 
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
@@ -151,6 +153,12 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     // Grim
     private var timerTicks = 0
 
+    // Vulcan
+    private var transaction = false
+
+    // Pause On Explosion
+    private var pauseTicks = 0
+
     override val tag
         get() = if (mode == "Simple" || mode == "Legit") {
             val horizontalPercentage = (horizontal * 100).toInt()
@@ -160,6 +168,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         } else mode
 
     override fun onDisable() {
+        pauseTicks = 0
         mc.thePlayer?.speedInAir = 0.02F
         timerTicks = 0
         reset()
@@ -297,9 +306,18 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             "intave" -> {
                 intaveTick++
                 if (hasReceivedVelocity && mc.thePlayer.hurtTime == 2) {
-                    if (mc.thePlayer.onGround && intaveTick % 2 == 0) {
-                        mc.thePlayer.tryJump()
+                    if (thePlayer.onGround && intaveTick % 2 == 0) {
+                        thePlayer.tryJump()
                         intaveTick = 0
+                    }
+                    hasReceivedVelocity = false
+                }
+            }
+
+            "hypixelair" -> {
+                if (hasReceivedVelocity) {
+                    if (thePlayer.onGround) {
+                        thePlayer.tryJump()
                     }
                     hasReceivedVelocity = false
                 }
@@ -349,13 +367,23 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         if (!handleEvents())
             return
 
+        if (pauseTicks > 0) {
+            pauseTicks--
+            return
+        }
+
         if (event.isCancelled)
             return
 
         if ((packet is S12PacketEntityVelocity && thePlayer.entityId == packet.entityID && packet.motionY > 0 && (packet.motionX != 0 || packet.motionZ != 0))
-            || (!ignoreExplosion && packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
+            || (packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
                 && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
+
+            if (pauseOnExplosion && packet is S27PacketExplosion  && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)) {
+                pauseTicks = ticksToPause
+            }
 
             when (mode.lowercase()) {
                 "simple" -> handleVelocity(event)
@@ -418,31 +446,39 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                     }
                 }
 
+                "hypixelair" -> {
+                    hasReceivedVelocity = true
+                    event.cancelEvent()
+                }
+
                 "vulcan" -> {
                     event.cancelEvent()
                 }
 
                 "s32packet" -> {
+                    hasReceivedVelocity = true
                     event.cancelEvent()
                 }
             }
         }
 
-        if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
+        if (mode == "Vulcan") {
+            if (Disabler.handleEvents() && (Disabler.verusCombat || Disabler.verusCombat && !Disabler.isOnCombat) || !isMoving) return
 
-            // prevent for vulcan transaction timeout
-            if (event.isCancelled)
-                return
-
-            event.cancelEvent()
+            if (packet is S32PacketConfirmTransaction) {
+                event.cancelEvent()
+                sendPacket(C0FPacketConfirmTransaction(if (transaction) 1 else -1, if (transaction) -1 else 1, transaction), false)
+                transaction = !transaction
+            }
         }
 
         if (mode == "S32Packet" && packet is S32PacketConfirmTransaction) {
 
-            if (event.isCancelled)
+            if (!hasReceivedVelocity)
                 return
 
             event.cancelEvent()
+            hasReceivedVelocity = false
         }
     }
 
@@ -450,7 +486,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
      * Tick Event (Abuse Timer Balance)
      */
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         val player = mc.thePlayer ?: return
 
         if (mode != "GrimC03")

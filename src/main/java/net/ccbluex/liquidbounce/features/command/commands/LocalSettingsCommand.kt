@@ -50,10 +50,10 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 return@withContext
             }
 
-            val settingsFile = File(settingsDir, args[2])
+            val settingsFile = File(settingsDir, args[2] + ".txt")
 
             if (!settingsFile.exists()) {
-                chat("§cSettings file does not exist!")
+                chat("§cSettings file does not exist! §e(Ensure its .txt)")
                 return@withContext
             }
 
@@ -78,7 +78,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 return@withContext
             }
 
-            val settingsFile = File(settingsDir, args[2])
+            val settingsFile = File(settingsDir, args[2] + ".txt")
 
             try {
                 if (settingsFile.exists())
@@ -86,11 +86,12 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
                 settingsFile.createNewFile()
 
-                val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "all"
+                val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "default"
                 val all = "all" in option
-                val values = all || "values" in option
+                val default = "default" in option
+                val values = all || default || "values" in option
                 val binds = all || "binds" in option
-                val states = all || "states" in option
+                val states = all || default || "states" in option
 
                 if (!values && !binds && !states) {
                     chatSyntaxError()
@@ -118,7 +119,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 return@withContext
             }
 
-            val settingsFile = File(settingsDir, args[2])
+            val settingsFile = File(settingsDir, args[2] + ".txt")
 
             if (!settingsFile.exists()) {
                 chat("§cSettings file does not exist!")
@@ -137,7 +138,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
             val settings = settingsDir.listFiles() ?: return@withContext
 
             for (file in settings) {
-                chat("> " + file.name)
+                chat("> " + file.name.removeSuffix(".txt"))
             }
         }
     }
@@ -162,16 +163,9 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
             2 -> {
                 when (args[0].lowercase()) {
-                    "delete", "load" -> {
+                    "delete", "load", "save" -> {
                         val settings = settingsDir.listFiles() ?: return emptyList()
-                        settings.map { it.name }.filter { it.startsWith(args[1], true) }
-                    }
-                    "save" -> {
-                        if (args.getOrNull(1)?.isNotBlank() == true) {
-                            return emptyList()
-                        } else {
-                            emptyList()
-                        }
+                        settings.map { it.name.removeSuffix(".txt") }.filter { it.startsWith(args[1], true) }
                     }
                     else -> emptyList()
                 }
@@ -179,7 +173,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
             3 -> {
                 when (args[0].lowercase()) {
-                    "save" -> listOf("all", "values", "binds", "states").filter { it.startsWith(args[2], true) }
+                    "save" -> listOf("all", "default", "values", "binds", "states").filter { it.startsWith(args[2], true) }
                     else -> emptyList()
                 }
             }

@@ -8,13 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
-import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
@@ -24,7 +22,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.item.EnumAction
-import net.minecraft.util.MovingObjectPosition
+import net.minecraft.item.ItemBlock
 import kotlin.random.Random.Default.nextBoolean
 
 object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) {
@@ -49,8 +47,10 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private val blockDelay by IntegerValue("BlockDelay", 50, 0..100) { block }
 
     private val requiresNoInput by BoolValue("RequiresNoInput", false) { left }
-    private val maxAngleDifference by FloatValue("maxAngleDifference", 30f, 10f..180f) { left && requiresNoInput }
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 30f, 10f..180f) { left && requiresNoInput }
     private val range by FloatValue("Range", 3f, 0.1f..5f) { left && requiresNoInput }
+
+    private val onlyBlocks by BoolValue("OnlyBlocks", true) { right }
 
     private var rightDelay = randomClickDelay(minCPS, maxCPS)
     private var rightLastSwing = 0L
@@ -60,7 +60,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var lastBlocking = 0L
 
     private val shouldAutoClick
-        get() =  mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
+        get() = mc.thePlayer.capabilities.isCreativeMode || !mc.objectMouseOver.typeOfHit.isBlock
 
     private var shouldJitter = false
 
@@ -81,7 +81,9 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
             }
 
             if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
-                handleRightClick(time, doubleClick)
+                if (!onlyBlocks || thePlayer.heldItem.item is ItemBlock) {
+                    handleRightClick(time, doubleClick)
+                }
             }
 
             if (requiresNoInput) {
@@ -106,9 +108,14 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     @EventTarget
     fun onTick(event: UpdateEvent) {
         mc.thePlayer?.let { thePlayer ->
-            shouldJitter = mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
 
-            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown))) {
+            shouldJitter = !mc.objectMouseOver.typeOfHit.isBlock &&
+                    (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
+
+            if (jitter && ((left && shouldAutoClick && shouldJitter)
+                        || (right && !thePlayer.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown
+                        && ((onlyBlocks && thePlayer.heldItem.item is ItemBlock) || !onlyBlocks)))) {
+
                 if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
                 if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
             }

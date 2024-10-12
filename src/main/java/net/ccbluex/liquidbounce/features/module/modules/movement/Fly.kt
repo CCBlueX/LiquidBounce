@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
@@ -22,20 +22,26 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.sparta
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan2
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.SmoothVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.Vanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.verus.Verus
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.verus.VerusGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.Vulcan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanGhost
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanOld
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.extensions.stop
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
@@ -64,21 +70,61 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         // Vulcan
         Vulcan, VulcanOld, VulcanGhost,
 
+        // Verus
+        Verus, VerusGlide,
+
         // Other anti-cheats
-        MineSecure, HawkEye, HAC, WatchCat, Verus,
+        MineSecure, HawkEye, HAC, WatchCat,
 
         // Other
-        Jetpack, KeepAlive, Collide, Jump, Flag
+        Jetpack, KeepAlive, Collide, Jump, Flag, Fireball
     )
 
-    private val modes = flyModes.map { it.modeName }.toTypedArray()
+    /**
+     * Old/Deprecated Modes
+     */
+    private val deprecatedMode = arrayOf(
+        Spartan, Spartan2, BugSpartan,
 
-    val mode by ListValue("Mode", modes, "Vanilla")
+        MineSecure, HawkEye, HAC, WatchCat, NeruxVace, Minesucht,
 
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true)
-        { mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan") }
-    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true)
-        { mode in arrayOf("Vanilla", "SmoothVanilla") }
+        BlocksMC, BlocksMC2,
+
+        Hypixel, BoostHypixel, FreeHypixel,
+
+        NCP, OldNCP,
+
+        AAC1910, AAC305, AAC316, AAC3312, AAC3312Glide, AAC3313,
+
+        CubeCraft
+    )
+
+    private val showDeprecatedValue: BoolValue = object : BoolValue("DeprecatedMode", true) {
+        override fun onUpdate(value: Boolean) {
+            modeValue.changeValue(modesList.first { it !in deprecatedMode }.modeName)
+            modeValue.updateValues(modesList.filter { value || it !in deprecatedMode }.map { it.modeName }
+                .toTypedArray())
+        }
+    }
+
+    private val showDeprecated by showDeprecatedValue
+
+    private var modesList = flyModes
+
+    val modeValue = ListValue("Mode", modesList.map { it.modeName }.toTypedArray(), "Vanilla")
+    val mode by modeValue
+
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true) {
+        mode in arrayOf("Vanilla",
+            "KeepAlive",
+            "MineSecure",
+            "BugSpartan"
+        )
+    }
+    private val vanillaKickBypass by BoolValue("VanillaKickBypass",
+        false,
+        subjective = true
+    ) { mode in arrayOf("Vanilla", "SmoothVanilla") }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
@@ -89,10 +135,8 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
     // Hypixel
     val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
-    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000)
-        { mode == "Hypixel" && hypixelBoost }
-    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f)
-        { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000) { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f) { mode == "Hypixel" && hypixelBoost }
 
     // Other
     val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
@@ -113,8 +157,34 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     val stopOnNoMove by BoolValue("StopOnNoMove", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
     val debugFly by BoolValue("Debug", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
 
+    // Fireball
+    val pitchMode by ListValue("PitchMode", arrayOf("Custom", "Smart"), "Custom") { mode == "Fireball" }
+    val rotationPitch by FloatValue("Pitch", 90f, 0f..90f) { pitchMode != "Smart" && mode == "Fireball" }
+    val invertYaw by BoolValue("InvertYaw", true) { pitchMode != "Smart" && mode == "Fireball" }
+
+    val autoFireball by ListValue("AutoFireball",
+        arrayOf("Off", "Pick", "Spoof", "Switch"),
+        "Spoof"
+    ) { mode == "Fireball" }
+    val swing by BoolValue("Swing", true) { mode == "Fireball" }
+    val fireballTry by IntegerValue("MaxFireballTry", 1, 0..2) { mode == "Fireball" }
+    val fireBallThrowMode by ListValue("FireballThrow", arrayOf("Normal", "Edge"), "Normal") { mode == "Fireball" }
+    val edgeThreshold by FloatValue("EdgeThreshold",
+        1.05f,
+        1f..2f
+    ) { fireBallThrowMode == "Edge" && mode == "Fireball" }
+
+    val options = RotationSettings(this) { mode == "Fireball" }.apply {
+        resetTicksValue.setSupport { { it && keepRotation } }
+    }
+
+    val autoJump by BoolValue("AutoJump", true) { mode == "Fireball" }
+
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
+
+    var wasFired = false
+    var firePosition: BlockPos? = null
 
     var jumpY = 0.0
 
@@ -137,11 +207,17 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
+        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "VerusGlide"
+            && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside"
+            && mode != "Fireball" && mode != "Collide" && mode != "Jump") {
+
             if (mode == "CubeCraft") thePlayer.stopXZ()
             else thePlayer.stop()
         }
 
+        wasFired = false
+        firePosition = null
+        serverSlot = thePlayer.inventory.currentItem
         thePlayer.capabilities.isFlying = wasFlying
         mc.timer.timerSpeed = 1f
         thePlayer.speedInAir = 0.02f
@@ -152,6 +228,17 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         modeModule.onUpdate()
+    }
+
+    @EventTarget
+    fun onTick(event: GameTickEvent) {
+        if (mode == "Fireball" && wasFired) {
+            WaitTickUtils.scheduleTicks(2) {
+                Fly.state = false
+            }
+        }
+
+        modeModule.onTick()
     }
 
     @EventTarget

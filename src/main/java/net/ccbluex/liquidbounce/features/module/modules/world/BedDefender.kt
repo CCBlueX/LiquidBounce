@@ -13,16 +13,17 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockBBValid
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
@@ -41,48 +42,15 @@ import java.awt.Color
 
 object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
-    private val rotations by BoolValue("Rotations", true)
-
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val swing by BoolValue("Swing", true)
     private val placeDelay by IntegerValue("PlaceDelay", 500, 0..1000)
-    private val raycastMode by ListValue("Raycast", arrayOf("None", "Normal", "Around"), "Normal") { rotations }
+    private val raycastMode by ListValue("Raycast", arrayOf("None", "Normal", "Around"), "Normal") { options.rotationsActive }
     private val scannerMode by ListValue("Scanner", arrayOf("Nearest", "Random"), "Nearest")
 
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotations }
-    private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotations && keepRotation
+    private val options = RotationSettings(this).apply {
+        resetTicksValue.setSupport { { it && keepRotationValue.isActive() } }
     }
-
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
-
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     private val onSneakOnly by BoolValue("OnSneakOnly", true)
     private val autoSneak by ListValue("AutoSneak", arrayOf("Off", "Normal", "Packet"), "Off") { !onSneakOnly }
@@ -114,6 +82,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         }
     }
 
+    // TODO: Proper event to update.
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
@@ -161,18 +130,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             val rotation = RotationUtils.toRotation(blockPos.getVec(), false, player)
             val raytrace = performBlockRaytrace(rotation, mc.playerController.blockReachDistance) ?: return
 
-            if (rotations) {
-                RotationUtils.setTargetRotation(
-                    rotation,
-                    if (keepRotation) keepTicks else 1,
-                    strafe != "Off",
-                    strafe == "Strict",
-                    turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                    angleThresholdForReset = angleThresholdUntilReset,
-                    smootherMode = smootherMode,
-                    simulateShortStop = simulateShortStop,
-                    startOffSlow = startFirstRotationSlow
-                )
+            if (options.rotationsActive) {
+                setTargetRotation(rotation, options, if (options.keepRotation) options.resetTicks else 1)
             }
 
             blockPosition = blockPos
@@ -300,7 +259,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                 movingObjectPosition != null && movingObjectPosition.blockPos == pos
             }
             
-            "around" -> EnumFacing.values().any { !isFullBlock(pos.offset(it)) }
+            "around" -> EnumFacing.values().any { !isBlockBBValid(pos.offset(it)) }
             
             else -> true
         }

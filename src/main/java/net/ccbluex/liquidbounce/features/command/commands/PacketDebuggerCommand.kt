@@ -5,22 +5,23 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import kotlinx.coroutines.*
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.PacketDebugger.selectedPackets
 import net.ccbluex.liquidbounce.features.module.modules.misc.PacketDebugger.packetType
-import net.ccbluex.liquidbounce.script.api.global.Chat
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils
 
 object PacketDebuggerCommand : Command("packetdebugger", "debug") {
 
-    private var packetList: Map<String, Set<String>?> = emptyMap()
+    private lateinit var packetList: Set<String>
 
     init {
-        runBlocking {
-            launch { packetList = loadPacketList("$CLIENT_CLOUD/packets-list/packets") }
-        }.isCompleted
+        runCatching {
+            javaClass.getResourceAsStream("/assets/minecraft/liquidbounce/packets.txt")!!.bufferedReader().use {
+                packetList = it.readLines().toSet()
+            }
+        }.onFailure {
+            ClientUtils.LOGGER.error("Failed to load packet list", it)
+        }
     }
 
     /**
@@ -88,8 +89,7 @@ object PacketDebuggerCommand : Command("packetdebugger", "debug") {
                 when (args[0].lowercase()) {
                     "add" -> {
                         val input = args[1].lowercase()
-                        packetList.flatMap { it.value.orEmpty() }
-                            .filter { it.lowercase().startsWith(input) }
+                        packetList.filter { it.lowercase().startsWith(input) }
                     }
                     "remove" -> {
                         val input = args[1].lowercase()
@@ -102,27 +102,4 @@ object PacketDebuggerCommand : Command("packetdebugger", "debug") {
         }
     }
 
-    private suspend fun loadPacketList(url: String): Map<String, Set<String>> {
-        return try {
-            val (response, code) = fetchDataAsync(url)
-            if (code == 200) {
-                val packetList = response.split("\n").filter { it.isNotBlank() && it.isNotEmpty() }.map { it.trim() }.toSet()
-                Chat.print("§aSuccessfully loaded §9${packetList.size} §apackets.")
-                mapOf(url to packetList)
-            } else {
-                Chat.print("§cFailed to load packet list. §9(ERROR CODE: $code)")
-                emptyMap()
-            }
-        } catch (e: Exception) {
-            Chat.print("§cFailed to load packet list. §9(${e.message})")
-            e.printStackTrace()
-            emptyMap()
-        }
-    }
-
-    private suspend fun fetchDataAsync(url: String): Pair<String, Int> {
-        return withContext(Dispatchers.IO) {
-            HttpUtils.request(url, "GET").let { Pair(it.first, it.second) }
-        }
-    }
 }

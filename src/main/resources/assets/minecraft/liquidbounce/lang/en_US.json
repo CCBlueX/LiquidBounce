@@ -3,7 +3,8 @@
     "contributors": [
         "1zuna",
         "Zywl",
-        "CzechHek"
+        "CzechHek",
+        "EclipsesDev"
     ],
     "translations": {
         "menu.altManager": "Alt Manager",
@@ -11,6 +12,8 @@
         "menu.serverStatus": "Server Status",
         "menu.configuration": "Configuration",
         "menu.contributors": "Contributors",
+
+        "menu.discordRPC.typeBox": "Type Here..",
 
         "notification.moduleEnabled": "Enabled %s",
         "notification.moduleDisabled": "Disabled %s",
@@ -39,7 +42,9 @@
 
         "module.bedDefender.description": "Automatically defends bed with blocks",
 
-        "module.bowAimbot.description": "Automatically aims at players when using a bow.",
+        "module.bedPlates.description": "Allows you to see blocks around beds.",
+
+        "module.projectileAimbot.description": "Automatically aims at players when using a projectile.",
 
         "module.criticals.description": "Automatically deals critical hits.",
 
@@ -52,6 +57,8 @@
         "module.killAura.description": "Automatically attacks targets around you.",
 
         "module.noFriends.description": "Allows you to attack friends.",
+
+        "module.noachievement.description": "No Achievement.",
 
         "module.superKnockback.description": "Increases knockback dealt to other entities.",
 
@@ -87,13 +94,15 @@
         
         "module.antiBot.description": "Prevents KillAura from attacking AntiCheat bots.",
 
-        "module.antiExploit": "Prevents server from crashing you.",
+        "module.antiExploit.description": "Prevents server from crashing you.",
         
         "module.antiCactus.description": "Prevents cacti from damaging you.",
         
         "module.antiFireball.description": "Automatically punches fireballs away from you.",
 
         "module.antiVanish.description": "Automatically detects vanished players.",
+
+        "module.antiVoid.description": "Automatically setbacks you after falling a certain distance.",
         
         "module.atAllProvider.description": "Automatically mentions everyone on the server when using '@a' in your message.",
         
@@ -130,8 +139,6 @@
         "module.breadcrumbs.description": "Leaves a trail behind you.",
         
         "module.bufferSpeed.description": "Allows you to walk faster on slabs and stairs.",
-        
-        "module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
         
         "module.cameraClip.description": "Allows you to see through walls in third person view.",
         
@@ -176,6 +183,8 @@
         "module.forceUnicodeChat.description": "Allows you to send unicode messages in chat.",
         
         "module.freeCam.description": "Allows you to move out of your body.",
+
+        "module.freeLook.description": "Allows you to see around in third person view.",
         
         "module.freeze.description": "Allows you to stay stuck in mid air.",
         
@@ -210,6 +219,8 @@
         "module.keepAlive.description": "Tries to prevent you from dying.",
         
         "module.keepContainer.description": "Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
+
+        "module.keepTabList.description": "Keeps TAB List opened",
 
         "module.keyPearl.description": "Allows you to throw an ender pearl from your hotbar using a certain key.",
 
@@ -357,6 +368,12 @@
 
         "module.disabler.description": "Disables either a server or a specific anticheat detection.",
 
-        "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast."
+        "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast.",
+
+        "module.tickBase.description": "Buffers ticks to get early hits of an enemy.",
+
+        "module.rotationRecorder.description": "Records and saves your rotations.",
+
+        "module.forwardTrack.description": "Reveals the actual position of an entity."
     }
 }

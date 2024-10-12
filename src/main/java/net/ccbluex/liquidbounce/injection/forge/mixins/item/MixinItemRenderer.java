@@ -130,6 +130,10 @@ public abstract class MixinItemRenderer {
      */
     @Overwrite
     public void renderItemInFirstPerson(float partialTicks) {
+        final KillAura killAura = KillAura.INSTANCE;
+        final NoSlow noSlow = NoSlow.INSTANCE;
+        final Animations animations = Animations.INSTANCE;
+
         float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
         EntityPlayerSP abstractclientplayer = mc.thePlayer;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
@@ -141,13 +145,13 @@ public abstract class MixinItemRenderer {
         enableRescaleNormal();
         pushMatrix();
 
-        if (Animations.INSTANCE.handleEvents()) {
-            float scale = Animations.INSTANCE.getHandItemScale();
-            float x = Animations.INSTANCE.getHandX();
-            float y = Animations.INSTANCE.getHandY();
-            float rotX = Animations.INSTANCE.getHandPosX();
-            float rotY = Animations.INSTANCE.getHandPosY();
-            float rotZ = Animations.INSTANCE.getHandPosZ();
+        if (animations.handleEvents()) {
+            float scale = animations.getHandItemScale();
+            float x = animations.getHandX();
+            float y = animations.getHandY();
+            float rotX = animations.getHandPosX();
+            float rotY = animations.getHandPosY();
+            float rotZ = animations.getHandPosZ();
 
             translate(x, y, scale);
             rotate(rotX, 1f, 0f, 0f);
@@ -156,7 +160,9 @@ public abstract class MixinItemRenderer {
         }
 
         if (itemToRender != null) {
-            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || (KillAura.INSTANCE.getTarget() != null && KillAura.INSTANCE.getBlinkAutoBlock()) || NoSlow.INSTANCE.isUNCPBlocking();
+            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && !killAura.getAutoBlock().equals("Off") &&
+                    (killAura.getRenderBlocking() || killAura.getTarget() != null && (killAura.getBlinkAutoBlock() || killAura.getForceBlockRender()))
+                    || noSlow.isUNCPBlocking());
 
             if (itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);
@@ -173,7 +179,6 @@ public abstract class MixinItemRenderer {
                         transformFirstPersonItem(f, f1);
                         break;
                     case BLOCK:
-                        final Animations animations = Animations.INSTANCE;
                         final Animation animation;
 
                         if (animations.handleEvents()) {
@@ -189,10 +194,9 @@ public abstract class MixinItemRenderer {
                     case BOW:
                         transformFirstPersonItem(f, f1);
                         doBowTransformations(partialTicks, abstractclientplayer);
+                        break;
                 }
             } else {
-                final Animations animations = Animations.INSTANCE;
-
                 if (!animations.handleEvents() || !animations.getOddSwing()) {
                     doItemUsedTransformations(f1);
                 }

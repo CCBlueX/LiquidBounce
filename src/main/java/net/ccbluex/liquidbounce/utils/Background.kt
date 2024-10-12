@@ -51,8 +51,14 @@ class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
     private val resourceLocation = ResourceLocation("${CLIENT_NAME.lowercase()}/background.png")
 
     override fun initBackground() {
-        val image = ImageIO.read(backgroundFile.inputStream())
-        mc.textureManager.loadTexture(resourceLocation, DynamicTexture(image))
+        mc.addScheduledTask {
+            runCatching {
+                val image = ImageIO.read(backgroundFile.inputStream())
+                mc.textureManager.loadTexture(resourceLocation, DynamicTexture(image))
+            }.onFailure {
+                it.printStackTrace()
+            }
+        }
     }
 
     override fun drawBackground(width: Int, height: Int) {

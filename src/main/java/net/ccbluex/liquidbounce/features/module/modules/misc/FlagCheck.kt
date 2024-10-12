@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
-import net.ccbluex.liquidbounce.features.module.modules.exploit.disablermodes.verus.VerusFly.dontPlaceOnAttack
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -28,9 +26,13 @@ import kotlin.math.sqrt
 
 object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hideModule = false) {
 
-    private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 600, 100..1000)
-    private val rubberbandCheck by BoolValue("RubberbandCheck", false)
+    private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 5000, 1000..10000)
+    private val ghostBlockCheck by BoolValue("GhostBlock-Check", true)
+    private val ghostBlockDelay by IntegerValue("GhostBlockDelay", 750, 500..1000) { ghostBlockCheck }
+    private val rubberbandCheck by BoolValue("Rubberband-Check", false)
     private val rubberbandThreshold by FloatValue("RubberBandThreshold", 5.0f, 0.05f..10.0f) { rubberbandCheck }
+
+    private var lastCheckTime = 0L
 
     private var flagCount = 0
     private var lastYaw = 0F
@@ -56,7 +58,10 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
     private var lastPosY = 0.0
     private var lastPosZ = 0.0
 
+    private var resetTicks = 0
+
     override fun onDisable() {
+        resetTicks = 0
         clearFlags()
     }
 
@@ -129,24 +134,28 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             return
         }
 
-        val currentTime = System.currentTimeMillis()
-
         // GhostBlock Checks | Checks is disabled when using VerusFly Disabler, to prevent false flag.
-        if (!Disabler.handleEvents() || (Disabler.handleEvents() && Disabler.mode.contains("VerusFly") && !dontPlaceOnAttack)) {
-            blockPlacementAttempts.filter { (_, timestamp) ->
-                currentTime - timestamp > 500
-            }.forEach { (blockPos, _) ->
-                val block = world.getBlockState(blockPos).block
-                val isNotUsing =
-                    !player.isUsingItem && !player.isBlocking && (!KillAura.renderBlocking || !KillAura.blockStatus)
+        if (ghostBlockCheck && (!Disabler.handleEvents() || (Disabler.handleEvents() && !Disabler.verusFly))) {
+            val currentTime = System.currentTimeMillis()
 
-                if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
-                    successfulPlacements.remove(blockPos)
-                    flagCount++
-                    Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+            if (currentTime - lastCheckTime > 2000) {
+                lastCheckTime = currentTime
+
+                blockPlacementAttempts.entries.removeIf { (blockPos, timestamp) ->
+                    if (currentTime - timestamp > ghostBlockDelay) {
+                        // Returns if blockpos is < 0
+                        if (blockPos < BlockPos(0, 0, 0)) return@removeIf false
+                        val block = world.getBlockState(blockPos).block
+
+                        if (block == Blocks.air && successfulPlacements.contains(blockPos)) {
+                            flagCount++
+                            Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+                            successfulPlacements.clear()
+                            return@removeIf true
+                        }
+                    }
+                    false
                 }
-
-                blockPlacementAttempts.remove(blockPos)
             }
         }
 
@@ -191,7 +200,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         if (rubberbandReason.isNotEmpty()) {
             flagCount++
             val reasonString = rubberbandReason.joinToString(" §8|§e ")
-            Chat.print("§7(§9FlagCheck§7) §dDetected §3Rubberband §8(§e$reasonString§8) §b(§c${flagCount}x§b)")
+            Chat.print("§dDetected §3Rubberband §8(§e$reasonString§8) §b(§c${flagCount}x§b)")
             rubberbandReason.clear()
         }
 
@@ -203,10 +212,21 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         lastMotionX = motionX
         lastMotionY = motionY
         lastMotionZ = motionZ
+    }
 
-        // Automatically clear flags (Default: 10 minutes)
-        if (player.ticksExisted % (resetFlagCounterTicks * 20) == 0) {
+    @EventTarget
+    fun onTick(event: GameTickEvent) {
+        if (mc.thePlayer == null || mc.theWorld == null)
+            return
+
+        if (resetTicks >= resetFlagCounterTicks) {
             clearFlags()
+            resetTicks = 0
+            return
+        }
+
+        if (mc.thePlayer.ticksExisted > 100) {
+            resetTicks++
         }
     }
 

@@ -71,6 +71,9 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)
@@ -104,7 +107,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
+            if (isSelected(entity, false)) {
 
                 val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 

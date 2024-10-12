@@ -91,8 +91,8 @@ object RandomUtils {
             adjective = ADJECTIVES.filter { it.length <= maxLength - animal.length }.random()
         }
 
-        //Returns raw name if unformatted alts option is enabled.
-        if (raw) return adjective + (if (adjective.length + animal.length < maxLength) "_" else "") + animal
+        //Returns raw name if unformatted alts option is not enabled.
+        if (!raw) return adjective + (if (adjective.length + animal.length < maxLength) "_" else "") + animal
 
         val baseName = leetRandomly(adjective) + (if (adjective.length + animal.length < maxLength) random(
             1,

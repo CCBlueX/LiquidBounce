@@ -5,9 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.syncSpecialModuleRotations
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -16,25 +19,24 @@ object Derp : Module("Derp", Category.FUN, subjective = true, hideModule = false
 
     private val headless by BoolValue("Headless", false)
     private val spinny by BoolValue("Spinny", false)
-        private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
+    private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
 
-    private var currentSpin = 0F
+    override fun onDisable() {
+        syncSpecialModuleRotations()
+    }
 
     val rotation: Rotation
         get() {
-            val rot = Rotation(mc.thePlayer.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
+            val rotationToUse = currentRotation ?: serverRotation
+
+            val rot = Rotation(rotationToUse.yaw, nextFloat(-90f, 90f))
 
             if (headless)
                 rot.pitch = 180F
 
-            if (spinny) {
-                currentSpin += increment
-                rot.yaw = currentSpin
-            }
+            rot.yaw += if (spinny) increment else nextFloat(-180f, 180f)
 
-            rot.fixedSensitivity()
-
-            return rot
+            return rot.fixedSensitivity()
         }
 
 }

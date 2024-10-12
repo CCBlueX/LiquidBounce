@@ -72,6 +72,8 @@
     "block.MixinBlockSlime",
     "gui.MixinGuiAchievement",
     "gui.MixinGuiContainer",
+    "render.MixinItemRenderer",
+    "render.MixinRenderGlobal",
     "tweaks.MixinEntityFX"
   ]
 }

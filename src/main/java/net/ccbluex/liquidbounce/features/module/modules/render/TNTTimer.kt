@@ -42,6 +42,9 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -62,6 +65,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     private fun renderTNTTimer(tnt: EntityTNTPrimed, timeRemaining: Int) {
         val thePlayer = mc.thePlayer ?: return
         val renderManager = mc.renderManager
+        val rotateX = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
@@ -74,7 +78,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         )
 
         glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(renderManager.playerViewX * rotateX, 1F, 0F, 0F)
 
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
 

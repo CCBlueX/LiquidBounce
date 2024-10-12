@@ -11,23 +11,27 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.util.Vec3
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
 
 object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
+
+    private val itemText by BoolValue("ItemText", false)
 
     private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
     private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
@@ -45,7 +49,15 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         }
     }
 
+    private val scale by FloatValue("Scale", 3F, 1F..5F) { itemText }
+    private val itemCounts by BoolValue("ItemCounts", true) { itemText }
+    private val font by FontValue("Font", Fonts.font40) { itemText }
+    private val fontShadow by BoolValue("Shadow", true) { itemText }
+
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val onLook by BoolValue("OnLook", false)
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }
@@ -74,6 +86,10 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
                         mc.thePlayer.openContainer.inventory,
                         mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
+
+                    if (itemText) {
+                        renderEntityText(entityItem, if (isUseful) Color.green else color)
+                    }
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
                     drawEntityBox(entityItem, if (isUseful) Color.green else color, mode == "Box")
@@ -111,6 +127,53 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         }.onFailure {
             LOGGER.error("An error occurred while rendering ItemESP!", it)
         }
+    }
+
+    private fun renderEntityText(entity: EntityItem, color: Color) {
+        val thePlayer = mc.thePlayer ?: return
+        val renderManager = mc.renderManager
+        val rotateX = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
+
+        glPushAttrib(GL_ENABLE_BIT)
+        glPushMatrix()
+
+        // Translate to entity position
+        val partialTicks = mc.timer.renderPartialTicks
+        val interpolatedPosX = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks
+        val interpolatedPosY = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks + 1F
+        val interpolatedPosZ = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks
+
+        glTranslated(
+            interpolatedPosX - renderManager.renderPosX,
+            interpolatedPosY - renderManager.renderPosY,
+            interpolatedPosZ - renderManager.renderPosZ
+        )
+
+        glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
+        glRotatef(renderManager.playerViewX * rotateX, 1F, 0F, 0F)
+
+        disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
+        enableGlCap(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        val fontRenderer = font
+
+        // Scale
+        val scale = (thePlayer.getDistanceToEntity(entity) / 4F).coerceAtLeast(1F) / 150F * scale
+        glScalef(-scale, -scale, scale)
+
+        val itemStack = entity.entityItem
+        val text = itemStack.displayName + if (itemCounts) " (${itemStack.stackSize})" else ""
+
+        // Draw text
+        val width = fontRenderer.getStringWidth(text) * 0.5f
+        fontRenderer.drawString(
+            text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, color.rgb, fontShadow
+        )
+
+        resetCaps()
+        glPopMatrix()
+        glPopAttrib()
     }
 
     override fun handleEvents() = super.handleEvents() || (InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful)

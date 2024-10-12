@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
-import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -60,6 +59,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     var isFirstInventoryClick = true
 
+    var timeSinceClosedInventory = 0L
+
     val CLICK_TIMER = MSTimer()
 
     val BLOCK_BLACKLIST = listOf(
@@ -84,6 +85,14 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         Blocks.redstone_torch,
         Blocks.ladder
     )
+
+    fun findItemArray(startInclusive: Int, endInclusive: Int, items: Array<Item>): Int? {
+        for (i in startInclusive..endInclusive)
+            if (mc.thePlayer.openContainer.getSlot(i).stack?.item in items)
+                return i
+
+        return null
+    }
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
         for (i in startInclusive..endInclusive)
@@ -128,7 +137,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
     }
 
-    fun findBlockStackInHotbarGreaterThan(amount:Int): Int? {
+    fun findBlockStackInHotbarGreaterThan(amount: Int): Int? {
         val player = mc.thePlayer ?: return null
         val inventory = player.openContainer
 
@@ -139,11 +148,31 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             stack.item is ItemBlock && stack.stackSize > amount && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
         }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
     }
+
     // Converts container slot to hotbar slot id, else returns null
     fun Int.toHotbarIndex(stacksSize: Int): Int? {
         val parsed = this - stacksSize + 9
 
         return if (parsed in 0..8) parsed else null
+    }
+
+    fun blocksAmount(): Int {
+        val player = mc.thePlayer ?: return 0
+        var amount = 0
+
+        for (i in 36..44) {
+            val stack = player.inventoryContainer.getSlot(i).stack ?: continue
+            val item = stack.item
+            if (item is ItemBlock) {
+                val block = item.block
+                val heldItem = player.heldItem
+                if (heldItem != null && heldItem == stack || block !in BLOCK_BLACKLIST && block !is BlockBush) {
+                    amount += stack.stackSize
+                }
+            }
+        }
+
+        return amount
     }
 
     @EventTarget
@@ -172,6 +201,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 isFirstInventoryClick = false
                 _serverOpenInventory = false
                 serverOpenContainer = false
+
+                timeSinceClosedInventory = System.currentTimeMillis()
 
                 if (packet is S2DPacketOpenWindow) {
                     if (packet.guiId == "minecraft:chest" || packet.guiId == "minecraft:container")
@@ -210,27 +241,9 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        val player = mc.thePlayer ?: return
-
-        val playerSlot = player.inventory.currentItem.takeIf { it != -1 } ?: return
-
-        val prevServerSlot = _serverSlot
-        val startTime = System.currentTimeMillis()
-
-        if (prevServerSlot != playerSlot) {
-            LOGGER.info("Previous Saved Slot: $prevServerSlot | Previous Slot: $playerSlot")
-
-            // Synced previous slot to match client-side slot
-            _serverSlot = playerSlot
-            mc.playerController.updateController()
-
-            val elapsedTime = System.currentTimeMillis() - startTime
-            LOGGER.info("Slot Synced (${elapsedTime}ms)")
-        } else {
-            serverSlot = 0
-        }
-
         // Reset flags to prevent de-sync
+        serverSlot = 0
+        if (NoSlotSet.handleEvents()) _serverSlot = 0
         _serverOpenInventory = false
         serverOpenContainer = false
     }

@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
+import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
@@ -48,6 +49,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -129,10 +131,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final InventoryMove inventoryMove = InventoryMove.INSTANCE;
         final Sneak sneak = Sneak.INSTANCE;
+        final Derp derp = Derp.INSTANCE;
+
         final boolean fakeSprint = inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()
                 || AntiHunger.INSTANCE.handleEvents()
                 || sneak.handleEvents() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure")
-                || Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getMode().equals("StartSprint");
+                || Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getStartSprint();
 
         boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -160,7 +164,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
-            final Derp derp = Derp.INSTANCE;
             if (derp.handleEvents()) {
                 Rotation rot = derp.getRotation();
                 yaw = rot.getYaw();
@@ -178,9 +181,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double yawDiff = yaw - this.lastReportedYaw;
             double pitchDiff = pitch - this.lastReportedPitch;
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4 || positionUpdateTicks >= 20;
-            boolean rotated = yawDiff != 0 || pitchDiff != 0;
-
-            RotationUtils.INSTANCE.setLastServerRotation(new Rotation(lastReportedYaw, lastReportedPitch));
+            boolean rotated = !FreeCam.INSTANCE.shouldDisableRotations() && (yawDiff != 0 || pitchDiff != 0);
 
             if (ridingEntity == null) {
                 if (moved && rotated) {
@@ -206,6 +207,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 positionUpdateTicks = 0;
             }
 
+            RotationUtils.INSTANCE.setServerRotation(new Rotation(yaw, pitch));
+
             if (rotated) {
                 this.lastReportedYaw = yaw;
                 this.lastReportedPitch = pitch;
@@ -214,7 +217,17 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         EventManager.INSTANCE.callEvent(new MotionEvent(EventState.POST));
 
+        EventManager.INSTANCE.callEvent(new RotationUpdateEvent());
+
         ci.cancel();
+    }
+
+    @ModifyVariable(method = "sendChatMessage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private String handleSendMessage(String content) {
+        if (Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getSpigotSpam()) {
+            return Disabler.INSTANCE.getMessage() + " " + content;
+        }
+        return content;
     }
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
@@ -751,5 +764,22 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             worldObj.theProfiler.endSection();
         }
+    }
+
+    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;onUpdate()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
+    private void preTickEvent(CallbackInfo ci) {
+        final PlayerTickEvent tickEvent = new PlayerTickEvent(EventState.PRE);
+        EventManager.INSTANCE.callEvent(tickEvent);
+
+        if (tickEvent.isCancelled()) {
+            EventManager.INSTANCE.callEvent(new RotationUpdateEvent());
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;onUpdate()V", shift = At.Shift.AFTER, ordinal = 0))
+    private void postTickEvent(CallbackInfo ci) {
+        final PlayerTickEvent tickEvent = new PlayerTickEvent(EventState.POST);
+        EventManager.INSTANCE.callEvent(tickEvent);
     }
 }

@@ -21,6 +21,26 @@ import kotlin.math.*
  */
 data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
+    operator fun minus(other: Rotation): Rotation {
+        return Rotation(yaw - other.yaw, pitch - other.pitch)
+    }
+
+    operator fun plus(other: Rotation): Rotation {
+        return Rotation(yaw + other.yaw, pitch + other.pitch)
+    }
+
+    operator fun times(value: Float): Rotation {
+        return Rotation(yaw * value, pitch * value)
+    }
+
+    operator fun div(value: Float): Rotation {
+        return Rotation(yaw / value, pitch / value)
+    }
+
+    companion object {
+        val ZERO = Rotation(0f, 0f)
+    }
+
     /**
      * Set rotations to [player]
      */
@@ -46,9 +66,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         val gcd = getFixedAngleDelta(sensitivity)
 
         yaw = getFixedSensitivityAngle(yaw, serverRotation.yaw, gcd)
-        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd).coerceIn(-90f, 90f)
+        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd)
 
-        return this
+        return this.withLimitedPitch()
     }
 
     /**
@@ -104,6 +124,12 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             player.motionX += calcStrafe * yawCos - calcForward * yawSin
             player.motionZ += calcForward * yawCos + calcStrafe * yawSin
         }
+    }
+
+    fun withLimitedPitch(value: Float = 90f): Rotation {
+        pitch = pitch.coerceIn(-value, value)
+
+        return this
     }
 }
 

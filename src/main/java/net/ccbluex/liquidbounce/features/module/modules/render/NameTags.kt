@@ -86,6 +86,9 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
@@ -146,6 +149,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         // Translate to player position
         val timer = mc.timer
         val renderManager = mc.renderManager
+        val rotateX = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
         glTranslated( // Translate to player position with render pos and interpolate it
             entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
@@ -154,7 +158,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         )
 
         glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(mc.renderManager.playerViewX * rotateX, 1F, 0F, 0F)
 
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.value
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
@@ -22,7 +21,7 @@ abstract class Value<T>(
     val name: String,
     protected open var value: T,
     val subjective: Boolean = false,
-    private val isSupported: (() -> Boolean)? = null
+    var isSupported: (() -> Boolean)? = null,
 ) : ReadWriteProperty<Any?, T> {
 
     fun set(newValue: T): Boolean {
@@ -72,6 +71,10 @@ abstract class Value<T>(
     protected open fun onChanged(oldValue: T, newValue: T) {}
     open fun isSupported() = isSupported?.invoke() ?: true
 
+    open fun setSupport(value: (Boolean) -> () -> Boolean) {
+        isSupported = value(isSupported())
+    }
+
     // Support for delegating values using the `by` keyword.
     override operator fun getValue(thisRef: Any?, property: KProperty<*>) = value
     override operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
@@ -86,7 +89,7 @@ open class BoolValue(
     name: String,
     value: Boolean,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<Boolean>(name, value, subjective, isSupported) {
 
     override fun toJsonF() = JsonPrimitive(value)
@@ -97,8 +100,18 @@ open class BoolValue(
 
     fun toggle() = set(!value)
 
-    fun isActive() = value && isSupported()
+    fun isActive() = value && (isSupported() || note == NoteType.HIDE)
 
+    override fun getValue(thisRef: Any?, property: KProperty<*>): Boolean {
+        return super.getValue(thisRef, property) && isActive()
+    }
+
+    // Use only when you want something to be enabled while hidden in ClickGUI.
+    var note: NoteType? = null
+
+    enum class NoteType {
+        HIDE,
+    }
 }
 
 /**
@@ -109,7 +122,7 @@ open class IntegerValue(
     value: Int,
     val range: IntRange = 0..Int.MAX_VALUE,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<Int>(name, value, subjective, isSupported) {
 
     fun set(newValue: Number) = set(newValue.toInt())
@@ -133,7 +146,7 @@ open class FloatValue(
     value: Float,
     val range: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<Float>(name, value, subjective, isSupported) {
 
     fun set(newValue: Number) = set(newValue.toFloat())
@@ -156,7 +169,7 @@ open class TextValue(
     name: String,
     value: String,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<String>(name, value, subjective, isSupported) {
 
     override fun toJsonF() = JsonPrimitive(value)
@@ -171,7 +184,7 @@ open class FontValue(
     name: String,
     value: FontRenderer,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<FontRenderer>(name, value, subjective, isSupported) {
 
     override fun toJsonF(): JsonElement? {
@@ -216,18 +229,19 @@ open class FontValue(
 /**
  * Block value represents a value with a block
  */
-open class BlockValue(name: String, value: Int, subjective: Boolean = false, isSupported: (() -> Boolean)? = null)
-    : IntegerValue(name, value, 1..197, subjective, isSupported)
+open class BlockValue(
+    name: String, value: Int, subjective: Boolean = false, isSupported: (() -> Boolean)? = null,
+) : IntegerValue(name, value, 1..197, subjective, isSupported)
 
 /**
  * List value represents a selectable list of values
  */
 open class ListValue(
     name: String,
-    val values: Array<String>,
+    var values: Array<String>,
     override var value: String,
     subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
+    isSupported: (() -> Boolean)? = null,
 ) : Value<String>(name, value, subjective, isSupported) {
 
     var openList = false
@@ -241,36 +255,8 @@ open class ListValue(
     override fun toJsonF() = JsonPrimitive(value)
 
     override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asString else null
-}
 
-/**
- * MultiList value represents multi-selectable list of values
- */
-open class MultiListValue(
-    name: String,
-    val values: Array<String>,
-    public override var value: List<String>,
-    subjective: Boolean = false,
-    isSupported: (() -> Boolean)? = null
-) : Value<List<String>>(name, value, subjective, isSupported) {
-
-    var openList = false
-
-    operator fun contains(string: String?) = values.any { it.equals(string, true) }
-
-    override fun changeValue(newValue: List<String>) {
-        if (newValue.isEmpty()) return
-
-        val filteredValues = newValue.filter { valueToKeep -> values.any { it.equals(valueToKeep, true) } }
-
-        if (filteredValues.isEmpty()) return
-
-        value = filteredValues
+    fun updateValues(newValues: Array<String>) {
+        values = newValues
     }
-
-    override fun toJsonF() = JsonArray().apply {
-        value.forEach { add(it) }
-    }
-
-    override fun fromJsonF(element: JsonElement) = if (element.isJsonArray) element.asJsonArray.map { it.asString } else null
 }

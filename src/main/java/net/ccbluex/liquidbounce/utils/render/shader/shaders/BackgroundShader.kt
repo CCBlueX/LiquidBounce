@@ -20,6 +20,7 @@ class BackgroundShader : Shader {
 
     companion object {
         val BACKGROUND_SHADER = BackgroundShader()
+        var glowOutline = true
     }
 
     private var time = 0f
