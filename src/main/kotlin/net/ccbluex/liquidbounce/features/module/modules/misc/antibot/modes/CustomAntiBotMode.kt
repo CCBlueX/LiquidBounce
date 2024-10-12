@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -64,13 +65,13 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private val flyingSet = hashMapOf<Int, Int>()
-    private val hitListSet = hashSetOf<Int>()
-    private val notAlwaysInRadiusSet = hashSetOf<Int>()
+    private val flyingSet = Int2IntOpenHashMap()
+    private val hitListSet = IntOpenHashSet()
+    private val notAlwaysInRadiusSet = IntOpenHashSet()
 
-    private val swungSet = hashSetOf<Int>()
-    private val crittedSet = hashSetOf<Int>()
-    private val attributesSet = hashSetOf<Int>()
+    private val swungSet = IntOpenHashSet()
+    private val crittedSet = IntOpenHashSet()
+    private val attributesSet = IntOpenHashSet()
 
     val repeatable = repeatable {
         val rangeSquared = AlwaysInRadius.alwaysInRadiusRange
@@ -97,20 +98,20 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
                 val entity = packet.getEntity(world) ?: return@handler
                 if (entity.isOnGround && entity.prevY != entity.y) {
-                    flyingSet[entity.id] = flyingSet.getOrDefault(entity.id, 0) + 1
+                    flyingSet.put(entity.id, flyingSet.getOrDefault(entity.id, 0) + 1)
                 } else if (!entity.isOnGround && flyingSet.getOrDefault(entity.id, 0) > 0) {
                     val newVL = flyingSet.getOrDefault(entity.id, 0) / 2
 
                     if (newVL <= 0) {
-                        flyingSet -= entity.id
+                        flyingSet.remove(entity.id)
                     } else {
-                        flyingSet[entity.id] = newVL
+                        flyingSet.put(entity.id, newVL)
                     }
                 }
             }
 
             is EntityAttributesS2CPacket -> {
-                attributesSet += packet.entityId
+                attributesSet.add(packet.entityId)
             }
 
             is EntityAnimationS2CPacket -> {
@@ -118,10 +119,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
                 if (animationId == EntityAnimationS2CPacket.SWING_MAIN_HAND ||
                     animationId == EntityAnimationS2CPacket.SWING_OFF_HAND) {
-                    swungSet += packet.entityId
+                    swungSet.add(packet.entityId)
                 } else if (animationId == EntityAnimationS2CPacket.CRIT ||
                     animationId == EntityAnimationS2CPacket.ENCHANTED_HIT) {
-                    crittedSet += packet.entityId
+                    crittedSet.add(packet.entityId)
                 }
             }
 
@@ -129,10 +130,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 // don't use forEach, it provides Integer instead of int
                 while (hasNext()) {
                     val entityId = nextInt()
-                    attributesSet -= entityId
-                    flyingSet -= entityId
-                    hitListSet -= entityId
-                    notAlwaysInRadiusSet -= entityId
+                    attributesSet.remove(entityId)
+                    flyingSet.remove(entityId)
+                    hitListSet.remove(entityId)
+                    notAlwaysInRadiusSet.remove(entityId)
                 }
             }
         }
