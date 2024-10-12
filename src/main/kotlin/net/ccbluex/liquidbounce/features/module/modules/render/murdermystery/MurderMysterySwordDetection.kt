@@ -29,6 +29,7 @@ object MurderMysterySwordDetection {
             Items.NETHER_BRICK,
             Items.COOKED_CHICKEN,
             Items.MUSIC_DISC_BLOCKS,
+            Items.MUSIC_DISC_11,
             Items.RED_DYE,
             Items.OAK_BOAT,
             Items.BOOK,
