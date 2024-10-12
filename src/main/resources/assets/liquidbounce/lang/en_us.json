@@ -394,7 +394,7 @@
   "liquidbounce.module.blink.description": "Makes it look as if you were teleporting to other players.",
   "liquidbounce.module.blockBounce.description": "Allows you to bounce higher on bouncy blocks.",
   "liquidbounce.module.blockESP.description": "Allows you to see selected blocks through walls.",
-  "liquidbounce.module.blockOutline.description": "Make the block have an outline.",
+  "liquidbounce.module.blockOutline.description": "Adds an outline to all blocks.",
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-full block blocks.",
   "liquidbounce.module.breadcrumbs.description": "Leaves a trace behind you.",
   "liquidbounce.module.antiVoid.description": "Protects you from falling into the void.",
