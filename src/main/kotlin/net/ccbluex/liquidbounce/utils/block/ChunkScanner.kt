@@ -37,7 +37,7 @@ object ChunkScanner : Listenable {
 
     private val loadedChunks = hashSetOf<ChunkLocation>()
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private val mutex = Mutex()
 
@@ -78,8 +78,8 @@ object ChunkScanner : Listenable {
         scope.launch {
             mutex.withLock {
                 subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
+                loadedChunks.clear()
             }
-            loadedChunks.clear()
         }
     }
 
@@ -108,16 +108,20 @@ object ChunkScanner : Listenable {
     }
 
     fun unsubscribe(oldSubscriber: BlockChangeSubscriber) {
-        this.subscriber.remove(oldSubscriber)
         scope.launch {
             mutex.withLock {
+                subscriber.remove(oldSubscriber)
                 oldSubscriber.clearAllChunks()
             }
         }
     }
 
     object ChunkScannerThread {
-        private val chunkUpdateChannel = Channel<UpdateRequest>(capacity = 600)
+        private const val CHANNEL_CAPACITY = 800
+
+        private var chunkUpdateChannel = Channel<UpdateRequest>(capacity = CHANNEL_CAPACITY)
+
+        private val channelRestartMutex = Mutex()
 
         init {
             scope.launch {
@@ -127,7 +131,11 @@ object ChunkScanner : Listenable {
                         val chunkUpdate = chunkUpdateChannel.receive()
 
                         if (mc.world == null) {
-                            chunkUpdateChannel.cancel()
+                            // reset Channel
+                            channelRestartMutex.withLock {
+                                chunkUpdateChannel.cancel()
+                                chunkUpdateChannel = Channel(capacity = CHANNEL_CAPACITY)
+                            }
                             // max delay = 30s (1s, 2s, 4s, ...)
                             delay((1000L shl retrying++).coerceAtMost(30000L))
                             continue
@@ -143,14 +151,8 @@ object ChunkScanner : Listenable {
                                     chunkUpdate.z
                                 )
 
-                                is UpdateRequest.BlockUpdateEvent -> {
-                                    for (sub in subscriber) {
-                                        sub.recordBlock(
-                                            chunkUpdate.blockPos,
-                                            chunkUpdate.newState,
-                                            cleared = false
-                                        )
-                                    }
+                                is UpdateRequest.BlockUpdateEvent -> subscriber.forEach {
+                                    it.recordBlock(chunkUpdate.blockPos, chunkUpdate.newState, cleared = false)
                                 }
                             }
                         }
@@ -158,7 +160,7 @@ object ChunkScanner : Listenable {
                         break // end loop if job has been canceled
                     } catch (e: Throwable) {
                         retrying++
-                        e.printStackTrace()
+                        logger.warn("Chunk update error", e)
                     }
                 }
             }
@@ -166,14 +168,16 @@ object ChunkScanner : Listenable {
 
         fun enqueueChunkUpdate(request: UpdateRequest) {
             scope.launch {
-                chunkUpdateChannel.send(request)
+                channelRestartMutex.withLock {
+                    chunkUpdateChannel.send(request)
+                }
             }
         }
 
         /**
          * Scans the chunks for a block
          */
-        private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest) {
+        private suspend fun scanChunk(request: UpdateRequest.ChunkUpdateRequest) {
             val chunk = request.chunk
 
             if (chunk.isEmpty) {
@@ -191,20 +195,22 @@ object ChunkScanner : Listenable {
 
             val start = System.nanoTime()
 
-            for (x in 0 until 16) {
-                for (y in 0 until chunk.height) {
-                    for (z in 0 until 16) {
-                        val pos = BlockPos(x + chunk.pos.startX, y + chunk.bottomY, z + chunk.pos.startZ)
-                        val blockState = chunk.getBlockState(pos)
-
-                        for (sub in subscribersForRecordBlock) {
-                            sub.recordBlock(pos, blockState, cleared = true)
+            (0 until chunk.height).map { y ->
+                scope.launch {
+                    val pos = BlockPos.Mutable(chunk.pos.startX, y + chunk.bottomY, chunk.pos.startZ)
+                    repeat(16) {
+                        repeat(16) {
+                            val blockState = chunk.getBlockState(pos)
+                            subscribersForRecordBlock.forEach { it.recordBlock(pos, blockState, cleared = true) }
+                            pos.z++
                         }
+                        pos.z = chunk.pos.startZ
+                        pos.x++
                     }
                 }
-            }
+            }.joinAll()
 
-            logger.debug("Scanning chunk ${chunk.pos.x} ${chunk.pos.x} took ${(System.nanoTime() - start) / 1000}us")
+            logger.debug("Scanning chunk (${chunk.pos.x}, ${chunk.pos.z}) took ${(System.nanoTime() - start) / 1000}us")
         }
 
         private fun removeMarkedBlocksFromChunk(x: Int, z: Int) {
@@ -236,6 +242,7 @@ object ChunkScanner : Listenable {
         /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          *
+         * @param pos DON'T directly save it to a container Property (Field in Java), save a copy instead
          * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)

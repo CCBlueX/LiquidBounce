@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -7,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -46,12 +63,13 @@ private const val ITEM_SCALE: Float = 1.0F
 private const val BACKGROUND_PADDING: Int = 2
 
 object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
-    val maxLayers by int("MaxLayers", 5, 1..5)
-    val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
+    private val maxLayers by int("MaxLayers", 5, 1..5)
+    private val scale by float("Scale", 1.5f, 0.5f..3.0f)
+    private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
 
-    private val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    private val fontRenderer by lazy {
+        Fonts.DEFAULT_FONT.get()
+    }
 
     val renderHandler = handler<OverlayRenderEvent> {
         val fontBuffers = FontRendererBuffers()
@@ -63,9 +81,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
             try {
                 val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
-                    val bp = BlockPos(key.x, key.y, key.z)
-
-                    bp.getSquaredDistance(playerPos) to value
+                    key.asBlockPos().getSquaredDistance(playerPos) to value
                 }.filter { (distSq, _) ->
                     distSq < maxDistanceSquared
                 }.sortedByDescending { (distSq, _) ->
@@ -255,30 +271,26 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             } else null
         }
 
-        private val invalidBeds = hashSetOf<TargetBlockPos>()
         private fun updateAllBeds(pos: BlockPos) {
             trackedBlockMap.forEach { (trackedPos, _) ->
-                val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
+                val trackedPosBlockPos = trackedPos.asBlockPos()
                 // Update if the block is close to a bed
-                if (trackedPosBlockPos.manhattanDistanceTo(pos) <= maxLayers) {
-                    val bedState = trackedPosBlockPos.getState() ?: return@forEach
-                    if (bedState.block !in BED_BLOCKS) {
-                        // The tracked block is not a bed anymore, remove it
-                        invalidBeds.add(trackedPos)
-                        return@forEach
-                    }
-                    trackedBlockMap[trackedPos] = TrackedState(
-                        bedPlates = getBedPlates(trackedPosBlockPos, bedState),
-                        centerPos = getBedCenterPos(bedState, trackedPosBlockPos),
-                        bedItem = bedState.block.asItem().defaultStack
-                    )
+                if (trackedPosBlockPos.manhattanDistanceTo(pos) > maxLayers) {
+                    return@forEach
                 }
-            }
-            if (invalidBeds.isNotEmpty()) {
-                invalidBeds.forEach {
-                    trackedBlockMap.remove(it)
+
+                val bedState = trackedPosBlockPos.getState() ?: return@forEach
+                if (bedState.block !in BED_BLOCKS) {
+                    // The tracked block is not a bed anymore, remove it
+                    trackedBlockMap.remove(trackedPos)
+                    return@forEach
                 }
-                invalidBeds.clear()
+
+                trackedBlockMap[trackedPos] = TrackedState(
+                    bedPlates = getBedPlates(trackedPosBlockPos, bedState),
+                    centerPos = getBedCenterPos(bedState, trackedPosBlockPos),
+                    bedItem = bedState.block.asItem().defaultStack
+                )
             }
         }
     }

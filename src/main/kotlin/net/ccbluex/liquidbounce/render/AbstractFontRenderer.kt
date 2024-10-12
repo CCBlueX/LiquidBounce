@@ -69,4 +69,10 @@ abstract class AbstractFontRenderer<T> {
         text: TextProcessor.ProcessedText,
         shadow: Boolean = false
     ): Float
+
+    val TextProcessor.ProcessedText.width: Float
+        get() = getStringWidth(this, false)
+
+    val TextProcessor.ProcessedText.widthWithShadow: Float
+        get() = getStringWidth(this, true)
 }

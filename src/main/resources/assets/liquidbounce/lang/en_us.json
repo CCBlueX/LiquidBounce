@@ -409,6 +409,7 @@
   "liquidbounce.module.criticals.description": "Automatically deals critical damage every time you attack an entity.",
   "liquidbounce.module.crystalAura.description": "Automatically places and destroys end crystals.",
   "liquidbounce.module.damage.description": "Deals the specified amount of damage to yourself.",
+  "liquidbounce.module.damageParticles.description": "Show health changes of entities.",
   "liquidbounce.module.dankBobbing.description": "Increases the view bobbing effect.",
   "liquidbounce.module.debug.description": "Only of interest to developers.",
   "liquidbounce.module.debugRecorder.description": "Only of interest to developers.",
