@@ -32,11 +32,11 @@ val Dispatchers.Loom: CoroutineDispatcher
 private val loomBuilder = Thread.ofVirtual()
 
 fun virtualThread(
-    name: String? = null,
+    name: String = "Loom-${System.currentTimeMillis() % 1000}",
     start: Boolean = true,
     block: Runnable,
 ): Thread = with(loomBuilder) {
-    if (name != null) name(name)
+    name(name)
 
     if (start) start(block) else unstarted(block)
 }

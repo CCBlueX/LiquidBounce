@@ -74,7 +74,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     private val attributesSet = IntOpenHashSet()
 
     val repeatable = repeatable {
-        val rangeSquared = AlwaysInRadius.alwaysInRadiusRange
+        val rangeSquared = AlwaysInRadius.alwaysInRadiusRange * AlwaysInRadius.alwaysInRadiusRange
 
         for (entity in world.players) {
             if (player.squaredDistanceTo(entity) > rangeSquared) {
