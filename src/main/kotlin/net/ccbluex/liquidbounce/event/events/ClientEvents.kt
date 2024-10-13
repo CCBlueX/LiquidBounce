@@ -30,10 +30,10 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
-import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
-import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.integration.browser.supports.IBrowser
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -166,7 +166,7 @@ class ServerPingedEvent(val server: ServerInfo) : Event()
 
 @Nameable("componentsUpdate")
 @WebSocketEvent
-class ComponentsUpdate(val components: List<Component>) : Event()
+class ComponentsUpdate : Event()
 
 /**
  * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.

@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 
 @Nameable("windowResize")
 @WebSocketEvent

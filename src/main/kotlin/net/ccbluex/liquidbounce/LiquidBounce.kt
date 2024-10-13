@@ -55,11 +55,11 @@ import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
-import net.ccbluex.liquidbounce.web.socket.ClientSocket
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
-import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -147,6 +147,7 @@ object LiquidBounce : Listenable {
             InventoryManager
             WorldToScreen
             Reconnect
+            ActiveServerList
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
             ConfigSystem.root(ClientAccountManager)
@@ -162,13 +163,12 @@ object LiquidBounce : Listenable {
 
             // Load theme and component overlay
             ThemeManager
-            ComponentOverlay.insertComponents()
 
             // Load config system from disk
             ConfigSystem.loadAll()
 
             // Netty WebSocket
-            ClientSocket.start()
+            ClientInteropServer.start()
 
             // Initialize browser
             logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
