@@ -31,11 +31,12 @@ object VelocityIntave : Choice("Intave") {
         true) {
 
         private val reduceFactor by float("Factor", 0.97f, 0.6f..1f)
+        private val hurtTime by int("HurtTime", 9, 1..9)
         var lastAttackTime = 0L
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEvent> {
-            if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+            if (player.hurtTime == hurtTime && System.currentTimeMillis() - lastAttackTime <= 8000) {
                 player.velocity.x *= reduceFactor
                 player.velocity.z *= reduceFactor
             }
