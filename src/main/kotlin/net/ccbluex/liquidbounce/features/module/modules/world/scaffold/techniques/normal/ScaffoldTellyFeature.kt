@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
@@ -69,6 +70,11 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
             it.jumping = true
             jumpTicks = jumpTicksOpt.random()
         }
+    }
+
+    @Suppress
+    private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
+        ticksUntilJump = 0
     }
 
 }
