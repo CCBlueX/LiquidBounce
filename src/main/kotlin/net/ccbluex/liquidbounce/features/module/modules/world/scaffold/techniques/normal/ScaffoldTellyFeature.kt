@@ -60,21 +60,21 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
     }
 
     @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent> {
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
         if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.isOnGround) {
             return@handler
         }
 
         val isStraight = RotationManager.currentRotation == null || straightTicks == 0
         if (isStraight && ticksUntilJump >= jumpTicks) {
-            it.jumping = true
-            jumpTicks = jumpTicksOpt.random()
+            event.jumping = true
         }
     }
 
     @Suppress
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
         ticksUntilJump = 0
+        jumpTicks = jumpTicksOpt.random()
     }
 
 }
