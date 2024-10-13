@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.block
+package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
@@ -30,13 +30,18 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBedDefender.mc
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBedDefender.player
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.PlacementRenderer
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
@@ -44,8 +49,10 @@ import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 
+// TODO sneaking leads to multiple placements?
 class BlockPlacer(
     name: String,
     val module: Module,
@@ -98,12 +105,14 @@ class BlockPlacer(
         SilentHotbar.selectSlotSilently(this, slot.hotbarSlot)
 
         // Check if we are facing the target
-        val blockHitResult = raytraceTarget(blockPos)
+        val blockHitResult = raytraceTarget(blockPos, currentTarget!!)
             ?: return@repeatable
 
         // Place block
         doPlacement(blockHitResult, placementSwingMode = swingMode)
-        placedRenderer.addBlock(currentTarget!!.placedBlock)
+        val pos = currentTarget!!.placedBlock
+        targetRenderer.removeBlock(pos)
+        placedRenderer.addBlock(pos)
         currentTarget = null
 
         waitTicks(cooldown)
@@ -124,16 +133,18 @@ class BlockPlacer(
             it.movementEvent.sneaking = true
         }
 
+        val itemStack = /*slotFinder().itemStack ?:*/ ItemStack(Items.SANDSTONE)
+
         val iterator = blocks.iterator()
         while (iterator.hasNext()) { // TODO skip blocks that are blocked by entities
             val position = iterator.next()
 
             val searchOptions = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
-                ItemStack(Items.SANDSTONE),
+                itemStack,
                 CenterTargetPositionFactory,
                 BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                player.pos,
+                if (wallRange == 0f) player.pos else position.toVec3d(),
                 player.pose
             )
 
@@ -141,7 +152,7 @@ class BlockPlacer(
                 ?: continue
 
             // Check if we can reach the target
-            if (raytraceTarget(placementTarget.interactedBlockPos, placementTarget.rotation) == null) {
+            if (raytraceTarget(placementTarget.interactedBlockPos, placementTarget, placementTarget.rotation) == null) {
                 continue
             }
 
@@ -156,8 +167,15 @@ class BlockPlacer(
                 it.movementEvent.sneaking = true
             }
 
+            var rotation = placementTarget.rotation
+
+            // the utils don't allow rotations trough walls, so this hacky work around is needed
+            if (wallRange > 0) {
+                rotation = RotationManager.makeRotation(placementTarget.interactedBlockPos.toCenterPos().add(Vec3d.of(placementTarget.direction.vector).multiply(0.5)), player.eyePos)
+            }
+
             RotationManager.aimAt(
-                placementTarget.rotation,
+                rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
                 provider = module,
@@ -169,7 +187,7 @@ class BlockPlacer(
         }
     }
 
-    private fun raytraceTarget(blockPos: BlockPos, providedRotation: Rotation? = null): BlockHitResult? {
+    private fun raytraceTarget(blockPos: BlockPos, target: BlockPlacementTarget, providedRotation: Rotation? = null): BlockHitResult? {
         val blockState = blockPos.getState() ?: return null
 
         // Raytrace with collision
@@ -182,28 +200,17 @@ class BlockPlacer(
         }
 
         // Raytrace through walls
-        if (wallRange <= 0f) {
+        if (blockPos.toCenterPos().squaredDistanceTo(player.eyePos) > wallRange * wallRange) {
             return null
         }
 
-        val blockHitResult = raytraceBlock(
-            range = wallRange.toDouble(),
-            rotation = providedRotation ?: RotationManager.serverRotation,
-            pos = blockPos,
-            state = blockState
-        )
-        if (blockHitResult != null && blockHitResult.type == HitResult.Type.BLOCK
-            && blockHitResult.blockPos == blockPos) {
-            return blockHitResult
-        }
-
-        return null
+        return target.blockHitResult
     }
 
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      */
-    fun update(positions: List<BlockPos>) {
+    fun update(positions: Set<BlockPos>) {
         val iterator = blocks.iterator()
         while (iterator.hasNext()) {
             val position = iterator.next()
@@ -211,6 +218,11 @@ class BlockPlacer(
                 targetRenderer.removeBlock(position)
                 iterator.remove()
             }
+        }
+
+        if (currentTarget != null && currentTarget!!.placedBlock !in positions) {
+            targetRenderer.removeBlock(currentTarget!!.placedBlock)
+            currentTarget = null
         }
 
         positions.forEach { addToQueue(it, false) }
@@ -254,6 +266,10 @@ class BlockPlacer(
         reset()
         targetRenderer.clearSilently()
         placedRenderer.clearSilently()
+    }
+
+    fun isDone(): Boolean {
+        return currentTarget == null && blocks.isEmpty()
     }
 
     @Suppress("unused")

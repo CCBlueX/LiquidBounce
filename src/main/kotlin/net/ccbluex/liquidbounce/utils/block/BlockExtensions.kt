@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.*
 import net.minecraft.item.ItemPlacementContext
@@ -451,4 +451,13 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         // it would be checked as the player can quickly switch to glow stone
         || this is ShulkerBoxBlock || this is StonecutterBlock
         || this is SweetBerryBushBlock && (blockState?.get(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapdoorBlock
+}
+
+/**
+ * Returns the shape of the block as box, if it can't get the actual shape, it will return [FULL_BOX].
+ *
+ * Note: The world is required to NOT be `null`.
+ */
+fun BlockPos.getShape(): Box {
+    return this.getState()?.getOutlineShape(world, this)?.boundingBox ?: FULL_BOX
 }

@@ -29,12 +29,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedCh
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedColorChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedNoneChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedSpawnLocationChoice
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BedBlock
 import net.minecraft.block.BlockState
@@ -60,7 +61,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         var best: HotbarItemSlot? = null
 
         HOTBAR_SLOTS.forEach {
-            if (ScaffoldBlockItemSelection.isBlockUnfavourable(it.itemStack)) {
+            if (!it.itemStack.isFullBlock()) {
                 return@forEach
             }
 
@@ -70,18 +71,21 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
                 return@forEach
             }
 
+            // prioritize blocks with a higher hardness
             if (hardness > maxHardness || hardness == -1f && maxHardness != -1f) {
                 best = it
                 maxHardness = hardness
                 return@forEach
             }
 
+            // prioritize stacks with a higher count
             val count = it.itemStack.count
             if (count > maxCount) {
                 best = it
                 maxCount = count
             }
 
+            // prioritize stacks closer to the selected slot
             val distance1a = (it.hotbarSlot - selected + 9) % 9
             val distance1b = (selected - it.hotbarSlot + 9) % 9
             val distance1 = minOf(distance1a, distance1b)
@@ -147,7 +151,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
             placementPositions.map { pos -> ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.alpha(100)) }
         ))
 
-        placer.update(placementPositions)
+        placer.update(placementPositions.toSet())
     }
 
     override fun disable() {

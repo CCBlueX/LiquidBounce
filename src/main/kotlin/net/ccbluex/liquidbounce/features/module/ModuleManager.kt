@@ -68,6 +68,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.Mod
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -294,6 +295,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleZoom,
 
             // World
+            ModuleAutoBuild,
             ModuleAutoDisable,
             ModuleAutoFarm,
             ModuleAutoTool,

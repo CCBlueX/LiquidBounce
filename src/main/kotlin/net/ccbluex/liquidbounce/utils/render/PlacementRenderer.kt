@@ -53,15 +53,15 @@ class PlacementRenderer(
     private val fadeInCurve by curve("FadeInCurve", Easing.LINEAR)
     private val fadeOutCurve by curve("FadeOutCurve", Easing.LINEAR)
 
-    private val inTime by int("InTime", 1000, 0..5000, "ms")
-    private val outTime by int("InTime", 1000, 0..5000, "ms")
+    private val inTime by int("InTime", 500, 0..5000, "ms")
+    private val outTime by int("OutTime", 500, 0..5000, "ms")
 
     private val color by color("Color", Color4b(0, 255, 0, 150))
     private val outlineColor by color("OutlineColor", Color4b(0, 255, 0, 150))
 
-    private val inList = linkedMapOf<BlockPos, Pair<Long, Long>>()
-    private val currentList = linkedMapOf<BlockPos, Long>()
-    private val outList = linkedMapOf<BlockPos, Pair<Long, Long>>()
+    private val inList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
+    private val currentList = linkedMapOf<BlockPos, Pair<Long, Box>>()
+    private val outList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
     private var outAnimationsFinished = true
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -89,23 +89,23 @@ class PlacementRenderer(
 
                         val sizeFactor = startSizeCurve.getFactor(entry.value.first, time, inTime.toFloat())
                         val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                        val box = getBox(expand)
+                        val box = getBox(expand, entry.value.third)
                         val colorFactor = fadeInCurve.getFactor(entry.value.first, time, inTime.toFloat())
 
                         drawEntryBox(entry.key, entry.value.second, box, colorFactor)
 
                         if (time - entry.value.first >= outTime) {
                             if (keep) {
-                                currentList[entry.key] = entry.value.second
+                                currentList[entry.key] = entry.value.second to entry.value.third
                             } else {
-                                outList[entry.key] = System.currentTimeMillis() to entry.value.second
+                                outList[entry.key] = Triple(time, entry.value.second, entry.value.third)
                             }
                             remove()
                         }
                     }
                 }
 
-                currentList.forEach { drawEntryBox(it.key, it.value, FULL_BOX, 1f) }
+                currentList.forEach { drawEntryBox(it.key, it.value.first, it.value.second, 1f) }
 
                 outList.iterator().apply {
                     while (hasNext()) {
@@ -113,7 +113,7 @@ class PlacementRenderer(
 
                         val sizeFactor = endSizeCurve.getFactor(entry.value.first, time, outTime.toFloat())
                         val expand = MathHelper.lerp(sizeFactor, 1f, endSize)
-                        val box = getBox(expand)
+                        val box = getBox(expand, entry.value.third)
                         val colorFactor = 1 - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
 
                         drawEntryBox(entry.key, entry.value.second, box, colorFactor)
@@ -135,15 +135,14 @@ class PlacementRenderer(
         }
     }
 
-    private fun getBox(expand: Float): Box {
-        return if (expand == 0f) {
-            FULL_BOX
+    private fun getBox(expand: Float, box: Box): Box { // TODO this doesn't work
+        return if (expand == 1f) {
+            box
+        } else if (expand == 0f) {
+            EMPTY_BOX
         } else {
-            if (expand < 1) {
-                FULL_BOX.expand(expand.toDouble() - 1)  // TODO to properly shrink half blocks we need to get the size and multiply it here
-            } else {
-                FULL_BOX.expand(1 - expand.toDouble())
-            }
+            val f = if (expand < 1) -0.5 * expand else (expand - 1) * 0.5
+            box.expand(box.lengthX * f, box.lengthY * f, box.lengthZ * f)
         }
     }
 
@@ -157,11 +156,11 @@ class PlacementRenderer(
 
         scanBlocksInCuboid(2, pos) { // TODO in theory a one block radius should be enough
             inList.computeIfPresent(it) { _, value ->
-                value.first to getCullData(it)
+                Triple(value.first, getCullData(it), value.third)
             }?.let { return@scanBlocksInCuboid false }
 
-            currentList.computeIfPresent(it) { _, _ ->
-                getCullData(it)
+            currentList.computeIfPresent(it) { _, value ->
+                getCullData(it) to value.second
             }?.let { return@scanBlocksInCuboid false }
 
             return@scanBlocksInCuboid false
@@ -172,13 +171,13 @@ class PlacementRenderer(
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      */
-    fun addBlock(pos: BlockPos, update: Boolean = true) {
+    fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
         if (!enabled) {
             return
         }
 
         if (!currentList.contains(pos) && !inList.contains(pos)) {
-            inList[pos] = System.currentTimeMillis() to 0L
+            inList[pos] = Triple(System.currentTimeMillis(), 0L, box)
             if (update) {
                 updateNeighbors(pos)
             }
@@ -195,8 +194,19 @@ class PlacementRenderer(
             return
         }
 
-        val entry = currentList.remove(pos) ?: inList.remove(pos)?.second ?: return
-        outList[pos] = System.currentTimeMillis() to entry
+        var cullData = 0L
+        var box: Box? = null
+        currentList.remove(pos)?.let {
+            cullData = it.first
+            box = it.second
+        } ?: run {
+            inList.remove(pos)?.let {
+                cullData = it.second
+                box = it.third
+            } ?: return
+        }
+
+        outList[pos] = Triple(System.currentTimeMillis(), cullData, box!!)
     }
 
     /**
@@ -211,10 +221,10 @@ class PlacementRenderer(
         }
 
         for (entry in inList) {
-            inList[entry.key] = entry.value.first to getCullData(entry.key)
+            inList[entry.key] = Triple(entry.value.first, getCullData(entry.key), entry.value.third)
         }
         for (entry in currentList) {
-            currentList[entry.key] = getCullData(entry.key)
+            currentList[entry.key] = getCullData(entry.key) to entry.value.second
         }
     }
 
@@ -286,7 +296,8 @@ class PlacementRenderer(
         diagonalPresent: Boolean,
         mask: Int
     ): Int {
-        return if ((!direction1Present && !direction2Present) || (direction1Present && direction2Present && !diagonalPresent)) {
+        return if ((!direction1Present && !direction2Present)
+            || (direction1Present && direction2Present && !diagonalPresent)) {
             currentData or mask
         } else {
             currentData
@@ -316,7 +327,7 @@ class PlacementRenderer(
         inList.iterator().apply {
             while (hasNext()) {
                 val entry = next()
-                outList[entry.key] = System.currentTimeMillis() to entry.value.second
+                outList[entry.key] = Triple(System.currentTimeMillis(), entry.value.second, entry.value.third)
                 remove()
             }
         }
@@ -324,7 +335,7 @@ class PlacementRenderer(
         currentList.iterator().apply {
             while (hasNext()) {
                 val entry = next()
-                outList[entry.key] = System.currentTimeMillis() to entry.value
+                outList[entry.key] = Triple(System.currentTimeMillis(), entry.value.first, entry.value.second)
                 remove()
             }
         }

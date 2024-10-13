@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.MutableText
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
@@ -66,6 +67,7 @@ fun withColor(text: String, color: Formatting) = text.asText().styled { it.withC
 fun bypassNameProtection(text: MutableText) = text.styled {
     val color = it.color ?: TextColor.fromFormatting(Formatting.RESET)
 
+    @Suppress("KotlinConstantConditions")
     val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
 
     it.withColor(newColor)
@@ -119,6 +121,14 @@ fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata)
 
     chatHud.addMessage(literalText, metadata.id, metadata.count)
 }
+
+fun chat(text: Text, module: Module) = chat(text, metadata = MessageMetadata(id = "${module.name}#info"))
+
+fun chat(text: Text, command: Command) = chat(text, metadata = MessageMetadata(id = "${command.name}#info"))
+
+fun chat(text: String, module: Module) = chat(text.asText(), module)
+
+fun chat(text: String, command: Command) = chat(text.asText(), command)
 
 fun chat(text: String) = chat(text.asText())
 

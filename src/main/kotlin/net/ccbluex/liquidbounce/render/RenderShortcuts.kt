@@ -41,6 +41,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 /**
  * Data class representing the rendering environment.
