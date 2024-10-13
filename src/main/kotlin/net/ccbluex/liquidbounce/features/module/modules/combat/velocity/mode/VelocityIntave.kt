@@ -30,7 +30,7 @@ object VelocityIntave : Choice("Intave") {
     private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack",
         true) {
 
-        private val reduceFactor by float("Factor", 0.97f, 0.6f..1f)
+        private val reduceFactor by float("Factor", 0.6f, 0.6f..1f)
         private val hurtTime by int("HurtTime", 9, 1..9)
         var lastAttackTime = 0L
 
