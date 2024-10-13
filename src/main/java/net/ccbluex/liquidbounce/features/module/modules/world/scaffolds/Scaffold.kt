@@ -953,14 +953,15 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         placeRotation ?: return false
 
         if (options.rotationsActive && !isGodBridgeEnabled) {
-            val rotationDifference = rotationDifference(placeRotation.rotation, currRotation)
+             val rotationDifference = rotationDifference(placeRotation.rotation, currRotation)
+             val (hSpeed, vSpeed) = options.horizontalSpeed.random() to options.verticalSpeed.random()
              val (factorH, factorV) = if (options.smootherMode == "Relative") 
-                 computeFactor(rotationDifference, options.horizontalSpeed) to computeFactor(rotationDifference, options.verticalSpeed)
-             else options.horizontalSpeed to options.verticalSpeed
+                 computeFactor(rotationDifference, hSpeed) to computeFactor(rotationDifference, vSpeed)
+             else hSpeed to vSpeed
 
              options.instant = blockSafe && rotationDifference > (factorH + factorV) / 2f
                 
-            setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
+             setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
         }
 
         this.placeRotation = placeRotation
