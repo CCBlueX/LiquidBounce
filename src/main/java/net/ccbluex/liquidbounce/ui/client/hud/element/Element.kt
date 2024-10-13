@@ -6,10 +6,12 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element
 
 import net.ccbluex.liquidbounce.utils.ClassUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.gui.ScaledResolution
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.math.max
 import kotlin.math.min
 
@@ -92,13 +94,17 @@ abstract class Element(
      */
     open val values: Set<Value<*>>
         get() {
-            var orderedValues = mutableSetOf<Value<*>>()
+            val orderedValues = CopyOnWriteArraySet<Value<*>>()
 
-            javaClass.declaredFields.forEach { innerField ->
-                innerField.isAccessible = true
-                val element = innerField[this] ?: return@forEach
+            try {
+                javaClass.declaredFields.forEach { innerField ->
+                    innerField.isAccessible = true
+                    val element = innerField[this] ?: return@forEach
 
-                orderedValues = ClassUtils.findValues(element, configurables, orderedValues)
+                    ClassUtils.findValues(element, configurables, orderedValues)
+                }
+            } catch (e: Exception) {
+                LOGGER.error(e)
             }
 
             return orderedValues
