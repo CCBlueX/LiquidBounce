@@ -535,7 +535,7 @@ fun RenderEnvironment.drawGradientCircle(
  * Function to draw the outline of a circle of the size [radius]
  *
  * @param radius The radius
- * @param color The color
+ * @param color4b The color
  */
 fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     val matrix = matrixStack.peek().positionMatrix

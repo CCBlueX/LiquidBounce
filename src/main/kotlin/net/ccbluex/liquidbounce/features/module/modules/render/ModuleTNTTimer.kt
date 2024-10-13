@@ -79,18 +79,19 @@ object ModuleTNTTimer : Module("TNTTimer", Category.RENDER) {
                 val c = size
                 val fontScale = 1.0F / (c * 0.15F) * ShowTimer.scale
 
-                world.entities.filterIsInstanceTo(hashSetOf<TntEntity>()).forEachWithSelf { it, i, self ->
-                    if (it.fuse <= 0) return@forEachWithSelf
+                world.entities.filterIsInstanceTo(hashSetOf<TntEntity>()).forEachWithSelf { tnt, i, self ->
+                    if (tnt.fuse <= 0) return@forEachWithSelf
 
-                    val pos = it.box.center.add(0.0, ShowTimer.renderY.toDouble(), 0.0)
+                    val pos = tnt.box.center.add(0.0, ShowTimer.renderY.toDouble(), 0.0)
 
                     val screenPos = WorldToScreen.calculateScreenPos(pos) ?: return@forEachWithSelf
 
                     // Yellow #ffff00 -> Red #ff0000
-                    val color = Color4b(255, MathHelper.floor(255F * it.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
+                    val color = Color4b(255, MathHelper.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
+                    // ticks to seconds
                     val text = process(
-                        "%.2fs".format(it.fuse * 0.05F),
+                        "%.2fs".format(tnt.fuse * 0.05F),
                         color,
                     )
 

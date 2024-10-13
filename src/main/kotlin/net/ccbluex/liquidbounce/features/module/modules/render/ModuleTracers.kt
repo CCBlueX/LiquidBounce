@@ -72,8 +72,12 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
 
         val useDistanceColor = DistanceColor.isActive
 
-        val viewDistance =
-            (if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16.0 * MathHelper.SQUARE_ROOT_OF_TWO
+        val viewDistance = 16.0F * MathHelper.SQUARE_ROOT_OF_TWO *
+            (if (DistanceColor.useViewDistance) {
+                mc.options.viewDistance.value.toFloat()
+            } else {
+                DistanceColor.customViewDistance
+            })
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
 
@@ -91,12 +95,12 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                     continue
                 }
 
-                val dist = player.distanceTo(entity) * 2.0
+                val dist = player.distanceTo(entity) * 2.0F
 
                 val color = if (useDistanceColor) {
                     Color4b(
                         Color.getHSBColor(
-                            (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f),
+                            (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
                             1.0f,
                             1.0f
                         )

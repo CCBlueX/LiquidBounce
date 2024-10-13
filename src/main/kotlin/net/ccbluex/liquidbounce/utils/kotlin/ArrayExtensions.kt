@@ -67,7 +67,7 @@ fun <T> List<T>.subList(fromIndex: Int): List<T> {
  * A JavaScript-styled forEach
  */
 inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self: C) -> Unit) {
-    forEachIndexed { i, it ->
-        action(it, i, this)
+    forEachIndexed { i, item ->
+        action(item, i, this)
     }
 }

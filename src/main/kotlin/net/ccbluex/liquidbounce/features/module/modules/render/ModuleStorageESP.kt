@@ -99,7 +99,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
             }
         }
 
-        private fun collectBoxesToDraw(event: WorldRenderEvent): MutableList<Triple<Vec3d, Box, Color4b>> {
+        private fun collectBoxesToDraw(event: WorldRenderEvent): List<Triple<Vec3d, Box, Color4b>> {
             val queuedBoxes = mutableListOf<Triple<Vec3d, Box, Color4b>>()
 
             for ((pos, type) in locations.entries) {

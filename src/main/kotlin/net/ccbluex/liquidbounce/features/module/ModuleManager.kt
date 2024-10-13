@@ -394,7 +394,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     @JvmName("getCategories")
     @ScriptApi
-    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+    fun getCategories() = Category.entries.map { it.readableName }.toTypedArray()
 
     @JvmName("getModules")
     fun getModules() = modules

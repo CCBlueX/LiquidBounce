@@ -117,7 +117,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val bedDistance = mc.player?.pos?.distanceTo(trackState.centerPos) ?: 0.0
         val text = "Bed (${bedDistance.roundToInt()}m)"
 
-        val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
+        val c = fontRenderer.size
 
         val scale = 1.0F / (c * 0.15F) * scale
 
