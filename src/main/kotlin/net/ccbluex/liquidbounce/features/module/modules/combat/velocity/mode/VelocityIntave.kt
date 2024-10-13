@@ -31,7 +31,7 @@ object VelocityIntave : Choice("Intave") {
         true) {
 
         private val reduceFactor by float("Factor", 0.6f, 0.6f..1f)
-        private val hurtTime by int("HurtTime", 9, 1..9)
+        private val hurtTime by int("HurtTime", 9, 1..10)
         var lastAttackTime = 0L
 
         @Suppress("unused")
