@@ -457,7 +457,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return abs(newDiff * factor)
     }
 
-    private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
+    fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
         return (rotationDifference / nextFloat(120f, 150f) * turnSpeed).coerceIn(nextFloat(0.5f, 1.5f), 180f)
     }
 
