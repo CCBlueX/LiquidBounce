@@ -207,6 +207,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun isSupported() = allowClutching && scaffoldMode !in arrayOf("Telly", "Expand")
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
+    private val blockSafe by BoolValue("BlockSafe, false) { allowClutching }
 
     // Eagle
     private val eagleValue =
@@ -952,6 +953,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         placeRotation ?: return false
 
         if (options.rotationsActive && !isGodBridgeEnabled) {
+            val rotationDifference = rotationDifference(placeRotation.rotation, currRotation)
+             val (factorH, factorV) = if (options.smootherMode == "Relative") 
+                 computeFactor(rotationDifference, options.horizontalSpeed) to computeFactor(rotationDifference, options.verticalSpeed)
+             else options.horizontalSpeed to options.verticalSpeed
+
+             options.instant = blockSafe && rotationDifference > (factorH + factorV) / 2f
+                
             setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
         }
 
