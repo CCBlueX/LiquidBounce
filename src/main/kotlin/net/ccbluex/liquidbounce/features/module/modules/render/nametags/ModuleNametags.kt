@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -60,8 +59,9 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
     val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    val fontRenderer by lazy {
+        Fonts.DEFAULT_FONT.get()
+    }
 
     @Suppress("unused")
     val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
@@ -94,11 +94,13 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private fun collectAndSortNametagsToRender(tickDelta: Float): List<Pair<Vec3, NametagInfo>> {
         val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
 
+        val maximumDistanceSquared = maximumDistance * maximumDistance
+
         for (entity in ModuleESP.findRenderedEntities()) {
+            if (entity.squaredDistanceTo(mc.cameraEntity) > maximumDistanceSquared) continue
+
             val nametagPos = entity.interpolateCurrentPosition(tickDelta)
                 .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
-
-            if (entity.distanceTo(mc.cameraEntity) > maximumDistance) continue
 
             val screenPos = WorldToScreen.calculateScreenPos(nametagPos) ?: continue
 

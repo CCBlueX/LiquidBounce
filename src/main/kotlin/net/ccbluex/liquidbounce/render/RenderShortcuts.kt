@@ -55,6 +55,15 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
 
+    inline fun withMatrixStack(block: () -> Unit) {
+        matrixStack.push()
+        try {
+            block()
+        } finally {
+            matrixStack.pop()
+        }
+    }
+
     inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
         val fontBuffers = FontRendererBuffers()
         try {

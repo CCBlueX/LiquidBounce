@@ -57,7 +57,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         ) }
     )
 
-    val friendColor by color("Friends", Color4b(0, 0, 255))
+    private val friendColor by color("Friends", Color4b(0, 0, 255))
 
     private object BoxMode : Choice("Box") {
 

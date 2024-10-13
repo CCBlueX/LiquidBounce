@@ -62,3 +62,12 @@ fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double>
 fun <T> List<T>.subList(fromIndex: Int): List<T> {
     return this.subList(fromIndex, this.size)
 }
+
+/**
+ * A JavaScript-styled forEach
+ */
+inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self: C) -> Unit) {
+    forEachIndexed { i, it ->
+        action(it, i, this)
+    }
+}
