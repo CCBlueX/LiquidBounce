@@ -35,6 +35,12 @@ object MurderMysterySwordDetection {
             Items.GLISTERING_MELON_SLICE,
             Items.JUNGLE_SAPLING,
             Items.PRISMARINE_SHARD,
+            Items.CHARCOAL,
+            Items.SUGAR_CANE,
+            Items.FLINT,
+            Items.BREAD,
+            Items.LAPIS_LAZULI,
+            Items.LEATHER,
         )
     private val KNOWN_NON_SWORD_ITEMS =
         hashSetOf(

@@ -59,17 +59,19 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }.apply { tagBy(this) }
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
-    private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")
+    private val pauseOnFlag by int("PauseOnFlag", 0, 0..20, "ticks")
 
-    var pause = 0
+    private var pause = 0
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val countHandler = handler<GameTickEvent>(ignoreCondition = true) {
         if (pause > 0) {
             pause--
         }
     }
 
-    val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
+    @Suppress("unused")
+    private val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
         if (!it.original) {
@@ -102,4 +104,5 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     override fun handleEvents() = super.handleEvents() && pause == 0
+
 }

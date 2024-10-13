@@ -44,8 +44,7 @@ public class MixinSodiumBlockOcclusionCache {
             return;
         }
 
-        Set<Block> blocks = module.getBlocks();
-        cir.setReturnValue(blocks.contains(selfState.getBlock()));
+        cir.setReturnValue(module.shouldRender(selfState, pos));
         cir.cancel();
     }
 }

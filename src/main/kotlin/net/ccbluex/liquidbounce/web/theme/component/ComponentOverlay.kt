@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
-import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
 import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.TextComponent
 
-var components: MutableList<Component> = mutableListOf()
-var customComponents: MutableList<Component> = mutableListOf(
-    HtmlComponent("<b>This is HTML</b>", enabled = false)
+val components: MutableList<Component> = mutableListOf()
+val customComponents: MutableList<Component> = mutableListOf(
+    TextComponent("hello! :)", enabled = false)
 )
 
 object ComponentOverlay : Listenable {

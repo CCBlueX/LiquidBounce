@@ -23,27 +23,26 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 
 internal object VelocityDexland : Choice("Dexland") {
 
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    val hReduce by float("HReduce", 0.3f, 0f..1f)
-    val times by int("AttacksToWork", 4, 1..10)
+    private val hReduce by float("HReduce", 0.3f, 0f..1f)
+    private val times by int("AttacksToWork", 4, 1..10)
 
-    var lastAttackTime = 0L
+    private var lastAttackTime = 0L
     var count = 0
 
-    val attackHandler = handler<AttackEvent> {
+    @Suppress("unused")
+    private val attackHandler = handler<AttackEvent> {
         if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
             player.velocity.x *= hReduce
             player.velocity.z *= hReduce
         }
+
         lastAttackTime = System.currentTimeMillis()
     }
-
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
 }

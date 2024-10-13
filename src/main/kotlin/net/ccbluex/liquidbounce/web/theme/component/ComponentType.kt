@@ -50,6 +50,7 @@ enum class ComponentType(
     )),
     MINIMAP("Minimap", createComponent = { MinimapComponent }),
     TARGET_HUD("TargetHud"),
+    BLOCK_COUNTER("BlockCounter"),
     KEYSTROKES("Keystrokes"),
     TACO("Taco");
 

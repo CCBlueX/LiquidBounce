@@ -42,7 +42,14 @@ val inGame: Boolean
     get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } ?: false
 
 // Chat formatting
-private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
+private val clientPrefix = Text.empty()
+    .styled { it.withFormatting(Formatting.RESET) }.styled { it.withFormatting(Formatting.GRAY) }
+    .append(Text.literal("Liquid")
+        .styled { it.withColor(Formatting.WHITE) }.styled { it.withFormatting(Formatting.BOLD) })
+    .append(Text.literal("Bounce")
+        .styled { it.withColor(Formatting.BLUE) }.styled { it.withFormatting(Formatting.BOLD) })
+    .append(Text.literal(" ▸ ")
+        .styled { it.withFormatting(Formatting.RESET) }.styled { it.withColor(Formatting.DARK_GRAY) })
 
 fun dot() = regular(".")
 
@@ -169,5 +176,6 @@ fun keyName(keyCode: Int) = when (keyCode) {
  */
 fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
 
+@Suppress("CAST_NEVER_SUCCEEDS")
 val TextColor.bypassesNameProtection: Boolean
     get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
