@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClassUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
@@ -24,6 +25,7 @@ import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
+import java.util.concurrent.CopyOnWriteArraySet
 
 open class Module constructor(
 
@@ -174,17 +176,21 @@ open class Module constructor(
      */
     open val values: Set<Value<*>>
         get() {
-            var orderedValues = mutableSetOf<Value<*>>()
+            val orderedValues = CopyOnWriteArraySet<Value<*>>()
 
-            javaClass.declaredFields.forEach { innerField ->
-                innerField.isAccessible = true
-                val element = innerField[this] ?: return@forEach
+            try {
+                javaClass.declaredFields.forEach { innerField ->
+                    innerField.isAccessible = true
+                    val element = innerField[this] ?: return@forEach
 
-                orderedValues = ClassUtils.findValues(element, configurables, orderedValues)
+                    ClassUtils.findValues(element, configurables, orderedValues)
+                }
+
+                if (gameDetecting) orderedValues += onlyInGameValue
+                if (!hideModule) orderedValues += hideModuleValue
+            } catch (e: Exception) {
+                LOGGER.error(e)
             }
-
-            if (gameDetecting) orderedValues += onlyInGameValue
-            if (!hideModule) orderedValues += hideModuleValue
 
             return orderedValues
         }
