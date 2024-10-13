@@ -55,12 +55,12 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
 
-    inline fun withMatrixStack(block: () -> Unit) {
-        matrixStack.push()
+    inline fun withMatrixStack(block: MatrixStack.() -> Unit) = with(matrixStack) {
+        push()
         try {
             block()
         } finally {
-            matrixStack.pop()
+            pop()
         }
     }
 
@@ -307,7 +307,7 @@ inline fun RenderEnvironment.drawCustomMesh(
     }
 }
 
-fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
+fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
     val tessellator = RenderSystem.renderThreadTesselator()
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.QUADS, VertexFormats.POSITION)
@@ -318,17 +318,45 @@ fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
 
     // Draw the vertices of the box
     with(buffer) {
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat())
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat())
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat())
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos2.z)
+        vertex(matrix, pos2.x, pos1.y, pos2.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
 
         // Draw the outlined box
         BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
     }
 }
 
-fun RenderEnvironment.drawTriangle(p1: Vec3d, p2: Vec3d, p3: Vec3d) {
+fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
+    val tessellator = RenderSystem.renderThreadTesselator()
+    // Begin drawing lines with position format
+    val buffer = tessellator.begin(DrawMode.DEBUG_LINES, VertexFormats.POSITION)
+
+    RenderSystem.setShader { GameRenderer.getPositionProgram() }
+
+    val matrix = matrixStack.peek().positionMatrix
+
+    // Draw the vertices of the box
+    with(buffer) {
+
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
+
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos1.z)
+
+        vertex(matrix, pos2.x, pos1.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos1.z)
+
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos2.x, pos1.y, pos1.z)
+
+        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+    }
+}
+
+fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
     val tessellator = RenderSystem.renderThreadTesselator()
     // Begin drawing lines with position format
     val bufferBuilder = tessellator.begin(DrawMode.TRIANGLES, VertexFormats.POSITION)
@@ -339,9 +367,9 @@ fun RenderEnvironment.drawTriangle(p1: Vec3d, p2: Vec3d, p3: Vec3d) {
 
     // Draw the vertices of the box
     with(bufferBuilder) {
-        vertex(matrix, p1.x.toFloat(), p1.y.toFloat(), p1.z.toFloat())
-        vertex(matrix, p2.x.toFloat(), p2.y.toFloat(), p2.z.toFloat())
-        vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat())
+        vertex(matrix, p1.x, p1.y, p1.z)
+        vertex(matrix, p2.x, p2.y, p2.z)
+        vertex(matrix, p3.x, p3.y, p3.z)
 
         // Draw the outlined box
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end())

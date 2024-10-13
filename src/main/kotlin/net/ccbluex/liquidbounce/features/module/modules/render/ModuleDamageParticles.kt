@@ -123,7 +123,7 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
 
                     draw(
                         text,
-                        screenPos.x - text.widthWithShadow * 0.5F,
+                        screenPos.x,
                         screenPos.y,
                         shadow = true,
                         z = 1000.0F * i / particles.size,

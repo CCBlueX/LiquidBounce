@@ -344,6 +344,7 @@
   "liquidbounce.module.civBreak.description": "Allows you to mine blocks faster.",
   "liquidbounce.module.civBreak.value.switch.description": "Silently switches to the right tool or uses auto tool if it is enabled.",
   "liquidbounce.module.ESP.description": "Allows you to see targets through walls.",
+  "liquidbounce.module.tntTimer.description": "Highlight the active TNTs.",
   "liquidbounce.module.abortBreaking.description": "Allows you to abort breaking without losing progress.",
   "liquidbounce.module.aimbot.description": "Automatically faces targets nearby.",
   "liquidbounce.module.airJump.description": "Allows you to jump mid-air.",
