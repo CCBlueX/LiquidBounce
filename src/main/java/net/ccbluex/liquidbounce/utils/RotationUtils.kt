@@ -325,9 +325,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
             targetRotation,
             hSpeed,
             vSpeed,
-            settings.startRotatingSlow,
+            !settings.instant && settings.startRotatingSlow,
             settings.useStraightLinePath,
-            settings.slowDownOnDirectionChange,
+            !settings.instant && settings.slowDownOnDirectionChange,
             settings.minRotationDifference,
             settings.smootherMode,
         )
