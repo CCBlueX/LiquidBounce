@@ -208,7 +208,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun isSupported() = allowClutching && scaffoldMode !in arrayOf("Telly", "Expand")
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
-    private val blockSafe by BoolValue("BlockSafe", false) { allowClutching }
+    private val blockSafe by BoolValue("BlockSafe", false)
 
     // Eagle
     private val eagleValue =
