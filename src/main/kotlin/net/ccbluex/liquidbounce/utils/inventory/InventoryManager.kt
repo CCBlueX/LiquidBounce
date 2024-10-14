@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
@@ -80,7 +81,16 @@ object InventoryManager : Listenable {
 
         var maximumCloseDelay = 0
 
+        var cycles = 0
         do {
+            cycles++
+            // Safety check to prevent infinite loops
+            if (cycles > 100) {
+                chat("InventoryManager has been running for too long ($cycles cycles) on tick, stopping now. " +
+                    "Please report this issue.")
+                break
+            }
+
             requiresUpdate = false
 
             val event = EventManager.callEvent(ScheduleInventoryActionEvent())
@@ -388,6 +398,47 @@ data class CloseContainerAction(
 
     override fun performAction(): Boolean {
         player.closeHandledScreen()
+        return true
+    }
+
+    override fun requiresPlayerInventoryOpen() = false
+
+}
+
+data class CreativeInventoryAction(
+    val itemStack: ItemStack,
+    val slot: ItemSlot? = null
+) : InventoryAction {
+
+    companion object {
+        fun performThrow(itemStack: ItemStack) = CreativeInventoryAction(itemStack)
+        fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = CreativeInventoryAction(itemStack, slot)
+    }
+
+    override fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean {
+        // Check constrains
+        if (!inventoryConstraints.passesRequirements(this)) {
+            return false
+        }
+
+        // Screen is null, which means we are targeting the player inventory
+        if (requiresPlayerInventoryOpen() && player.currentScreenHandler.isPlayerInventory &&
+            !interaction.hasRidingInventory()) {
+            return true
+        }
+
+        return player.isCreative
+    }
+
+    override fun performAction(): Boolean {
+        val slot = slot
+
+        if (slot != null) {
+            val slotId = slot.getIdForServer(null) ?: return false
+            interaction.clickCreativeStack(itemStack, slotId)
+        } else {
+            interaction.dropCreativeStack(itemStack)
+        }
         return true
     }
 
