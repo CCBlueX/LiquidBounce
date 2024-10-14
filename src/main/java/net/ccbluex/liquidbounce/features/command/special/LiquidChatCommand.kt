@@ -17,7 +17,7 @@ object LiquidChatCommand : Command("chat", "lc", "irc") {
             }
 
             if (!LiquidChat.client.isConnected()) {
-                chat("§cError: §LiquidChat is currently not connected to the server!")
+                chat("§cError: §7LiquidChat is currently not connected to the server!")
                 return
             }
 
