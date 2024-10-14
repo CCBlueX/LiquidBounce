@@ -49,7 +49,12 @@ class HttpConductor {
             val httpHeaders = response.headers()
             httpHeaders[HttpHeaderNames.CONTENT_TYPE] = "text/plain"
             httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
-            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
+
+            val requestOrigin = context.headers["origin"]
+            if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
+                httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
+            }
+
             httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
             httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
             return@runCatching response
