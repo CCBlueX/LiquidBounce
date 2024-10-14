@@ -317,7 +317,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, settings: RotationSettings) : Rotation {
         val (hSpeed, vSpeed) = if (settings.instant) {
-             180f..180f
+             180f to 180f
 	        } else settings.horizontalSpeed.random() to settings.verticalSpeed.random()
         
         return performAngleChange(
