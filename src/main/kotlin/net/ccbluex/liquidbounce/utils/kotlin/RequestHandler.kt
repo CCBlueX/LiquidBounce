@@ -47,6 +47,10 @@ class RequestHandler<T> {
         return this.activeRequests.peek().value
     }
 
+    fun clear() {
+        activeRequests.clear()
+    }
+
     /**
      * A requested state of the system.
      *

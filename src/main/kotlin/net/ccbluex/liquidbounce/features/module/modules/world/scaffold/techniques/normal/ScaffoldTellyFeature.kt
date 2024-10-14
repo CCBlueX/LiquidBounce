@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -40,10 +42,10 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
 
     val doNotAim: Boolean
-        get() = offGroundTicks < straightTicks && ticksUntilJump >= jumpTicks
+        get() = offGroundTicks < straightTicks && groundTicks >= jumpTicks
 
     private var offGroundTicks = 0
-    private var ticksUntilJump = 0
+    private var groundTicks = 0
 
     private val straightTicks by int("Straight", 0, 0..5, "ticks")
     private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
@@ -53,7 +55,7 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
     private val gameHandler = handler<GameTickEvent> {
         if (player.isOnGround) {
             offGroundTicks = 0
-            ticksUntilJump++
+            groundTicks++
         } else {
             offGroundTicks++
         }
@@ -61,19 +63,51 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
-        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.isOnGround) {
+        if (!player.moving || ModuleScaffold.blockCount <= 0) {
             return@handler
         }
 
+        // If we want to aim straight for more than 1 tick, we
+        // have to predict if we are about to hit the ground
+        if (this.straightTicks > 0 && player.velocity.y <= 0) {
+            val snapshots = PlayerSimulationCache
+                .getSimulationForLocalPlayer()
+                .getSnapshotsBetween(0 until straightTicks)
+            chat("ticks until ground: ${
+                snapshots.withIndex()
+                    .filter { (_, snapshot) ->
+                        snapshot.onGround
+                    }.minByOrNull { (index, _) ->
+                        index
+                    }?.index ?: -1
+            }")
+
+            val touchesGround = snapshots.any { snapshot -> snapshot.onGround }
+            val touchesGroundOnNextTick = snapshots.firstOrNull()?.onGround ?: false
+            if (touchesGround) {
+                offGroundTicks = 0
+
+                if (touchesGroundOnNextTick) {
+                    // This will overwrite any Keep Reset delay
+                    chat("Force Reset")
+                    RotationManager.forceReset()
+                }
+            }
+        }
+
         val isStraight = RotationManager.currentRotation == null || straightTicks == 0
-        if (isStraight && ticksUntilJump >= jumpTicks) {
-            event.jumping = true
+        if (isStraight) {
+            groundTicks++
+
+            if (groundTicks >= jumpTicks) {
+                event.jumping = true
+            }
         }
     }
 
     @Suppress
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        ticksUntilJump = 0
+        groundTicks = 0
         jumpTicks = jumpTicksOpt.random()
     }
 
