@@ -68,7 +68,7 @@ class KeyEvent(val key: Int) : Event()
  *
  * @param eventState PRE or POST
  */
-class MotionEvent(val eventState: EventState) : Event()
+class MotionEvent(var x: Double, var y: Double, var z: Double, var onGround: Boolean, val eventState: EventState) : Event()
 
 /**
  * Called in "onLivingUpdate" when the player is using a use item.
