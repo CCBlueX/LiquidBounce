@@ -35,6 +35,7 @@ object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT, aliases = arrayO
 
     val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false)
+    val alwaysHideShield by boolean("AlwaysHideShield", false)
 
     @Suppress("UNUSED")
     private val packetHandler = sequenceHandler<PacketEvent> {

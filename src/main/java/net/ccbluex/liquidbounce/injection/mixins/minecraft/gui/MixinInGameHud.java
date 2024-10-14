@@ -175,8 +175,9 @@ public abstract class MixinInGameHud {
     private boolean hookOffhandItem(boolean original) {
         return original || ModuleSwordBlock.INSTANCE.handleEvents()
                 && ModuleSwordBlock.INSTANCE.getHideShieldSlot()
-                && getCameraPlayer().getMainHandStack().getItem() instanceof SwordItem
-                && getCameraPlayer().getOffHandStack().getItem() instanceof ShieldItem;
+                && getCameraPlayer().getOffHandStack().getItem() instanceof ShieldItem
+                && (getCameraPlayer().getMainHandStack().getItem() instanceof SwordItem
+                || ModuleSwordBlock.INSTANCE.getAlwaysHideShield());
     }
 
     @Unique

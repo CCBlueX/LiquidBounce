@@ -6,7 +6,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.ShieldItem;
 import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
@@ -20,10 +19,11 @@ public class MixinPlayerEntityRenderer  {
     @Inject(method = "getArmPose", at = @At("HEAD"), cancellable = true)
     private static void injectArmPose(AbstractClientPlayerEntity player, Hand hand, CallbackInfoReturnable<BipedEntityModel.ArmPose> cir) {
         if (hand == Hand.OFF_HAND && player == MinecraftClient.getInstance().player) {
-            ItemStack offhand = player.getOffHandStack();
-
-            if (player.getMainHandStack().getItem() instanceof SwordItem && offhand.getItem() instanceof ShieldItem) {
-                if (ModuleSwordBlock.INSTANCE.handleEvents() || AutoBlock.INSTANCE.getBlockVisual()) {
+            if (ModuleSwordBlock.INSTANCE.handleEvents() || AutoBlock.INSTANCE.getBlockVisual()) {
+                if (player.getOffHandStack().getItem() instanceof ShieldItem
+                        && (player.getMainHandStack().getItem() instanceof SwordItem
+                        || ModuleSwordBlock.INSTANCE.handleEvents()
+                        && ModuleSwordBlock.INSTANCE.getAlwaysHideShield())) {
                     cir.setReturnValue(BipedEntityModel.ArmPose.EMPTY);
                 }
             }
