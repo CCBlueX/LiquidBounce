@@ -66,6 +66,8 @@ object ClientSocket {
         "blockCountChange",
         "gameModeChange",
         "componentsUpdate",
+        "playerArmorInventory",
+        "playerMainInventory",
         "proxyAdditionResult",
         "proxyEditResult",
         "proxyCheckResult",
