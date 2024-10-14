@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 
 class HttpConductor {
 
-    fun processRequestObject(requestObject: RequestObject) = runCatching {
+    fun processRequestObject(requestObject: RequestObject) = middleware(requestObject.context, runCatching {
         val context = requestObject.context
         val method = context.httpMethod
 
@@ -50,28 +50,26 @@ class HttpConductor {
             val httpHeaders = response.headers()
             httpHeaders[HttpHeaderNames.CONTENT_TYPE] = "text/plain"
             httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
-
-            middleware(context, response)
             return@runCatching response
         }
 
         RouteController.findRoute(context.path, method)?.let { route ->
             logger.debug("Found route {}", route)
-            return@runCatching middleware(context, route.handler(requestObject))
+            return@runCatching route.handler(requestObject)
         }
 
         if (method == HttpMethod.GET) {
             RouteController.findFileServant(context.path)?.let { (fileServant, path) ->
                 logger.debug("Found file servant {}", fileServant)
-                return@runCatching middleware(context, fileServant.handleFileRequest(path))
+                return@runCatching fileServant.handleFileRequest(path)
             }
         }
 
-        middleware(context, httpNotFound(context.path, "Route not found"))
+        httpNotFound(context.path, "Route not found")
     }.getOrElse {
         logger.error("Error while processing request object: $requestObject", it)
         httpInternalServerError(it.message ?: "Unknown error")
-    }
+    })
 
     private fun middleware(context: RequestContext, response: FullHttpResponse): FullHttpResponse {
         val httpHeaders = response.headers()
