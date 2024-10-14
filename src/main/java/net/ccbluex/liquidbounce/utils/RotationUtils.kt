@@ -315,18 +315,23 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun rotationDifference(a: Rotation, b: Rotation = serverRotation) =
         hypot(angleDifference(a.yaw, b.yaw), a.pitch - b.pitch)
 
-    private fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, settings: RotationSettings) =
-        performAngleChange(
+    private fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, settings: RotationSettings) : Rotation {
+        val (hSpeed, vSpeed) = if (settings.instant) {
+             180f to 180f
+	        } else settings.horizontalSpeed.random() to settings.verticalSpeed.random()
+        
+        return performAngleChange(
             currentRotation,
             targetRotation,
-            settings.horizontalSpeed.random(),
-            settings.verticalSpeed.random(),
-            settings.startRotatingSlow,
+            hSpeed,
+            vSpeed,
+            !settings.instant && settings.startRotatingSlow,
             settings.useStraightLinePath,
-            settings.slowDownOnDirectionChange,
+            !settings.instant && settings.slowDownOnDirectionChange,
             settings.minRotationDifference,
             settings.smootherMode,
         )
+    }
 
     fun performAngleChange(
         currentRotation: Rotation, targetRotation: Rotation, hSpeed: Float,
@@ -457,7 +462,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return abs(newDiff * factor)
     }
 
-    private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
+    fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
         return (rotationDifference / nextFloat(120f, 150f) * turnSpeed).coerceIn(nextFloat(0.5f, 1.5f), 180f)
     }
 

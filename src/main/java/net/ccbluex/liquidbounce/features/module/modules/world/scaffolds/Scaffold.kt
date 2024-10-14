@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationUtils.computeFactor
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -207,6 +208,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun isSupported() = allowClutching && scaffoldMode !in arrayOf("Telly", "Expand")
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
+    private val blockSafe by BoolValue("BlockSafe", false)
 
     // Eagle
     private val eagleValue =
@@ -952,7 +954,15 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         placeRotation ?: return false
 
         if (options.rotationsActive && !isGodBridgeEnabled) {
-            setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
+             val rotationDifference = rotationDifference(placeRotation.rotation, currRotation)
+             val (hSpeed, vSpeed) = options.horizontalSpeed.random() to options.verticalSpeed.random()
+             val (factorH, factorV) = if (options.smootherMode == "Relative") 
+                 computeFactor(rotationDifference, hSpeed) to computeFactor(rotationDifference, vSpeed)
+             else hSpeed to vSpeed
+
+             options.instant = blockSafe && rotationDifference > (factorH + factorV) / 2f
+                
+             setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
         }
 
         this.placeRotation = placeRotation

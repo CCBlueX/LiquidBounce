@@ -85,6 +85,7 @@ class RotationSettings(owner: Module, generalApply: () -> Boolean = { true }) {
 
     var prioritizeRequest = false
     var immediate = false
+    var instant = false
 
     val rotationsActive
         get() = rotationMode != "Off"
