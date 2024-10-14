@@ -79,6 +79,10 @@ class GameModeChangeEvent(val gameMode: GameMode) : Event()
 @WebSocketEvent
 class TargetChangeEvent(val target: PlayerData?) : Event()
 
+@Nameable("blockCountChange")
+@WebSocketEvent
+class BlockCountChangeEvent(val count: Int?): Event()
+
 @Nameable("clientChatStateChange")
 @WebSocketEvent
 class ClientChatStateChange(val state: State) : Event() {

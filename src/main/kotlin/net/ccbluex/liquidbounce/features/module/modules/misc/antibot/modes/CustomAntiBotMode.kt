@@ -23,17 +23,20 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
-import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket
-import java.util.*
 import kotlin.math.abs
 
 object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
@@ -46,56 +49,95 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         tree(AlwaysInRadius)
     }
 
-    private val duplicate by boolean("Duplicate", true)
+    private val duplicate by boolean("Duplicate", false)
     private val noGameMode by boolean("NoGameMode", true)
     private val illegalPitch by boolean("IllegalPitch", true)
-    private val fakeEntityID by boolean("FakeEntityID", false)
-    private val illegalName by boolean("IllegalName", false)
+    private val fakeEntityID by boolean("FakeEntityID", true)
+    private val illegalName by boolean("IllegalName", true)
     private val needHit by boolean("NeedHit", false)
     private val health by boolean("IllegalHealth", false)
+    private val swung by boolean("Swung", false)
+    private val critted by boolean("Critted", false)
+    private val attributes by boolean("Attributes", false)
 
     private object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private val invalidGroundList = mutableMapOf<Entity, Int>()
-    private val hitList = HashSet<UUID>()
-    private val notAlwaysInRadius = HashSet<UUID>()
+    private val flyingSet = mutableMapOf<Int, Int>()
+    private val hitListSet = hashSetOf<Int>()
+    private val notAlwaysInRadiusSet = hashSetOf<Int>()
+
+    private val swungSet = hashSetOf<Int>()
+    private val crittedSet = hashSetOf<Int>()
+    private val attributesSet = mutableListOf<Int>()
 
     val repeatable = repeatable {
         for (entity in world.players) {
             if (player.distanceTo(entity) > AlwaysInRadius.alwaysInRadiusRange) {
-                notAlwaysInRadius.add(entity.uuid)
+                notAlwaysInRadiusSet.add(entity.id)
             }
         }
     }
 
-    val attackHandler = handler<AttackEvent> {
-        hitList.add(it.enemy.uuid)
+    @Suppress("unused")
+    private val attackHandler = handler<AttackEvent> {
+        hitListSet.add(it.enemy.id)
     }
 
-    val packetHandler = handler<PacketEvent> {
-        if (it.packet !is EntityS2CPacket || !it.packet.isPositionChanged || !InvalidGround.enabled) {
-            return@handler
-        }
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        when (val packet = event.packet) {
+            is EntityS2CPacket -> {
+                if (!packet.isPositionChanged || !InvalidGround.enabled) {
+                    return@handler
+                }
 
-        val entity = it.packet.getEntity(world) ?: return@handler
+                val entity = packet.getEntity(world) ?: return@handler
+                if (entity.isOnGround && entity.prevY != entity.y) {
+                    flyingSet[entity.id] = flyingSet.getOrDefault(entity.id, 0) + 1
+                } else if (!entity.isOnGround && flyingSet.getOrDefault(entity.id, 0) > 0) {
+                    val newVL = flyingSet.getOrDefault(entity.id, 0) / 2
 
-        if (entity.isOnGround && entity.prevY != entity.y) {
-            invalidGroundList[entity] = invalidGroundList.getOrDefault(entity, 0) + 1
-        } else if (!entity.isOnGround && invalidGroundList.getOrDefault(entity, 0) > 0) {
-            val newVL = invalidGroundList.getOrDefault(entity, 0) / 2
+                    if (newVL <= 0) {
+                        flyingSet -= entity.id
+                    } else {
+                        flyingSet[entity.id] = newVL
+                    }
+                }
+            }
 
-            if (newVL <= 0) {
-                invalidGroundList.remove(entity)
-            } else {
-                invalidGroundList[entity] = newVL
+            is EntityAttributesS2CPacket -> {
+                attributesSet += packet.entityId
+            }
+
+            is EntityAnimationS2CPacket -> {
+                val animationId = packet.animationId
+
+                if (animationId == EntityAnimationS2CPacket.SWING_MAIN_HAND ||
+                    animationId == EntityAnimationS2CPacket.SWING_OFF_HAND) {
+                    swungSet += packet.entityId
+                } else if (animationId == EntityAnimationS2CPacket.CRIT ||
+                    animationId == EntityAnimationS2CPacket.ENCHANTED_HIT) {
+                    crittedSet += packet.entityId
+                }
+            }
+
+            is EntitiesDestroyS2CPacket -> {
+                for (entityId in packet.entityIds) {
+                    attributesSet -= entityId
+                    flyingSet -= entityId
+                    hitListSet -= entityId
+                    notAlwaysInRadiusSet -= entityId
+                }
             }
         }
+
+
     }
 
     private fun hasInvalidGround(player: PlayerEntity): Boolean {
-        return invalidGroundList.getOrDefault(player, 0) >= InvalidGround.vlToConsiderAsBot
+        return flyingSet.getOrDefault(player.id, 0) >= InvalidGround.vlToConsiderAsBot
     }
 
     private fun hasIllegalName(player: PlayerEntity): Boolean {
@@ -115,16 +157,20 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     private fun meetsCustomConditions(player: PlayerEntity): Boolean {
         val noGameMode = noGameMode && network.getPlayerListEntry(player.uuid)?.gameMode == null
         val invalidGround = InvalidGround.enabled && hasInvalidGround(player)
-        val fakeID = fakeEntityID && (player.id < 0 || player.id >= 1E+9)
+        val fakeId = fakeEntityID && (player.id < 0 || player.id >= 1E+9)
         val isADuplicate = duplicate && isADuplicate(player.gameProfile)
         val illegalName = illegalName && hasIllegalName(player)
         val illegalPitch = illegalPitch && abs(player.pitch) > 90
-        val alwaysInRadius = AlwaysInRadius.enabled && !notAlwaysInRadius.contains(player.uuid)
-        val needHit = needHit && !hitList.contains(player.uuid)
+        val alwaysInRadius = AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(player.id)
+        val needHit = needHit && !hitListSet.contains(player.id)
         val health = health && player.health > 20f
+        val swung = swung && !swungSet.contains(player.id)
+        val critted = critted && !crittedSet.contains(player.id)
+        val attributes = attributes && !attributesSet.contains(player.id)
 
-        return noGameMode || invalidGround || fakeID || isADuplicate
+        return noGameMode || invalidGround || fakeId || isADuplicate
             || illegalName || illegalPitch || alwaysInRadius || needHit || health
+            || swung || critted || attributes
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {
@@ -132,8 +178,11 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     }
 
     override fun reset() {
-        invalidGroundList.clear()
-        notAlwaysInRadius.clear()
-        hitList.clear()
+        flyingSet.clear()
+        notAlwaysInRadiusSet.clear()
+        hitListSet.clear()
+        swungSet.clear()
+        crittedSet.clear()
+        attributesSet.clear()
     }
 }

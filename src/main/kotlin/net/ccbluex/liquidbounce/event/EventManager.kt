@@ -107,6 +107,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ServerConnectEvent::class,
     ServerPingedEvent::class,
     TargetChangeEvent::class,
+    BlockCountChangeEvent::class,
     GameModeChangeEvent::class,
     ComponentsUpdate::class,
     ResourceReloadEvent::class,
@@ -121,7 +122,9 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClickGuiScaleChangeEvent::class,
     BrowserUrlChangeEvent::class,
     TagEntityEvent::class,
-    RegistryChangeEvent::class
+    RegistryChangeEvent::class,
+    MouseScrollInHotbarEvent::class,
+    PlayerFluidCollisionCheckEvent::class
 )
 
 /**

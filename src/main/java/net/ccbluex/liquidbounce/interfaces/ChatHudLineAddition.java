@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
+import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
+
 /**
  * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine}.
  */
@@ -25,8 +27,7 @@ public interface ChatHudLineAddition {
 
     /**
      * Sets the count of the message.
-     * This indicates how many times this massage has already been sent in
-     * {@link net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat}.
+     * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
      */
     void liquid_bounce$setCount(int count);
 

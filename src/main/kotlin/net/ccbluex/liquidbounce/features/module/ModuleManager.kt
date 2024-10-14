@@ -32,13 +32,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
@@ -71,6 +69,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
@@ -84,13 +83,32 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     val modulesConfigurable = ConfigSystem.root("modules", modules)
 
     /**
-     * Handle key input for module binds
+     * Handles keystrokes for module binds.
      */
     @Suppress("unused")
-    val keyHandler = handler<KeyEvent> { ev ->
-        if (ev.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == ev.key.keyCode } // modules bound to a specific key
-                .forEach { it.enabled = !it.enabled } // toggle modules
+    val keyHandler = handler<KeyEvent> { event ->
+        if (event.action == GLFW.GLFW_PRESS) {
+            filter { it.bind == event.key.keyCode } // modules bound to a specific key
+                .forEach {
+                    if (it.bindAction == Module.BindAction.HOLD) {
+                        it.enabled = true
+                    } else {
+                        it.enabled = !it.enabled // toggle modules
+                    }
+                }
+        }
+    }
+
+    /**
+     * Handles keystrokes for module binds.
+     * This also runs in GUIs, so that if a GUI is opened while a key is pressed,
+     * any modules that need to be disabled on key release will be properly disabled.
+     */
+    @Suppress("unused")
+    val keyReleaseHandler = handler<KeyboardKeyEvent> { event ->
+        if (event.action == GLFW.GLFW_RELEASE) {
+            filter { it.bind == event.keyCode && it.bindAction == Module.BindAction.HOLD }
+                .forEach { it.enabled = false }
         }
     }
 
@@ -125,6 +143,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoShoot,
             ModuleKeepSprint,
             ModuleMaceKill,
+            ModuleNoMissCooldown,
 
             // Exploit
             ModuleAbortBreaking,
@@ -138,6 +157,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleKick,
             ModuleMoreCarry,
+            ModuleMultiActions,
             ModuleNameCollector,
             ModuleNoPitchLimit,
             ModulePingSpoof,
@@ -160,6 +180,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDerp,
             ModuleSkinDerp,
             ModuleHandDerp,
+            ModuleVomit,
 
             // Misc
             ModuleAntiBot,
@@ -239,12 +260,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,
+            ModuleDamageParticles,
             ModuleESP,
             ModuleFreeCam,
             ModuleFullBright,
             ModuleHoleESP,
             ModuleHud,
             ModuleItemESP,
+            ModuleItemTags,
             ModuleJumpEffect,
             ModuleMobOwners,
             ModuleMurderMystery,
@@ -260,6 +283,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSignRender,
             ModuleNoSwing,
             ModuleCustomAmbience,
+            ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
@@ -268,6 +292,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
+            ModuleZoom,
 
             // World
             ModuleAutoDisable,
@@ -278,7 +303,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFastBreak,
             ModuleFastPlace,
             ModuleFucker,
-            ModuleIgnite,
+            ModuleAutoTrap,
             ModuleNoSlowBreak,
             ModuleLiquidPlace,
             ModuleProjectilePuncher,

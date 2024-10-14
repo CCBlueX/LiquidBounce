@@ -53,14 +53,14 @@ class NametagRenderer {
         env: RenderEnvironment,
         info: NametagInfo,
         pos: Vec3,
-    ) {
+    ) = with(env) {
         val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
 
         val scale = 1.0F / (c * 0.15F) * ModuleNametags.scale
 
-        env.matrixStack.push()
-        env.matrixStack.translate(pos.x, pos.y, pos.z)
-        env.matrixStack.scale(scale, scale, 1.0F)
+        matrixStack.push()
+        matrixStack.translate(pos.x, pos.y, pos.z)
+        matrixStack.scale(scale, scale, 1.0F)
 
         val x =
             ModuleNametags.fontRenderer.draw(
@@ -72,7 +72,7 @@ class NametagRenderer {
             )
 
         // Make the model view matrix center the text when rendering
-        env.matrixStack.translate(-x * 0.5F, -ModuleNametags.fontRenderer.height * 0.5F, 0.00F)
+        matrixStack.translate(-x * 0.5F, -ModuleNametags.fontRenderer.height * 0.5F, 0.00F)
 
         ModuleNametags.fontRenderer.commit(env, fontBuffers)
 
@@ -89,7 +89,7 @@ class NametagRenderer {
             drawItemList(pos, info.items)
         }
 
-        env.matrixStack.pop()
+        matrixStack.pop()
     }
 
     private fun drawItemList(

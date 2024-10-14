@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -7,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -15,16 +32,11 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.manhattanDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.BedBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.DoubleBlockProperties
+import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -51,11 +63,13 @@ private const val ITEM_SCALE: Float = 1.0F
 private const val BACKGROUND_PADDING: Int = 2
 
 object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
-    val maxLayers by int("MaxLayers", 5, 1..5)
-    val scale by float("Scale", 1.5f, 0.5f..3.0f)
+    private val maxLayers by int("MaxLayers", 5, 1..5)
+    private val scale by float("Scale", 1.5f, 0.5f..3.0f)
+    private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
 
-    val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    private val fontRenderer by lazy {
+        Fonts.DEFAULT_FONT.get()
+    }
 
     val renderHandler = handler<OverlayRenderEvent> {
         val fontBuffers = FontRendererBuffers()
@@ -63,30 +77,30 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         renderEnvironmentForGUI {
             val playerPos = player.blockPos
 
+            val maxDistanceSquared = maxDistance * maxDistance
+
             try {
-                synchronized(BlockTracker.trackedBlockMap) {
-                    val trackedBlockMap = BlockTracker.trackedBlockMap.entries.sortedByDescending {
-                        val bp = BlockPos(it.key.x, it.key.y, it.key.z)
+                val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
+                    key.asBlockPos().getSquaredDistance(playerPos) to value
+                }.filter { (distSq, _) ->
+                    distSq < maxDistanceSquared
+                }.sortedByDescending { (distSq, _) ->
+                    distSq
+                }
 
-                        bp.getSquaredDistance(playerPos)
-                    }
+                trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
+                    val bedPlates = trackState.bedPlates
+                    with(matrixStack) {
+                        push()
+                        try {
+                            val z = idx.toFloat() / trackedBlockMap.size.toFloat()
 
-                    val env = this
-
-                    trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
-                        val bedPlates = trackState.bedPlates
-                        with(matrixStack) {
-                            push()
-                            try {
-                                val z = idx.toFloat() / trackedBlockMap.size.toFloat()
-
-                                renderBedPlates(env, trackState, fontBuffers, bedPlates, z * 1000.0F)
-                            } finally {
-                                pop()
-                            }
+                            renderBedPlates(trackState, fontBuffers, bedPlates, z * 1000.0F)
+                        } finally {
+                            pop()
                         }
-
                     }
+
                 }
             } finally {
                 fontBuffers.draw(fontRenderer)
@@ -94,11 +108,10 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         }
     }
 
-    private fun renderBedPlates(
-        env: GUIRenderEnvironment,
+    private fun GUIRenderEnvironment.renderBedPlates(
         trackState: TrackedState,
         fontBuffers: FontRendererBuffers,
-        bedPlates: List<Block>,
+        bedPlates: Set<Block>,
         z: Float
     ) {
         val screenPos = WorldToScreen.calculateScreenPos(
@@ -141,15 +154,15 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             0.0f
         )
 
-        env.matrixStack.push()
+        matrixStack.push()
 
-        env.matrixStack.translate(screenPos.x, screenPos.y, z)
-        env.matrixStack.translate(0.0f, -height + fontRenderer.height * scale - 6.0F, 0.0f)
-        env.matrixStack.scale(scale, scale, 1.0F)
+        matrixStack.translate(screenPos.x, screenPos.y, z)
+        matrixStack.translate(0.0f, -height + fontRenderer.height * scale - 6.0F, 0.0f)
+        matrixStack.scale(scale, scale, 1.0F)
 
-        fontRenderer.commit(env, fontBuffers)
+        fontRenderer.commit(fontBuffers)
 
-        env.matrixStack.pop()
+        matrixStack.pop()
 
         // draw items
         val itemStartX = width / 2 - (bedPlates.size + 1) * ITEM_SIZE / 2
@@ -158,7 +171,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             itemStartX,
             mc.textRenderer.fontHeight
         )
-        for ((index, block) in bedPlates.withIndex()) {
+        bedPlates.forEachIndexed { index, block ->
             dc.drawItem(
                 block.asItem().defaultStack,
                 itemStartX + (index + 1) * ITEM_SIZE,
@@ -167,63 +180,45 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         }
     }
 
-    private fun getBedPlates(pos: BlockPos, state: BlockState): List<Block> {
-        val bedPlates = arrayListOf<Block>()
+    private fun getBedPlates(pos: BlockPos, state: BlockState): Set<Block> {
+        val bedPlates = hashSetOf<Block>()
         val secondPos = pos.offset(BedBlock.getOppositePartDirection(state))
 
         // If the second part of the bed is a bed block, we don't want to render the bed plates
         if (secondPos.getState()?.block !in BED_BLOCKS) {
-            return emptyList()
+            return emptySet()
         }
 
-        val firstPlates = pos.getBedPlatesAround()
-        val secondPlates = secondPos.getBedPlatesAround()
+        val platesFirst = pos.getBedPlatesAround().keys
+        val platesSecond = secondPos.getBedPlatesAround().keys
+        bedPlates += platesFirst
+        bedPlates += platesSecond
+        bedPlates.removeAll(BED_BLOCKS)
 
-        for (layer in 1..maxLayers) {
-            val platesFirst = firstPlates.filterValues { it == layer }.keys
-            val platesSecond = secondPlates.filterValues { it == layer }.keys
-            if (platesFirst.isEmpty() && platesSecond.isEmpty()) {
-                break
-            }
-            platesFirst.forEach {
-                if (it !in bedPlates) {
-                    bedPlates.add(it)
-                }
-            }
-            platesSecond.forEach {
-                if (it !in bedPlates) {
-                    bedPlates.add(it)
-                }
-            }
-        }
-
-        return bedPlates.toList()
+        return bedPlates
     }
 
     private fun BlockPos.getBedPlatesAround(): Map<Block, Int> {
-        val bedPlateTypes = mutableMapOf<Block, Int>()
-
-        // handle each block around the bed
-        val handleBlock: (BlockPos, BlockState) -> Unit = { blockPos, blockState ->
-            val block = blockState.block
-            if (!blockState.isAir && block !in BED_BLOCKS) {
-                val layer = manhattanDistanceTo(blockPos)
-                bedPlateTypes.compute(block) { _, value ->
-                    if (value == null || layer < value) {
-                        layer
-                    } else {
-                        value
-                    }
-                }
-            }
-        }
+        val bedPlateTypes = hashMapOf<Block, Int>()
 
         for (offsetX in x - maxLayers..x + maxLayers) {
             for (offsetZ in z - maxLayers..z + maxLayers) {
                 for (offsetY in y..y + maxLayers) {
                     val blockPos = BlockPos(offsetX, offsetY, offsetZ)
                     val blockState = blockPos.getState() ?: continue
-                    handleBlock(blockPos, blockState)
+                    val block = blockState.block
+
+                    if (blockState.isAir || block in BED_BLOCKS) {
+                        continue
+                    }
+
+                    // handle each block around the bed
+                    val layer = manhattanDistanceTo(blockPos)
+                    if (layer > maxLayers) continue
+
+                    bedPlateTypes.compute(block) { _, value ->
+                        value?.let { minOf(it, layer) } ?: layer
+                    }
                 }
             }
         }
@@ -249,7 +244,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     }
 
     private class TrackedState(
-        val bedPlates: List<Block>,
+        val bedPlates: Set<Block>,
         val centerPos: Vec3d,
         val bedItem: ItemStack,
     )
@@ -276,30 +271,26 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             } else null
         }
 
-        private val invalidBeds = arrayListOf<TargetBlockPos>()
         private fun updateAllBeds(pos: BlockPos) {
             trackedBlockMap.forEach { (trackedPos, _) ->
-                val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
+                val trackedPosBlockPos = trackedPos.asBlockPos()
                 // Update if the block is close to a bed
-                if (trackedPosBlockPos.manhattanDistanceTo(pos) <= maxLayers) {
-                    val bedState = trackedPosBlockPos.getState() ?: return@forEach
-                    if (bedState.block !in BED_BLOCKS) {
-                        // The tracked block is not a bed anymore, remove it
-                        invalidBeds.add(trackedPos)
-                        return@forEach
-                    }
-                    trackedBlockMap[trackedPos] = TrackedState(
-                        bedPlates = getBedPlates(trackedPosBlockPos, bedState),
-                        centerPos = getBedCenterPos(bedState, trackedPosBlockPos),
-                        bedItem = bedState.block.asItem().defaultStack
-                    )
+                if (trackedPosBlockPos.manhattanDistanceTo(pos) > maxLayers) {
+                    return@forEach
                 }
-            }
-            if (invalidBeds.isNotEmpty()) {
-                invalidBeds.forEach {
-                    trackedBlockMap.remove(it)
+
+                val bedState = trackedPosBlockPos.getState() ?: return@forEach
+                if (bedState.block !in BED_BLOCKS) {
+                    // The tracked block is not a bed anymore, remove it
+                    trackedBlockMap.remove(trackedPos)
+                    return@forEach
                 }
-                invalidBeds.clear()
+
+                trackedBlockMap[trackedPos] = TrackedState(
+                    bedPlates = getBedPlates(trackedPosBlockPos, bedState),
+                    centerPos = getBedCenterPos(bedState, trackedPosBlockPos),
+                    bedItem = bedState.block.asItem().defaultStack
+                )
             }
         }
     }

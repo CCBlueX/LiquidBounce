@@ -24,12 +24,12 @@ import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.*
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -49,11 +49,22 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
  *
  * @property matrixStack The matrix stack for rendering.
  */
-abstract class RenderEnvironment(val matrixStack: MatrixStack) {
+sealed class RenderEnvironment(val matrixStack: MatrixStack) {
     val currentMvpMatrix: Matrix4f
         get() = matrixStack.peek().positionMatrix
 
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
+
+    inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
+        val fontBuffers = FontRendererBuffers()
+        try {
+            block(fontBuffers) // don't forget to `commit`!
+        } finally {
+            fontBuffers.draw(this)
+        }
+    }
+
+    fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@RenderEnvironment, buffer)
 }
 
 class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
@@ -75,7 +86,7 @@ class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : Ren
  * @param draw The block of code to be executed in the rendering environment.
  */
 @OptIn(ExperimentalContracts::class)
-fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
+inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
     contract {
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
@@ -97,7 +108,7 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnviron
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
-fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
+inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
     RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
@@ -113,13 +124,12 @@ fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIR
  * @param pos The position vector.
  * @param draw The block of code to be executed in the transformed environment.
  */
-fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
+inline fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
         try { draw() }
         finally { pop() }
-
     }
 }
 
@@ -129,20 +139,19 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
  * @param pos The position vector.
  * @param draw The block of code to be executed in the transformed environment.
  */
-fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.() -> Unit) {
+inline fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.() -> Unit) {
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
         try { draw() }
         finally { pop() }
-
     }
 }
 
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
-fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
     val relativePos = relativeToCamera(pos)
 
     with(matrixStack) {
@@ -159,7 +168,7 @@ fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldR
  * @param color4b The color transformation.
  * @param draw The block of code to be executed in the transformed environment.
  */
-fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
+inline fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
     RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
     try { draw() }
     finally { RenderSystem.setShaderColor(1f, 1f, 1f, 1f) }
@@ -171,7 +180,7 @@ fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> 
  *
  * @param draw The block of code to be executed with cull disabled.
  */
-fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
+inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
     RenderSystem.disableCull()
     try { draw() }
     finally { RenderSystem.enableCull() }
@@ -265,7 +274,7 @@ fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
 }
 /**
  */
-fun RenderEnvironment.drawCustomMesh(
+inline fun RenderEnvironment.drawCustomMesh(
     drawMode: DrawMode,
     vertexFormat: VertexFormat,
     shader: ShaderProgram,

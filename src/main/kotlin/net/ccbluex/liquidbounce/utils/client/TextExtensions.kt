@@ -184,3 +184,12 @@ fun Int.formatAsTime(): String {
         else -> "${seconds}s"
     }
 }
+
+fun hideSensitiveAddress(address: String): String {
+    // Hide possibly sensitive information from LiquidProxy
+    return when {
+        address.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
+        address.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
+        else -> address
+    }
+}

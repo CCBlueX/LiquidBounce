@@ -34,7 +34,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * alerts you about flags
  */
 
-object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
+object ModuleFlagCheck: Module("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
 
     private var alertThroughChat by boolean("AlertThroughChat", true)
 
@@ -74,7 +74,7 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
         }
 
         val invalidReason = mutableListOf<String>()
-        if (player.health <= 0.0f) {
+        if (player.health <= 0.0f && player.isAlive) {
             invalidReason.add("Health")
         }
         if (player.hungerManager.foodLevel <= 0) {

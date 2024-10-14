@@ -23,6 +23,8 @@ package net.ccbluex.liquidbounce.utils.entity
 import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -36,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.block.*
 import net.minecraft.client.input.Input
 import net.minecraft.entity.Entity
+import net.minecraft.entity.MovementType
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffect
@@ -68,7 +71,7 @@ class SimulatedPlayer(
     var velocity: Vec3d,
     private var boundingBox: Box,
     var yaw: Float,
-    private val pitch: Float,
+    var pitch: Float,
     private var sprinting: Boolean,
 
     var fallDistance: Float,
@@ -403,7 +406,10 @@ class SimulatedPlayer(
     private fun getMovementSpeed(): Float = 0.10000000149011612.toFloat()
 
     private fun move(input: Vec3d) {
-        val movement = this.adjustMovementForSneaking(input)
+        val event = callEvent(PlayerMoveEvent(MovementType.SELF, input))
+        val vec3d = event.movement
+
+        val movement = this.adjustMovementForSneaking(vec3d)
         val adjustedMovement = this.adjustMovementForCollisions(movement)
 
         if (adjustedMovement.lengthSquared() > 1.0E-7) {
@@ -909,12 +915,17 @@ class SimulatedPlayer(
         companion object {
             private const val MAX_WALKING_SPEED = 0.121
 
-            fun fromClientPlayer(directionalInput: DirectionalInput): SimulatedPlayerInput {
+            fun fromClientPlayer(
+                directionalInput: DirectionalInput,
+                jumping: Boolean = player.input.jumping,
+                sprinting: Boolean = player.isSprinting,
+                sneaking: Boolean = player.isSneaking
+            ): SimulatedPlayerInput {
                 val input = SimulatedPlayerInput(
                     directionalInput,
-                    player.input.jumping,
-                    player.isSprinting,
-                    player.isSneaking
+                    jumping,
+                    sprinting,
+                    sneaking
                 )
 
                 val safeWalkEvent = PlayerSafeWalkEvent()

@@ -117,12 +117,8 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
         simulateUntil(tickRange.endInclusive + 1)
 
         return sequence<SimulatedPlayerSnapshot> {
-            var idx = 0
-
-            while (true) {
-                yield(getSnapshotAt(idx))
-
-                idx++
+            for (i in tickRange) {
+                yield(getSnapshotAt(i))
             }
         }
     }

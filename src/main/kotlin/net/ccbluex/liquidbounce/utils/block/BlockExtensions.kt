@@ -118,14 +118,14 @@ inline fun searchBlocksInCuboid(
 
 @Suppress("NestedBlockDepth")
 inline fun forEachBlockPosBetween(
-    from: BlockPos,
-    to: BlockPos,
-    action: (BlockPos) -> Unit,
+    from: Vec3i,
+    to: Vec3i,
+    action: (Vec3i) -> Unit,
 ) {
     for (x in from.x..to.x) {
         for (y in from.y..to.y) {
             for (z in from.z..to.z) {
-                action(BlockPos(x, y, z))
+                action(Vec3i(x, y, z))
             }
         }
     }

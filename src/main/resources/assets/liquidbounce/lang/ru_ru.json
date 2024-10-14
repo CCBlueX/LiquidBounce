@@ -268,6 +268,11 @@
   "liquidbounce.module.damage.description": "Наносит указанное количество повреждений себе.",
   "liquidbounce.module.disabler.description": "Отключает определенные Анти читы.",
   "liquidbounce.module.forceUnicodeChat.description": "Переводит все сообщения чата, которые Вы отправляете, в юникод.",
+  "liquidbounce.module.flagCheck.description": "Оповещает вас о флагах.",
+  "liquidbounce.module.flagCheck.messages.alert": "Обнаружено %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.alertWithExtra": "Обнаружено %s %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.lagback": "LagBack",
+  "liquidbounce.module.flagCheck.messages.invalid": "Недопустимо",
   "liquidbounce.module.kick.description": "Кикает Вас сервера.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Невозможно включить %s в одиночной игре.",
   "liquidbounce.module.moreCarry.description": "Позволяет Вам хранить дополнительные предметы в слотах для крафта (Только в мультиплеере!).",
@@ -352,7 +357,7 @@
   "liquidbounce.module.autoTool.description": "Автоматически выбирает лучший инструмент для ломания блока.",
   "liquidbounce.module.crystalAura.description": "Автоматически ставит и взрывает кристалы Энда.",
   "liquidbounce.module.fucker.description": "Ломает/использует выбранные блоки вокруг Вас.",
-  "liquidbounce.module.ignite.description": "Автоматически поджигает цели вокруг Вас.",
+  "liquidbounce.module.autoTrap.description": "Автоматически поджигает цели вокруг Вас.",
   "liquidbounce.module.extinguish.description": "Автоматически тушит вас, когда вы горите.",
   "liquidbounce.module.scaffold.description": "Автоматически ставит блоки под Вами.",
   "liquidbounce.module.fastUse.description": "Позволяет Вам использовать предметы быстрее.",
@@ -576,5 +581,8 @@
   "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости.",
   "liquidbounce.module.ESP.description": "Позволяет Вам видеть цели через стены.",
   "liquidbounce.module.targets.description": "Позволяет Вам выбрать, какие сущности будут считаться враждебными.",
-  "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы."
+  "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы.",
+  "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars.",
+  "liquidbounce.module.multiActions.description": "Позволяет выполнять несколько действий одновременно.",
+  "liquidbounce.module.zoom.description": "Позволяет вам сделать всё в вашем мире больше или меньше."
 }

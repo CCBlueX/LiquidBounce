@@ -16,12 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
-/**
- * tested on mineblaze.net
- * made for intave version 14.8.4
- */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -29,10 +23,13 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.hit.BlockHitResult
+
+/**
+ * tested on mineblaze.net
+ * made for intave version 14.8.4
+ */
 
 internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
 
@@ -52,16 +49,6 @@ internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) :
                         )
                     )
                 }
-            }
-
-            is PlayerInteractItemC2SPacket -> {
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        player.blockPos,
-                        player.horizontalFacing.opposite
-                    )
-                )
             }
         }
     }

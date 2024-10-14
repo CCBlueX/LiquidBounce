@@ -43,7 +43,7 @@ import net.minecraft.util.shape.VoxelShapes
 
 object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
-    private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator))
+    private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator)).apply { tagBy(this) }
     private val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)
 
     /**

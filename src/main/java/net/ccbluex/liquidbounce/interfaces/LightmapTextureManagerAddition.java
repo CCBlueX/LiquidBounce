@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
+package net.ccbluex.liquidbounce.interfaces;
 
-package net.ccbluex.liquidbounce.web.theme.component.types
+/**
+ * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine}.
+ */
+public interface LightmapTextureManagerAddition {
 
-import net.ccbluex.liquidbounce.web.theme.component.Component
-
-class FrameComponent(url: String, enabled: Boolean = true) : Component("Frame", enabled) {
-
-    val src by text("Src", url)
-    val scale by float("Scale", 1.0f, 0.0f..10.0f)
-    val width by int("Width", 600, 0..1920)
-    val height by int("Height", 300, 0..1920)
-
-    init {
-        registerComponentListen()
-    }
+    /**
+     * Restores the last light map.
+     */
+    void liquid_bounce$restoreLightMap();
 
 }

@@ -47,7 +47,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT, aliases = arra
         LiquidWalkNoCheatPlus,
         LiquidWalkVerusB3901,
         LiquidWalkVulcan,
-    ))
+    )).apply { tagBy(this) }
 
     /**
      * Check if player is standing on water

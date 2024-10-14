@@ -25,7 +25,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'com.gorylenko.gradle-git-properties' version '2.4.2'
     id "io.gitlab.arturbosch.detekt" version "1.23.6"
-    id "com.github.node-gradle.node" version "7.0.2"
+    id "com.github.node-gradle.node" version "7.1.0"
     id 'org.jetbrains.dokka' version '1.9.10'
 }
 
@@ -71,7 +71,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.2'
 
     // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -132,7 +132,7 @@ dependencies {
 
     // Test libraries
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

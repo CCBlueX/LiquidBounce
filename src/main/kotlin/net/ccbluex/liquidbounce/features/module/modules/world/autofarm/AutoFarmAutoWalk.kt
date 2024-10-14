@@ -45,8 +45,8 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     var walkTarget: Vec3d? = null
 
-    private fun findWalkToItem() = world.entities.filter { it is ItemEntity && it.distanceTo(player) < 20 }
-        .minByOrNull { it.distanceTo(player) }?.pos
+    private fun findWalkToItem() = world.entities.filter { it is ItemEntity && it.squaredDistanceTo(player) < 20 * 20 }
+        .minByOrNull { it.squaredDistanceTo(player) }?.pos
 
     fun updateWalkTarget(): Boolean {
         if (!enabled) return false
@@ -94,8 +94,8 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }
 
         val closestBlock = AutoFarmBlockTracker.trackedBlockMap.filter { allowedItems[it.value.ordinal] }.keys.map {
-            Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))
-        }.minByOrNull { it.distanceTo(player.pos) }
+            it.asBlockPos().toCenterPos()
+        }.minByOrNull { it.squaredDistanceTo(player.pos) }
 
         return closestBlock
     }

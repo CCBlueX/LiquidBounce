@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
-import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Tracks locations of specific blocks in the world
@@ -29,7 +29,7 @@ import java.util.*
  */
 abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscriber {
 
-    val trackedBlockMap: MutableMap<TargetBlockPos, T> = Collections.synchronizedMap(hashMapOf<TargetBlockPos, T>())
+    val trackedBlockMap = ConcurrentHashMap<TargetBlockPos, T>()
 
     abstract fun getStateFor(pos: BlockPos, state: BlockState): T?
 
@@ -62,5 +62,7 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
 
     data class TargetBlockPos(val x: Int, val y: Int, val z: Int) {
         constructor(pos: BlockPos) : this(pos.x, pos.y, pos.z)
+
+        fun asBlockPos() = BlockPos(x, y, z)
     }
 }

@@ -37,7 +37,6 @@
     <ID>BracesOnIfStatements:ModuleNoSlow.kt$ModuleNoSlow$if</ID>
     <ID>BracesOnIfStatements:ModulePlugins.kt$ModulePlugins$else</ID>
     <ID>BracesOnIfStatements:ModulePlugins.kt$ModulePlugins$if</ID>
-    <ID>BracesOnIfStatements:ModuleRotations.kt$ModuleRotations$if</ID>
     <ID>BracesOnIfStatements:ModuleSkinDerp.kt$ModuleSkinDerp$else</ID>
     <ID>BracesOnIfStatements:ModuleSkinDerp.kt$ModuleSkinDerp$if</ID>
     <ID>BracesOnIfStatements:ModuleSmartEat.kt$ModuleSmartEat.Estimator$else</ID>
@@ -123,7 +122,6 @@
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
     <ID>LongParameterList:RotationsUtil.kt$RotationManager$( vecRotation: VecRotation, entity: Entity? = null, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority, provider: Module )</ID>
     <ID>LongParameterList:ThemeManager.kt$ThemeManager$(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float)</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
@@ -135,11 +133,10 @@
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
-    <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
-    <ID>NestedBlockDepth:ModuleBedDefender.kt$ModuleBedDefender$private fun BlockPos.getPlacementPositionsAround(): List&lt;BlockPos></ID>
+    <ID>NestedBlockDepth:ModuleBedPlates.kt$ModuleBedPlates$private fun BlockPos.getBedPlatesAround(): Map&lt;Block, Int></ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>ReturnCount:AutoFarmBlockHandler.kt$AutoFarmBlockTracker$override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates?</ID>
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
@@ -148,8 +145,10 @@
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleScaffold.kt$ModuleScaffold$(blockInMainHand, blockInOffHand, *blocksInHotbar.map { it.second }.toTypedArray())</ID>
+    <ID>SpreadOperator:ModuleVomit.kt$ModuleVomit$( *emptySlots.map { slot -> CreativeInventoryAction.performFillSlot(randomStack, slot) } .toTypedArray(), *emptySlots.map { slot -> ClickInventoryAction.performThrow(null, slot) } .toTypedArray() )</ID>
     <ID>StringLiteralDuplication:AutoQueueGommeDuels.kt$AutoQueueGommeDuels$"AutoPlay"</ID>
     <ID>StringLiteralDuplication:JsSetting.kt$JsSetting$"default"</ID>
+    <ID>SwallowedException:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$e: CancellationException</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalArgumentException()</ID>
@@ -174,6 +173,7 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
+    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>

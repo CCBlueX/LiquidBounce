@@ -126,7 +126,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : Choice("Custom")
 
         private var ticksTimeout = 0
 
-        val repeatable = repeatable {
+        @Suppress("unused")
+        private val strafeHandler = repeatable {
             if (ticksTimeout > 0) {
                 ticksTimeout--
                 return@repeatable
