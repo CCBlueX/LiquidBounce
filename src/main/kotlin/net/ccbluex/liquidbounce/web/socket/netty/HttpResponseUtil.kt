@@ -39,9 +39,6 @@ private fun httpResponse(status: HttpResponseStatus, contentType: String = "text
     val httpHeaders = response.headers()
     httpHeaders[HttpHeaderNames.CONTENT_TYPE] = contentType
     httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
-    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
-    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
-    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
     return response
 }
 
@@ -88,7 +85,6 @@ fun httpFile(file: File): FullHttpResponse {
     val httpHeaders = response.headers()
     httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(file)
     httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
-    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
     return response
 }
 
@@ -104,7 +100,6 @@ fun httpFileStream(stream: InputStream): FullHttpResponse {
     val httpHeaders = response.headers()
     httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(bytes)
     httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
-    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
 
     return response
 }

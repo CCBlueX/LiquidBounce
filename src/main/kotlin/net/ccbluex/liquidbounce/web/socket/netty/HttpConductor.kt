@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.netty
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.socket.netty.model.RequestContext
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 
@@ -50,33 +51,43 @@ class HttpConductor {
             httpHeaders[HttpHeaderNames.CONTENT_TYPE] = "text/plain"
             httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
 
-            val requestOrigin = context.headers["origin"]
-            if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
-                httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
-            }
-
-            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
-            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
+            middleware(context, response)
             return@runCatching response
         }
 
         RouteController.findRoute(context.path, method)?.let { route ->
             logger.debug("Found route {}", route)
-            return@runCatching route.handler(requestObject)
+            return@runCatching middleware(context, route.handler(requestObject))
         }
 
         if (method == HttpMethod.GET) {
             RouteController.findFileServant(context.path)?.let { (fileServant, path) ->
                 logger.debug("Found file servant {}", fileServant)
-                return@runCatching fileServant.handleFileRequest(path)
+                return@runCatching middleware(context, fileServant.handleFileRequest(path))
             }
         }
 
-        httpNotFound(context.path, "Route not found")
+        middleware(context, httpNotFound(context.path, "Route not found"))
     }.getOrElse {
         logger.error("Error while processing request object: $requestObject", it)
         httpInternalServerError(it.message ?: "Unknown error")
     }
 
+    private fun middleware(context: RequestContext, response: FullHttpResponse): FullHttpResponse {
+        val httpHeaders = response.headers()
+
+        val requestOrigin = context.headers["origin"]
+        if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
+        } else {
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "null"
+        }
+
+        httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
+        httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] =
+            "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
+
+        return response
+    }
 
 }
