@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestContext
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
+import java.net.URI
+import java.net.URISyntaxException
 
 class HttpConductor {
 
@@ -73,15 +75,25 @@ class HttpConductor {
 
     private fun middleware(context: RequestContext, response: FullHttpResponse): FullHttpResponse {
         val httpHeaders = response.headers()
-        val requestOrigin = context.headers["origin"]
+        val requestOrigin = context.headers["origin"] ?: context.headers["Origin"]
 
         if (requestOrigin != null) {
-            // If the origin is either localhost or 127.0.0.1, allow it
-            if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
-                httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
-            } else {
-                // Block cross-origin requests by not allowing other origins
+            try {
+                // Parse the origin to extract the hostname (ignoring the port)
+                val uri = URI(requestOrigin)
+                val host = uri.host
+
+                // Allow requests from localhost or 127.0.0.1 regardless of the port
+                if (host == "localhost" || host == "127.0.0.1") {
+                    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
+                } else {
+                    // Block cross-origin requests by not allowing other origins
+                    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "null"
+                }
+            } catch (e: URISyntaxException) {
+                // Handle bad URIs by setting a default CORS policy or logging the error
                 httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "null"
+                logger.error("Invalid Origin header: $requestOrigin", e)
             }
 
             // Allow specific methods and headers for cross-origin requests
@@ -92,6 +104,7 @@ class HttpConductor {
 
         return response
     }
+
 
 
 }
