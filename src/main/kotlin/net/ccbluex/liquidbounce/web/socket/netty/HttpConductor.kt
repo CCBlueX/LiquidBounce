@@ -73,19 +73,25 @@ class HttpConductor {
 
     private fun middleware(context: RequestContext, response: FullHttpResponse): FullHttpResponse {
         val httpHeaders = response.headers()
-
         val requestOrigin = context.headers["origin"]
-        if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
-            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
-        } else {
-            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "null"
-        }
 
-        httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
-        httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] =
-            "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
+        if (requestOrigin != null) {
+            // If the origin is either localhost or 127.0.0.1, allow it
+            if (requestOrigin == "http://localhost" || requestOrigin == "http://127.0.0.1") {
+                httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = requestOrigin
+            } else {
+                // Block cross-origin requests by not allowing other origins
+                httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "null"
+            }
+
+            // Allow specific methods and headers for cross-origin requests
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] =
+                "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
+        }
 
         return response
     }
+
 
 }
