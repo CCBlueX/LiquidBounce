@@ -299,7 +299,7 @@ class BlockPlacer(
         targetRenderer.removeBlock(pos)
     }
 
-    private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction, ): BlockHitResult? {
+    private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction): BlockHitResult? {
         val blockHitResult = raytraceBlock(
             range = wallRange.toDouble(),
             rotation = providedRotation,

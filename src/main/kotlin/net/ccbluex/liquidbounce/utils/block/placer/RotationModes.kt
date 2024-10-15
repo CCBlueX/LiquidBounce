@@ -64,7 +64,7 @@ class NormalRotationMode(configurable: ChoiceConfigurable<RotationMode>, placer:
 class NoRotationMode(configurable: ChoiceConfigurable<RotationMode>, placer: BlockPlacer)
     : RotationMode("None", configurable, placer) {
 
-    val send by boolean("SendRotationPacket", true)
+    val send by boolean("SendRotationPacket", false)
 
     /**
      * Not rotating properly allows doing multiple placements. "b/o" stands for blocker per operation.

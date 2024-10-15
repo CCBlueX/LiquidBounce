@@ -50,8 +50,8 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
     val blockedPositions = mutableSetOf<BlockPos>()
 
     /**
-     * Currently finds the best path using Dijkstra's algorithm, the speed can
-     * be improved by adding heuristics and making it an A* algorithm.
+     * Currently finds the best path of blocks to support the placement of [targetPos] using Dijkstra's algorithm,
+     * the speed can possibly be improved by adding heuristics and making it an A* algorithm.
      */
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val rangeSq = placer.range.sq()

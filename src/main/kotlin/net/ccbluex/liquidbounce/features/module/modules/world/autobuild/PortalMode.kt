@@ -73,6 +73,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
         portal = null
     }
 
+    @Suppress("NestedBlockDepth")
     private fun getPortal(): NetherPortal? {
         val portals = mutableListOf<NetherPortal>()
         val pos = BlockPos.ofFloored(player.pos)

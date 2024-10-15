@@ -80,9 +80,9 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                             val entry = next()
 
                             val sizeFactor = endSizeCurve.getFactor(entry.value.first, time, outTime.toFloat())
-                            val expand = 1 - MathHelper.lerp(sizeFactor, 1f, endSize)
+                            val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
                             val box = getBox(expand, entry.value.third)
-                            val colorFactor = 1 - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
+                            val colorFactor = 1f - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
 
                             drawEntryBox(entry.key, entry.value.second, box, colorFactor)
 
@@ -98,13 +98,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     }
 
     private fun getBox(expand: Float, box: Box): Box {
-        return if (expand == 1f) {
-            box
-        } else if (expand == 0f) {
-            EMPTY_BOX
-        } else {
-            val f = if (expand < 1) -0.5 * expand else (expand - 1) * 0.5
-            box.expand(box.lengthX * f, box.lengthY * f, box.lengthZ * f)
+        return when (expand) {
+            1f -> box
+            0f -> EMPTY_BOX
+            else -> {
+                val f = if (expand < 1) -0.5 * expand else (expand - 1) * 0.5
+                box.expand(box.lengthX * f, box.lengthY * f, box.lengthZ * f)
+            }
         }
     }
 
