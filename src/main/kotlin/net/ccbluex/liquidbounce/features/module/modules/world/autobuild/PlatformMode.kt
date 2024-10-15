@@ -24,9 +24,8 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.Filter
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
-import net.ccbluex.liquidbounce.utils.item.getBlock
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 
@@ -65,15 +64,6 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
         placer.update(blocks1)
     }
 
-    override fun getSlot(): HotbarItemSlot? {
-        HOTBAR_SLOTS.forEach {
-            val block = it.itemStack.getBlock() ?: return@forEach
-            if (filter(block, blocks)) {
-                return it
-            }
-        }
-
-        return null
-    }
+    override fun getSlot(): HotbarItemSlot? = filter.getSlot(blocks)
 
 }

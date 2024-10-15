@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -26,39 +27,42 @@ import net.minecraft.util.math.Direction
 class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direction, rotated: Direction)
     : QuickImports {
 
-    val blocks = arrayOf(
-        origin.up().up().up().up(), origin.offset(rotated).up().up().up().up(),
+    val frameBlocks = arrayOf(
+        origin.up(4), origin.offset(rotated).up(4),
 
-        origin.offset(rotated.opposite).up().up().up(), origin.offset(rotated).offset(rotated).up().up().up(),
-        origin.offset(rotated.opposite).up().up(), origin.offset(rotated).offset(rotated).up().up(),
+        origin.offset(rotated.opposite).up(3), origin.offset(rotated).offset(rotated).up(3),
+        origin.offset(rotated.opposite).up(2), origin.offset(rotated).offset(rotated).up(2),
         origin.offset(rotated.opposite).up(), origin.offset(rotated).offset(rotated).up(),
 
         origin, origin.offset(rotated)
     )
-    private val requiredEmpty = arrayOf(
-        origin.up().up().up(), origin.offset(rotated).up().up().up(),
-        origin.up().up(), origin.offset(rotated).up().up(),
+    val enclosedBlocks = arrayOf(
+        origin.up(3), origin.offset(rotated).up(3),
+        origin.up(2), origin.offset(rotated).up(2),
         origin.up(), origin.offset(rotated).up()
     )
     private val edgeBlocks = arrayOf(
-        origin.offset(rotated.opposite).up().up().up().up(), origin.offset(rotated).offset(rotated).up().up().up().up(),
+        origin.offset(rotated.opposite).up(4), origin.offset(rotated).offset(rotated).up(4),
         origin.offset(rotated.opposite), origin.offset(rotated).offset(rotated)
     )
     val ignitePos: BlockPos = origin.up()
     var score = 0
 
+    /**
+     * Scores the potential portal about how favourable it would be, to find the best place position.
+     */
     fun calculateScore() {
         // there can't be blocks inside the portal
-        if (requiredEmpty.any { !world.isAir(it) }) {
+        if (enclosedBlocks.any { !world.isAir(it) }) {
             score = -1
             return
         }
 
-        blocks.forEach {
+        frameBlocks.forEach {
             val blockState = world.getBlockState(it)
             if (blockState.block == Blocks.OBSIDIAN) {
                 score += 3
-            } else if (!blockState.isReplaceable) {
+            } else if (!blockState.isReplaceable || it.isBlockedByEntities()) {
                 // a block is not obsidian and not replaceable, making the portal invalid
                 score = -1
                 return
@@ -69,6 +73,9 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
         edgeBlocks.forEach {
            if (!world.isAir(it)) {
                 score += 4
+           } else if (it.isBlockedByEntities()) {
+               score -= 1
+               score = score.coerceAtLeast(0)
            }
         }
 
@@ -77,11 +84,25 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
             score += 1
         }
 
+        // in the best case, we already look directly at the portal
         if (player.movementDirection == direction) {
             score += 10
         }
     }
 
+    /**
+     * Returns a list with all the positions that should be obsidian but aren't.
+     */
+    fun confirmPlacements(): List<BlockPos> {
+        return frameBlocks.filter {
+            val blockState = world.getBlockState(it)
+            blockState.block != Blocks.OBSIDIAN && blockState.isReplaceable
+        }
+    }
+
+    /**
+     * Whether the score is `-1`, meaning we can't build this portal without additional actions such as breaking.
+     */
     fun isValid(): Boolean = score != -1
 
 }

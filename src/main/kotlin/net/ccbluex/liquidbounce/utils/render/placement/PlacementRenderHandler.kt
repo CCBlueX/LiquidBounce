@@ -16,111 +16,80 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.render
+package net.ccbluex.liquidbounce.utils.render.placement
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.scanBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-// TODO make it use AABBs
-class PlacementRenderer(
-    name: String,
-    enabled: Boolean,
-    val module: Module,
-    val keep: Boolean = true,
-    clump: Boolean = true
-) : ToggleableConfigurable(module, name, enabled) {
-
-    private val clump by boolean("Clump", clump)
-
-    private val startSize by float("StartSize", 1.2f, 0f..2f)
-    private val startSizeCurve by curve("StartCurve", Easing.EXPONENTIAL_OUT)
-
-    private val endSize by float("EndSize", 0.8f, 0f..2f)
-    private val endSizeCurve by curve("EndCurve", Easing.EXPONENTIAL_IN)
-
-    private val fadeInCurve by curve("FadeInCurve", Easing.LINEAR)
-    private val fadeOutCurve by curve("FadeOutCurve", Easing.LINEAR)
-
-    private val inTime by int("InTime", 500, 0..5000, "ms")
-    private val outTime by int("OutTime", 500, 0..5000, "ms")
-
-    private val color by color("Color", Color4b(0, 255, 0, 150))
-    private val outlineColor by color("OutlineColor", Color4b(0, 255, 0, 150))
+class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
 
     private val inList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
     private val currentList = linkedMapOf<BlockPos, Pair<Long, Box>>()
     private val outList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
-    private var outAnimationsFinished = true
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    fun render(event: WorldRenderEvent, time: Long) {
         val matrixStack = event.matrixStack
-        val time = System.currentTimeMillis()
 
-        renderEnvironmentForWorld(matrixStack) {
-            BoxRenderer.drawWith(this) {
-                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
-                    val vec3d = Vec3d(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
-                    withPositionRelativeToCamera(vec3d) {
-                        drawBox(
-                            box,
-                            color.fade(colorFactor),
-                            outlineColor.fade(colorFactor),
-                            (cullData shr 32).toInt(),
-                            (cullData and 0xFFFFFFFF).toInt()
-                        )
-                    }
-                }
-
-                inList.iterator().apply {
-                    while (hasNext()) {
-                        val entry = next()
-
-                        val sizeFactor = startSizeCurve.getFactor(entry.value.first, time, inTime.toFloat())
-                        val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                        val box = getBox(expand, entry.value.third)
-                        val colorFactor = fadeInCurve.getFactor(entry.value.first, time, inTime.toFloat())
-
-                        drawEntryBox(entry.key, entry.value.second, box, colorFactor)
-
-                        if (time - entry.value.first >= outTime) {
-                            if (keep) {
-                                currentList[entry.key] = entry.value.second to entry.value.third
-                            } else {
-                                outList[entry.key] = Triple(time, entry.value.second, entry.value.third)
-                            }
-                            remove()
+        with(placementRenderer) {
+            renderEnvironmentForWorld(matrixStack) {
+                BoxRenderer.drawWith(this) {
+                    fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
+                        val vec3d = Vec3d(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
+                        withPositionRelativeToCamera(vec3d) {
+                            drawBox(
+                                box,
+                                getColor(id).fade(colorFactor),
+                                getOutlineColor(id).fade(colorFactor),
+                                (cullData shr 32).toInt(),
+                                (cullData and 0xFFFFFFFF).toInt()
+                            )
                         }
                     }
-                }
 
-                currentList.forEach { drawEntryBox(it.key, it.value.first, it.value.second, 1f) }
+                    inList.iterator().apply {
+                        while (hasNext()) {
+                            val entry = next()
 
-                outList.iterator().apply {
-                    while (hasNext()) {
-                        val entry = next()
+                            val sizeFactor = startSizeCurve.getFactor(entry.value.first, time, inTime.toFloat())
+                            val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
+                            val box = getBox(expand, entry.value.third)
+                            val colorFactor = fadeInCurve.getFactor(entry.value.first, time, inTime.toFloat())
 
-                        val sizeFactor = endSizeCurve.getFactor(entry.value.first, time, outTime.toFloat())
-                        val expand = MathHelper.lerp(sizeFactor, 1f, endSize)
-                        val box = getBox(expand, entry.value.third)
-                        val colorFactor = 1 - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
+                            drawEntryBox(entry.key, entry.value.second, box, colorFactor)
 
-                        drawEntryBox(entry.key, entry.value.second, box, colorFactor)
+                            if (time - entry.value.first >= outTime) {
+                                if (keep) {
+                                    currentList[entry.key] = entry.value.second to entry.value.third
+                                } else {
+                                    outList[entry.key] = Triple(time, entry.value.second, entry.value.third)
+                                }
+                                remove()
+                            }
+                        }
+                    }
 
-                        if (time - entry.value.first >= outTime) {
-                            updateNeighbors(entry.key)
-                            remove()
+                    currentList.forEach { drawEntryBox(it.key, it.value.first, it.value.second, 1f) }
+
+                    outList.iterator().apply {
+                        while (hasNext()) {
+                            val entry = next()
+
+                            val sizeFactor = endSizeCurve.getFactor(entry.value.first, time, outTime.toFloat())
+                            val expand = 1 - MathHelper.lerp(sizeFactor, 1f, endSize)
+                            val box = getBox(expand, entry.value.third)
+                            val colorFactor = 1 - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
+
+                            drawEntryBox(entry.key, entry.value.second, box, colorFactor)
+
+                            if (time - entry.value.first >= outTime) {
+                                updateNeighbors(entry.key)
+                                remove()
+                            }
                         }
                     }
                 }
@@ -128,14 +97,7 @@ class PlacementRenderer(
         }
     }
 
-    @Suppress("unused")
-    private val repeatable = repeatable {
-        if (!outAnimationsFinished && outList.isEmpty()) {
-            outAnimationsFinished = true
-        }
-    }
-
-    private fun getBox(expand: Float, box: Box): Box { // TODO this doesn't work
+    private fun getBox(expand: Float, box: Box): Box {
         return if (expand == 1f) {
             box
         } else if (expand == 0f) {
@@ -146,11 +108,13 @@ class PlacementRenderer(
         }
     }
 
+    fun isFinished(): Boolean = outList.isEmpty()
+
     /**
      * Updates the culling of all blocks around a position that has been removed or added.
      */
-    private fun updateNeighbors(pos: BlockPos) {
-        if (!clump) {
+    fun updateNeighbors(pos: BlockPos) {
+        if (!placementRenderer.clump) {
             return
         }
 
@@ -164,67 +128,6 @@ class PlacementRenderer(
             }?.let { return@scanBlocksInCuboid false }
 
             return@scanBlocksInCuboid false
-        }
-    }
-
-    /**
-     * Adds a block to be rendered. First it will make an appear-animation, then
-     * it will continue to get rendered until it's removed or the world changes.
-     */
-    fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
-        if (!enabled) {
-            return
-        }
-
-        if (!currentList.contains(pos) && !inList.contains(pos)) {
-            inList[pos] = Triple(System.currentTimeMillis(), 0L, box)
-            if (update) {
-                updateNeighbors(pos)
-            }
-        }
-
-        outList.remove(pos)
-    }
-
-    /**
-     * Removes a block from the rendering, it will get an out animation tho.
-     */
-    fun removeBlock(pos: BlockPos) {
-        if (!enabled) {
-            return
-        }
-
-        var cullData = 0L
-        var box: Box? = null
-        currentList.remove(pos)?.let {
-            cullData = it.first
-            box = it.second
-        } ?: run {
-            inList.remove(pos)?.let {
-                cullData = it.second
-                box = it.third
-            } ?: return
-        }
-
-        outList[pos] = Triple(System.currentTimeMillis(), cullData, box!!)
-    }
-
-    /**
-     * Updates all culling data.
-     *
-     * This can be useful to reduce overhead when adding a bunch of positions,
-     * so that positions don't get updated multiple times.
-     */
-    fun updateAll() {
-        if (!clump) {
-            return
-        }
-
-        for (entry in inList) {
-            inList[entry.key] = Triple(entry.value.first, getCullData(entry.key), entry.value.third)
-        }
-        for (entry in currentList) {
-            currentList[entry.key] = getCullData(entry.key) to entry.value.second
         }
     }
 
@@ -320,6 +223,55 @@ class PlacementRenderer(
     }
 
     /**
+     * Adds a block to be rendered. First it will make an appear-animation, then
+     * it will continue to get rendered until it's removed or the world changes.
+     */
+    fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
+        if (!currentList.contains(pos) && !inList.contains(pos)) {
+            inList[pos] = Triple(System.currentTimeMillis(), 0L, box)
+            if (update) {
+                updateNeighbors(pos)
+            }
+        }
+
+        outList.remove(pos)
+    }
+
+    /**
+     * Removes a block from the rendering, it will get an out animation tho.
+     */
+    fun removeBlock(pos: BlockPos) {
+        var cullData = 0L
+        var box: Box? = null
+        currentList.remove(pos)?.let {
+            cullData = it.first
+            box = it.second
+        } ?: run {
+            inList.remove(pos)?.let {
+                cullData = it.second
+                box = it.third
+            } ?: return
+        }
+
+        outList[pos] = Triple(System.currentTimeMillis(), cullData, box!!)
+    }
+
+    /**
+     * Updates all culling data.
+     *
+     * This can be useful to reduce overhead when adding a bunch of positions,
+     * so that positions don't get updated multiple times.
+     */
+    fun updateAll() {
+        for (entry in inList) {
+            inList[entry.key] = Triple(entry.value.first, getCullData(entry.key), entry.value.third)
+        }
+        for (entry in currentList) {
+            currentList[entry.key] = getCullData(entry.key) to entry.value.second
+        }
+    }
+
+    /**
      * Puts all currently rendered positions in the out-animation state and keeps it being rendered until
      * all animations have been finished even though the module might be already disabled.
      */
@@ -339,33 +291,15 @@ class PlacementRenderer(
                 remove()
             }
         }
-
-        outAnimationsFinished = false
-    }
-
-    override fun disable() {
-        clear()
-    }
-
-    @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent> {
-        clear()
     }
 
     /**
      * Removes all stored positions.
      */
-    private fun clear() {
+    fun clear() {
         inList.clear()
         currentList.clear()
         outList.clear()
-    }
-
-    /**
-     * Only run when the module and this is enabled or out-animations are running.
-     */
-    override fun handleEvents(): Boolean {
-        return module.handleEvents() && enabled || !outAnimationsFinished
     }
 
 }

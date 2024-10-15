@@ -44,7 +44,8 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
             chat(markAsError(ModuleAutoBuild.message("noPosition")), ModuleAutoBuild)
             ModuleAutoBuild.enabled = false
         }
-        placer.update(portal!!.blocks.filter { it.getState()!!.block != Blocks.OBSIDIAN }.toSet())
+        placer.update(portal!!.frameBlocks.filter { it.getState()!!.block != Blocks.OBSIDIAN }.toSet())
+        placer.support.blockedPositions.addAll(portal!!.enclosedBlocks)
     }
 
     @Suppress("unused")
@@ -54,6 +55,12 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
         }
 
         if (phase == Phase.BUILD) {
+            val blocks = portal!!.confirmPlacements()
+            if (blocks.isNotEmpty()) {
+                placer.update(blocks.toSet())
+                return@handler
+            }
+
             phase = Phase.IGNITE
             placer.addToQueue(portal!!.ignitePos)
         } else if (phase == Phase.IGNITE) {
@@ -62,6 +69,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
     }
 
     override fun disabled() {
+        placer.support.blockedPositions.clear()
         portal = null
     }
 

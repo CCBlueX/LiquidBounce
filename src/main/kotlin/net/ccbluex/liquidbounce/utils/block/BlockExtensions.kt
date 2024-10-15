@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.*
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
@@ -42,7 +43,9 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 
 fun BlockPos.getBlock() = getState()?.block
 
-fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.getCenterDistanceSquared() = player.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+
+fun BlockPos.getCenterDistanceSquaredEyes() = player.eyes.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
 /**
  * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
@@ -460,4 +463,10 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
  */
 fun BlockPos.getShape(): Box {
     return this.getState()?.getOutlineShape(world, this)?.boundingBox ?: FULL_BOX
+}
+
+fun BlockPos.isBlockedByEntities(): Boolean {
+    return world.entities.any {
+        it.boundingBox.intersects(FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble()))
+    }
 }
