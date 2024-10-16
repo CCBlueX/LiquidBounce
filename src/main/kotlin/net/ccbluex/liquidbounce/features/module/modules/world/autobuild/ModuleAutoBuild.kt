@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
+/**
+ * AutoBuild module
+ *
+ * Builds structures.
+ */
 object ModuleAutoBuild : Module("AutoBuild", Category.WORLD, aliases = arrayOf("Platform", "AutoPortal")) {
 
     private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode))

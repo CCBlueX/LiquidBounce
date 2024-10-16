@@ -26,6 +26,11 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
+// TODO check whether the Boxes actually touch
+/**
+ * A renderer instance that can be added to a [PlacementRenderer], it contains the core logic.
+ * Culling is handled in each handler for its boxes individually.
+ */
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
 
     private val inList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
@@ -36,6 +41,9 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         val matrixStack = event.matrixStack
 
         with(placementRenderer) {
+            val color = getColor(id)
+            val outlineColor = getOutlineColor(id)
+
             renderEnvironmentForWorld(matrixStack) {
                 BoxRenderer.drawWith(this) {
                     fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
@@ -43,8 +51,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                         withPositionRelativeToCamera(vec3d) {
                             drawBox(
                                 box,
-                                getColor(id).fade(colorFactor),
-                                getOutlineColor(id).fade(colorFactor),
+                                color.fade(colorFactor),
+                                outlineColor.fade(colorFactor),
                                 (cullData shr 32).toInt(),
                                 (cullData and 0xFFFFFFFF).toInt()
                             )
@@ -57,7 +65,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
                             val sizeFactor = startSizeCurve.getFactor(entry.value.first, time, inTime.toFloat())
                             val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                            val box = getBox(expand, entry.value.third)
+                            val box = getBox(if (expand < 1f) 1f - expand else expand, entry.value.third)
                             val colorFactor = fadeInCurve.getFactor(entry.value.first, time, inTime.toFloat())
 
                             drawEntryBox(entry.key, entry.value.second, box, colorFactor)

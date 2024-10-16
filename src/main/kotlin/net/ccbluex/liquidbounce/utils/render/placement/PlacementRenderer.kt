@@ -25,13 +25,19 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
-// TODO check whether the AABBs actually touch
+/**
+ * Render boxes, manages fade-in/-out and culling.
+ *
+ * Modules that want to provide a color not set in here can simply extend this class, register all settings except for
+ * the color settings, and override the color getters as needed.
+ */
 open class PlacementRenderer(
     name: String,
     enabled: Boolean,
@@ -57,6 +63,13 @@ open class PlacementRenderer(
     private val colorSetting by color("Color", Color4b(0, 255, 0, 150))
     private val outlineColorSetting by color("OutlineColor", Color4b(0, 255, 0, 150))
 
+    /**
+     * The [PlacementRenderHandler]s managed by this renderer.
+     *
+     * Handler should be added/removed only on the main thread because this map is not thread save.
+     *
+     * By default, there is a handler registered with the number `0`.
+     */
     var placementRenderHandlers = Int2ObjectOpenHashMap<PlacementRenderHandler>()
 
     init {
@@ -80,9 +93,12 @@ open class PlacementRenderer(
     /**
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
+     *
+     * @param handlerId To which handler the block should be added.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX, handlerId: Int = 0) {
-        if (!enabled) {
+        // return if the renderer is deactivated or the box is empty, as there wouldn't be anything to render
+        if (!enabled || box == EMPTY_BOX) {
             return
         }
 
@@ -92,6 +108,8 @@ open class PlacementRenderer(
 
     /**
      * Removes a block from the rendering, it will get an out animation tho.
+     *
+     * @param handlerId From which handler the block should be removed.
      */
     fun removeBlock(pos: BlockPos, handlerId: Int = 0) {
         if (!enabled) {
@@ -107,6 +125,8 @@ open class PlacementRenderer(
      *
      * This can be useful to reduce overhead when adding a bunch of positions,
      * so that positions don't get updated multiple times.
+     *
+     * @param handlerId On which handler the update should be performed.
      */
     fun updateAll(handlerId: Int = 0) {
         if (!clump) {
@@ -120,6 +140,8 @@ open class PlacementRenderer(
     /**
      * Puts all currently rendered positions in the out-animation state and keeps it being rendered until
      * all animations have been finished even though the module might be already disabled.
+     *
+     * Performed on all handlers in this renderer.
      */
     fun clearSilently() {
         placementRenderHandlers.values.forEach { it.clearSilently() }
@@ -142,8 +164,18 @@ open class PlacementRenderer(
         return module.handleEvents() && enabled || !outAnimationsFinished
     }
 
+    /**
+     * Returns the box color.
+     *
+     * @param id The handler requesting the color.
+     */
     open fun getColor(id: Int): Color4b = colorSetting
 
+    /**
+     * Returns the outline color.
+     *
+     * @param id The handler requesting the color.
+     */
     open fun getOutlineColor(id: Int): Color4b = outlineColorSetting
 
 }

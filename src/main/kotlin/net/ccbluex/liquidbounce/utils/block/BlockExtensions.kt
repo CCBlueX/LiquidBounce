@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
@@ -422,7 +423,7 @@ fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }
 
-// TODO replace this by an approach that automatically collects the blocks, this would create better mod compatibilty
+// TODO replace this by an approach that automatically collects the blocks, this would create better mod compatibility
 /**
  * Checks if the block can be interacted with, null will be returned as not interactable.
  * The [blockState] is optional but can make the result more accurate, if not provided
@@ -458,11 +459,14 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
 
 /**
  * Returns the shape of the block as box, if it can't get the actual shape, it will return [FULL_BOX].
- *
- * Note: The world is required to NOT be `null`.
  */
 fun BlockPos.getShape(): Box {
-    return this.getState()?.getOutlineShape(world, this)?.boundingBox ?: FULL_BOX
+    val outlineShape = this.getState()?.getOutlineShape(world, this) ?: return FULL_BOX
+    if (outlineShape.isEmpty) {
+        return EMPTY_BOX
+    }
+
+    return outlineShape.boundingBox
 }
 
 fun BlockPos.isBlockedByEntities(): Boolean {

@@ -204,7 +204,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var ledge by boolean("Ledge", true)
 
-    private val renderer = tree(PlacementRenderer("Render", true, this, false, true))
+    private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
     private var placementY = 0
     private var forceSneak = 0
@@ -499,7 +499,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // Take the fall off position before placing the block
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
-        renderer.addBlock(target.placedBlock, box = target.placedBlock.getShape())
+        renderer.addBlock(target.placedBlock)
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             currentTarget = null

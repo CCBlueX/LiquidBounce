@@ -68,6 +68,13 @@ class BlockPlacer(
     val swingMode by enumChoice("Swing", PlacementSwingMode.DO_NOT_HIDE)
 
     /**
+     * Construct a center hit result when the raytrace result is invalid.
+     * This can make the module rotations wrong as well as place a bit outside the range,
+     * but it makes the placements a lot more reliable and works on most servers.
+     */
+    val constructFailResult by boolean("ConstructFailResult", true)
+
+    /**
      * Defines how long the player should sneak when placing on an interactable block.
      * This can make placing multiple blocks seem smoother.
      */
@@ -76,7 +83,7 @@ class BlockPlacer(
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     val ignoreUsingItem by boolean("IgnoreUsingItem", true)
 
-    val rotationsMode = choices<RotationMode>(this, "RotationMode", { it.choices[0] }, {
+    val rotationsMode = choices<RotationMode>(this, "RotationMode", { it.choices[1] }, {
         arrayOf(NormalRotationMode(it, this), NoRotationMode(it, this))
     })
 
@@ -108,6 +115,7 @@ class BlockPlacer(
     ))
 
     val blocks = Object2BooleanOpenHashMap<BlockPos>()
+    val inaccessible = mutableSetOf<BlockPos>()
     val postRotateTasks = mutableListOf<() -> Unit>()
     private var sneakTimes = 0
     private var ticksToWait = 0
@@ -148,6 +156,7 @@ class BlockPlacer(
 
         val itemStack = ItemStack(Items.SANDSTONE)
 
+        inaccessible.clear()
         rotationsMode.activeChoice.onTickStart()
         if (scheduleCurrentPlacements(itemStack, it)) {
             return@handler
@@ -176,7 +185,7 @@ class BlockPlacer(
         }
 
         // find the best path
-        blocks.keys.forEach { pos -> // TODO should we skip unreachable here?
+        blocks.keys.filterNot { inaccessible.contains(it) }.forEach { pos ->
             support.findSupport(pos)?.let { path ->
                 val size = path.size
                 if (supportPath == null || supportPath!!.size > size) {
@@ -214,9 +223,18 @@ class BlockPlacer(
         var hasPlaced = false
 
         val iterator = blocks.iterator()
-        while (iterator.hasNext()) { // TODO skip blocks that are blocked by entities?
+        while (iterator.hasNext()) {
             val entry = iterator.next()
             val pos = entry.key
+
+            if (inaccessible.contains(pos)) {
+                continue
+            }
+
+            if (pos.isBlockedByEntities()) {
+                inaccessible.add(pos)
+                continue
+            }
 
             val searchOptions = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
@@ -228,14 +246,12 @@ class BlockPlacer(
                 wallRange > 0
             )
 
-            val placementTarget = findBestBlockPlacementTarget(
-                pos,
-                searchOptions
-            ) // TODO prioritize faces where sneaking is not required
-                ?: continue
+            // TODO prioritize faces where sneaking is not required
+            val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: continue
 
             // Check if we can reach the target
             if (!canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
+                inaccessible.add(pos)
                 continue
             }
 
@@ -311,11 +327,14 @@ class BlockPlacer(
             return blockHitResult.withSide(direction)
         }
 
-        // TODO return null or a missed rotation?
-        return BlockHitResult(pos.toCenterPos(), direction, pos, false)
+        if (constructFailResult) {
+            return BlockHitResult(pos.toCenterPos(), direction, pos, false)
+        }
+
+        return null
     }
 
-    private fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
+    fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
         // not the exact distance but good enough
         val distance = pos.getCenterDistanceSquaredEyes()
         val wallRangeSq = wallRange.toDouble().sq()
@@ -398,6 +417,7 @@ class BlockPlacer(
     private fun reset() {
         sneakTimes = 0
         blocks.clear()
+        inaccessible.clear()
     }
 
     override fun parent(): Listenable = module

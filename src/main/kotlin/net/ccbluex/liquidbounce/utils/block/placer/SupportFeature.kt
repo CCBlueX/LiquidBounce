@@ -31,6 +31,9 @@ import net.minecraft.util.math.Direction
 import java.util.*
 import kotlin.Comparator
 
+// TODO support no wall range, proper reach calculations
+// wall range support could be done by taking the angle and, if the face is pointing to the player, exclude
+// TODO cache blocked / allowed spots
 /**
  * Places blocks to support placements.
  */
@@ -80,7 +83,8 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
                 }
 
                 if (
-                    blockedPositions.contains(neighbor) || // not allowed
+                    // don't place helping blocks where the structure will be
+                    blockedPositions.contains(neighbor) ||
 
                     // exclude blocks where the structure is...
                     // this useless because we already search the shortest path under all structure blocks?

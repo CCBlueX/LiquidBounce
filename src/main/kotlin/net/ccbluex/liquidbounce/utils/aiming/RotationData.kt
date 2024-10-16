@@ -63,6 +63,29 @@ data class Rotation(
         return Rotation(yaw, pitch.coerceIn(-90f, 90f))
     }
 
+    fun wrapYaw(): Rotation {
+        return Rotation(MathHelper.wrapDegrees(yaw), pitch)
+    }
+
+    /**
+     * Checks whether this rotation is equal to the [other] rotations
+     * when only comparing up to the first four digits after the decimal point of the yaw.
+     */
+    fun equalsLowPrecision(other: Rotation): Boolean {
+        if (this == other) {
+            return true
+        }
+
+        if (this.pitch != other.pitch) {
+            return false
+        }
+
+        val lowerPrecisionYaw1 = (this.yaw * 10000).toInt()
+        val lowerPrecisionYaw2 = (other.yaw * 10000).toInt()
+
+        return lowerPrecisionYaw1 == lowerPrecisionYaw2
+    }
+
     operator fun minus(prevRotation: Rotation): Rotation {
         return Rotation(yaw - prevRotation.yaw, pitch - prevRotation.pitch)
     }

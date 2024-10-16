@@ -291,7 +291,7 @@ object RotationManager : Listenable {
         if (allowedRotation) {
             val nextRotation = storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
 
-            if (aimPlan != null && nextRotation == storedAimPlan.rotation) {
+            if (aimPlan != null && nextRotation.wrapYaw().equalsLowPrecision(storedAimPlan.rotation)) {
                 aimPlan.whenReached?.invoke()
             }
 
