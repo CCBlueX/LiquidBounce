@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -50,6 +52,22 @@ object ModuleTNTTimer : Module("TNTTimer", Category.RENDER) {
         val scale by float("Scale", 1.5F, 0.25F..4F)
         val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
         val border by boolean("Border", true)
+        val timeUnit = choices(this, "TimeUnit", Ticks, arrayOf(Ticks, Seconds))
+
+        sealed class TimeUnit(name: String) : Choice(name) {
+            override val parent: ChoiceConfigurable<*>
+                get() = timeUnit
+
+            abstract operator fun invoke(t: Int): String
+        }
+
+        private object Ticks : TimeUnit("Ticks") {
+            override fun invoke(t: Int) = t.toString()
+        }
+
+        private object Seconds : TimeUnit("Seconds") {
+            override fun invoke(t: Int) = "%.2fs".format(t * 0.05F)
+        }
     }
 
     init {
@@ -91,7 +109,7 @@ object ModuleTNTTimer : Module("TNTTimer", Category.RENDER) {
 
                     // ticks to seconds
                     val text = process(
-                        "%.2fs".format(tnt.fuse * 0.05F),
+                        ShowTimer.timeUnit.activeChoice(tnt.fuse),
                         color,
                     )
 
