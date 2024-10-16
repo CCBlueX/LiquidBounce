@@ -39,7 +39,14 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     private val delay by IntegerValue("Delay", 550, 0..1000)
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
-    private val distanceToPlayers by FloatValue("AllowedDistanceToPlayers", 3.5f, 0.0f..6.0f)
+
+    private val maxAllowedDistToEnemy: FloatValue = object : FloatValue("MaxAllowedDistToEnemy", 3.5f, 0f..6f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minAllowedDistToEnemy.get())
+    }
+    private val minAllowedDistToEnemy: FloatValue = object : FloatValue("MinAllowedDistToEnemy", 1.5f, 0f..6f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxAllowedDistToEnemy.get())
+        override fun isSupported(): Boolean = !maxAllowedDistToEnemy.isMinimal()
+    }
 
     private val blinkOnAction by BoolValue("BlinkOnAction", true)
 
@@ -67,7 +74,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = LinkedHashMap<Vec3, Long>()
     private val resetTimer = MSTimer()
-    private var wasNearPlayer = false
+    private var wasNearEnemy = false
     private var ignoreWholeTick = false
 
     override fun onDisable() {
@@ -91,7 +98,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (event.isCancelled)
             return
 
-        if (distanceToPlayers > 0.0 && wasNearPlayer)
+        if (maxAllowedDistToEnemy.get() > 0.0 && wasNearEnemy)
             return
 
         if (ignoreWholeTick)
@@ -191,7 +198,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     fun onGameLoop(event: GameLoopEvent) {
         val player = mc.thePlayer ?: return
 
-        if (distanceToPlayers > 0) {
+        if (maxAllowedDistToEnemy.get() > 0) {
             val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
@@ -200,15 +207,15 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             val (dx, dy, dz) = serverPos - playerPos
             val playerBox = player.hitBox.offset(dx, dy, dz)
 
-            wasNearPlayer = false
+            wasNearEnemy = false
 
             for (otherPlayer in otherPlayers) {
                 val entityMixin = otherPlayer as? IMixinEntity
                 if (entityMixin != null) {
                     val eyes = getTruePositionEyes(otherPlayer)
-                    if (eyes.distanceTo(getNearestPointBB(eyes, playerBox)) <= distanceToPlayers.toDouble()) {
+                    if (eyes.distanceTo(getNearestPointBB(eyes, playerBox)) in minAllowedDistToEnemy.get()..maxAllowedDistToEnemy.get()) {
                         blink()
-                        wasNearPlayer = true
+                        wasNearEnemy = true
                         return
                     }
                 }
