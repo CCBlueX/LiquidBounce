@@ -12,20 +12,20 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationSettings
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceTrajectory
 import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.inventory.isEmpty
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
-import net.minecraft.item.ItemBow
-import net.minecraft.item.ItemEgg
-import net.minecraft.item.ItemEnderPearl
-import net.minecraft.item.ItemSnowball
+import net.minecraft.item.*
 import java.awt.Color
 
 object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule = false) {
@@ -34,6 +34,11 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
     private val egg by BoolValue("Egg", true, subjective = true)
     private val snowball by BoolValue("Snowball", true, subjective = true)
     private val pearl by BoolValue("EnderPearl", false, subjective = true)
+    private val otherItems by BoolValue("OtherItems", false, subjective = true)
+
+    private val range by FloatValue("Range", 10f, 0f..30f)
+    private val throughWalls by BoolValue("ThroughWalls", false, subjective = true)
+    private val throughWallsRange by FloatValue("ThroughWallsRange", 10f, 0f..30f) { throughWalls }
 
     private val priority by ListValue("Priority",
         arrayOf("Health", "Distance", "Direction"),
@@ -41,16 +46,63 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
         subjective = true
     )
 
-    private val predict by BoolValue("Predict", true)
-    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
+    private val gravityType by ListValue("GravityType", arrayOf("None", "Projectile"), "Projectile")
 
-    private val throughWalls by BoolValue("ThroughWalls", false, subjective = true)
-    private val mark by BoolValue("Mark", true, subjective = true)
+    private val predict by BoolValue("Predict", true) { gravityType == "Projectile" }
+    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F)
+    { predict && gravityType == "Projectile"}
 
     private val options = RotationSettings(this).withoutKeepRotation().apply {
         rotationModeValue.set("On")
         rotationModeValue.isSupported = { false }
     }
+
+    private val randomizeRotations by BoolValue("RandomizeRotations", false) { options.rotationsActive }
+
+    private val highestBodyPointToTargetValue: ListValue = object : ListValue("HighestBodyPointToTarget",
+        arrayOf("Head", "Body", "Feet"),
+        "Head"
+    ) {
+        override fun isSupported() = options.rotationsActive
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val lowestPoint = RotationUtils.BodyPoint.fromString(lowestBodyPointToTarget)
+            val coercedPoint = RotationUtils.coerceBodyPoint(newPoint, lowestPoint, RotationUtils.BodyPoint.HEAD)
+            return coercedPoint.name
+        }
+    }
+    private val highestBodyPointToTarget by highestBodyPointToTargetValue
+
+    private val lowestBodyPointToTargetValue: ListValue = object : ListValue("LowestBodyPointToTarget",
+        arrayOf("Head", "Body", "Feet"),
+        "Body"
+    ) {
+        override fun isSupported() = options.rotationsActive
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val highestPoint = RotationUtils.BodyPoint.fromString(highestBodyPointToTarget)
+            val coercedPoint = RotationUtils.coerceBodyPoint(newPoint, RotationUtils.BodyPoint.FEET, highestPoint)
+            return coercedPoint.name
+        }
+    }
+
+    private val lowestBodyPointToTarget by lowestBodyPointToTargetValue
+
+    private val maxHorizontalBodySearch: FloatValue = object : FloatValue("MaxHorizontalBodySearch", 1f, 0f..1f) {
+        override fun isSupported() = options.rotationsActive
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalBodySearch.get())
+    }
+
+    private val minHorizontalBodySearch: FloatValue = object : FloatValue("MinHorizontalBodySearch", 0f, 0f..1f) {
+        override fun isSupported() = options.rotationsActive
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalBodySearch.get())
+    }
+
+    private val mark by BoolValue("Mark", true, subjective = true)
 
     private var target: Entity? = null
 
@@ -60,11 +112,13 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
+        val player = mc.thePlayer ?: return
+
         target = null
 
-        val targetRotation = when (val item = mc.thePlayer.heldItem?.item) {
+        val targetRotation = when (val item = player.heldItem?.item) {
             is ItemBow -> {
-                if (!bow || !mc.thePlayer.isUsingItem)
+                if (!bow || !player.isUsingItem)
                     return
 
                 target = getTarget(throughWalls, priority)
@@ -72,8 +126,9 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
                 faceTrajectory(target ?: return, predict, predictSize)
             }
 
-            is ItemEgg, is ItemSnowball, is ItemEnderPearl -> {
-                if (!egg && item is ItemEgg || !snowball && item is ItemSnowball || !pearl && item is ItemEnderPearl)
+            is Item -> {
+                if (!otherItems && !player.heldItem.isEmpty() ||
+                    (!egg && item is ItemEgg || !snowball && item is ItemSnowball || !pearl && item is ItemEnderPearl))
                     return
 
                 target = getTarget(throughWalls, priority)
@@ -84,7 +139,21 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
             else -> return
         }
 
-        setTargetRotation(targetRotation, options = options)
+        val normalRotation = target?.entityBoundingBox?.let {
+            searchCenter(
+                it,
+                outborder = false,
+                randomizeRotations,
+                predict = true,
+                lookRange = range,
+                attackRange = range,
+                throughWallsRange = throughWallsRange,
+                bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget),
+                horizontalSearch = minHorizontalBodySearch.get()..maxHorizontalBodySearch.get()
+            )
+        } ?: return
+
+        setTargetRotation(if (gravityType == "Projectile") targetRotation else normalRotation, options = options)
     }
 
     @EventTarget
@@ -96,7 +165,9 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
         val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && isSelected(it, true) && (throughWalls || mc.thePlayer.canEntityBeSeen(it))
+            it is EntityLivingBase && isSelected(it, true) &&
+                    mc.thePlayer.getDistanceToEntityBox(it) <= range &&
+                    (throughWalls || mc.thePlayer.canEntityBeSeen(it) && mc.thePlayer.getDistanceToEntityBox(it) <= throughWallsRange)
         }
 
         return when (priorityMode.uppercase()) {
