@@ -17,7 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.utils.block.placer
-import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap
+
+import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.Listenable
@@ -64,7 +65,7 @@ class BlockPlacer(
 
     val range by float("Range", 4.5f, 1f..6f)
     val wallRange by float("WallRange", 4.5f, 0f..6f)
-    val cooldown by int("Cooldown", 1, 0..10, "ticks")
+    val cooldown by int("Cooldown", 1, 0..40, "ticks")
     val swingMode by enumChoice("Swing", PlacementSwingMode.DO_NOT_HIDE)
 
     /**
@@ -114,7 +115,11 @@ class BlockPlacer(
         keep = false
     ))
 
-    val blocks = Object2BooleanOpenHashMap<BlockPos>()
+    /**
+     * Stores all block positions where blocks should be placed.
+     */
+    val blocks = Object2BooleanLinkedOpenHashMap<BlockPos>()
+
     val inaccessible = mutableSetOf<BlockPos>()
     val postRotateTasks = mutableListOf<() -> Unit>()
     private var sneakTimes = 0
@@ -153,6 +158,9 @@ class BlockPlacer(
         if (blocks.isEmpty()) {
             return@handler
         }
+
+        // return if now blocks are available
+        slotFinder() ?: return@handler
 
         val itemStack = ItemStack(Items.SANDSTONE)
 
