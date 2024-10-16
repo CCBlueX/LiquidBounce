@@ -68,6 +68,7 @@ object ClientSocket {
         "componentsUpdate",
         "playerArmorInventory",
         "playerMainInventory",
+        "playerCraftingInventory",
         "proxyAdditionResult",
         "proxyEditResult",
         "proxyCheckResult",

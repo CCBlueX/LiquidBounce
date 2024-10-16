@@ -64,6 +64,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     val tickHandler = handler<PlayerTickEvent> {
         EventManager.callEvent(PlayerArmorInventory(player.inventory.armor))
         EventManager.callEvent(PlayerMainInventory(player.inventory.main))
+        EventManager.callEvent(PlayerCraftingInventory(player.playerScreenHandler.craftingInput.heldStacks))
     }
 
     val isBlurable

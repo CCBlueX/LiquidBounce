@@ -88,6 +88,10 @@ class PlayerArmorInventory(val stacks: List<ItemStack>) : Event()
 @WebSocketEvent
 class PlayerMainInventory(val stacks: List<ItemStack>) : Event()
 
+@Nameable("playerCraftingInventory")
+@WebSocketEvent
+class PlayerCraftingInventory(val stacks: List<ItemStack>) : Event()
+
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
 

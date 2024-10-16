@@ -76,6 +76,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerInteractedItem::class,
     PlayerArmorInventory::class,
     PlayerMainInventory::class,
+    PlayerCraftingInventory::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
     PlayerSafeWalkEvent::class,

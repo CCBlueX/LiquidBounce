@@ -17,6 +17,7 @@
     import BlockCounter from "./elements/BlockCounter.svelte";
     import ArmorItems from "./elements/inventory/ArmorItems.svelte";
     import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
+    import CraftingInput from "./elements/inventory/CraftingInput.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -61,6 +62,8 @@
                     <ArmorItems/>
                 {:else if c.name === "Inventory"}
                     <InventoryContainer/>
+                {:else if c.name === "CraftingInventory"}
+                    <CraftingInput/>
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}

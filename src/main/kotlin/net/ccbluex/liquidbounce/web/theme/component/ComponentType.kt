@@ -53,6 +53,7 @@ enum class ComponentType(
     BLOCK_COUNTER("BlockCounter"),
     ARMOR_ITEMS("ArmorItems"),
     INVENTORY("Inventory"),
+    CRAFTING_INVENTORY("CraftingInventory"),
     KEYSTROKES("Keystrokes"),
     TACO("Taco");
 
