@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
@@ -32,6 +35,8 @@ import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ShieldItem;
+import net.minecraft.item.SwordItem;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
@@ -166,6 +171,15 @@ public abstract class MixinInGameHud {
         }
     }
 
+    @ModifyExpressionValue(method = "renderHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private boolean hookOffhandItem(boolean original) {
+        return original || ModuleSwordBlock.INSTANCE.handleEvents()
+                && ModuleSwordBlock.INSTANCE.getHideShieldSlot()
+                && getCameraPlayer().getOffHandStack().getItem() instanceof ShieldItem
+                && (getCameraPlayer().getMainHandStack().getItem() instanceof SwordItem
+                || ModuleSwordBlock.INSTANCE.getAlwaysHideShield());
+    }
+
     @Unique
     private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, IntegratedComponent component) {
         var playerEntity = this.getCameraPlayer();
@@ -188,7 +202,7 @@ public abstract class MixinInGameHud {
         }
 
         var offHandStack = playerEntity.getOffHandStack();
-        if (!offHandStack.isEmpty()) {
+        if (!hookOffhandItem(offHandStack.isEmpty())) {
             this.renderHotbarItem(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
         }
     }
