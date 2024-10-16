@@ -84,7 +84,7 @@ class BlockPlacer(
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     val ignoreUsingItem by boolean("IgnoreUsingItem", true)
 
-    val rotationsMode = choices<RotationMode>(this, "RotationMode", { it.choices[1] }, {
+    val rotationMode = choices<RotationMode>(this, "RotationMode", { it.choices[1] }, {
         arrayOf(NormalRotationMode(it, this), NoRotationMode(it, this))
     })
 
@@ -165,7 +165,7 @@ class BlockPlacer(
         val itemStack = ItemStack(Items.SANDSTONE)
 
         inaccessible.clear()
-        rotationsMode.activeChoice.onTickStart()
+        rotationMode.activeChoice.onTickStart()
         if (scheduleCurrentPlacements(itemStack, it)) {
             return@handler
         }
@@ -277,7 +277,7 @@ class BlockPlacer(
                 it.movementEvent.sneaking = true
             }
 
-            if (rotationsMode.activeChoice(entry.value, pos, placementTarget)) {
+            if (rotationMode.activeChoice(entry.value, pos, placementTarget)) {
                 return true
             }
 
@@ -298,7 +298,7 @@ class BlockPlacer(
             slotFinder()
         } ?: return
 
-        val verificationRotation = rotationsMode.activeChoice.getVerificationRotation(placementTarget.rotation)
+        val verificationRotation = rotationMode.activeChoice.getVerificationRotation(placementTarget.rotation)
 
         // check if we can still reach the target
         if (!canReach(placementTarget.interactedBlockPos, verificationRotation)) {
