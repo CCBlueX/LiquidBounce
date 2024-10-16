@@ -48,11 +48,11 @@ open class PlacementRenderer(
 
     val clump by boolean("Clump", clump)
 
-    val startSize by float("StartSize", 1.2f, 0f..2f)
-    val startSizeCurve by curve("StartCurve", Easing.EXPONENTIAL_OUT)
+    val startSize by float("StartSize", 1f, 0f..2f)
+    val startSizeCurve by curve("StartCurve", Easing.LINEAR)
 
     val endSize by float("EndSize", 0.8f, 0f..2f)
-    val endSizeCurve by curve("EndCurve", Easing.EXPONENTIAL_IN)
+    val endSizeCurve by curve("EndCurve", Easing.LINEAR)
 
     val fadeInCurve by curve("FadeInCurve", Easing.LINEAR)
     val fadeOutCurve by curve("FadeOutCurve", Easing.LINEAR)
