@@ -159,7 +159,7 @@ class BlockPlacer(
             return@handler
         }
 
-        // return if now blocks are available
+        // return if no blocks are available
         slotFinder() ?: return@handler
 
         val itemStack = ItemStack(Items.SANDSTONE)
