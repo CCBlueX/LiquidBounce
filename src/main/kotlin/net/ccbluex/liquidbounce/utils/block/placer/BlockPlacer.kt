@@ -131,8 +131,15 @@ class BlockPlacer(
             return@handler
         }
 
+        if (ticksToWait > 0) {
+            postRotateTasks.clear()
+            ticksToWait--
+            return@handler
+        }
+
         postRotateTasks.forEach { task -> task() }
         postRotateTasks.clear()
+        ticksToWait = cooldown
     }
 
     @Suppress("unused")
@@ -148,11 +155,6 @@ class BlockPlacer(
         if (sneakTimes > 0) {
             sneakTimes--
             it.movementEvent.sneaking = true
-        }
-
-        if (ticksToWait > 0) {
-            ticksToWait--
-            return@handler
         }
 
         if (blocks.isEmpty()) {
@@ -281,7 +283,6 @@ class BlockPlacer(
                 return true
             }
 
-            ticksToWait = cooldown
             hasPlaced = true
         }
 

@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  */
 object ModuleAutoBuild : Module("AutoBuild", Category.WORLD, aliases = arrayOf("Platform", "AutoPortal")) {
 
-    private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode))
+    private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode)).apply { tagBy(this) }
     val placer = tree(BlockPlacer("Placing", this, Priority.NORMAL, { mode.activeChoice.getSlot() }))
 
     init {
