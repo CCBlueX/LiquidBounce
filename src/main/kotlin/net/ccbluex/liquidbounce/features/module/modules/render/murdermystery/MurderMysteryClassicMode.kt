@@ -18,9 +18,12 @@ object MurderMysteryClassicMode : MurderMysteryGenericMode("Classic") {
         entity: AbstractClientPlayerEntity,
         locationSkin: Identifier,
     ) {
+        // Use entity.getId() instead of entity.entityId
+        val entityId = entity.id
+        
         // Prioritize entity ID if available.
-        if (entity.entityId > 0 && !ModuleMurderMystery.knownMurderers.contains(entity.entityId)) {
-            ModuleMurderMystery.knownMurderers.add(entity.entityId)
+        if (entityId > 0 && !ModuleMurderMystery.knownMurderers.contains(entityId)) {
+            ModuleMurderMystery.knownMurderers.add(entityId)
             chat("It's " + entity.gameProfile.name)
             ModuleMurderMystery.playHurt = true
 
