@@ -508,7 +508,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }, placementSwingMode = swingMode)
 
         if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.withFixedYaw(currentRotation), player.pitch, player.isOnGround))
+            network.sendPacket(
+               Full(
+                    player.x, player.y, player.z, player.withFixedYaw(currentRotation),
+                    player.pitch, player.isOnGround
+                )
+            )
         }
 
         if (wasSuccessful) {
