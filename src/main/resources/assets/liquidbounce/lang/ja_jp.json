@@ -249,7 +249,6 @@
 	"liquidbounce.command.username.description": "ユーザー名をクリップボードにコピーします。",
 	"liquidbounce.command.username.result.username": "ユーザー名: %s ",
 	"liquidbounce.command.value.description": "値を変更できます",
-	"liquidbounce.command.value.result.success": "値が正常に変更されました。",
 	"liquidbounce.command.value.result.valueError": "要素「%s」を変更できませんでした: 「%s」",
 	"liquidbounce.command.value.result.valueNotFound": "値 %s が見つかりません!",
 	"liquidbounce.command.vclip.result.invalidDistance": "無効な距離です。 有効な距離を入力してください。",
