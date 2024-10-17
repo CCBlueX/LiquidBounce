@@ -77,6 +77,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
+import net.ccbluex.liquidbounce.utils.aiming.RotationExtensions.withFixedYaw
 
 /**
  * Scaffold module
@@ -507,7 +508,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }, placementSwingMode = swingMode)
 
         if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+            network.sendPacket(Full(player.x, player.y, player.z, player.withFixedYaw(currentRotation), player.pitch, player.isOnGround))
         }
 
         if (wasSuccessful) {
