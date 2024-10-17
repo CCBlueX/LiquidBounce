@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.HorseEntity
 import net.minecraft.entity.passive.TameableEntity
@@ -31,7 +32,6 @@ import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 
 /**
  * MobOwners module
@@ -41,11 +41,9 @@ import java.util.concurrent.Executors
 
 object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
-    val projectiles by boolean("Projectiles", false)
+    private val projectiles by boolean("Projectiles", false)
 
-    val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
-
-    var asyncRequestExecutor = Executors.newSingleThreadExecutor()
+    private val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
 
     fun getOwnerInfoText(entity: Entity): OrderedText? {
         if (!this.enabled) {
@@ -66,10 +64,8 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
     private fun getFromMojangApi(ownerId: UUID): OrderedText {
         return uuidNameCache.computeIfAbsent(ownerId) {
-            this.asyncRequestExecutor.submit {
+            virtualThread(name = "Get-Username-$ownerId") {
                 try {
-                    class UsernameRecord(var name: String, var changedToAt: Int?)
-
                     val uuidAsString = it.toString().replace("-", "")
                     val url = "https://api.mojang.com/user/profiles/$uuidAsString/names"
                     val response = decode<Array<UsernameRecord>>(HttpClient.get(url))
@@ -90,10 +86,6 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
         }
     }
 
-    override fun disable() {
-        this.asyncRequestExecutor.shutdownNow()
-
-        this.asyncRequestExecutor = Executors.newSingleThreadExecutor()
-    }
+    private class UsernameRecord(var name: String, var changedToAt: Int?)
 
 }
