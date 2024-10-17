@@ -46,8 +46,8 @@ object ModuleEagle : Module("Eagle", Category.PLAYER, aliases = arrayOf("FastBri
         val forwards by boolean("Forwards", false)
         val backwards by boolean("Backwards", false)
 
-        fun shouldSneak(event: MovementInputEvent) = when {
-            !enabled -> true
+        fun shouldSneak(event: MovementInputEvent): Boolean = when {
+            !enabled || event.sneaking -> true
             holdingBlocks && !isValidBlock(player.mainHandStack) && !isValidBlock(player.offHandStack) -> false
             onGround && !player.isOnGround -> false
             player.pitch !in pitch -> false
