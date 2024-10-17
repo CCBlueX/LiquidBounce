@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.minecraft.entity.player.PlayerEntity
-import net.ccbluex.liquidbounce.utils.aiming.RotationsUtil.angleDifference
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.angleDifference
 
 fun PlayerEntity?.applyRotation(rotation: Rotation) {
     this ?: return
