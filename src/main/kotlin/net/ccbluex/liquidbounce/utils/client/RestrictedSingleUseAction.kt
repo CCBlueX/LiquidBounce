@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.utils.client
 
 /**
- * Represents an operation that does not return a result and can only be executed once.
+ * Represents an operation that does not return a result and can only be executed once when [canExecute] returns true.
  * This is protected, so all future calls won't execute the actual [action].
  */
-class SingleUseAction(private val action: () -> Unit) {
+class RestrictedSingleUseAction(private val canExecute: () -> Boolean, private val action: () -> Unit) {
 
     private var isExecuted = false
 
     operator fun invoke() {
-        if (!isExecuted) {
+        if (!isExecuted && canExecute()) {
             action()
             isExecuted = true
         }

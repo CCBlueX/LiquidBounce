@@ -54,6 +54,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3i
+import kotlin.math.max
 
 class BlockPlacer(
     name: String,
@@ -326,7 +327,7 @@ class BlockPlacer(
 
     private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction): BlockHitResult? {
         val blockHitResult = raytraceBlock(
-            range = wallRange.toDouble(),
+            range = max(range, wallRange).toDouble(),
             rotation = providedRotation,
             pos = pos,
             state = pos.getState()!!
@@ -343,7 +344,7 @@ class BlockPlacer(
         return null
     }
 
-    fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
+    private fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
         // not the exact distance but good enough
         val distance = pos.getCenterDistanceSquaredEyes()
         val wallRangeSq = wallRange.toDouble().sq()
@@ -367,8 +368,9 @@ class BlockPlacer(
             if (position !in positions) {
                 targetRenderer.removeBlock(position)
                 iterator.remove()
+            } else {
+                blocks[position] = false
             }
-            blocks[position] = false
         }
 
         positions.forEach { addToQueue(it, false) }

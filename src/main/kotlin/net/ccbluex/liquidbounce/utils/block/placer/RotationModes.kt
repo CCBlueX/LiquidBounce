@@ -6,10 +6,14 @@ import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.SingleUseAction
+import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
+import kotlin.math.max
 
 abstract class RotationMode(
     name: String,
@@ -38,17 +42,27 @@ class NormalRotationMode(configurable: ChoiceConfigurable<RotationMode>, placer:
     val rotations = tree(RotationsConfigurable(this))
 
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
+        val interactedBlockPos = placementTarget.interactedBlockPos
         RotationManager.aimAt(
             placementTarget.rotation,
             considerInventory = !placer.ignoreOpenInventory,
             configurable = rotations,
             provider = placer.module,
             priority = placer.priority,
-            whenReached = SingleUseAction {
+            whenReached = RestrictedSingleUseAction({
+                val raytraceResult = raytraceBlock(
+                    max(placer.range, placer.wallRange).toDouble(),
+                    RotationManager.currentRotation ?: return@RestrictedSingleUseAction false,
+                    interactedBlockPos,
+                    interactedBlockPos.getState()!!
+                ) ?: return@RestrictedSingleUseAction false
+
+                raytraceResult.type == HitResult.Type.BLOCK && raytraceResult.blockPos == interactedBlockPos
+            }, {
                 placer.postRotateTasks.add {
                     placer.doPlacement(isSupport, pos, placementTarget)
                 }
-            }
+            })
         )
 
         return true

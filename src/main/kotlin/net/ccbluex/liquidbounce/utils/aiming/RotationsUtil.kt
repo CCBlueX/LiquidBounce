@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.*
-import net.ccbluex.liquidbounce.utils.client.SingleUseAction
+import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -84,7 +84,7 @@ open class RotationsConfigurable(
     private val changeLook by boolean("ChangeLook", changeLook)
 
     fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
-                  considerInventory: Boolean = false, whenReached: SingleUseAction? = null) = AimPlan(
+                  considerInventory: Boolean = false, whenReached: RestrictedSingleUseAction? = null) = AimPlan(
         rotation,
         vec,
         entity,
@@ -209,7 +209,7 @@ object RotationManager : Listenable {
         configurable: RotationsConfigurable,
         priority: Priority,
         provider: Module,
-        whenReached: SingleUseAction? = null
+        whenReached: RestrictedSingleUseAction? = null
     ) {
         aimAt(configurable.toAimPlan(
             rotation, considerInventory = considerInventory, whenReached = whenReached
@@ -291,10 +291,6 @@ object RotationManager : Listenable {
         if (allowedRotation) {
             val nextRotation = storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
 
-            if (aimPlan != null && nextRotation.wrapYaw().equalsLowPrecision(storedAimPlan.rotation)) {
-                aimPlan.whenReached?.invoke()
-            }
-
             nextRotation.fixedSensitivity().let {
                 currentRotation = it
                 previousAimPlan = storedAimPlan
@@ -303,6 +299,8 @@ object RotationManager : Listenable {
                     player.applyRotation(it)
                 }
             }
+
+            aimPlan?.whenReached?.invoke()
         }
         // Update reset ticks
         aimPlanHandler.tick()
