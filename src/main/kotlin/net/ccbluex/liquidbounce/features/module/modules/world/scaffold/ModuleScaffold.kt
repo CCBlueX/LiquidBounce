@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
@@ -507,7 +508,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }, placementSwingMode = swingMode)
 
         if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+            network.sendPacket(
+               Full(
+                    player.x, player.y, player.z, player.withFixedYaw(currentRotation),
+                    player.pitch, player.isOnGround
+                )
+            )
         }
 
         if (wasSuccessful) {

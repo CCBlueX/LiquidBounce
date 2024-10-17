@@ -518,7 +518,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         attack()
 
         if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+            network.sendPacket(
+                Full(player.x, player.y, player.z, player.withFixedYaw(rotation), player.pitch, player.isOnGround)
+            )
         }
 
         if (simulateInventoryClosing && isInInventoryScreen) {
