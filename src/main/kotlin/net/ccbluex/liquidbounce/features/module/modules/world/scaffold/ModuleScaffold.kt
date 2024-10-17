@@ -77,7 +77,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
-import net.ccbluex.liquidbounce.utils.aiming.RotationExtensions.withFixedYaw
 
 /**
  * Scaffold module
