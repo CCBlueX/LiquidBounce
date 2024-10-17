@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.input.keyList
+import net.ccbluex.liquidbounce.utils.input.mouseList
 
 /**
  * Bind Command
@@ -43,6 +45,7 @@ object CommandBind {
                 ParameterBuilder
                     .begin<String>("key")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .autocompletedWith { begin -> (keyList + mouseList).filter { it.startsWith(begin) } }
                     .required()
                     .build()
             )
@@ -53,10 +56,8 @@ object CommandBind {
                 val module = ModuleManager.find { it.name.equals(name, true) }
                     ?: throw CommandException(command.result("moduleNotFound", name))
 
-                val bindKey = key(keyName)
-                module.bind = bindKey
-
-                chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
+                module.bind.bind(keyName)
+                chat(regular(command.result("moduleBound", variable(module.name), variable(module.bind.keyName))))
             }
             .build()
     }

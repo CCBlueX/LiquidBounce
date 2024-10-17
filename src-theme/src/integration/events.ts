@@ -37,10 +37,7 @@ export interface NotificationEvent {
 }
 
 export interface KeyEvent {
-    key: {
-        code: number;
-        name: string;
-    };
+    key: string;
     action: number;
     mods: number;
 }
