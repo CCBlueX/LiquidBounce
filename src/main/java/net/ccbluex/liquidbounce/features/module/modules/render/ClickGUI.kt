@@ -6,11 +6,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
+import net.ccbluex.liquidbounce.LiquidBounce.riceGui
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.ui.client.clickgui.RiceGui
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
@@ -26,7 +28,7 @@ import java.awt.Color
 
 object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBeEnabled = false) {
     private val style by
-        object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly", "Black"), "LiquidBounce") {
+        object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly", "Black","Rice"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()
         }
     var scale by FloatValue("Scale", 0.8f, 0.5f..1.5f)
@@ -47,7 +49,10 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
 
     override fun onEnable() {
         updateStyle()
-        mc.displayGuiScreen(clickGui)
+        if (style == "Rice")
+            mc.displayGuiScreen(riceGui)
+        else
+            mc.displayGuiScreen(clickGui)
     }
 
     private fun updateStyle() {
@@ -63,7 +68,7 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
     @EventTarget(ignoreCondition = true)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (packet is S2EPacketCloseWindow && mc.currentScreen is ClickGui)
+        if (packet is S2EPacketCloseWindow && (mc.currentScreen is ClickGui || mc.currentScreen is RiceGui))
             event.cancelEvent()
     }
 }
