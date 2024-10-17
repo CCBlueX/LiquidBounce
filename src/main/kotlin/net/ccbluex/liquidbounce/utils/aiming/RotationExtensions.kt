@@ -32,7 +32,7 @@ fun PlayerEntity?.applyRotation(rotation: Rotation) {
         pitch = it.pitch
     }
 }
-fun PlayerEntity?.withFixedYaw(rotation: Rotation) {
+fun PlayerEntity?.withFixedYaw(rotation: Rotation): Float {
     this ?: return 0f
 
     return rotation.yaw + angleDifference(yaw, rotation.yaw)
