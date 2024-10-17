@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
+import net.minecraft.block.Block
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.component.DataComponentTypes
@@ -43,6 +44,7 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.UseAction
+import net.minecraft.util.math.BlockPos
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -185,4 +187,18 @@ fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
 
     val registry = world.registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
     return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
+}
+
+fun ItemStack.getBlock(): Block? {
+    val item = this.item
+    if (item !is BlockItem) {
+        return null
+    }
+
+   return item.block
+}
+
+fun ItemStack.isFullBlock(): Boolean {
+    val block = this.getBlock() ?: return false
+    return block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
 }
