@@ -63,6 +63,7 @@ import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import kotlin.math.max
+import net.ccbluex.liquidbounce.utils.aiming.RotationExtensions.withFixedYaw
 
 /**
  * KillAura module
@@ -518,7 +519,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         attack()
 
         if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+            network.sendPacket(Full(player.x, player.y, player.z, player.withFixedYaw(rotation), player.pitch, player.isOnGround))
         }
 
         if (simulateInventoryClosing && isInInventoryScreen) {
