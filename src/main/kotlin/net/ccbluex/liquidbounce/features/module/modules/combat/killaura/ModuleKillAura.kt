@@ -63,7 +63,6 @@ import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import kotlin.math.max
-import net.ccbluex.liquidbounce.utils.aiming.RotationExtensions.withFixedYaw
 
 /**
  * KillAura module
