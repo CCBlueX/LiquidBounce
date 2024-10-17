@@ -40,7 +40,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
         /**
          * At which health we switch to a totem.
          */
-        val health by int("Health", 14, 0..20)
+        private val healthThreshold by int("HealthThreshold", 14, 0..20)
 
         /**
          * For crystal pvp, allows to have longer a useful item in your offhand if you're not in danger of
@@ -53,7 +53,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
              * At which health we switch to a totem when we're from explosions and stuff meaning in bedrock / obsidian
              * holes.
              */
-            val safeHealth by int("SafeHealth", 10, 0..20)
+            val safeHealth by int("SafeHealthThreshold", 10, 0..20)
 
         }
 
@@ -131,7 +131,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 return true
             }
 
-            return currentHealth <= health
+            return currentHealth <= healthThreshold
         }
 
     }
