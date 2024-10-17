@@ -414,6 +414,7 @@
   "liquidbounce.module.debugRecorder.description": "Only of interest to developers.",
   "liquidbounce.module.smartEat.description": "Automatically eats food when your hunger is low.",
   "liquidbounce.module.derp.description": "Makes it look as if you were derping around. to other players",
+  "liquidbounce.module.vomit.description": "Vomit items out of your inventory.",
   "liquidbounce.module.disabler.description": "Attempts to disable the AntiCheat of the server.",
   "liquidbounce.module.disabler.messages.info": "Check your configuration in the Disabler module to make sure it is correct for the server or anti-cheat. If not, not only will this module not work, it may even flag you.",
   "liquidbounce.module.disabler.messages.vulcanRiptideMessage": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
