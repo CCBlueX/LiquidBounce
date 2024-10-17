@@ -86,6 +86,14 @@ fun findInventorySlot(predicate: (ItemStack) -> Boolean): ItemSlot? {
     return ALL_SLOTS_IN_INVENTORY.find { predicate(it.itemStack) }
 }
 
+fun findInventorySlot(slots: List<ItemSlot>,  predicate: (ItemStack) -> Boolean): ItemSlot? {
+    if (mc.player == null) {
+        return null
+    }
+
+    return slots.find { predicate(it.itemStack) }
+}
+
 /**
  * Check if a stack is nothing (means empty slot)
  */

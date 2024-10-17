@@ -402,3 +402,19 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
 fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }
+
+val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
+    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+)
+
+fun BlockPos?.isFallDamageBlocking(): Boolean {
+    if (this == null) {
+        return false
+    }
+
+    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+}
+
+fun BlockPos.isBlastResistant(): Boolean {
+    return getBlock()!!.blastResistance >= 600f
+}

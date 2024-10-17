@@ -28,15 +28,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
+import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.GameRules
-import net.minecraft.world.explosion.Explosion
-import kotlin.math.floor
-import kotlin.math.sqrt
 
 object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
 
@@ -90,7 +86,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
         var totalHarm = 0.0
 
         for (possibleVictim in possibleVictims) {
-            val dmg = getDamageFromExplosion(pos, possibleVictim) * entityDamageWeight(possibleVictim)
+            val dmg = possibleVictim.getDamageFromExplosion(pos) * entityDamageWeight(possibleVictim)
 
             if (dmg > 0) {
                 totalGood += dmg
@@ -104,33 +100,6 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
 
     private fun shouldTakeIntoAccount(entity: Entity): Boolean {
         return entity.shouldBeAttacked() || entity == player || FriendManager.isFriend(entity)
-    }
-
-    private fun getDamageFromExplosion(
-        pos: Vec3d,
-        possibleVictim: LivingEntity,
-        power: Float = 6.0F,
-    ): Float {
-        val explosionRange = power * 2.0F
-
-        val distanceDecay = 1.0F - sqrt(possibleVictim.squaredDistanceTo(pos).toFloat()) / explosionRange
-        val pre1 = Explosion.getExposure(pos, possibleVictim) * distanceDecay
-
-        val preprocessedDamage = floor((pre1 * pre1 + pre1) / 2.0F * 7.0F * explosionRange + 1.0F)
-
-        val explosion =
-            Explosion(
-                possibleVictim.world,
-                null,
-                pos.x,
-                pos.y,
-                pos.z,
-                power,
-                false,
-                world.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY),
-            )
-
-        return possibleVictim.getEffectiveDamage(mc.world!!.damageSources.explosion(explosion), preprocessedDamage)
     }
 
     private fun entityDamageWeight(entity: Entity): Double {
