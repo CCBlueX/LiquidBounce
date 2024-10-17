@@ -22,14 +22,11 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.OFFHAND_SLOT
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
-import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.minecraft.screen.slot.SlotActionType
 
 /**
@@ -84,14 +81,14 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 forbiddenSlots.add(ArmorItemSlot(armorSlot))
             }
 
-            if (ModuleAutoTotem.totemSlot != null) {
+            if (ModuleOffhand.isOperating()) {
                 // Disallow tampering with off-hand slot when AutoTotem is active
                 forbiddenSlots.add(OffHandSlot)
             }
 
             val forbiddenSlotsToFill = setOfNotNull(
                 // Disallow tampering with off-hand slot when AutoTotem is active
-                if (ModuleAutoTotem.totemSlot != null) OffHandSlot else null
+                if (ModuleOffhand.isOperating()) OffHandSlot else null
             )
 
             val constraintProvider = AmountConstraintProvider(

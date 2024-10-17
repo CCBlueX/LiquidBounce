@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -30,20 +31,28 @@ import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.TntEntity
 import net.minecraft.entity.damage.DamageSource
+import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.vehicle.TntMinecartEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
+import net.minecraft.world.GameRules
+import net.minecraft.world.explosion.Explosion
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -361,6 +370,44 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     return amount
 }
 
+fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
+    return when (entity) {
+        is EndCrystalEntity -> getDamageFromExplosion(entity.pos, entity, 6f)
+        is TntEntity -> getDamageFromExplosion(entity.pos.add(0.0, 0.0625, 0.0), entity, 4f)
+        is TntMinecartEntity -> {
+            val d = 5f
+            getDamageFromExplosion(entity.pos, entity, 4f + d * 1.5f)
+        }
+        is CreeperEntity -> {
+            val f = if (entity.shouldRenderOverlay()) 2f else 1f
+            getDamageFromExplosion(entity.pos, entity, entity.explosionRadius * f)
+        }
+        else -> 0f
+    }
+}
+
+fun LivingEntity.getDamageFromExplosion(pos: Vec3d, exploding: Entity? = null, power: Float = 6f): Float {
+    val explosionRange = power * 2f
+
+    val distanceDecay = 1f - sqrt(this.squaredDistanceTo(pos).toFloat()) / explosionRange
+    val pre1 = Explosion.getExposure(pos, this) * distanceDecay
+
+    val preprocessedDamage = floor((pre1 * pre1 + pre1) / 2f * 7f * explosionRange + 1f)
+
+    val explosion = Explosion(
+        world,
+        exploding,
+        pos.x,
+        pos.y,
+        pos.z,
+        power,
+        false,
+        world.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY)
+    )
+
+    return getEffectiveDamage(world.damageSources.explosion(explosion), preprocessedDamage)
+}
+
 fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     if (fromScoreboard) {
         world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
@@ -434,4 +481,19 @@ fun ClientPlayerEntity.warp(pos: Vec3d? = null, onGround: Boolean = false) {
     } else {
         network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(onGround))
     }
+}
+
+fun ClientPlayerEntity.isInHole(): Boolean {
+    val pos = BlockPos.ofFloored(pos)
+    return Direction.entries.all {
+        if (it == Direction.UP) {
+            return@all true
+        }
+
+        pos.offset(it).isBlastResistant()
+    }
+}
+
+fun ClientPlayerEntity.isBurrowed(): Boolean {
+    return BlockPos.ofFloored(pos).isBlastResistant()
 }
