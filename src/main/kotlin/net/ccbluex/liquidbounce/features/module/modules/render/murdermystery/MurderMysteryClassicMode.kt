@@ -7,6 +7,10 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.util.Identifier
 
 object MurderMysteryClassicMode : MurderMysteryGenericMode("Classic") {
+
+    // Set to track the unique entity IDs of known murderers.
+    private val knownMurderers = mutableSetOf<Int>()
+    
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleMurderMystery.modes
 
@@ -14,9 +18,15 @@ object MurderMysteryClassicMode : MurderMysteryGenericMode("Classic") {
         entity: AbstractClientPlayerEntity,
         locationSkin: Identifier,
     ) {
-        if (murdererSkins.add(locationSkin.path)) {
+        // Prioritize entity ID if available.
+        if (entity.entityId > 0 && !ModuleMurderMystery.knownMurderers.contains(entity.entityId)) {
+            ModuleMurderMystery.knownMurderers.add(entity.entityId)
             chat("It's " + entity.gameProfile.name)
+            ModuleMurderMystery.playHurt = true
 
+        // If entity ID is unavailable, fall back to using the skin for identification (less precise).
+        } else if (murdererSkins.add(locationSkin.path)) {
+            chat("It's " + entity.gameProfile.name + " (by skin)")
             ModuleMurderMystery.playHurt = true
         }
     }
