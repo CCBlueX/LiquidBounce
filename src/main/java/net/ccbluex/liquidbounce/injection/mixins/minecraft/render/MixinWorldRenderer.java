@@ -35,6 +35,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.TntEntity;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -201,6 +202,9 @@ public abstract class MixinWorldRenderer {
         if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive() && CombatExtensionsKt.shouldBeShown(entity)) {
             return true;
         }
+        if (ModuleTNTTimer.INSTANCE.getEnabled() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
+            return true;
+        }
 
         if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents() &&
                 ModuleStorageESP.Glow.INSTANCE.isActive() && ModuleStorageESP.INSTANCE.categorizeEntity(entity) != null) {
@@ -220,6 +224,11 @@ public abstract class MixinWorldRenderer {
         if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.GlowMode.INSTANCE.isActive() && ModuleItemESP.INSTANCE.shouldRender(instance)) {
             return ModuleItemESP.INSTANCE.getColor().toARGB();
         }
+
+        if (instance instanceof TntEntity && ModuleTNTTimer.INSTANCE.getEnabled() && ModuleTNTTimer.INSTANCE.getEsp()) {
+            return ModuleTNTTimer.INSTANCE.getTntColor(((TntEntity) instance).getFuse()).toARGB();
+        }
+
         if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents()
                 && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
