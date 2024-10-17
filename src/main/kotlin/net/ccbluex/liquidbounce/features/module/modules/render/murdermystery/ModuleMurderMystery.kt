@@ -42,6 +42,9 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     var playHurt = false
     var playBow = false
 
+    // Mutable set to store known murderers by their entity ID
+    val knownMurderers = mutableSetOf<Int>()
+
     val modes =
         choices(
             "Mode",
@@ -58,6 +61,8 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
     private fun reset() {
         this.currentMode.reset()
+        // Clear the knownMurderers set when the game resets or a new game starts
+        knownMurderers.clear()
     }
 
     @Suppress("unused")
@@ -121,7 +126,6 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             it.dontTarget()
         }
 
-
         val playerType = this.currentMode.getPlayerType(it.entity)
 
         val col = when (playerType) {
@@ -146,9 +150,14 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
         val locationSkin = entity.skinTextures.texture
 
-        when {
-            isSword -> currentMode.handleHasSword(entity, locationSkin)
-            isBow -> currentMode.handleHasBow(entity, locationSkin)
+        // Track murderers by their entity ID instead of just their skin
+        if (isSword) {
+            if (!knownMurderers.contains(entity.id)) {
+                knownMurderers.add(entity.id)
+                currentMode.handleHasSword(entity, locationSkin)
+            }
+        } else if (isBow) {
+            currentMode.handleHasBow(entity, locationSkin)
         }
     }
 
@@ -164,3 +173,4 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         return this.currentMode.disallowsArrowDodge()
     }
 }
+
