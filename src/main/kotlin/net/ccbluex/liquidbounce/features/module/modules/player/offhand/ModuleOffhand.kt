@@ -81,8 +81,6 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
     private var staticMode = Mode.NONE
-    private var modeBeforeDirectGapple = Mode.NONE
-    private var modeBeforeDirectCrystal = Mode.NONE
     private var last: Pair<Item, ItemSlot>? = null
 
     override val tag: String
@@ -104,24 +102,8 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         }
 
         when (it.key.keyCode) {
-            Gapple.gappleBind -> {
-                if (activeMode == Mode.GAPPLE && modeBeforeDirectGapple.canCycleTo()) {
-                    modeBeforeDirectGapple = Mode.NONE
-                    staticMode = modeBeforeDirectGapple
-                } else if (Mode.GAPPLE.canCycleTo()) {
-                    modeBeforeDirectGapple = staticMode
-                    staticMode = Mode.GAPPLE
-                }
-            }
-            Crystal.crystalBind -> {
-                if (activeMode == Mode.CRYSTAL && modeBeforeDirectCrystal.canCycleTo()) {
-                    modeBeforeDirectCrystal = Mode.NONE
-                    staticMode = modeBeforeDirectCrystal
-                } else if (Mode.CRYSTAL.canCycleTo()) {
-                    modeBeforeDirectCrystal = staticMode
-                    staticMode = Mode.CRYSTAL
-                }
-            }
+            Gapple.gappleBind -> Mode.GAPPLE.onBindPress()
+            Crystal.crystalBind -> Mode.CRYSTAL.onBindPress()
             cycleSlots -> {
                 val entries = Mode.entries
                 val startIndex = staticMode.ordinal
@@ -242,6 +224,8 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             override fun canCycleTo() = false
         };
 
+        private var modeBeforeDirectSwitch: Mode? = null
+
         open fun shouldEquip() = false
 
         open fun getDelay() = switchDelay
@@ -253,6 +237,16 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
          * 1 = Hotbar
          */
         open fun getPrioritizedInventoryPart() = 0
+
+        fun onBindPress() {
+            if (activeMode == this && modeBeforeDirectSwitch != null && modeBeforeDirectSwitch!!.canCycleTo()) {
+                modeBeforeDirectSwitch = NONE
+                staticMode = modeBeforeDirectSwitch!!
+            } else if (canCycleTo()) {
+                modeBeforeDirectSwitch = staticMode
+                staticMode = this
+            }
+        }
 
         open fun getSlot(): ItemSlot? {
             if (item == Items.AIR) {
