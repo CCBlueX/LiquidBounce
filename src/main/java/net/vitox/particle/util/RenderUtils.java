@@ -49,5 +49,7 @@ public class RenderUtils {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LINE_SMOOTH);
         glColor4f(1F, 1F, 1F, 1F);
+        glDisable(GL_BLEND);
+        glClearColor(0F, 0F, 0F, 1F);
     }
 }
