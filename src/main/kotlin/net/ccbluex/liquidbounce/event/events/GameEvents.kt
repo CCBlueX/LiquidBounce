@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.session.Session
+import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -35,15 +35,7 @@ class GameTickEvent : Event()
 
 @Nameable("key")
 @WebSocketEvent
-class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
-
-    data class Key(
-        @SerializedName("code")
-        val keyCode: Int,
-        @SerializedName("name")
-        val translationKey: String
-    )
-}
+class KeyEvent(val key: InputUtil.Key, val action: Int) : Event()
 
 // Input events
 @Nameable("inputHandle")

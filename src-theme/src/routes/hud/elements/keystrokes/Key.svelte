@@ -9,7 +9,7 @@
     let active = false;
 
     listen("key", (e: KeyEvent) => {
-        if (e.key.name !== key?.key.translationKey) {
+        if (e.key !== key?.key.translationKey) {
             return;
         }
 
