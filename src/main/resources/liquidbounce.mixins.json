@@ -82,9 +82,11 @@
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",
+    "minecraft.render.MixinItemRender",
     "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinOutlineVertexConsumerProvider",
+    "minecraft.render.MixinPlayerEntityRenderer",
     "minecraft.render.MixinPostEffectPass",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignText",
@@ -94,8 +96,8 @@
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
-    "minecraft.text.MixinTranslatableTextContent",
-    "minecraft.text.MixinTextColor"
+    "minecraft.text.MixinTextColor",
+    "minecraft.text.MixinTranslatableTextContent"
   ],
   "server": [],
   "injectors": {
