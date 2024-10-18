@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.inventory.ARMOR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BedBlock
 import net.minecraft.block.RespawnAnchorBlock
@@ -89,6 +88,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
         }
 
         private object FallDamage : ToggleableConfigurable(this, "PredictFallDamage", true) {
+
             val ignoreElytra by boolean("IgnoreElytra", false)
 
             fun getFallDamage(): Float {
@@ -102,7 +102,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
                 val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
                 if (collision != null && !collision.isFallDamageBlocking()) {
-                   return player.getEffectiveDamage(
+                    return player.getEffectiveDamage(
                         player.damageSources.fall(),
                         player.computeFallDamage(player.fallDistance, 1f).toFloat()
                     )
@@ -154,7 +154,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
             // the damage would exceed the threshold
             if (calculatedDamage >= allowedDamage) {
-               return true
+                return true
             }
 
             calculatedDamage = calculatedDamage.coerceAtLeast(getDamageFromBlocks(allowedDamage))
@@ -193,41 +193,27 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 return 0f
             }
 
-            val playerPos = player.pos.toBlockPos()
+            val overworld = world.dimension.bedWorks
+            val nether = world.dimension.respawnAnchorWorks
+            val playerPos = player.blockPos
             var maxDamage = 0f
 
-            if (!world.dimension.bedWorks) {
-                sphere!!.forEach {
-                    val pos = it.add(playerPos)
-                    if (pos.getBlock() !is BedBlock) {
-                        return@forEach
-                    }
+            sphere!!.forEach {
+                val pos = it.add(playerPos)
+                val block = pos.getBlock()
 
-                    maxDamage = maxDamage.coerceAtLeast(
-                        player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
-                    )
-
-                    if (maxDamage >= allowedDamage) {
-                        return maxDamage
-                    }
+                val noBedExplosion = overworld || block !is BedBlock
+                val noAnchorExplosion = nether || block !is RespawnAnchorBlock || !block.isCharged(pos.getState()!!)
+                if (noBedExplosion && noAnchorExplosion) {
+                    return@forEach
                 }
-            }
 
-            if (!world.dimension.respawnAnchorWorks) {
-                sphere!!.forEach {
-                    val pos = it.add(playerPos)
-                    val block = pos.getBlock()
-                    if (block !is RespawnAnchorBlock || block.getCharges(pos.getState()!!) <= 0) {
-                        return@forEach
-                    }
+                maxDamage = maxDamage.coerceAtLeast(
+                    player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
+                )
 
-                    maxDamage = maxDamage.coerceAtLeast(
-                        player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
-                    )
-
-                    if (maxDamage >= allowedDamage) {
-                        return maxDamage
-                    }
+                if (maxDamage >= allowedDamage) {
+                    return maxDamage
                 }
             }
 
