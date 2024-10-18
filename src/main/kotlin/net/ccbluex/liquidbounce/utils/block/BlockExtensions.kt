@@ -168,6 +168,31 @@ inline fun searchBlocksInRadius(
     return blocks
 }
 
+@Suppress("NestedBlockDepth")
+fun getSphere(radius: Float): Array<BlockPos> {
+    val blocks = mutableListOf<BlockPos>()
+    val radiusSq = radius * radius
+
+    val xRange = floor(radius).toInt() downTo floor(radius).toInt()
+    val yRange = floor(radius).toInt() downTo floor(radius).toInt()
+    val zRange = floor(radius).toInt() downTo floor(radius).toInt()
+
+    for (x in xRange) {
+        for (y in yRange) {
+            for (z in zRange) {
+                val blockPos = BlockPos(x, y, z)
+                if (blockPos.getSquaredDistance(BlockPos.ORIGIN) > radiusSq) {
+                    continue
+                }
+
+                blocks.add(blockPos)
+            }
+        }
+    }
+
+    return blocks.toTypedArray()
+}
+
 fun BlockPos.canStandOn(): Boolean {
     return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
 }
@@ -417,4 +442,9 @@ fun BlockPos?.isFallDamageBlocking(): Boolean {
 
 fun BlockPos.isBlastResistant(): Boolean {
     return getBlock()!!.blastResistance >= 600f
+}
+
+@Suppress("UnusedReceiverParameter")
+fun RespawnAnchorBlock.getCharges(state: BlockState): Int {
+    return state.get(RespawnAnchorBlock.CHARGES)
 }

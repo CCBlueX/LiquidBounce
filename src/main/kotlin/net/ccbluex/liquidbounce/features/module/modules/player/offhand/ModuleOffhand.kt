@@ -61,7 +61,6 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         init {
             tree(WhileHoldingSword)
         }
-
     }
 
     private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
@@ -189,7 +188,6 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
     fun isOperating() = enabled && activeMode != Mode.NONE
 
-    // TODO MoreCarry slots
     private enum class Mode(val modeName: String, private val item: Item, private val fallBackItem: Item? = null) {
         TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
             override fun shouldEquip() = totem.shouldEquip()

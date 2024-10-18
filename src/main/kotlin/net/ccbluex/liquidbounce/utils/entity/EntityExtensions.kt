@@ -372,8 +372,8 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
 
 fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     return when (entity) {
-        is EndCrystalEntity -> getDamageFromExplosion(entity.pos, entity, 6f)
-        is TntEntity -> getDamageFromExplosion(entity.pos.add(0.0, 0.0625, 0.0), entity, 4f)
+        is EndCrystalEntity -> getDamageFromExplosion(entity.pos, entity, 6f, 12f, 144f)
+        is TntEntity -> getDamageFromExplosion(entity.pos.add(0.0, 0.0625, 0.0), entity, 4f, 8f, 64f)
         is TntMinecartEntity -> {
             val d = 5f
             getDamageFromExplosion(entity.pos, entity, 4f + d * 1.5f)
@@ -386,8 +386,17 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     }
 }
 
-fun LivingEntity.getDamageFromExplosion(pos: Vec3d, exploding: Entity? = null, power: Float = 6f): Float {
-    val explosionRange = power * 2f
+fun LivingEntity.getDamageFromExplosion(
+    pos: Vec3d,
+    exploding: Entity? = null,
+    power: Float = 6f,
+    explosionRange: Float = power * 2f, // allows setting precomputed values
+    damageDistance: Float = explosionRange * explosionRange
+): Float {
+    // no damage will be dealt if the entity is outside the explosion range
+    if (this.squaredDistanceTo(pos) > damageDistance) {
+        return 0f
+    }
 
     val distanceDecay = 1f - sqrt(this.squaredDistanceTo(pos).toFloat()) / explosionRange
     val pre1 = Explosion.getExposure(pos, this) * distanceDecay
