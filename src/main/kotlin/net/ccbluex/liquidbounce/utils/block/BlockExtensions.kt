@@ -444,6 +444,6 @@ fun BlockPos.isBlastResistant(): Boolean {
 }
 
 @Suppress("UnusedReceiverParameter")
-fun RespawnAnchorBlock.getCharges(state: BlockState): Int {
-    return state.get(RespawnAnchorBlock.CHARGES)
+fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
+    return state.get(RespawnAnchorBlock.CHARGES) > 0
 }
