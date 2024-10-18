@@ -14,10 +14,7 @@ import net.ccbluex.liquidbounce.utils.Background;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -95,6 +92,8 @@ public abstract class MixinGuiScreen {
 
             if (background == null) {
                 // Use default background shader
+
+                if (mc.currentScreen instanceof GuiScreenResourcePacks) return;
 
                 GL11.glPushMatrix();
                 BackgroundShader.Companion.getBACKGROUND_SHADER().startShader();
