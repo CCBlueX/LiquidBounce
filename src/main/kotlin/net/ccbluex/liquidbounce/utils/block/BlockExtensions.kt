@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.*
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -32,6 +32,8 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
+import net.minecraft.world.BlockView
+import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -190,6 +192,46 @@ fun getSphere(radius: Float): Array<BlockPos> {
     }
 
     return blocks.sortedBy { it.first }.map { it.second }.toTypedArray()
+}
+
+/**
+ * Basically [BlockView.raycast] but this method allows us to exclude blocks using [exclude].
+ */
+@Suppress("SpellCheckingInspection")
+fun BlockView.raycast(context: RaycastContext, exclude: Array<BlockPos>): BlockHitResult {
+    return BlockView.raycast(context.start, context.end, context,
+        { raycastContext, pos ->
+            val excluded = pos in exclude
+
+            val blockState = if (excluded) { Blocks.VOID_AIR.defaultState } else { getBlockState(pos) }
+            val fluidState = if (excluded) { Fluids.EMPTY.defaultState } else { getFluidState(pos) }
+
+            val vec = raycastContext.start
+            val vec2 = raycastContext.end
+
+            val blockShape = raycastContext.getBlockShape(blockState, this, pos)
+            val blockHitResult = raycastBlock(vec, vec2, pos, blockShape, blockState)
+
+            val fluidShape = raycastContext.getFluidShape(fluidState, this, pos)
+            val fluidHitResult = fluidShape.raycast(vec, vec2, pos)
+
+            val blockHitDistance = blockHitResult?.let {
+                raycastContext.start.squaredDistanceTo(blockHitResult.pos)
+            } ?: Double.MAX_VALUE
+            val fluidHitDistance = fluidHitResult?.let {
+                raycastContext.start.squaredDistanceTo(fluidHitResult.pos)
+            } ?: Double.MAX_VALUE
+
+            if (blockHitDistance <= fluidHitDistance) blockHitResult else fluidHitResult
+        },
+        { raycastContext ->
+            val vec = raycastContext.start.subtract(raycastContext.end)
+            BlockHitResult.createMissed(
+                raycastContext.end,
+                Direction.getFacing(vec.x, vec.y, vec.z),
+                BlockPos.ofFloored(raycastContext.end)
+            )
+        })
 }
 
 fun BlockPos.canStandOn(): Boolean {
@@ -446,4 +488,12 @@ fun BlockPos.isBlastResistant(): Boolean {
 @Suppress("UnusedReceiverParameter")
 fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
     return state.get(RespawnAnchorBlock.CHARGES) > 0
+}
+
+/**
+ * Returns the second bed block position that might not exist (normally beds are two blocks long tho).
+ */
+@Suppress("UnusedReceiverParameter")
+fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): BlockPos {
+    return pos.offset((state.get(HorizontalFacingBlock.FACING)).opposite)
 }

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
+import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -43,13 +44,12 @@ import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.hit.HitResult
+import net.minecraft.util.math.*
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import net.minecraft.world.GameRules
+import net.minecraft.world.RaycastContext
 import net.minecraft.world.explosion.Explosion
 import kotlin.math.cos
 import kotlin.math.floor
@@ -378,10 +378,12 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
             val d = 5f
             getDamageFromExplosion(entity.pos, entity, 4f + d * 1.5f)
         }
+
         is CreeperEntity -> {
             val f = if (entity.shouldRenderOverlay()) 2f else 1f
             getDamageFromExplosion(entity.pos, entity, entity.explosionRadius * f)
         }
+
         else -> 0f
     }
 }
@@ -391,7 +393,8 @@ fun LivingEntity.getDamageFromExplosion(
     exploding: Entity? = null,
     power: Float = 6f,
     explosionRange: Float = power * 2f, // allows setting precomputed values
-    damageDistance: Float = explosionRange * explosionRange
+    damageDistance: Float = explosionRange * explosionRange,
+    exclude: Array<BlockPos>? = null
 ): Float {
     // no damage will be dealt if the entity is outside the explosion range
     if (this.squaredDistanceTo(pos) > damageDistance) {
@@ -399,7 +402,8 @@ fun LivingEntity.getDamageFromExplosion(
     }
 
     val distanceDecay = 1f - sqrt(this.squaredDistanceTo(pos).toFloat()) / explosionRange
-    val pre1 = Explosion.getExposure(pos, this) * distanceDecay
+    val exposure = exclude?.let { getExposureToExplosion(pos, it) } ?: Explosion.getExposure(pos, this)
+    val pre1 = exposure * distanceDecay
 
     val preprocessedDamage = floor((pre1 * pre1 + pre1) / 2f * 7f * explosionRange + 1f)
 
@@ -415,6 +419,62 @@ fun LivingEntity.getDamageFromExplosion(
     )
 
     return getEffectiveDamage(world.damageSources.explosion(explosion), preprocessedDamage)
+}
+
+/**
+ * Basically [Explosion.getExposure] but this method allows us to exclude blocks using [exclude].
+ */
+fun LivingEntity.getExposureToExplosion(source: Vec3d, exclude: Array<BlockPos>): Float {
+    val entityBoundingBox = boundingBox
+
+    val stepX = 1.0 / ((entityBoundingBox.maxX - entityBoundingBox.minX) * 2.0 + 1.0)
+    val stepY = 1.0 / ((entityBoundingBox.maxY - entityBoundingBox.minY) * 2.0 + 1.0)
+    val stepZ = 1.0 / ((entityBoundingBox.maxZ - entityBoundingBox.minZ) * 2.0 + 1.0)
+
+    val offsetX = (1.0 - floor(1.0 / stepX) * stepX) / 2.0
+    val offsetZ = (1.0 - floor(1.0 / stepZ) * stepZ) / 2.0
+
+    if (stepX < 0.0 || stepY < 0.0 || stepZ < 0.0) {
+        return 0f
+    }
+
+    var hits = 0
+    var totalRays = 0
+
+    var currentXStep = 0.0
+    while (currentXStep <= 1.0) {
+        var currentYStep = 0.0
+        while (currentYStep <= 1.0) {
+            var currentZStep = 0.0
+            while (currentZStep <= 1.0) {
+                val sampleX = MathHelper.lerp(currentXStep, entityBoundingBox.minX, entityBoundingBox.maxX)
+                val sampleY = MathHelper.lerp(currentYStep, entityBoundingBox.minY, entityBoundingBox.maxY)
+                val sampleZ = MathHelper.lerp(currentZStep, entityBoundingBox.minZ, entityBoundingBox.maxZ)
+
+                val samplePoint = Vec3d(sampleX + offsetX, sampleY, sampleZ + offsetZ)
+                val hitResult = world.raycast(
+                    RaycastContext(
+                        samplePoint,
+                        source,
+                        RaycastContext.ShapeType.COLLIDER,
+                        RaycastContext.FluidHandling.NONE,
+                        this
+                    ), exclude
+                )
+
+                if (hitResult.type == HitResult.Type.MISS) {
+                    hits++
+                }
+
+                totalRays++
+                currentZStep += stepZ
+            }
+            currentYStep += stepY
+        }
+        currentXStep += stepX
+    }
+
+    return hits.toFloat() / totalRays.toFloat()
 }
 
 fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {

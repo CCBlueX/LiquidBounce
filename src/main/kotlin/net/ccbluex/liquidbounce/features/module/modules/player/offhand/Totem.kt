@@ -201,15 +201,25 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             sphere!!.forEach {
                 val pos = it.add(playerPos)
                 val block = pos.getBlock()
+                val state = pos.getState()!!
 
                 val noBedExplosion = overworld || block !is BedBlock
-                val noAnchorExplosion = nether || block !is RespawnAnchorBlock || !block.isCharged(pos.getState()!!)
+                val noAnchorExplosion = nether || block !is RespawnAnchorBlock || !block.isCharged(state)
                 if (noBedExplosion && noAnchorExplosion) {
                     return@forEach
                 }
 
+                // exclude the block as it gets removed before the explosion happens
+                val exclude = if (noBedExplosion) {
+                    // the anchor is just the block itself
+                    arrayOf(pos)
+                } else {
+                    // a bed consists of two blocks
+                    arrayOf(pos, (block as BedBlock).getPotentialSecondBedBlock(state, pos))
+                }
+
                 maxDamage = maxDamage.coerceAtLeast(
-                    player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
+                    player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f, exclude)
                 )
 
                 if (maxDamage >= allowedDamage) {
