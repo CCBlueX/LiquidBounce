@@ -286,6 +286,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
+            ModuleTNTTimer,
             ModuleTracers,
             ModuleTrajectories,
             ModuleTrueSight,
@@ -391,7 +392,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     @JvmName("getCategories")
     @ScriptApi
-    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+    fun getCategories() = Category.entries.map { it.readableName }.toTypedArray()
 
     @JvmName("getModules")
     fun getModules() = modules

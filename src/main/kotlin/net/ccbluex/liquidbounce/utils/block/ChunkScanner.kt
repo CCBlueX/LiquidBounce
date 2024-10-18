@@ -241,6 +241,7 @@ object ChunkScanner : Listenable {
 
         /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
+         * This method must be **thread-safe**.
          *
          * @param pos DON'T directly save it to a container Property (Field in Java), save a copy instead
          * @param cleared true, if the section the block is in was already cleared
