@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 import net.ccbluex.liquidbounce.utils.openai.OPENAI_BASE_URL
 import net.ccbluex.liquidbounce.utils.openai.OpenAi
-import kotlin.concurrent.thread
 
 /**
  * Automatically solves chat game riddles.
@@ -155,7 +155,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             // Create new AI instance with OpenAI key
             val ai = OpenAi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
-            thread {
+            virtualThread(name = "AutoChatGame") {
                 runCatching {
                     val startAsk = System.currentTimeMillis()
                     var answer = ai.requestNewAnswer(question)
