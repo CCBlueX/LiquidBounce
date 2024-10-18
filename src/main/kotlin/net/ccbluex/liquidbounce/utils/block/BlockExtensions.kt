@@ -168,6 +168,30 @@ inline fun searchBlocksInRadius(
     return blocks
 }
 
+@Suppress("NestedBlockDepth")
+fun getSphere(radius: Float): Array<BlockPos> {
+    val blocks = mutableListOf<Pair<Double, BlockPos>>()
+    val radiusSq = radius * radius
+
+    val range = MathHelper.floor(radius) downTo MathHelper.floor(-radius)
+
+    for (x in range) {
+        for (y in range) {
+            for (z in range) {
+                val blockPos = BlockPos(x, y, z)
+                val distanceSq = blockPos.getSquaredDistance(BlockPos.ORIGIN)
+                if (distanceSq > radiusSq) {
+                    continue
+                }
+
+                blocks.add(distanceSq to blockPos)
+            }
+        }
+    }
+
+    return blocks.sortedBy { it.first }.map { it.second }.toTypedArray()
+}
+
 fun BlockPos.canStandOn(): Boolean {
     return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
 }
@@ -401,4 +425,25 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
 
 fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
+}
+
+val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
+    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+)
+
+fun BlockPos?.isFallDamageBlocking(): Boolean {
+    if (this == null) {
+        return false
+    }
+
+    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+}
+
+fun BlockPos.isBlastResistant(): Boolean {
+    return getBlock()!!.blastResistance >= 600f
+}
+
+@Suppress("UnusedReceiverParameter")
+fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
+    return state.get(RespawnAnchorBlock.CHARGES) > 0
 }
