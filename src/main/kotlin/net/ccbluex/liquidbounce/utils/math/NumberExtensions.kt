@@ -16,22 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.math
 
-package net.ccbluex.liquidbounce.config.adapter
+fun Int.sq(): Int {
+    return this * this
+}
 
-import com.google.gson.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
-import java.lang.reflect.Type
+fun Float.sq(): Float {
+    return this * this
+}
 
-object ColorSerializer : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
-
-    override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.toARGB())
-    }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt, true))
-    }
-
+fun Double.sq(): Double {
+    return this * this
 }

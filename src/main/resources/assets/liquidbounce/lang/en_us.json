@@ -591,5 +591,9 @@
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
   "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids.",
   "liquidbounce.module.multiActions.description": "Allows you to do multiple things at the same time.",
-  "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars."
+  "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars.",
+  "liquidbounce.module.autoBuild.description": "Automatically builds certain structures.",
+  "liquidbounce.module.autoBuild.messages.noPosition": "No possible position found, disabling...",
+  "liquidbounce.module.autoBuild.messages.noObsidian": "No obsidian found, disabling...",
+  "liquidbounce.module.autoBuild.messages.noFlintAndSteel": "No flint-and-steel found, disabling..."
 }

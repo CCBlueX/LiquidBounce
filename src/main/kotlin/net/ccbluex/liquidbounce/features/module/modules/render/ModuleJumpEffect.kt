@@ -29,17 +29,18 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.Curves
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
 object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
+
     private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 
     private val innerColor by color("InnerColor", Color4b(0, 255, 4, 0))
     private val outerColor by color("OuterColor", Color4b(0, 255, 4, 89))
 
-    private val animCurve by curve("AnimCurve", Curves.EASE_OUT)
+    private val animCurve by curve("AnimCurve", Easing.QUAD_OUT)
 
     private val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
@@ -57,7 +58,9 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
-                val progress = animCurve((it.right + event.partialTicks) / lifetime).coerceIn(0f..1f)
+                val progress = animCurve
+                    .transform((it.right + event.partialTicks) / lifetime)
+                    .coerceIn(0f..1f)
 
                 withPositionRelativeToCamera(it.left) {
                     drawGradientCircle(
