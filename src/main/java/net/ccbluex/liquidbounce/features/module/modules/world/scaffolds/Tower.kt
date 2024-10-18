@@ -127,6 +127,8 @@ object Tower : MinecraftInstance(), Listenable {
                 return
             if (towerModeValues.get() == "None" || towerModeValues.get() == "Jump")
                 return
+            if (notOnMoveValues.get() && isMoving)
+                return
             if (Speed.state || Fly.state)
                 return
 
