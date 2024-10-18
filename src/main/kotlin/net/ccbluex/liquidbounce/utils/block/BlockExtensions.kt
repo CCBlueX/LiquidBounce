@@ -203,8 +203,8 @@ fun BlockView.raycast(context: RaycastContext, exclude: Array<BlockPos>): BlockH
         { raycastContext, pos ->
             val excluded = pos in exclude
 
-            val blockState = if (excluded) { Blocks.VOID_AIR.defaultState } else { getBlockState(pos) }
-            val fluidState = if (excluded) { Fluids.EMPTY.defaultState } else { getFluidState(pos) }
+            val blockState = if (excluded) Blocks.VOID_AIR.defaultState else getBlockState(pos)
+            val fluidState = if (excluded) Fluids.EMPTY.defaultState else getFluidState(pos)
 
             val vec = raycastContext.start
             val vec2 = raycastContext.end

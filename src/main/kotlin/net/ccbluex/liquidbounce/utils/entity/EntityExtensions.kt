@@ -424,6 +424,7 @@ fun LivingEntity.getDamageFromExplosion(
 /**
  * Basically [Explosion.getExposure] but this method allows us to exclude blocks using [exclude].
  */
+@Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(source: Vec3d, exclude: Array<BlockPos>): Float {
     val entityBoundingBox = boundingBox
 
