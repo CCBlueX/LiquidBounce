@@ -65,7 +65,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     }
 
     private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
-        val onlyWhileCa by boolean("OnlyWhileCrystalAura", true)
+        val onlyWhileCa by boolean("OnlyWhileCrystalAura", false)
         val whenNoTotems by boolean("WhenNoTotems", true)
         val crystalBind by key("CrystalBind", GLFW.GLFW_KEY_UNKNOWN)
     }
@@ -82,6 +82,8 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
     private var staticMode = Mode.NONE
+    private var modeBeforeDirectGapple = Mode.NONE
+    private var modeBeforeDirectCrystal = Mode.NONE
     private var last: Pair<Item, ItemSlot>? = null
 
     override val tag: String
@@ -104,13 +106,21 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
         when (it.key.keyCode) {
             Gapple.gappleBind -> {
-                if (Mode.GAPPLE.canCycleTo()) {
-                    activeMode = Mode.GAPPLE
+                if (activeMode == Mode.GAPPLE && modeBeforeDirectGapple.canCycleTo()) {
+                    modeBeforeDirectGapple = Mode.NONE
+                    staticMode = modeBeforeDirectGapple
+                } else if (Mode.GAPPLE.canCycleTo()) {
+                    modeBeforeDirectGapple = staticMode
+                    staticMode = Mode.GAPPLE
                 }
             }
             Crystal.crystalBind -> {
-                if (Mode.CRYSTAL.canCycleTo()) {
-                    activeMode = Mode.CRYSTAL
+                if (activeMode == Mode.CRYSTAL && modeBeforeDirectCrystal.canCycleTo()) {
+                    modeBeforeDirectCrystal = Mode.NONE
+                    staticMode = modeBeforeDirectCrystal
+                } else if (Mode.CRYSTAL.canCycleTo()) {
+                    modeBeforeDirectCrystal = staticMode
+                    staticMode = Mode.CRYSTAL
                 }
             }
             cycleSlots -> {
@@ -132,7 +142,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     }
 
     @Suppress("unused")
-    private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
+    private val autoTotemHandler = handler<ScheduleInventoryActionEvent>(priority = 100) {
         activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode
         if (activeMode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) {
             activeMode = Mode.BACK
@@ -171,7 +181,9 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             }
         }
 
-        it.schedule(inventoryConstraints, actions)
+        if (activeMode != Mode.TOTEM || !totem.send(actions)) {
+            it.schedule(inventoryConstraints, actions)
+        }
         chronometer.reset()
     }
 

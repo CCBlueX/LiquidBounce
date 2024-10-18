@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.inventory.ARMOR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.entity.EntityPose
 
 class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
@@ -100,7 +102,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
         //val mainHand by boolean("MainHand", false)
 
-        fun healthAboveThreshold():Boolean {
+        fun healthBellowThreshold(): Boolean {
             if (!enabled) {
                 return true
             }
@@ -128,7 +130,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
             val safetyOperating = Safety.enabled && currentHealth > Safety.safeHealth
             if (safetyOperating && (player.isBurrowed() || player.isInHole())) {
-                return true
+                return false
             }
 
             return currentHealth <= healthThreshold
@@ -140,6 +142,11 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
         tree(Health)
     }
 
+    /**
+     * Ignores all active inventory requests, switch settings and sends the switch packets directly.
+     */
+    private val sendDirectly by boolean("SendDirectly", false)
+
     fun shouldEquip(): Boolean {
         if (!enabled) {
             return false
@@ -149,7 +156,20 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        return Health.healthAboveThreshold()
+        return Health.healthBellowThreshold()
+    }
+
+    /**
+     * @return `true` if the [actions] got performed.
+     */
+    fun send(actions: List<ClickInventoryAction>): Boolean {
+        if (!sendDirectly) {
+            return false
+        }
+
+        InventoryManager.clickOccurred()
+        actions.forEach { it.performAction() }
+        return true
     }
 
 }
