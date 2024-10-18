@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.inventory.ARMOR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BedBlock
 import net.minecraft.block.RespawnAnchorBlock
 import net.minecraft.entity.EntityPose
 import net.minecraft.util.math.BlockPos
-import kotlin.math.max
 
 class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
@@ -74,7 +74,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * This can lead to a more aggressive auto totem, where a totem is put in the offhand if it
          * might not be necessary.
          */
-        private val subtractCalculatedDamage by boolean("SubtractCalculatedDamage", true)
+        private val subtractCalculatedDamage by boolean("SubtractCalculatedDamage", false)
 
         /**
          * Predicts explosions from creepers, crystals, etc. See [getExplosionDamageFromEntity].
@@ -92,7 +92,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             val ignoreElytra by boolean("IgnoreElytra", false)
 
             fun getFallDamage(): Float {
-                if (!ModuleNoFall.enabled || FallDamage.enabled || player.fallDistance <= 0) {
+                if (ModuleNoFall.enabled || !FallDamage.enabled || player.fallDistance <= 4) {
                     return 0f
                 }
 
@@ -133,25 +133,40 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 return true
             }
 
-            val currentHealth = player.health
-            var calculatedDamage = max(getDamageFromEntities(), getDamageFromBlocks())
+            val safetyOperating = Safety.enabled && (player.isBurrowed() || player.isInHole())
+            var allowedDamage = player.health - if (safetyOperating) {
+                Safety.safeHealth.toFloat()
+            } else {
+                healthThreshold.toFloat()
+            }
 
-            calculatedDamage += FallDamage.getFallDamage()
-
-            // if we don't subtract, we only put a totem in the offhand if the damage would kill the player
-            if (!subtractCalculatedDamage && currentHealth - calculatedDamage <= 0f) {
+            // the health is bellow or at the threshold
+            if (allowedDamage <= 0f) {
                 return true
             }
 
-            val safetyOperating = Safety.enabled && currentHealth > Safety.safeHealth
-            if (safetyOperating && (player.isBurrowed() || player.isInHole())) {
-                return false
+            // if we don't subtract, we only put a totem in the offhand if the damage would kill the player
+            if (subtractCalculatedDamage) {
+                allowedDamage = player.health
             }
 
-            return currentHealth <= healthThreshold
+            var calculatedDamage = getDamageFromEntities(allowedDamage)
+
+            // the damage would exceed the threshold
+            if (calculatedDamage >= allowedDamage) {
+               return true
+            }
+
+            calculatedDamage = calculatedDamage.coerceAtLeast(getDamageFromBlocks(allowedDamage))
+            if (calculatedDamage >= allowedDamage) {
+                return true
+            }
+
+            calculatedDamage += FallDamage.getFallDamage()
+            return calculatedDamage >= allowedDamage
         }
 
-        private fun getDamageFromEntities(): Float {
+        private fun getDamageFromEntities(allowedDamage: Float): Float {
             if (!explosionDamage) {
                 return 0f
             }
@@ -163,25 +178,37 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
                 // find the maximum damage that could be applied to player
                 maxDamage = maxDamage.coerceAtLeast(damageFromEntity)
+
+                // the entity does already enough harm, we can return here
+                if (maxDamage >= allowedDamage) {
+                    return maxDamage
+                }
             }
+
             return maxDamage
         }
 
-        private fun getDamageFromBlocks(): Float {
+        private fun getDamageFromBlocks(allowedDamage: Float): Float {
             if (!explosionDamageBlocks || sphere == null) {
                 return 0f
             }
 
-            val playerPos = player.blockPos
+            val playerPos = player.pos.toBlockPos()
             var maxDamage = 0f
 
             if (!world.dimension.bedWorks) {
                 sphere!!.forEach {
                     val pos = it.add(playerPos)
-                    if (pos.getBlock() is BedBlock) {
-                        maxDamage = maxDamage.coerceAtLeast(
-                            player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
-                        )
+                    if (pos.getBlock() !is BedBlock) {
+                        return@forEach
+                    }
+
+                    maxDamage = maxDamage.coerceAtLeast(
+                        player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
+                    )
+
+                    if (maxDamage >= allowedDamage) {
+                        return maxDamage
                     }
                 }
             }
@@ -190,10 +217,16 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 sphere!!.forEach {
                     val pos = it.add(playerPos)
                     val block = pos.getBlock()
-                    if (block is RespawnAnchorBlock && block.getCharges(pos.getState()!!) > 0) {
-                        maxDamage = maxDamage.coerceAtLeast(
-                            player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
-                        )
+                    if (block !is RespawnAnchorBlock || block.getCharges(pos.getState()!!) <= 0) {
+                        return@forEach
+                    }
+
+                    maxDamage = maxDamage.coerceAtLeast(
+                        player.getDamageFromExplosion(pos.toVec3d(), null, 5f, 10f, 100f)
+                    )
+
+                    if (maxDamage >= allowedDamage) {
+                        return maxDamage
                     }
                 }
             }

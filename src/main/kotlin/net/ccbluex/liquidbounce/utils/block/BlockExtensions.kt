@@ -170,27 +170,26 @@ inline fun searchBlocksInRadius(
 
 @Suppress("NestedBlockDepth")
 fun getSphere(radius: Float): Array<BlockPos> {
-    val blocks = mutableListOf<BlockPos>()
+    val blocks = mutableListOf<Pair<Double, BlockPos>>()
     val radiusSq = radius * radius
 
-    val xRange = floor(radius).toInt() downTo floor(radius).toInt()
-    val yRange = floor(radius).toInt() downTo floor(radius).toInt()
-    val zRange = floor(radius).toInt() downTo floor(radius).toInt()
+    val range = MathHelper.floor(radius) downTo MathHelper.floor(-radius)
 
-    for (x in xRange) {
-        for (y in yRange) {
-            for (z in zRange) {
+    for (x in range) {
+        for (y in range) {
+            for (z in range) {
                 val blockPos = BlockPos(x, y, z)
-                if (blockPos.getSquaredDistance(BlockPos.ORIGIN) > radiusSq) {
+                val distanceSq = blockPos.getSquaredDistance(BlockPos.ORIGIN)
+                if (distanceSq > radiusSq) {
                     continue
                 }
 
-                blocks.add(blockPos)
+                blocks.add(distanceSq to blockPos)
             }
         }
     }
 
-    return blocks.toTypedArray()
+    return blocks.sortedBy { it.first }.map { it.second }.toTypedArray()
 }
 
 fun BlockPos.canStandOn(): Boolean {
