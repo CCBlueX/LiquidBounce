@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.BED_BLOCKS
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedColorChoice
@@ -43,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.inventory.BED_BLOCKS
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BedBlock

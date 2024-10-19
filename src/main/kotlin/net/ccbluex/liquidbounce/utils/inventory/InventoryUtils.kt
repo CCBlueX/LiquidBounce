@@ -34,17 +34,12 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.DyedColorComponent
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterials
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
-import net.minecraft.util.Colors
-import net.minecraft.util.DyeColor
 import net.minecraft.util.Hand
 import kotlin.math.abs
 
@@ -195,7 +190,7 @@ fun useHotbarSlotOrOffhand(item: HotbarItemSlot) = when (item) {
     }
 }
 
-fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
+inline fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
     preInteraction()
 
     interaction.interactItem(player, hand).takeIf { it.isAccepted }?.let {
@@ -227,7 +222,7 @@ fun getArmorColor() = ARMOR_SLOTS.mapNotNull { slot ->
  */
 fun ItemStack.getArmorColor(): Int? {
     return if (isIn(ItemTags.DYEABLE)) {
-        DyedColorComponent.getColor(this, -6265536)
+        DyedColorComponent.getColor(this, -6265536) // FFA06540
     } else {
         null
     }
@@ -237,10 +232,29 @@ fun ItemStack.getArmorColor(): Int? {
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold
  * won't count them as blocks
  */
-var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
+val DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.TNT,
     Blocks.COBWEB,
     Blocks.NETHER_PORTAL,
+)
+
+val BED_BLOCKS = setOf(
+    Blocks.RED_BED,
+    Blocks.BLUE_BED,
+    Blocks.GREEN_BED,
+    Blocks.BLACK_BED,
+    Blocks.WHITE_BED,
+    Blocks.YELLOW_BED,
+    Blocks.PURPLE_BED,
+    Blocks.ORANGE_BED,
+    Blocks.PINK_BED,
+    Blocks.LIGHT_BLUE_BED,
+    Blocks.LIGHT_GRAY_BED,
+    Blocks.LIME_BED,
+    Blocks.MAGENTA_BED,
+    Blocks.BROWN_BED,
+    Blocks.CYAN_BED,
+    Blocks.GRAY_BED
 )
 
 /**

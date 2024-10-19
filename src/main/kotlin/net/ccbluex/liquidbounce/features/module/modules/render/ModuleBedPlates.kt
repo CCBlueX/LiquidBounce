@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.manhattanDistanceTo
+import net.ccbluex.liquidbounce.utils.inventory.BED_BLOCKS
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
@@ -23,24 +24,6 @@ import net.minecraft.util.math.Vec3d
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-val BED_BLOCKS = setOf(
-    Blocks.RED_BED,
-    Blocks.BLUE_BED,
-    Blocks.GREEN_BED,
-    Blocks.BLACK_BED,
-    Blocks.WHITE_BED,
-    Blocks.YELLOW_BED,
-    Blocks.PURPLE_BED,
-    Blocks.ORANGE_BED,
-    Blocks.PINK_BED,
-    Blocks.LIGHT_BLUE_BED,
-    Blocks.LIGHT_GRAY_BED,
-    Blocks.LIME_BED,
-    Blocks.MAGENTA_BED,
-    Blocks.BROWN_BED,
-    Blocks.CYAN_BED,
-    Blocks.GRAY_BED
-)
 private const val ITEM_SIZE: Int = 16
 private const val ITEM_SCALE: Float = 1.0F
 private const val BACKGROUND_PADDING: Int = 2
