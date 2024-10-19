@@ -12,8 +12,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
-import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+import net.ccbluex.liquidbounce.utils.render.*;
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientShader;
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
@@ -25,15 +27,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import java.util.List;
+
 import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.glEnable;
@@ -67,6 +67,8 @@ public abstract class MixinGuiInGame extends Gui {
 
     @Shadow
     protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
+
+    @Shadow @Final protected Minecraft mc;
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
     private void renderScoreboard(CallbackInfo callbackInfo) {
@@ -131,13 +133,82 @@ public abstract class MixinGuiInGame extends Gui {
                 slot = FakeItemRender.INSTANCE.getFakeItem();
             }
 
-            if (hud.handleEvents() && hud.getBlackHotbar()) {
+            if (hud.handleEvents() && hud.getCustomHotbar()) {
                 int middleScreen = sr.getScaledWidth() / 2;
                 int height = sr.getScaledHeight() - 1;
 
+                float gradientOffset = (System.currentTimeMillis() % 10000) / 10000f;
+
+                float gradientX = (hud.getGradientX() == 0f) ? 0f : 1f / hud.getGradientX();
+                float gradientY = (hud.getGradientY() == 0f) ? 0f : 1f / hud.getGradientY();
+
+                float rainbowOffset = (System.currentTimeMillis() % 10000) / 10000f;
+                float rainbowX = (hud.getRainbowX() == 0f) ? 0f : 1f / hud.getRainbowX();
+                float rainbowY = (hud.getRainbowY() == 0f) ? 0f : 1f / hud.getRainbowY();
+
+                List<float[]> gradientColors = ColorSettingsKt.toColorArray(hud.getBgGradColors(), hud.getMaxHotbarGradientColors());
+
                 resetColor();
-                render.drawRoundedRectInt(middleScreen - 91, height - 22, middleScreen + 91, height, Integer.MIN_VALUE, hud.getRoundedHotbarRadius());
-                render.drawRoundedRectInt(middleScreen - 91 - 1 + slot * 20 + 1, height - 22, middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24, Integer.MAX_VALUE, hud.getRoundedHotbarRadius());
+
+                boolean isGradient = hud.getHotbarMode().equals("Gradient");
+                boolean isRainbow = hud.getHotbarMode().equals("Rainbow");
+
+                if (isGradient) {
+                    GradientShader.begin(
+                            true,
+                            gradientX,
+                            gradientY,
+                            hud.getMaxHotbarGradientColors(),
+                            gradientColors,
+                            hud.getGradientHotbarSpeed(),
+                            gradientOffset
+                    );
+                }
+
+                if (isRainbow) {
+                    RainbowShader.begin(true, rainbowX, rainbowY, rainbowOffset);
+                }
+
+                // Inner - Background
+                render.drawRoundedRectInt(
+                        middleScreen - 91, height - 22,
+                        middleScreen + 91, height,
+                        hud.getHbBackgroundColors().color().getRGB(),
+                        hud.getRoundedHotbarRadius()
+                );
+
+                if (isRainbow) {
+                    RainbowShader.INSTANCE.stopShader();
+                }
+                if (isGradient) {
+                    GradientShader.INSTANCE.stopShader();
+                }
+
+                // Inner - Highlight
+                render.drawRoundedRectInt(
+                        middleScreen - 91 - 1 + slot * 20 + 1, height - 22,
+                        middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24,
+                        hud.getHbHighlightColors().color().getRGB(),
+                        hud.getRoundedHotbarRadius()
+                );
+
+                // Border - Background
+                render.drawRoundedBorderInt(
+                        middleScreen - 91, height - 22,
+                        middleScreen + 91, height,
+                        hud.getHotbarBorder(),
+                        hud.getHbBorderColors().color().getRGB(),
+                        hud.getRoundedHotbarRadius()
+                );
+
+                // Border - Highlight
+                render.drawRoundedBorderInt(
+                        middleScreen - 91 - 1 + slot * 20 + 1, height - 22,
+                        middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24,
+                        hud.getHotbarBorder(),
+                        hud.getHbBorderColors().color().getRGB(),
+                        hud.getRoundedHotbarRadius()
+                );
 
                 enableRescaleNormal();
                 glEnable(GL_BLEND);

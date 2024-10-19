@@ -68,6 +68,7 @@ object GradientShader : Shader("gradient_shader.frag"), Closeable {
             stopShader()
     }
 
+    @JvmStatic
     fun begin(enable: Boolean, x: Float, y: Float, maxColors: Int, gradient: List<FloatArray>, speed: Float, offset: Float): GradientShader {
         if (enable) {
             strengthX = x
