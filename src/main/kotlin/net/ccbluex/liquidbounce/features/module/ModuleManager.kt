@@ -106,7 +106,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
                     m.bind.matchesKey(event.keyCode, event.scanCode) &&
                         m.bind.action == InputBind.BindAction.HOLD
                 }.forEach { m ->
-                    chat("${m.name} is bound to ${m.bind.keyName} and has been released")
                     m.enabled = false
                 }
         }
