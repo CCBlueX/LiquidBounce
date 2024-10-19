@@ -45,8 +45,7 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
             stopShader()
     }
 
-    @Suppress("NOTHING_TO_INLINE")
-    inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader {
+    fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader {
         if (enable) {
             strengthX = x
             strengthY = y
