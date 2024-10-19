@@ -121,7 +121,7 @@ class BlockPlacer(
      */
     val blocks = Object2BooleanLinkedOpenHashMap<BlockPos>()
 
-    val inaccessible = mutableSetOf<BlockPos>()
+    val inaccessible = hashSetOf<BlockPos>()
     val postRotateTasks = mutableListOf<() -> Unit>()
     private var sneakTimes = 0
     private var ticksToWait = 0

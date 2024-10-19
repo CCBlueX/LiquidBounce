@@ -50,7 +50,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
     @Suppress("unused")
     private val targetUpdater = handler<SimulatedTickEvent> {
-        val blocks1 = mutableSetOf<BlockPos>()
+        val blocks1 = hashSetOf<BlockPos>()
         val center = BlockPos.ofFloored(player.pos).down()
         for (x in center.x - platformSize..center.x + platformSize) {
             for (z in center.z - platformSize..center.z + platformSize) {

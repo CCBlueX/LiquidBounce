@@ -44,13 +44,13 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
 
     // what block helping blocks can be, by default just "trash blocks", meaning very common blocks
     val filter by enumChoice("Filter", Filter.WHITELIST)
-    val blocks by blocks("Blocks", mutableSetOf(Blocks.COBBLESTONE, Blocks.DIRT, Blocks.NETHERRACK))
+    val blocks by blocks("Blocks", hashSetOf(Blocks.COBBLESTONE, Blocks.DIRT, Blocks.NETHERRACK))
 
     // we don't have to consistently search, every once in a while is okay, see `delay`
     val chronometer = Chronometer()
 
     // positions we may not place at
-    val blockedPositions = mutableSetOf<BlockPos>()
+    val blockedPositions = hashSetOf<BlockPos>()
 
     /**
      * Currently finds the best path of blocks to support the placement of [targetPos] using Dijkstra's algorithm,
@@ -60,7 +60,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
         val rangeSq = placer.range.sq()
 
         val openList = PriorityQueue<Node>(Comparator.comparingDouble { it.totalCost })
-        val closedList = mutableSetOf<BlockPos>()
+        val closedList = hashSetOf<BlockPos>()
 
         val startNode = Node(targetPos, null, 0.0)
         openList.add(startNode)
