@@ -11,6 +11,7 @@ export interface KeyboardKeyEvent {
     scanCode: number;
     action: number;
     mods: number;
+    key: string;
 }
 
 export interface ScaleFactorChangeEvent {
