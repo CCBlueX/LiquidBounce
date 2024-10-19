@@ -149,9 +149,7 @@ public abstract class MixinNetHandlerPlayClient {
             } catch (final URISyntaxException e) {
                 ClientUtils.INSTANCE.getLOGGER().error("Failed to handle resource pack", e);
 
-                // Accepted is always sent.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, ACCEPTED));
-                // But we fail of course.
+                // We fail of course.
                 netManager.sendPacket(new C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD));
 
                 callbackInfo.cancel();
