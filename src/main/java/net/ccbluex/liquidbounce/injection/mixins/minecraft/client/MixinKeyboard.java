@@ -48,7 +48,7 @@ public class MixinKeyboard {
         // does if (window == this.client.getWindow().getHandle())
         var inputKey = InputUtil.fromKeyCode(key, scancode);
 
-        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(key, scancode, i, j));
+        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(inputKey, key, scancode, i, j));
         if (client.currentScreen == null) {
             EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, i));
         }
