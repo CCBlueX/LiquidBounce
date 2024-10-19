@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
+import com.google.common.base.Predicate
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
@@ -32,9 +34,15 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_12_2
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.PotionContentsComponent
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.SwordItem
 import org.lwjgl.glfw.GLFW
@@ -47,6 +55,7 @@ import org.lwjgl.glfw.GLFW
 object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
+    private val switchMode = enumChoice("SwitchMode", SwitchMode.SMART)
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
     private val totem = tree(Totem())
@@ -69,9 +78,21 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         val crystalBind by key("CrystalBind", GLFW.GLFW_KEY_UNKNOWN)
     }
 
+    private object Strength : ToggleableConfigurable(this, "StrengthPotion", false) {
+        val onlyWhileHoldingSword by boolean("OnlyWhileHoldingSword", true)
+        val onlyWhileKa by boolean("OnlyWhileKillAura", true)
+        val strengthBind by key("StrengthBind", GLFW.GLFW_KEY_UNKNOWN)
+    }
+
     init {
         tree(Crystal)
         tree(Gapple)
+        tree(Strength)
+
+        // the protocol is automatically detected, no need for a setting
+        if (hasProtocolTranslator) {
+            inner.remove(switchMode)
+        }
     }
 
     private val INVENTORY_MAIN_PRIORITY = INVENTORY_SLOTS + HOTBAR_SLOTS
@@ -104,6 +125,13 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         when (it.key.keyCode) {
             Gapple.gappleBind -> Mode.GAPPLE.onBindPress()
             Crystal.crystalBind -> Mode.CRYSTAL.onBindPress()
+            Strength.strengthBind -> {
+                // since we can't cycle to strength, its status has to be checked here
+                if (Strength.enabled) {
+                    Mode.STRENGTH.onBindPress()
+                }
+            }
+
             cycleSlots -> {
                 val entries = Mode.entries
                 val startIndex = staticMode.ordinal
@@ -150,22 +178,39 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             last = slot.itemStack.item to slot
         }
 
-        val actions = ArrayList<ClickInventoryAction>(3)
-
-        if (slot is HotbarItemSlot) {
-            actions += ClickInventoryAction.performSwap(from = slot, to = OffHandSlot)
-        } else {
-            actions += ClickInventoryAction.performPickup(slot = slot)
-            actions += ClickInventoryAction.performPickup(slot = OffHandSlot)
-            if (!OffHandSlot.itemStack.isEmpty) {
-                actions += ClickInventoryAction.performPickup(slot = slot)
+        val actions = if (hasProtocolTranslator) {
+            if (isOlderThanOrEquals1_12_2) {
+                // you can only perform a swap in newer versions
+                SwitchMode.PICKUP.performSwitch(slot)
+                performSwitch(slot, false)
+            } else {
+                performSwitch(slot, true)
+                SwitchMode.SMART.performSwitch(slot)
             }
+        } else {
+            switchMode.get().performSwitch(slot)
         }
 
         if (activeMode != Mode.TOTEM || !totem.send(actions)) {
             it.schedule(inventoryConstraints, actions)
         }
         chronometer.reset()
+    }
+
+    fun performSwitch(from: ItemSlot, smart: Boolean): List<ClickInventoryAction> {
+        val actions = ArrayList<ClickInventoryAction>(3)
+
+        if (smart && from is HotbarItemSlot) {
+            actions += ClickInventoryAction.performSwap(from = from, to = OffHandSlot)
+        } else {
+            actions += ClickInventoryAction.performPickup(slot = from)
+            actions += ClickInventoryAction.performPickup(slot = OffHandSlot)
+            if (!OffHandSlot.itemStack.isEmpty) {
+                actions += ClickInventoryAction.performPickup(slot = from)
+            }
+        }
+
+        return actions
     }
 
     fun isOperating() = enabled && activeMode != Mode.NONE
@@ -188,6 +233,39 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             }
 
             override fun canCycleTo() = totem.enabled
+        },
+        STRENGTH("Strength", Items.POTION) {
+            val isStrengthPotion = Predicate<ItemStack> { stack ->
+                if (stack.item != Items.POTION) {
+                    return@Predicate false
+                }
+
+                val content = stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT)
+                content.effects.forEach { effect ->
+                    if (effect.effectType == StatusEffects.STRENGTH) {
+                        return@Predicate true
+                    }
+                }
+
+                return@Predicate false
+            }
+
+            override fun shouldEquip(): Boolean {
+                val killAura = Strength.onlyWhileKa && !ModuleKillAura.enabled
+                if (!Strength.enabled || killAura || player.hasStatusEffect(StatusEffects.STRENGTH)) {
+                    return false
+                }
+
+                return player.mainHandStack.item is SwordItem || !Strength.onlyWhileHoldingSword
+            }
+
+            override fun getSlot(): ItemSlot? {
+                if (isStrengthPotion.test(player.offHandStack)) {
+                    return OFFHAND_SLOT
+                }
+
+                return findInventorySlot(INVENTORY_MAIN_PRIORITY) { isStrengthPotion.test(it) }
+            }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
             override fun shouldEquip(): Boolean {
@@ -217,12 +295,8 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
                     if (it.first == it.second.itemStack.item) it.second else null
                 }
             }
-
-            override fun canCycleTo() = false
         },
-        NONE("None", Items.AIR) {
-            override fun canCycleTo() = false
-        };
+        NONE("None", Items.AIR);
 
         private var modeBeforeDirectSwitch: Mode? = null
 
@@ -230,7 +304,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
         open fun getDelay() = switchDelay
 
-        abstract fun canCycleTo(): Boolean
+        open fun canCycleTo() = false
 
         /**
          * 0 = Main inventory
@@ -240,11 +314,13 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
         fun onBindPress() {
             if (activeMode == this && modeBeforeDirectSwitch != null && modeBeforeDirectSwitch!!.canCycleTo()) {
-                modeBeforeDirectSwitch = NONE
                 staticMode = modeBeforeDirectSwitch!!
+                modeBeforeDirectSwitch = null
             } else if (canCycleTo()) {
                 modeBeforeDirectSwitch = staticMode
                 staticMode = this
+            } else {
+                modeBeforeDirectSwitch = null
             }
         }
 
@@ -274,6 +350,26 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
             return itemSlot
         }
+    }
+
+    @Suppress("unused")
+    private enum class SwitchMode(override val choiceName: String) : NamedChoice {
+        /**
+         * Pickup, but it performs a swap action whenever possible to send fewer packets.
+         * Only works on newer versions.
+         */
+        SMART("Smart") {
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, true)
+        },
+
+        /**
+         * Works on all versions.
+         */
+        PICKUP("PickUp") {
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, false)
+        };
+
+        abstract fun performSwitch(from: ItemSlot): List<ClickInventoryAction>
     }
 
 }

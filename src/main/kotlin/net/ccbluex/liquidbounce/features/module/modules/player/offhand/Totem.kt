@@ -92,7 +92,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             val ignoreElytra by boolean("IgnoreElytra", false)
 
             fun getFallDamage(): Float {
-                if (ModuleNoFall.enabled || !FallDamage.enabled || player.fallDistance <= 4) {
+                if (ModuleNoFall.enabled || !FallDamage.enabled || player.fallDistance <= 3f) {
                     return 0f
                 }
 
@@ -133,8 +133,10 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 return true
             }
 
+            val health = player.health + player.absorptionAmount
+
             val safetyOperating = Safety.enabled && (player.isBurrowed() || player.isInHole())
-            var allowedDamage = player.health - if (safetyOperating) {
+            var allowedDamage = health - if (safetyOperating) {
                 Safety.safeHealth.toFloat()
             } else {
                 healthThreshold.toFloat()
@@ -146,8 +148,8 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             }
 
             // if we don't subtract, we only put a totem in the offhand if the damage would kill the player
-            if (subtractCalculatedDamage) {
-                allowedDamage = player.health
+            if (!subtractCalculatedDamage) {
+                allowedDamage = health
             }
 
             var calculatedDamage = getDamageFromEntities(allowedDamage)

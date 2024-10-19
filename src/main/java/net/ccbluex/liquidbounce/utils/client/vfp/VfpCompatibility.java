@@ -140,4 +140,16 @@ public enum VfpCompatibility {
         }
     }
 
+    public boolean isOlderThanOrEqual1_12_2() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is older or equal than 1.12.2
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_12_2);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.12.2", throwable);
+            return false;
+        }
+    }
+
 }

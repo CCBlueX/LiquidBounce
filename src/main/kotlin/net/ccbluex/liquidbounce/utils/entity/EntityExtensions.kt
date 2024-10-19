@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.TntEntity
@@ -388,6 +389,9 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     }
 }
 
+/**
+ * See [ExplosionBehavior.calculateDamage].
+ */
 fun LivingEntity.getDamageFromExplosion(
     pos: Vec3d,
     exploding: Entity? = null,
@@ -396,16 +400,19 @@ fun LivingEntity.getDamageFromExplosion(
     damageDistance: Float = explosionRange * explosionRange,
     exclude: Array<BlockPos>? = null
 ): Float {
-    // no damage will be dealt if the entity is outside the explosion range
-    if (this.squaredDistanceTo(pos) > damageDistance) {
+    // no damage will be dealt if the entity is outside the explosion range or when the difficulty is peaceful
+    if (this.squaredDistanceTo(pos) > damageDistance || world.difficulty == Difficulty.PEACEFUL) {
         return 0f
     }
 
-    val distanceDecay = 1f - sqrt(this.squaredDistanceTo(pos).toFloat()) / explosionRange
+    val distanceDecay = 1.0 - (sqrt(this.squaredDistanceTo(pos)) / explosionRange.toDouble())
     val exposure = exclude?.let { getExposureToExplosion(pos, it) } ?: Explosion.getExposure(pos, this)
-    val pre1 = exposure * distanceDecay
+    val pre1 = exposure.toDouble() * distanceDecay
 
-    val preprocessedDamage = floor((pre1 * pre1 + pre1) / 2f * 7f * explosionRange + 1f)
+    val preprocessedDamage = (pre1 * pre1 + pre1) / 2.0 * 7.0 * explosionRange.toDouble() + 1.0
+    if (preprocessedDamage == 0.0) {
+        return 0f
+    }
 
     val explosion = Explosion(
         world,
@@ -418,7 +425,7 @@ fun LivingEntity.getDamageFromExplosion(
         world.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY)
     )
 
-    return getEffectiveDamage(world.damageSources.explosion(explosion), preprocessedDamage)
+    return getEffectiveDamage(world.damageSources.explosion(explosion), preprocessedDamage.toFloat())
 }
 
 /**
