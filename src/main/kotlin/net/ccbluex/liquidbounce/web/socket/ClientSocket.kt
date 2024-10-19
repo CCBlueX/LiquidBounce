@@ -96,6 +96,9 @@ object ClientSocket {
         // "windowResize",
         "keybindChange",
 
+        "keybinding",
+        "keybindingCPS",
+
         // browser support events
         "browserUrlChange"
     )
