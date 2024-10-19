@@ -174,6 +174,9 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (velocity) {
             if (packet is S12PacketEntityVelocity && packet.entityID == mc.thePlayer?.entityId) {
                 if (packet.motionX == 0 && packet.motionZ == 0 && packet.motionY / 8000.0 > 0.075) {
+                    attemptLeave = false
+                    autoLeave()
+
                     if (warn == "Chat") {
                         Chat.print("§3Staff is Watching")
                     } else {
