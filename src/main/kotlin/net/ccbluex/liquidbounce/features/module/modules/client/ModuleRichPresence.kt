@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -68,7 +67,6 @@ object ModuleRichPresence : Module(
     private val largeImageText by text("LargeImage", "Online with %protocol%")
     private val smallImageText by text("SmallImage", "%clientBranch% (%clientCommit%)")
 
-    // IPC Client
     private var ipcClient: IPCClient? = null
     @Volatile
     private var timestamp = System.currentTimeMillis()
@@ -93,7 +91,7 @@ object ModuleRichPresence : Module(
                     continue
                 }
 
-                val richPresence = RichPresence {
+                ipcClient?.sendRichPresence {
                     // Set playing time
                     setStartTimestamp(timestamp)
 
@@ -121,8 +119,6 @@ object ModuleRichPresence : Module(
                         })
                     })
                 }
-
-                ipcClient?.sendRichPresence(richPresence)
             }
         }
     }
@@ -195,7 +191,7 @@ object ModuleRichPresence : Module(
 
     override fun handleEvents() = true
 
-    private inline fun RichPresence(action: RichPresence.Builder.() -> Unit) =
-        RichPresence.Builder().apply(action).build()
+    private inline fun IPCClient.sendRichPresence(action: RichPresence.Builder.() -> Unit) =
+        sendRichPresence(RichPresence.Builder().apply(action).build())
 
 }
