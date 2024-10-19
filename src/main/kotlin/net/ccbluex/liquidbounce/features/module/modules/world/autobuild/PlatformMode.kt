@@ -32,7 +32,7 @@ import net.minecraft.util.math.BlockPos
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
     private val filter by enumChoice("Filter", Filter.WHITELIST)
-    private val blocks by blocks("Blocks", mutableSetOf(Blocks.OBSIDIAN))
+    private val blocks by blocks("Blocks", hashSetOf(Blocks.OBSIDIAN))
     private val platformSize by int("Size", 3, 1..6)
 
     private var startY = 0.0
