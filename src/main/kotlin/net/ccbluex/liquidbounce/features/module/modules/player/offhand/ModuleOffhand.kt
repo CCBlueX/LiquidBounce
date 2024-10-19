@@ -181,11 +181,9 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         val actions = if (hasProtocolTranslator) {
             if (isOlderThanOrEquals1_12_2) {
                 // you can only perform a swap in newer versions
-                SwitchMode.PICKUP.performSwitch(slot)
                 performSwitch(slot, false)
             } else {
                 performSwitch(slot, true)
-                SwitchMode.SMART.performSwitch(slot)
             }
         } else {
             switchMode.get().performSwitch(slot)
