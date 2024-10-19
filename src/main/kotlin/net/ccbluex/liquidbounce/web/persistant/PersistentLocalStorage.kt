@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 
 object PersistentLocalStorage : Configurable("storage") {
 
-    var map by value("map", mutableMapOf<String, String>())
+    val map by value("map", mutableMapOf<String, String>())
 
     init {
         ConfigSystem.root(this)

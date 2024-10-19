@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
 import java.io.FileInputStream
@@ -63,13 +64,11 @@ object HashValidator {
 
         logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
 
-        Runtime.getRuntime().addShutdownHook(object : Thread() {
-            override fun run() {
-                runCatching {
-                    folderToDelete.deleteRecursively()
-                }.onFailure {
-                    LiquidBounce.logger.error("Failed to delete ${folderToDelete.absolutePath}.", it)
-                }
+        Runtime.getRuntime().addShutdownHook(virtualThread(start = false) {
+            runCatching {
+                folderToDelete.deleteRecursively()
+            }.onFailure {
+                LiquidBounce.logger.error("Failed to delete ${folderToDelete.absolutePath}.", it)
             }
         })
     }
