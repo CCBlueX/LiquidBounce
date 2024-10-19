@@ -51,12 +51,14 @@ object MouseStateTracker : Listenable {
 }
 
 class KeyBindingTracker internal constructor(val keyBinding: KeyBinding) : Listenable {
+    // records clicks in latest 20 ticks (1 sec)
     private val countByTick = IntArray(20)
     private var tickIndex = 0
     private var currentCount = 0
 
-    val cps: Int
-        get() = countByTick.sum()
+    // sum of countByTick
+    var cps = 0
+        private set
 
     var pressed = false
         private set(value) {
@@ -92,7 +94,9 @@ class KeyBindingTracker internal constructor(val keyBinding: KeyBinding) : Liste
         }
 
         handler<PlayerTickEvent> {
+            cps -= countByTick[tickIndex]
             countByTick[tickIndex] = currentCount
+            cps += currentCount
             currentCount = 0
             tickIndex = (tickIndex + 1) % countByTick.size
             EventManager.callEvent(KeyBindingCPSEvent(keyBinding, cps))
