@@ -37,14 +37,14 @@ val KeyBinding.pressedOnMouse
 
 object MouseStateTracker : Listenable {
 
-    private val mouseStates = mutableMapOf<Int, Boolean>()
+    private val mouseStates = IntArray(32)
 
     @Suppress("unused")
     private val handleMouseAction = handler<MouseButtonEvent> {
-        mouseStates[it.button] = it.action == GLFW.GLFW_PRESS
+        mouseStates[it.button] = it.action
     }
 
-    fun isButtonPressed(button: Int) = mouseStates.getOrDefault(button, false)
+    fun isButtonPressed(button: Int) = mouseStates[button]  == GLFW.GLFW_PRESS
 
 }
 
