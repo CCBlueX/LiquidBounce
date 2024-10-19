@@ -212,7 +212,7 @@ class BlockPlacer(
 
         // we found the same path again, updating is not required
         if (currentPlaceCandidates == supportPath) {
-            currentPlaceCandidates.forEach { blocks[it] = true }
+            currentPlaceCandidates.forEach { blocks.put(it, true) }
             return
         }
 
@@ -369,7 +369,7 @@ class BlockPlacer(
                 targetRenderer.removeBlock(position)
                 iterator.remove()
             } else {
-                blocks[position] = false
+                blocks.put(position, false)
             }
         }
 
@@ -387,7 +387,7 @@ class BlockPlacer(
             return
         }
 
-        blocks[pos] = isSupport
+        blocks.put(pos, isSupport)
         targetRenderer.addBlock(pos, update)
     }
 
