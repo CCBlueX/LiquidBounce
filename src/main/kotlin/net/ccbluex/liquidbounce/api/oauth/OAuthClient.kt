@@ -33,7 +33,7 @@ object OAuthClient {
     private var authCodeContinuation: Continuation<String>? = null
 
     fun runWithScope(block: suspend CoroutineScope.() -> Unit) {
-        scope.launch { block() }
+        scope.launch(block = block)
     }
 
     suspend fun startAuth(onUrl: (String) -> Unit): ClientAccount {

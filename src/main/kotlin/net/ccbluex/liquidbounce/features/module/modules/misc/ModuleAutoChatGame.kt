@@ -158,12 +158,8 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             virtualThread(name = "AutoChatGame") {
                 runCatching {
                     val startAsk = System.currentTimeMillis()
-                    var answer = ai.requestNewAnswer(question)
-
                     // Remove dot on the end of answer
-                    if (answer.last() == '.') {
-                        answer = answer.substring(0, answer.length - 1)
-                    }
+                    val answer = ai.requestNewAnswer(question).removeSuffix(".")
 
                     chat("§aAnswer: $answer, took ${System.currentTimeMillis() - startAsk}ms.")
 
