@@ -40,9 +40,9 @@ import net.minecraft.item.SwordItem
 import org.lwjgl.glfw.GLFW
 
 /**
- * Scaffold module
+ * Offhand module
  *
- * Places blocks under you.
+ * Manages your offhand.
  */
 object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
