@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -33,17 +32,17 @@ class Region(from: BlockPos, to: BlockPos) {
         fun quadAround(pos: BlockPos, xz: Int, y: Int): Region {
             assert(xz > 0 && y > 0)
 
-            return Region(pos.subtract(Vec3i(xz, y, xz)), pos.add(Vec3i(xz + 1, y + 1, xz + 1)))
+            return Region(pos.add(-xz, -y, -xz), pos.add(xz + 1, y + 1, xz + 1))
         }
 
         fun fromChunkPosition(x: Int, z: Int): Region {
-            val from = BlockPos(x * 16, 0, z * 16)
+            val from = BlockPos(x shl 4, 0, z shl 4)
 
             return Region(from, from.add(BlockPos(16, mc.world!!.height, 16)))
         }
 
         fun fromBlockPos(blockPos: BlockPos): Region {
-            return Region(blockPos, blockPos.add(BlockPos(1, 1, 1)))
+            return Region(blockPos, blockPos.add(1, 1, 1))
         }
     }
 
