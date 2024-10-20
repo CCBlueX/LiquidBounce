@@ -10,9 +10,7 @@
     let premium = true;
 
     const inAccountManager = $location === "/altmanager";
-
-    console.log(inAccountManager);
-
+    
     async function refreshSession() {
         const session = await getSession();
         username = session.username;
