@@ -97,12 +97,12 @@ val isOlderThanOrEquals1_7_10: Boolean
         logger.error("Failed to check if the server is using 1.7.10", it)
     }.getOrDefault(false)
 
-val isOlderThanOrEquals1_12_2: Boolean
+val isNewerThanOrEquals1_16: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_2
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.12.2", it)
+        logger.error("Failed to check if the server is using 1.16+", it)
     }.getOrDefault(false)
 
 fun selectProtocolVersion(protocolId: Int) {

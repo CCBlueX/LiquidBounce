@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_12_2
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.component.DataComponentTypes
@@ -45,6 +45,9 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.SwordItem
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -55,7 +58,7 @@ import org.lwjgl.glfw.GLFW
 object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private val switchMode = enumChoice("SwitchMode", SwitchMode.SMART)
+    private var switchMode = enumChoice("SwitchMode", SwitchMode.AUTOMATIC)
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
     private val totem = tree(Totem())
@@ -89,9 +92,8 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         tree(Gapple)
         tree(Strength)
 
-        // the protocol is automatically detected, no need for a setting
-        if (hasProtocolTranslator) {
-            inner.remove(switchMode)
+        if (!hasProtocolTranslator) {
+            switchMode = enumChoice("SwitchMode", SwitchMode.SWITCH)
         }
     }
 
@@ -178,20 +180,16 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             last = slot.itemStack.item to slot
         }
 
-        val actions = if (hasProtocolTranslator) {
-            if (isOlderThanOrEquals1_12_2) {
-                // you can only perform a swap in newer versions
-                performSwitch(slot, false)
-            } else {
-                performSwitch(slot, true)
-            }
-        } else {
-            switchMode.get().performSwitch(slot)
+        val actions = switchMode.get().performSwitch(slot)
+        if (actions.isEmpty()) {
+            chronometer.reset()
+            return@handler
         }
 
         if (activeMode != Mode.TOTEM || !totem.send(actions)) {
             it.schedule(inventoryConstraints, actions)
         }
+
         chronometer.reset()
     }
 
@@ -199,7 +197,15 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         val actions = ArrayList<ClickInventoryAction>(3)
 
         if (smart && from is HotbarItemSlot) {
-            actions += ClickInventoryAction.performSwap(from = from, to = OffHandSlot)
+            if (!player.isSpectator) {
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
+                    )
+                )
+            }
         } else {
             actions += ClickInventoryAction.performPickup(slot = from)
             actions += ClickInventoryAction.performPickup(slot = OffHandSlot)
@@ -353,18 +359,46 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     @Suppress("unused")
     private enum class SwitchMode(override val choiceName: String) : NamedChoice {
         /**
-         * Pickup, but it performs a swap action whenever possible to send fewer packets.
-         * Only works on newer versions.
+         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
+         * Works on all versions.
+         *
+         * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action
+         * often and quickly.
          */
         SMART("Smart") {
             override fun performSwitch(from: ItemSlot) = performSwitch(from, true)
         },
 
         /**
+         * Performs a switch action, works on 1.16.
+         * The best method on newer servers.
+         */
+        SWITCH("Switch") {
+            override fun performSwitch(from: ItemSlot) = listOf(ClickInventoryAction.performSwap(
+                from = from,
+                to = OffHandSlot
+            ))
+        },
+
+        /**
+         * Performs 2-3 a pickup actions.
          * Works on all versions.
          */
         PICKUP("PickUp") {
             override fun performSwitch(from: ItemSlot) = performSwitch(from, false)
+        },
+
+        /**
+         * Chooses the switch action based on the version. Only works if vfp is installed.
+         */
+        AUTOMATIC("Automatic") {
+            override fun performSwitch(from: ItemSlot): List<ClickInventoryAction> {
+                return if (isNewerThanOrEquals1_16) {
+                    SWITCH.performSwitch(from)
+                } else {
+                    PICKUP.performSwitch(from)
+                }
+            }
         };
 
         abstract fun performSwitch(from: ItemSlot): List<ClickInventoryAction>
