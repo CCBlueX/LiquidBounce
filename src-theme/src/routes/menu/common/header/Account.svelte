@@ -3,10 +3,15 @@
     import {getSession, openScreen} from "../../../../integration/rest";
     import {onMount} from "svelte";
     import {listen} from "../../../../integration/ws";
+    import {location} from "svelte-spa-router";
 
     let username = "";
     let avatar = "";
     let premium = true;
+
+    const inAccountManager = $location === "/altmanager";
+
+    console.log(inAccountManager);
 
     async function refreshSession() {
         const session = await getSession();
@@ -36,7 +41,7 @@
             <span class="offline">Offline</span>
         {/if}
     </div>
-    <button class="button-change-account" type="button" on:click={() => openScreen("altmanager")}>
+    <button class="button-change-account" disabled={inAccountManager} type="button" on:click={() => openScreen("altmanager")}>
         <ToolTip text="Change account"/>
 
         <img class="icon" src="img/menu/icon-pen.svg" alt="change account">
@@ -97,5 +102,10 @@
     position: relative;
     height: max-content;
     cursor: pointer;
+
+    &:disabled {
+      pointer-events: none;
+      opacity: .5;
+    }
   }
 </style>
