@@ -24,7 +24,7 @@ import net.minecraft.util.math.BlockPos
 import kotlin.math.max
 import kotlin.math.min
 
-class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<BlockPos> by BlockPos.iterate(from, to) {
+class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<BlockPos> by BlockPos.iterate(from, to) {
 
     override val endInclusive: BlockPos
         get() = this.to
@@ -56,11 +56,6 @@ class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<Bloc
     val to: BlockPos
 
     val volume: Int
-        get() {
-            val delta = this.to.subtract(this.from)
-
-            return delta.x * delta.y * delta.z
-        }
 
     init {
         val fixedFrom = BlockPos(
@@ -76,6 +71,7 @@ class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<Bloc
 
         this.from = fixedFrom
         this.to = fixedTo
+        this.volume = (fixedTo.x - fixedFrom.x) * (fixedFrom.y - fixedTo.y) * (fixedFrom.z - fixedFrom.z)
     }
 
     private inline val xRange: IntRange
@@ -87,15 +83,10 @@ class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<Bloc
     private inline val zRange: IntRange
         get() = this.from.z..this.to.z
 
-    override fun isEmpty(): Boolean {
-        return this.from.x == this.to.x || this.from.y == this.to.y || this.from.z == this.to.z
-    }
+    override fun isEmpty(): Boolean = this.volume == 0
 
     operator fun contains(pos: Region): Boolean {
-        val xInRange = pos.from.x..pos.to.x in xRange
-        val yInRange = pos.from.y..pos.to.y in yRange
-        val zInRange = pos.from.z..pos.to.z in zRange
-        return xInRange && yInRange && zInRange
+        return pos.from.x..pos.to.x in xRange && pos.from.y..pos.to.y in yRange && pos.from.z..pos.to.z in zRange
     }
 
     override operator fun contains(value: BlockPos): Boolean {
@@ -123,16 +114,6 @@ class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<Bloc
         var result = from.hashCode()
         result = 31 * result + to.hashCode()
         return result
-    }
-
-    inline fun forEachCoordinate(function: (Int, Int, Int) -> Unit) {
-        for (x in from.x until to.x) {
-            for (y in from.y until to.y) {
-                for (z in from.z until to.z) {
-                    function(x, y, z)
-                }
-            }
-        }
     }
 
     /**

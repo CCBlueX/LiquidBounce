@@ -187,26 +187,20 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     private fun updateRegion(region: Region) {
         val world = world
 
-        region.forEachCoordinate { x, y, z ->
-            val pos = BlockPos(x, y, z)
+        region.forEach { p ->
+            val pos = p.toImmutable()
             val blockState = world.getBlockState(pos)
 
             if (!blockState.isAir && blockState.getCollisionShape(world, pos).boundingBoxes.any { it.maxY >= 1 }) {
-                return@forEachCoordinate
+                return@forEach
             }
 
             // Can you actually go inside that hole?
             if (arrayOf(pos.up(1), pos.up(2)).any { !world.getBlockState(it).getCollisionShape(world, it).isEmpty }) {
-                return@forEachCoordinate
+                return@forEach
             }
 
-            val positionsToScan = arrayOf(
-                BlockPos(x + 1, y, z),
-                BlockPos(x - 1, y, z),
-                BlockPos(x, y, z + 1),
-                BlockPos(x, y, z - 1),
-                BlockPos(x, y - 1, z)
-            )
+            val positionsToScan = arrayOf(p.down(), p.east(), p.west(), p.north(), p.south())
 
             var unsafeBlocks = 0
 
@@ -216,7 +210,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 val isUnsafe = when (scanState.block) {
                     Blocks.BEDROCK -> false
                     Blocks.OBSIDIAN -> true
-                    else -> return@forEachCoordinate
+                    else -> return@forEach
                 }
 
                 unsafeBlocks += if (isUnsafe) 1 else 0
@@ -257,8 +251,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             val intersection = region.intersection(movableRegionScanner.currentRegion)
 
             val rescanRegion = Region(
-                intersection.from.subtract(Vec3i(1, 1, 1)),
-                intersection.to.add(Vec3i(1, 1, 1))
+                intersection.from.add(-1, -1, -1),
+                intersection.to.add(1, 1, 1)
             )
 
             synchronized(holes) {

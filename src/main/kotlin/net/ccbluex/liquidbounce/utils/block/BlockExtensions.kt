@@ -36,9 +36,6 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
-@Suppress("NOTHING_TO_INLINE")
-inline operator fun BlockPos.rangeTo(other: BlockPos) = Region(this, other)
-
 fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.world?.getBlockState(this)
