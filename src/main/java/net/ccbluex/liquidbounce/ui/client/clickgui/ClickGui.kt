@@ -134,11 +134,11 @@ object ClickGui : GuiScreen() {
 
                                     displayChatMessage("§6Settings applied successfully")
                                     HUD.addNotification(Notification("Updated Settings"))
-                                    mc.soundHandler.playSound(
-                                        PositionedSoundRecord.create(
-                                            ResourceLocation("random.anvil_use"), 1F
+                                    synchronized(mc.soundHandler) {
+                                        mc.soundHandler.playSound(
+                                            PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F)
                                         )
-                                    )
+                                    }
                                 } catch (e: Exception) {
                                     ClientUtils.LOGGER.error("Failed to load settings", e)
                                     displayChatMessage("Failed to load settings: ${e.message}")

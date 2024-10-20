@@ -106,11 +106,14 @@ open class Module constructor(
 
             // Play sound and add notification
             if (!isStarting) {
-                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled",
-                    getName()
-                )
-                )
+                synchronized(mc.soundHandler) {
+                    mc.soundHandler.playSound(
+                        PositionedSoundRecord.create(ResourceLocation("random.click"), 1F)
+                    )
+                }
+                addNotification(
+                    Notification(translation("notification.module" + if (value) "Enabled" else "Disabled", getName())
+                    )
                 )
             }
 
