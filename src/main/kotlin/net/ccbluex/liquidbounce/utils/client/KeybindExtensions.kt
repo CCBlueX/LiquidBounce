@@ -18,34 +18,103 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
+import net.minecraft.client.util.InputUtil.Type.*
 import org.lwjgl.glfw.GLFW
 
 val KeyBinding.isPressedOnAny
     get() = pressedOnKeyboard || pressedOnMouse
 
 val KeyBinding.pressedOnKeyboard
-    get() = this.boundKey.category == InputUtil.Type.KEYSYM
+    get() = this.boundKey.category == KEYSYM
         && InputUtil.isKeyPressed(mc.window.handle, this.boundKey.code)
 
 val KeyBinding.pressedOnMouse
-    get() = this.boundKey.category == InputUtil.Type.MOUSE && MouseStateTracker.isButtonPressed(this.boundKey.code)
+    get() = this.boundKey.category == MOUSE && MouseStateTracker.isButtonPressed(this.boundKey.code)
 
 object MouseStateTracker : Listenable {
 
-    private val mouseStates = mutableMapOf<Int, Boolean>()
+    private val mouseStates = IntArray(32)
 
     @Suppress("unused")
     private val handleMouseAction = handler<MouseButtonEvent> {
-        mouseStates[it.button] = it.action == GLFW.GLFW_PRESS
+        mouseStates[it.button] = it.action
     }
 
-    fun isButtonPressed(button: Int) = mouseStates.getOrDefault(button, false)
+    fun isButtonPressed(button: Int) = mouseStates[button]  == GLFW.GLFW_PRESS
 
 }
 
+class KeyBindingTracker internal constructor(val keyBinding: KeyBinding) : Listenable {
+    // records clicks in latest 20 ticks (1 sec)
+    private val countByTick = IntArray(20)
+    private var tickIndex = 0
+    private var currentCount = 0
+
+    // sum of countByTick
+    var cps = 0
+        private set
+
+    var pressed = false
+        private set(value) {
+            if (value) {
+                currentCount++
+            }
+            field = value
+        }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun setPressed(action: Int) {
+        when (action) {
+            GLFW.GLFW_RELEASE -> pressed = false
+            GLFW.GLFW_PRESS -> pressed = true
+        }
+    }
+
+    init {
+        when (keyBinding.boundKey.category) {
+            KEYSYM -> handler<KeyEvent> {
+                if (keyBinding.boundKey.code == it.key.keyCode) {
+                    setPressed(it.action)
+                    EventManager.callEvent(KeyBindingEvent(keyBinding, it))
+                }
+            }
+            MOUSE -> handler<MouseButtonEvent> {
+                if (keyBinding.boundKey.code == it.button) {
+                    setPressed(it.action)
+                    EventManager.callEvent(KeyBindingEvent(keyBinding, it))
+                }
+            }
+            else -> throw UnsupportedOperationException("Unknown key binding type: $keyBinding")
+        }
+
+        handler<PlayerTickEvent> {
+            cps -= countByTick[tickIndex]
+            countByTick[tickIndex] = currentCount
+            cps += currentCount
+            currentCount = 0
+            tickIndex = (tickIndex + 1) % countByTick.size
+            EventManager.callEvent(KeyBindingCPSEvent(keyBinding, cps))
+        }
+    }
+}
+
+object KeyBindingTrackers : Listenable {
+    private val trackers = listOf(
+        KeyBindingTracker(mc.options.forwardKey),
+        KeyBindingTracker(mc.options.backKey),
+        KeyBindingTracker(mc.options.leftKey),
+        KeyBindingTracker(mc.options.rightKey),
+        KeyBindingTracker(mc.options.jumpKey),
+        KeyBindingTracker(mc.options.attackKey),
+        KeyBindingTracker(mc.options.useKey),
+    )
+
+    override fun children() = trackers
+}
 

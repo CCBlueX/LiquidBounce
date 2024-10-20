@@ -23,10 +23,12 @@ package net.ccbluex.liquidbounce.event.events
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.events.KeyEvent.Key
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.session.Session
 import net.minecraft.text.Text
 
@@ -42,7 +44,9 @@ class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
         val keyCode: Int,
         @SerializedName("name")
         val translationKey: String
-    )
+    ) {
+        constructor(keyBinding: KeyBinding) : this(keyBinding.boundKey.code, keyBinding.boundKeyTranslationKey)
+    }
 }
 
 // Input events
@@ -57,7 +61,28 @@ class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : C
 
 @Nameable("keybindChange")
 @WebSocketEvent
-class KeybindChangeEvent: Event()
+class KeybindChangeEvent : Event()
+
+@Nameable("keybinding")
+@WebSocketEvent
+class KeyBindingEvent(val key: Key, val action: Int, val mods: Int) : Event() {
+    constructor(keyBinding: KeyBinding, keyEvent: KeyEvent) : this(
+        Key(keyBinding),
+        keyEvent.action,
+        keyEvent.mods
+    )
+    constructor(keyBinding: KeyBinding, mouseButtonEvent: MouseButtonEvent) : this(
+        Key(keyBinding),
+        mouseButtonEvent.action,
+        mouseButtonEvent.mods
+    )
+}
+
+@Nameable("keybindingCPS")
+@WebSocketEvent
+class KeyBindingCPSEvent(val key: Key, val cps: Int) : Event() {
+    constructor(keyBinding: KeyBinding, cps: Int) : this(Key(keyBinding), cps)
+}
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
