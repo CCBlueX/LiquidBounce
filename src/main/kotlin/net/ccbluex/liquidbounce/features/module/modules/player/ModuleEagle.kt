@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
@@ -33,14 +35,40 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 object ModuleEagle : Module("Eagle", Category.PLAYER, aliases = arrayOf("FastBridge", "BridgeAssistant")) {
 
     private val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)
-    private val requiresSneak by boolean("RequiresSneak", false)
+
+    private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
+        val holdingBlocks by boolean("HoldingBlocks", false)
+        val onGround by boolean("OnGround", true)
+        val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
+        val sneak by boolean("Sneak", false)
+        val left by boolean("Left", false)
+        val right by boolean("Right", false)
+        val forwards by boolean("Forwards", false)
+        val backwards by boolean("Backwards", false)
+
+        fun shouldSneak(event: MovementInputEvent): Boolean = when {
+            !enabled || event.sneaking -> true
+            holdingBlocks && !isValidBlock(player.mainHandStack) && !isValidBlock(player.offHandStack) -> false
+            onGround && !player.isOnGround -> false
+            player.pitch !in pitch -> false
+            sneak && !event.sneaking -> false
+            left && !event.directionalInput.left -> false
+            right && !event.directionalInput.right -> false
+            forwards && !event.directionalInput.forwards -> false
+            backwards && !event.directionalInput.backwards -> false
+            else -> true
+        }
+    }
+
+    init {
+        tree(Conditional)
+    }
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.SAFETY_FEATURE
     ) { event ->
-        val shouldSneak = !requiresSneak || event.sneaking
-        val shouldBeActive = !player.abilities.flying && player.isOnGround && shouldSneak
+        val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event)
 
         event.sneaking = shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())
     }
