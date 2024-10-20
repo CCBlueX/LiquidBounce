@@ -127,7 +127,6 @@
   "liquidbounce.command.chat.description": "Manda uma mensagem no LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Mensagem para mandar.",
   "liquidbounce.command.value.description": "Deixa você mudar um valor",
-  "liquidbounce.command.value.result.success": "Valor mudado.",
   "liquidbounce.command.value.result.valueNotFound": "Valor %s não existe!",
   "liquidbounce.command.ping.description": "Checa seu ping.",
   "liquidbounce.command.ping.result.pingCheck": "seu ping é %sms.",

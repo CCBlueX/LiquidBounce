@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Listenable
@@ -26,9 +25,7 @@ import net.ccbluex.liquidbounce.event.events.RegistryChange
 import net.ccbluex.liquidbounce.event.events.RegistryChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -36,13 +33,13 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
- * Value Command
+ * Restore Command
  *
- * Allows you to set the value of a specific module.
+ * Allows you to restore original configurations.
  */
-object CommandValue : Listenable {
+object CommandRestore : Listenable {
 
-    var command = CommandBuilder.begin("value").hub().build()
+    var command = CommandBuilder.begin("restore").hub().build()
 
     fun createCommand() = command
 
@@ -63,7 +60,10 @@ object CommandValue : Listenable {
         configurable: Configurable,
         module: Configurable
     ) {
-        val commandBuilder1 = CommandBuilder.begin(configurable.name).hub()
+        val commandBuilder1 = CommandBuilder
+            .begin(configurable.name)
+            .handler { _, _ -> handle(module, configurable) }
+            .hub()
 
         configurable.inner.forEach { value ->
             if (value is Configurable) {
@@ -72,15 +72,7 @@ object CommandValue : Listenable {
                 commandBuilder1.subcommand(
                     CommandBuilder
                         .begin(value.name)
-                        .parameter(
-                            ParameterBuilder
-                                .begin<String>("value")
-                                .autocompletedWith { begin -> value.getCompletion(begin) }
-                                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                                .required()
-                                .build()
-                        )
-                        .handler { command, args -> handle(args, module, command, value) }
+                        .handler { _, _ -> handle(module, value) }
                         .build()
                 )
             }
@@ -91,26 +83,26 @@ object CommandValue : Listenable {
         command?.let { it.subcommands += command1 }
     }
 
-    private fun handle(args: Array<Any>, module: Configurable, command: Command, value: Value<*>) {
-        val valueString = args[0] as String
-        val valueName = value.name
+    private fun handle(module: Configurable, value: Value<*>) {
+        value.restore()
 
-        try {
-            value.setByString(valueString)
-        } catch (e: Exception) {
-            throw CommandException(translation(
-                "liquidbounce.command.value.result.valueError",
-                valueName,
-                e.message ?: ""
-            ))
+        if (value is Configurable) {
+            chat(
+                regular(
+                    translation("liquidbounce.command.restore.configurable.result.success", variable(value.name))
+                ), metadata = MessageMetadata(id = "${module.name}#restored")
+            )
+        } else {
+            chat(
+                regular(
+                    translation(
+                        "liquidbounce.command.restore.result.success",
+                        variable(value.name),
+                        variable(module.name)
+                    )
+                ), metadata = MessageMetadata(id = "${module.name}#restored")
+            )
         }
-
-        chat(regular(translation(
-            "liquidbounce.command.value.result.success",
-            variable(valueName),
-            variable(module.name),
-            variable(ConfigSystem.clientGson.toJson(value.inner))
-        )), metadata = MessageMetadata(id = "${command.translationBaseKey}#changed"))
     }
 
 }
