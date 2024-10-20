@@ -1,4 +1,4 @@
-import type {Component, PlayerData, Proxy, Server, TextComponent} from "./types";
+import type {Component, ItemStack, PlayerData, Proxy, Server, TextComponent} from "./types";
 
 export interface ToggleModuleEvent {
     moduleName: string;
@@ -69,6 +69,18 @@ export interface AccountManagerLoginEvent {
 
 export interface ServerPingedEvent {
     server: Server;
+}
+
+export interface PlayerArmorInventoryEvent {
+    stacks: ItemStack[];
+}
+
+export interface PlayerMainInventoryEvent {
+    stacks: ItemStack[];
+}
+
+export interface PlayerCraftingInventoryEvent {
+    stacks: ItemStack[];
 }
 
 export interface ProxyAdditionResultEvent {

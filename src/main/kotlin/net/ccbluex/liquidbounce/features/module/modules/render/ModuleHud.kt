@@ -21,8 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
@@ -53,11 +52,19 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         get() = "liquidbounce.module.hud"
 
     private val blur by boolean("Blur", true)
+
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange {
         EventManager.callEvent(SpaceSeperatedNamesChangeEvent(it))
 
         it
+    }
+
+    @Suppress("unused")
+    val tickHandler = handler<PlayerTickEvent> {
+        EventManager.callEvent(PlayerArmorInventory(player.inventory.armor))
+        EventManager.callEvent(PlayerMainInventory(player.inventory.main))
+        EventManager.callEvent(PlayerCraftingInventory(player.playerScreenHandler.craftingInput.heldStacks))
     }
 
     val isBlurable

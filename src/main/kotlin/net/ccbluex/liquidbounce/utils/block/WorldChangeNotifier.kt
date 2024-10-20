@@ -70,7 +70,7 @@ object WorldChangeNotifier : Listenable {
         notifyAllSubscribers { it.invalidateEverything() }
     }
 
-    private fun notifyAllSubscribers(function: (WorldChangeSubscriber) -> Unit) {
+    private inline fun notifyAllSubscribers(function: (WorldChangeSubscriber) -> Unit) {
         synchronized(this.subscriber) {
             this.subscriber.forEach {
                 function(it)
