@@ -21,10 +21,16 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.util.math.BlockPos
-import java.lang.Integer.max
-import java.lang.Integer.min
+import kotlin.math.max
+import kotlin.math.min
 
-class Region(from: BlockPos, to: BlockPos) {
+class Region(from: BlockPos, to: BlockPos): ClosedRange<BlockPos>, Iterable<BlockPos> by BlockPos.iterate(from, to) {
+
+    override val endInclusive: BlockPos
+        get() = this.to
+
+    override val start: BlockPos
+        get() = this.from
 
     companion object {
         val EMPTY: Region = Region(BlockPos.ORIGIN, BlockPos.ORIGIN)
@@ -38,7 +44,7 @@ class Region(from: BlockPos, to: BlockPos) {
         fun fromChunkPosition(x: Int, z: Int): Region {
             val from = BlockPos(x shl 4, 0, z shl 4)
 
-            return Region(from, from.add(BlockPos(16, mc.world!!.height, 16)))
+            return Region(from, from.add(16, mc.world!!.height, 16))
         }
 
         fun fromBlockPos(blockPos: BlockPos): Region {
@@ -81,7 +87,7 @@ class Region(from: BlockPos, to: BlockPos) {
     private inline val zRange: IntRange
         get() = this.from.z..this.to.z
 
-    fun isEmpty(): Boolean {
+    override fun isEmpty(): Boolean {
         return this.from.x == this.to.x || this.from.y == this.to.y || this.from.z == this.to.z
     }
 
@@ -92,8 +98,8 @@ class Region(from: BlockPos, to: BlockPos) {
         return xInRange && yInRange && zInRange
     }
 
-    operator fun contains(pos: BlockPos): Boolean {
-        return pos.x in this.from.x..this.to.x && pos.y in this.from.y..this.to.y && pos.z in this.from.z..this.to.z
+    override operator fun contains(value: BlockPos): Boolean {
+        return value.x in this.from.x..this.to.x && value.y in this.from.y..this.to.y && value.z in this.from.z..this.to.z
     }
 
     fun intersects(other: Region): Boolean {

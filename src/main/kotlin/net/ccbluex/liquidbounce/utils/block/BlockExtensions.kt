@@ -36,6 +36,9 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
+@Suppress("NOTHING_TO_INLINE")
+inline operator fun BlockPos.rangeTo(other: BlockPos) = Region(this, other)
+
 fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.world?.getBlockState(this)
@@ -79,7 +82,7 @@ val BlockPos.weakestBlock: BlockPos?
         val block = this.getBlock()
         return positionsAround
             .filter { it.getBlock() != block && it.getState()?.isAir == false }
-            .sortedBy { player.pos.distanceTo(it.toCenterPos()) }
+            .sortedBy { player.pos.squaredDistanceTo(it.toCenterPos()) }
             .minByOrNull { it.getBlock()?.hardness ?: 0f }
     }
 
@@ -175,7 +178,7 @@ fun BlockPos.canStandOn(): Boolean {
 /**
  * Check if [box] is reaching of specified blocks
  */
-fun isBlockAtPosition(
+inline fun isBlockAtPosition(
     box: Box,
     isCorrectBlock: (Block?) -> Boolean,
 ): Boolean {
@@ -196,7 +199,7 @@ fun isBlockAtPosition(
  * Check if [box] intersects with bounding box of specified blocks
  */
 @Suppress("detekt:all")
-fun collideBlockIntersects(
+inline fun collideBlockIntersects(
     box: Box,
     checkCollisionShape: Boolean = true,
     isCorrectBlock: (Block?) -> Boolean
@@ -233,7 +236,7 @@ fun collideBlockIntersects(
     return false
 }
 
-fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
+inline fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
     val from = BlockPos(this.minX.toInt(), this.minY.toInt(), this.minZ.toInt())
     val to = BlockPos(ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt())
 
