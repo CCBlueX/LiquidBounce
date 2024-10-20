@@ -173,14 +173,20 @@ object ChunkScanner : Listenable {
                 return
             }
 
-            val currentSubscriber = request.singleSubscriber?.let { setOf(it) } ?: subscribers
+            val currentSubscriber = request.singleSubscriber?.let { listOf(it) } ?: subscribers
 
-            currentSubscriber.forEach {
-                it.chunkUpdate(request.chunk.pos.x, request.chunk.pos.z)
-            }
+            currentSubscriber.map {
+                scope.launch {
+                    it.chunkUpdate(request.chunk.pos.x, request.chunk.pos.z)
+                }
+            }.joinAll()
 
             // Contains all subscriber that want recordBlock called on a chunk update
             val subscribersForRecordBlock = currentSubscriber.filter { it.shouldCallRecordBlockOnChunkUpdate }
+
+            if (subscribersForRecordBlock.isEmpty()) {
+                return
+            }
 
             val start = System.nanoTime()
 
