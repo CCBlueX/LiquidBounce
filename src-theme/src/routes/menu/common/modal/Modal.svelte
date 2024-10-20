@@ -53,6 +53,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 5px;
+    box-shadow: 0 0 10px rgba($menu-base-color, 0.5);
   }
 
   .title {
