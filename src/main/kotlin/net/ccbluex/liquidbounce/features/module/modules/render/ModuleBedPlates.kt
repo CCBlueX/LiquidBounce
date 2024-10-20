@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.manhattanDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
@@ -72,38 +73,26 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     }
 
     val renderHandler = handler<OverlayRenderEvent> {
-        val fontBuffers = FontRendererBuffers()
+        val playerPos = player.blockPos
+
+        val maxDistanceSquared = maxDistance * maxDistance
 
         renderEnvironmentForGUI {
-            val playerPos = player.blockPos
-
-            val maxDistanceSquared = maxDistance * maxDistance
-
-            try {
-                val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
+            fontRenderer.withBuffers { buf ->
+                BlockTracker.trackedBlockMap.map { (key, value) ->
                     key.asBlockPos().getSquaredDistance(playerPos) to value
                 }.filter { (distSq, _) ->
                     distSq < maxDistanceSquared
                 }.sortedByDescending { (distSq, _) ->
                     distSq
-                }
-
-                trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
+                }.forEachWithSelf { (_, trackState), i, self ->
                     val bedPlates = trackState.bedPlates
-                    with(matrixStack) {
-                        push()
-                        try {
-                            val z = idx.toFloat() / trackedBlockMap.size.toFloat()
+                    withMatrixStack {
+                        val z = 1000.0F * i / self.size
 
-                            renderBedPlates(trackState, fontBuffers, bedPlates, z * 1000.0F)
-                        } finally {
-                            pop()
-                        }
+                        renderBedPlates(trackState, buf, bedPlates, z)
                     }
-
                 }
-            } finally {
-                fontBuffers.draw(fontRenderer)
             }
         }
     }
@@ -128,7 +117,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val bedDistance = mc.player?.pos?.distanceTo(trackState.centerPos) ?: 0.0
         val text = "Bed (${bedDistance.roundToInt()}m)"
 
-        val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
+        val c = fontRenderer.size
 
         val scale = 1.0F / (c * 0.15F) * scale
 
