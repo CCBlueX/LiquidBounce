@@ -32,11 +32,8 @@ import net.minecraft.client.util.InputUtil
 
 fun RestNode.inputRest() {
     get("/input") { request ->
-        val key = request.params["code"]?.toIntOrNull()
-            ?: return@get httpBadRequest("Missing key parameter")
-        val scanCode = request.params["scanCode"]?.toIntOrNull() ?: -1
-
-        val input = InputUtil.fromKeyCode(key, scanCode)
+        val key = request.params["key"] ?: return@get httpBadRequest("Missing key parameter")
+        val input = InputUtil.fromTranslationKey(key)
 
         httpOk(JsonObject().apply {
             addProperty("translationKey", input.translationKey)

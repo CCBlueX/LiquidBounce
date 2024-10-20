@@ -70,6 +70,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucke
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApi
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -83,31 +86,41 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
     /**
      * Handles keystrokes for module binds.
-     */
-    @Suppress("unused")
-    val keyHandler = handler<KeyEvent> { event ->
-        if (event.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == event.key.keyCode } // modules bound to a specific key
-                .forEach {
-                    if (it.bindAction == Module.BindAction.HOLD) {
-                        it.enabled = true
-                    } else {
-                        it.enabled = !it.enabled // toggle modules
-                    }
-                }
-        }
-    }
-
-    /**
-     * Handles keystrokes for module binds.
      * This also runs in GUIs, so that if a GUI is opened while a key is pressed,
      * any modules that need to be disabled on key release will be properly disabled.
      */
     @Suppress("unused")
-    val keyReleaseHandler = handler<KeyboardKeyEvent> { event ->
-        if (event.action == GLFW.GLFW_RELEASE) {
-            filter { it.bind == event.keyCode && it.bindAction == Module.BindAction.HOLD }
-                .forEach { it.enabled = false }
+    private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
+        when (event.action) {
+            GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
+                    filter { m -> m.bind.matchesKey(event.keyCode, event.scanCode) }
+                    .forEach { m ->
+                        m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
+                    }
+                }
+            GLFW.GLFW_RELEASE ->
+                filter { m ->
+                    m.bind.matchesKey(event.keyCode, event.scanCode) &&
+                        m.bind.action == InputBind.BindAction.HOLD
+                }.forEach { m ->
+                    m.enabled = false
+                }
+        }
+    }
+
+    @Suppress("unused")
+    private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
+        when (event.action) {
+            GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
+                filter { m -> m.bind.matchesMouse(event.button) }
+                    .forEach { m ->
+                        m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
+                    }
+            }
+            GLFW.GLFW_RELEASE ->
+                filter { m ->
+                    m.bind.matchesMouse(event.button) && m.bind.action == InputBind.BindAction.HOLD
+                }.forEach { m -> m.enabled = false }
         }
     }
 

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.Curves
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 
@@ -113,7 +114,7 @@ open class Configurable(
     protected fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
         rangedValue(name, default, range, suffix, ValueType.INT)
 
-    protected fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
+    protected fun bind(name: String, default: InputBind) = value(name, default, ValueType.BIND)
 
     protected fun intRange(name: String, default: IntRange, range: IntRange, suffix: String = "") =
         rangedValue(name, default, range, suffix, ValueType.INT_RANGE)

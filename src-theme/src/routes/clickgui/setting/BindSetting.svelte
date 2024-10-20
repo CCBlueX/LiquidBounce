@@ -1,25 +1,30 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
-    import type {KeySetting, ModuleSetting} from "../../../integration/types";
+    import type {BindSetting, ModuleSetting} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import Dropdown from "./common/Dropdown.svelte";
 
     export let setting: ModuleSetting;
 
-    const cSetting = setting as KeySetting;
+    const cSetting = setting as BindSetting;
+
+    const UNKNOWN_KEY = "key.keyboard.unknown";
 
     const dispatch = createEventDispatcher();
 
     let binding = false;
     let printableKeyName = "";
 
-    async function updatePrintableKeyName() {
-        if (cSetting.value === -1) {
-            return;
+    $: {
+        if (cSetting.value.boundKey !== UNKNOWN_KEY) {
+            getPrintableKeyName(cSetting.value.boundKey)
+                .then(printableKey => {
+                    printableKeyName = printableKey.localized;
+                });
         }
-        printableKeyName = (await getPrintableKeyName(cSetting.value)).localized;
     }
 
     listen("keyboardKey", async (e: KeyboardKeyEvent) => {
@@ -30,11 +35,10 @@
         binding = false;
 
         if (e.keyCode !== 256) {
-            cSetting.value = e.keyCode;
+            cSetting.value.boundKey = e.key;
         } else {
-            cSetting.value = -1;
+            cSetting.value.boundKey = UNKNOWN_KEY;
         }
-        await updatePrintableKeyName();
 
         setting = {...cSetting};
 
@@ -43,8 +47,7 @@
 
     async function toggleBinding() {
         if (binding) {
-            cSetting.value = -1;
-            await updatePrintableKeyName();
+            cSetting.value.boundKey = UNKNOWN_KEY;
         }
 
         binding = !binding;
@@ -54,17 +57,18 @@
         dispatch("change");
     }
 
-    onMount(async () => {
-        await updatePrintableKeyName();
-    });
+    function handleActionChange() {
+        setting = {...cSetting};
+        dispatch("change");
+    }
 </script>
 
-<div class="setting">
+<div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
     <button class="change-bind" on:click={toggleBinding}>
         {#if !binding}
             <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
-            
-            {#if cSetting.value === -1}
+
+            {#if cSetting.value.boundKey === UNKNOWN_KEY}
                 <span class="none">None</span>
             {:else}
                 <span>{printableKeyName}</span>
@@ -73,6 +77,11 @@
             <span>Press any key</span>
         {/if}
     </button>
+
+    {#if cSetting.value.boundKey !== UNKNOWN_KEY}
+        <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
+                  on:change={handleActionChange}/>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -80,6 +89,13 @@
 
   .setting {
     padding: 7px 0px;
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 5px;
+
+    &.has-value {
+      grid-template-columns: 1fr max-content;
+    }
   }
 
   .change-bind {
@@ -87,7 +103,7 @@
     border: solid 2px $accent-color;
     border-radius: 3px;
     cursor: pointer;
-    padding: 5px;
+    padding: 4px;
     font-weight: 500;
     color: $clickgui-text-color;
     font-size: 12px;
