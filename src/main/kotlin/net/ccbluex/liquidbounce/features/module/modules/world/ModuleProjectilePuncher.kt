@@ -31,12 +31,13 @@ import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.util.math.MathHelper
-import kotlin.math.cos
-import kotlin.math.pow
 
 /**
  * ProjectilePuncher module
@@ -72,7 +73,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
     val repeatable = repeatable {
         val target = target ?: return@repeatable
 
-        if (target.boxedDistanceTo(player) > range ||
+        if (target.squaredBoxedDistanceTo(player) > range * range ||
             !facingEnemy(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
@@ -89,7 +90,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
     }
 
     private fun updateTarget() {
-        val rangeSquared = range.pow(2)
+        val rangeSquared = range * range
 
         target = null
 
@@ -98,7 +99,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
                 continue
             }
 
-            val nextTickFireballPosition = entity.pos.add(entity.pos.subtract(entity.prevPos))
+            val nextTickFireballPosition = entity.pos + entity.pos - entity.prevPos
 
             val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
             val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyes)
@@ -131,7 +132,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
             return false
         }
 
-        val fireballVelocity = entity.pos.subtract(entity.prevPos)
+        val fireballVelocity = entity.pos - entity.prevPos
 
         // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
         // the fireball is moving.
@@ -140,17 +141,18 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.box.center.subtract(entity.pos)
+        val vecToPlayer = player.box.center - entity.pos
 
         val dot = vecToPlayer.dotProduct(fireballVelocity)
 
-        val isMovingTowardsPlayer = dot > -cos(Math.toRadians(40.0))
+        // if angle less than PI/3 (60 degrees) then
+        val isMovingTowardsPlayer = dot > 0.5 * fireballVelocity.length() * vecToPlayer.length()
 
         val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
 
         // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
         // would unecessarily trigger the player to attack the fireball.
-        val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity.multiply(20.0)).isPresent
+        val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity * 20.0).isPresent
         val willHitPlayer = !extendedHitbox.contains(entity.pos) && touchesHitbox
 
         // We need two checks in order to prevent following situation: The fireball is very close to the player and
