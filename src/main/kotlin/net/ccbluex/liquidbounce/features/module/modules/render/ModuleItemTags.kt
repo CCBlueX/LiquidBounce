@@ -56,8 +56,9 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
     private val renderY by float("RenderY", 0.0F, -2.0F..2.0F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    private val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    private val fontRenderer by lazy {
+        Fonts.DEFAULT_FONT.get()
+    }
 
     @Suppress("unused")
     val renderHandler = handler<OverlayRenderEvent> {

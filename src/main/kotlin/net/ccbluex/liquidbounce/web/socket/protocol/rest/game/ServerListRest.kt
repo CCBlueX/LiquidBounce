@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -50,20 +50,12 @@ import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
 import java.net.UnknownHostException
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.ThreadPoolExecutor
 
 object ServerListRest : Listenable {
 
     private var serverList = ServerList(mc).apply { loadFile() }
 
     private val serverListPinger = MultiplayerServerListPinger()
-    private val serverPingerThreadPool: ThreadPoolExecutor = ScheduledThreadPoolExecutor(
-        10,
-        ThreadFactoryBuilder().setNameFormat("Server Pinger #%d")
-            .setDaemon(true)
-            .build()
-    )
     private val cannotConnectText = Text.translatable("multiplayer.status.cannot_connect")
         .withColor(Colors.RED)
     private val cannotResolveText = Text.translatable("multiplayer.status.cannot_resolve")
@@ -81,7 +73,7 @@ object ServerListRest : Listenable {
             serverEntry.label = ScreenTexts.EMPTY
             serverEntry.playerCountLabel = ScreenTexts.EMPTY
 
-            serverPingerThreadPool.submit {
+            virtualThread(name = "Server-Pinger-${serverEntry.address}") {
                 try {
                     serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
                         serverEntry.status =

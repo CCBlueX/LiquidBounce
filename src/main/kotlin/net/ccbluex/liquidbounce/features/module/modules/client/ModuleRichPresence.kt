@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -45,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.kotlin.virtualThread
 
 data class IpcConfiguration(
     val appID: Long,
@@ -56,8 +56,10 @@ val ipcConfiguration by lazy {
     decode<IpcConfiguration>(HttpClient.get("$CLIENT_CLOUD/discord.json"))
 }
 
-object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true, hide = true,
-    aliases = arrayOf("DiscordPresence")) {
+object ModuleRichPresence : Module(
+    "RichPresence", Category.CLIENT, state = true, hide = true,
+    aliases = arrayOf("DiscordPresence")
+) {
 
     private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
     private val stateText by text("State", "%enabledModules% of %totalModules% modules enabled")
@@ -65,14 +67,60 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     private val largeImageText by text("LargeImage", "Online with %protocol%")
     private val smallImageText by text("SmallImage", "%clientBranch% (%clientCommit%)")
 
-    // IPC Client
     private var ipcClient: IPCClient? = null
+    @Volatile
     private var timestamp = System.currentTimeMillis()
 
     private var doNotTryToConnect = false
 
     init {
         doNotIncludeAlways()
+
+        virtualThread("RichPresence-Loop") {
+            while (true) {
+                Thread.sleep(1000L)
+
+                if (enabled) {
+                    connectIpc()
+                } else {
+                    shutdownIpc()
+                }
+
+                // Check ipc client is connected and send rpc
+                if (ipcClient?.status != PipeStatus.CONNECTED) {
+                    continue
+                }
+
+                ipcClient?.sendRichPresence {
+                    // Set playing time
+                    setStartTimestamp(timestamp)
+
+                    // Check assets contains logo and set logo
+                    if ("logo" in ipcConfiguration.assets) {
+                        setLargeImage(ipcConfiguration.assets["logo"], formatText(largeImageText))
+                    }
+
+                    if ("smallLogo" in ipcConfiguration.assets) {
+                        setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
+                    }
+
+                    setDetails(formatText(detailsText))
+                    setState(formatText(stateText))
+
+                    setButtons(JsonArray().apply {
+                        add(JsonObject().apply {
+                            addProperty("label", "Download")
+                            addProperty("url", "https://liquidbounce.net/")
+                        })
+
+                        add(JsonObject().apply {
+                            addProperty("label", "GitHub")
+                            addProperty("url", "https://github.com/CCBlueX/LiquidBounce")
+                        })
+                    })
+                }
+            }
+        }
     }
 
     override fun enable() {
@@ -127,51 +175,6 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     }
 
     @Suppress("unused")
-    val updateCycle = repeatable {
-        waitTicks(20)
-
-        if (enabled) {
-            connectIpc()
-        } else {
-            shutdownIpc()
-        }
-
-        // Check ipc client is connected and send rpc
-        if (ipcClient?.status == PipeStatus.CONNECTED) {
-            val builder = RichPresence.Builder()
-
-            // Set playing time
-            builder.setStartTimestamp(timestamp)
-
-            // Check assets contains logo and set logo
-            if ("logo" in ipcConfiguration.assets) {
-                builder.setLargeImage(ipcConfiguration.assets["logo"], formatText(largeImageText))
-            }
-
-            if ("smallLogo" in ipcConfiguration.assets) {
-                builder.setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
-            }
-
-            builder.setDetails(formatText(detailsText))
-            builder.setState(formatText(stateText))
-
-            builder.setButtons(JsonArray().apply {
-                add(JsonObject().apply {
-                    addProperty("label", "Download")
-                    addProperty("url", "https://liquidbounce.net/")
-                })
-
-                add(JsonObject().apply {
-                    addProperty("label", "GitHub")
-                    addProperty("url", "https://github.com/CCBlueX/LiquidBounce")
-                })
-            })
-
-            ipcClient?.sendRichPresence(builder.build())
-        }
-    }
-
-    @Suppress("unused")
     val serverConnectHandler = handler<ServerConnectEvent> {
         timestamp = System.currentTimeMillis()
     }
@@ -187,5 +190,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         .replace("%server%", hideSensitiveAddress(mc.currentServerEntry?.address ?: "none"))
 
     override fun handleEvents() = true
+
+    private inline fun IPCClient.sendRichPresence(action: RichPresence.Builder.() -> Unit) =
+        sendRichPresence(RichPresence.Builder().apply(action).build())
 
 }
