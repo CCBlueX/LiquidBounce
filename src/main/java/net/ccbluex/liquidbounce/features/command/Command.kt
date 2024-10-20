@@ -55,5 +55,11 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
     /**
      * Play edit sound
      */
-    protected fun playEdit() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F))
+    protected fun playEdit() {
+        synchronized(mc.soundHandler) {
+            mc.soundHandler.playSound(
+                PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F)
+            )
+        }
+    }
 }
