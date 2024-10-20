@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 
@@ -65,14 +64,11 @@ internal object NoFallMLG : Choice("MLG") {
     private var currentTarget: PlacementPlan? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
-    private val fallDamageBlockingBlocks = arrayOf(
-        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
-    )
-
     private val itemsForMLG = arrayOf(
         Items.WATER_BUCKET, Items.COBWEB, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK
     )
 
+    @Suppress("unused")
     val tickMovementHandler = handler<SimulatedTickEvent> {
         val currentGoal = this.getCurrentGoal()
 
@@ -167,7 +163,7 @@ internal object NoFallMLG : Choice("MLG") {
 
         val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
 
-        if (collision.getBlock() in fallDamageBlockingBlocks) {
+        if (collision.isFallDamageBlocking()) {
             return null
         }
 
