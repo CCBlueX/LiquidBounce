@@ -90,7 +90,7 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
     }
 
     override operator fun contains(value: BlockPos): Boolean {
-        return value.x in this.from.x..this.to.x && value.y in this.from.y..this.to.y && value.z in this.from.z..this.to.z
+        return value.x in xRange && value.y in yRange && value.z in zRange
     }
 
     fun intersects(other: Region): Boolean {
