@@ -76,11 +76,7 @@ data class ClientProtocolVersion(val name: String, val version: Int)
 val isEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isEqual1_8
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isEqual1_8
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
@@ -88,11 +84,7 @@ val isEqual1_8: Boolean
 val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
@@ -100,11 +92,7 @@ val isOlderThanOrEqual1_8: Boolean
 val isOlderThanOrEquals1_7_10: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
     }.onFailure {
         logger.error("Failed to check if the server is using 1.7.10", it)
     }.getOrDefault(false)
@@ -112,11 +100,7 @@ val isOlderThanOrEquals1_7_10: Boolean
 val isOlderThanOrEquals1_12_2: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_2
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_2
     }.onFailure {
         logger.error("Failed to check if the server is using 1.12.2", it)
     }.getOrDefault(false)

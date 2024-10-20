@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
+import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
@@ -170,28 +172,29 @@ inline fun searchBlocksInRadius(
     return blocks
 }
 
+/**
+ * **Squared Distance** to **BlockPos**
+ */
 @Suppress("NestedBlockDepth")
-fun getSphere(radius: Float): Array<BlockPos> {
-    val blocks = mutableListOf<Pair<Double, BlockPos>>()
+fun BlockPos.getSphere(radius: Float): Sequence<DoubleObjectPair<BlockPos>> = sequence {
     val radiusSq = radius * radius
 
-    val range = MathHelper.floor(radius) downTo MathHelper.floor(-radius)
+    val radiusCeil = MathHelper.ceil(radius)
+
+    val range = radiusCeil downTo -radiusCeil
 
     for (x in range) {
         for (y in range) {
             for (z in range) {
-                val blockPos = BlockPos(x, y, z)
-                val distanceSq = blockPos.getSquaredDistance(BlockPos.ORIGIN)
-                if (distanceSq > radiusSq) {
+                val distanceSq = getSquaredDistance(x.toDouble(), y.toDouble(), z.toDouble())
+                if (distanceSq <= radiusSq) {
                     continue
                 }
 
-                blocks.add(distanceSq to blockPos)
+                yield(DoubleObjectImmutablePair(distanceSq, BlockPos(x, y, z)))
             }
         }
     }
-
-    return blocks.sortedBy { it.first }.map { it.second }.toTypedArray()
 }
 
 /**
