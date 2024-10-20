@@ -98,7 +98,7 @@ fun ClientPlayerEntity.isCloseToEdge(
         Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
     }
 
-    val from = pos + Vec3d(0.0, -0.1, 0.0)
+    val from = pos.add(0.0, -0.1, 0.0)
     val to = from + direction.multiply(distance)
 
     if (findEdgeCollision(from, to) != null) {
@@ -114,7 +114,7 @@ val ClientPlayerEntity.pressingMovementButton
     get() = input.pressingForward || input.pressingBack || input.pressingLeft || input.pressingRight
 
 val Entity.exactPosition
-    get() = Triple(x, y, z)
+    get() = Vec3d(x, y, z)
 
 val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
@@ -307,12 +307,8 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
         return false
     }
 
-    val vec3d = source.pos
-
     val facingVec = getRotationVec(1.0f)
-    var deltaPos = vec3d.relativize(pos).normalize()
-
-    deltaPos = Vec3d(deltaPos.x, 0.0, deltaPos.z)
+    val deltaPos = (pos - source.pos).multiply(1.0, 0.0, 1.0)
 
     return deltaPos.dotProduct(facingVec) < 0.0
 }
@@ -548,7 +544,7 @@ fun ClientPlayerEntity.warp(pos: Vec3d? = null, onGround: Boolean = false) {
     val vehicle = this.vehicle
 
     if (vehicle != null) {
-        pos?.let { pos -> vehicle.setPosition(pos) }
+        pos?.let(vehicle::setPosition)
         network.sendPacket(VehicleMoveC2SPacket(vehicle))
         return
     }
@@ -562,11 +558,13 @@ fun ClientPlayerEntity.warp(pos: Vec3d? = null, onGround: Boolean = false) {
 
 fun ClientPlayerEntity.isInHole(): Boolean {
     val pos = BlockPos.ofFloored(pos)
-    return Direction.entries.all {
-        if (it == Direction.UP) {
-            return@all true
-        }
-
+    return arrayOf(
+        Direction.EAST,
+        Direction.WEST,
+        Direction.SOUTH,
+        Direction.NORTH,
+        Direction.DOWN,
+    ).all {
         pos.offset(it).isBlastResistant()
     }
 }
