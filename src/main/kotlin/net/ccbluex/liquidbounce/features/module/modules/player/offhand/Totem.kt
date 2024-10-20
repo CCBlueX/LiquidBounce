@@ -84,7 +84,7 @@ class Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * Predicts explosions from beds and respawn anchors.
          */
         private val explosionDamageBlocks by boolean("PredictExplosionDamageBlocks", false).onChanged {
-            sphere = getSphere(5f)
+            sphere = getSphere(10f)
         }
 
         private object FallDamage : ToggleableConfigurable(this, "PredictFallDamage", true) {
