@@ -56,11 +56,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val interactionRange by float("Range", 3F, 1F..6F)
     private val wallInteractionRange by float("WallRange", 0f, 0F..6F).onChange {
         // Ensure that wallInteractionRange does not exceed interactionRange
-        if (it > interactionRange) {
-            interactionRange
-        } else {
-            it
-        }
+        minOf(interactionRange, it)
     }
     private val interactionDelay by int("Delay", 5, 1..80, "ticks")
     private val shouldDisplayVisualSwing by boolean("VisualSwing", true)

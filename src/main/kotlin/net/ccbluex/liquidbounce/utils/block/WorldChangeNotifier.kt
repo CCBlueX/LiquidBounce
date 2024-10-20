@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import java.util.concurrent.CopyOnWriteArrayList
 
 object WorldChangeNotifier : Listenable {
-    private val subscriber = arrayListOf<WorldChangeSubscriber>()
+    private val subscribers = CopyOnWriteArrayList<WorldChangeSubscriber>()
 
     @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
@@ -70,28 +71,21 @@ object WorldChangeNotifier : Listenable {
         notifyAllSubscribers { it.invalidateEverything() }
     }
 
-    private fun notifyAllSubscribers(function: (WorldChangeSubscriber) -> Unit) {
-        synchronized(this.subscriber) {
-            this.subscriber.forEach {
-                function(it)
-            }
-        }
+    private inline fun notifyAllSubscribers(function: (WorldChangeSubscriber) -> Unit) {
+        this.subscribers.forEach(function)
     }
 
     fun subscribe(newSubscriber: WorldChangeSubscriber) {
-        synchronized(subscriber) {
-            check(!this.subscriber.contains(newSubscriber)) {
-                "Subscriber already registered"
-            }
-
-            this.subscriber.add(newSubscriber)
+        check(!this.subscribers.contains(newSubscriber)) {
+            "Subscriber $newSubscriber already registered"
         }
+
+        this.subscribers.add(newSubscriber)
     }
 
     fun unsubscribe(oldSubscriber: WorldChangeSubscriber) {
-        synchronized(subscriber) {
-            this.subscriber.remove(oldSubscriber)
-        }
+        this.subscribers.remove(oldSubscriber)
+        oldSubscriber.invalidateEverything()
     }
 
     interface WorldChangeSubscriber {

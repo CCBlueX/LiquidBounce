@@ -224,7 +224,7 @@ public abstract class MixinWorldRenderer {
                 && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
             if (categorizedEntity != null) {
-                return categorizedEntity.getColor().invoke().toARGB();
+                return categorizedEntity.getColor().toARGB();
             }
         }
 

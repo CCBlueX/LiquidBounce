@@ -68,8 +68,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
 
     private val locations = ConcurrentHashMap<BlockPos, ChestType>()
 
-    init {
+    override fun enable() {
         WorldChangeNotifier.subscribe(StorageScanner)
+    }
+
+    override fun disable() {
+        WorldChangeNotifier.unsubscribe(StorageScanner)
     }
 
     private object BoxMode : Choice("Box") {
@@ -99,11 +103,11 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
             }
         }
 
-        private fun collectBoxesToDraw(event: WorldRenderEvent): MutableList<Triple<Vec3d, Box, Color4b>> {
+        private fun collectBoxesToDraw(event: WorldRenderEvent): List<Triple<Vec3d, Box, Color4b>> {
             val queuedBoxes = mutableListOf<Triple<Vec3d, Box, Color4b>>()
 
-            for ((pos, type) in locations.entries) {
-                val color = type.color()
+            for ((pos, type) in locations) {
+                val color = type.color
 
                 if (color.a <= 0 || !type.shouldRender(pos)) {
                     continue
@@ -134,8 +138,9 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
                 val d = dimensions.width.toDouble() / 2.0
                 val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
 
-                queuedBoxes.add(Triple(pos, box, type.color()))
+                queuedBoxes.add(Triple(pos, box, type.color))
             }
+
             return queuedBoxes
 
         }
@@ -149,19 +154,13 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
 
         @Suppress("unused")
         val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
+            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW || locations.isEmpty()) {
                 return@handler
             }
 
-            // Don't halt other modules from accessing locations
-            val positions = locations.entries.map { it.key to it.value }
-
-            if (positions.isEmpty())
-                return@handler
-
             renderEnvironmentForWorld(event.matrixStack) {
                 BoxRenderer.drawWith(this) {
-                    for ((pos, type) in positions) {
+                    for ((pos, type) in locations) {
                         val state = pos.getState() ?: continue
 
                         // non-model blocks are already processed by WorldRenderer where we injected code which renders
@@ -183,7 +182,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
                         }
 
                         withPosition(relativeToCamera(Vec3d.of(pos))) {
-                            drawBox(boundingBox, type.color())
+                            drawBox(boundingBox, type.color)
                         }
 
                         event.markDirty()
@@ -199,7 +198,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
             is HopperMinecartEntity -> ChestType.HOPPER
             is StorageMinecartEntity -> ChestType.CHEST
             is ChestBoatEntity -> ChestType.CHEST
-            is AbstractDonkeyEntity -> if (entity.hasChest()) ChestType.CHEST else null
+            is AbstractDonkeyEntity -> ChestType.CHEST.takeIf { entity.hasChest() }
             else -> null
         }
     }
@@ -217,13 +216,41 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
         }
     }
 
-    enum class ChestType(val color: () -> Color4b, val shouldRender: (BlockPos) -> Boolean = { true }) {
-        CHEST({ chestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
-        ENDER_CHEST({ enderChestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
-        FURNACE({ furnaceColor }),
-        DISPENSER({ dispenserColor }),
-        HOPPER({ hopperColor }),
-        SHULKER_BOX({ shulkerColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) })
+    enum class ChestType {
+        CHEST {
+            override val color: Color4b
+                get() = chestColor
+
+            override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
+        },
+        ENDER_CHEST {
+            override val color: Color4b
+                get() = enderChestColor
+
+            override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
+        },
+        FURNACE {
+            override val color: Color4b
+                get() = furnaceColor
+        },
+        DISPENSER {
+            override val color: Color4b
+                get() = dispenserColor
+        },
+        HOPPER {
+            override val color: Color4b
+                get() = hopperColor
+        },
+        SHULKER_BOX {
+            override val color: Color4b
+                get() = shulkerColor
+
+            override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
+        };
+
+        abstract val color: Color4b
+
+        open fun shouldRender(pos: BlockPos): Boolean = true
     }
 
     object StorageScanner : WorldChangeNotifier.WorldChangeSubscriber {
@@ -245,7 +272,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
                 return
             }
 
-            for ((pos, blockEntity) in chunk.blockEntities.entries) {
+            for ((pos, blockEntity) in chunk.blockEntities) {
                 val type = categorizeBlockEntity(blockEntity) ?: continue
 
                 locations[pos] = type

@@ -50,8 +50,8 @@ public class MixinBlockEntityRenderDispatcher {
                     .getOutlineVertexConsumers();
             var type = ModuleStorageESP.INSTANCE.categorizeBlockEntity(blockEntity);
 
-            if (type != null && type.getShouldRender().invoke(blockEntity.getPos())) {
-                var color = type.getColor().invoke();
+            if (type != null && type.shouldRender(blockEntity.getPos())) {
+                var color = type.getColor();
 
                 if (color.getA() > 0) {
                     outlineVertexConsumerProvider.setColor(color.getR(), color.getG(), color.getB(), color.getA());

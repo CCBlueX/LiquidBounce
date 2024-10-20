@@ -120,13 +120,13 @@ class MinimapHeightmapManager {
 
         val maxHeight = (maxY ?: world.height) - 1
 
-        for (y in maxHeight downTo world.bottomY + 1) {
-            val pos = BlockPos(x, y, z)
+        val pos = BlockPos.Mutable(x, maxHeight, z)
+        while (pos.y > world.bottomY) {
             val state = world.getBlockState(pos)
-
             if (isSurface(pos, state)) {
-                return y
+                return pos.y
             }
+            pos.y--
         }
 
         return world.bottomY
@@ -151,18 +151,11 @@ class MinimapHeightmapManager {
 class HeightmapForChunk {
     private val heightmap = IntArray(16 * 16) { 255 }
 
-    private fun getPosition(
-        x: Int,
-        z: Int,
-    ): Int {
-        return z * 16 + x
-    }
-
     fun getHeight(
         x: Int,
         z: Int,
     ): Int {
-        return heightmap[getPosition(x, z)]
+        return heightmap[(z shl 4) or x]
     }
 
     fun setHeight(
@@ -170,6 +163,6 @@ class HeightmapForChunk {
         z: Int,
         height: Int,
     ) {
-        heightmap[getPosition(x, z)] = height
+        heightmap[(z shl 4) or x] = height
     }
 }
