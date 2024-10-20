@@ -62,6 +62,7 @@
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$if</ID>
     <ID>CognitiveComplexMethod:AutoBlock.kt$AutoBlock$fun startBlocking()</ID>
     <ID>CognitiveComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
+    <ID>CognitiveComplexMethod:BlockExtensions.kt$fun Block?.isInteractable(blockState: BlockState?): Boolean</ID>
     <ID>CognitiveComplexMethod:BrowserRest.kt$internal fun RestNode.browserRest()</ID>
     <ID>CognitiveComplexMethod:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>CognitiveComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
@@ -78,12 +79,16 @@
     <ID>CognitiveComplexMethod:ModuleHoleESP.kt$ModuleHoleESP$private fun updateRegion(region: Region)</ID>
     <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence&lt;*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
     <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$private suspend fun Sequence&lt;*>.mightAttack(chosenEntity: Entity, rotation: Rotation)</ID>
+    <ID>CognitiveComplexMethod:PlacementRenderHandler.kt$PlacementRenderHandler$fun render(event: WorldRenderEvent, time: Long)</ID>
     <ID>CognitiveComplexMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
     <ID>CognitiveComplexMethod:RegistryRest.kt$fun RestNode.registriesRest()</ID>
     <ID>CognitiveComplexMethod:SimulatedArrow.kt$SimulatedArrow$private fun updateCollision(pos: Vec3d, newPos: Vec3d): HitResult?</ID>
     <ID>CognitiveComplexMethod:SpeedAntiCornerBump.kt$SpeedAntiCornerBump$fun getSuggestedJumpDelay( simulatedPlayer: SimulatedPlayer, n: Int = 2, ): Int?</ID>
+    <ID>CognitiveComplexMethod:SupportFeature.kt$SupportFeature$fun findSupport(targetPos: BlockPos): Set&lt;BlockPos>?</ID>
     <ID>CognitiveComplexMethod:TextureRest.kt$fun RestNode.resourceRest()</ID>
+    <ID>ComplexCondition:PlacementRenderHandler.kt$PlacementRenderHandler$(!direction1Present &amp;&amp; !direction2Present) || (direction1Present &amp;&amp; direction2Present &amp;&amp; !diagonalPresent)</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
+    <ID>ComplexCondition:SupportFeature.kt$SupportFeature$blockedPositions.contains(neighbor) || // exclude blocks where the structure is... // this useless because we already search the shortest path under all structure blocks? placer.blocks.contains(neighbor) || neighbor.manhattanDistanceTo(targetPos) > depth || player.eyePos.squaredDistanceTo(neighbor.toCenterPos()) > rangeSq || neighbor.isBlockedByEntities()</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
@@ -120,8 +125,11 @@
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
+    <ID>LongParameterList:RotationsUtil.kt$RotationManager$( rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority, provider: Module, whenReached: RestrictedSingleUseAction? = null )</ID>
     <ID>LongParameterList:RotationsUtil.kt$RotationManager$( vecRotation: VecRotation, entity: Entity? = null, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority, provider: Module )</ID>
+    <ID>LongParameterList:TargetFinding.kt$BlockPlacementTargetFindingOptions$( val offsetsToInvestigate: List&lt;Vec3i>, val stackToPlaceWith: ItemStack, val facePositionFactory: FaceTargetPositionFactory, val offsetPriorityGetter: (Vec3i) -> Double, val playerPositionOnPlacement: Vec3d, val playerPoseOnPlacement: EntityPose = EntityPose.STANDING, val allowPointingAway: Boolean = false )</ID>
     <ID>LongParameterList:ThemeManager.kt$ThemeManager$(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float)</ID>
+    <ID>LoopWithTooManyJumpStatements:BlockPlacer.kt$BlockPlacer$while</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
@@ -137,6 +145,7 @@
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
     <ID>NestedBlockDepth:ModuleBedPlates.kt$ModuleBedPlates$private fun BlockPos.getBedPlatesAround(): Map&lt;Block, Int></ID>
+    <ID>NestedBlockDepth:SupportFeature.kt$SupportFeature$fun findSupport(targetPos: BlockPos): Set&lt;BlockPos>?</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>ReturnCount:AutoFarmBlockHandler.kt$AutoFarmBlockTracker$override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates?</ID>
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
@@ -161,6 +170,7 @@
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
+    <ID>TooManyFunctions:BlockPlacer.kt$BlockPlacer : ConfigurableListenable</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>TooManyFunctions:CommandClient.kt$CommandClient</ID>
@@ -173,6 +183,7 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
+    <ID>TooManyFunctions:PlacementRenderHandler.kt$PlacementRenderHandler</ID>
     <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>

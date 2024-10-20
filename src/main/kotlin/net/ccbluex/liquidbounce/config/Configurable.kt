@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.Curves
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 
@@ -123,7 +123,7 @@ open class Configurable(
     protected fun textArray(name: String, default: MutableList<String>) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
-    protected fun curve(name: String, default: Curves) = enumChoice(name, default)
+    protected fun curve(name: String, default: Easing) = enumChoice(name, default)
 
     protected fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 

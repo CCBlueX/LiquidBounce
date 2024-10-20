@@ -16,22 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.client
 
-package net.ccbluex.liquidbounce.config.adapter
+/**
+ * Represents an operation that does not return a result and can only be executed once when [canExecute] returns true.
+ * This is protected, so all future calls won't execute the actual [action].
+ */
+class RestrictedSingleUseAction(private val canExecute: () -> Boolean, private val action: () -> Unit) {
 
-import com.google.gson.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Color
-import java.lang.reflect.Type
+    private var isExecuted = false
 
-object ColorSerializer : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
-
-    override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.toARGB())
-    }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt, true))
+    operator fun invoke() {
+        if (!isExecuted && canExecute()) {
+            action()
+            isExecuted = true
+        }
     }
 
 }
