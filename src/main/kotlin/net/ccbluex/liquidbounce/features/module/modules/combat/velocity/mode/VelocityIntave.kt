@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
 object VelocityIntave : Choice("Intave") {
@@ -59,16 +60,16 @@ object VelocityIntave : Choice("Intave") {
         true
     ) {
 
-        private val hurtTime by int("HurtTime", 9, 1..10)
         private val chance by float("Chance", 50f, 0f..100f, "%")
 
         @Suppress("unused")
         private val repeatable = repeatable {
-            val shouldJump = Math.random() * 100 < chance && player.hurtTime == hurtTime
+            val shouldJump = Math.random() * 100 < chance && player.hurtTime > 0
             val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
 
             if (shouldJump && canJump) {
                 player.jump()
+                chat("jumped")
             }
         }
     }
