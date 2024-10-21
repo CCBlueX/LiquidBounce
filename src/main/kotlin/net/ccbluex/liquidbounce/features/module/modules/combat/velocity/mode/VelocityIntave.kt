@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
 object VelocityIntave : Choice("Intave") {
@@ -69,7 +68,6 @@ object VelocityIntave : Choice("Intave") {
 
             if (shouldJump && canJump) {
                 player.jump()
-                chat("jumped")
             }
         }
     }
