@@ -264,6 +264,7 @@
   "liquidbounce.module.killAura.description": "Автоматические атакует врагов",
   "liquidbounce.module.superKnockback.description": "Увеличивает отбрасывание других сущностей.",
   "liquidbounce.module.velocity.description": "Изменяет величину отдачи, которую вы получаете.",
+  "liquidbounce.module.vomit.description": "Выбрасывает предметы из вашего инвентаря.",
   "liquidbounce.module.abortBreaking.description": "Позволяет прервать ломание, сохраняя прогресс.",
   "liquidbounce.module.clip.description": "Позволяет проходить сквозь блоки.",
   "liquidbounce.module.damage.description": "Наносит указанное количество повреждений себе.",
