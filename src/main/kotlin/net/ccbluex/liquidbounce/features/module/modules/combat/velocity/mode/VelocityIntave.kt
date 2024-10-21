@@ -32,13 +32,10 @@ object VelocityIntave : Choice("Intave") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    private var jumpChance by float("JumpChance", 50f, 0f..100f, "%")
-
     private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(
         parent, "ReduceOnAttack",
         true
     ) {
-
         private val reduceFactor by float("Factor", 0.6f, 0.6f..1f)
         private val hurtTime by int("HurtTime", 9, 1..10)
         var lastAttackTime = 0L
@@ -57,13 +54,26 @@ object VelocityIntave : Choice("Intave") {
         tree(ReduceOnAttack(this))
     }
 
-    @Suppress("unused")
-    private val repeatable = repeatable {
-        val shouldJump = Math.random() * 100 < jumpChance && player.hurtTime < 10
-        val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
+    private class JumpReset(parent: Listenable?) : ToggleableConfigurable(
+        parent, "JumpReset",
+        true
+    ) {
 
-        if (shouldJump && canJump) {
-            player.jump()
+        private var jumpHurtTime by int("JumpHurtTime", 9, 1..10)
+        private var jumpChance by float("JumpChance", 50f, 0f..100f, "%")
+
+        @Suppress("unused")
+        private val repeatable = repeatable {
+            val shouldJump = Math.random() * 100 < jumpChance && player.hurtTime == jumpHurtTime
+            val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
+
+            if (shouldJump && canJump) {
+                player.jump()
+            }
         }
+    }
+
+    init {
+        tree(JumpReset(this))
     }
 }
