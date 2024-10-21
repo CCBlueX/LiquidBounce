@@ -59,12 +59,12 @@ object VelocityIntave : Choice("Intave") {
         true
     ) {
 
-        private var jumpHurtTime by int("JumpHurtTime", 9, 1..10)
-        private var jumpChance by float("JumpChance", 50f, 0f..100f, "%")
+        private val hurtTime by int("HurtTime", 9, 1..10)
+        private val chance by float("Chance", 50f, 0f..100f, "%")
 
         @Suppress("unused")
         private val repeatable = repeatable {
-            val shouldJump = Math.random() * 100 < jumpChance && player.hurtTime == jumpHurtTime
+            val shouldJump = Math.random() * 100 < chance && player.hurtTime == hurtTime
             val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
 
             if (shouldJump && canJump) {
