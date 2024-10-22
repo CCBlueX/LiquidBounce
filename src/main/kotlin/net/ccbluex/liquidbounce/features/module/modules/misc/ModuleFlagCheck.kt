@@ -21,22 +21,31 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.Vec3d
+import org.apache.commons.lang3.StringUtils
 
 /**
- * alerts you about flags
+ * Module Flag Check.
+ *
+ * Alerts you about set backs.
  */
+object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
 
-object ModuleFlagCheck: Module("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
-
-    private var alertThroughChat by boolean("AlertThroughChat", true)
+    private var chatMessage by boolean("ChatMessage", true)
+    private var notification by boolean("Notification", false)
+    private var invalidAttributes by boolean("InvalidAttributes", false)
 
     private object ResetFlags : ToggleableConfigurable(this, "ResetFlags", true) {
 
@@ -44,68 +53,105 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC, aliases = arrayOf("Fl
 
         @Suppress("unused")
         private val repeatable = repeatable {
-            clearFlags()
+            flagCount = 0
             waitSeconds(afterSeconds)
         }
+
+    }
+
+    private object Render : ToggleableConfigurable(this, "Render", true) {
+
+        private var renderTime by int("Alive", 1000, 1..2000, "ms")
+        private var color by color("Color", Color4b.RED.alpha(100).darker())
+        private var outlineColor by color("OutlineColor", Color4b.RED.darker())
+
+        val wireframePlayer = WireframePlayer(Vec3d.ZERO, 0f, 0f)
+        var creationTime = 0L
+
+        @Suppress("unused")
+        val renderHandler = handler<WorldRenderEvent> { // TODO fade out
+            //if (System.currentTimeMillis() - creationTime <= renderTime) {
+                wireframePlayer.render(it, color, outlineColor)
+            //}
+        }
+
     }
 
     init {
         tree(ResetFlags)
+        tree(Render)
     }
 
     private var flagCount = 0
-    private fun clearFlags() {
-        flagCount = 0
-    }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        when (event.packet) {
+        when (val packet = event.packet) {
             is PlayerPositionLookS2CPacket -> {
-                if (player.age > 25) {
-                    flagCount++
-                    alert(AlertReason.LAGBACK, flagCount)
+                if (player.age <= 25) {
+                    return@handler
                 }
+
+                flagCount++
+                alert(AlertReason.LAGBACK)
+                Render.creationTime = System.currentTimeMillis()
+                Render.wireframePlayer.setPosRot(packet.x, packet.y, packet.z, packet.yaw, packet.pitch)
             }
 
             is DisconnectS2CPacket -> {
-                clearFlags()
+                flagCount = 0
             }
         }
+    }
 
-        val invalidReason = mutableListOf<String>()
-        if (player.health <= 0.0f && player.isAlive) {
-            invalidReason.add("Health")
-        }
-        if (player.hungerManager.foodLevel <= 0) {
-            invalidReason.add("Hunger")
+    @Suppress("unused")
+    private val repeatable = repeatable {
+        if (!invalidAttributes) {
+            return@repeatable
         }
 
-        if (invalidReason.isNotEmpty()) {
+        val invalidHeath = player.health <= 0f && player.isAlive
+        val invalidHunger = player.hungerManager.foodLevel <= 0
+
+        if (!invalidHeath && !invalidHunger) {
+            return@repeatable
+        }
+
+        val invalidReasons = mutableListOf<String>()
+
+        if (invalidHeath) {
+            invalidReasons.add("Health")
+        }
+
+        if (invalidHunger) {
+            invalidReasons.add("Hunger")
+        }
+
+        if (invalidReasons.isNotEmpty()) {
             flagCount++
 
-            val reasonString = invalidReason.joinToString()
-            invalidReason.clear()
-            alert(AlertReason.INVALID, flagCount, reasonString)
+            val reasonString = invalidReasons.joinToString()
+            alert(AlertReason.INVALID, reasonString)
         }
     }
 
-    private fun alert(reason: AlertReason, count: Int, extra: String = "") {
-        flagCount++
-
-        val message = if (extra.isBlank()) {
-            message("alert", message(reason.key), count)
+    private fun alert(reason: AlertReason, extra: String? = null) {
+        val message = if (StringUtils.isEmpty(extra)) {
+            message("alert", message(reason.key), flagCount)
         } else {
-            message("alertWithExtra", message(reason.key), extra, count)
+            message("alertWithExtra", message(reason.key), extra!!, flagCount)
         }
 
-        if (!alertThroughChat) {
+        if (notification) {
             notification(name, message, NotificationEvent.Severity.INFO)
-        } else {
-            chat(message)
+        }
+
+        if (chatMessage) {
+            chat(message, metadata = MessageMetadata(id = "$name#${reason.key}"))
         }
     }
 
+    @Suppress("SpellCheckingInspection")
     private enum class AlertReason(val key: String) {
         INVALID("invalid"),
         LAGBACK("lagback")
