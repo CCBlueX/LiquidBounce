@@ -28,7 +28,8 @@ data class WireframePlayer(var pos: Vec3d, var yaw: Float, var pitch: Float) {
         renderEnvironmentForWorld(event.matrixStack) {
             withPositionRelativeToCamera(pos) {
                 val matrix = matrixStack.peek().positionMatrix
-                matrix.rotate(Quaternionf().rotationY(Math.toRadians(-MathHelper.wrapDegrees(yaw.toDouble())).toFloat()))
+                val yRot = -MathHelper.wrapDegrees(yaw.toDouble())
+                matrix.rotate(Quaternionf().rotationY(Math.toRadians(yRot).toFloat()))
                 matrix.scale(1.9f)
 
                 BoxRenderer.drawWith(this) {

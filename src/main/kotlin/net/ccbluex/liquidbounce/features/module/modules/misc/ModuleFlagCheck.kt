@@ -61,7 +61,8 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
 
     private object Render : ToggleableConfigurable(this, "Render", true) {
 
-        private var renderTime by int("Alive", 1000, 1..2000, "ms")
+        private val notInFirstPerson by boolean("NotInFirstPerson", true)
+        //private var renderTime by int("Alive", 1000, 1..2000, "ms")
         private var color by color("Color", Color4b.RED.alpha(100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
@@ -70,6 +71,10 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
 
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { // TODO fade out
+            if (notInFirstPerson && mc.options.perspective.isFirstPerson) {
+                return@handler
+            }
+
             //if (System.currentTimeMillis() - creationTime <= renderTime) {
                 wireframePlayer.render(it, color, outlineColor)
             //}
