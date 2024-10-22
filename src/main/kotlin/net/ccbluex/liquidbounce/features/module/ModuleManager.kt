@@ -152,7 +152,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleResetVL,
             ModuleDamage,
             ModuleDisabler,
-            ModuleForceUnicodeChat,
             ModuleGhostHand,
             ModuleKick,
             ModuleMoreCarry,
