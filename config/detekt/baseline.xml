@@ -113,7 +113,7 @@
     <ID>LongMethod:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongMethod:WorldListRest.kt$internal fun RestNode.worldListRest()</ID>
-    <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, private var parentCommand: Command? = null )</ID>
+    <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, var subcommands: Array&lt;Command>, val hub: Boolean, val handler: CommandHandler?, private var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
     <ID>LongParameterList:JsNetworkUtil.kt$JsNetworkUtil$(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean)</ID>

@@ -149,6 +149,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandFakePlayer.createCommand())
         addCommand(CommandAutoAccount.createCommand())
         addCommand(CommandDebug.createCommand())
+        addCommand(CommandRestore.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -251,11 +252,14 @@ object CommandManager : Iterable<Command> {
         val command = pair.first
 
         // If the command is not executable, don't allow it to be executed
-        if (!command.executable) {
+        if (command.handler == null) {
             throw CommandException(
                 translation("liquidbounce.commandManager.invalidUsage", args[0]),
                 usageInfo = command.usage()
             )
+        } else if (command.hub) {
+            command.handler!!(command, emptyArray());
+            return
         }
 
         // The index the command is in
@@ -326,7 +330,7 @@ object CommandManager : Iterable<Command> {
             }
         }
 
-        if (!command.executable) {
+        if (command.handler == null) {
             throw CommandException(
                 translation("liquidbounce.commandManager.commandNotExecutable", command.name),
                 usageInfo = command.usage()
@@ -522,8 +526,6 @@ object CommandManager : Iterable<Command> {
 //
 //        return builder.buildFuture()
     }
-
-
 
     operator fun plusAssign(command: Command) {
         addCommand(command)

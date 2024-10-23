@@ -29,7 +29,7 @@ class CommandBuilder private constructor(val name: String) {
     private var parameters: ArrayList<Parameter<*>> = ArrayList()
     private var subcommands: ArrayList<Command> = ArrayList()
     private var handler: CommandHandler? = null
-    private var executable = true
+    private var hub = false
 
     companion object {
         fun begin(name: String): CommandBuilder = CommandBuilder(name)
@@ -60,24 +60,26 @@ class CommandBuilder private constructor(val name: String) {
     }
 
     /**
-     * If a command is marked as a hub command, it is impossible to execute it.
+     * If a command is marked as a hub command, it can't have parameters.
+     * Furthermore, hubs are not required to be executable.
      *
      * For example: <code>.friend</code>
      *
-     * The command _friend_ would not be executable since it just acts as a
-     * hub for its subcommands
+     * The command _friend_ would not be able to have parameters since it just acts as a
+     * hub for its subcommands.
      */
     fun hub(): CommandBuilder {
-        this.executable = false
+        this.hub = true
 
         return this
     }
 
     fun build(): Command {
-        require(executable || this.handler == null) {
-            "The command is marked as not executable (hub), but no handler was specified"
+        require(hub && parameters.isEmpty() || !hub) {
+            "The command is marked as hub, but parameters were specified"
         }
-        require(!executable || this.handler != null) {
+
+        require(!hub && handler != null || hub) {
             "The command is marked as executable, but no handler was specified."
         }
 
@@ -103,7 +105,7 @@ class CommandBuilder private constructor(val name: String) {
             this.subcommands.toArray(
                 emptyArray()
             ),
-            executable,
+            this.hub,
             this.handler
         )
     }

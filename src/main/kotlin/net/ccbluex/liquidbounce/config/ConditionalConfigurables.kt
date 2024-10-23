@@ -132,6 +132,10 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
+    override fun getCompletion(begin: String): List<String> {
+        return choices.map { it.choiceName }.filter { it.startsWith(begin) }
+    }
+
     @ScriptApi
     fun getChoicesStrings(): Array<String> = this.choices.map { it.name }.toTypedArray()
 
