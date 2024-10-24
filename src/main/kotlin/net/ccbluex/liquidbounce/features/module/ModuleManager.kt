@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
@@ -71,7 +73,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucke
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApi
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import org.lwjgl.glfw.GLFW
@@ -298,6 +299,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
+            ModuleSilentHotbar,
             ModuleStorageESP,
             ModuleTNTTimer,
             ModuleTracers,

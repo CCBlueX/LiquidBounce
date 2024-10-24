@@ -36,8 +36,11 @@ object SilentHotbar : Listenable {
     val serversideSlot: Int
         get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.selectedSlot ?: 0
 
+    val clientsideSlot: Int
+        get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.selectedSlot ?: 0
+
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
-        hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
+        hotbarState = SilentHotbarState(slot, requester, ticksUntilReset, clientsideSlot)
         ticksSinceLastUpdate = 0
     }
 
@@ -64,4 +67,9 @@ object SilentHotbar : Listenable {
     }
 }
 
-private class SilentHotbarState(val enforcedHotbarSlot: Int, var requester: Any?, var ticksUntilReset: Int)
+private class SilentHotbarState(
+    val enforcedHotbarSlot: Int,
+    var requester: Any?,
+    var ticksUntilReset: Int,
+    var clientsideSlot: Int
+)

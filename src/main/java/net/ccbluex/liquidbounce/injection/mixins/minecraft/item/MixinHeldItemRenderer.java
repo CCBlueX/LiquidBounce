@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -168,6 +171,14 @@ public abstract class MixinHeldItemRenderer {
             // Default animation
             ModuleAnimations.OneSevenAnimation.INSTANCE.transform(matrices, arm, equipProgress, swingProgress);
         }
+    }
+
+    @Redirect(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
+    private ItemStack injectSilentHotbar(ClientPlayerEntity player) {
+        if (ModuleSilentHotbar.INSTANCE.getEnabled()) {
+            return player.getInventory().main.get(SilentHotbar.INSTANCE.getClientsideSlot());
+        }
+        return player.getMainHandStack();
     }
 
 }
