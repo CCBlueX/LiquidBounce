@@ -36,8 +36,11 @@ object SilentHotbar : Listenable {
     val serversideSlot: Int
         get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.selectedSlot ?: 0
 
+    val clientsideSlot: Int
+        get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.selectedSlot ?: 0
+
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
-        hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
+        hotbarState = SilentHotbarState(slot, requester, ticksUntilReset, clientsideSlot)
         ticksSinceLastUpdate = 0
     }
 
@@ -47,10 +50,12 @@ object SilentHotbar : Listenable {
         }
     }
 
+    fun isSlotModified() = hotbarState != null
+
     /**
      * Returns if the slot is currently getting modified by a given requester
      */
-    fun isSlotModified(requester: Any?) = hotbarState?.requester == requester
+    fun isSlotModifiedBy(requester: Any?) = hotbarState?.requester == requester
 
     val tickHandler = handler<GameTickEvent>(priority = 1001) {
         val hotbarState = hotbarState ?: return@handler
@@ -64,4 +69,9 @@ object SilentHotbar : Listenable {
     }
 }
 
-private class SilentHotbarState(val enforcedHotbarSlot: Int, var requester: Any?, var ticksUntilReset: Int)
+private class SilentHotbarState(
+    val enforcedHotbarSlot: Int,
+    var requester: Any?,
+    var ticksUntilReset: Int,
+    var clientsideSlot: Int
+)

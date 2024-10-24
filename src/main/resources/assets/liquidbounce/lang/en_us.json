@@ -541,6 +541,7 @@
   "liquidbounce.module.reverseStep.description": "Makes you step down blocks faster.",
   "liquidbounce.module.richPresence.description": "Displays information about the client in your Discord rich presence.",
   "liquidbounce.module.rotations.description": "Allows you to see server-sided rotations.",
+  "liquidbounce.module.silentHotbar.description": "Disables showing silently selected items in your hand.",
   "liquidbounce.module.safeWalk.description": "Prevents you from falling down block (as if you were sneaking).",
   "liquidbounce.module.scaffold.description": "Automatically places blocks beneath your feet allowing you to walk across gaps.",
   "liquidbounce.module.serverCrasher.description": "Attempts to crash the server by exploiting known bugs.",
