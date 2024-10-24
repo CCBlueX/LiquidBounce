@@ -88,7 +88,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 dirty = drawInternal(
-                    BlockTracker.trackedBlockMap.keys.mapTo(hashSetOf()) { it.asBlockPos() },
+                    BlockTracker.trackedBlockMap.keys,
                     colorMode,
                     fullAlpha,
                     drawOutline

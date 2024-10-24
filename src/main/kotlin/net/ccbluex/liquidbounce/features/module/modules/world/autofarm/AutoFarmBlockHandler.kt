@@ -61,7 +61,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates
 
 
     private fun handlePlaceableBlock(pos: BlockPos, state: BlockState, trackedState: AutoFarmTrackedStates) {
-        val targetBlockPos = TargetBlockPos(pos.down())
+        val targetBlockPos = pos.down()
         if (state.isAir){
             // If there is no air above, add it
             this.trackedBlockMap[targetBlockPos] = trackedState
