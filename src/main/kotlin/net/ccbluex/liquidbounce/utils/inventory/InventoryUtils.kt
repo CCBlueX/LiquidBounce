@@ -135,6 +135,10 @@ fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
     return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { it.itemStack.isEmpty }
 }
 
+fun findNonEmptyStorageSlotsInInventory(): List<ItemSlot> {
+    return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { !it.itemStack.isEmpty }
+}
+
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
 }

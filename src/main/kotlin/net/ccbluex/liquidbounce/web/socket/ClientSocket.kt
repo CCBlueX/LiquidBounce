@@ -63,6 +63,7 @@ object ClientSocket {
         "serverConnect",
         "serverPinged",
         "targetChange",
+        "blockCountChange",
         "gameModeChange",
         "componentsUpdate",
         "proxyAdditionResult",

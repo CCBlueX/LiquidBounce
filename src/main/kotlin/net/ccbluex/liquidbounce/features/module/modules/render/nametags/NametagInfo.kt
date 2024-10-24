@@ -24,7 +24,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 
-class NametagInfo(
+data class NametagInfo(
     /**
      * The text to render as nametag
      */

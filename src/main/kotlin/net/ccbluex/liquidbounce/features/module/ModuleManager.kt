@@ -35,10 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
@@ -168,7 +165,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleResetVL,
             ModuleDamage,
             ModuleDisabler,
-            ModuleForceUnicodeChat,
             ModuleGhostHand,
             ModuleKick,
             ModuleMoreCarry,
@@ -195,6 +191,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDerp,
             ModuleSkinDerp,
             ModuleHandDerp,
+            ModuleVomit,
 
             // Misc
             ModuleAntiBot,
@@ -274,6 +271,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,
+            ModuleDamageParticles,
             ModuleESP,
             ModuleFreeCam,
             ModuleFullBright,
@@ -300,6 +298,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
+            ModuleTNTTimer,
             ModuleTracers,
             ModuleTrajectories,
             ModuleTrueSight,
@@ -405,7 +404,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     @JvmName("getCategories")
     @ScriptApi
-    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+    fun getCategories() = Category.entries.map { it.readableName }.toTypedArray()
 
     @JvmName("getModules")
     fun getModules() = modules

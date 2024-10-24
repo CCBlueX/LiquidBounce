@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.ItemEntity
@@ -56,17 +56,17 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
     private val renderY by float("RenderY", 0.0F, -2.0F..2.0F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    private val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    private val fontRenderer by lazy {
+        Fonts.DEFAULT_FONT.get()
+    }
 
     @Suppress("unused")
     val renderHandler = handler<OverlayRenderEvent> {
-        val fontBuffers = FontRendererBuffers()
+        val maxDistSquared = maximumDistance * maximumDistance
 
         renderEnvironmentForGUI {
-            try {
-                val maxDistSquared = maximumDistance * maximumDistance
-                val clusters = world.entities
+            fontRenderer.withBuffers { buf ->
+                world.entities
                     .filterIsInstance<ItemEntity>()
                     .filter {
                         it.squaredDistanceTo(player) < maxDistSquared
@@ -76,21 +76,12 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
                         val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
                             ?: return@mapNotNull null
                         renderPos to items
-                    }
-
-                clusters.forEachIndexed { i, (center, items) ->
-                    with(matrixStack) {
-                        push()
-                        try {
-                            val z = 1000.0F * i / clusters.size
-                            drawItemTags(items, Vec3(center.x, center.y, z), fontBuffers)
-                        } finally {
-                            pop()
+                    }.forEachWithSelf { (center, items), i, self ->
+                        withMatrixStack {
+                            val z = 1000.0F * i / self.size
+                            drawItemTags(items, Vec3(center.x, center.y, z), buf)
                         }
                     }
-                }
-            } finally {
-                fontBuffers.draw(fontRenderer)
             }
         }
     }
@@ -155,7 +146,7 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
             }
         }
 
-        fontRenderer.commit(this, fontBuffers)
+        fontRenderer.commit(fontBuffers)
         matrixStack.pop()
     }
 

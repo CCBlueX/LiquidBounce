@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -47,6 +48,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
@@ -233,7 +235,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // In this case we expand the bounding box by 0.5 in all directions and check if there is a collision
             // This might cause for "Spider-like" behavior, but it's the most reliable way to check
             // and usually the scaffold should start placing blocks
-            return world.getBlockCollisions(player,
+            return world.getBlockCollisions(
+                player,
                 player.boundingBox.expand(0.5, 0.0, 0.5).offset(0.0, -1.05, 0.0)
             ).any { shape -> shape != VoxelShapes.empty() }
         }
@@ -279,7 +282,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
+        updateRenderCount()
     }
+
+    private fun updateRenderCount(count: Int? = null) = EventManager.callEvent(BlockCountChangeEvent(count))
 
     @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
@@ -402,13 +408,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     @Suppress("unused")
     val tickHandler = repeatable {
+        updateRenderCount(blockCount)
+
         if (player.isOnGround) {
             // Placement Y is the Y coordinate of the block below the player
             placementY = player.blockPos.y - 1
             jumps++
         }
 
-        if(mc.options.jumpKey.isPressed) {
+        if (mc.options.jumpKey.isPressed) {
             startY = player.blockPos.y
             jumps = 2
         }
@@ -449,7 +457,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Does the crosshair target meet the requirements?
         if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget) ||
-            !isValidCrosshairTarget(currentCrosshairTarget)) {
+            !isValidCrosshairTarget(currentCrosshairTarget)
+        ) {
             return@repeatable
         }
 
@@ -499,7 +508,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }, placementSwingMode = swingMode)
 
         if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
-            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+            network.sendPacket(
+               Full(
+                    player.x, player.y, player.z, player.withFixedYaw(currentRotation),
+                    player.pitch, player.isOnGround
+                )
+            )
         }
 
         if (wasSuccessful) {
@@ -559,7 +573,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (!isTowering) {
             sameYMode.getTargetedBlockPos(blockPos)?.let { return it }
         } else if (towerMode.activeChoice == ScaffoldTowerMotion &&
-            ScaffoldTowerMotion.placeOffOnNoInput && !player.moving) {
+            ScaffoldTowerMotion.placeOffOnNoInput && !player.moving
+        ) {
             // Find the block closest to the player
             val blocks = arrayOf(
                 blockPos.add(0, 0, 1),
@@ -632,8 +647,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot,
-                    ScaffoldAutoBlockFeature.slotResetDelay)
+                SilentHotbar.selectSlotSilently(
+                    this, bestMainHandSlot,
+                    ScaffoldAutoBlockFeature.slotResetDelay
+                )
 
                 return true
             } else {

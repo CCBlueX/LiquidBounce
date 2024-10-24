@@ -264,6 +264,7 @@
   "liquidbounce.module.killAura.description": "Автоматические атакует врагов",
   "liquidbounce.module.superKnockback.description": "Увеличивает отбрасывание других сущностей.",
   "liquidbounce.module.velocity.description": "Изменяет величину отдачи, которую вы получаете.",
+  "liquidbounce.module.vomit.description": "Выбрасывает предметы из вашего инвентаря.",
   "liquidbounce.module.abortBreaking.description": "Позволяет прервать ломание, сохраняя прогресс.",
   "liquidbounce.module.clip.description": "Позволяет проходить сквозь блоки.",
   "liquidbounce.module.damage.description": "Наносит указанное количество повреждений себе.",
@@ -585,5 +586,10 @@
   "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы.",
   "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars.",
   "liquidbounce.module.multiActions.description": "Позволяет выполнять несколько действий одновременно.",
-  "liquidbounce.module.zoom.description": "Позволяет вам сделать всё в вашем мире больше или меньше."
+  "liquidbounce.module.zoom.description": "Позволяет вам сделать всё в вашем мире больше или меньше.",
+  "liquidbounce.module.damageParticles.description": "Показывает изменения здоровья сущностей.",
+  "liquidbounce.module.noMissCooldown.description": "Отключает кулдаун удара из версии 1.8 или полностью отменяет пропущенные атаки.",
+  "liquidbounce.module.itemTags.description": "Отображает значки и количество для выброшенных предметов.",
+  "liquidbounce.module.blockOutline.description": "Изменяет способ выделения блоков в Minecraft.",
+  "liquidbounce.module.prophuntESP.description": "Показывает объекты в режиме Prophunt."
 }
