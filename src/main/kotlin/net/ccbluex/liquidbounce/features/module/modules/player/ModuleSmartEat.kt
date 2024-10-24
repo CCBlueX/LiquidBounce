@@ -165,7 +165,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
             if (useAction != UseAction.EAT && useAction != UseAction.DRINK)
                 return@repeatable
-            if (!SilentHotbar.isSlotModified(this@SilentOffhand))
+            if (!SilentHotbar.isSlotModifiedBy(this@SilentOffhand))
                 return@repeatable
 
             // if we are already eating, we want to keep the silent slot
