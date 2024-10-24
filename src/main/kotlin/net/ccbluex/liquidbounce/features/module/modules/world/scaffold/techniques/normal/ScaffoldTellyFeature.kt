@@ -42,6 +42,10 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
     val doNotAim: Boolean
         get() = offGroundTicks < straightTicks && ticksUntilJump >= jumpTicks
 
+    // New val to determine if the player is telly bridging
+    val isTellyBridging: Boolean
+        get() = ticksUntilJump >= jumpTicks && player.moving
+
     private var offGroundTicks = 0
     private var ticksUntilJump = 0
 
@@ -71,7 +75,7 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
         }
     }
 
-    @Suppress
+    @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
         ticksUntilJump = 0
         jumpTicks = jumpTicksOpt.random()
