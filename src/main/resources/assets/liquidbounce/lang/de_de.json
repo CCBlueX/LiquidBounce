@@ -576,10 +576,10 @@
   "liquidbounce.module.autoQueue.description": "Tritt automatisch auf Mini Game Servern dem Spiel bei.",
   "liquidbounce.module.chams.description": "Rendert Spieler durch Wände.",
   "liquidbounce.module.bungeeSpoofer.description": "Ermöglicht dir die Verbindung zu einem Bungee-Cord-geschützten Subserver, indem du den BungeeCord-Handshake vortäuschst.",
-  "liquidbounce.module.customAmbience.description": "Ermöglicht dir, die Weltatmosphäre zu überschreiben.",
+  "liquidbounce.module.customAmbience.description": "Ermöglicht dir, die Weltatmosphäre zu ändern.",
   "liquidbounce.module.bedPlates.description": "Ermöglicht dir zu sehen, welche Blöcke sich um das Bett herum befinden",
   "liquidbounce.module.targetStrafe.description": "Geht automatisch um Feinde herum, die von KillAura anvisiert werden.",
-  "liquidbounce.module.autoShop.description": "Kauft automatisch bestimmte Artikel inm BedWars Shop.",
+  "liquidbounce.module.autoShop.description": "Kauft automatisch bestimmte Artikel im BedWars Shop.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Erfolgreich neu geladen",
   "liquidbounce.module.autoShop.messages.loadError": "Die Konfiguration kann nicht geladen werden",
   "liquidbounce.module.liquidPlace.description": "Ermöglicht das Platzieren von Blöcken auf Flüssigkeiten.",
@@ -590,5 +590,10 @@
   "liquidbounce.module.multiActions.description": "Ermöglicht dir, mehrere Dinge gleichzeitig zu erledigen.",
   "liquidbounce.module.noMissCooldown.description": "Deaktiviert 1.8 Abklingzeit (Hit Cooldown) oder bricht verpasste Angriffe vollständig ab.",
   "liquidbounce.module.damageParticles.description": "Zeigt dir an, wie viel Schaden du an z.B. Spielern verteilst.",
-  "liquidbounce.module.vomit.description": "Droppt Items aus deinem Inventar."
+  "liquidbounce.module.vomit.description": "Wirft Items aus deinem Inventar.",
+  "liquidbounce.module.tntTimer.description": "Zeigt einen Timer an, wann das TNT explodieren wird.",
+  "liquidbounce.module.autoBuild.description": "Baut automatisch bestimmte Strukturen.",
+  "liquidbounce.module.autoBuild.messages.noPosition": "Es wurde keine mögliche Position gefunden, deaktiviere Modul...",
+  "liquidbounce.module.autoBuild.messages.noObsidian": "Es wurde kein Obsidian gefunden, deaktiviere Modul...",
+  "liquidbounce.module.autoBuild.messages.noFlintAndSteel": "Es wurde kein Feuerzeug gefunden, deaktiviere Modul..."
 }
