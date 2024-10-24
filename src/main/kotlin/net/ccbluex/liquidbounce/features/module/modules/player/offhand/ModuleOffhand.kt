@@ -60,7 +60,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private var switchMode = enumChoice("SwitchMode", SwitchMode.AUTOMATIC)
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
-    private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
+    private val cycleSlots by bind("Cycle", GLFW.GLFW_KEY_H)
     private val totem = tree(Totem())
 
     private object Gapple : ToggleableConfigurable(this, "Gapple", true) {
@@ -68,7 +68,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             val onlyWhileKa by boolean("OnlyWhileKillAura", true)
         }
 
-        val gappleBind by key("GappleBind", GLFW.GLFW_KEY_UNKNOWN)
+        val gappleBind by bind("GappleBind", GLFW.GLFW_KEY_UNKNOWN)
 
         init {
             tree(WhileHoldingSword)
@@ -78,13 +78,13 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
         val onlyWhileCa by boolean("OnlyWhileCrystalAura", false)
         val whenNoTotems by boolean("WhenNoTotems", true)
-        val crystalBind by key("CrystalBind", GLFW.GLFW_KEY_UNKNOWN)
+        val crystalBind by bind("CrystalBind", GLFW.GLFW_KEY_UNKNOWN)
     }
 
     private object Strength : ToggleableConfigurable(this, "StrengthPotion", false) {
         val onlyWhileHoldingSword by boolean("OnlyWhileHoldingSword", true)
         val onlyWhileKa by boolean("OnlyWhileKillAura", true)
-        val strengthBind by key("StrengthBind", GLFW.GLFW_KEY_UNKNOWN)
+        val strengthBind by bind("StrengthBind", GLFW.GLFW_KEY_UNKNOWN)
     }
 
     init {
@@ -124,17 +124,17 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             return@handler
         }
 
-        when (it.key.keyCode) {
-            Gapple.gappleBind -> Mode.GAPPLE.onBindPress()
-            Crystal.crystalBind -> Mode.CRYSTAL.onBindPress()
-            Strength.strengthBind -> {
+        when (it.key.code) {
+            Gapple.gappleBind.boundKey.code -> Mode.GAPPLE.onBindPress()
+            Crystal.crystalBind.boundKey.code -> Mode.CRYSTAL.onBindPress()
+            Strength.strengthBind.boundKey.code -> {
                 // since we can't cycle to strength, its status has to be checked here
                 if (Strength.enabled) {
                     Mode.STRENGTH.onBindPress()
                 }
             }
 
-            cycleSlots -> {
+            cycleSlots.boundKey.code -> {
                 val entries = Mode.entries
                 val startIndex = staticMode.ordinal
                 var index = (startIndex + 1) % entries.size
