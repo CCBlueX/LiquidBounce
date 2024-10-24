@@ -40,7 +40,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
         .doNotIncludeAlways() // Keeps API key private
     private val openAiKey by text("OpenAiKey", "")
         .doNotIncludeAlways() // Keeps API key private
-    private val model by text("Model", "gpt-4")
+    private val model by text("Model", "gpt-4o-mini") // GPT 4O Mini should be enough for this
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
         "ms")
     private val cooldownMinutes by int("Cooldown", 2, 0..60, "minutes")
