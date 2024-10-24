@@ -94,7 +94,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }
 
         val closestBlock = AutoFarmBlockTracker.trackedBlockMap.filter { allowedItems[it.value.ordinal] }.keys.map {
-            it.asBlockPos().toCenterPos()
+            it.toCenterPos()
         }.minByOrNull { it.squaredDistanceTo(player.pos) }
 
         return closestBlock
