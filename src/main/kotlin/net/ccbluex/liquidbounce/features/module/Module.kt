@@ -31,12 +31,13 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
+import net.minecraft.client.util.InputUtil
 import net.minecraft.client.world.ClientWorld
-import org.lwjgl.glfw.GLFW
 
 interface QuickImports {
     /**
@@ -66,8 +67,8 @@ interface QuickImports {
 open class Module(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
-    bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
-    bindAction: BindAction = BindAction.TOGGLE, // default action
+    bind: Int = InputUtil.UNKNOWN_KEY.code, // default bind
+    bindAction: InputBind.BindAction = InputBind.BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
@@ -148,10 +149,8 @@ open class Module(
         new
     }
 
-    var bind by key("Bind", bind)
+    val bind by bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
-    var bindAction by enumChoice<BindAction>("BindAction", bindAction)
-        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeAction }
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .onChange {
@@ -258,12 +257,5 @@ open class Module(
     ) = choices(this, name, activeCallback, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)
-
-    enum class BindAction(override val choiceName: String) : NamedChoice {
-
-        TOGGLE("Toggle"),
-        HOLD("Hold")
-
-    }
 
 }

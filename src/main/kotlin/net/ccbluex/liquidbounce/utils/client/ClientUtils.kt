@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
@@ -127,6 +129,14 @@ fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata)
     chatHud.addMessage(literalText, metadata.id, metadata.count)
 }
 
+fun chat(text: Text, module: Module) = chat(text, metadata = MessageMetadata(id = "${module.name}#info"))
+
+fun chat(text: Text, command: Command) = chat(text, metadata = MessageMetadata(id = "${command.name}#info"))
+
+fun chat(text: String, module: Module) = chat(text.asText(), module)
+
+fun chat(text: String, command: Command) = chat(text.asText(), command)
+
 fun chat(text: String) = chat(text.asText())
 
 fun notification(title: Text, message: String, severity: NotificationEvent.Severity) =
@@ -137,29 +147,6 @@ fun notification(title: String, message: Text, severity: NotificationEvent.Sever
 
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
-
-/**
- * Translated key code to key name using GLFW and translates unknown key to NONE
- */
-fun key(name: String) = when (name.lowercase()) {
-    "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
-    "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
-    else -> runCatching {
-        InputUtil.fromTranslationKey("key.keyboard.${name.lowercase()}").code
-    }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
-}
-
-/**
- * Translated key code to key name using GLFW and translates unknown key to NONE
- */
-fun keyName(keyCode: Int) = when (keyCode) {
-    GLFW.GLFW_KEY_UNKNOWN -> "NONE"
-    else -> InputUtil.fromKeyCode(keyCode, -1).translationKey
-        .split(".")
-        .drop(2)
-        .joinToString(separator = "_")
-        .uppercase()
-}
 
 /**
  * Open uri in browser

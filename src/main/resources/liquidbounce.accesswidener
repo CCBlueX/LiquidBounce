@@ -96,8 +96,6 @@ mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVel
 mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityY F
 mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityZ F
 
-mutable field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
-
 accessible field net/minecraft/client/world/ClientChunkManager chunks Lnet/minecraft/client/world/ClientChunkManager$ClientChunkMap;
 accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z
 accessible field net/minecraft/client/world/ClientChunkManager$ClientChunkMap chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
@@ -171,3 +169,7 @@ accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraf
 accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
 
 accessible field net/minecraft/client/MinecraftClient renderTaskQueue Ljava/util/Queue;
+
+accessible field net/minecraft/util/math/Direction HORIZONTAL [Lnet/minecraft/util/math/Direction;
+
+accessible field net/minecraft/client/util/InputUtil$Type map Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;

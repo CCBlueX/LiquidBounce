@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
+import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -171,7 +172,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
             // Changes your server side rotation and then resets it with provided settings
-            var aimPlan = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toAimPlan(new Rotation(j, k), null, null, true);
+            var aimPlan = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toAimPlan(new Rotation(j, k), null, null, true, null);
             RotationManager.INSTANCE.aimAt(aimPlan, Priority.NOT_IMPORTANT, ModuleNoRotateSet.INSTANCE);
         } else {
             // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotation server-side.
@@ -184,10 +185,13 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @ModifyVariable(method = "sendChatMessage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private String handleSendMessage(String content) {
+        var result = ModuleBetterChat.INSTANCE.modifyMessage(content);
+
         if (ModuleDisabler.INSTANCE.getEnabled() && DisablerSpigotSpam.INSTANCE.getEnabled()) {
-            return DisablerSpigotSpam.INSTANCE.getMessage() + " " + content;
+            return DisablerSpigotSpam.INSTANCE.getMessage() + " " + result;
         }
-        return content;
+
+        return result;
     }
 
 }

@@ -11,11 +11,11 @@
     import TogglableSetting from "../TogglableSetting.svelte";
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
-    import KeySetting from "../KeySetting.svelte";
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
     import {onMount} from "svelte";
     import TextArraySetting from "../TextArraySetting.svelte";
+    import BindSetting from "../BindSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -54,12 +54,12 @@
             <ColorSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "TEXT"}
             <TextSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "KEY"}
-            <KeySetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "BLOCKS"}
             <BlocksSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "TEXT_ARRAY"}
             <TextArraySetting bind:setting={setting} on:change/>
+        {:else if setting.valueType === "BIND"}
+            <BindSetting bind:setting={setting} on:change/>
         {:else}
             <div style="color: white">Unsupported setting {setting.valueType}</div>
         {/if}

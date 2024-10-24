@@ -65,6 +65,11 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             FriendManager.friends.withIndex().forEach { (id, friend) ->
                 val color4b = if (ReplaceFriendNames.colorRainbow) rainbow() else ReplaceFriendNames.color
 
+                // Do not replace blank names, otherwise the game will crash
+                if (friend.name.isBlank()) {
+                    return@forEach
+                }
+
                 replacements.add(ReplacementMapping(
                     friend.name,
                     friend.alias ?: friend.getDefaultName(id),

@@ -57,6 +57,7 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
  * @param offsetPriorityGetter compares two offsets by their priority. The offset with the higher priority will be
  * prioritized.
  * @param playerPositionOnPlacement the position the player will be at when placing the block
+ * @param allowPointingAway will consider faces the point away from the player
  */
 class BlockPlacementTargetFindingOptions(
     val offsetsToInvestigate: List<Vec3i>,
@@ -64,7 +65,8 @@ class BlockPlacementTargetFindingOptions(
     val facePositionFactory: FaceTargetPositionFactory,
     val offsetPriorityGetter: (Vec3i) -> Double,
     val playerPositionOnPlacement: Vec3d,
-    val playerPoseOnPlacement: EntityPose = EntityPose.STANDING
+    val playerPoseOnPlacement: EntityPose = EntityPose.STANDING,
+    val allowPointingAway: Boolean = false
 ) {
     companion object {
         val PRIORITIZE_LEAST_BLOCK_DISTANCE: (Vec3i) -> Double = { vec ->
@@ -116,7 +118,7 @@ private fun findBestTargetPlanForTargetPosition(
     mode: BlockTargetingMode,
     targetFindingOptions: BlockPlacementTargetFindingOptions
 ): BlockTargetPlan? {
-    val directions = Direction.values()
+    val directions = Direction.entries
 
     val options = directions.mapNotNull { direction ->
         val targetPlan =
@@ -124,8 +126,10 @@ private fun findBestTargetPlanForTargetPosition(
                 ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
-        if (targetPlan.calculateAngleToPlayerEyeCosine(targetFindingOptions.playerPositionOnPlacement) < 0)
+        if (!targetFindingOptions.allowPointingAway &&
+            targetPlan.calculateAngleToPlayerEyeCosine(targetFindingOptions.playerPositionOnPlacement) < 0) {
             return@mapNotNull null
+        }
 
         return@mapNotNull targetPlan
     }
@@ -155,7 +159,7 @@ fun getTargetPlanForPositionAndDirection(
             val currPos = pos.add(direction.opposite.vector)
             val currState = currPos.getState() ?: return null
 
-            if (currState.isAir || currState.isReplaceable) {
+            if (currState.isReplaceable) {
                 return null
             }
 
@@ -169,10 +173,7 @@ fun getTargetPlanForPositionAndDirection(
 
 class PointOnFace(val face: Face, val point: Vec3d)
 
-fun findBestBlockPlacementTarget(
-    pos: BlockPos,
-    options: BlockPlacementTargetFindingOptions
-): BlockPlacementTarget? {
+fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.getState()!!
 
     // We cannot place blocks when there is already a block at that position
@@ -222,7 +223,7 @@ fun findBestBlockPlacementTarget(
             pointOnFace.point.add(Vec3d.of(currPos)),
             options.playerPositionOnPlacement.add(
                 0.0,
-                mc.player!!.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
+                player.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
                 0.0
             )
         )

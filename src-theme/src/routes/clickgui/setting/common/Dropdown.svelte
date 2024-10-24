@@ -2,7 +2,7 @@
     import {createEventDispatcher} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
 
-    export let name: string;
+    export let name: string | null;
     export let options: string[];
     export let value: string;
 
@@ -28,7 +28,11 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="dropdown" class:expanded on:click={() => (expanded = !expanded)}>
     <div class="head" bind:this={dropdownHead}>
-        <span class="text">{name} &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+        {#if name !== null}
+            <span class="text">{name} &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+        {:else}
+            <span class="text">{value}</span>
+        {/if}
     </div>
 
     {#if expanded}

@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Module
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
 import net.ccbluex.liquidbounce.utils.inventory.UNFAVORABLE_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.FallingBlock
-import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -36,13 +36,7 @@ object ScaffoldBlockItemSelection {
             return false
         }
 
-        val item = stack.item
-
-        if (item !is BlockItem) {
-            return false
-        }
-
-        val block = item.block
+        val block = stack.getBlock() ?: return false
         val defaultState = block.defaultState
 
         return when {
@@ -61,14 +55,7 @@ object ScaffoldBlockItemSelection {
      * - [ModuleInventoryCleaner]: Unfavourable blocks are not used as blocks by inv-cleaner.
      */
     fun isBlockUnfavourable(stack: ItemStack): Boolean {
-        val item = stack.item
-
-        if (item !is BlockItem) {
-            return true
-        }
-
-        val block = item.block
-
+        val block = stack.getBlock() ?: return true
         return when {
             // We dislike slippery blocks...
             block.slipperiness > 0.6F -> true
@@ -84,4 +71,5 @@ object ScaffoldBlockItemSelection {
             else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
         }
     }
+
 }

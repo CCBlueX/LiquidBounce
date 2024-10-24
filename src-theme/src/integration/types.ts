@@ -15,7 +15,6 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
-    | KeySetting
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting
@@ -27,12 +26,26 @@ export type ModuleSetting =
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting;
+    | TextArraySetting
+    | BindSetting;
 
 export interface BlocksSetting {
     valueType: string;
     name: string;
     value: string[];
+}
+
+export interface BindSetting {
+    valueType: string;
+    name: string;
+    value: {
+        boundKey: string;
+        action: string;
+    };
+    defaultValue: {
+        boundKey: string;
+        action: string;
+    };
 }
 
 export interface TextSetting {
@@ -48,12 +61,6 @@ export interface TextArraySetting {
 }
 
 export interface ColorSetting {
-    valueType: string;
-    name: string;
-    value: number;
-}
-
-export interface KeySetting {
     valueType: string;
     name: string;
     value: number;

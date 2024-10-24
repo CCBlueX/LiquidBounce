@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.minecraft.client.util.InputUtil
 
 @Nameable("windowResize")
 @WebSocketEvent
@@ -50,7 +51,13 @@ class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
 @WebSocketEvent
-class KeyboardKeyEvent(val keyCode: Int, val scanCode: Int, val action: Int, val mods: Int) : Event()
+class KeyboardKeyEvent(
+    val key: InputUtil.Key,
+    val keyCode: Int,
+    val scanCode: Int,
+    val action: Int,
+    val mods: Int
+) : Event()
 
 @Nameable("keyboardChar")
 @WebSocketEvent

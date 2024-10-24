@@ -136,7 +136,7 @@ object CommandAutoDisable {
                                     .append(module.name + " (")
                                     .styled { it.withColor(Formatting.GRAY) }
                                     .append(
-                                        keyName(module.bind).asText()
+                                        module.bind.keyName.asText()
                                             .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
                                     )
                                     .append(")")

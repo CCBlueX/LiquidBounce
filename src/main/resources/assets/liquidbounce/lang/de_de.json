@@ -334,7 +334,7 @@
   "liquidbounce.generic.locked": "Das Modul ist gesperrt und kann nicht aktiviert werden. Es bypassed wahrscheinlich nicht.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentifizierung fehlgeschlagen! Für LiquidChat ist ein Minecraft-Premium-Konto erforderlich.",
   "liquidbounce.liquidchat.jwtTokenReceived": "JWT-Token erhalten! Erneut anmelden...",
-  "liquidbounce.liquidchat.notConnected": "Keine Verbindung zum Chatserver! Schalten Sie das LiquidChat-Modul ein!",
+  "liquidbounce.liquidchat.notConnected": "Keine Verbindung zum Chatserver! Schalte das LiquidChat-Modul ein!",
   "liquidbounce.liquidchat.notLoggedIn": "Nicht authentifiziert! Du kannst leider nur mit einem Premium-Minecraft-Konto chatten!",
   "liquidbounce.liquidchat.states.connected": "Mit Chatserver verbunden!",
   "liquidbounce.liquidchat.states.disconnected": "Verbindung zum Chatserver getrennt!",
@@ -588,5 +588,7 @@
   "liquidbounce.module.prophuntESP.description": "Zeigt dir Props in Prophunt an.",
   "liquidbounce.module.zoom.description": "Ermöglicht dir, alles in deiner Welt kleiner oder größer erscheinen zu lassen.",
   "liquidbounce.module.multiActions.description": "Ermöglicht dir, mehrere Dinge gleichzeitig zu erledigen.",
-  "liquidbounce.module.noMissCooldown.description": "Deaktiviert 1.8 Abklingzeit (Hit Cooldown) oder bricht verpasste Angriffe vollständig ab."
+  "liquidbounce.module.noMissCooldown.description": "Deaktiviert 1.8 Abklingzeit (Hit Cooldown) oder bricht verpasste Angriffe vollständig ab.",
+  "liquidbounce.module.damageParticles.description": "Zeigt dir an, wie viel Schaden du an z.B. Spielern verteilst.",
+  "liquidbounce.module.vomit.description": "Droppt Items aus deinem Inventar."
 }

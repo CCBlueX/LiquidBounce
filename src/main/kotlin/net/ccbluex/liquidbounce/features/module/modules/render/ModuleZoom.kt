@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouse
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.util.math.MathHelper
 import kotlin.math.abs
 import kotlin.math.round
@@ -36,7 +37,7 @@ import kotlin.math.round
  *
  * The mouse is slowed down with the help of mixins in [MixinMouse].
  */
-object ModuleZoom : Module("Zoom", Category.RENDER, bindAction = BindAction.HOLD) {
+object ModuleZoom : Module("Zoom", Category.RENDER, bindAction = InputBind.BindAction.HOLD) {
 
     val zoom by int("Zoom", 30, 10..150)
 

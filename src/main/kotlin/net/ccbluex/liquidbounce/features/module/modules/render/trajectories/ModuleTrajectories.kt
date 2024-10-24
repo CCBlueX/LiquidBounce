@@ -30,10 +30,8 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin

@@ -42,7 +42,7 @@ object Fonts {
         }
     }
 
-    private var fontQueue = mutableListOf<QueuedFont>()
+    private val fontQueue = ArrayDeque<QueuedFont>()
 
     const val DEFAULT_FONT_SIZE: Int = 43
     val FONT_FORMATS = arrayOf("Regular", "Bold", "Italic", "BoldItalic")
@@ -50,11 +50,11 @@ object Fonts {
         .queueLoad()
 
     fun loadQueuedFonts() {
-        fontQueue.forEach {
-            logger.info("Loading queued font ${it.fontInfo.name}")
-            it.loadNow()
+        while (fontQueue.isNotEmpty()) {
+            val font = fontQueue.removeFirst()
+            logger.info("Loading queued font ${font.fontInfo.name}")
+            font.loadNow()
         }
-        fontQueue.clear()
     }
 
     /**

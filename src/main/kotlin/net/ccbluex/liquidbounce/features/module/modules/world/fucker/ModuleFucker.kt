@@ -18,12 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,13 +38,11 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BedBlock
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -217,7 +212,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
+            raytracePos != destroyerTarget.pos || raytracePos.getState()!!.isNotBreakable(raytracePos)
         ) {
             return@repeatable
         }

@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.utils.client.Curves
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
@@ -46,7 +46,7 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     private val scale by float("Scale", 1.5F, 0.25F..4F)
     private val ttl by float("TimeToLive", 1.5F, 0.5F..5.0F, "s")
     private val transitionY by float("TransitionY", 1.0F, -2.0F..2.0F)
-    private val transitionType by curve("TransitionType", Curves.EASE_OUT)
+    private val transitionType by curve("TransitionType", Easing.QUAD_OUT)
 
     private val healthMap = Object2FloatOpenHashMap<LivingEntity>()
     private val particles = hashSetOf<Particle>()
@@ -111,26 +111,30 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 val now = System.currentTimeMillis()
+                val c = size
+                val fontScale = 1.0F / (c * 0.15F) * scale
                 particles.forEachIndexed { i, particle ->
                     val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-                    val currentPos = particle.pos.add(0.0, (transitionY * transitionType(progress)).toDouble(), 0.0)
+                    val currentPos = particle.pos.add(
+                        0.0,
+                        (transitionY * transitionType.transform(progress)).toDouble(),
+                        0.0
+                    )
                     val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
-                    val c = size
-                    val fontScale = 1.0F / (c * 0.15F) * scale
                     val text = process(particle.text, particle.color)
 
                     draw(
                         text,
-                        screenPos.x - text.widthWithShadow * 0.5F,
+                        screenPos.x,
                         screenPos.y,
                         shadow = true,
                         z = 1000.0F * i / particles.size,
                         scale = fontScale
                     )
                 }
-                commit(this@renderEnvironmentForGUI, buf)
+                commit(buf)
             }
         }
     }

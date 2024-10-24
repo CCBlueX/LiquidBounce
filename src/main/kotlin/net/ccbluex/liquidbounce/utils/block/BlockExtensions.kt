@@ -23,7 +23,10 @@ import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.*
 import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemPlacementContext
@@ -46,7 +49,9 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 
 fun BlockPos.getBlock() = getState()?.block
 
-fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.getCenterDistanceSquared() = player.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+
+fun BlockPos.getCenterDistanceSquaredEyes() = player.eyes.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
 /**
  * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
@@ -83,25 +88,24 @@ val BlockPos.weakestBlock: BlockPos?
         val block = this.getBlock()
         return positionsAround
             .filter { it.getBlock() != block && it.getState()?.isAir == false }
-            .sortedBy { player.pos.distanceTo(it.toCenterPos()) }
+            .sortedBy { player.pos.squaredDistanceTo(it.toCenterPos()) }
             .minByOrNull { it.getBlock()?.hardness ?: 0f }
     }
 
 /**
- * Search blocks around the player in a cuboid
+ * Search blocks around a position in a cuboid.
  */
 @Suppress("NestedBlockDepth")
 inline fun searchBlocksInCuboid(
-    a: Float,
-    eyes: Vec3d,
+    radius: Float,
+    center: Vec3d,
     filter: (BlockPos, BlockState) -> Boolean
 ): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-//    val (eyeX, eyeY, eyeZ) = Triple(eyes.x.roundToInt(), eyes.y.roundToInt(), eyes.z.roundToInt())
-    val xRange = floor(a + eyes.x).toInt() downTo floor(-a + eyes.x).toInt()
-    val yRange = floor(a + eyes.y).toInt() downTo floor(-a + eyes.y).toInt()
-    val zRange = floor(a + eyes.z).toInt() downTo floor(-a + eyes.z).toInt()
+    val xRange = floor(center.x + radius).toInt() downTo floor(center.x - radius).toInt()
+    val yRange = floor(center.y + radius).toInt() downTo floor(center.y - radius).toInt()
+    val zRange = floor(center.z + radius).toInt() downTo floor(center.z - radius).toInt()
 
     for (x in xRange) {
         for (y in yRange) {
@@ -118,6 +122,23 @@ inline fun searchBlocksInCuboid(
     }
 
     return blocks
+}
+
+/**
+ * Scan blocks around a position in a cuboid.
+ */
+@Suppress("NestedBlockDepth")
+inline fun scanBlocksInCuboid(radius: Int, center: BlockPos, function: (pos: BlockPos) -> Boolean) {
+    for (x in center.x - radius..center.x + radius) {
+        for (y in center.y - radius..center.y + radius) {
+            for (z in center.z - radius..center.z + radius) {
+                val blockPos = BlockPos(x, y, z)
+                if (function(blockPos)) {
+                    return
+                }
+            }
+        }
+    }
 }
 
 @Suppress("NestedBlockDepth")
@@ -244,7 +265,7 @@ fun BlockPos.canStandOn(): Boolean {
 /**
  * Check if [box] is reaching of specified blocks
  */
-fun isBlockAtPosition(
+inline fun isBlockAtPosition(
     box: Box,
     isCorrectBlock: (Block?) -> Boolean,
 ): Boolean {
@@ -265,7 +286,7 @@ fun isBlockAtPosition(
  * Check if [box] intersects with bounding box of specified blocks
  */
 @Suppress("detekt:all")
-fun collideBlockIntersects(
+inline fun collideBlockIntersects(
     box: Box,
     checkCollisionShape: Boolean = true,
     isCorrectBlock: (Block?) -> Boolean
@@ -302,7 +323,7 @@ fun collideBlockIntersects(
     return false
 }
 
-fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
+inline fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
     val from = BlockPos(this.minX.toInt(), this.minY.toInt(), this.minZ.toInt())
     val to = BlockPos(ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt())
 
@@ -468,6 +489,12 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
     }
 }
 
+fun BlockState.isNotBreakable(pos: BlockPos) = !isBreakable(pos)
+
+fun BlockState.isBreakable(pos: BlockPos): Boolean {
+    return !isAir && (player.isCreative || getHardness(world, pos) >= 0f)
+}
+
 fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }
@@ -499,4 +526,56 @@ fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
 @Suppress("UnusedReceiverParameter")
 fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): BlockPos {
     return pos.offset((state.get(HorizontalFacingBlock.FACING)).opposite)
+}
+
+// TODO replace this by an approach that automatically collects the blocks, this would create better mod compatibility
+/**
+ * Checks if the block can be interacted with, null will be returned as not interactable.
+ * The [blockState] is optional but can make the result more accurate, if not provided
+ * it will just assume the block is interactable.
+ *
+ * Note: The player is required to NOT be `null`.
+ *
+ * This data has been collected by looking at the implementations of [AbstractBlock.onUse].
+ */
+fun Block?.isInteractable(blockState: BlockState?): Boolean {
+    if (this == null) {
+        return false
+    }
+
+    return this is BedBlock || this is AbstractChestBlock<*> || this is AbstractFurnaceBlock || this is AnvilBlock
+        || this is BarrelBlock || this is BeaconBlock || this is BellBlock || this is BrewingStandBlock
+        || this is ButtonBlock || this is CakeBlock && player.hungerManager.isNotFull || this is CandleCakeBlock
+        || this is CartographyTableBlock || this is CaveVinesBodyBlock && blockState?.get(CaveVines.BERRIES) ?: true
+        || this is CaveVinesHeadBlock && blockState?.get(CaveVines.BERRIES) ?: true
+        || this is ComparatorBlock || this is ComposterBlock && (blockState?.get(ComposterBlock.LEVEL) ?: 8) == 8
+        || this is CrafterBlock || this is CraftingTableBlock || this is DaylightDetectorBlock
+        || this is DecoratedPotBlock || this is DispenserBlock || this is DoorBlock || this is DragonEggBlock
+        || this is EnchantingTableBlock || this is FenceGateBlock || this is FlowerPotBlock
+        || this is GrindstoneBlock || this is HopperBlock || this is OperatorBlock && player.isCreativeLevelTwoOp
+        || this is JukeboxBlock && blockState?.get(JukeboxBlock.HAS_RECORD) == true || this is LecternBlock
+        || this is LeverBlock || this is LightBlock && player.isCreativeLevelTwoOp || this is NoteBlock
+        || this is RedstoneWireBlock || this is RepeaterBlock || this is RespawnAnchorBlock // this only works
+        // when we hold glow stone or are not in the nether and the anchor is charged, but it'd be too error-prone when
+        // it would be checked as the player can quickly switch to glow stone
+        || this is ShulkerBoxBlock || this is StonecutterBlock
+        || this is SweetBerryBushBlock && (blockState?.get(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapdoorBlock
+}
+
+/**
+ * Returns the shape of the block as box, if it can't get the actual shape, it will return [FULL_BOX].
+ */
+fun BlockPos.getShape(): Box {
+    val outlineShape = this.getState()?.getOutlineShape(world, this) ?: return FULL_BOX
+    if (outlineShape.isEmpty) {
+        return EMPTY_BOX
+    }
+
+    return outlineShape.boundingBox
+}
+
+fun BlockPos.isBlockedByEntities(): Boolean {
+    return world.entities.any {
+        it.boundingBox.intersects(FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble()))
+    }
 }
