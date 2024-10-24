@@ -178,6 +178,7 @@ public abstract class MixinHeldItemRenderer {
         if (ModuleSilentHotbar.INSTANCE.getEnabled()) {
             return player.getInventory().main.get(SilentHotbar.INSTANCE.getClientsideSlot());
         }
+
         return player.getMainHandStack();
     }
 
