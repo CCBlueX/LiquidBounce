@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.entity.Entity
@@ -55,6 +56,10 @@ class AimPlan(
     val considerInventory: Boolean,
     val applyVelocityFix: Boolean,
     val changeLook: Boolean,
+    /**
+     * What should be done if the target rotation has been reached. Can be `null`.
+      */
+    val whenReached: RestrictedSingleUseAction? = null
 ) {
 
     /**
