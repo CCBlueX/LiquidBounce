@@ -166,3 +166,5 @@ accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraf
 accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
 
 accessible field net/minecraft/client/MinecraftClient renderTaskQueue Ljava/util/Queue;
+
+accessible field net/minecraft/client/util/InputUtil$Type map Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
