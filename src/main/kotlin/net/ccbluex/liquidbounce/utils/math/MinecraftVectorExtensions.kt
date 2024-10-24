@@ -21,11 +21,20 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.block.Region
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.floor
+
+inline operator fun BlockPos.rangeTo(other: BlockPos) = Region(this, other)
+
+inline operator fun Vec3i.component1() = this.x
+inline operator fun Vec3i.component2() = this.y
+inline operator fun Vec3i.component3() = this.z
+
+inline fun BlockPos.copy(x: Int = this.x, y: Int = this.y, z: Int = this.z) = BlockPos(x, y, z)
 
 inline operator fun Vec3d.plus(other: Vec3d): Vec3d {
     return this.add(other)

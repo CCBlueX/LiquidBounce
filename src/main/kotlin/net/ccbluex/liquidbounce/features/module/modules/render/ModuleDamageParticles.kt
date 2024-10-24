@@ -111,26 +111,26 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 val now = System.currentTimeMillis()
+                val c = size
+                val fontScale = 1.0F / (c * 0.15F) * scale
                 particles.forEachIndexed { i, particle ->
                     val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
                     val currentPos = particle.pos.add(0.0, (transitionY * transitionType(progress)).toDouble(), 0.0)
                     val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
-                    val c = size
-                    val fontScale = 1.0F / (c * 0.15F) * scale
                     val text = process(particle.text, particle.color)
 
                     draw(
                         text,
-                        screenPos.x - text.widthWithShadow * 0.5F,
+                        screenPos.x,
                         screenPos.y,
                         shadow = true,
                         z = 1000.0F * i / particles.size,
                         scale = fontScale
                     )
                 }
-                commit(this@renderEnvironmentForGUI, buf)
+                commit(buf)
             }
         }
     }
