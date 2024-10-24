@@ -112,7 +112,7 @@ object ChunkRenderer {
 
             val brightness =
                 if (higherOffsets.size < 2) {
-                    220 / 255.0
+                    220.0 / 255.0
                 } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
                     130.0 / 255.0
                 } else {
@@ -120,7 +120,7 @@ object ChunkRenderer {
                     val eee = higherOffsetVec.dotProduct(Vec2i(pos.x, pos.z)).toDouble() / higherOffsetVec.length()
                     val sine = sin(eee * 0.5 * PI)
 
-                    (190 + (similarityToSunDirection * 55.0) + sine * 10) / 255.0
+                    (190.0 + (similarityToSunDirection * 55.0) + sine * 10.0) / 255.0
                 }
 
             val surfaceBlockPos = BlockPos(pos.x, height, pos.z)
@@ -162,7 +162,7 @@ object ChunkRenderer {
                     for (offZ in 0..15) {
                         val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
-                        val color = getColor(BlockPos(offX or (z shl 4), 0, offZ or (z shl 4)))
+                        val color = getColor(BlockPos(offX or (x shl 4), 0, offZ or (z shl 4)))
 
                         texture.image!!.setColor(texX, texY, color)
                     }
