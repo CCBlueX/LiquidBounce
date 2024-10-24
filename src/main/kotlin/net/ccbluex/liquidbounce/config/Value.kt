@@ -31,10 +31,11 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
-import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
+import net.minecraft.client.util.InputUtil
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.awt.Color
@@ -337,11 +338,11 @@ open class Value<T : Any>(
                 set(items as T)
             }
 
-            ValueType.KEY -> {
+            ValueType.BIND -> {
                 val newValue = try {
-                    string.toInt()
+                    InputUtil.Type.KEYSYM.createFromCode(string.toInt())
                 } catch (e: NumberFormatException) {
-                    key(string)
+                    inputByName(string)
                 }
 
                 set(newValue as T)
@@ -439,6 +440,7 @@ enum class ValueType {
     BLOCK, BLOCKS,
     ITEM, ITEMS,
     KEY,
+    BIND,
     CHOICE, CHOOSE,
     INVALID,
     PROXY,

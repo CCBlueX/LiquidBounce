@@ -149,29 +149,6 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
     EventManager.callEvent(NotificationEvent(title, message, severity))
 
 /**
- * Translated key code to key name using GLFW and translates unknown key to NONE
- */
-fun key(name: String) = when (name.lowercase()) {
-    "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
-    "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
-    else -> runCatching {
-        InputUtil.fromTranslationKey("key.keyboard.${name.lowercase()}").code
-    }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
-}
-
-/**
- * Translated key code to key name using GLFW and translates unknown key to NONE
- */
-fun keyName(keyCode: Int) = when (keyCode) {
-    GLFW.GLFW_KEY_UNKNOWN -> "NONE"
-    else -> InputUtil.fromKeyCode(keyCode, -1).translationKey
-        .split(".")
-        .drop(2)
-        .joinToString(separator = "_")
-        .uppercase()
-}
-
-/**
  * Open uri in browser
  */
 fun browseUrl(url: String) = Util.getOperatingSystem().open(url)

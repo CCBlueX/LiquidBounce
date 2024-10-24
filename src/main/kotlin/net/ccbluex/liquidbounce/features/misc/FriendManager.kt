@@ -32,7 +32,8 @@ object FriendManager : Configurable("Friends"), Listenable {
 
     val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
 
-    val tagEntityEvent = handler<TagEntityEvent> {
+    @Suppress("unused")
+    private val tagEntityEvent = handler<TagEntityEvent> {
         if (isFriend(it.entity)) {
             it.assumeFriend()
         }
