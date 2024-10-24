@@ -191,6 +191,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val surroundingBlocks: Set<SurroundingBlock>,
     )
 
+    @Suppress("CognitiveComplexMethod")
     private fun BlockPos.searchLayer(layers: Int, vararg directions: Direction): Sequence<IntObjectPair<BlockPos>> =
         sequence {
             val queue = ArrayDeque<IntObjectPair<BlockPos>>(layers * layers * directions.size / 2).apply {
@@ -227,18 +228,17 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     private fun getBedPlates(headState: BlockState, head: BlockPos): BedState {
         val bedDirection = headState.get(BedBlock.FACING)
 
-        // up + left + right
-        val directions = if (bedDirection.axis == Direction.Axis.X) {
-            arrayOf(Direction.UP, Direction.SOUTH, Direction.NORTH)
+        val (left, right) = if (bedDirection.axis == Direction.Axis.X) {
+            arrayOf(Direction.SOUTH, Direction.NORTH)
         } else {
-            arrayOf(Direction.UP, Direction.WEST, Direction.EAST)
+            arrayOf(Direction.WEST, Direction.EAST)
         }
 
         val opposite = bedDirection.opposite
         val layers = Array<Object2IntOpenHashMap<Block>>(maxLayers - 1) { Object2IntOpenHashMap() }
 
-        (head.searchLayer(maxLayers, bedDirection, *directions) +
-            head.offset(opposite).searchLayer(maxLayers, opposite, *directions))
+        (head.searchLayer(maxLayers, bedDirection, Direction.UP, left, right) +
+            head.offset(opposite).searchLayer(maxLayers, opposite, Direction.UP, left, right))
             .mapNotNull {
                 IntObjectImmutablePair(it.keyInt(), it.value()?.getState() ?: return@mapNotNull null)
             }
