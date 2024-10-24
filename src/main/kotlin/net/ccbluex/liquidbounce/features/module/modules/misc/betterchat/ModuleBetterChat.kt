@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -41,11 +42,34 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
      */
     private val keepAfterDeath by boolean("KeepAfterDeath", true)
 
-    var antiChatClearPaused = false
+    private object AppendPrefix : MessageModifier("AppendPrefix", false) {
+        val prefix by text("Prefix", "> ")
+
+        override fun getMessage(content: String) = prefix + content
+    }
+
+    private object AppendSuffix : MessageModifier("AppendSuffix", false) {
+        val suffix by text("Suffix", " | \uD835\uDE7B\uD835\uDE92\uD835\uDE9A\uD835\uDE9E" +
+            "\uD835\uDE92\uD835\uDE8D\uD835\uDE71\uD835\uDE98\uD835\uDE9E\uD835\uDE97\uD835\uDE8C\uD835\uDE8E")
+
+        override fun getMessage(content: String) = content + suffix
+    }
+
+    init {
+        tree(AppendPrefix)
+        tree(AppendSuffix)
+    }
+
+    /**
+     * Allows you to transform your message text to unicode.
+     */
+    private val forceUnicodeChat by boolean("ForceUnicodeChat", false)
 
     init {
         tree(AntiSpam)
     }
+
+    var antiChatClearPaused = false
 
     @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
@@ -64,6 +88,47 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
 
     private fun openChat(text: String) {
         mc.send { mc.setScreen(ChatScreen(text)) }
+    }
+
+    fun modifyMessage(content: String): String {
+        if (!enabled) {
+            return content
+        }
+
+        val result = if (forceUnicodeChat) {
+            applyUnicodeTransformation(content)
+        } else {
+            content
+        }
+
+        return AppendSuffix.modifyMessage(AppendPrefix.modifyMessage(result))
+    }
+
+    private fun applyUnicodeTransformation(content: String): String {
+        return buildString {
+            for (c in content) {
+                if (c.code in 33..128) {
+                    append(Character.toChars(c.code + 65248))
+                } else {
+                    append(c)
+                }
+            }
+        }
+    }
+
+    private abstract class MessageModifier(
+        name: String,
+        enabled: Boolean
+    ) : ToggleableConfigurable(this, name, enabled) {
+        fun modifyMessage(content: String): String {
+            if (!this.enabled) {
+                return content
+            }
+
+            return getMessage(content)
+        }
+
+        abstract fun getMessage(content: String): String
     }
 
 }

@@ -71,7 +71,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
 
     // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -126,13 +126,13 @@ dependencies {
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
     implementation 'com.vdurmont:semver4j:3.1.0'
-    implementation 'org.apache.tika:tika-core:2.9.2'
+    implementation 'org.apache.tika:tika-core:3.0.0'
 
     implementation 'org.apache.commons:commons-exec:1.3'
 
     // Test libraries
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

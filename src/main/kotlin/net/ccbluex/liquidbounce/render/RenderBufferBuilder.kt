@@ -262,47 +262,70 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
 
 }
 
-fun drawSolidBox(env: RenderEnvironment, consumer: VertexConsumer, box: Box, color: Color4b) {
-    val matrix = env.currentMvpMatrix
+internal val Box.vertexPositions: List<Vec3>
+    get() = listOf(
+        Vec3(minX, minY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(minX, minY, minZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, maxY, minZ)
+    )
 
-    val vertexPositions = boxVertexPositions(box)
+internal val Box.outlineVertexPositions: List<Vec3>
+    get() = listOf(
+        Vec3(minX, minY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, minZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, maxY, minZ)
+    )
+
+fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Color4b) {
+    val matrix = currentMvpMatrix
 
     // Draw the vertices of the box
-    vertexPositions.forEach { (x, y, z) ->
+    box.vertexPositions.forEach { (x, y, z) ->
         consumer.vertex(matrix, x, y, z).color(color.toRGBA())
     }
 }
-
-private fun boxVertexPositions(box: Box): List<Vec3> {
-    val vertices = listOf(
-        Vec3(box.minX, box.minY, box.minZ),
-        Vec3(box.maxX, box.minY, box.minZ),
-        Vec3(box.maxX, box.minY, box.maxZ),
-        Vec3(box.minX, box.minY, box.maxZ),
-        Vec3(box.minX, box.maxY, box.minZ),
-        Vec3(box.minX, box.maxY, box.maxZ),
-        Vec3(box.maxX, box.maxY, box.maxZ),
-        Vec3(box.maxX, box.maxY, box.minZ),
-        Vec3(box.minX, box.minY, box.minZ),
-        Vec3(box.minX, box.maxY, box.minZ),
-        Vec3(box.maxX, box.maxY, box.minZ),
-        Vec3(box.maxX, box.minY, box.minZ),
-        Vec3(box.maxX, box.minY, box.minZ),
-        Vec3(box.maxX, box.maxY, box.minZ),
-        Vec3(box.maxX, box.maxY, box.maxZ),
-        Vec3(box.maxX, box.minY, box.maxZ),
-        Vec3(box.minX, box.minY, box.maxZ),
-        Vec3(box.maxX, box.minY, box.maxZ),
-        Vec3(box.maxX, box.maxY, box.maxZ),
-        Vec3(box.minX, box.maxY, box.maxZ),
-        Vec3(box.minX, box.minY, box.minZ),
-        Vec3(box.minX, box.minY, box.maxZ),
-        Vec3(box.minX, box.maxY, box.maxZ),
-        Vec3(box.minX, box.maxY, box.minZ)
-    )
-    return vertices
-}
-
 
 fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     env: RenderEnvironment,
