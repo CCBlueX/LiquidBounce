@@ -212,7 +212,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
+            raytracePos != destroyerTarget.pos || raytracePos.getState()!!.isNotBreakable(raytracePos)
         ) {
             return@repeatable
         }

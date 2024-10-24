@@ -419,6 +419,12 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
     }
 }
 
+fun BlockState.isNotBreakable(pos: BlockPos) = !isBreakable(pos)
+
+fun BlockState.isBreakable(pos: BlockPos): Boolean {
+    return !isAir && (player.isCreative || getHardness(world, pos) >= 0f)
+}
+
 fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }
