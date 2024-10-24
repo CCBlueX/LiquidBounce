@@ -74,18 +74,26 @@ fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): Item
 
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 
-fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
+inline fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
     return (0..8).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
 
 fun findInventorySlot(item: Item): ItemSlot? = findInventorySlot { it.item == item }
 
-fun findInventorySlot(predicate: (ItemStack) -> Boolean): ItemSlot? {
+inline fun findInventorySlot(predicate: (ItemStack) -> Boolean): ItemSlot? {
     if (mc.player == null) {
         return null
     }
 
     return ALL_SLOTS_IN_INVENTORY.find { predicate(it.itemStack) }
+}
+
+inline fun findInventorySlot(slots: List<ItemSlot>,  predicate: (ItemStack) -> Boolean): ItemSlot? {
+    if (mc.player == null) {
+        return null
+    }
+
+    return slots.find { predicate(it.itemStack) }
 }
 
 /**

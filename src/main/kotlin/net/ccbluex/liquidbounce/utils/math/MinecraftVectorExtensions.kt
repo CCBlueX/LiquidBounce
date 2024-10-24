@@ -26,7 +26,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import kotlin.math.floor
 
 inline operator fun BlockPos.rangeTo(other: BlockPos) = Region(this, other)
 
@@ -55,12 +54,7 @@ fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
 fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 
-fun Vec3d.toBlockPos(): BlockPos {
-    val d = floor(this.x).toInt()
-    val e = floor(this.y).toInt()
-    val f = floor(this.z).toInt()
-    return BlockPos(d, e, f)
-}
+fun Vec3d.toBlockPos() = BlockPos.ofFloored(x, y, z)!!
 
 fun Vec3d.squaredXZDistanceTo(other: Vec3d): Double {
     val d = this.x - other.x

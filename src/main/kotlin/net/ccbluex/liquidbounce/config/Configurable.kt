@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.block.Block
+import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Item
 
 open class Configurable(
@@ -113,6 +114,11 @@ open class Configurable(
 
     protected fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
         rangedValue(name, default, range, suffix, ValueType.INT)
+
+    protected fun bind(name: String, default: Int) = bind(
+        name,
+        InputBind(InputUtil.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
+    )
 
     protected fun bind(name: String, default: InputBind) = value(name, default, ValueType.BIND)
 

@@ -107,6 +107,9 @@ accessible method net/minecraft/world/World getDestructionType (Lnet/minecraft/w
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
 accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
+accessible method net/minecraft/entity/LivingEntity computeFallDamage (FF)I
+
+accessible field net/minecraft/entity/mob/CreeperEntity explosionRadius I
 
 accessible method net/minecraft/client/render/Camera setPos (DDD)V
 accessible method net/minecraft/client/render/Camera setPos (Lnet/minecraft/util/math/Vec3d;)V

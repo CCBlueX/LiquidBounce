@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
+import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
@@ -26,6 +28,7 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.*
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -34,6 +37,8 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
+import net.minecraft.world.BlockView
+import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -186,6 +191,71 @@ inline fun searchBlocksInRadius(
     }
 
     return blocks
+}
+
+/**
+ * **Squared Distance** to **BlockPos**
+ */
+@Suppress("NestedBlockDepth")
+fun BlockPos.getSphere(radius: Float): Sequence<DoubleObjectPair<BlockPos>> = sequence {
+    val radiusSq = radius * radius
+
+    val radiusCeil = MathHelper.ceil(radius)
+
+    val range = radiusCeil downTo -radiusCeil
+
+    for (x in range) {
+        for (y in range) {
+            for (z in range) {
+                val distanceSq = getSquaredDistance(x.toDouble(), y.toDouble(), z.toDouble())
+                if (distanceSq <= radiusSq) {
+                    continue
+                }
+
+                yield(DoubleObjectImmutablePair(distanceSq, BlockPos(x, y, z)))
+            }
+        }
+    }
+}
+
+/**
+ * Basically [BlockView.raycast] but this method allows us to exclude blocks using [exclude].
+ */
+@Suppress("SpellCheckingInspection")
+fun BlockView.raycast(context: RaycastContext, exclude: Array<BlockPos>): BlockHitResult {
+    return BlockView.raycast(context.start, context.end, context,
+        { raycastContext, pos ->
+            val excluded = pos in exclude
+
+            val blockState = if (excluded) Blocks.VOID_AIR.defaultState else getBlockState(pos)
+            val fluidState = if (excluded) Fluids.EMPTY.defaultState else getFluidState(pos)
+
+            val vec = raycastContext.start
+            val vec2 = raycastContext.end
+
+            val blockShape = raycastContext.getBlockShape(blockState, this, pos)
+            val blockHitResult = raycastBlock(vec, vec2, pos, blockShape, blockState)
+
+            val fluidShape = raycastContext.getFluidShape(fluidState, this, pos)
+            val fluidHitResult = fluidShape.raycast(vec, vec2, pos)
+
+            val blockHitDistance = blockHitResult?.let {
+                raycastContext.start.squaredDistanceTo(blockHitResult.pos)
+            } ?: Double.MAX_VALUE
+            val fluidHitDistance = fluidHitResult?.let {
+                raycastContext.start.squaredDistanceTo(fluidHitResult.pos)
+            } ?: Double.MAX_VALUE
+
+            if (blockHitDistance <= fluidHitDistance) blockHitResult else fluidHitResult
+        },
+        { raycastContext ->
+            val vec = raycastContext.start.subtract(raycastContext.end)
+            BlockHitResult.createMissed(
+                raycastContext.end,
+                Direction.getFacing(vec.x, vec.y, vec.z),
+                BlockPos.ofFloored(raycastContext.end)
+            )
+        })
 }
 
 fun BlockPos.canStandOn(): Boolean {
@@ -427,6 +497,35 @@ fun BlockState.isBreakable(pos: BlockPos): Boolean {
 
 fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
     return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
+}
+
+val FALL_DAMAGE_BLOCKING_BLOCKS = arrayOf(
+    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+)
+
+fun BlockPos?.isFallDamageBlocking(): Boolean {
+    if (this == null) {
+        return false
+    }
+
+    return getBlock() in FALL_DAMAGE_BLOCKING_BLOCKS
+}
+
+fun BlockPos.isBlastResistant(): Boolean {
+    return getBlock()!!.blastResistance >= 600f
+}
+
+@Suppress("UnusedReceiverParameter")
+fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
+    return state.get(RespawnAnchorBlock.CHARGES) > 0
+}
+
+/**
+ * Returns the second bed block position that might not exist (normally beds are two blocks long tho).
+ */
+@Suppress("UnusedReceiverParameter")
+fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): BlockPos {
+    return pos.offset((state.get(HorizontalFacingBlock.FACING)).opposite)
 }
 
 // TODO replace this by an approach that automatically collects the blocks, this would create better mod compatibility

@@ -76,11 +76,7 @@ data class ClientProtocolVersion(val name: String, val version: Int)
 val isEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isEqual1_8
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isEqual1_8
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
@@ -88,11 +84,7 @@ val isEqual1_8: Boolean
 val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
@@ -100,13 +92,17 @@ val isOlderThanOrEqual1_8: Boolean
 val isOlderThanOrEquals1_7_10: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
-        } else {
-            return@runCatching false
-        }
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
     }.onFailure {
         logger.error("Failed to check if the server is using 1.7.10", it)
+    }.getOrDefault(false)
+
+val isNewerThanOrEquals1_16: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        hasProtocolTranslator && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.16+", it)
     }.getOrDefault(false)
 
 fun selectProtocolVersion(protocolId: Int) {

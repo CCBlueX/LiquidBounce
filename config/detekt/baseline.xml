@@ -119,6 +119,7 @@
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongMethod:WorldListRest.kt$internal fun RestNode.worldListRest()</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, private var parentCommand: Command? = null )</ID>
+    <ID>LongParameterList:EntityExtensions.kt$( pos: Vec3d, exploding: Entity? = null, power: Float = 6f, explosionRange: Float = power * 2f, // allows setting precomputed values damageDistance: Float = explosionRange * explosionRange, exclude: Array&lt;BlockPos>? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
     <ID>LongParameterList:JsNetworkUtil.kt$JsNetworkUtil$(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean)</ID>
@@ -136,8 +137,6 @@
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
-    <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
-    <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
