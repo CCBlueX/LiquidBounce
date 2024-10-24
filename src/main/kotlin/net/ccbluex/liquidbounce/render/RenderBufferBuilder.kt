@@ -81,9 +81,9 @@ class RenderBufferBuilder<I : VertexInputType>(
         val matrix = env.currentMvpMatrix
 
         val vertexPositions = if (useOutlineVertices) {
-            boxOutlineVertexPositions(box)
+            box.outlineVertexPositions()
         } else {
-            boxVertexPositions(box)
+            box.vertexPositions()
         }
 
         val check = verticesToUse != -1
@@ -101,98 +101,6 @@ class RenderBufferBuilder<I : VertexInputType>(
                 bb.color(color.toARGB())
             }
         }
-    }
-
-    private fun boxVertexPositions(box: Box): Array<Vec3> {
-        return arrayOf(
-            // down
-            Vec3(box.minX, box.minY, box.minZ),
-            Vec3(box.maxX, box.minY, box.minZ),
-            Vec3(box.maxX, box.minY, box.maxZ),
-            Vec3(box.minX, box.minY, box.maxZ),
-
-            // up
-            Vec3(box.minX, box.maxY, box.minZ),
-            Vec3(box.minX, box.maxY, box.maxZ),
-            Vec3(box.maxX, box.maxY, box.maxZ),
-            Vec3(box.maxX, box.maxY, box.minZ),
-
-            // north
-            Vec3(box.minX, box.minY, box.minZ),
-            Vec3(box.minX, box.maxY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.minZ),
-            Vec3(box.maxX, box.minY, box.minZ),
-
-            // east
-            Vec3(box.maxX, box.minY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.maxZ),
-            Vec3(box.maxX, box.minY, box.maxZ),
-
-            // south
-            Vec3(box.minX, box.minY, box.maxZ),
-            Vec3(box.maxX, box.minY, box.maxZ),
-            Vec3(box.maxX, box.maxY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.maxZ),
-
-            // west
-            Vec3(box.minX, box.minY, box.minZ),
-            Vec3(box.minX, box.minY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.minZ)
-        )
-    }
-
-    private fun boxOutlineVertexPositions(box: Box): Array<Vec3> {
-        return arrayOf(
-            // down north
-            Vec3(box.minX, box.minY, box.minZ),
-            Vec3(box.maxX, box.minY, box.minZ),
-
-            // down east
-            Vec3(box.maxX, box.minY, box.minZ),
-            Vec3(box.maxX, box.minY, box.maxZ),
-
-            // down south
-            Vec3(box.maxX, box.minY, box.maxZ),
-            Vec3(box.minX, box.minY, box.maxZ),
-
-            // down west
-            Vec3(box.minX, box.minY, box.maxZ),
-            Vec3(box.minX, box.minY, box.minZ),
-
-            // north west
-            Vec3(box.minX, box.minY, box.minZ),
-            Vec3(box.minX, box.maxY, box.minZ),
-
-            // north east
-            Vec3(box.maxX, box.minY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.minZ),
-
-            // south east
-            Vec3(box.maxX, box.minY, box.maxZ),
-            Vec3(box.maxX, box.maxY, box.maxZ),
-
-            // south west
-            Vec3(box.minX, box.minY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.maxZ),
-
-            // up north
-            Vec3(box.minX, box.maxY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.minZ),
-
-            // up east
-            Vec3(box.maxX, box.maxY, box.minZ),
-            Vec3(box.maxX, box.maxY, box.maxZ),
-
-            // up south
-            Vec3(box.maxX, box.maxY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.maxZ),
-
-            // up west
-            Vec3(box.minX, box.maxY, box.maxZ),
-            Vec3(box.minX, box.maxY, box.minZ)
-        )
     }
 
     fun draw() {
@@ -262,67 +170,103 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
 
 }
 
-internal val Box.vertexPositions: List<Vec3>
-    get() = listOf(
+fun Box.vertexPositions(): Array<Vec3> {
+    return arrayOf(
+        // down
         Vec3(minX, minY, minZ),
         Vec3(maxX, minY, minZ),
         Vec3(maxX, minY, maxZ),
         Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, maxY, minZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(minX, maxY, minZ)
-    )
 
-internal val Box.outlineVertexPositions: List<Vec3>
-    get() = listOf(
-        Vec3(minX, minY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, minY, minZ),
+        // up
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(maxX, maxY, minZ),
+
+        // north
         Vec3(minX, minY, minZ),
         Vec3(minX, maxY, minZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, minY, minZ),
+
+        // east
         Vec3(maxX, minY, minZ),
         Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+        Vec3(maxX, minY, maxZ),
+
+        // south
+        Vec3(minX, minY, maxZ),
         Vec3(maxX, minY, maxZ),
         Vec3(maxX, maxY, maxZ),
+        Vec3(minX, maxY, maxZ),
+
+        // west
+        Vec3(minX, minY, minZ),
         Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(minX, maxY, minZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(minX, maxY, maxZ),
         Vec3(minX, maxY, maxZ),
         Vec3(minX, maxY, minZ)
     )
+}
+
+fun Box.outlineVertexPositions(): Array<Vec3> {
+    return arrayOf(
+        // down north
+        Vec3(minX, minY, minZ),
+        Vec3(maxX, minY, minZ),
+
+        // down east
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+
+        // down south
+        Vec3(maxX, minY, maxZ),
+        Vec3(minX, minY, maxZ),
+
+        // down west
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, minY, minZ),
+
+        // north west
+        Vec3(minX, minY, minZ),
+        Vec3(minX, maxY, minZ),
+
+        // north east
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, maxY, minZ),
+
+        // south east
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, maxZ),
+
+        // south west
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, maxZ),
+
+        // up north
+        Vec3(minX, maxY, minZ),
+        Vec3(maxX, maxY, minZ),
+
+        // up east
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+
+        // up south
+        Vec3(maxX, maxY, maxZ),
+        Vec3(minX, maxY, maxZ),
+
+        // up west
+        Vec3(minX, maxY, maxZ),
+        Vec3(minX, maxY, minZ)
+    )
+}
 
 fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Color4b) {
     val matrix = currentMvpMatrix
 
     // Draw the vertices of the box
-    box.vertexPositions.forEach { (x, y, z) ->
+    box.vertexPositions().forEach { (x, y, z) ->
         consumer.vertex(matrix, x, y, z).color(color.toRGBA())
     }
 }
