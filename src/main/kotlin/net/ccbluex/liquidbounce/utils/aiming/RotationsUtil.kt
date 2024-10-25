@@ -231,6 +231,12 @@ object RotationManager : Listenable {
         )
     }
 
+    fun forceReset() {
+        currentRotation = null
+        aimPlanHandler.clear()
+        previousAimPlan = null
+    }
+
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
         val diffX = vec.x - eyes.x
         val diffY = vec.y - eyes.y
