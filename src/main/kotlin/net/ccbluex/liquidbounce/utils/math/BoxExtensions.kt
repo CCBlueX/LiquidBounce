@@ -66,3 +66,11 @@ fun Box.isHitByLine(start: Vec3d, p: Vec3d): Boolean {
 
 val Box.size: Double
     get() = this.lengthX * this.lengthY * this.lengthZ
+
+fun Box.getCoordinate(direction: Direction): Double {
+    return if (direction.direction == Direction.AxisDirection.POSITIVE) {
+        this.getMax(direction.axis)
+    } else {
+        this.getMin(direction.axis)
+    }
+}

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -39,7 +39,7 @@ class DragPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
-        scheduler: ClickScheduler<*>
+        clicker: Clicker<*>
     ) {
         val clicks = cps.random()
 

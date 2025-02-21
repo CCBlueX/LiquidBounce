@@ -35,12 +35,8 @@ import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import java.awt.Color
 import java.util.*
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
@@ -55,6 +51,7 @@ typealias ValueChangedListener<T> = (T) -> Unit
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") open val name: String,
+    @Exclude val aliases: Array<out String> = emptyArray(),
     @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
     @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None,
@@ -316,11 +313,12 @@ open class Value<T : Any>(
  */
 class RangedValue<T : Any>(
     name: String,
-    value: T,
+    aliases: Array<String> = emptyArray(),
+    defaultValue: T,
     @Exclude val range: ClosedRange<*>,
     @Exclude val suffix: String,
-    type: ValueType
-) : Value<T>(name, value, valueType = type) {
+    valueType: ValueType
+) : Value<T>(name, aliases, defaultValue, valueType) {
 
     override fun setByString(string: String) {
         if (this.inner is ClosedRange<*>) {
@@ -356,16 +354,20 @@ class RangedValue<T : Any>(
 
 class BindValue(
     name: String,
+    aliases: Array<String> = emptyArray(),
     defaultValue: InputBind,
-) : Value<InputBind>(name, defaultValue, ValueType.BIND) {
+) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
     override fun setByString(string: String) {
         get().bind(string)
     }
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String, value: T, @Exclude val choices: Array<T>
-) : Value<T>(name, value, ValueType.CHOOSE) {
+    name: String,
+    aliases: Array<String> = emptyArray(),
+    defaultValue: T,
+    @Exclude val choices: Array<T>
+) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString

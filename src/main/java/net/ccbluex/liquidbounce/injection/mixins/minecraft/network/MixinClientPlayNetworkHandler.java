@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disable
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.kotlin.Priority;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
@@ -200,7 +200,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
                     true,
                     null
             );
-            RotationManager.INSTANCE.aimAt(aimPlan, Priority.NOT_IMPORTANT, ModuleNoRotateSet.INSTANCE);
+            RotationManager.INSTANCE.setRotationTarget(aimPlan, Priority.NOT_IMPORTANT, ModuleNoRotateSet.INSTANCE);
         }
 
         // Increase yaw and pitch by a value so small that the difference cannot be seen,

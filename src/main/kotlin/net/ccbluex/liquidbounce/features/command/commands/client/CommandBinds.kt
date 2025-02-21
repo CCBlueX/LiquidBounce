@@ -73,14 +73,9 @@ object CommandBinds : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val page = if (args.size > 1) {
-                args[0] as Int
-            } else {
-                1
-            }.coerceAtLeast(1)
+            val page = (args.firstOrNull() as? Int ?: 1).coerceAtLeast(1)
 
-            val bindings = ModuleManager.sortedBy { it.name }
-                .filter { !it.bind.isUnbound }
+            val bindings = ModuleManager.filter { !it.bind.isUnbound }
 
             if (bindings.isEmpty()) {
                 throw CommandException(command.result("noBindings"))

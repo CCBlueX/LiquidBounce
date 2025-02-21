@@ -28,13 +28,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPl
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.util.Hand
 
@@ -46,13 +44,13 @@ import net.minecraft.util.Hand
  */
 object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = arrayOf("Ignite", "AutoWeb")) {
 
-    val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
+    private val range = floatRange("Range", 3.0f..4.5f, 2f..6f)
     private val delay by int("Delay", 20, 0..400, "ticks")
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val ignitionTrapPlanner = tree(IgnitionTrapPlanner(this))
     private val webTrapPlanner = tree(WebTrapPlanner(this))
-    val targetTracker = tree(TargetTracker())
+    val targetTracker = tree(TargetTracker(range = range))
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private var currentPlan: BlockChangeIntent<*>? = null
@@ -73,14 +71,12 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = array
             return@handler
         }
 
-        targetTracker.validateLock { target -> target.shouldBeAttacked() && target.boxedDistanceTo(player) in range }
-
-        val enemies = targetTracker.enemies()
+        val enemies = targetTracker.targets()
         TrapPlayerSimulation.runSimulations(enemies)
 
-        this.currentPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
-        this.currentPlan?.let { intent ->
-            RotationManager.aimAt(
+        currentPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
+        currentPlan?.let { intent ->
+            RotationManager.setRotationTarget(
                 (intent.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotationsConfigurable,

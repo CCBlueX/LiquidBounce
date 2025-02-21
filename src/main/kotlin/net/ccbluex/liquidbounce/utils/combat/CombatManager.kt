@@ -19,10 +19,15 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 
 /**
  * A rotation manager
@@ -80,31 +85,39 @@ object CombatManager : EventListener {
     }
 
     @Suppress("unused")
-    val attackHandler = handler<AttackEntityEvent> {
-        // 40 ticks = 2 seconds
-        duringCombat = 40
+    val attackHandler = handler<AttackEntityEvent> { event ->
+        val entity = event.entity
+
+        if (entity is LivingEntity && entity.shouldBeAttacked()) {
+            // 40 ticks = 2 seconds
+            duringCombat = 40
+
+            if (entity is PlayerEntity) {
+                EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
+            }
+        }
     }
 
     val shouldPauseCombat: Boolean
-        get() = this.pauseCombat > 0
+        get() = pauseCombat > 0
     val shouldPauseRotation: Boolean
-        get() = this.pauseRotation > 0
+        get() = pauseRotation > 0
     val shouldPauseBlocking: Boolean
-        get() = this.pauseBlocking > 0
+        get() = pauseBlocking > 0
     val isInCombat: Boolean
         get() = this.duringCombat > 0 ||
-            (ModuleKillAura.running && ModuleKillAura.targetTracker.lockedOnTarget != null)
+            (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null)
 
     fun pauseCombatForAtLeast(pauseTime: Int) {
-        this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)
+        pauseCombat = pauseCombat.coerceAtLeast(pauseTime)
     }
 
     fun pauseRotationForAtLeast(pauseTime: Int) {
-        this.pauseRotation = this.pauseRotation.coerceAtLeast(pauseTime)
+        pauseRotation = pauseRotation.coerceAtLeast(pauseTime)
     }
 
     fun pauseBlockingForAtLeast(pauseTime: Int) {
-        this.pauseBlocking = this.pauseBlocking.coerceAtLeast(pauseTime)
+        pauseBlocking = pauseBlocking.coerceAtLeast(pauseTime)
     }
 
 }

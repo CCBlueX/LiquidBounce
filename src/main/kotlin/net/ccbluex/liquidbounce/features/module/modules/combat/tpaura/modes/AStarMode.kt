@@ -5,10 +5,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clickScheduler
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetTracker
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -53,7 +53,7 @@ object AStarMode : TpAuraChoice("AStar") {
     private val tickHandler = tickHandler {
         val (_, path) = pathCache ?: return@tickHandler
 
-        if (!clickScheduler.isGoingToClick) {
+        if (!clicker.isGoingToClick) {
             return@tickHandler
         }
 
@@ -73,7 +73,7 @@ object AStarMode : TpAuraChoice("AStar") {
 
             val maximumDistanceSq = maximumDistance.sq()
 
-            targetTracker.enemies().filter {
+            targetSelector.targets().filter {
                 it.squaredDistanceTo(playerPosition) <= maximumDistanceSq
             }.sortedBy {
                 it.squaredBoxedDistanceTo(playerPosition)

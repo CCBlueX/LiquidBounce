@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.*
@@ -71,7 +71,7 @@ object ModuleFastExp : ClientModule(
         if (Rotate.enabled) {
             waitUntil {
                 val rotation = Rotation(player.yaw, 90f)
-                RotationManager.aimAt(
+                RotationManager.setRotationTarget(
                     Rotate.rotations.toAimPlan(rotation),
                     Priority.IMPORTANT_FOR_USAGE_3,
                     this@ModuleFastExp

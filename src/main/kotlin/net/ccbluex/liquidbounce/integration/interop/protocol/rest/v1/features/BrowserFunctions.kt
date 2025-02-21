@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.integration.BrowserScreen
 import net.ccbluex.liquidbounce.integration.browserTabs
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -46,7 +47,7 @@ fun postBrowserNavigate(requestObject: RequestObject) = with(requestObject.asJso
         ?: return@with httpBadRequest("No browser tab")
 
     browserTab.loadUrl(url)
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 private data class Navigate(val url: String)
@@ -57,7 +58,7 @@ fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
     val browserScreen = mc.currentScreen as? BrowserScreen
         ?: return@with httpBadRequest("No browser screen")
     mc.setScreen(null)
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/browser/reload
@@ -69,7 +70,7 @@ fun postBrowserReload(requestObject: RequestObject) = with(requestObject) {
         ?: return@with httpBadRequest("No browser tab")
 
     browserTab.reload()
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/browser/forceReload
@@ -81,7 +82,7 @@ fun postBrowserForceReload(requestObject: RequestObject) = with(requestObject) {
         ?: return@with httpBadRequest("No browser tab")
 
     browserTab.forceReload()
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/browser/forward
@@ -93,7 +94,7 @@ fun postBrowserForward(requestObject: RequestObject) = with(requestObject) {
         ?: return@with httpBadRequest("No browser tab")
 
     browserTab.goForward()
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/browser/back
@@ -105,7 +106,7 @@ fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
         ?: return@with httpBadRequest("No browser tab")
 
     browserTab.goBack()
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/browser/closeTab
@@ -118,5 +119,5 @@ fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
 
     browserTab.closeTab()
     browserTabs.remove(browserTab)
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }

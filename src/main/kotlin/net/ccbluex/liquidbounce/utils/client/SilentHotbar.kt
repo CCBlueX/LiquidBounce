@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.handler
 
 /**
@@ -40,6 +42,11 @@ object SilentHotbar : EventListener {
         get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.selectedSlot ?: 0
 
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
+        val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
+        if (event.isCancelled) {
+            return
+        }
+
         hotbarState = SilentHotbarState(slot, requester, ticksUntilReset, clientsideSlot)
         ticksSinceLastUpdate = 0
     }

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.AxeItem
@@ -44,7 +44,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
 
     object Left : ToggleableConfigurable(this, "Attack", true) {
 
-        val clickScheduler = tree(ClickScheduler(this, true))
+        val clicker = tree(Clicker(this, true))
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
@@ -93,7 +93,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
         }
 
-        suspend fun Sequence<*>.encounterItemUse(): Boolean {
+        suspend fun Sequence.encounterItemUse(): Boolean {
             return when (onItemUse) {
                 Use.WAIT -> {
                     this.waitUntil { !player.isUsingItem }
@@ -122,7 +122,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     object Right : ToggleableConfigurable(this, "Use", false) {
-        val clickScheduler = tree(ClickScheduler(this, false))
+        val clicker = tree(Clicker(this, false))
         internal val delayStart by boolean("DelayStart", false)
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)
@@ -170,7 +170,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
 
-            clickScheduler.clicks {
+            clicker.clicks {
                 KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
                 true
             }
@@ -194,7 +194,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            clickScheduler.clicks {
+            clicker.clicks {
                 KeyBinding.onKeyPressed(mc.options.useKey.boundKey)
                 true
             }

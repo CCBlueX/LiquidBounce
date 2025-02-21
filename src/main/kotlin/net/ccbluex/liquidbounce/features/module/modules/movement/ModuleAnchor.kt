@@ -64,7 +64,7 @@ object ModuleAnchor : ClientModule(
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler { _ ->
+    private val tickHandler = tickHandler {
         // if we're already in a hole, we should just center us in that
         val playerBB = player.boundingBox
         HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.getBoundingBox()) }?.let { hole ->

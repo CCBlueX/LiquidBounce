@@ -496,6 +496,7 @@
   "liquidbounce.module.xRay.description": "Опис рентгену",
   "liquidbounce.module.antiHunger.description": "Опис антиголоду",
   "liquidbounce.module.antiHunger.messages.warnSprint": "Попередження: біг",
+  "liquidbounce.module.elytraSwap.description": "Дозволяє швидко змінювати нагрудник на елітри і навпаки.",
   "liquidbounce.module.antiHunger.messages.warnBreak": "Попередження: перерва",
   "liquidbounce.module.liquidChat.description": "Опис рідкого чату",
   "liquidbounce.module.consoleSpammer.description": "Опис спамера консолі",

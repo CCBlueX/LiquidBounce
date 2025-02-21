@@ -18,11 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.getCoordinate
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.preferOver
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 
+@Suppress("TooManyFunctions")
 open class Line(val position: Vec3d, val direction: Vec3d) {
 
     companion object {
@@ -83,6 +88,41 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         val phi2 = other.calculateNearestPhiTo(this) ?: return null
 
         return doubleArrayOf(phi1, phi2)
+    }
+
+    /**
+     * Finds the closest point on the box's surface to the [position] in positive [direction].
+     */
+    fun getPointOnBoxInDirection(box: Box): Vec3d? {
+        val candidates = Direction.entries.mapNotNull { dir ->
+            val positionCoordinate = position.getComponentAlongAxis(dir.axis)
+            val directionCoordinate = direction.getComponentAlongAxis(dir.axis)
+            computeIntersection(box.getCoordinate(dir), positionCoordinate, directionCoordinate)?.let { factor ->
+                val pointOnFace = dir.doubleVector.multiply(factor)
+                val directionalPointsOnFace = position.add(direction.normalize().multiply(factor))
+                pointOnFace.preferOver(directionalPointsOnFace)
+            }
+        }
+
+        var minDistanceSq = Double.POSITIVE_INFINITY
+        var intersection: Vec3d? = null
+        candidates.forEach { candidate ->
+            if (position.squaredDistanceTo(candidate) < minDistanceSq) {
+                minDistanceSq = position.squaredDistanceTo(candidate)
+                intersection = candidate
+            }
+        }
+
+        return intersection
+    }
+
+    private fun computeIntersection(plane: Double, pos: Double, dir: Double): Double? {
+        if (dir == 0.0) {
+            return null
+        }
+
+        val t = (plane - pos) / dir
+        return if (t > 0) t else null
     }
 
     @Suppress("MaxLineLength")

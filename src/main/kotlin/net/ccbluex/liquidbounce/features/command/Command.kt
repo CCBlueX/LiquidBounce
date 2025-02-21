@@ -73,7 +73,7 @@ class Command(
     }
 
     fun result(key: String, vararg args: Any): MutableText {
-        return translation("$translationBaseKey.result.$key", *args)
+        return translation("$translationBaseKey.result.$key", args = args)
     }
 
     fun resultWithTree(key: String, vararg args: Any): MutableText {
@@ -84,10 +84,10 @@ class Command(
                 parentCommand = parentCommand.parentCommand
             }
 
-            return parentCommand!!.result(key, *args)
+            return parentCommand!!.result(key, args = args)
         }
 
-        return translation("$translationBaseKey.result.$key", *args)
+        return translation("$translationBaseKey.result.$key", args = args)
     }
 
     /**

@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
 import net.ccbluex.liquidbounce.render.engine.UiRenderer;
 import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShader;
-import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -111,7 +111,7 @@ public abstract class MixinGameRenderer {
             rotation = cameraRotation;
         }
 
-        return RaytracingExtensionsKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
+        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
                 ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
     }
 
@@ -122,7 +122,7 @@ public abstract class MixinGameRenderer {
         }
 
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
-        return rotation != null ? rotation.getRotationVec() : original;
+        return rotation != null ? rotation.getDirectionVector() : original;
     }
 
     /**

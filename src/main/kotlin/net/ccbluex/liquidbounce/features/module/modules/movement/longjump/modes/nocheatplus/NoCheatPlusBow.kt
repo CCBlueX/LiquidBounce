@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -78,7 +78,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     private val tickJumpHandler = tickHandler {
         if (arrowBoost <= arrowsToShoot) {
             forceUseKey = true
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 Rotation(player.yaw, -90f),
                 configurable = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,

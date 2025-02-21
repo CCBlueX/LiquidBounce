@@ -73,8 +73,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             !MinecraftClient.IS_SYSTEM_MAC
 
     init {
-        tree(Configurable("In-built", components as MutableList<Value<*>>))
-        tree(Configurable("Custom", customComponents as MutableList<Value<*>>))
+        tree(Configurable("In-built", value = components as MutableList<Value<*>>))
+        tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
     }
 
     @Suppress("unused")

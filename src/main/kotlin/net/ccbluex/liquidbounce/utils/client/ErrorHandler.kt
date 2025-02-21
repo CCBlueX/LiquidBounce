@@ -40,20 +40,22 @@ object ErrorHandler {
         logger.error("Fatal error", error)
 
         val logPath = mc.runDirectory.resolve("logs").resolve("latest.log").absolutePath
-        val message = """LiquidBounce Nextgen has encountered an error!
-                    |Try restarting the client.
-                    |Please report this issue to the developers on GitHub if the error keeps occuring.
-                    |
-                    |Include the following information:
-                    |OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
-                    |Java: ${System.getProperty("java.version")}
-                    |Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
-                    |${additionalMessage ?: ""}
-                    |Error: ${error.message}
-                    |Error Type: ${error.javaClass.name}
-                    |
-                    |Include your game log, which can be found at:
-                    |$logPath""".trimMargin()
+        val message = """
+            LiquidBounce Nextgen has encountered an error!
+            Try restarting the client.
+            Please report this issue to the developers on GitHub if the error keeps occurring.
+
+            Include the following information:
+            OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
+            Java: ${System.getProperty("java.version")}
+            Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
+            ${additionalMessage ?: ""}
+            Error: ${error.message}
+            Error Type: ${error.javaClass.name}
+
+            Include your game log, which can be found at:
+            $logPath
+        """.trimIndent()
 
         TinyFileDialogs.tinyfd_messageBox(
             "LiquidBounce Nextgen",
@@ -66,6 +68,18 @@ object ErrorHandler {
         // Open GitHub issue
         browseUrl("https://github.com/CCBlueX/LiquidBounce/issues")
 
+        exitProcess(1)
+    }
+
+    fun fatal(message: String) {
+        logger.error("Fatal error: $message")
+        TinyFileDialogs.tinyfd_messageBox(
+            "LiquidBounce Nextgen",
+            message.replace("\"", "").replace("'", ""),
+            "ok",
+            "error",
+            true
+        )
         exitProcess(1)
     }
 

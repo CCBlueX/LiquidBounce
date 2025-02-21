@@ -28,4 +28,4 @@ open class DynamicConfigurable(
     value: MutableList<Value<*>> = mutableListOf(),
     val factory: (String, JsonObject) -> Value<*>,
     valueType: ValueType = ValueType.CONFIGURABLE
-) : Configurable(name, value, valueType)
+) : Configurable(name, value = value, valueType = valueType)

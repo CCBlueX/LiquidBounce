@@ -85,7 +85,7 @@ object ConfigSystem {
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
         @Suppress("UNCHECKED_CAST")
-        return root(Configurable(name, tree as MutableList<Value<*>>))
+        return root(Configurable(name, value = tree as MutableList<Value<*>>))
     }
 
     fun dynamic(
@@ -190,7 +190,8 @@ object ConfigSystem {
         val jsonObject = jsonElement.asJsonObject
 
         // Check if the name is the same as the configurable name
-        check(jsonObject.getAsJsonPrimitive("name").asString == configurable.name) {
+        val name = jsonObject.getAsJsonPrimitive("name").asString
+        check(name == configurable.name || configurable.aliases.contains(name)) {
             "Configurable name does not match the name in the json object"
         }
 
@@ -218,7 +219,10 @@ object ConfigSystem {
             // On an ordinary configurable, we simply deserialize the values that are present
             else -> {
                 for (value in configurable.inner) {
-                    val currentElement = values[value.name] ?: continue
+                    val currentElement = values[value.name]
+                        // Alias support
+                        ?: values.entries.firstOrNull { entry -> entry.key in value.aliases }?.value
+                        ?: continue
 
                     deserializeValue(value, currentElement)
                 }
@@ -247,6 +251,8 @@ object ConfigSystem {
                     for (choice in value.choices) {
                         runCatching {
                             val choiceElement = choices[choice.name]
+                                // Alias support
+                                ?: choice.aliases.firstNotNullOfOrNull { alias -> choices[alias] }
                                 ?: error("Choice ${choice.name} not found")
 
                             deserializeConfigurable(choice, choiceElement)

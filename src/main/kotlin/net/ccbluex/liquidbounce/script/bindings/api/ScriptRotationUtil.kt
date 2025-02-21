@@ -22,10 +22,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptRotationUtil.newRotationEntity
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
@@ -46,7 +47,7 @@ import kotlin.math.sqrt
 object ScriptRotationUtil {
 
     /**
-     * Creates a new [Rotation] from [entity]'s bounding box.
+     * Creates a new [net.ccbluex.liquidbounce.utils.aiming.data.Rotation] from [entity]'s bounding box.
      * This uses raytracing, so it's guaranteed to be the best spot.
      *
      * It has a performance impact, so it's recommended to use [newRotationEntity] if you don't need the best spot.
@@ -88,13 +89,12 @@ object ScriptRotationUtil {
      */
     @JvmName("aimAtRotation")
     fun aimAtRotation(rotation: Rotation, fixVelocity: Boolean) {
-        RotationManager.aimAt(
+        RotationManager.setRotationTarget(
             rotation,
             configurable = RotationsConfigurable(
-                object : EventListener { }
-            ).also {
-                it.fixVelocity = fixVelocity
-            }, priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", Category.MISC)
+                object : EventListener { },
+                movementCorrection = if (fixVelocity) MovementCorrection.SILENT else MovementCorrection.OFF
+            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", Category.MISC)
         )
     }
 

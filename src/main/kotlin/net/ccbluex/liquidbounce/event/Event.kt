@@ -25,13 +25,12 @@ import kotlin.reflect.full.findAnnotation
 /**
  * A callable event
  */
-open class Event
+abstract class Event
 
 /**
  * A cancellable event
  */
-open class CancellableEvent : Event() {
-
+abstract class CancellableEvent : Event() {
     /**
      * Let you know if the event is cancelled
      *

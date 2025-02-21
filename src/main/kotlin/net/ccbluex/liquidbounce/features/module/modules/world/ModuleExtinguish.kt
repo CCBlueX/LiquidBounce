@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -87,7 +87,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
 
         this.currentTarget = target
 
-        RotationManager.aimAt(
+        RotationManager.setRotationTarget(
             target.placementTarget.rotation,
             configurable = rotationsConfigurable,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,

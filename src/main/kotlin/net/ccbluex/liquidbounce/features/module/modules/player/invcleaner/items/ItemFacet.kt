@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFu
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.item.ItemStack
 

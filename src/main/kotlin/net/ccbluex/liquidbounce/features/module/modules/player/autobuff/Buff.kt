@@ -42,7 +42,7 @@ abstract class Buff(
     /**
      * Try to run feature if possible, otherwise return false
      */
-    internal suspend fun runIfPossible(sequence: Sequence<*>): Boolean {
+    internal suspend fun runIfPossible(sequence: Sequence): Boolean {
         if (!enabled || !passesRequirements) {
             return false
         }
@@ -83,7 +83,7 @@ abstract class Buff(
         return false
     }
 
-    abstract suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot)
+    abstract suspend fun execute(sequence: Sequence, slot: HotbarItemSlot)
 
     internal fun getStack(slot: Int): ItemStack =
         if (slot == -1) player.offHandStack else player.inventory.getStack(slot)

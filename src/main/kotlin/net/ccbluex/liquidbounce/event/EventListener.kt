@@ -93,15 +93,15 @@ inline fun <reified T : Event> EventListener.once(
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
-    noinline eventHandler: SuspendableHandler<T>
+    noinline eventHandler: SuspendableEventHandler<T>
 ) {
-    handler<T>(priority) { event -> Sequence(this, eventHandler, event) }
+    handler<T>(priority) { event -> Sequence(this) { eventHandler(event) } }
 }
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
  */
-fun EventListener.tickHandler(eventHandler: SuspendableHandler<DummyEvent>) {
+fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
     // We store our sequence in this variable.
     // That can be done because our variable will survive the scope of this function
     // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.

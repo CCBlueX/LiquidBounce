@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
-import net.ccbluex.liquidbounce.utils.aiming.raytraceUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -39,8 +39,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -127,7 +125,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val rayTraceResult = world.raycast(
             RaycastContext(
                 player.eyePos,
-                player.eyePos.add(currentRotation.rotationVec.multiply(range.toDouble())),
+                player.eyePos.add(currentRotation.directionVector.multiply(range.toDouble())),
                 RaycastContext.ShapeType.OUTLINE,
                 RaycastContext.FluidHandling.NONE,
                 player
@@ -202,7 +200,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 rotation,
                 configurable = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
@@ -242,7 +240,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 rotation,
                 configurable = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,

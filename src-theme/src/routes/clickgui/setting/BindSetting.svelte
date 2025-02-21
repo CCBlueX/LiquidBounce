@@ -3,7 +3,7 @@
     import type {BindSetting, ModuleSetting} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
-    import type {KeyboardKeyEvent} from "../../../integration/events";
+    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import Dropdown from "./common/Dropdown.svelte";
 
@@ -15,6 +15,7 @@
 
     const dispatch = createEventDispatcher();
 
+    let isHovered = false;
     let binding = false;
     let printableKeyName = "";
 
@@ -50,6 +51,25 @@
         dispatch("change");
     });
 
+    listen("mouseButton", async (e: MouseButtonEvent) => {
+        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
+            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+            return;
+        }
+
+        if (!binding || (e.button === 0 && isHovered)) {
+            return;
+        }
+
+        binding = false;
+
+        cSetting.value.boundKey = e.key;
+
+        setting = {...cSetting};
+
+        dispatch("change");
+    })
+
     async function toggleBinding() {
         if (binding) {
             cSetting.value.boundKey = UNKNOWN_KEY;
@@ -69,7 +89,12 @@
 </script>
 
 <div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
-    <button class="change-bind" on:click={toggleBinding}>
+    <button
+            class="change-bind"
+            on:click={toggleBinding}
+            on:mouseenter={() => isHovered = true}
+            on:mouseleave={() => isHovered = false}
+    >
         {#if !binding}
             <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
 

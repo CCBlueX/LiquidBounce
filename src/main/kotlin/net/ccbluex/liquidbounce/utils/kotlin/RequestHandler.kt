@@ -23,6 +23,7 @@ import net.minecraft.client.MinecraftClient
 import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
+
     private var currentTick = 0
 
     private val activeRequests = PriorityBlockingQueue<Request<T>>(11, compareBy { -it.priority })
@@ -35,20 +36,21 @@ class RequestHandler<T> {
         // we remove all requests provided by module on new request
         activeRequests.removeAll { it.provider == request.provider }
         request.expiresIn += currentTick
-        this.activeRequests.add(request)
+        activeRequests.add(request)
     }
 
     fun getActiveRequestValue(): T? {
+        var top = activeRequests.peek() ?: return null
+
         if (MinecraftClient.getInstance()?.isOnThread != false) {
             // we remove all outdated requests here
-            while ((this.activeRequests.peek() ?: return null).expiresIn <= currentTick ||
-                !this.activeRequests.peek().provider.running
-            ) {
-                this.activeRequests.remove()
+            while (top.expiresIn <= currentTick || !top.provider.running) {
+                activeRequests.remove()
+                top = activeRequests.peek() ?: return null
             }
         }
 
-        return this.activeRequests.peek().value
+        return top.value
     }
 
     /**

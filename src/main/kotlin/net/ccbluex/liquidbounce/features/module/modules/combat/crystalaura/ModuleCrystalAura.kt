@@ -32,11 +32,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
+import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.LivingEntity
 
 /**
  * Module CrystalAura
@@ -52,7 +52,9 @@ object ModuleCrystalAura : ClientModule(
     disableOnQuit = true
 ) {
 
-    val targetTracker = tree(TargetTracker(maxRange = 12f))
+    val targetTracker = tree(TargetTracker(
+        rangeValue =  FloatValueProvider("Range", 4.5f, 1f..12f)
+    ))
 
     object PredictFeature : Configurable("Predict") {
         init {
@@ -82,8 +84,6 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
-    var currentTarget: LivingEntity? = null
-
     override fun disable() {
         CrystalAuraTriggerer.terminateRunningTasks()
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
@@ -103,13 +103,12 @@ object ModuleCrystalAura : ClientModule(
             return@handler
         }
 
-        currentTarget = targetTracker.enemies().firstOrNull()
-        currentTarget ?: return@handler
+        targetTracker.selectFirst()
     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
-        val target = currentTarget ?: return@handler
+        val target = targetTracker.target ?: return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
             targetRenderer.render(this, target, it.partialTicks)

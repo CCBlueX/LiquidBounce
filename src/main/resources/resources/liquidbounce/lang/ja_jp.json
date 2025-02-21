@@ -454,6 +454,7 @@
 	"liquidbounce.module.noSlowBreak.description": "悪影響を与える状況にある場合、採掘速度を自動的に調整します。",
 	"liquidbounce.module.noSwing.description": "スイング効果を無効にします。",
 	"liquidbounce.module.noWeather.description": "雨の効果を無効にします。",
+	"liquidbounce.module.elytraSwap.description": "チェストプレートとエリトラを素早く入れ替えることができます。",
 	"liquidbounce.module.noWeb.description": "クモの巣のスローダウンを無効にします。",
 	"liquidbounce.module.notifier.description": "あらゆる種類のイベントについて通知します。",
 	"liquidbounce.module.nuker.description": "エリア内のすべてのブロックを自動的に破壊します。",

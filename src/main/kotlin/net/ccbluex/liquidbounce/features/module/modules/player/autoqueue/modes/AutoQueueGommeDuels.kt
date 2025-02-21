@@ -122,7 +122,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         inMatch = false
     }
 
-    private suspend fun Sequence<*>.handleLobbySituation() {
+    private suspend fun Sequence.handleLobbySituation() {
         inMatch = false
 
         val duelsEntity = world.entities.filterIsInstance<ArmorStandEntity>().find {
@@ -145,7 +145,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         waitSeconds(5)
     }
 
-    private suspend fun Sequence<*>.handleDuelsSituation() {
+    private suspend fun Sequence.handleDuelsSituation() {
         // Check if player inventory has a head
         if (!inMatch) {
             if (controlKillAura) {

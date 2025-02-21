@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder
 
-import com.google.gson.Gson
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -13,8 +13,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
-import java.nio.charset.Charset
-import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -68,7 +66,7 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC) {
                     file = folder.resolve("${baseName}_${idx++}.json")
                 }
 
-                Files.write(file.toPath(), Gson().toJson(this.packets).toByteArray(Charset.forName("UTF-8")))
+                file.writeText(publicGson.toJson(this.packets))
 
                 file.absolutePath
             }.onFailure {

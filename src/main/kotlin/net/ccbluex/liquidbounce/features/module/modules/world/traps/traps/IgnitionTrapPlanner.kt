@@ -21,30 +21,22 @@ package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
 import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.*
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.*
 
 class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlanner.IgnitionIntentData>(
     parent,
@@ -59,18 +51,16 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         val slot = findItemToIgnite() ?: return null
 
         for (target in enemies) {
-            if (!shouldTarget(target)) {
+            if (target.isOnFire) {
                 continue
             }
             val targetPos = TrapPlayerSimulation.findPosForTrap(
-                target,
-                isTargetLocked = targetTracker.lockedOnTarget == target
+                target, isTargetLocked = targetTracker.target == target
             ) ?: continue
 
             val placementTarget = generatePlacementInfo(targetPos, target, slot) ?: continue
 
-            targetTracker.lock(target)
-
+            targetTracker.target = target
             return BlockChangeIntent(
                 BlockChangeInfo.PlaceBlock(placementTarget ),
                 slot,
@@ -81,10 +71,6 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         }
 
         return null
-    }
-
-    private fun shouldTarget(target: LivingEntity): Boolean {
-        return !target.isOnFire && target.boxedDistanceTo(player) in ModuleAutoTrap.range
     }
 
     private fun generatePlacementInfo(
@@ -198,7 +184,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     }
 
     override fun onIntentFullfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
-        targetTracker.lock(intent.planningInfo.target, reportToUI = false)
+        targetTracker.target = intent.planningInfo.target
     }
 
     private fun findItemToIgnite(): HotbarItemSlot? {

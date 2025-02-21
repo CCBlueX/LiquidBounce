@@ -81,11 +81,11 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
                 return@handler
             }
         } else if (AutoBowAimbotFeature.enabled) {
-            if (AutoBowAimbotFeature.targetTracker.lockedOnTarget == null) {
+            if (AutoBowAimbotFeature.targetTracker.target == null) {
                 return@handler
             }
 
-            val targetRotation = RotationManager.workingAimPlan ?: return@handler
+            val targetRotation = RotationManager.activeRotationTarget ?: return@handler
 
             val aimDifference = RotationManager.serverRotation.angleTo(targetRotation.rotation)
 

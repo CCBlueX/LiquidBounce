@@ -18,16 +18,10 @@
  *
  *
  */
-
 @file:Suppress("TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1
-import com.viaversion.viaversion.api.Via
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Types
-import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -35,7 +29,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.fabricmc.loader.api.FabricLoader
+import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
+import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.component.type.DyedColorComponent
@@ -80,12 +75,15 @@ class PlayerInventoryConstraints : InventoryConstraints() {
      * When this option is not enabled, the inventory will be opened silently
      * depending on the Minecraft version chosen using ViaFabricPlus.
      *
-     * If the protocol contains [Protocol1_12To1_11_1] and the client status packet is supported,
+     * If the protocol contains [com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1]
+     * and the client status packet is supported,
      * the inventory will be opened silently using [openInventorySilently].
      * Otherwise, the inventory will not have any open tracking and
      * the server will only know when clicking in the inventory.
      *
-     * Closing will still be required to be done for any version. Sad. :(
+     * Closing will still be required to be done for any version.
+     * Sad.
+     * :(
      */
     private val requiresOpenInventory by boolean("RequiresInventoryOpen", false)
 
@@ -113,36 +111,16 @@ fun findNonEmptySlotsInInventory(): List<ItemSlot> {
 /**
  * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions.
  */
-
-// https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
-    if (InventoryManager.isInventoryOpenServerSide) {
+    if (InventoryManager.isInventoryOpenServerSide || !usesViaFabricPlus) {
         return
     }
 
-    runCatching {
-        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
-
-        if (!isViaFabricPlusLoaded) {
-            return
-        }
-
-        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
-
-        if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
-            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_COMMAND, viaConnection)
-            clientStatus.write(Types.VAR_INT, 2) // Open Inventory Achievement
-
-            runCatching {
-                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
-            }.onSuccess {
-                InventoryManager.isInventoryOpenServerSide = true
-            }.onFailure {
-                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
-                it.printStackTrace()
-            }
-        }
-    }
+    network.sendPacket(
+        OpenInventorySilentlyPacket(),
+        onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
+        onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
+    )
 }
 
 fun closeInventorySilently() {

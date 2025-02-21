@@ -27,6 +27,7 @@ import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
@@ -44,7 +45,7 @@ fun getProxyInfo(requestObject: RequestObject) = httpOk(ProxyManager.currentProx
     interopGson.toJsonTree(proxy).asJsonObject.apply {
         addProperty("id", ProxyManager.proxies.indexOf(proxy))
     }
-} ?: JsonObject())
+} ?: emptyJsonObject())
 
 // POST /api/v1/client/proxy
 @Suppress("UNUSED_PARAMETER")
@@ -57,14 +58,14 @@ fun postProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.setProxy(body.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/proxy
 @Suppress("UNUSED_PARAMETER")
 fun deleteProxy(requestObject: RequestObject): FullHttpResponse {
     ProxyManager.unsetProxy()
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // GET /api/v1/client/proxies
@@ -98,7 +99,7 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.addProxy(body.host, body.port, body.username, body.password)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/proxies/clipboard
@@ -125,7 +126,7 @@ fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/proxies/edit
@@ -150,7 +151,7 @@ fun postEditProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.editProxy(body.id, body.host, body.port, body.username, body.password, body.forwardAuthentication)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/proxies/check
@@ -164,7 +165,7 @@ fun postCheckProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.checkProxy(body.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/proxies/remove
@@ -178,7 +179,7 @@ fun deleteRemoveProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.removeProxy(body.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // PUT /api/v1/client/proxies/favorite
@@ -192,7 +193,7 @@ fun putFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.favoriteProxy(body.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/proxies/favorite
@@ -206,5 +207,5 @@ fun deleteFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.unfavoriteProxy(body.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }

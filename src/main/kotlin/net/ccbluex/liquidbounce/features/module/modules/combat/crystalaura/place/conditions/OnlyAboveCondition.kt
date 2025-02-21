@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
-import net.ccbluex.liquidbounce.utils.aiming.canSeeUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeUpperBlockSide
 import net.minecraft.util.math.BlockPos
 
 /**

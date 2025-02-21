@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.dupe.ModuleDupe
+import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
@@ -71,6 +72,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.features.module.modules.render.*
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
@@ -236,6 +238,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleConsoleSpammer,
             ModuleTimeShift,
             ModuleTeleport,
+            ModulePhase,
 
             // Fun
             ModuleDankBobbing,
@@ -257,6 +260,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSpammer,
             ModuleAutoAccount,
             ModuleTeams,
+            ModuleElytraSwap,
             ModuleAutoChatGame,
             ModuleFocus,
             ModuleAutoPearl,
@@ -390,6 +394,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleNuker,
             ModuleExtinguish,
             ModuleBedDefender,
+            ModuleBlockIn,
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,

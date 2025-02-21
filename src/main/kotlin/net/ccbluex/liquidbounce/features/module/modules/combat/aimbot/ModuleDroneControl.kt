@@ -9,11 +9,9 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Vec3d
-import org.lwjgl.glfw.GLFW
 
 object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
 
@@ -49,7 +47,7 @@ object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
         }
 
         if (currentRotation != null) {
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 rotation = currentRotation,
                 configurable = rotationsConfigurable,
                 priority = Priority.NORMAL,

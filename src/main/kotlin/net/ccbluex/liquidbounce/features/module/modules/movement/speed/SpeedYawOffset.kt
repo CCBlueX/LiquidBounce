@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
@@ -47,7 +47,7 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
 
         val rotation = Rotation(player.yaw - yaw, player.pitch)
 
-        RotationManager.aimAt(
+        RotationManager.setRotationTarget(
             rotationsConfigurable.toAimPlan(rotation),
             Priority.NOT_IMPORTANT,
             ModuleSpeed

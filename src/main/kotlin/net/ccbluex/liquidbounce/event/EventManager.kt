@@ -123,6 +123,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     DrawOutlinesEvent::class,
     OverlayMessageEvent::class,
     ScheduleInventoryActionEvent::class,
+    SelectHotbarSlotSilentlyEvent::class,
     SpaceSeperatedNamesChangeEvent::class,
     ClickGuiScaleChangeEvent::class,
     BrowserUrlChangeEvent::class,

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 
 /**
@@ -29,7 +29,7 @@ class StabilizedPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
-        scheduler: ClickScheduler<*>
+        clicker: Clicker<*>
     ) {
         val clicks = cps.random()
 

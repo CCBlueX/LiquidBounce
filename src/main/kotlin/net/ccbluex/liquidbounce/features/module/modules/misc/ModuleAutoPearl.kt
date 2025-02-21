@@ -29,14 +29,14 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -118,7 +118,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.MISC, aliases = arra
 
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
         if (Rotate.enabled) {
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 Rotate.rotations.toAimPlan(rotation),
                 Priority.IMPORTANT_FOR_USAGE_3,
                 this@ModuleAutoPearl
@@ -137,7 +137,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.MISC, aliases = arra
             }
 
             waitConditional(20) {
-                RotationManager.aimAt(
+                RotationManager.setRotationTarget(
                     Rotate.rotations.toAimPlan(rotation),
                     Priority.IMPORTANT_FOR_USAGE_3,
                     this@ModuleAutoPearl
@@ -204,7 +204,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.MISC, aliases = arra
 
         return when(mode) {
             Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked()
-            Modes.TARGET -> ModuleKillAura.targetTracker.lockedOnTarget?.uuid == pearl.ownerUuid
+            Modes.TARGET -> ModuleKillAura.targetTracker.target?.uuid == pearl.ownerUuid
         }
     }
 

@@ -80,13 +80,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
             }
 
             val emptySlot = findEmptyStorageSlotsInInventory().firstOrNull() ?: break
-            event.schedule(inventoryConstrains, when (itemMoveMode) {
-                ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, slot))
-                ItemMoveMode.DRAG_AND_DROP -> listOf(
-                    ClickInventoryAction.performPickup(screen, slot),
-                    ClickInventoryAction.performPickup(screen, emptySlot),
-                )
-            },
+
+            val actions = getActionsForMove(screen, from = slot, to = emptySlot)
+
+            event.schedule(inventoryConstrains, actions,
                 /**
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
@@ -98,6 +95,23 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         // Check if stealing the chest was completed
         if (autoClose && sortedItemsToCollect.isEmpty()) {
             event.schedule(inventoryConstrains, CloseContainerAction(screen))
+        }
+    }
+
+    /**
+     * Create a list of actions that will move the item in the slot [from] to the slot [to].
+     */
+    private fun getActionsForMove(
+        screen: GenericContainerScreen,
+        from: ContainerItemSlot,
+        to: ItemSlot
+    ): List<ClickInventoryAction> {
+        return when (itemMoveMode) {
+            ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, from))
+            ItemMoveMode.DRAG_AND_DROP -> listOf(
+                ClickInventoryAction.performPickup(screen, from),
+                ClickInventoryAction.performPickup(screen, to),
+            )
         }
     }
 
@@ -175,8 +189,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
                  */
-                ItemCategorization(listOf()).getItemFacets(hotbarSwap.from)
-                    .maxOf { it.category.type.allocationPriority }
+                hotbarSwap.priority
             )
 
             // todo: hook to schedule and check if swap was successful

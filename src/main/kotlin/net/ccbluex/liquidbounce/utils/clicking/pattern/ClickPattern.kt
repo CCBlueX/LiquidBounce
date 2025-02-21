@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking.pattern
 
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 
 interface ClickPattern {
-    fun fill(clickArray: IntArray, cps: IntRange, scheduler: ClickScheduler<*>)
+    fun fill(clickArray: IntArray, cps: IntRange, clicker: Clicker<*>)
 }

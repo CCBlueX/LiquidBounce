@@ -44,9 +44,14 @@ open class Configurable(
      * The options should be used in common options, so that
      * descriptions don't have to be written twice.
      */
-    independentDescription: Boolean = false
+    independentDescription: Boolean = false,
+    /**
+     * Used for backwards compatibility when renaming.
+     */
+    aliases: Array<out String> = emptyArray(),
 ) : Value<MutableList<Value<*>>>(
     name,
+    aliases,
     defaultValue = value,
     valueType,
     independentDescription = independentDescription
@@ -174,14 +179,18 @@ open class Configurable(
 
     fun <T : Any> value(
         name: String,
-        default: T,
+        defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) = Value(name, default, valueType, listType).apply { this@Configurable.inner.add(this) }
+    ) = Value(name, defaultValue = defaultValue, valueType = valueType, listType = listType).apply {
+        this@Configurable.inner.add(this)
+    }
 
-    fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
-                                      valueType: ValueType) =
-        RangedValue(name, default, range, suffix, valueType).apply { this@Configurable.inner.add(this) }
+    fun <T : Any> rangedValue(name: String, defaultValue: T, range: ClosedRange<*>, suffix: String,
+                              valueType: ValueType) =
+        RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
+            this@Configurable.inner.add(this)
+        }
 
     // Fixed data types
 
@@ -205,7 +214,9 @@ open class Configurable(
         InputBind(InputUtil.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
     )
 
-    fun bind(name: String, default: InputBind) = BindValue(name, default).apply { this@Configurable.inner.add(this) }
+    fun bind(name: String, default: InputBind) = BindValue(name, defaultValue = default).apply {
+        this@Configurable.inner.add(this)
+    }
 
     fun key(name: String, default: Int) = key(name, InputUtil.Type.KEYSYM.createFromCode(default))
 
@@ -243,7 +254,7 @@ open class Configurable(
 
     fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice =
-        ChooseListValue(name, default, choices).apply { this@Configurable.inner.add(this) }
+        ChooseListValue(name, defaultValue = default, choices = choices).apply { this@Configurable.inner.add(this) }
 
     protected fun <T : Choice> choices(
         eventListener: EventListener,

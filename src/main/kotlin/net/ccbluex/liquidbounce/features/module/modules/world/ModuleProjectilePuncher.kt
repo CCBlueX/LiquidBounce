@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.prevPos
@@ -48,7 +48,7 @@ import net.minecraft.util.math.MathHelper
  */
 object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
-    private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, false))
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
@@ -85,7 +85,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             return@tickHandler
         }
 
-        clickScheduler.clicks {
+        clicker.clicks {
             target.attack(swing)
             true
         }
@@ -118,7 +118,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             target = entity
 
             // aim at target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,

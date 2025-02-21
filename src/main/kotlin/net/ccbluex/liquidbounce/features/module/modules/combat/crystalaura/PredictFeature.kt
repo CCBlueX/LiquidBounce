@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.minecraft.entity.LivingEntity
@@ -29,6 +31,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import kotlin.math.abs
 
 /**
  * Tries to run calculations with simulated player positions.
@@ -75,14 +78,27 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
         }
 
         val simulation = getSnapshotPos(target, if (basePlace) basePlaceTicks else placeTicks)
-        return box.intersects(
-            simulation.x,
+
+        val boundingBox = target?.boundingBox ?: player.boundingBox
+        val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
+        val predictedBoundingBox = Box(
+            simulation.x - halfWidth,
             simulation.y,
-            simulation.z,
-            simulation.x + 1.0,
-            simulation.y + 1.0,
-            simulation.z + 1.0
+            simulation.z - halfWidth,
+            simulation.x + halfWidth,
+            simulation.y + boundingBox.maxY - boundingBox.minY,
+            simulation.z + halfWidth
         )
+
+        mc.execute {
+            ModuleDebug.debugGeometry(
+                ModuleCrystalAura,
+                "predictedIntersect$name",
+                ModuleDebug.DebuggedBox(predictedBoundingBox, Color4b.BLUE.fade(0.4f))
+            )
+        }
+
+        return box.intersects(predictedBoundingBox)
     }
 
     fun getDamage(
@@ -101,18 +117,31 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
         }
 
         val simulated = getSnapshotPos(player, ticks)
+
+        val boundingBox = player.boundingBox
+        val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
+        val predictedBoundingBox = Box(
+            simulated.x - halfWidth,
+            simulated.y,
+            simulated.z - halfWidth,
+            simulated.x + halfWidth,
+            simulated.y + boundingBox.maxY - boundingBox.minY,
+            simulated.z + halfWidth
+        )
+
+        mc.execute {
+            ModuleDebug.debugGeometry(
+                ModuleCrystalAura,
+                "predictedDamage$name",
+                ModuleDebug.DebuggedBox(predictedBoundingBox, Color4b.GRAY.fade(0.4f))
+            )
+        }
+
         val predictedDamage = player.getDamageFromExplosion(
             crystal,
             include = include,
             maxBlastResistance = maxBlastResistance,
-            entityBoundingBox = Box(
-                simulated.x,
-                simulated.y,
-                simulated.z,
-                simulated.x + 1.0,
-                simulated.y + 1.0,
-                simulated.z + 1.0
-            )
+            entityBoundingBox = predictedBoundingBox
         )
 
         val calcMode = calculationMode.activeChoice

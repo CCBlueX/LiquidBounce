@@ -36,7 +36,7 @@ object Head : HealthBasedBuff("Head", isValidItem = { stack, _ -> stack.item == 
     override val passesRequirements: Boolean
         get() = passesHealthRequirements && chronometer.hasElapsed(cooldown * 1000L)
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)
         chronometer.reset()
     }

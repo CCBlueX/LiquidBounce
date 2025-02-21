@@ -27,6 +27,8 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSource
+import okio.buffer
+import okio.sink
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
@@ -81,21 +83,8 @@ object HttpClient {
         response
     }
 
-    suspend fun download(url: String, file: File, agent: String = DEFAULT_AGENT) = withContext(Dispatchers.IO) {
-        val request = createRequest(url, HttpMethod.GET, agent)
-
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw HttpException(HttpMethod.GET, url, response.code, "Failed to download file")
-            }
-
-            file.outputStream().use { output ->
-                response.body.byteStream().use { input ->
-                    input.copyTo(output)
-                }
-            }
-        }
-    }
+    suspend fun download(url: String, file: File, agent: String = DEFAULT_AGENT) =
+        request(url, HttpMethod.GET, agent).toFile(file)
 
 }
 
@@ -116,6 +105,10 @@ inline fun <reified T> Response.parse(): T {
             else -> decode<T>(body.charStream())
         }
     }
+}
+
+fun Response.toFile(file: File) = use { response ->
+    file.sink().buffer().use(response.body.source()::readAll)
 }
 
 fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)

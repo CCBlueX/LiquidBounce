@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.edgePoints
+import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.entity.direction
@@ -114,7 +114,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val currentRotation = RotationManager.serverRotation
 
-        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.directionVector)
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
@@ -140,7 +140,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             "daLine",
             ModuleDebug.DebuggedLine(Line(
                 config.eyePos,
-                currentRotation.rotationVec
+                currentRotation.directionVector
             ), Color4b(0, 0, 255, 255))
         )
 

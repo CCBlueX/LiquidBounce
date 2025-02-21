@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
+import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
-import net.ccbluex.liquidbounce.config.gson.util.jsonObjectOf
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -169,15 +169,15 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
                 setState(formatText(stateText))
 
                 setButtons(jsonArrayOf(
-                    jsonObjectOf(
-                        "label" to "Download",
-                        "url" to "https://liquidbounce.net/",
-                    ),
+                    json {
+                        "label" to "Download"
+                        "url" to "https://liquidbounce.net/"
+                    },
 
-                    jsonObjectOf(
-                        "label" to "GitHub",
-                        "url" to "https://github.com/CCBlueX/LiquidBounce",
-                    ),
+                    json {
+                        "label" to "GitHub"
+                        "url" to "https://github.com/CCBlueX/LiquidBounce"
+                    },
                 ))
             }
         }

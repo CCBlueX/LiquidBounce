@@ -42,7 +42,7 @@ object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == 
         tree(DropAfterUse)
     }
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         // Use item (be aware, it will always return false in this case)
         useHotbarSlotOrOffhand(slot)
 

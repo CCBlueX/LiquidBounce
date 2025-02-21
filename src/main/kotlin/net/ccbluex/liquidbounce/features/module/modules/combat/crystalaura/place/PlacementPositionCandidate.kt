@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
+import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
@@ -26,12 +27,22 @@ class PlacementPositionCandidate(
     val pos: BlockPos, // the block the crystal should be placed on
     val notBlockedByCrystal: Boolean,
     val requiresBasePlace: Boolean
-) {
+) : Comparable<PlacementPositionCandidate> {
 
     /**
-     * The damage a crystal at the specific position would deal.
+     * The damage a crystal at the specific position would deal to the enemy.
      */
-    var explosionDamage: Float? = null
+    var enemyDamage: Float? = null
+
+    /**
+     * The damage a crystal at the specific position would deal to the enemy.
+     */
+    private var selfDamage: Float? = null
+
+    /**
+     * The distance to us.
+     */
+    private val distanceSq by lazy { pos.getSquaredDistance(player.pos) }
 
     init {
         calculate()
@@ -42,7 +53,7 @@ class PlacementPositionCandidate(
      */
     fun calculate() {
         val damageSourceLoc = Vec3d.of(pos).add(0.5, 1.0, 0.5)
-        explosionDamage = CrystalAuraDamageOptions.approximateExplosionDamage(
+        val explosionDamage = CrystalAuraDamageOptions.approximateExplosionDamage(
             damageSourceLoc,
             if (requiresBasePlace) {
                 CrystalAuraDamageOptions.RequestingSubmodule.BASE_PLACE
@@ -50,9 +61,38 @@ class PlacementPositionCandidate(
                 CrystalAuraDamageOptions.RequestingSubmodule.PLACE
             }
         )
+
+        explosionDamage?.let {
+            selfDamage = it.firstFloat()
+            enemyDamage = it.secondFloat()
+        } ?: run {
+            selfDamage = null
+            enemyDamage = null
+        }
     }
 
-    fun isNotInvalid() = explosionDamage != null
+    fun isNotInvalid() = enemyDamage != null
+
+    override fun compareTo(other: PlacementPositionCandidate): Int {
+        // coarse sorting
+        val enemyDamageComparison = this.enemyDamage!!.compareTo(other.enemyDamage!!)
+
+        // not equal
+        if (enemyDamageComparison != 0) {
+            return enemyDamageComparison
+        }
+
+        // equal -> fine sorting 1
+        val selfDamageComparison = other.selfDamage!!.compareTo(this.selfDamage!!)
+
+        // not equal
+        if (selfDamageComparison != 0) {
+            return selfDamageComparison
+        }
+
+        // equal -> fine sorting 2
+        return other.distanceSq.compareTo(this.distanceSq)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

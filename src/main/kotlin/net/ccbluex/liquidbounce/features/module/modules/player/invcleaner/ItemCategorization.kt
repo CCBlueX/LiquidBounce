@@ -64,8 +64,8 @@ enum class ItemType(
     val providedFunction: ItemFunction? = null
 ) {
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
-    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
-    WEAPON(true, allocationPriority = Priority.NOT_IMPORTANT, providedFunction = ItemFunction.WEAPON_LIKE),
+    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
+    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -146,7 +146,12 @@ class ItemCategorization(
         )
     }
 
-    private val bestPiecesIfFullArmor: List<ItemSlot>
+    /**
+     * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
+     * the best ones as soon as we upgrade one of the other armor pieces.
+     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     */
+    private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
     init {
@@ -158,7 +163,7 @@ class ItemCategorization(
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
 
-        this.bestPiecesIfFullArmor = ArmorEvaluation.findBestArmorPiecesWithComparator(
+        this.futureArmorToKeep = ArmorEvaluation.findBestArmorPiecesWithComparator(
             availableItems,
             armorComparatorForFullArmor
         ).values.mapNotNull { it?.itemSlot }
@@ -178,7 +183,7 @@ class ItemCategorization(
         val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
             // Treat animal armor as a normal item
             is AnimalArmorItem -> arrayOf(ItemFacet(slot))
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
             is SwordItem -> arrayOf(SwordItemFacet(slot))
             is BowItem -> arrayOf(BowItemFacet(slot))
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))

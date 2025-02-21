@@ -64,7 +64,7 @@ object Drink : Buff("Drink", isValidItem = { stack, forUse -> isPotion(stack, fo
 
     private var forceUseKey = false
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         forceUseKey = true
         sequence.waitUntil { !passesRequirements }
         forceUseKey = false

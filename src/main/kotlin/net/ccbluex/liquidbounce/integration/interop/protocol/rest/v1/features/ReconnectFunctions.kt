@@ -20,13 +20,15 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
-import com.google.gson.JsonObject
+import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
 // POST /api/v1/client/reconnect
 @Suppress("UNUSED_PARAMETER")
-fun postReconnect(requestObject: RequestObject) = httpOk(JsonObject().apply {
+fun postReconnect(requestObject: RequestObject): FullHttpResponse {
     Reconnect.reconnectNow()
-})
+    return httpOk(emptyJsonObject())
+}

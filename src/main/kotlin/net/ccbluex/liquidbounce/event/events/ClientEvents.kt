@@ -24,6 +24,7 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
@@ -206,9 +207,7 @@ object ResourceReloadEvent : Event()
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
 
 @Nameable("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(
-    val schedule: MutableList<InventoryActionChain> = mutableListOf()
-) : Event() {
+class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChain> = mutableListOf()) : Event() {
 
     fun schedule(
         constrains: InventoryConstraints,
@@ -234,6 +233,9 @@ class ScheduleInventoryActionEvent(
         this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray(), priority))
     }
 }
+
+@Nameable("selectHotbarSlotSilently")
+class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()
 
 @Nameable("browserUrlChange")
 @WebSocketEvent

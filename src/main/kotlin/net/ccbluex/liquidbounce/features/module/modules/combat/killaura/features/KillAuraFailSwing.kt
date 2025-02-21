@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.config.types.NoneChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClicker.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -42,14 +42,14 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
      * Additional range for fail swing to work
      */
     private val additionalRange by float("AdditionalRange", 2f, 0f..10f)
-    val clickScheduler = tree(ClickScheduler(this, false))
+    val clicker = tree(Clicker(this, false))
     val mode = choices(this, "NotifyWhenFail", activeIndex = 1) {
         arrayOf(NoneChoice(it), Box, Sound)
     }.apply {
         doNotIncludeAlways()
     }
 
-    suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
+    suspend fun Sequence.dealWithFakeSwing(target: Entity?) {
         if (!enabled) {
             return
         }
@@ -77,9 +77,9 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
-        if (clickScheduler.isGoingToClick) {
+        if (clicker.isGoingToClick) {
             prepareAttackEnvironment {
-                clickScheduler.clicks {
+                clicker.clicks {
                     if (considerMissCooldown && mc.attackCooldown > 0) {
                         return@clicks false
                     }

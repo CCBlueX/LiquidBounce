@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -76,7 +76,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
                 }
 
                 if (player.pitch <= 80) {
-                    RotationManager.aimAt(
+                    RotationManager.setRotationTarget(
                         Rotation(player.yaw, (80f..90f).random().toFloat()),
                         configurable = rotations,
                         provider = ModuleFastUse,

@@ -46,11 +46,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3i
 import org.joml.Vector2d
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * Surround module
@@ -298,11 +300,13 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val hole = if (noWaste && player.isInHole(feetBlockPos)) {
             setOf(feetBlockPos)
         } else {
+            val maxX = getMax(bb, Direction.Axis.X)
+            val maxZ = getMax(bb, Direction.Axis.Z)
             setOf(
                 BlockPos.ofFloored(bb.minX, y, bb.minZ),
-                BlockPos.ofFloored(bb.minX, y, bb.maxZ),
-                BlockPos.ofFloored(bb.maxX, y, bb.minZ),
-                BlockPos.ofFloored(bb.maxX, y, bb.maxZ),
+                BlockPos.ofFloored(bb.minX, y, maxZ),
+                BlockPos.ofFloored(maxX, y, bb.minZ),
+                BlockPos.ofFloored(maxX, y, maxZ),
             )
         }
 
@@ -402,11 +406,13 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     private fun getEntitySurround(entity: Entity, list: HashSet<BlockPos>, blocked: HashSet<BlockPos>, y: Double) {
         val bb = entity.boundingBox
 
+        val maxX = getMax(bb, Direction.Axis.X)
+        val maxZ = getMax(bb, Direction.Axis.Z)
         val hole = setOf(
             BlockPos.ofFloored(bb.minX, y, bb.minZ),
-            BlockPos.ofFloored(bb.minX, y, bb.maxZ),
-            BlockPos.ofFloored(bb.maxX, y, bb.minZ),
-            BlockPos.ofFloored(bb.maxX, y, bb.maxZ),
+            BlockPos.ofFloored(bb.minX, y, maxZ),
+            BlockPos.ofFloored(maxX, y, bb.minZ),
+            BlockPos.ofFloored(maxX, y, maxZ),
         )
 
         blocked.addAll(hole)
@@ -419,6 +425,17 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
                     list += pos
                 }
             }
+        }
+    }
+
+    private fun getMax(boundingBox: Box, axis: Direction.Axis): Double {
+        val max = boundingBox.getMax(axis)
+        val min = boundingBox.getMin(axis)
+
+        return if (max == floor(min) + 1.0) {
+            min
+        } else {
+            max
         }
     }
 

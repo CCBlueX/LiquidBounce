@@ -616,6 +616,7 @@
   "liquidbounce.module.velocity.description": "Изменяет величину отдачи, которую вы получаете.",
   "liquidbounce.module.vomit.description": "Выбрасывает предметы из вашего инвентаря.",
   "liquidbounce.module.xRay.description": "Отрисовывает только выбранные блоки.",
+  "liquidbounce.module.elytraSwap.description": "Позволяет быстро заменять нагрудник элитрой и наоборот.",
   "liquidbounce.module.zoom.description": "Позволяет сделать всё в мире больше или меньше.",
   "liquidbounce.module.packetLogger.description": "Выводит все пакеты и их содержание (поля).",
   "liquidbounce.module.packetLogger.messages.send": "Отправляющиеся",

@@ -65,7 +65,7 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         sending = false
     }
 
-    private suspend inline fun Sequence<*>.action(operation: () -> Unit) {
+    private suspend inline fun Sequence.action(operation: () -> Unit) {
         sending = true
         waitUntil { mc.networkHandler != null }
         waitTicks(delay.random())

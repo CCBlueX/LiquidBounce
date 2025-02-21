@@ -23,11 +23,11 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -91,7 +91,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
     RenderSystem.recordRenderCall {
         ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // PUT /api/v1/client/servers/add
@@ -112,7 +112,7 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     serverList.add(serverInfo, false)
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/servers/remove
@@ -125,7 +125,7 @@ fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     serverList.remove(serverInfo)
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // PUT /api/v1/client/servers/edit
@@ -147,7 +147,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
     }
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/servers/swap
@@ -158,7 +158,7 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 
     serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
     serverList.saveFile()
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/servers/order
@@ -173,7 +173,7 @@ fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
         }
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 object ActiveServerList : EventListener {

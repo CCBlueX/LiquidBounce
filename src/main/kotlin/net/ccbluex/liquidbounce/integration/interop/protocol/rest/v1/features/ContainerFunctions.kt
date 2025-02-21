@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.features.container.inventoryAsCompound
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.*
@@ -87,7 +88,7 @@ fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 private fun giveItem(compound: NbtCompound): FullHttpResponse? {
@@ -129,7 +130,7 @@ fun postStoreItem(requestObject: RequestObject): FullHttpResponse {
         val compoundList = inventory.inventoryAsCompound(screenHandler.title)
         compoundList.forEach(ClientItemGroups::storeAsContainerItem)
 
-        httpOk(JsonObject())
+        httpOk(emptyJsonObject())
     } else {
         httpForbidden("Not a container")
     }

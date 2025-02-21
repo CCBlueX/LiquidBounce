@@ -25,9 +25,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -109,7 +110,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
         val rotation = Rotation(yaw, player.pitch)
 
-        RotationManager.aimAt(rotationsConfigurable.toAimPlan(rotation), Priority.NOT_IMPORTANT,
+        RotationManager.setRotationTarget(rotationsConfigurable.toAimPlan(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
@@ -121,7 +122,8 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
             MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
         val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir)
             && !shouldSprintOmnidirectional
-            && RotationManager.workingAimPlan?.applyVelocityFix == false && !hasForwardMovement
+            && RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.OFF
+            && !hasForwardMovement
 
         return running && preventSprint
     }

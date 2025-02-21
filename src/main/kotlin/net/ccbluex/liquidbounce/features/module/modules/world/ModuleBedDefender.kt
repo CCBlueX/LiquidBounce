@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.isSelfBedChoices
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
@@ -148,7 +149,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             )
         }
 
-        ModuleDebug.debugGeometry(this, "PlacementPosition") {
+        debugGeometry("PlacementPosition") {
             ModuleDebug.DebugCollection(
                 updatePositions.map { (_, pos) ->
                     ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.with(a = 100))

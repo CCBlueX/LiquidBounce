@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -46,7 +47,7 @@ abstract class RotationMode(
      *
      * PostMove might be irrelevant if this is enabled.
      */
-    val instant by boolean("instant", false)
+    val instant by boolean("Instant", false)
 
     abstract fun rotate(rotation: Rotation, isFinished: () -> Boolean, onFinished: () -> Unit)
 
@@ -73,7 +74,7 @@ class NormalRotationMode(
             onFinished()
             if (aimAfterInstantAction) {
                 mc.execute {
-                    RotationManager.aimAt(rotation, !ignoreOpenInventory, rotations, priority, module)
+                    RotationManager.setRotationTarget(rotation, !ignoreOpenInventory, rotations, priority, module)
                 }
             }
 
@@ -81,7 +82,7 @@ class NormalRotationMode(
         }
 
         mc.execute {
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,

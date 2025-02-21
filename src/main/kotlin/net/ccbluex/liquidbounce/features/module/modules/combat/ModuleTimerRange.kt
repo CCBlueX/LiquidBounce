@@ -64,7 +64,7 @@ object ModuleTimerRange : ClientModule("TimerRange", Category.COMBAT) {
 
     val repeatable = tickHandler {
         if (onlyOnGround && !player.isOnGround) return@tickHandler
-        if (requiresKillAura && (!ModuleKillAura.running || ModuleKillAura.targetTracker.lockedOnTarget == null)) {
+        if (requiresKillAura && (!ModuleKillAura.running || ModuleKillAura.targetTracker.target == null)) {
             return@tickHandler
         }
 

@@ -25,16 +25,19 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.againstShield
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.prepare
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
+import net.minecraft.util.Hand
 
 /**
  * AutoWeapon module
@@ -85,11 +88,22 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     private val switchOn by int("SwitchOn", 1, 0..2, "ticks")
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
+    /**
+     * Prioritize Auto Buff or consuming an item over Auto Weapon
+     */
+    private val isBusy: Boolean
+        get() = SilentHotbar.isSlotModifiedBy(ModuleAutoBuff) || player.isUsingItem && player.activeHand ==
+            Hand.MAIN_HAND && player.activeItem.isConsumable
+
     @Suppress("unused")
     private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@sequenceHandler
         val weaponSlot = determineWeaponSlot(entity) ?: return@sequenceHandler
         val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot
+
+        if (isBusy) {
+            return@sequenceHandler
+        }
 
         SilentHotbar.selectSlotSilently(
             this,
@@ -116,7 +130,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
      * Prepare AutoWeapon for given [entity] if [prepare] is enabled
      */
     fun prepare(entity: Entity?) {
-        if (!running || !prepare || entity !is LivingEntity) {
+        if (!running || !prepare || entity !is LivingEntity || isBusy) {
             return
         }
 

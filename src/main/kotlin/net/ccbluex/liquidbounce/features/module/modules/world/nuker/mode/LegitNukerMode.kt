@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
@@ -135,7 +135,7 @@ object LegitNukerMode : Choice("Legit") {
             ) ?: return@let
 
             if (!packetMine) {
-                RotationManager.aimAt(
+                RotationManager.setRotationTarget(
                     raytraceResult.rotation,
                     considerInventory = !ignoreOpenInventory,
                     configurable = rotations,
@@ -158,7 +158,7 @@ object LegitNukerMode : Choice("Legit") {
             ) ?: continue
 
             if (!packetMine) {
-                RotationManager.aimAt(
+                RotationManager.setRotationTarget(
                     raytraceResult.rotation,
                     considerInventory = !ignoreOpenInventory,
                     configurable = rotations,

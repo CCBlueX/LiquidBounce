@@ -114,7 +114,11 @@ enum class FailProcedure {
                 mode.activeChoice.onCannotLookAtTarget(mineTarget)
 
                 // if required, we already switch
+                val switchMode = switchMode.activeChoice
                 switch(switchMode.getSlot(mineTarget.blockState), mineTarget)
+                if (switchMode.getSwitchingMethod().shouldSync) {
+                    interaction.syncSelectedSlot()
+                }
             }
 
             return true

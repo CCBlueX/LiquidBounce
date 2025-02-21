@@ -20,17 +20,13 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationUtil
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.config.types.RangedValue
+import net.ccbluex.liquidbounce.config.types.ValueType.*
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.entity.Entity
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -38,40 +34,73 @@ import net.minecraft.entity.player.PlayerEntity
 /**
  * A target tracker to choose the best enemy to attack
  */
-open class TargetTracker(
-    defaultPriority: PriorityEnum = PriorityEnum.HEALTH,
-    maxRange: Float? = null
+class TargetTracker(
+    defaultPriority: TargetPriority = TargetPriority.HEALTH,
+    rangeValue: RangedValueProvider = NoneRangedValueProvider
+) : TargetSelector(defaultPriority, rangeValue) {
+
+    constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
+        this(defaultPriority, DummyRangedValueProvider(range))
+
+    var target: LivingEntity? = null
+
+    fun selectFirst(predicate: ((LivingEntity) -> Boolean)? = null): LivingEntity? {
+        val enemies = targets()
+        return (if (predicate != null) enemies.firstOrNull(predicate) else enemies.firstOrNull()).also { target = it }
+    }
+
+    fun <R> select(evaluator: (LivingEntity) -> R): R? {
+        for (enemy in targets()) {
+            val value = evaluator(enemy)
+            if (value != null) {
+                target = enemy
+                return value
+            }
+        }
+
+        reset()
+        return null
+    }
+
+    fun reset() {
+        target = null
+    }
+
+    fun validate(validator: ((LivingEntity) -> Boolean)? = null) {
+        val target = target ?: return
+
+        if (!validate(target) || validator != null && !validator(target)) {
+            reset()
+        }
+    }
+}
+
+open class TargetSelector(
+    defaultPriority: TargetPriority = TargetPriority.HEALTH,
+    rangeValue: RangedValueProvider = NoneRangedValueProvider
 ) : Configurable("Target") {
 
-    var range = Double.MAX_VALUE
-    var lockedOnTarget: LivingEntity? = null
-        private set
-    var maximumDistance: Double = 0.0
+    constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
+        this(defaultPriority, DummyRangedValueProvider(range))
 
+    var closestSquaredEnemyDistance: Double = 0.0
+
+    private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
     private val priority by enumChoice("Priority", defaultPriority)
 
-    init {
-        if (maxRange != null) {
-            float("Range", 4.5f, 1f..maxRange).onChanged { range = it.toDouble() }
-            range = 4.5
-        }
-    }
-
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun enemies(): List<LivingEntity> {
+    fun targets(): MutableList<LivingEntity> {
         val entities = world.entities
             .asSequence()
             .filterIsInstance<LivingEntity>()
-            .filter(this::validate)
-            .map { it to it.boxedDistanceTo(player) }
-            .filter { it.second <= range }
+            .filter(::validate)
             // Sort by distance (closest first) - in case of tie at priority level
-            .sortedBy { it.second }
-            .mapTo(mutableListOf()) { it.first }
+            .sortedBy { it.squaredBoxedDistanceTo(player) }
+            .toMutableList()
 
         if (entities.isEmpty()) {
             return entities
@@ -88,57 +117,68 @@ open class TargetTracker(
 
         when (priority) {
             // Lowest health first
-            PriorityEnum.HEALTH -> entities.sortBy { it.getActualHealth() }
+            TargetPriority.HEALTH -> entities.sortBy { it.getActualHealth() }
             // Closest to your crosshair first
-            PriorityEnum.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
+            TargetPriority.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
             // Oldest entity first
-            PriorityEnum.AGE -> entities.sortByDescending { it.age }
+            TargetPriority.AGE -> entities.sortByDescending { it.age }
             // With the lowest hurt time first
-            PriorityEnum.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
+            TargetPriority.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
             // Closest to you first
             else -> {} // Do nothing
         }
 
         // Update max distance squared
-        maximumDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
+        closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
 
         return entities
     }
 
-    fun cleanup() {
-        unlock()
-    }
+    open fun validate(entity: LivingEntity) =
+        entity != player
+        && !entity.isRemoved
+        && entity.shouldBeAttacked()
+        && fov >= RotationUtil.crosshairAngleToEntity(entity)
+        && entity.hurtTime <= hurtTime
+        && validateRange(entity)
 
-    fun lock(entity: LivingEntity, reportToUI: Boolean = true) {
-        lockedOnTarget = entity
+    private fun validateRange(entity: LivingEntity): Boolean {
+        if (range == null) return true
 
-        if (entity is PlayerEntity && reportToUI) {
-            EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
+        val distanceSq = entity.squaredBoxedDistanceTo(player)
+        val range = range.get()
+
+        @Suppress("UNCHECKED_CAST")
+        return when (this.range.valueType) {
+            FLOAT -> distanceSq <= (range as Float).sq()
+            FLOAT_RANGE ->
+                distanceSq >= (range as ClosedFloatingPointRange<Float>).start.sq()
+                && distanceSq <= range.endInclusive.sq()
+            INT -> distanceSq <= (range as Int).sq()
+            INT_RANGE -> distanceSq >= (range as IntRange).first.sq() && distanceSq <= range.last.sq()
+            else -> true
         }
     }
 
-    private fun unlock() {
-        lockedOnTarget = null
-    }
+    val maxRange: Float
+        get() {
+            if (range == null) return Float.MAX_VALUE
 
-    fun validateLock(validator: (Entity) -> Boolean) {
-        val lockedOnTarget = lockedOnTarget ?: return
+            val value = range.get()
 
-        if (!validate(lockedOnTarget) || !validator(lockedOnTarget)) {
-            this.lockedOnTarget = null
+            @Suppress("UNCHECKED_CAST")
+            return when (range.valueType) {
+                FLOAT -> value as Float
+                FLOAT_RANGE -> (value as ClosedFloatingPointRange<Float>).endInclusive
+                INT -> (value as Int).toFloat()
+                INT_RANGE -> (value as IntRange).last.toFloat()
+                else -> Float.MAX_VALUE
+            }
         }
-    }
-
-    open fun validate(entity: LivingEntity)
-            = entity != player
-            && !entity.isRemoved
-            && entity.shouldBeAttacked()
-            && fov >= RotationUtil.crosshairAngleToEntity(entity)
-            && entity.hurtTime <= hurtTime
 
 }
 
-enum class PriorityEnum(override val choiceName: String) : NamedChoice {
+enum class TargetPriority(override val choiceName: String) : NamedChoice {
     HEALTH("Health"),
     DISTANCE("Distance"),
     DIRECTION("Direction"),

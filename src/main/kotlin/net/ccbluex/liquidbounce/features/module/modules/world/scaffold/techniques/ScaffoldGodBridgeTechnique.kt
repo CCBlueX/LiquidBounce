@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeAction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -61,7 +61,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
     private var mode by enumChoice("Mode", Mode.JUMP)
     private var forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
-    private var sneakTime by int("SneakTime", 1, 1..10)
+    private val sneakTime by intRange("SneakTime", 1..1, 1..10)
 
     override fun ledge(
         target: BlockPlacementTarget?,
@@ -82,7 +82,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
         return if (snapshotOne.clipLedged) {
             val cameraPosition = snapshotOne.pos.add(0.0, player.standingEyeHeight.toDouble(), 0.0)
-            val currentCrosshairTarget = raycast(start = cameraPosition, direction = rotation.rotationVec)
+            val currentCrosshairTarget = raycast(start = cameraPosition, direction = rotation.directionVector)
 
             if (target == null) {
                 return LedgeAction.NO_LEDGE
@@ -103,16 +103,16 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // we need to prevent the player from falling off the ledge e.g by jumping or sneaking.
             when {
                 ModuleScaffold.blockCount < forceSneakBelowCount -> {
-                    LedgeAction(sneakTime = this@ScaffoldGodBridgeTechnique.sneakTime)
+                    LedgeAction(sneakTime = sneakTime.random())
                 }
                 mode == Mode.JUMP -> LedgeAction(jump = true)
-                mode == Mode.SNEAK -> LedgeAction(sneakTime = this@ScaffoldGodBridgeTechnique.sneakTime)
+                mode == Mode.SNEAK -> LedgeAction(sneakTime = sneakTime.random())
                 mode == Mode.STOP_INPUT -> LedgeAction(stopInput = true)
                 mode == Mode.BACKWARDS -> LedgeAction(stepBack = true)
                 mode == Mode.RANDOM -> if (Random.nextBoolean()) {
                     LedgeAction(jump = true, sneakTime = 0)
                 } else {
-                    LedgeAction(jump = false, sneakTime = this@ScaffoldGodBridgeTechnique.sneakTime)
+                    LedgeAction(jump = false, sneakTime = sneakTime.random())
                 }
                 else -> LedgeAction.NO_LEDGE
             }

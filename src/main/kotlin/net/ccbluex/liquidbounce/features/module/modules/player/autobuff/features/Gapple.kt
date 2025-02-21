@@ -32,7 +32,7 @@ object Gapple : HealthBasedBuff("Gapple", isValidItem = { stack, _ -> stack.item
 
     private var forceUseKey = false
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         forceUseKey = true
         sequence.waitUntil { !passesRequirements }
         forceUseKey = false

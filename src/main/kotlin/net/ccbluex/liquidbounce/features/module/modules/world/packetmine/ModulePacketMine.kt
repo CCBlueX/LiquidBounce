@@ -24,20 +24,22 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.ImmediateMineMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.NormalMineMode
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.AlwaysToolMode
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.NeverToolMode
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.block.BlockState
@@ -66,17 +68,25 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         "Mode",
         NormalMineMode,
         arrayOf(NormalMineMode, ImmediateMineMode, CivMineMode)
-    )
+    ).apply {
+        tagBy(this)
+    }
 
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChange {
         it.coerceAtLeast(range)
     }
+
     val keepRange by float("KeepRange", 25f, 0f..200f).onChange {
         it.coerceAtLeast(wallsRange)
     }
+
     val swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
-    val switchMode by enumChoice("Switch", MineToolMode.ON_STOP)
+    val switchMode = choices("Switch",
+        OnStopToolMode,
+        arrayOf(AlwaysToolMode, PostStartToolMode, OnStopToolMode, NeverToolMode)
+    )
+
     private val rotationMode by enumChoice("Rotate", MineRotationMode.NEVER)
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -95,8 +105,14 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
 
-    private var target: MineTarget? = null
-        set(value) {
+    /**
+     * The current target of the module.
+     *
+     * Should never be accessed directly by other modules!
+     */
+    @Suppress("ObjectPropertyName", "ObjectPropertyNaming")
+    var _target: MineTarget? = null // yes "_" because kotlin lacks package private
+        set(value) { // and I don't want to offer this to modules using this to mine something
             if (value == field) {
                 return
             }
@@ -121,21 +137,21 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
     override fun disable() {
         targetRenderer.clearSilently()
-        target = null
+        _target = null
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        val mineTarget = target ?: return@handler
+        val mineTarget = _target ?: return@handler
         mineTarget.updateBlockState()
         rotate(mineTarget)
     }
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        val mineTarget = target ?: return@tickHandler
+        val mineTarget = _target ?: return@tickHandler
         if (mineTarget.isInvalidOrOutOfRange()) {
-            target = null
+            _target = null
             return@tickHandler
         }
 
@@ -159,7 +175,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         }
 
         if (rotate) {
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotationsConfigurable,
@@ -211,6 +227,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
             return
         }
 
+        val switchMode = switchMode.activeChoice
         val slot = switchMode.getSlot(mineTarget.blockState)
         if (!mineTarget.started) {
             startBreaking(slot, mineTarget)
@@ -218,17 +235,25 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
             updateBreakingProgress(mineTarget, slot)
             if (mineTarget.progress >= breakDamage && !mineTarget.finished) {
                 mode.activeChoice.finish(mineTarget)
+                switchMode.getSwitchingMethod().switchBack()
             }
         }
+
+        switchMode.getSwitchingMethod().reset()
     }
 
     private fun startBreaking(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
         switch(slot, mineTarget)
+        if (switchMode.activeChoice.syncOnStart) {
+            interaction.syncSelectedSlot()
+        }
+
         mode.activeChoice.start(mineTarget)
         mineTarget.started = true
     }
 
     private fun updateBreakingProgress(mineTarget: MineTarget, slot: IntObjectImmutablePair<ItemStack>?) {
+        val switchMode = switchMode.activeChoice
         mineTarget.progress += switchMode.getBlockBreakingDelta(
             mineTarget.targetPos,
             mineTarget.blockState,
@@ -236,6 +261,10 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         )
 
         switch(slot, mineTarget)
+        if (switchMode.getSwitchingMethod().shouldSync) {
+            interaction.syncSelectedSlot()
+        }
+
         val f = if (breakDamage > 0f) {
             val breakDamageD = breakDamage.toDouble()
             mineTarget.progress.toDouble().coerceIn(0.0..breakDamageD) / breakDamageD / 2.0
@@ -262,18 +291,16 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
             return
         }
 
-        val shouldSwitch = switchMode.shouldSwitch(mineTarget)
-        if (shouldSwitch && ModuleAutoTool.running) {
-            ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
-        } else if (shouldSwitch) {
-            SilentHotbar.selectSlotSilently(this, slot.firstInt(), 1)
+        val switchMode = switchMode.activeChoice
+        if (switchMode.shouldSwitch(mineTarget)) {
+            switchMode.getSwitchingMethod().switch(slot, mineTarget)
         }
     }
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         val openScreen = mc.currentScreen != null
-        val unchangeableActive = !mode.activeChoice.canManuallyChange && target != null
+        val unchangeableActive = !mode.activeChoice.canManuallyChange && _target != null
         if (openScreen || unchangeableActive || !player.abilities.allowModifyWorld) {
             return@handler
         }
@@ -291,9 +318,9 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
         val shouldTargetBlock = mode.activeChoice.shouldTarget(blockPos, state)
         // stop when the block is clicked again
-        val isCancelledByUser = blockPos.equals(target?.targetPos)
+        val isCancelledByUser = blockPos.equals(_target?.targetPos)
 
-        target = if (shouldTargetBlock && world.worldBorder.contains(blockPos) && !isCancelledByUser) {
+        _target = if (shouldTargetBlock && world.worldBorder.contains(blockPos) && !isCancelledByUser) {
             MineTarget(blockPos)
         } else {
             null
@@ -309,7 +336,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        target = null
+        _target = null
     }
 
     @Suppress("unused")
@@ -332,20 +359,20 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     }
 
     private fun updatePosOnChange(pos: BlockPos, state: BlockState) {
-        if (pos == target?.targetPos && state.isAir) {
-            target = null
+        if (pos == _target?.targetPos && state.isAir) {
+            _target = null
         }
     }
 
     fun setTarget(blockPos: BlockPos) {
-        if (target?.finished != false && mode.activeChoice.canManuallyChange || target == null) {
-            target = MineTarget(blockPos)
+        if (_target?.finished != false && mode.activeChoice.canManuallyChange || _target == null) {
+            _target = MineTarget(blockPos)
         }
     }
 
     @Suppress("FunctionNaming", "FunctionName")
     fun _resetTarget() {
-        target = null
+        _target = null
     }
 
 }

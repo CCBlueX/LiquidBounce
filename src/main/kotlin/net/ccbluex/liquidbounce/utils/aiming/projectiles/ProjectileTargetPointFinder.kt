@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.aiming.findVisiblePointFromVirtualEye
+import net.ccbluex.liquidbounce.utils.aiming.utils.findVisiblePointFromVirtualEye
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.text.DecimalFormat

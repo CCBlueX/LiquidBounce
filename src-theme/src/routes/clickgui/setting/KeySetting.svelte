@@ -4,7 +4,7 @@
     import {getPrintableKeyName} from "../../../integration/rest";
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
-    import type {KeyboardKeyEvent} from "../../../integration/events";
+    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
 
     export let setting: ModuleSetting;
 
@@ -13,6 +13,7 @@
     const dispatch = createEventDispatcher();
     const UNKNOWN_KEY = "key.keyboard.unknown";
 
+    let isHovered = false;
     let binding = false;
     let printableKeyName = "";
 
@@ -59,10 +60,34 @@
 
         dispatch("change");
     });
+
+    listen("mouseButton", async (e: MouseButtonEvent) => {
+        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
+            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+            return;
+        }
+
+        if (!binding || (e.button === 0 && isHovered)) {
+            return;
+        }
+
+        binding = false;
+
+        cSetting.value = e.key;
+
+        setting = {...cSetting};
+
+        dispatch("change");
+    })
 </script>
 
 <div class="setting">
-    <button class="change-bind" on:click={toggleBinding}>
+    <button
+            class="change-bind"
+            on:click={toggleBinding}
+            on:mouseenter={() => isHovered = true}
+            on:mouseleave={() => isHovered = false}
+    >
         {#if !binding}
             <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
 

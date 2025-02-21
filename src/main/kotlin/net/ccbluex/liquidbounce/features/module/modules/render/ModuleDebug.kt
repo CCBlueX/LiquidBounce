@@ -142,8 +142,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     private val expireHandler = tickHandler {
         val currentTime = System.currentTimeMillis()
 
-        debugParameters.entries.removeIf { (parameter, capture) ->
-            (currentTime - capture.time) / 1000 >= expireTime
+        debugParameters.entries.removeIf { (_, capture) ->
+            currentTime - capture.time >= expireTime * 1000
         }
     }
 
@@ -154,8 +154,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         if (mc.options.playerListKey.isPressed || !parameters) {
             return@handler
         }
-
-        val width = mc.window.scaledWidth
 
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buffers ->
@@ -220,18 +218,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                     commit(buffers)
                 }
-
-
             }
         }
-    }
-
-    inline fun debugGeometry(owner: Any, name: String, lazyGeometry: () -> DebuggedGeometry) {
-        if (!running) {
-            return
-        }
-
-        debugGeometry(owner, name, lazyGeometry.invoke())
     }
 
     fun debugGeometry(owner: Any, name: String, geometry: DebuggedGeometry) {
@@ -243,6 +231,14 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debuggedGeometry[DebuggedGeometryOwner(owner, name)] = geometry
     }
 
+    inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
+        if (!ModuleDebug.running) {
+            return
+        }
+
+        debugGeometry(owner = this, name, lazyGeometry())
+    }
+
     private data class DebuggedGeometryOwner(val owner: Any, val name: String)
 
     private data class DebuggedParameter(val owner: Any, val name: String)
@@ -251,20 +247,20 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     private val debugParameters = hashMapOf<DebuggedParameter, ParameterCapture>()
 
-    inline fun debugParameter(owner: Any, name: String, lazyValue: () -> Any) {
-        if (!running) {
-            return
-        }
-
-        debugParameter(owner, name, lazyValue.invoke())
-    }
-
     fun debugParameter(owner: Any, name: String, value: Any?) {
         if (!running) {
             return
         }
 
         debugParameters[DebuggedParameter(owner, name)] = ParameterCapture(value = value)
+    }
+
+    inline fun Any.debugParameter(name: String, lazyValue: () -> Any) {
+        if (!ModuleDebug.running) {
+            return
+        }
+
+        debugParameter(owner = this, name, lazyValue())
     }
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {

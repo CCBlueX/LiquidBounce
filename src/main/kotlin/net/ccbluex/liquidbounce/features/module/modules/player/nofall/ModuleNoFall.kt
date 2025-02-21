@@ -45,6 +45,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
             NoFallVulcanTP,
             NoFallVerus,
             NoFallForceJump,
+            NoFallCancel,
             NoFallBlink,
             NoFallHypixelPacket,
             NoFallHypixel,

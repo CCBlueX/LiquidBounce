@@ -78,7 +78,7 @@ class ItemPacker {
             val targetSlot = fillItemIntoSlot(filledInItemSlot, leftHotbarSlotIterator)
 
             if (targetSlot != null && targetSlot !in forbiddenSlotsToFill) {
-                moves.add(InventorySwap(filledInItemSlot, targetSlot))
+                moves.add(InventorySwap(filledInItemSlot, targetSlot, filledInItem.category.type.allocationPriority))
             }
         }
 

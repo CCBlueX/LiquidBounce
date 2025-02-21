@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
-import org.graalvm.polyglot.Value as PolyglotValue;
+import org.graalvm.polyglot.Value as PolyglotValue
 
 /**
  * Object used by the script API to provide an idiomatic way of creating module values.
@@ -143,7 +142,7 @@ object ScriptSetting {
                 }'"
             )
 
-        return ChooseListValue(name, default, choices)
+        return ChooseListValue(name, defaultValue = default, choices = choices)
     }
 
 
@@ -152,12 +151,12 @@ object ScriptSetting {
         default: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) = Value(name, default, valueType, listType)
+    ) = Value(name, defaultValue = default, valueType = valueType, listType = listType)
 
     private fun <T : Any> rangedValue(
         name: String, default: T, range: ClosedRange<*>, suffix: String,
         valueType: ValueType
     ) =
-        RangedValue(name, default, range, suffix, valueType)
+        RangedValue(name, defaultValue = default, range = range, suffix = suffix, valueType = valueType)
 
 }

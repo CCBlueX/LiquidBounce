@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler.Companion.RNG
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.clicking.Clicker.Companion.RNG
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 
 /**
@@ -30,7 +30,7 @@ class NormalDistributionPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
-        scheduler: ClickScheduler<*>
+        clicker: Clicker<*>
     ) {
         data class Band(val top: Double, val mean: Double, val std: Double)
 

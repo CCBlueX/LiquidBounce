@@ -338,6 +338,7 @@
   "liquidbounce.command.config.subcommand.create.result.created": "O arquivo de configuração chamado %s foi criado.",
   "liquidbounce.command.config.subcommand.create.result.alreadyExists": "O arquivo de configuração chamado %s já existe.",
   "liquidbounce.module.fastPlace.description": "Permite que você coloque blocos mais rápido.",
+  "liquidbounce.module.elytraSwap.description": "Permite trocar rapidamente entre a couraça e a elytra.",
   "liquidbounce.module.trueSight.description": "Permite que você veja objetos e entidades invisíveis.",
   "liquidbounce.module.noRotateSet.description": "Impede que o servidor gire sua cabeça.",
   "liquidbounce.module.sprint.description": "Corre automaticamente.",

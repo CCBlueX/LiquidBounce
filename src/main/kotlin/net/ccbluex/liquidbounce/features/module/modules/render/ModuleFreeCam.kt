@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -94,7 +94,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             val target = raycast(
                 range = 100.0,
                 start = cameraPosition,
-                direction = mc.cameraEntity?.rotation?.rotationVec ?: return null
+                direction = mc.cameraEntity?.rotation?.directionVector ?: return null
             )
 
             return target.pos
@@ -179,7 +179,8 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             return@handler
         }
 
-        RotationManager.aimAt(rotationsConfigurable.toAimPlan(lookAt), Priority.NOT_IMPORTANT, ModuleFreeCam)
+        RotationManager.setRotationTarget(rotationsConfigurable.toAimPlan(lookAt),
+            Priority.NOT_IMPORTANT, ModuleFreeCam)
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {

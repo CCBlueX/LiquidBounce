@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget;
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -101,13 +102,13 @@ public abstract class MixinCamera {
             this.setRotation(screen.getCameraRotation().x, screen.getCameraRotation().y);
         }
 
-        AimPlan aimPlan = RotationManager.INSTANCE.getWorkingAimPlan();
+        RotationTarget rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
 
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
         boolean shouldModifyRotation = ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.getCamera()
-            || aimPlan != null && aimPlan.getChangeLook();
+            || rotationTarget != null && rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;

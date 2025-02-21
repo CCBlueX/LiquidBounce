@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.browser.supports
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
@@ -68,6 +69,27 @@ class JcefBrowser : IBrowser, EventListener {
             }
 
             val resourceManager = MCEF.INSTANCE.newResourceManager()
+
+            // Check if system is compatible with MCEF (JCEF)
+            if (!resourceManager.isSystemCompatible) {
+                ErrorHandler.fatal("""
+                    LiquidBounce Nextgen could not start because your system is not compatible.
+
+                    What you need:
+                    - A 64-bit computer
+                    - Windows 10 or newer, macOS 10.15 or newer, or a Linux system
+
+                    What to do:
+                    - Please update your operating system to a newer version.
+
+                    Information:
+                    OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
+                    Java: ${System.getProperty("java.version")}
+                    Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
+                """.trimIndent())
+                return
+            }
+
             HashValidator.validateFolder(resourceManager.commitDirectory)
 
             if (resourceManager.requiresDownload()) {

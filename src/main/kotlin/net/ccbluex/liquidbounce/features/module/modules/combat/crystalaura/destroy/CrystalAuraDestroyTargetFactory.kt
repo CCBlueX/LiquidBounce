@@ -18,13 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
-import it.unimi.dsi.fastutil.objects.ObjectFloatImmutablePair
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.getMaxRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.wallsRange
-import net.ccbluex.liquidbounce.utils.aiming.canSeeBox
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.Entity
@@ -50,8 +49,8 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
                 val damage = dealsEnoughDamage(it) ?: return@mapNotNull null
 
-                ObjectFloatImmutablePair(it as EndCrystalEntity, damage)
-            }.maxByOrNull { it.secondFloat() }?.first()
+                ComparisonListEntry(it as EndCrystalEntity, damage.firstFloat(), damage.secondFloat())
+            }.maxOrNull()?.crystalEntity
     }
 
     /**
@@ -87,5 +86,26 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
         range = range.toDouble(),
         wallsRange = wallsRange.toDouble()
     )
+
+    private class ComparisonListEntry(
+        val crystalEntity: EndCrystalEntity,
+        val selfDamage: Float,
+        val enemyDamage: Float
+    ) : Comparable<ComparisonListEntry> {
+
+        override fun compareTo(other: ComparisonListEntry): Int {
+            // coarse sorting
+            val enemyDamageComparison = this.enemyDamage.compareTo(other.enemyDamage)
+
+            // not equal
+            if (enemyDamageComparison != 0) {
+                return enemyDamageComparison
+            }
+
+            // equal -> fine sorting
+            return other.selfDamage.compareTo(this.selfDamage)
+        }
+
+    }
 
 }

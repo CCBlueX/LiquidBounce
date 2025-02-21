@@ -19,6 +19,14 @@ export interface KeyboardKeyEvent {
     screen: Screen | undefined;
 }
 
+export interface MouseButtonEvent {
+    key: string;
+    button: number;
+    action: number;
+    mods: number;
+    screen: Screen | undefined;
+}
+
 export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }

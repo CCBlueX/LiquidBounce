@@ -37,6 +37,7 @@
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",
+    "minecraft.entity.MixinLivingEntityCompatibility",
     "minecraft.entity.MixinPlayerEntity",
     "minecraft.entity.MixinPlayerEntityAccessor",
     "minecraft.entity.projectile.MixinFishingBobberEntity",
@@ -100,6 +101,7 @@
     "minecraft.render.MixinWorldRenderer",
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",
+    "minecraft.render.entity.feature.MixinFeatureRenderer",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
     "minecraft.text.MixinTextColor",
@@ -109,8 +111,7 @@
     "truffle.MixinHostClassDesc",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
-    "truffle.MixinTruffleLanguage",
-    "minecraft.entity.MixinLivingEntityCompatibility"
+    "truffle.MixinTruffleLanguage"
   ],
   "server": [],
   "injectors": {

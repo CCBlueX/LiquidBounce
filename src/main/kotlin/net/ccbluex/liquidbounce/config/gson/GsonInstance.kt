@@ -108,7 +108,7 @@ val publicGson: Gson = GsonBuilder()
 /**
  * This GSON instance is used for interop communication.
  */
-internal val interopGson = GsonBuilder()
+internal val interopGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
@@ -118,7 +118,7 @@ internal val interopGson = GsonBuilder()
  * This GSON instance is used for serializing objects as accessible JSON which means it is READ-ONLY (!)
  * and often comes with an easier syntax to use in other programming languages like JavaScript.
  */
-internal val accessibleInteropGson = GsonBuilder()
+internal val accessibleInteropGson: Gson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)

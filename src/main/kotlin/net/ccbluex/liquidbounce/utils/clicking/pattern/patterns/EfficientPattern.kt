@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
-import net.ccbluex.liquidbounce.utils.clicking.ClickScheduler
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 
 /**
@@ -29,14 +29,14 @@ class EfficientPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
-        scheduler: ClickScheduler<*>
+        clicker: Clicker<*>
     ) {
         var clicks = cps.random()
 
         // Efficient will introduce wide gaps when the CPS is lower than half of the cycle length,
         // so we will use StabilizedPattern instead.
         if (clicks < 10) {
-            return StabilizedPattern().fill(clickArray, cps, scheduler)
+            return StabilizedPattern().fill(clickArray, cps, clicker)
         }
 
         for (i in 0 until clicks) {
