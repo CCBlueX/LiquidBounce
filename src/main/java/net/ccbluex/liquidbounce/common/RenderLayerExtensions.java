@@ -84,7 +84,10 @@ public class RenderLayerExtensions {
 							RenderPipeline.builder()
 									.withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
 									.withBlend(JCEF_COMPATIBLE_BLEND)
-									.withLocation("blurred_ui_layer").build(),
+									.withLocation(RandomStringUtils.randomAlphabetic(12).toLowerCase() + "_lb")
+									.withVertexShader(RandomStringUtils.randomAlphabetic(12).toLowerCase() + "_lb")
+									.withFragmentShader(RandomStringUtils.randomAlphabetic(12).toLowerCase() + "_lb")
+									.build(),
 							RenderLayer.MultiPhaseParameters.builder()
 									.texture(new Texture(textureId, TriState.FALSE, false))
 									.target(BlurEffectRenderer.getOutlineTarget())
