@@ -34,12 +34,17 @@ import kotlin.random.Random
  * Increases your reach.
  */
 object ModuleReach : ClientModule("Reach", Category.PLAYER) {
-    object Combat : Configurable("Combat") {
-        val reach by floatRange("Reach", 4.2f..4.2f, 3f..8f).onChanged { updateReach(true) }
+    private object Combat : Configurable("Combat") {
+        val reach by floatRange("Reach", 4.2f..4.2f, 3f..8f).onChanged {
+            if (combatReach != null) {
+                combatReach = it.random()
+            }
+        }
         private val chance by float("Chance", 100f, 0f..100f, "%")
-        private val delay by int("Delay", 0, 0..1000, "ticks")
+        private val delay by intRange("Delay", 0..0, 0..1000, "ticks").onChanged { currentDelay = it.random() }
 
         private var lastReachTick = 0
+        private var currentDelay: Int = delay.random()
 
         @Suppress("unused")
         private val packetHandler = handler<PacketEvent> { event ->
@@ -48,31 +53,24 @@ object ModuleReach : ClientModule("Reach", Category.PLAYER) {
                     lastReachTick = player.age
                 }
 
-                updateReach(false)
+                updateReach()
+
+                if (player.age - lastReachTick <= currentDelay) {
+                    currentDelay = delay.random()
+                    println("tick delay")
+                }
             }
         }
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.age - lastReachTick == delay) {
-                updateReach(false)
+            if (player.age - lastReachTick == currentDelay) {
+                updateReach()
             }
         }
 
-        init {
-            updateReach(true)
-        }
-
-        private fun updateReach(causedBySettingChange: Boolean) {
-            if (causedBySettingChange) {
-                if (combatReach != null) {
-                    combatReach = reach.random()
-                }
-
-                return
-            }
-
-            combatReach = if (player.age - lastReachTick >= delay && Random.nextFloat() * 100 <= chance) {
+        private fun updateReach() {
+            combatReach = if (player.age - lastReachTick >= currentDelay && Random.nextFloat() * 100 <= chance) {
                 reach.random()
             } else {
                 null
@@ -93,6 +91,6 @@ object ModuleReach : ClientModule("Reach", Category.PLAYER) {
             "${Combat.reach.start} - ${Combat.reach.endInclusive}"
         }
 
-    var combatReach: Float? = null
+    var combatReach: Float? = Combat.reach.random()
         private set
 }
