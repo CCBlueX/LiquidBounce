@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screen.DisconnectedScreen
@@ -37,6 +36,7 @@ import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import java.util.function.Predicate
 
 /**
  * Checks for Lunar client screens
@@ -48,9 +48,11 @@ private val Screen.isLunar
 
 enum class VirtualScreenType(
     val routeName: String,
-    val recognizer: (Screen) -> Boolean = { false },
+    private val recognizer: Predicate<Screen> = Predicate { false },
     val isInGame: Boolean = false,
-    private val open: () -> Unit = { mc.setScreen(VirtualDisplayScreen(byName(routeName)!!)) }
+    private val open: Runnable = Runnable {
+        mc.setScreen(VirtualDisplayScreen(byName(routeName)!!))
+    }
 ) {
 
     HUD("hud", isInGame = true),
@@ -126,11 +128,11 @@ enum class VirtualScreenType(
         recognizer = { it is BrowserScreen }
     );
 
-    fun open() = RenderSystem.recordRenderCall(open)
+    fun open() = mc.execute(open)
 
     companion object {
         fun byName(name: String) = entries.find { it.routeName == name }
-        fun recognize(screen: Screen) = entries.find { it.recognizer(screen) }
+        fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 
 }

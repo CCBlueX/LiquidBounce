@@ -37,9 +37,13 @@ class VirtualDisplayScreen(
     }
 
     override fun close() {
-        IntegrationListener.virtualClose()
-        mc.mouse.lockCursor()
-        super.close()
+        if (parentScreen is VirtualDisplayScreen) {
+            mc.setScreen(parentScreen)
+        } else {
+            IntegrationListener.virtualClose()
+            mc.mouse.lockCursor()
+            super.close()
+        }
     }
 
     override fun shouldPause(): Boolean {
