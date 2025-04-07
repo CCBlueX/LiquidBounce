@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -64,10 +65,11 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         && !(Ignore.OPEN_INVENTORY !in ignore
             && (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen))
         && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
+        && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
 
     @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
-        val arrows = findFlyingArrows(world)
+        val arrows = world.findFlyingArrows()
 
         val simulatedPlayer = CachedPlayerSimulation(PlayerSimulationCache.getSimulationForLocalPlayer())
 
@@ -96,8 +98,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         }
     }
 
-    private fun findFlyingArrows(world: ClientWorld): List<ArrowEntity> {
-        return world.entities.mapNotNull {
+    private fun ClientWorld.findFlyingArrows(): List<ArrowEntity> {
+        return entities.mapNotNull {
             if (it !is ArrowEntity) {
                 return@mapNotNull null
             }
@@ -199,7 +201,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     fun getInflictedHit(pos: Vec3d): HitInfo? {
-        val arrows = findFlyingArrows(net.ccbluex.liquidbounce.utils.client.world)
+        val arrows = world.findFlyingArrows()
         val playerSimulation = RigidPlayerSimulation(pos)
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
@@ -217,6 +219,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         override val choiceName: String
     ) : NamedChoice {
         OPEN_INVENTORY("OpenInventory"),
-        USING_ITEM("UsingItem")
+        USING_ITEM("UsingItem"),
+        USING_SCAFFOLD("UsingScaffold")
     }
 }
