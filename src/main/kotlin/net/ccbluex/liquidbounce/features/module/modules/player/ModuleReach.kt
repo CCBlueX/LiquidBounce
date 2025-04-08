@@ -57,7 +57,6 @@ object ModuleReach : ClientModule("Reach", Category.PLAYER) {
 
                 if (player.age - lastReachTick <= currentDelay) {
                     currentDelay = delay.random()
-                    println("tick delay")
                 }
             }
         }
