@@ -62,6 +62,11 @@ public abstract class MixinCamera {
     @Shadow
     public abstract void setPos(Vec3d pos);
 
+    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
+    private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+        ModuleFreeCam.INSTANCE.applyCameraPosition(focusedEntity, tickDelta);
+    }
+
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER), cancellable = true)
     private void modifyCameraOrientation(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         var freeLook = ModuleFreeLook.INSTANCE.getRunning();
@@ -119,11 +124,6 @@ public abstract class MixinCamera {
             MathHelper.lerp(tickDelta, previousRotation.getYaw(), currentRotation.getYaw()),
             MathHelper.lerp(tickDelta, previousRotation.getPitch(), currentRotation.getPitch())
         );
-    }
-
-    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
-    private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        ModuleFreeCam.INSTANCE.applyCameraPosition(focusedEntity, tickDelta);
     }
 
     @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))
