@@ -33,8 +33,8 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 internal object VelocityReversal : VelocityMode("Reversal") {
 
     private val delay by int("Delay", 2, 1..5, "ticks")
-    private val xModifier by float("XModifier", 0.5f, 0.1f..1.0f)
-    private val zModifier by float("ZModifier", 0.5f, 0.1f..1.0f)
+    private val xModifier by float("XModifier", 0.5f, 0f..1.0f)
+    private val zModifier by float("ZModifier", 0.5f, 0f..1.0f)
     private val onlyMoving by boolean("OnlyMoving", false)
 
     private var handlingVelocity = false
