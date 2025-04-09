@@ -51,6 +51,7 @@ def getContributors(repoOwner, repoName) {
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
+    id "maven-publish"
     id "com.gorylenko.gradle-git-properties" version "2.5.0"
     id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.1.0"
@@ -61,6 +62,21 @@ base {
     archivesBaseName = project.archives_base_name
     version = project.mod_version
     group = project.maven_group
+    manifest {
+        attributes["Implementation-Title"] = project.archives_base_name
+        attributes["Implementation-Version"] = project.mod_version
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components["java"]
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
 
 // These libs are included by the game or other required mods
