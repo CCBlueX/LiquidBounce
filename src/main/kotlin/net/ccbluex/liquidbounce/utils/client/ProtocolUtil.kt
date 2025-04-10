@@ -134,6 +134,7 @@ fun openVfpProtocolSelection() {
     VfpCompatibility.INSTANCE.unsafeOpenVfpProtocolSelection()
 }
 
+@Suppress("FunctionName")
 fun send1_8SignUpdate(blockPos: BlockPos, lines: Array<String>) {
     require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
     require(isEqual1_8) { "Not 1.8 protocol" }
@@ -141,6 +142,7 @@ fun send1_8SignUpdate(blockPos: BlockPos, lines: Array<String>) {
     VfpCompatibility1_8.INSTANCE.sendSignUpdate(blockPos, lines)
 }
 
+@Suppress("FunctionName")
 fun send1_8BlockPlacement(blockPos: BlockPos, face: Int, heldItem: ItemStack,
                           facingXIn: Float, facingYIn: Float, facingZIn: Float) {
     require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
@@ -149,6 +151,7 @@ fun send1_8BlockPlacement(blockPos: BlockPos, face: Int, heldItem: ItemStack,
     VfpCompatibility1_8.INSTANCE.sendBlockPlacement(blockPos, face, heldItem, facingXIn, facingYIn, facingZIn)
 }
 
+@Suppress("FunctionName")
 fun send1_8PlayerInput(sideways: Float, forward: Float, jumping: Boolean, sneaking: Boolean) {
     require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
     require(isEqual1_8) { "Not 1.8 protocol" }
