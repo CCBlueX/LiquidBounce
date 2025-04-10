@@ -6,7 +6,11 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.block.BlockState
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import kotlin.collections.filter
 import kotlin.math.abs
+
+fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
+    findClosestSlot { it.item === items }
 
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(vararg items: Item): T? =
     findClosestSlot { it.item in items }
@@ -30,43 +34,38 @@ inline fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(predicate: (ItemSta
     }
 }
 
+fun SlotGroup<*>.hasItem(item: Item): Boolean = any { it.itemStack.item === item }
+
+fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
+    blockState: BlockState,
+    ignoreDurability: Boolean = true
+): T? {
+    val player = mc.player ?: return null
+
+    val slot = filter {
+        val stack = it.itemStack
+        val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
+        stack.isNothing() || (!player.isCreative && durabilityCheck)
+    }.maxByOrNull {
+        it.itemStack.getMiningSpeedMultiplier(blockState)
+    } ?: return null
+
+    val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
+
+    // The current slot already matches the best
+    if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
+        return null
+    }
+
+    return slot
+}
+
 object Slots {
 
-    object Hotbar : SlotGroup<HotbarItemSlot>(
+    @JvmField
+    val Hotbar = SlotGroup(
         List(9) { HotbarItemSlot(it) }
-    ) {
-        fun findSlotIndex(item: Item): Int? {
-            return findSlotIndex { it.item == item }
-        }
-
-        inline fun findSlotIndex(predicate: (ItemStack) -> Boolean): Int? {
-            return if (mc.player == null) null else find { predicate(it.itemStack) }?.hotbarSlot
-        }
-
-        fun findBestToolToMineBlock(
-            blockState: BlockState,
-            ignoreDurability: Boolean = true
-        ): HotbarItemSlot? {
-            val player = mc.player ?: return null
-
-            val slot = filter {
-                val stack = it.itemStack
-                val durabilityCheck = (stack.damage < (stack.maxDamage - 2) || ignoreDurability)
-                stack.isNothing() || (!player.isCreative && durabilityCheck)
-            }.maxByOrNull {
-                it.itemStack.getMiningSpeedMultiplier(blockState)
-            } ?: return null
-
-            val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
-
-            // The current slot already matches the best
-            if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-                return null
-            }
-
-            return slot
-        }
-    }
+    )
 
     @JvmField
     val Inventory = SlotGroup(
@@ -91,12 +90,12 @@ object Slots {
     val All = Hotbar + OffHand + Inventory + Armor
 }
 
-open class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
+class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
     val items: List<Item>
         get() = slots.map { it.itemStack.item }
 
     fun findSlot(item: Item): T? {
-        return if (mc.player == null) null else find { it.itemStack.item == item }
+        return findSlot { it.item === item }
     }
 
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {

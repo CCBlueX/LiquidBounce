@@ -250,7 +250,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
 
         // If both is false, we have to find the item in the hotbar
         return if (!mainHand && !offHand) {
-            val throwableSlot = Slots.Hotbar.findSlotIndex(item) ?: return null
+            val throwableSlot = Slots.Hotbar.findSlot(item)?.hotbarSlot ?: return null
             Hand.MAIN_HAND to throwableSlot
         } else if (offHand) {
             Hand.OFF_HAND to -1

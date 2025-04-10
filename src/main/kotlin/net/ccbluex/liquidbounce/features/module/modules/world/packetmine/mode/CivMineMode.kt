@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
 import net.minecraft.block.BlockState
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -83,7 +84,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
             shouldSwitch = false
         } else if (shouldSwitch) {
-            val slot1 = Slots.Hotbar.findSlotIndex { stack: ItemStack -> stack.isSuitableFor(state) }
+            val slot1 = Slots.Hotbar.findBestToolToMineBlock(state)?.hotbarSlot
             if (slot1 != null && slot1 != oldSlot) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(slot1))
             } else {

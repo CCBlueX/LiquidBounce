@@ -156,7 +156,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                             val defaultState = it.block.defaultState
                             val color =
                                 if (highlightUnbreakable && defaultState.isToolRequired
-                                    && Slots.Hotbar.findSlotIndex { s -> s.isSuitableFor(defaultState) } == null) {
+                                    && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null) {
                                     Color4b.RED
                                 } else {
                                     Color4b.WHITE
