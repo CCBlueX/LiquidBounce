@@ -65,18 +65,18 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
     private object Estimator {
-        fun findBestFood(): HotbarItemSlot? {
-            val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
-                // If there is an indication for a special item, we should use it. Items with lower health threshold
-                // are preferred since their usage is probably more urgent.
-                compareByDescending { it.second.healthThreshold },
-                compareBy { it.second.restoredHunger },
-                // Use the closest slot
-                compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
-                // Just for stabilization reasons
-                compareBy { SilentHotbar.serversideSlot }
-            )
+        private val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
+            // If there is an indication for a special item, we should use it. Items with lower health threshold
+            // are preferred since their usage is probably more urgent.
+            compareByDescending { it.second.healthThreshold },
+            compareBy { it.second.restoredHunger },
+            // Use the closest slot
+            compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
+            // Just for stabilization reasons
+            compareBy { SilentHotbar.serversideSlot }
+        )
 
+        fun findBestFood(): HotbarItemSlot? {
             return Slots.Hotbar
                 .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
                 .maxWithOrNull(comparator)?.first
