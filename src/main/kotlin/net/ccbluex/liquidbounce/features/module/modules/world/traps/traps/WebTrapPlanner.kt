@@ -185,7 +185,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
     }
 
     private fun findItemToWeb(): HotbarItemSlot? {
-        return Slots.Hotbar.findClosestItem(trapItems)
+        return Slots.OffhandWithHotbar.findClosestItem(items = trapItems)
     }
 
     class WebIntentData(
