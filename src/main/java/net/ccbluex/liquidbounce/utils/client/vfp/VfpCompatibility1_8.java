@@ -69,6 +69,22 @@ public enum VfpCompatibility1_8 {
         });
     }
 
+    public void sendPlayerInput(Float sideways, Float forwards, boolean jumping, boolean sneaking) {
+        writePacket(ServerboundPackets1_8.PLAYER_INPUT, packet -> {
+            packet.write(Types.FLOAT, sideways);
+            packet.write(Types.FLOAT, forwards);
+            byte b = 0;
+            if (jumping) {
+                b = (byte)(b | 1);
+            }
+
+            if (sneaking) {
+                b = (byte)(b | 2);
+            }
+            packet.write(Types.BYTE, b);
+        });
+    }
+
     private void writePacket(ServerboundPacketType packetType, Consumer<PacketWrapper> writer) {
         if (!VfpCompatibility.INSTANCE.isEqual1_8()) {
             throw new IllegalStateException("Not on 1.8 protocol");

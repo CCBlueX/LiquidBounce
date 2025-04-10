@@ -148,3 +148,10 @@ fun send1_8BlockPlacement(blockPos: BlockPos, face: Int, heldItem: ItemStack,
 
     VfpCompatibility1_8.INSTANCE.sendBlockPlacement(blockPos, face, heldItem, facingXIn, facingYIn, facingZIn)
 }
+
+fun send1_8PlayerInput(sideways: Float, forward: Float, jumping: Boolean, sneaking: Boolean) {
+    require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
+    require(isEqual1_8) { "Not 1.8 protocol" }
+
+    VfpCompatibility1_8.INSTANCE.sendPlayerInput(sideways, forward, jumping, sneaking)
+}
