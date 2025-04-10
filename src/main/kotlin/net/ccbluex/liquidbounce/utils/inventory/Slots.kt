@@ -8,6 +8,21 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.math.abs
 
+/**
+ * Distance order:
+ * current hand -> offhand -> other slots
+ */
+fun <T : HotbarItemSlot> SlotGroup<T>.findClosestItem(vararg items: Item): T? {
+    val selected = player.inventory.selectedSlot
+    return this.filter { it.itemStack.item in items }.minByOrNull {
+        when {
+            it is OffHandSlot -> Int.MIN_VALUE + 1
+            it.hotbarSlotForServer == selected -> Int.MIN_VALUE
+            else -> abs(selected - it.hotbarSlotForServer)
+        }
+    }
+}
+
 object Slots {
 
     object Hotbar : SlotGroup<HotbarItemSlot>(
@@ -19,11 +34,6 @@ object Slots {
 
         inline fun findSlotIndex(predicate: (ItemStack) -> Boolean): Int? {
             return if (mc.player == null) null else find { predicate(it.itemStack) }?.hotbarSlot
-        }
-
-        fun findClosestItem(vararg items: Item): HotbarItemSlot? {
-            return filter { it.itemStack.item in items }
-                .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
         }
 
         fun findBestToolToMineBlock(
