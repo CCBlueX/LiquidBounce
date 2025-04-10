@@ -23,12 +23,14 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.minecraft.item.ItemStack
 
 abstract class Buff(
@@ -47,46 +49,30 @@ abstract class Buff(
             return false
         }
 
-        // Check main hand for item
-        val mainHandStack = player.mainHandStack
-        if (isValidItem(mainHandStack, true)) {
-            CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
-            execute(sequence, HotbarItemSlot(player.inventory.selectedSlot))
+        // Check if the item is in the hotbar
+        val slot = Slots.OffhandWithHotbar.findClosestSlot { isValidItem(it, true) } ?: return false
+
+        CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
+
+        if (slot.isSelected || slot is OffHandSlot) {
+            // Check main hand and offhand
+            execute(sequence, slot)
             return true
-        }
-
-        // Check off-hand for item
-        val offHandStack = player.offHandStack
-        if (isValidItem(offHandStack, true)) {
-            CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
-            execute(sequence, OffHandSlot)
+        } else if (AutoSwap.enabled) {
+            // Check if we should auto swap
+            // todo: do not hardcode ticksUntilReset
+            SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot) { 300 }
+            sequence.waitTicks(AutoSwap.delayIn.random())
+            execute(sequence, slot)
+            sequence.waitTicks(AutoSwap.delayOut.random())
+            SilentHotbar.resetSlot(ModuleAutoBuff)
             return true
+        } else {
+            return false
         }
-
-        // Check if we should auto swap
-        ModuleAutoBuff.AutoSwap.takeIf { autoSwap -> autoSwap.enabled }?.run {
-            // Check if the item is in the hotbar
-            val slot = Slots.Hotbar.findSlotIndex { stack: ItemStack -> isValidItem(stack, true) }
-
-            if (slot != null) {
-                CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
-
-                // todo: do not hardcode ticksUntilReset
-                SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, ticksUntilReset = 300)
-                sequence.waitTicks(delayIn.random())
-                execute(sequence, HotbarItemSlot(slot))
-                sequence.waitTicks(delayOut.random())
-                SilentHotbar.resetSlot(ModuleAutoBuff)
-                return true
-            }
-        }
-        return false
     }
 
     abstract suspend fun execute(sequence: Sequence, slot: HotbarItemSlot)
-
-    internal fun getStack(slot: Int): ItemStack =
-        if (slot == -1) player.offHandStack else player.inventory.getStack(slot)
 
 }
 

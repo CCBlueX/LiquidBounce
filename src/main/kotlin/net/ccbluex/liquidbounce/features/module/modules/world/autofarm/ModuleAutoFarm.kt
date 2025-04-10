@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestItem
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -86,9 +86,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private val itemForFarmland
-        get() = Slots.Hotbar.findClosestItem(itemsForFarmland)
+        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
     private val itemForSoulSand
-        get() = Slots.Hotbar.findClosestItem(itemsForFarmland)
+        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
 
     var currentTarget: BlockPos? = null
 

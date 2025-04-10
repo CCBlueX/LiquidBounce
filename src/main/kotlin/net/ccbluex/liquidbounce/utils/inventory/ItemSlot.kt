@@ -122,6 +122,12 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
 
     open val hotbarSlotForServer: Int = hotbarSlot
 
+    /**
+     * If the player is holding this slot (main hand stack)
+     */
+    val isSelected: Boolean
+        get() = hotbarSlotForServer == player.inventory.selectedSlot
+
     open val useHand = Hand.MAIN_HAND
 
     override fun getIdForServer(screen: GenericContainerScreen?): Int? {
