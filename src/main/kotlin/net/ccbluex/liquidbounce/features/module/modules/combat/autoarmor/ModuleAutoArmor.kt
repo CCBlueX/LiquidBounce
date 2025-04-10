@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
-import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
@@ -111,7 +110,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
         isInArmorSlot: Boolean
     ): InventoryAction {
         val inventorySlot = armorPiece.itemSlot
-        val armorPieceSlot = if (isInArmorSlot) ArmorItemSlot(armorPiece.entitySlotId) else inventorySlot
+        val armorPieceSlot = if (isInArmorSlot) Slots.Armor[armorPiece.entitySlotId] else inventorySlot
 
         val canTryHotbarMove = booleanArrayOf(
             UseHotbar.enabled,

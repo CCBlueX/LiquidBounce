@@ -62,30 +62,50 @@ fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
 
 object Slots {
 
+    /**
+     * Hotbar 0~8
+     */
     @JvmField
     val Hotbar = SlotGroup(
         List(9) { HotbarItemSlot(it) }
     )
 
+    /**
+     * Inventory 0~26
+     */
     @JvmField
     val Inventory = SlotGroup(
         List(27) { InventoryItemSlot(it) }
     )
 
+    /**
+     * Offhand (singleton list)
+     */
     @JvmField
     val OffHand = SlotGroup(
         listOf(OffHandSlot)
     )
 
+    /**
+     * Armor slots 0~3
+     *
+     * Boots/Leggings/Chestplate/Helmet
+     */
     @JvmField
     val Armor = SlotGroup(
         List(4) { ArmorItemSlot(it) }
     )
 
+    /**
+     * Offhand + Hotbar
+     */
     @Suppress("UNCHECKED_CAST")
     @JvmField
     val OffhandWithHotbar = (OffHand + Hotbar) as SlotGroup<HotbarItemSlot>
 
+    /**
+     * Hotbar + OffHand + Inventory + Armor
+     */
     @JvmField
     val All = Hotbar + OffHand + Inventory + Armor
 }
