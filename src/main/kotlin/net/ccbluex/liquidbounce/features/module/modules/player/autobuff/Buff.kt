@@ -35,7 +35,6 @@ import net.minecraft.item.ItemStack
 
 abstract class Buff(
     name: String,
-    val isValidItem: (ItemStack, Boolean) -> Boolean,
 ) : ToggleableConfigurable(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
@@ -71,6 +70,8 @@ abstract class Buff(
             return false
         }
     }
+
+    abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
 
     abstract suspend fun execute(sequence: Sequence, slot: HotbarItemSlot)
 
