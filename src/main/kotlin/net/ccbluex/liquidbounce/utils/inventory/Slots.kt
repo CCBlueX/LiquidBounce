@@ -2,8 +2,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.minecraft.block.BlockState
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.collections.filter
@@ -35,30 +33,6 @@ inline fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(predicate: (ItemSta
 }
 
 fun SlotGroup<*>.hasItem(item: Item): Boolean = any { it.itemStack.item === item }
-
-fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
-    blockState: BlockState,
-    ignoreDurability: Boolean = true
-): T? {
-    val player = mc.player ?: return null
-
-    val slot = filter {
-        val stack = it.itemStack
-        val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
-        stack.isNothing() || (!player.isCreative && durabilityCheck)
-    }.maxByOrNull {
-        it.itemStack.getMiningSpeedMultiplier(blockState)
-    } ?: return null
-
-    val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
-
-    // The current slot already matches the best
-    if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-        return null
-    }
-
-    return slot
-}
 
 object Slots {
 
