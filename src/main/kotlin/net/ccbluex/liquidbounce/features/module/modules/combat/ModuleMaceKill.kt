@@ -53,7 +53,7 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
             // Auto Select Mace
             val maceIndex = Slots.Hotbar.findClosestSlot(Items.MACE) ?: return@handler
 
-            SilentHotbar.selectSlotSilently(this, maceIndex) { 1 }
+            SilentHotbar.selectSlotSilently(this, maceIndex, 1)
         }
 
         val height = determineHeight()

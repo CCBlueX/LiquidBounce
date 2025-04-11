@@ -39,9 +39,9 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
     override suspend fun execute(sequence: Sequence) {
         val item = Slots.Hotbar.findSlot { itemStack: ItemStack ->
             itemStack.name.convertToString().contains(itemName)
-        }?.hotbarSlot ?: return
+        } ?: return
 
-        SilentHotbar.selectSlotSilently(ModuleAutoQueue, item)
+        SilentHotbar.selectSlotSilently(ModuleAutoQueue, item, 20)
         sequence.waitTicks(1)
         interaction.interactItem(player, Hand.MAIN_HAND)
     }

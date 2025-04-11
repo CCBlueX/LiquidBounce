@@ -60,7 +60,7 @@ abstract class Buff(
         } else if (AutoSwap.enabled) {
             // Check if we should auto swap
             // todo: do not hardcode ticksUntilReset
-            SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot) { 300 }
+            SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
             sequence.waitTicks(AutoSwap.delayIn.random())
             execute(sequence, slot)
             sequence.waitTicks(AutoSwap.delayOut.random())

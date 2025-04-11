@@ -49,16 +49,14 @@ object SilentHotbar : EventListener {
      *
      * @return hand of [slot]
      */
-    inline fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: () -> Int): Hand {
-        return if (slot !is OffHandSlot) {
-            selectSlotSilently(requester, slot.hotbarSlot, ticksUntilReset())
+    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
+        if (slot !is OffHandSlot) {
+            selectSlotSilently(requester, slot.hotbarSlot, ticksUntilReset)
             Hand.MAIN_HAND
-        } else {
-            Hand.OFF_HAND
         }
     }
 
-    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
+    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int) {
         val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
         if (event.isCancelled) {
             return

@@ -100,7 +100,7 @@ internal object NoFallMLG : Choice("MLG") {
             return@tickHandler
         }
 
-        val hand = SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot) { 1 }
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val onSuccess: () -> Boolean = {
             lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
@@ -108,7 +108,7 @@ internal object NoFallMLG : Choice("MLG") {
             true
         }
 
-        doPlacement(rayTraceResult, hand,
+        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
             onItemUseSuccess = onSuccess, onPlacementSuccess = onSuccess)
 
         currentTarget = null

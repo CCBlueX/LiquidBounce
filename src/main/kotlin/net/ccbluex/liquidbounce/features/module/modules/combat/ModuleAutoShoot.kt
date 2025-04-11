@@ -233,9 +233,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         return when (throwableType) {
             ThrowableType.EGG_AND_SNOWBALL -> getThrowable(Items.EGG) ?: getThrowable(Items.SNOWBALL)
             ThrowableType.ANYTHING -> {
-                if (player.mainHandStack?.isNothing() == false) {
+                if (!player.mainHandStack.isNothing()) {
                     Hand.MAIN_HAND to -1
-                } else if (player.offHandStack?.isNothing() == false) {
+                } else if (!player.offHandStack.isNothing()) {
                     Hand.OFF_HAND to -1
                 } else {
                     null

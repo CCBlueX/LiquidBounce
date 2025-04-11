@@ -138,7 +138,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             return@tickHandler
         }
 
-        val hand = SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot) { 1 }
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
@@ -149,7 +149,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             true
         }
 
-        doPlacement(rayTraceResult, hand,
+        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
             onItemUseSuccess = successFunction, onPlacementSuccess = successFunction)
     }
 

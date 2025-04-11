@@ -329,11 +329,11 @@ class BlockPlacer(
             placementTarget.direction
         ) ?: return
 
-        val hand = SilentHotbar.selectSlotSilently(this, slot) { slotResetDelay.random() }
+        SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
 
         if (slot.itemStack.item !is BlockItem || pos.getState()!!.isReplaceable) {
             // place the block
-            doPlacement(blockHitResult, hand, swingMode = swingMode)
+            doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
             placedRenderer.addBlock(pos)
         }
 

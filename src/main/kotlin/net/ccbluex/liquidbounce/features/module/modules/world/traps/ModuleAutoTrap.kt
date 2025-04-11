@@ -96,8 +96,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = array
         }
 
         CombatManager.pauseCombatForAtLeast(1)
-        val hand = SilentHotbar.selectSlotSilently(this, plan.slot) { 1 }
-        doPlacement(raycast, hand)
+        SilentHotbar.selectSlotSilently(this, plan.slot, 1)
+        doPlacement(raycast, hand = plan.slot.useHand)
         timeout = true
         plan.onIntentFullfilled()
         waitTicks(delay)
