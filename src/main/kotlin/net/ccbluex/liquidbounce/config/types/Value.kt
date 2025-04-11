@@ -29,6 +29,9 @@ import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.script.asDoubleArray
+import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -156,7 +159,7 @@ open class Value<T : Any>(
         is ChoiceConfigurable<*> -> activeChoice.name
         else -> when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
-            is IntRange -> arrayOf(v.first, v.last)
+            is IntRange -> intArrayOf(v.first, v.last)
             is NamedChoice -> v.choiceName
             else -> v
         }
@@ -174,7 +177,7 @@ open class Value<T : Any>(
         set(
             when (inner) {
                 is ClosedFloatingPointRange<*> -> {
-                    val a = t.`as`(Array<Double>::class.java)
+                    val a = t.asDoubleArray()
                     require(a.size == 2)
                     (a.first().toFloat()..a.last().toFloat()) as T
                 }
@@ -184,17 +187,17 @@ open class Value<T : Any>(
                 }
 
                 is IntRange -> {
-                    val a = t.`as`(Array<Int>::class.java)
+                    val a = t.asIntArray()
                     require(a.size == 2)
                     (a.first()..a.last()) as T
                 }
 
-                is Float -> t.`as`(Double::class.java).toFloat() as T
-                is Int -> t.`as`(Int::class.java) as T
-                is String -> t.`as`(String::class.java) as T
-                is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
-                is LinkedHashSet<*> -> t.`as`(Array<String>::class.java).toCollection(LinkedHashSet()) as T
-                is Boolean -> t.`as`(Boolean::class.java) as T
+                is Float -> t.asDouble().toFloat() as T
+                is Int -> t.asInt() as T
+                is String -> t.asString() as T
+                is MutableList<*> -> t.asArray<String>().toMutableList() as T
+                is LinkedHashSet<*> -> t.asArray<String>().toMutableSet() as T
+                is Boolean -> t.asBoolean() as T
                 else -> error("Unsupported value type $inner")
             }
         )

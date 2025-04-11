@@ -27,13 +27,14 @@ import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.STRING_VALIDATOR
+import net.ccbluex.liquidbounce.script.asArray
 import org.graalvm.polyglot.Value
 
 class ScriptCommandBuilder(private val commandObject: Value) {
 
     private fun createCommand(commandObject: Value): Command {
         val aliases = if (commandObject.hasMember("aliases")) {
-            commandObject.getMember("aliases").`as`(Array<String>::class.java)
+            commandObject.getMember("aliases").asArray<String>()
         } else {
             emptyArray()
         }
@@ -43,7 +44,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             .alias(aliases = aliases)
 
         if (commandObject.hasMember("subcommands")) {
-            val subcommands = commandObject.getMember("subcommands").`as`(Array<Value>::class.java)
+            val subcommands = commandObject.getMember("subcommands").asArray<Value>()
 
             for (subcommand in subcommands) {
                 commandBuilder.subcommand(createCommand(subcommand))
@@ -51,7 +52,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
         }
 
         if (commandObject.hasMember("parameters")) {
-            val parameters = commandObject.getMember("parameters").`as`(Array<Value>::class.java)
+            val parameters = commandObject.getMember("parameters").asArray<Value>()
 
             for (parameter in parameters) {
                 commandBuilder.parameter(createParameter(parameter))
@@ -92,7 +93,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val completions = parameterObject.getMember("getCompletions")
 
             parameterBuilder.autocompletedWith { begin, args ->
-                (completions.execute(begin, args).`as`(Array<String>::class.java)).toList()
+                completions.execute(begin, args).asArray<String>().asList()
             }
         }
 

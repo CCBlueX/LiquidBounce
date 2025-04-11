@@ -77,7 +77,8 @@ object SequenceManager : EventListener {
 
 @Suppress("TooManyFunctions")
 open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
-    private var coroutine: Job
+    var coroutine: Job
+        private set
 
     open fun cancel() {
         coroutine.cancel()
@@ -93,8 +94,8 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     init {
         // Note: It is important that this is in the constructor and NOT in the variable declaration, because
         // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
-        // overwritten by the initialization of the `totalTicks` field which results in one or less ticks of actual wait
-        // time.
+        // overwritten by the initialization of the `totalTicks` field
+        // which results in one or fewer ticks of actual wait time.
         this.coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
             SequenceManager.sequences += this@Sequence
             coroutineRun()
@@ -195,16 +196,40 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     internal suspend fun sync() = wait { 0 }
 
     /**
+     * Private utility function for waiting external [deferred].
+     * Resume without changing [CoroutineContext].
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    suspend fun <T> waitFor(deferred: Deferred<T>): T {
+        // Use `waitUntil` to avoid duplicated resumption
+        waitUntil(deferred::isCompleted)
+        return deferred.getCompleted()
+    }
+
+    /**
      * Start a task with given context, and wait for its completion.
      * @see withContext
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun <T> waitFor(context: CoroutineContext, block: suspend CoroutineScope.() -> T): T {
-        // Set parent job as `this.coroutine`
-        val deferred = CoroutineScope(coroutine + context).async(context, block = block)
-        // Use `waitUntil` to avoid duplicated resumption
-        this.waitUntil { deferred.isCompleted }
-        return deferred.getCompleted()
+    suspend fun <T> waitFor(
+        context: CoroutineContext,
+        block: suspend CoroutineScope.() -> T
+    ): T = waitFor(CoroutineScope(coroutine + context).async(context, block = block))
+
+    /**
+     * Wait for next event with type of [E],
+     * handle it with [handler] and [priority],
+     * and get the instance.
+     */
+    suspend inline fun <reified E : Event> waitNext(
+        priority: Short = 0,
+        crossinline handler: Handler<E>
+    ): E {
+        val deferred = CompletableDeferred<E>(parent = coroutine)
+        owner.once<E>(priority) {
+            handler(it)
+            deferred.complete(it)
+        }
+        return waitFor(deferred)
     }
 
 }

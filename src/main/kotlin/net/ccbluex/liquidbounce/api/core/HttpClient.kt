@@ -108,19 +108,19 @@ enum class HttpMethod {
  */
 inline fun <reified T> Response.parse(): T {
     return when (T::class.java) {
-        String::class.java -> body.string()
-        Unit::class.java -> close()
-        InputStream::class.java -> body.byteStream()
-        BufferedSource::class.java -> body.source()
-        Reader::class.java -> body.charStream()
+        String::class.java -> body.string() as T
+        Unit::class.java -> close() as T
+        InputStream::class.java -> body.byteStream() as T
+        BufferedSource::class.java -> body.source() as T
+        Reader::class.java -> body.charStream() as T
         NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
             // TODO: please work
-                NativeImageBackedTexture({
+            NativeImageBackedTexture({
                     return@NativeImageBackedTexture ""
                 }, NativeImage.read(stream))
-        }
-        else -> decode(body.charStream())
-    } as T
+        } as T
+        else -> decode<T>(body.charStream())
+    }
 }
 
 /**

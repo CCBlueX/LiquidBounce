@@ -19,6 +19,9 @@
 package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.script.asDoubleArray
+import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
 import org.graalvm.polyglot.Value as PolyglotValue
@@ -41,7 +44,7 @@ object ScriptSetting {
     fun float(value: PolyglotValue): RangedValue<Float> {
         val name = value.getMember("name").asString()
         val default = value.getMember("default").asDouble()
-        val range = value.getMember("range").`as`(Array<Double>::class.java)
+        val range = value.getMember("range").asDoubleArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(range.size == 2)
@@ -57,8 +60,8 @@ object ScriptSetting {
     @JvmName("floatRange")
     fun floatRange(value: PolyglotValue): RangedValue<ClosedFloatingPointRange<Float>> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<Double>::class.java)
-        val range = value.getMember("range").`as`(Array<Double>::class.java)
+        val default = value.getMember("default").asDoubleArray()
+        val range = value.getMember("range").asDoubleArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(default.size == 2)
@@ -76,7 +79,7 @@ object ScriptSetting {
     fun int(value: PolyglotValue): RangedValue<Int> {
         val name = value.getMember("name").asString()
         val default = value.getMember("default").asInt()
-        val range = value.getMember("range").`as`(Array<Int>::class.java)
+        val range = value.getMember("range").asIntArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(range.size == 2)
@@ -86,8 +89,8 @@ object ScriptSetting {
     @JvmName("intRange")
     fun intRange(value: PolyglotValue): RangedValue<IntRange> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<Int>::class.java)
-        val range = value.getMember("range").`as`(Array<Int>::class.java)
+        val default = value.getMember("default").asIntArray()
+        val range = value.getMember("range").asIntArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(default.size == 2)
@@ -120,7 +123,7 @@ object ScriptSetting {
     @JvmName("textArray")
     fun textArray(value: PolyglotValue): Value<MutableList<String>> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<String>::class.java)
+        val default = value.getMember("default").asArray<String>()
 
         return value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
     }
@@ -128,7 +131,7 @@ object ScriptSetting {
     @JvmName("choose")
     fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").`as`(Array<String>::class.java).map {
+        val choices = value.getMember("choices").asArray<String>().map {
             object : NamedChoice {
                 override val choiceName = it
             }
@@ -148,11 +151,8 @@ object ScriptSetting {
     @JvmName("multiChoose")
     fun multiChoose(value: PolyglotValue): MultiChooseStringListValue {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").`as`(Array<String>::class.java)
-            .toHashSet()
-
-        val default = value.getMember("default")?.`as`(Array<String>::class.java)
-            ?.toCollection(LinkedHashSet()) ?: LinkedHashSet()
+        val choices = value.getMember("choices").asArray<String>().toHashSet()
+        val default = value.getMember("default")?.asArray<String>()?.toMutableSet() ?: linkedSetOf()
 
         val canBeNone = value.getMember("canBeNone")?.asBoolean() ?: true
 
