@@ -21,7 +21,6 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.collections.filter
@@ -38,9 +37,7 @@ fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(vararg items: Item): T? =
  * current hand -> offhand -> other slots
  */
 inline fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(predicate: (ItemStack) -> Boolean): T? {
-    return if (mc.player == null) {
-        null
-    } else {
+    return mc.player?.let { player ->
         val selected = player.inventory.selectedSlot
         this.filter { predicate(it.itemStack) }.minByOrNull {
             when {
