@@ -146,7 +146,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 Slots.Hotbar.maxByOrNull { it.itemStack.getEnchantment(Enchantments.FORTUNE) }
                     ?.takeIf { it.itemStack.getEnchantment(Enchantments.FORTUNE) >= 1 }
                     ?.let {
-                        SilentHotbar.selectSlotSilently(this, it.hotbarSlot, 2)
+                        SilentHotbar.selectSlotSilently(this, it, 2)
                     }
             }
 
@@ -174,7 +174,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
                 item ?: return@tickHandler
 
-                SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, AutoPlaceCrops.swapBackDelay.random())
+                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult)
 
                 waitTicks(interactDelay.random())

@@ -85,8 +85,8 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }
 
         val blockState = pos.getState()!!
-        val index = toolSelector.activeChoice.getTool(blockState)?.hotbarSlot ?: return
-        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
+        val slot = toolSelector.activeChoice.getTool(blockState) ?: return
+        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
     }
 
     fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(

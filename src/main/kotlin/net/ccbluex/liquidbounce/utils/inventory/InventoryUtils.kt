@@ -165,7 +165,7 @@ fun useHotbarSlotOrOffhand(
 ) = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch)
     else -> {
-        SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, ticksUntilReset)
+        SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
         interactItem(Hand.MAIN_HAND, yaw, pitch)
     }
 }

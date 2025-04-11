@@ -52,7 +52,6 @@ object SilentHotbar : EventListener {
     fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
         if (slot !is OffHandSlot) {
             selectSlotSilently(requester, slot.hotbarSlot, ticksUntilReset)
-            Hand.MAIN_HAND
         }
     }
 

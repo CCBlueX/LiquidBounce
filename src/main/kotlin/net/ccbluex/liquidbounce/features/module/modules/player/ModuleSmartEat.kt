@@ -182,7 +182,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             CombatManager.pauseCombatForAtLeast(combatPauseTime)
             SilentHotbar.selectSlotSilently(
                 this@SilentOffhand,
-                currentFood.hotbarSlot,
+                currentFood,
                 swapBackDelay.coerceAtLeast(5)
             )
         }
@@ -242,7 +242,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
         fun eat() {
             val currentBestFood = Estimator.findBestFood() ?: return
 
-            SilentHotbar.selectSlotSilently(AutoEat, currentBestFood.hotbarSlot, swapBackDelay)
+            SilentHotbar.selectSlotSilently(AutoEat, currentBestFood, swapBackDelay)
             forceUseKey = true
         }
 
