@@ -20,7 +20,7 @@ enum class KillAuraRequirements(
     WEAPON("Weapon", {
         player.inventory.mainHandStack.item.isWeapon()
     }),
-    NAME("Name", {
+    NAME("VanillaName", {
         player.inventory.mainHandStack.customName == null
     });
 }
