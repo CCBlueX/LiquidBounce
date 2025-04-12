@@ -29,6 +29,7 @@ jobs:
         uses: gradle/gradle-build-action@v3
         env:
           CI: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: genSources build -x test -x detekt
 
