@@ -27,7 +27,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 
@@ -82,8 +85,32 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }
 
         val blockState = pos.getState()!!
-        val index = toolSelector.activeChoice.getTool(blockState)?.hotbarSlot ?: return
-        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
+        val slot = toolSelector.activeChoice.getTool(blockState) ?: return
+        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+    }
+
+    fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
+        blockState: BlockState,
+        ignoreDurability: Boolean = true
+    ): T? {
+        val player = mc.player ?: return null
+
+        val slot = filter {
+            val stack = it.itemStack
+            val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
+            stack.isNothing() || (!player.isCreative && durabilityCheck)
+        }.maxByOrNull {
+            it.itemStack.getMiningSpeedMultiplier(blockState)
+        } ?: return null
+
+        val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
+
+        // The current slot already matches the best
+        if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
+            return null
+        }
+
+        return slot
     }
 
 }

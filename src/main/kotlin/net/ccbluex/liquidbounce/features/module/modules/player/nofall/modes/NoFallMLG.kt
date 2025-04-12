@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
@@ -99,7 +100,7 @@ internal object NoFallMLG : Choice("MLG") {
             return@tickHandler
         }
 
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot.hotbarSlotForServer, 1)
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val onSuccess: () -> Boolean = {
             lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
@@ -107,7 +108,8 @@ internal object NoFallMLG : Choice("MLG") {
             true
         }
 
-        doPlacement(rayTraceResult, onItemUseSuccess = onSuccess, onPlacementSuccess = onSuccess)
+        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = onSuccess, onPlacementSuccess = onSuccess)
 
         currentTarget = null
     }
@@ -133,7 +135,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
-        val bestPickupItem = Slots.Hotbar.findClosestItem(Items.BUCKET) ?: return null
+        val bestPickupItem = Slots.Hotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
         this.lastPlacements.removeIf {
@@ -159,7 +161,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Find a way to prevent fall damage if we are falling.
      */
     private fun getCurrentMLGPlacementPlan(): PlacementPlan? {
-        val itemForMLG = Slots.Hotbar.findClosestItem(items = itemsForMLG)
+        val itemForMLG = Slots.OffhandWithHotbar.findClosestSlot(items = itemsForMLG)
 
         if (player.fallDistance <= minFallDist || itemForMLG == null) {
             return null

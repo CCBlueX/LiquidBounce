@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 
 object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
@@ -36,11 +37,11 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
     private val itemName by text("Name", "Paper")
 
     override suspend fun execute(sequence: Sequence) {
-        val item = Slots.Hotbar.findSlotIndex { itemStack ->
+        val item = Slots.Hotbar.findSlot { itemStack: ItemStack ->
             itemStack.name.convertToString().contains(itemName)
         } ?: return
 
-        SilentHotbar.selectSlotSilently(ModuleAutoQueue, item)
+        SilentHotbar.selectSlotSilently(ModuleAutoQueue, item, 20)
         sequence.waitTicks(1)
         interaction.interactItem(player, Hand.MAIN_HAND)
     }

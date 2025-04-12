@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoBuffRotationsConfigurable.RotationTimingMode.*
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Pot.isPotion
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -50,7 +49,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
 
-object Pot : Buff("Pot", isValidItem = { stack, forUse -> isPotion(stack, forUse) }) {
+object Pot : Buff("Pot") {
 
     private const val BENEFICIAL_SQUARE_RANGE = 16.0
 
@@ -163,7 +162,7 @@ object Pot : Buff("Pot", isValidItem = { stack, forUse -> isPotion(stack, forUse
         sequence.waitTicks(1)
     }
 
-    private fun isPotion(stack: ItemStack, forUse: Boolean): Boolean {
+    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
         if (stack.isNothing() || !isValidPotion(stack)) {
             return false
         }

@@ -115,8 +115,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     @Suppress("unused")
     private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@sequenceHandler
-        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@sequenceHandler
-        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot
+        val weaponSlot = determineWeaponSlot(entity) ?: return@sequenceHandler
+        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot.hotbarSlot
 
         if (isBusy) {
             return@sequenceHandler
@@ -154,7 +154,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         determineWeaponSlot(entity)?.let { slot ->
             SilentHotbar.selectSlotSilently(
                 this,
-                slot.hotbarSlot,
+                slot,
                 switchBack
             )
         }
