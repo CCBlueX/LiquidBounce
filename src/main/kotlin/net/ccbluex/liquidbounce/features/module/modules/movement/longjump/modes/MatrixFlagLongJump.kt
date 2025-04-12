@@ -5,73 +5,66 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
+import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.math.*
 
 /**
- * @author liangzaihua(https://space.bilibili.com/3493274998278662)
- * @antiCheat Matrix
- * @antiCheatVersion 7.14.5
+ * @anticheat Matrix
+ * @anticheatVersion 7.14.5
  * @testedOn mc.loyisa.cn
  */
 internal object MatrixFlagLongJump : Choice("MatrixFlag") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    val speed by float("MatrixSpeed", 1.98f, 0.1f..5f)
-    val motionY by float("MatrixMotionY", 0.42f, 0.0f..5.0f)
-    val delay by int("MatrixDelay", 0, 0..3)
+    private val boostSpeed by float("MatrixBoostSpeed", 1.97f, 0.1f..5f)
+    private val motionY by float("MatrixMotionY", 0.42f, 0.0f..5.0f)
+    private val delay by int("MatrixDelay", 0, 0..3)
 
-    var yaw: Double = 0.0
-    var flagTicks = 0
-    var jumped = false
-    var fly = false
-    var offGroundTicks = 0
+    private var movementYaw = 0.0
+    private var flagTicks = 0
+    private var jumped = false
+    private var shouldBoost = false
 
     override fun enable() {
-        if (!player.isOnGround) {
-            jumped = true
-            yaw = Math.toRadians(player.yaw.toDouble())
-        }
+        if (!player.isOnGround) ModuleLongJump.enabled = false
     }
 
     override fun disable() {
         flagTicks = 0
         jumped = false
-        fly = false
+        shouldBoost = false
     }
 
     @Suppress("unused")
-    val repeatable = tickHandler {
-        if (player.isOnGround) offGroundTicks = 0
-        else offGroundTicks++
+    private val repeatable = tickHandler {
+        if (player.airTicks >= delay) shouldBoost = true
 
-        if (offGroundTicks >= delay) fly = true
         if ((flagTicks > 1 && !jumped && player.isOnGround)) flagTicks = 0
+
         if (player.isOnGround) {
-            yaw = Math.toRadians(player.yaw.toDouble())
+            movementYaw = Math.toRadians(player.yaw.toDouble())
             jumped = true
+            return@tickHandler
         }
-        if ((!player.isOnGround && jumped) && fly) {
+
+        if (jumped && shouldBoost) {
             if (flagTicks <= 1) {
-                player.movement.x = -sin(yaw) * speed
-                player.movement.z = cos(yaw) * speed
+                player.movement.x = -sin(movementYaw) * boostSpeed
                 player.movement.y = motionY.toDouble()
+                player.movement.z = cos(movementYaw) * boostSpeed
             }
             if (flagTicks >= 1) {
                 jumped = false
-                val longJump = (ModuleManager["LongJump"] as ModuleLongJump)
-                if (longJump.autoDisable) longJump.enabled = false
+                if(ModuleLongJump.autoDisable) ModuleLongJump.enabled = false
             }
         }
     }
 
-
     @Suppress("unused")
-    val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-        if (packet is PlayerPositionLookS2CPacket) flagTicks++
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet is PlayerPositionLookS2CPacket) flagTicks++
     }
 }
