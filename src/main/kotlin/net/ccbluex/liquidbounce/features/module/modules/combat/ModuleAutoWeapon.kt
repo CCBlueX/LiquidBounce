@@ -32,10 +32,13 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
+import net.minecraft.item.MaceItem
 import net.minecraft.item.SwordItem
 import net.minecraft.util.Hand
 
@@ -57,19 +60,33 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     private val againstShield by enumChoice("BlockedByShield", WeaponType.AXE)
 
     @Suppress("unused")
-    enum class WeaponType(
+    private enum class WeaponType(
         override val choiceName: String,
         val filter: (WeaponItemFacet) -> Boolean
     ): NamedChoice {
         ANY("Any", { true }),
         SWORD("Sword", { it.itemStack.item is SwordItem }),
         AXE("Axe", { it.itemStack.item is AxeItem }),
+        MACE("Mace", { it.itemStack.item is MaceItem }),
+        ENCHANTED_ITEM("EnchantedItem", {
+            USEFUL_FOR_COMBAT.any { enchantment ->
+                it.itemStack.getEnchantment(enchantment) > 0
+            }
+        }),
 
         /**
          * Do not prefer any weapon type, this is useful to only
          * use the [againstShield] weapon type.
          */
-        NONE("None", { false })
+        NONE("None", { false });
+
+        companion object {
+            private val USEFUL_FOR_COMBAT = arrayOf(
+                Enchantments.FIRE_ASPECT,
+                Enchantments.KNOCKBACK,
+                Enchantments.SHARPNESS,
+            )
+        }
     }
 
     private val prepare by boolean("Prepare", true)
@@ -115,8 +132,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     @Suppress("unused")
     private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@sequenceHandler
-        val weaponSlot = determineWeaponSlot(entity) ?: return@sequenceHandler
-        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot.hotbarSlot
+        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@sequenceHandler
+        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot
 
         if (isBusy) {
             return@sequenceHandler
@@ -154,7 +171,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         determineWeaponSlot(entity)?.let { slot ->
             SilentHotbar.selectSlotSilently(
                 this,
-                slot,
+                slot.hotbarSlot,
                 switchBack
             )
         }
