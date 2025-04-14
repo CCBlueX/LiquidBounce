@@ -68,25 +68,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         SWORD("Sword", { it.itemStack.item is SwordItem }),
         AXE("Axe", { it.itemStack.item is AxeItem }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
-        ENCHANTED_ITEM("EnchantedItem", {
-            USEFUL_FOR_COMBAT.any { enchantment ->
-                it.itemStack.getEnchantment(enchantment) > 0
-            }
-        }),
 
         /**
          * Do not prefer any weapon type, this is useful to only
          * use the [againstShield] weapon type.
          */
         NONE("None", { false });
-
-        companion object {
-            private val USEFUL_FOR_COMBAT = arrayOf(
-                Enchantments.FIRE_ASPECT,
-                Enchantments.KNOCKBACK,
-                Enchantments.SHARPNESS,
-            )
-        }
     }
 
     private val prepare by boolean("Prepare", true)
