@@ -177,6 +177,7 @@ accessible method net/minecraft/entity/projectile/PersistentProjectileEntity isI
 accessible method net/minecraft/block/AbstractBlock getPickStack (Lnet/minecraft/world/WorldView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)Lnet/minecraft/item/ItemStack;
 
 accessible method net/minecraft/client/texture/NativeImage write (Ljava/nio/channels/WritableByteChannel;)Z
+accessible method net/minecraft/client/texture/GlTexture <init> (Ljava/lang/String;Lcom/mojang/blaze3d/textures/TextureFormat;IIII)V
 
 #accessible field net/minecraft/client/render/LightmapTextureManager lightmapFramebuffer Lnet/minecraft/client/gl/SimpleFramebuffer;
 accessible field net/minecraft/client/render/WorldRenderer entityOutlineFramebuffer Lnet/minecraft/client/gl/Framebuffer;
