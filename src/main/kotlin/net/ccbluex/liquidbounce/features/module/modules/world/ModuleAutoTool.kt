@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -47,8 +48,18 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             arrayOf(DynamicSelectMode, StaticSelectMode)
         )
 
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val blocks by blocks("Blocks", hashSetOf())
+
     sealed class ToolSelectorMode(name: String) : Choice(name) {
-        abstract fun getTool(blockState: BlockState): HotbarItemSlot?
+        fun getTool(blockState: BlockState): HotbarItemSlot? =
+            if (filter(blockState.block, blocks)) {
+                getToolSlot(blockState)
+            } else {
+                null
+            }
+
+        protected abstract fun getToolSlot(blockState: BlockState): HotbarItemSlot?
     }
 
     private object DynamicSelectMode : ToolSelectorMode("Dynamic") {
@@ -57,7 +68,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        override fun getTool(blockState: BlockState) =
+        override fun getToolSlot(blockState: BlockState) =
             Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
     }
 
@@ -67,7 +78,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val slot by int("Slot", 0, 0..8)
 
-        override fun getTool(blockState: BlockState) = Slots.Hotbar[slot]
+        override fun getToolSlot(blockState: BlockState) = Slots.Hotbar[slot]
     }
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
