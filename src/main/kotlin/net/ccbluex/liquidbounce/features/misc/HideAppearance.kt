@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.misc
 import com.mojang.blaze3d.systems.RenderSystem
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
@@ -164,7 +163,7 @@ object HideAppearance : EventListener {
         // Delete LiquidBounce folder and its content
         runCatching {
             ConfigSystem.rootFolder.deleteRecursively()
-        }.exceptionOrNull()?.printStackTrace()
+        }
 
         FabricLoaderImpl.INSTANCE.allMods.find {
             it.metadata.id == "liquidbounce"
@@ -183,7 +182,7 @@ object HideAppearance : EventListener {
             // Remove from Fabric Loader Impl
             runCatching {
                 FabricLoaderImpl.INSTANCE.modsInternal.remove(mod)
-            }.exceptionOrNull()?.printStackTrace()
+            }
         }
 
         // History clear
