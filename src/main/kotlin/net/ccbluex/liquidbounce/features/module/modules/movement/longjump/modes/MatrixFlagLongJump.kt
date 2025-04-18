@@ -19,9 +19,9 @@ internal object MatrixFlagLongJump : Choice("MatrixFlag") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    private val boostSpeed by float("MatrixBoostSpeed", 1.97f, 0.1f..5f)
-    private val motionY by float("MatrixMotionY", 0.42f, 0.0f..5.0f)
-    private val delay by int("MatrixDelay", 0, 0..3)
+    private val boostSpeed by float("BoostSpeed", 1.97f, 0.1f..5f)
+    private val motionY by float("MotionY", 0.42f, 0.0f..5.0f)
+    private val delay by int("Delay", 0, 0..3)
 
     private var movementYaw = 0.0
     private var flagTicks = 0
@@ -42,7 +42,7 @@ internal object MatrixFlagLongJump : Choice("MatrixFlag") {
     private val repeatable = tickHandler {
         if (player.airTicks >= delay) shouldBoost = true
 
-        if ((flagTicks > 1 && !jumped && player.isOnGround)) flagTicks = 0
+        if (flagTicks > 1 && !jumped && player.isOnGround) flagTicks = 0
 
         if (player.isOnGround) {
             movementYaw = Math.toRadians(player.yaw.toDouble())
@@ -58,7 +58,9 @@ internal object MatrixFlagLongJump : Choice("MatrixFlag") {
             }
             if (flagTicks >= 1) {
                 jumped = false
-                if(ModuleLongJump.autoDisable) ModuleLongJump.enabled = false
+                if (ModuleLongJump.autoDisable) {
+                    ModuleLongJump.enabled = false
+                }
             }
         }
     }
