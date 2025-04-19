@@ -248,6 +248,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleHandDerp,
             ModuleTwerk,
             ModuleVomit,
+            ModuleRainbowArmor,
 
             // Misc
             ModuleBookBot,
