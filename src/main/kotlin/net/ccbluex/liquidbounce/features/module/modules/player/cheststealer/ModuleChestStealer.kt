@@ -260,13 +260,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      * @return the chest screen if it is open and the title matches the chest title
      */
     private fun getChestScreen(): GenericContainerScreen? {
-        val screen = mc.currentScreen
+        val screen = mc.currentScreen as? GenericContainerScreen ?: return null
 
-        return if (screen is GenericContainerScreen && (!ScreenTitleCheck.enabled || ScreenTitleCheck.isScreenTitleChest(screen))) {
-            screen
-        } else {
-            null
-        }
+        return screen.takeIf { !ScreenTitleCheck.enabled || ScreenTitleCheck.isScreenTitleChest(screen) }
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
