@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.api.core
 
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.core.HttpClient.client
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
@@ -148,5 +149,5 @@ fun Response.toFile(file: File) = use { response ->
 fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 fun String.asForm() = toRequestBody(HttpClient.FORM_MEDIA_TYPE)
 
-class HttpException(val method: HttpMethod, val url: String, val code: Int, message: String)
-    : Exception("${method.name} $url failed with code $code: $message")
+class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
+    : Exception("${method.name} $url failed with code $code: $content")
