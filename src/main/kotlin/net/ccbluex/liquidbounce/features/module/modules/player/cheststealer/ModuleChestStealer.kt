@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.text.Text
 import kotlin.math.ceil
@@ -48,10 +48,35 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val checkTitle by boolean("CheckTitle", true)
+    private object ScreenTitleCheck : ToggleableConfigurable(this, "ScreenTitleCheck", true) {
+        private val vanillaTitles = arrayOf(
+            "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
+            "container.barrel"
+        )
+        private val vanilla by boolean("Vanilla", true)
+        private val customTitles = hashSetOf<Regex>()
+        @Suppress("unused")
+        private val custom by textArray("Custom", mutableListOf()).onChanged {
+            customTitles.clear()
+            it.mapTo(customTitles, ::Regex)
+        }
+
+        fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
+            val titleString = screen.title.string
+
+            return when {
+                vanilla && vanillaTitles.any {
+                    Text.translatable(it).string == titleString
+                } -> true
+                customTitles.any { it.matches(titleString) } -> true
+                else -> false
+            }
+        }
+    }
 
     init {
         tree(FeatureChestAura)
+        tree(ScreenTitleCheck)
     }
 
     override fun disable() {
@@ -150,16 +175,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         return (slotsToCollect - freeSlotsInInv - spaceGainedThroughMerge).coerceAtLeast(0)
     }
 
-    private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
-        val titleString = screen.title.string
-
-        return arrayOf(
-            "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
-            "container.barrel"
-        ).any { Text.translatable(it).string == titleString }
-    }
-
-
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      *
@@ -247,7 +262,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun getChestScreen(): GenericContainerScreen? {
         val screen = mc.currentScreen
 
-        return if (screen is GenericContainerScreen && (!checkTitle || isScreenTitleChest(screen))) {
+        return if (screen is GenericContainerScreen && (!ScreenTitleCheck.enabled || ScreenTitleCheck.isScreenTitleChest(screen))) {
             screen
         } else {
             null
