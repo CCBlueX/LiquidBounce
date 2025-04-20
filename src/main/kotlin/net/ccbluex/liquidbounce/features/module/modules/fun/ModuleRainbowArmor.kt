@@ -154,35 +154,29 @@ object ModuleRainbowArmor : Module("RainbowArmor", Category.FUN) {
         matrices.push()
         
         val armorItem = itemStack.item as? ArmorItem ?: return
-        val renderLayer = RenderLayer.getArmorCutoutNoCull(armorItem.getArmorTexture(itemStack, slot))
+        
+        // Use custom render layer
+        val renderLayer = RenderLayer.getEntityTranslucent(Identifier("liquidbounce", "textures/armor/rainbow"))
         val vertexConsumer = vertexConsumers.getBuffer(renderLayer)
         
         val r = (color shr 16 and 255) / 255f
         val g = (color shr 8 and 255) / 255f
         val b = (color and 255) / 255f
         
-        vertexConsumer.color(r, g, b, opacity)
+        // Apply custom shader and render
+        RenderSystem.enableBlend()
+        RenderSystem.defaultBlendFunc()
         
-        // Apply armor texture and render
-        RenderSystem.setShaderTexture(0, armorItem.getArmorTexture(itemStack, slot))
+        vertexConsumer.color(r, g, b, opacity)
         armorItem.render(matrices, vertexConsumers, itemStack, slot, player.getEquippedModel())
+        
+        RenderSystem.disableBlend()
         
         matrices.pop()
     }
 
     companion object {
-        private val armorTexture = Identifier("minecraft", "textures/models/armor/diamond_layer_1.png")
-        
-        fun apply(matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, itemStack: ItemStack, slot: EquipmentSlot, color: Color4b) {
-            val armorItem = itemStack.item as? ArmorItem ?: return
-            val renderLayer = RenderLayer.getArmorCutoutNoCull(armorTexture)
-            val vertexConsumer = vertexConsumers.getBuffer(renderLayer)
-            
-            matrices.push()
-            RenderSystem.setShaderTexture(0, armorTexture)
-            vertexConsumer.color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-            matrices.pop()
-        }
+        private val ARMOR_TEXTURE = Identifier("liquidbounce", "textures/armor/rainbow")
     }
 }
 
