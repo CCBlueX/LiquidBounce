@@ -232,7 +232,7 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
-    fun textArray(name: String, default: MutableList<String>) =
+    fun <C : MutableCollection<String>> textArray(name: String, default: C) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
     fun curve(name: String, default: Easing) = enumChoice(name, default)
@@ -245,12 +245,12 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
 
-    fun blocks(name: String, default: MutableSet<Block>) =
+    fun <C : MutableCollection<Block>> blocks(name: String, default: C) =
         value(name, default, ValueType.BLOCKS, ListValueType.Block)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun items(name: String, default: MutableList<Item>) =
+    fun <C : MutableCollection<Item>> items(name: String, default: C) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
     inline fun <reified T> multiEnumChoice(
