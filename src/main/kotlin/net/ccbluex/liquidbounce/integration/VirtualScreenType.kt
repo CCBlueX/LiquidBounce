@@ -21,8 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration
 
-import com.mojang.blaze3d.systems.RenderCall
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screen.DisconnectedScreen
@@ -52,7 +50,7 @@ enum class VirtualScreenType(
     val routeName: String,
     private val recognizer: Predicate<Screen> = Predicate { false },
     val isInGame: Boolean = false,
-    private val open: RenderCall = RenderCall {
+    private val open: Runnable = Runnable {
         mc.setScreen(VirtualDisplayScreen(byName(routeName)!!))
     }
 ) {
