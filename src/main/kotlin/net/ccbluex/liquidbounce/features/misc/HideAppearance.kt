@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
-import com.mojang.blaze3d.systems.RenderSystem
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.api.core.scope
@@ -70,7 +69,7 @@ object HideAppearance : EventListener {
 
     private val shiftChronometer = Chronometer()
 
-    var isHidingNow = true // TODO(port): uncomment once MCEF is fixed (never)
+    var isHidingNow = false
         set(value) {
             field = value
             updateClient()
