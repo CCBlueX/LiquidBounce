@@ -94,7 +94,7 @@ public abstract class MixinClientPlayerInteractionManager {
     /**
      * @author superblaubeere27
      */
-    @ModifyExpressionValue(method = "syncSelectedSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
+    @ModifyExpressionValue(method = "syncSelectedSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getSelectedSlot()I"))
     private int hookCustomSelectedSlot(int original) {
         return SilentHotbar.INSTANCE.getServersideSlot();
     }
