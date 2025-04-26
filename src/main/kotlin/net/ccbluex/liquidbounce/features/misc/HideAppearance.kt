@@ -70,7 +70,7 @@ object HideAppearance : EventListener {
 
     private val shiftChronometer = Chronometer()
 
-    var isHidingNow = false
+    var isHidingNow = true // TODO(port): uncomment once MCEF is fixed (never)
         set(value) {
             field = value
             updateClient()
