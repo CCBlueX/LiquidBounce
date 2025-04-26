@@ -79,7 +79,7 @@ class OpenAiApi(
                 .asJsonObject["content"]
                 .asString
         } catch (e: HttpException) {
-            val responseJson = JsonParser.parseString(e.message).asJsonObject
+            val responseJson = JsonParser.parseString(e.content).asJsonObject
             val errorJson = responseJson["error"].asJsonObject
 
             logger.error("Failed to send request to OpenAI", e)
