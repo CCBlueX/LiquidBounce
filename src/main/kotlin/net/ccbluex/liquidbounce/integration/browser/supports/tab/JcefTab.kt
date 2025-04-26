@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.browser.supports.tab
 
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -60,20 +61,21 @@ class JcefTab(
         zoomLevel = 1.0
     }
 
-    private val texture = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
+    private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
+    private val texture = RenderSystem.getDevice().createTexture(
+        null as String?, TextureFormat.RGBA8,
+        position.width, position.height, 1
+    )
 
     override var drawn = false
     override var preferOnTop = false
 
     init {
-        mc.textureManager.registerTexture(texture, object : AbstractTexture() {
-            override fun getGlTexture(): GpuTexture {
-                // TODO: wtf is "mipLevels"
-                val tex = GlTexture(
-                    "j", TextureFormat.RGBA8, position.width, position.height, 1, mcefBrowser.renderer.textureID
-                )
-                return tex
-            }
+        assert(texture == null) { "texture can't be null" }
+        mcefBrowser.renderer.textureID = (texture as GlTexture).glId
+        mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
+            @JvmField
+            val glTexture: GpuTexture = texture
         })
     }
 
@@ -102,10 +104,10 @@ class JcefTab(
     override fun closeTab() {
         jcefBrowser.removeTab(this)
         mcefBrowser.close()
-        mc.textureManager.destroyTexture(texture)
+        mc.textureManager.destroyTexture(textureId)
     }
 
-    override fun getTexture(): Identifier? = texture.takeUnless { mcefBrowser.renderer.isUnpainted }
+    override fun getTexture(): Identifier? = textureId.takeUnless { mcefBrowser.renderer.isUnpainted }
 
     override fun resize(width: Int, height: Int) {
         if (!position.fullScreen) {

@@ -115,7 +115,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         val framebuffer: Framebuffer = SimpleFramebuffer("lightColorFB", 16, 16, false)
 
         init {
-            framebuffer.setFilter(FilterMode.LINEAR)
+//            framebuffer.setFilter(FilterMode.LINEAR)
             // TODO: find setClearColor
 //            framebuffer.setClearColor(1f, 1f, 1f, 1f)
         }

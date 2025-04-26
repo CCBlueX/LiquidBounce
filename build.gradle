@@ -180,7 +180,7 @@ dependencies {
     includeDependency "com.github.CCBlueX:mc-authlib:${project.mc_authlib_version}"
 
     // JCEF Support
-    // TODO: change this back to CCBlueX's MCEF once they add 1.21.5
+    // TODO(port): change this back to CCBlueX's MCEF once they add 1.21.5
     includeModDependency "com.github.DataM0del:mcef:${project.mcef_version}"
     includeDependency "com.github.CCBlueX:netty-httpserver:2.1.1"
 
