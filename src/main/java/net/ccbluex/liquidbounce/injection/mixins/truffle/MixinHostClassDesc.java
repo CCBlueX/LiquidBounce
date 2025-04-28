@@ -174,15 +174,15 @@ public abstract class MixinHostClassDesc {
         }
 
         var name = member.getName();
+        var owner = member.getDeclaringClass();
+        var remapped = switch (member) {
+            case java.lang.reflect.Method ignored -> EnvironmentRemapper.INSTANCE.remapMethod(owner, name);
+            case java.lang.reflect.Field ignored -> EnvironmentRemapper.INSTANCE.remapField(owner, name);
+            default -> null;
+        };
 
-        String remapped;
-        if (member instanceof java.lang.reflect.Method) {
-            remapped = EnvironmentRemapper.INSTANCE.remapMethod(member.getDeclaringClass(), name);
-        } else if (member instanceof java.lang.reflect.Field) {
-            remapped = EnvironmentRemapper.INSTANCE.remapField(member.getDeclaringClass(), name);
-        } else {
-            ClientUtilsKt.getLogger().error("Unknown member type: {}", member.getClass().getName());
-            return null;
+        if (remapped == null) {
+            ClientUtilsKt.getLogger().error("Unknown member type {} of class {}", member.getClass().getName(), owner.getName());
         }
 
         // If the name is the same, return the original field
