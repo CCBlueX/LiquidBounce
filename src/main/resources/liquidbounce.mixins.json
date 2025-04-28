@@ -123,7 +123,6 @@
     "sodium.MixinSodiumBlockOcclusionCache",
     "sodium.MixinSodiumLightDataAccessMixin",
     "truffle.MixinHostClassDesc",
-    "truffle.MixinHostClassDescAccessor",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
     "truffle.MixinTruffleLanguage"

@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.truffle;
 
+import kotlin.Lazy;
+import kotlin.LazyKt;
 import net.ccbluex.liquidbounce.interfaces.MemberRetriever;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
@@ -28,12 +30,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Executable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
+import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 @Pseudo
 @Mixin(targets = "com/oracle/truffle/host/HostClassDesc$Members")
@@ -54,6 +55,18 @@ public abstract class MixinHostClassDesc {
     @Shadow(remap = false)
     @Final
     Map<String, Object> staticMethods;
+
+    @Unique
+    @SuppressWarnings("unchecked")
+    private static final Lazy<BiFunction<Object, Object, Object>> mergeMethod = LazyKt.lazy(() -> {
+        try {
+            var clazz = Class.forName("com.oracle.truffle.host.HostClassDesc$Members");
+            var field = clazz.getDeclaredField("MERGE");
+            return (BiFunction<Object, Object, Object>) field.get(null);
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    });
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void remapClassDesc(CallbackInfo ci) {
@@ -107,7 +120,7 @@ public abstract class MixinHostClassDesc {
                     }
 
                     if (map.containsKey(remappedName)) {
-                        var mergedMethod = MixinHostClassDescAccessor.getMergeMethod().apply(map.get(remappedName), value);
+                        var mergedMethod = mergeMethod.getValue().apply(map.get(remappedName), value);
                         map.remove(key);
                         map.put(remappedName, mergedMethod);
                     } else {
@@ -176,8 +189,8 @@ public abstract class MixinHostClassDesc {
         var name = member.getName();
         var owner = member.getDeclaringClass();
         var remapped = switch (member) {
-            case java.lang.reflect.Method ignored -> EnvironmentRemapper.INSTANCE.remapMethod(owner, name);
-            case java.lang.reflect.Field ignored -> EnvironmentRemapper.INSTANCE.remapField(owner, name);
+            case Method ignored -> EnvironmentRemapper.INSTANCE.remapMethod(owner, name);
+            case Field ignored -> EnvironmentRemapper.INSTANCE.remapField(owner, name);
             default -> null;
         };
 
