@@ -34,6 +34,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
         it.coerceAtLeast(targetSelector.maxRange)
     }
     private val requiresSpace by boolean("RequiresSpace", false)
+    private val onlyGround by boolean("OnlyOnGround", false)
 
     object MotionMode : Choice("Motion") {
 
@@ -132,6 +133,10 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
 
             // If speed isn't enabled and requiresSpeed is, we exit early
             if (requiresSpeed && !ModuleSpeed.running) {
+                return@handler
+            }
+
+            if (onlyGround && !player.isOnGround) {
                 return@handler
             }
 
