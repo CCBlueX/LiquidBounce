@@ -40,6 +40,18 @@ import java.util.function.BiFunction;
 @Mixin(targets = "com/oracle/truffle/host/HostClassDesc$Members")
 public abstract class MixinHostClassDesc {
 
+    @Unique
+    @SuppressWarnings("unchecked")
+    private static final Lazy<BiFunction<Object, Object, Object>> mergeMethod = LazyKt.lazy(() -> {
+        try {
+            var clazz = Class.forName("com.oracle.truffle.host.HostClassDesc$Members");
+            var field = clazz.getDeclaredField("MERGE");
+            return (BiFunction<Object, Object, Object>) field.get(null);
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
     @Shadow(remap = false)
     @Final
     Map<String, Object> methods;
@@ -55,18 +67,6 @@ public abstract class MixinHostClassDesc {
     @Shadow(remap = false)
     @Final
     Map<String, Object> staticMethods;
-
-    @Unique
-    @SuppressWarnings("unchecked")
-    private static final Lazy<BiFunction<Object, Object, Object>> mergeMethod = LazyKt.lazy(() -> {
-        try {
-            var clazz = Class.forName("com.oracle.truffle.host.HostClassDesc$Members");
-            var field = clazz.getDeclaredField("MERGE");
-            return (BiFunction<Object, Object, Object>) field.get(null);
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    });
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void remapClassDesc(CallbackInfo ci) {
