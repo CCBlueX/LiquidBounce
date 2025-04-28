@@ -22,39 +22,22 @@ package net.ccbluex.liquidbounce.injection.mixins.truffle;
 import net.ccbluex.liquidbounce.interfaces.MemberRetriever;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Pseudo
 @Mixin(targets = "com/oracle/truffle/host/HostClassDesc$Members")
 public abstract class MixinHostClassDesc {
-
-    @Unique
-    private static Method mergeMethod;
-
-    @Unique
-    private static Method getMergeMethod() {
-        if (mergeMethod == null) {
-            try {
-                Class<?> hostMethodDescClass = Class.forName("com.oracle.truffle.host.HostMethodDesc");
-                mergeMethod = Class.forName("com.oracle.truffle.host.HostClassDesc$Members")
-                        .getDeclaredMethod("merge", hostMethodDescClass, hostMethodDescClass);
-                mergeMethod.setAccessible(true);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to get merge method", e);
-            }
-        }
-        return mergeMethod;
-    }
 
     @Shadow(remap = false)
     @Final
@@ -72,60 +55,66 @@ public abstract class MixinHostClassDesc {
     @Final
     Map<String, Object> staticMethods;
 
-
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void remapClassDesc(CallbackInfo ci) {
-        remapFieldEntries(fields, this::getField);
-        remapFieldEntries(staticFields, this::getField);
+        remapFieldEntries(fields, MixinHostClassDesc::getField);
+        remapFieldEntries(staticFields, MixinHostClassDesc::getField);
 
         remapMethodEntries(methods);
         remapMethodEntries(staticMethods);
     }
 
     @Unique
-    private void remapMethodEntries(Map<String, Object> map) {
-        final var entries = new HashMap<>(map).entrySet();
+    private static Object[] getOverloadsFromHostMethodDesc(Object value) throws
+            IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        var clazz = value.getClass();
+        var getOverloads = clazz.getMethod("getOverloads");
+        getOverloads.setAccessible(true);
+        return (Object[]) getOverloads.invoke(value);
+    }
+
+    @Unique
+    private static @Nullable Executable getReflectionMethodFromSingleMethod(Object value)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        var clazz = value.getClass();
+        if (NOT_MAPPED.contains(clazz.getName())) {
+            return null;
+        }
+        var descMethod = clazz.getDeclaredMethod("getReflectionMethod");
+        descMethod.setAccessible(true);
+        return (Executable) descMethod.invoke(value);
+    }
+
+    @Unique
+    private static void remapMethodEntries(Map<String, Object> map) {
+        if (map.isEmpty()) {
+            return;
+        }
+
+        var entries = new HashMap<>(map).entrySet();
 
         for (var entry : entries) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
+            var key = entry.getKey();
+            var value = entry.getValue();
             try {
-                // this is a bit more complicated than fields because of overloads
+                // Get all overload methods
+                for (var overload : getOverloadsFromHostMethodDesc(value)) {
+                    var method = getReflectionMethodFromSingleMethod(overload);
+                    var remappedName = remapDescriptor(method);
 
-                final var methodsToRemap = new ArrayList<Method>();
+                    if (remappedName == null) {
+                        continue;
+                    }
 
-                try {
-                    // value instanceof HostMethodDesc.SingleMethod
-                    methodsToRemap.add(getReflectionMethodFromSingleMethod(value));
-                } catch (NoSuchMethodException _ignored) {
-                    // value instanceof HostMethodDesc.OverloadedMethod
-                    // which probably should not happen because intermediary names have no overloads?
-                    final Method getOverloads = value.getClass().getDeclaredMethod("getOverloads");
-                    getOverloads.setAccessible(true);
-                    final var overloads = (Object[]) getOverloads.invoke(value);
-
-                    for (final var overload : overloads) {
-                        methodsToRemap.add(getReflectionMethodFromSingleMethod(overload));
+                    if (map.containsKey(remappedName)) {
+                        var mergedMethod = MixinHostClassDescAccessor.getMergeMethod().apply(map.get(remappedName), value);
+                        map.remove(key);
+                        map.put(remappedName, mergedMethod);
+                    } else {
+                        map.remove(key);
+                        map.put(remappedName, value);
                     }
                 }
-
-                for (final Method method : methodsToRemap) {
-                    final String remappedName = remapDescriptor(method);
-
-                    if (remappedName != null) {
-                        if (map.containsKey(remappedName)) {
-                            final Object mergedMethod = getMergeMethod().invoke(null, map.get(remappedName), value);
-                            map.remove(key);
-                            map.put(remappedName, mergedMethod);
-
-                        } else {
-                            map.remove(key);
-                            map.put(remappedName, value);
-                        }
-                    }
-                }
-
-
             } catch (Exception e) {
                 ClientUtilsKt.getLogger().error("Failed to remap method: {}", key, e);
             }
@@ -133,46 +122,57 @@ public abstract class MixinHostClassDesc {
     }
 
     @Unique
-    private static Method getReflectionMethodFromSingleMethod(Object value)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        final Method descMethod = value.getClass().getDeclaredMethod("getReflectionMethod");
-        descMethod.setAccessible(true);
-        return (Method) descMethod.invoke(value);
-    }
+    private static void remapFieldEntries(Map<String, Object> map, MemberRetriever retriever) {
+        if (map.isEmpty()) {
+            return;
+        }
 
-    @Unique
-    private void remapFieldEntries(Map<String, Object> map, MemberRetriever retriever) {
-        var entries = new HashMap<>(map).entrySet();
-
-        for (var entry : entries) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            String remapped;
-
+        var remappedEntries = new HashMap<String, Object>();
+        var iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            var key = entry.getKey();
+            var value = entry.getValue();
             try {
-                Member member = retriever.getMember(value);
-                remapped = remapDescriptor(member);
+                var member = retriever.getMember(value);
+                var remapped = remapDescriptor(member);
+                if (remapped != null) {
+                    iterator.remove();
+                    remappedEntries.put(remapped, value);
+                }
             } catch (ReflectiveOperationException e) {
                 ClientUtilsKt.getLogger().error("Failed to remap field: {}", key, e);
-                continue;
-            }
-
-            if (remapped != null) {
-                map.remove(key);
-                map.put(remapped, value);
             }
         }
+        map.putAll(remappedEntries);
     }
 
+    /**
+     * Skip synthetic array field/method with singleton check
+     */
     @Unique
-    private Member getField(Object o) throws IllegalAccessException, NoSuchFieldException {
-        var descField = o.getClass().getDeclaredField("field");
+    private static final Set<String> NOT_MAPPED = Set.of(
+            "com.oracle.truffle.host.HostFieldDesc$SyntheticArrayLengthField",
+            "com.oracle.truffle.host.HostMethodDesc$SingleMethod$SyntheticArrayCloneMethod"
+    );
+
+    @Unique
+    private static @Nullable Member getField(Object o) throws IllegalAccessException, NoSuchFieldException {
+        var clazz = o.getClass();
+        if (NOT_MAPPED.contains(clazz.getName())) {
+            return null;
+        }
+        var descField = clazz.getDeclaredField("field");
         descField.setAccessible(true);
         return (Member) descField.get(o);
     }
 
     @Unique
-    private static String remapDescriptor(Member member) {
+    private static @Nullable String remapDescriptor(@Nullable Member member) {
+        if (member == null) {
+            return null;
+        }
+
         var name = member.getName();
 
         String remapped;
