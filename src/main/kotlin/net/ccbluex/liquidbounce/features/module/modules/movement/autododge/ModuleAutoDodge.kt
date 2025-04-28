@@ -100,14 +100,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         }
     }
 
-    private fun ClientWorld.findFlyingArrows(): List<Entity> {
-        return entities.mapNotNull {
-            if (it is ArrowEntity || it is SpectralArrowEntity && !it.isInGround) {
-                return@mapNotNull it
-            }
-
-            return@mapNotNull null
-        }
+    private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
+        (entity is ArrowEntity || entity is SpectralArrowEntity) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(
