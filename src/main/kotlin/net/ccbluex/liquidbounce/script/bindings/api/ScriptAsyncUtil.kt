@@ -62,7 +62,7 @@ class ScriptAsyncUtil(
     /**
      * `Promise.resolve(0)`
      */
-    private val PROMISE_OF_ZERO: Value =
+    private val defaultPromise: Value =
         jsPromiseConstructor.invokeMember("resolve", 0)
 
     /**
@@ -73,7 +73,7 @@ class ScriptAsyncUtil(
     @ScriptApiRequired
     fun ticks(n: Int): Value {
         if (n == 0) {
-            return PROMISE_OF_ZERO
+            return defaultPromise
         }
 
         var remains = n
@@ -127,7 +127,7 @@ class ScriptAsyncUtil(
         breakLoop: BooleanSupplier
     ): Value {
         if (ticks == 0) {
-            return PROMISE_OF_ZERO
+            return defaultPromise
         }
 
         var remains = ticks
