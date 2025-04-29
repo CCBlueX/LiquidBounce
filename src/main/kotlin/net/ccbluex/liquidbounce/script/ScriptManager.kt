@@ -177,6 +177,7 @@ object ScriptManager {
         try {
             disableAll()
             unloadAll()
+            ScriptAsyncUtil.TickScheduler.clear()
         } catch (e: Exception) {
             logger.error("Failed to unload scripts.", e)
         }

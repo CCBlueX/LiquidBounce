@@ -50,6 +50,13 @@ class ScriptAsyncUtil(
         private fun schedule(breakLoop: BooleanSupplier) {
             mc.execute { nextTickTasks += breakLoop }
         }
+
+        fun clear() {
+            mc.execute {
+                currentTickTasks.clear()
+                nextTickTasks.clear()
+            }
+        }
     }
 
     /**

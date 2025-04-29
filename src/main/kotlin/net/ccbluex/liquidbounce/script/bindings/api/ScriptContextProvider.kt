@@ -24,9 +24,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.*
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Value
-import java.util.function.BiFunction
-import java.util.function.Function
-import java.util.function.IntFunction
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -77,10 +74,7 @@ object ScriptContextProvider {
 
             // Async support
             if (::scriptAsyncUtil.isInitialized && isJs) {
-                putMember("ticks", IntFunction(scriptAsyncUtil::ticks))
-                putMember("seconds", IntFunction(scriptAsyncUtil::seconds))
-                putMember("until", Function(scriptAsyncUtil::until))
-                putMember("conditional", BiFunction(scriptAsyncUtil::conditional))
+                putMember("AsyncUtil", scriptAsyncUtil)
             }
         }
     }
