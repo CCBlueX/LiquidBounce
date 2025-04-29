@@ -87,9 +87,7 @@ object AutoConfig {
     }
 
     suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettingsScript(autoConfig.settingId).apply {
-            loadAutoConfig(reader())
-        }
+        ClientApi.requestSettingsScript(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**

@@ -1,14 +1,15 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
-import java.util.*
-
 /**
  * A circular buffer that maintains double the cycle length and regenerates the second half
  * when reaching the midpoint
  */
-class RollingClickArray(private val cycleLength: Int, val iterations: Int) {
+class RollingClickArray(
+    private val cycleLength: Int,
+    val iterations: Int,
+) {
 
-    val array = IntArray(cycleLength * iterations)
+    internal val array = IntArray(cycleLength * iterations)
     var head = 0
         private set
     private val size get() = array.size
@@ -41,19 +42,17 @@ class RollingClickArray(private val cycleLength: Int, val iterations: Int) {
      * Clears the array
      */
     fun clear() {
-        Arrays.fill(array, 0)
+        array.fill(0)
         head = 0
     }
 
     fun push(cycleArray: IntArray) {
         require(cycleArray.size == cycleLength) { "Array size must match cycle length" }
 
-        if (head == 0) {
-            System.arraycopy(cycleArray, 0, array, cycleLength, cycleLength)
-        } else if (head == cycleLength) {
-            System.arraycopy(cycleArray, 0, array, 0, cycleLength)
-        } else {
-            error("Head must be at 0 or cycle length")
+        when (head) {
+            0 -> System.arraycopy(cycleArray, 0, array, cycleLength, cycleLength)
+            cycleLength -> System.arraycopy(cycleArray, 0, array, 0, cycleLength)
+            else -> error("Head must be at 0 or cycle length")
         }
     }
 

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.models.client.Build
 import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
+import java.io.Reader
 
 object ClientApi : BaseApi(API_V1_ENDPOINT) {
 
@@ -37,6 +38,6 @@ object ClientApi : BaseApi(API_V1_ENDPOINT) {
         get<Array<AutoSettings>>("/client/$branch/settings")
 
     suspend fun requestSettingsScript(settingId: String, branch: String = API_BRANCH) =
-        get<String>("/client/$branch/settings/$settingId")
+        get<Reader>("/client/$branch/settings/$settingId")
 
 }

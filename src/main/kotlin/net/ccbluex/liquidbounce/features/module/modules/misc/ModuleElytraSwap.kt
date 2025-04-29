@@ -49,7 +49,7 @@ object ModuleElytraSwap : ClientModule(
     private val constraints = tree(PlayerInventoryConstraints())
 
     private val slotsToSearch = Slots.Hotbar + Slots.Inventory + Slots.OffHand
-    private val chestplateSlot = ArmorItemSlot(2)
+    private val chestplateSlot = Slots.Armor[2]
 
     @Suppress("unused")
     private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent>(

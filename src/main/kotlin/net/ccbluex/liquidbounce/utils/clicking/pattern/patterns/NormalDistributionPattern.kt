@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 /**
  * Normal distribution clicking pattern.
  */
-class NormalDistributionPattern : ClickPattern {
+object NormalDistributionPattern : ClickPattern {
 
     override fun fill(
         clickArray: IntArray,

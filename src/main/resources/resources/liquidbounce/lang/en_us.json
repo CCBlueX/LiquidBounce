@@ -468,6 +468,7 @@
   "liquidbounce.module.disabler.messages.vulcanRiptideMessage": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
   "liquidbounce.module.disabler.messages.grimSpectateMessage": "You were flagged! You should disable disabler.",
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Enable this Disabler during Respawning - when you have Fly abilities. You should be able to fly around and break blocks, but cannot attack other players during this. Disable it as soon as possible, otherwise you will being timed out.",
+  "liquidbounce.module.disabler.messages.minibloxProtocol": "Miniblox disabler only works with ViaFabricPlus on protocol 1.8.X.",
   "liquidbounce.module.antiCheatDetect.description": "Detects the AntiCheat of the server and notifies you.",
   "liquidbounce.module.antiCheatDetect.messages.detected": "Detected %s AntiCheat.",
   "liquidbounce.module.antiCheatDetect.messages.actionNumbers": "Action numbers: %s",

@@ -42,8 +42,11 @@ import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
@@ -51,7 +54,6 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
-import net.minecraft.util.Hand
 
 /**
  * A module that automatically shoots at the nearest enemy.
@@ -104,12 +106,33 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
 
+    private fun HotbarItemSlot.needsSelection(): Boolean =
+        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
+
+    /**
+     * @return If the player successfully selected [slot]
+     */
+    private fun trySelect(slot: HotbarItemSlot): Boolean {
+        // Select the throwable if we are not holding it.
+        if (slot.needsSelection()) {
+            if (!selectSlotAutomatically) {
+                return false
+            }
+            // If we are not holding the throwable, we can't shoot.
+            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
+            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer) {
+                return false
+            }
+        }
+        return true
+    }
+
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
      * as fast possible. This means we already pre-aim before we peek around the corner.
      */
     @Suppress("unused")
-    val simulatedTickHandler = handler<RotationUpdateEvent> {
+    private val simulatedTickHandler = handler<RotationUpdateEvent> {
         // Find the recommended target
         val target = targetTracker.selectFirst {
             // Check if we can see the enemy
@@ -125,17 +148,13 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val (hand, slot) = getThrowable() ?: return@handler
+        val slot = getThrowable() ?: return@handler
 
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            if (!selectSlotAutomatically) {
-                return@handler
-            }
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
+        if (!trySelect(slot)) {
+            return@handler
         }
 
-        val rotation = generateRotation(target, GravityType.fromHand(hand))
+        val rotation = generateRotation(target, GravityType.from(slot))
 
         // Set the rotation with the usage priority of 2.
         RotationManager.setRotationTarget(
@@ -152,7 +171,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
      * Handles the auto shoot logic.
      */
     @Suppress("unused")
-    val handleAutoShoot = tickHandler {
+    private val handleAutoShoot = tickHandler {
         val target = targetTracker.target ?: return@tickHandler
 
         if (notDuringCombat && CombatManager.isInCombat) {
@@ -160,24 +179,13 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val (hand, slot) = getThrowable() ?: return@tickHandler
+        val slot = getThrowable() ?: return@tickHandler
 
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-
-            // If we are not holding the throwable, we can't shoot.
-            if (SilentHotbar.serversideSlot != slot) {
-                return@tickHandler
-            }
+        if (!trySelect(slot)) {
+            return@tickHandler
         }
 
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-        }
-
-        val rotation = generateRotation(target, GravityType.fromHand(hand))
+        val rotation = generateRotation(target, GravityType.from(slot))
 
         // Check the difference between server and client rotation
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
@@ -195,7 +203,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
 
             interaction.interactItem(
                 player,
-                hand,
+                slot.useHand,
                 RotationManager.serverRotation.yaw,
                 RotationManager.serverRotation.pitch
             ).isAccepted
@@ -224,38 +232,18 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             // considering gravity's effect on the projectile's motion.
             GravityType.PROJECTILE -> {
                 SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.GENERIC, target)
-
             }
         }
     }
 
-    private fun getThrowable(): Pair<Hand, Int>? {
+    private fun getThrowable(): HotbarItemSlot? {
         return when (throwableType) {
-            ThrowableType.EGG_AND_SNOWBALL -> getThrowable(Items.EGG) ?: getThrowable(Items.SNOWBALL)
-            ThrowableType.ANYTHING -> {
-                if (player.mainHandStack?.isNothing() == false) {
-                    Hand.MAIN_HAND to -1
-                } else if (player.offHandStack?.isNothing() == false) {
-                    Hand.OFF_HAND to -1
-                } else {
-                    null
-                }
+            ThrowableType.EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot(Items.EGG, Items.SNOWBALL)
+            ThrowableType.ANYTHING -> when {
+                !player.mainHandStack.isNothing() -> Slots.Hotbar[player.inventory.selectedSlot]
+                !player.offHandStack.isNothing() -> OffHandSlot
+                else -> null
             }
-        }
-    }
-
-    private fun getThrowable(item: Item): Pair<Hand, Int>? {
-        val mainHand = player.mainHandStack.item == item
-        val offHand = player.offHandStack.item == item
-
-        // If both is false, we have to find the item in the hotbar
-        return if (!mainHand && !offHand) {
-            val throwableSlot = Slots.Hotbar.findSlotIndex(item) ?: return null
-            Hand.MAIN_HAND to throwableSlot
-        } else if (offHand) {
-            Hand.OFF_HAND to -1
-        } else { // mainHand
-            Hand.MAIN_HAND to -1
         }
     }
 
@@ -271,14 +259,10 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         PROJECTILE("Projectile");
 
         companion object {
-            fun fromHand(hand: Hand): GravityType {
-                return when (hand) {
-                    Hand.MAIN_HAND -> fromItem(player.mainHandStack.item)
-                    Hand.OFF_HAND -> fromItem(player.offHandStack.item)
-                }
-            }
+            fun from(slot: HotbarItemSlot): GravityType =
+                from(slot.itemStack.item)
 
-            fun fromItem(item: Item): GravityType {
+            fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {
                         when (item) {

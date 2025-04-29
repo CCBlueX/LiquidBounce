@@ -44,12 +44,12 @@ interface EventListener {
         get() = parent()?.running ?: !isDestructed
 
     /**
-     * Parent listenable
+     * Parent [EventListener]
      */
     fun parent(): EventListener? = null
 
     /**
-     * Children listenables
+     * Children [EventListener]
      */
     fun children(): List<EventListener> = emptyList()
 

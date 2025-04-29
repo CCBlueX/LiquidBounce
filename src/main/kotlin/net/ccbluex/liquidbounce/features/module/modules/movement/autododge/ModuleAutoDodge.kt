@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -35,7 +36,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.ArrowEntity
+import net.minecraft.entity.projectile.SpectralArrowEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -64,10 +67,11 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         && !(Ignore.OPEN_INVENTORY !in ignore
             && (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen))
         && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
+        && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
 
     @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
-        val arrows = findFlyingArrows(world)
+        val arrows = world.findFlyingArrows()
 
         val simulatedPlayer = CachedPlayerSimulation(PlayerSimulationCache.getSimulationForLocalPlayer())
 
@@ -96,23 +100,13 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         }
     }
 
-    private fun findFlyingArrows(world: ClientWorld): List<ArrowEntity> {
-        return world.entities.mapNotNull {
-            if (it !is ArrowEntity) {
-                return@mapNotNull null
-            }
-
-            if (it.isInGround()) {
-                return@mapNotNull null
-            }
-
-            return@mapNotNull it
-        }
+    private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
+        (entity is ArrowEntity || entity is SpectralArrowEntity) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(
         simulatedPlayer: T,
-        arrows: List<ArrowEntity>,
+        arrows: List<Entity>,
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
@@ -199,7 +193,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     fun getInflictedHit(pos: Vec3d): HitInfo? {
-        val arrows = findFlyingArrows(net.ccbluex.liquidbounce.utils.client.world)
+        val arrows = world.findFlyingArrows()
         val playerSimulation = RigidPlayerSimulation(pos)
 
         return getInflictedHits(playerSimulation, arrows, maxTicks = 40)
@@ -207,7 +201,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
 
     data class HitInfo(
         val tickDelta: Int,
-        val arrowEntity: ArrowEntity,
+        val arrowEntity: Entity,
         val hitPos: Vec3d,
         val prevArrowPos: Vec3d,
         val arrowVelocity: Vec3d,
@@ -217,6 +211,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         override val choiceName: String
     ) : NamedChoice {
         OPEN_INVENTORY("OpenInventory"),
-        USING_ITEM("UsingItem")
+        USING_ITEM("UsingItem"),
+        USING_SCAFFOLD("UsingScaffold")
     }
 }

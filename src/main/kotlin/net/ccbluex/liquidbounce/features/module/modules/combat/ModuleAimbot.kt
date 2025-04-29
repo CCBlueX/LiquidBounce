@@ -19,13 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -38,12 +38,10 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -60,18 +58,14 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
 
     private val range = float("Range", 4.2f, 1f..8f)
 
-    private object OnClick : ToggleableConfigurable(this, "OnClick", false) {
-        val delayUntilStop by int("DelayUntilStop", 3, 0..10, "ticks")
-    }
-
-    init {
-        tree(OnClick)
-    }
-
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
     private val targetRenderer = tree(WorldTargetRenderer(this))
     private val pointTracker = tree(PointTracker())
-    private val clickTimer = Chronometer()
+
+    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+
+    private val requirementsMet
+        get() = requires.all { it.meets() }
 
     private var angleSmooth = choices(this, "AngleSmooth") {
         arrayOf(
@@ -90,12 +84,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
     private val tickHandler = handler<RotationUpdateEvent> { _ ->
         playerRotation = player.rotation
 
-        if (mc.options.attackKey.isPressedOnAny) {
-            clickTimer.reset()
-        }
-
-        if (OnClick.enabled && (clickTimer.hasElapsed(OnClick.delayUntilStop * 50L)
-        || !mc.options.attackKey.isPressedOnAny && ModuleAutoClicker.running)) {
+        if (!requirementsMet) {
             targetTracker.reset()
             targetRotation = null
             return@handler

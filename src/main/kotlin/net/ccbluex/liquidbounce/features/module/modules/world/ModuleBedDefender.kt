@@ -55,7 +55,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         var maxCount = 0
         var best: HotbarItemSlot? = null
 
-        Slots.Hotbar.forEach {
+        Slots.OffhandWithHotbar.forEach {
             if (!it.itemStack.isFullBlock()) {
                 return@forEach
             }

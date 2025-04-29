@@ -33,6 +33,7 @@
     "minecraft.client.MixinTranslationStorage",
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorld",
+    "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
     "minecraft.entity.MixinAbstractHorseEntity",

@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.gri
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
@@ -91,6 +92,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedNCP(configurable),
 
         SpeedIntave14(configurable),
+        SpeedIntave14Fast(configurable),
 
         SpeedHylexLowHop(configurable),
         SpeedHylexGround(configurable),

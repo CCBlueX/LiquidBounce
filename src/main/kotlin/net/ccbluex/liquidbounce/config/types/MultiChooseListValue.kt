@@ -6,7 +6,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import java.util.*
+import java.util.EnumSet
 
 class MultiChooseEnumListValue<T>(
     name: String,
@@ -19,7 +19,7 @@ class MultiChooseEnumListValue<T>(
     choices = choices,
     canBeNone = canBeNone,
     listType = ListValueType.Enums,
-    autoSorting = true
+    autoSorting = true // EnumSet is ordered
 ) where T : Enum<T>, T : NamedChoice {
     override val T.elementName: String
         get() = choiceName
@@ -27,8 +27,8 @@ class MultiChooseEnumListValue<T>(
 
 class MultiChooseStringListValue(
     name: String,
-    value: AbstractSet<String>,
-    choices: AbstractSet<String>,
+    value: MutableSet<String>,
+    choices: Set<String>,
     canBeNone: Boolean = true,
 ) : MultiChooseListValue<String>(
     name,
@@ -41,8 +41,14 @@ class MultiChooseStringListValue(
 
 sealed class MultiChooseListValue<T>(
     name: String,
-    value: AbstractSet<T>,
-    @Exclude val choices: AbstractSet<T>,
+    /**
+     * Enabled values. A mutable and unordered [Set].
+     */
+    value: MutableSet<T>,
+    /**
+     * All selectable choices. A readonly and ordered [Set].
+     */
+    @Exclude val choices: Set<T>,
 
     /**
      * Can deselect all values or enable at least one
@@ -51,13 +57,13 @@ sealed class MultiChooseListValue<T>(
     listType: ListValueType,
 
     /**
-     * If the [AbstractSet] automatically implements sorting and guarantees order,
+     * If the [value] automatically implements sorting and guarantees order,
      * then set the [autoSorting] to true.
      * Otherwise, if the insertion order is not guaranteed,
      * leave [autoSorting] to false and then the implementation guarantees the order.
      */
     @Exclude @ProtocolExclude private val autoSorting: Boolean
-) : Value<AbstractSet<T>>(
+) : Value<MutableSet<T>>(
     name,
     defaultValue = value,
     valueType = ValueType.MULTI_CHOOSE,
@@ -135,7 +141,7 @@ sealed class MultiChooseListValue<T>(
         return !isActive
     }
 
-    private fun AbstractSet<T>.sortIfAutoSortingDisabled() {
+    private fun MutableSet<T>.sortIfAutoSortingDisabled() {
         if (autoSorting) {
             return
         }

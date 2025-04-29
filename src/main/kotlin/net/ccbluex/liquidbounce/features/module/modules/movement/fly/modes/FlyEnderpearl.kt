@@ -63,7 +63,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val repeatable = tickHandler {
-        val slot = Slots.Hotbar.findSlotIndex(Items.ENDER_PEARL)
+        val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlot
 
         if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
             return@tickHandler
