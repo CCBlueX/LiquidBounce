@@ -80,7 +80,7 @@ class PlayerSneakMultiplier(var multiplier: Double) : Event()
 class PlayerInteractedItem(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
 
 @Nameable("playerStrafe")
-class PlayerVelocityStrafe(var movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
+class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
 
 @Nameable("playerStride")
 class PlayerStrideEvent(var strideForce: Float) : Event()
