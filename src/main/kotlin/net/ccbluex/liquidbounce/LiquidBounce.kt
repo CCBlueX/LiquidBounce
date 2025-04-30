@@ -336,6 +336,8 @@ object LiquidBounce : EventListener {
                     DeepLearningEngine.init(task)
                     ModelHolster.load()
                 }.onFailure { exception ->
+                    task.subTasks.clear()
+
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.
                     logger.info("Failed to initialize deep learning.", exception)
