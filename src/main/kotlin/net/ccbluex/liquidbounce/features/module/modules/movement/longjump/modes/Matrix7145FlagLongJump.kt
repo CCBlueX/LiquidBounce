@@ -35,12 +35,12 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
         }
 
         onCancellation { flagTicks = 0 }
-        waitUntil { !player.isOnGround && player.airTicks >= delay }
-        val yaw = player.yaw
-        val movementYaw = Math.toRadians(yaw.toDouble())
 
-        // Repeat the jump until we get at least 2 flags or
-        // we floated long enough
+        // Wait until we are not on ground and reached the delay
+        waitUntil { !player.isOnGround && player.airTicks >= delay }
+
+        val yaw = player.yaw
+        // Repeat the jump until we get at least 2 flags and have not floated for too long
         while (flagTicks < 2 && player.airTicks < ACCEPTED_AIR_TIME) {
             player.velocity = player.velocity
                 .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
@@ -56,7 +56,6 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
         // Reset
         waitUntil { player.isOnGround }
         flagTicks = 0
-
         if (ModuleLongJump.autoDisable) {
             ModuleLongJump.enabled = false
         }
