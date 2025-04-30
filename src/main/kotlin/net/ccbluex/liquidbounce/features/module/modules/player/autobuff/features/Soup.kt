@@ -28,10 +28,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 
-object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == Items.MUSHROOM_STEW }) {
+object Soup : HealthBasedBuff("Soup") {
 
     object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
@@ -40,6 +41,10 @@ object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == 
 
     init {
         tree(DropAfterUse)
+    }
+
+    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
+        return stack.item == Items.MUSHROOM_STEW
     }
 
     override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {

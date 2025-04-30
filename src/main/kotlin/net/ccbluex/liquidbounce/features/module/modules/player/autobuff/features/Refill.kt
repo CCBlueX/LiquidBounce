@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.features
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -40,13 +39,12 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             return
         }
 
+        val validFeatures = features.filter { it.enabled }
+
         // Find valid items in the inventory
         val validItems = Slots.Inventory.filter {
-            it.itemStack.let { itemStack ->
-                features.any { f ->
-                    f.isValidItem(itemStack, false)
-                }
-            }
+            val itemStack = it.itemStack
+            validFeatures.any { f -> f.isValidItem(itemStack, false) }
         }
 
         // Check if we have any valid items
@@ -64,9 +62,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
     }
 
     private fun findEmptyHotbarSlot(): Boolean {
-        return Slots.All.find {
-            it.slotType == ItemSlotType.HOTBAR && it.itemStack.isNothing()
-        } != null
+        return Slots.Hotbar.findSlot { it.isNothing() } != null
     }
 
 }

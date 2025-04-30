@@ -34,7 +34,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
     override val parent: ChoiceConfigurable<Choice>
         get() = presets
 
-    private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL, SkyWarsGameMode.values())
+    private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL)
 
     private val hasPaper
         get() = Slots.Hotbar.findSlot(Items.PAPER) != null
@@ -50,7 +50,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
         waitTicks(20)
     }
 
-
+    @Suppress("unused")
     enum class SkyWarsGameMode(override val choiceName: String, val joinName: String) : NamedChoice {
         NORMAL("Normal", "solo_normal"),
         INSANE("Insane", "solo_insane");

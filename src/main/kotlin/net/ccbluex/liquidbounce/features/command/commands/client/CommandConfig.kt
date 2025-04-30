@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import java.io.Reader
 
 /**
  * Config Command
@@ -153,10 +154,10 @@ object CommandConfig : CommandFactory {
                 runCatching {
                     if (name.startsWith("http")) {
                         // Load the config from the specified URL
-                        HttpClient.request(name, HttpMethod.GET).parse<String>().reader()
+                        HttpClient.request(name, HttpMethod.GET).parse<Reader>()
                     } else {
                         // Get online config from API
-                        ClientApi.requestSettingsScript(name).reader()
+                        ClientApi.requestSettingsScript(name)
                     }
                 }.onSuccess { sourceReader ->
                     AutoConfig.withLoading {

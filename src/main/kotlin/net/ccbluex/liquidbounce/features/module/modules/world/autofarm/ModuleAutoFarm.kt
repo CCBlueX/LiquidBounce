@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -85,9 +86,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private val itemForFarmland
-        get() = Slots.Hotbar.findClosestItem(items = itemsForFarmland)
+        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
     private val itemForSoulSand
-        get() = Slots.Hotbar.findClosestItem(items = itemsForFarmland)
+        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
 
     var currentTarget: BlockPos? = null
 
@@ -145,7 +146,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 Slots.Hotbar.maxByOrNull { it.itemStack.getEnchantment(Enchantments.FORTUNE) }
                     ?.takeIf { it.itemStack.getEnchantment(Enchantments.FORTUNE) >= 1 }
                     ?.let {
-                        SilentHotbar.selectSlotSilently(this, it.hotbarSlot, 2)
+                        SilentHotbar.selectSlotSilently(this, it, 2)
                     }
             }
 
@@ -173,7 +174,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
                 item ?: return@tickHandler
 
-                SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, AutoPlaceCrops.swapBackDelay.random())
+                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult)
 
                 waitTicks(interactDelay.random())
@@ -185,7 +186,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && isTargeted(state, pos) &&
-                getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
+                    getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         for ((pos, state) in blocksToBreak) {
@@ -225,7 +226,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val blocksToPlace =
             eyesPos.searchBlocksInCuboid(radius) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
-                    && getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
+                        && getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
             }.map { it.first }.sortedBy { it.getCenterDistanceSquared() }
 
         for (pos in blocksToPlace) {

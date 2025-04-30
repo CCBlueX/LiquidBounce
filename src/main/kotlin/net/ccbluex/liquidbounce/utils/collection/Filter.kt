@@ -38,13 +38,11 @@ enum class Filter(override val choiceName: String) : NamedChoice {
     abstract operator fun <T> invoke(item: T, collection: Collection<T>): Boolean
 }
 
-fun Filter.getSlot(blocks: Set<Block>): HotbarItemSlot? {
-    Slots.Hotbar.forEach {
-        val block = it.itemStack.getBlock() ?: return@forEach
-        if (this(block, blocks)) {
-            return it
-        }
-    }
+fun Filter.getSlot(blocks: Set<Block>, offhand: Boolean = true): HotbarItemSlot? {
+    val slots = if (offhand) Slots.OffhandWithHotbar else Slots.Hotbar
 
-    return null
+    return slots.find {
+        val block = it.itemStack.getBlock() ?: return@find false
+        this(block, blocks)
+    }
 }

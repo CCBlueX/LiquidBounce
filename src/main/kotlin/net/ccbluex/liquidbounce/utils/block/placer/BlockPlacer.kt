@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -47,6 +48,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -192,7 +194,7 @@ class BlockPlacer(
         }
 
         // find the best path
-        blocks.keys.filterNot { inaccessible.contains(it) }.forEach { pos ->
+        (blocks.keys - inaccessible).forEach { pos ->
             support.findSupport(pos)?.let { path ->
                 val size = path.size
                 if (supportPath == null || supportPath!!.size > size) {
@@ -215,9 +217,7 @@ class BlockPlacer(
         currentPlaceCandidates.forEach(this::removeFromQueue)
 
         supportPath?.let { path ->
-            path.filter { pos ->
-                !blocks.contains(pos)
-            }.forEach { pos ->
+            (path - blocks.keys).forEach { pos ->
                 addToQueue(pos, isSupport = true)
             }
             scheduleCurrentPlacements(itemStack)
@@ -329,11 +329,11 @@ class BlockPlacer(
             placementTarget.direction
         ) ?: return
 
-        SilentHotbar.selectSlotSilently(this, slot.hotbarSlot, slotResetDelay.random())
+        SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
 
         if (slot.itemStack.item !is BlockItem || pos.getState()!!.isReplaceable) {
             // place the block
-            doPlacement(blockHitResult, swingMode = swingMode)
+            doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
             placedRenderer.addBlock(pos)
         }
 
@@ -398,7 +398,7 @@ class BlockPlacer(
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        if (blocks.contains(pos)) {
+        if (blocks.containsKey(pos)) {
             return
         }
 

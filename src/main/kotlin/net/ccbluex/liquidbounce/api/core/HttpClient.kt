@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import com.google.gson.JsonElement
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
@@ -27,7 +29,6 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSource
-import okio.buffer
 import okio.sink
 import java.io.File
 import java.io.InputStream
@@ -142,11 +143,16 @@ fun BufferedSource.utf8Lines(): Iterator<String> =
  * Save response body to file.
  */
 fun Response.toFile(file: File) = use { response ->
-    file.sink().buffer().use(response.body.source()::readAll)
+    file.sink().use(response.body.source()::readAll)
+}
+
+fun JsonElement.toRequestBody(): RequestBody {
+    return GsonInstance.ACCESSIBLE_INTEROP.gson.toJson(this)
+        .toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 }
 
 fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 fun String.asForm() = toRequestBody(HttpClient.FORM_MEDIA_TYPE)
 
-class HttpException(val method: HttpMethod, val url: String, val code: Int, message: String)
-    : Exception("${method.name} $url failed with code $code: $message")
+class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
+    : Exception("${method.name} $url failed with code $code: $content")

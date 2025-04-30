@@ -23,27 +23,50 @@ import groovy.json.JsonSlurper
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 def getContributors(repoOwner, repoName) {
-    def url = "https://api.github.com/repos/${repoOwner}/${repoName}/stats/contributors"
-    def connection = (HttpURLConnection) new URI(url).toURL().openConnection()
+    HttpURLConnection connection = null
 
-    connection.requestMethod = "GET"
-    connection.connectTimeout = 5000
-    connection.readTimeout = 5000
+    try {
+        String githubToken = System.getenv("GITHUB_TOKEN")
 
-    connection.setRequestProperty("User-Agent", "LiquidBounce-App")
+        connection = "https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=100".toURL().openConnection().with {
+            it as HttpURLConnection
+        }.tap {
+            requestMethod = "GET"
+            connectTimeout = 5000
+            readTimeout = 5000
+            setRequestProperty("User-Agent", "LiquidBounce-App")
+            setRequestProperty("X-GitHub-Api-Version", "2022-11-28")
+            setRequestProperty("Accept", "application/vnd.github+json")
 
-    if (200 <= connection.responseCode && connection.responseCode <= 299) {
-        def response = connection.inputStream.text
-        def json = new JsonSlurper().parseText(response)
-        return json[]
-                .collect { it['author']['login'] }
-                .findAll { !(it as String).contains("dependabot") }
-                .reversed()
+            if (githubToken?.trim()) {
+                setRequestProperty("Authorization", "Bearer ${githubToken}")
+            }
+        }
 
-    } else {
-        def error = connection.errorStream?.text ?: "No response details"
-        logger.log(LogLevel.ERROR, "Failed to collect contributors, github api responsed invalid status code: ${connection.responseCode}\n${error}")
+        def responseCode = connection.responseCode
+
+        if (responseCode in 200..299) {
+            String responseText = connection.inputStream.withReader { it.text }
+            try {
+                def contributors = new JsonSlurper().parseText(responseText)
+                        .collect { it["login"] }
+                        .findAll { it && !(it as String).contains("[bot]") }
+
+                return contributors
+            } catch (Exception parseError) {
+                logger.log(LogLevel.ERROR, "Failed to parse GitHub API response", parseError)
+                return []
+            }
+        } else {
+            String errorDetails = connection.errorStream?.withReader { it.text } ?: "No error details"
+            logger.log(LogLevel.ERROR, "GitHub API request failed (HTTP ${responseCode}): ${errorDetails}")
+            return []
+        }
+    } catch (Exception globalError) {
+        logger.log(LogLevel.ERROR, "Failed to fetch contributors: ${globalError.message}", globalError)
         return []
+    } finally {
+        connection?.disconnect()
     }
 }
 
@@ -193,7 +216,7 @@ dependencies {
     includeDependency "org.ahocorasick:ahocorasick:0.6.3"
 
     // Test libraries
-    testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.12.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     // Fix nullable annotations

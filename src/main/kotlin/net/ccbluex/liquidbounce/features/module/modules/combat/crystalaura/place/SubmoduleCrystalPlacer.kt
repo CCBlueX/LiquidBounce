@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
@@ -210,11 +210,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     }
 
     private fun getSlot(): Int? {
-        return if (OffHandSlot.itemStack.item == Items.END_CRYSTAL) {
-            OffHandSlot.hotbarSlotForServer
-        } else {
-            Slots.Hotbar.findSlotIndex(Items.END_CRYSTAL)
-        }
+        return Slots.OffhandWithHotbar.findClosestSlot(Items.END_CRYSTAL)?.hotbarSlotForServer
     }
 
     fun getMaxRange() = max(range, wallsRange)
