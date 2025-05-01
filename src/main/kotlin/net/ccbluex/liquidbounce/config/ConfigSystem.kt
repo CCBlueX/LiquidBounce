@@ -122,7 +122,7 @@ object ConfigSystem {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(!zipFile.exists()) { "Backup file already exists" }
 
-        configurables.map { it -> it.jsonFile }.createZipArchive(zipFile)
+        configurables.map { configurable -> configurable.jsonFile }.createZipArchive(zipFile)
     }
 
     /**

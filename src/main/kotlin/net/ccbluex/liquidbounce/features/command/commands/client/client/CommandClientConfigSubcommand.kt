@@ -118,6 +118,7 @@ object CommandClientConfigSubcommand {
             }
         }.build()
 
+    @Suppress("CognitiveComplexMethod")
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
