@@ -101,10 +101,15 @@ class PolyglotScript(
                         }
 
                         chat(
-                            regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
-                                translation("liquidbounce.scripts.debug.dap", variable(debugOptions.port.toString()))
+                            regular(
+                                translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
+                                    translation(
+                                        "liquidbounce.scripts.debug.dap",
+                                        variable(debugOptions.port.toString())
+                                    )
+                                )
                             )
-                        ))
+                        )
                     }
                 }
             }
@@ -144,18 +149,24 @@ class PolyglotScript(
      * Initialization of scripts
      */
     fun initScript() {
-        // Evaluate script
-        context.eval(Source.newBuilder(language, scriptText, file.name).build())
+        try {
+            // Evaluate script
+            context.eval(Source.newBuilder(language, scriptText, file.name).build())
 
-        // Call load event
-        callGlobalEvent("load")
+            // Call load event
+            callGlobalEvent("load")
 
-        if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
-            logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
-            error("Script '${file.name}' is missing required information!")
+            if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+                logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
+                error("Script '${file.name}' is missing required information!")
+            }
+
+            logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
+        } catch (e: Exception) {
+            logger.error("[ScriptAPI] Failed to load script '${file.name}'.", e)
+            context.close()
+            throw e
         }
-
-        logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
