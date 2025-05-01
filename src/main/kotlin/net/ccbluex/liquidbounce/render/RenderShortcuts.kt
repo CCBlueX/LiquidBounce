@@ -118,18 +118,18 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     val camera = mc.entityRenderDispatcher.camera ?: return
 
     // TODO: find these (enableBlend, blendFunc, disableDepthTest, etc.)
-//    RenderSystem.enableBlend()
-//    RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
-//    RenderSystem.disableDepthTest()
+    GlStateManager._disableDepthTest()
+    GlStateManager._enableBlend()
+    GlStateManager._blendFuncSeparate(GL11C.GL_SRC_ALPHA, GL11C.GL_ONE_MINUS_SRC_ALPHA, GL11C.GL_ONE, GL11C.GL_ZERO)
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
-//    RenderSystem.disableBlend()
-//    RenderSystem.enableDepthTest()
-//    RenderSystem.enableCull()
+    GlStateManager._disableBlend()
+    GlStateManager._enableDepthTest()
+    GlStateManager._enableCull()
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
@@ -137,11 +137,11 @@ inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), dra
     // TODO: find these
 //    RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
-//    RenderSystem.enableBlend()
+    GlStateManager._enableBlend()
 
     draw(GUIRenderEnvironment(matrixStack))
 
-//    RenderSystem.disableBlend()
+    GlStateManager._disableBlend()
 }
 
 /**
@@ -236,12 +236,11 @@ inline fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment
  * @param draw The block of code to be executed with cull disabled.
  */
 inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
-    // TODO: find these
-//    RenderSystem.disableCull()
+    GlStateManager._disableCull()
     try {
         draw()
     } finally {
-//        RenderSystem.enableCull()
+        GlStateManager._enableCull()
     }
 }
 
