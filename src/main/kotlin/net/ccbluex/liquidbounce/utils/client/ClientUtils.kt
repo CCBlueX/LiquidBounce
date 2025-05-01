@@ -175,6 +175,18 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  */
 fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
 
+/**
+ * Joins a list of [Text] into a single [Text] with the given [separator].
+ */
+fun List<Text>.joinToText(separator: Text): Text {
+    return this.foldIndexed(Text.empty()) { index, newText, text ->
+        if (index > 0) {
+            newText.append(separator)
+        }
+        newText.append(text)
+    }
+}
+
 @Suppress("CAST_NEVER_SUCCEEDS")
 val TextColor.bypassesNameProtection: Boolean
     get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
