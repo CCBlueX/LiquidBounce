@@ -46,20 +46,6 @@ import net.minecraft.util.Identifier
 import java.net.InetAddress
 import java.util.TreeSet
 import kotlin.collections.ArrayDeque
-import kotlin.collections.List
-import kotlin.collections.all
-import kotlin.collections.any
-import kotlin.collections.average
-import kotlin.collections.contains
-import kotlin.collections.drop
-import kotlin.collections.first
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.mapNotNullTo
-import kotlin.collections.mutableListOf
-import kotlin.collections.sortedSetOf
-import kotlin.collections.take
-import kotlin.collections.windowed
 
 object ServerObserver : EventListener {
 
@@ -315,7 +301,7 @@ object ServerObserver : EventListener {
      */
     fun guessAntiCheat(address: String?): String? {
         if (transactions.size < 5) {
-            return "Not enough data"
+            return null
         }
 
         val diffs = transactions.windowed(2) { it[1] - it[0] }
@@ -356,7 +342,7 @@ object ServerObserver : EventListener {
                 && transactions.drop(3).windowed(2).all { it[1] - it[0] == 1 }
                 -> "Old Vulcan"
 
-            else -> null
+            else -> "Unknown"
         }
     }
 
