@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.StringVisitable.StyledVisitor
 import net.minecraft.text.Style
 import net.minecraft.text.Text

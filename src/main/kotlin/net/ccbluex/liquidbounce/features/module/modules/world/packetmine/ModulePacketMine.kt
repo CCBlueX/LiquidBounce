@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Al
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.NeverToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation

@@ -16,22 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.render.engine.type
 
-package net.ccbluex.liquidbounce.config.gson.adapter
-
-import com.google.gson.*
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import java.awt.Color
-import java.lang.reflect.Type
-
-object ColorAdapter : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
-
-    override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.toARGB())
-    }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt, true))
-    }
-
-}
+@JvmRecord
+data class UV2f(val u: Float, val v: Float)

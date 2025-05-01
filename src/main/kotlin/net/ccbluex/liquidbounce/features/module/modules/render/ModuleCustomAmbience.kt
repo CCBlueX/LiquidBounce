@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.shader.shaders.BlendShader
 import net.ccbluex.liquidbounce.render.shader.shaders.BlendShaderData
 import net.minecraft.block.enums.CameraSubmersionType
