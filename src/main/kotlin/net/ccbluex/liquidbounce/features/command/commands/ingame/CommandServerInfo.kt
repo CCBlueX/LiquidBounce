@@ -126,6 +126,7 @@ object CommandServerInfo : CommandFactory, EventListener {
         val ipData = hostingInformation
         if (ipData != null) {
             // Hosting Information
+            chat(regular(command.result("hostingIp", ipData.ip?.let(::variable) ?: notAvailableError)))
             chat(regular(command.result("hostingHostname", ipData.hostname?.let(::variable) ?: notAvailableError)))
             chat(regular(command.result("hostingOrganization", ipData.org?.let(::variable) ?: notAvailableError)))
             chat(regular(command.result("hostingCountry", ipData.country?.let(::variable) ?: notAvailableError)))

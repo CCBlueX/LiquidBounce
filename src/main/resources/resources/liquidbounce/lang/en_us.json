@@ -239,6 +239,7 @@
   "liquidbounce.command.serverinfo.result.advertisedVersion": "Advertised Version: %s",
   "liquidbounce.command.serverinfo.result.detectedVersion": "Detected Version: %s",
   "liquidbounce.command.serverinfo.result.detectedVersion.description": "Detects server version by listening for resource pack metadata. Only works on servers newer or equal to 1.20.5.",
+  "liquidbounce.command.serverinfo.result.hostingIp": "Hosting IP: %s",
   "liquidbounce.command.serverinfo.result.hostingHostname": "Hosting Hostname: %s",
   "liquidbounce.command.serverinfo.result.hostingOrganization": "Hosting Organization: %s",
   "liquidbounce.command.serverinfo.result.hostingCountry": "Hosting Country: %s",
