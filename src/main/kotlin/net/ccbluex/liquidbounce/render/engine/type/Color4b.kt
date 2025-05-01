@@ -16,61 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.engine
+@file:Suppress("TooManyFunctions")
+package net.ccbluex.liquidbounce.render.engine.type
 
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
 import org.lwjgl.opengl.GL20
 import java.awt.Color
-import kotlin.Throws
-import kotlin.math.cos
-import kotlin.math.sin
-
-@JvmRecord
-data class Vec3(val x: Float, val y: Float, val z: Float) {
-    constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
-    constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
-    constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
-
-    fun add(other: Vec3): Vec3 {
-        return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
-    }
-
-    private fun sub(other: Vec3): Vec3 {
-        return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
-    }
-
-    operator fun plus(other: Vec3): Vec3 = add(other)
-    operator fun minus(other: Vec3): Vec3 = sub(other)
-    operator fun times(scale: Float): Vec3 = Vec3(this.x * scale, this.y * scale, this.z * scale)
-
-    fun rotatePitch(pitch: Float): Vec3 {
-        val f = cos(pitch)
-        val f1 = sin(pitch)
-
-        val d0 = this.x
-        val d1 = this.y * f + this.z * f1
-        val d2 = this.z * f - this.y * f1
-
-        return Vec3(d0, d1, d2)
-    }
-
-    fun rotateYaw(yaw: Float): Vec3 {
-        val f = cos(yaw)
-        val f1 = sin(yaw)
-
-        val d0 = this.x * f + this.z * f1
-        val d1 = this.y
-        val d2 = this.z * f - this.x * f1
-
-        return Vec3(d0, d1, d2)
-    }
-
-    fun toVec3d() = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
-}
-
-@JvmRecord
-data class UV2f(val u: Float, val v: Float)
 
 @JvmRecord
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int = 255) {
@@ -155,4 +105,43 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int = 255) {
         GL20.glUniform4f(pointer, r / 255f, g / 255f, b / 255f, a / 255f)
     }
 
+    /**
+     * Interpolates this color with another color using the given percentage.
+     *
+     * @param other The color to interpolate to
+     * @param percentage The percentage of interpolation (0.0 to 1.0)
+     * @return The interpolated color
+     */
+    fun interpolateTo(other: Color4b, percentage: Double): Color4b =
+        interpolateTo(other, percentage, percentage, percentage, percentage)
+
+    /**
+     * Interpolates this color with another color using separate factors for each component.
+     *
+     * @param other The color to interpolate to
+     * @param tR The factor to interpolate the red value (0.0 to 1.0)
+     * @param tG The factor to interpolate the green value (0.0 to 1.0)
+     * @param tB The factor to interpolate the blue value (0.0 to 1.0)
+     * @param tA The factor to interpolate the alpha value (0.0 to 1.0)
+     * @return The interpolated color
+     */
+    fun interpolateTo(
+        other: Color4b,
+        tR: Double,
+        tG: Double,
+        tB: Double,
+        tA: Double
+    ): Color4b = Color4b(
+        ((r + (other.r - r) * tR)).toInt().coerceIn(0, 255),
+        ((g + (other.g - g) * tG)).toInt().coerceIn(0, 255),
+        ((b + (other.b - b) * tB)).toInt().coerceIn(0, 255),
+        ((a + (other.a - a) * tA)).toInt().coerceIn(0, 255)
+    )
+
+    /**
+     * Converts this Color4b to a Java AWT Color
+     *
+     * @return The Color object representation
+     */
+    fun toAwtColor(): Color = Color(r, g, b, a)
 }

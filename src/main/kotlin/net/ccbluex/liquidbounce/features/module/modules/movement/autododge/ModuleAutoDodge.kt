@@ -36,7 +36,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.ArrowEntity
+import net.minecraft.entity.projectile.SpectralArrowEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -98,23 +100,13 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         }
     }
 
-    private fun ClientWorld.findFlyingArrows(): List<ArrowEntity> {
-        return entities.mapNotNull {
-            if (it !is ArrowEntity) {
-                return@mapNotNull null
-            }
-
-            if (it.isInGround) {
-                return@mapNotNull null
-            }
-
-            return@mapNotNull it
-        }
+    private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
+        (entity is ArrowEntity || entity is SpectralArrowEntity) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(
         simulatedPlayer: T,
-        arrows: List<ArrowEntity>,
+        arrows: List<Entity>,
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
@@ -209,7 +201,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
 
     data class HitInfo(
         val tickDelta: Int,
-        val arrowEntity: ArrowEntity,
+        val arrowEntity: Entity,
         val hitPos: Vec3d,
         val prevArrowPos: Vec3d,
         val arrowVelocity: Vec3d,

@@ -180,6 +180,7 @@ object CommandManager : Iterable<Command> by commands {
             CommandTeleport,
             CommandPlayerTeleport,
             CommandTps,
+            CommandServerInfo,
             CommandModels
         )
 

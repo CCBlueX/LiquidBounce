@@ -25,12 +25,13 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.utils.entity.getArmor
+import net.ccbluex.liquidbounce.utils.item.material
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.AbstractSkullBlock
 import net.minecraft.entity.player.PlayerEntity
@@ -158,7 +159,6 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     private val crittedSet = IntOpenHashSet()
     private val attributesSet = IntOpenHashSet()
 
-    private val ageSet = IntOpenHashSet()
     private val armorSet = IntOpenHashSet()
 
     private inline fun IntOpenHashSet.filterInPlace(predicate: (Int) -> Boolean) {
@@ -171,8 +171,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
-        val player = player
+    private val tickHandler = handler<GameTickEvent>(priority = CRITICAL_MODIFICATION) {
         val rangeSquared = AlwaysInRadius.alwaysInRadiusRange.sq()
         for (entity in world.players) {
             if (entity === player) {
@@ -183,18 +182,9 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 notAlwaysInRadiusSet.add(entity.id)
             }
 
-            if (entity.age < Age.minimum) {
-                ageSet.add(entity.id)
-            }
-
             if (Armor.enabled && !Armor.isValid(entity)) {
                 armorSet.add(entity.id)
             }
-        }
-
-        ageSet.filterInPlace {
-            val entity = world.getEntityById(it)
-            entity == null || entity.age >= Age.minimum
         }
 
         armorSet.filterInPlace {
@@ -204,8 +194,8 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     }
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEntityEvent> {
-        hitSet.add(it.entity.id)
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        hitSet.add(event.entity.id)
     }
 
     @Suppress("unused")
@@ -255,7 +245,6 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                         flyingSet.remove(entityId)
                         hitSet.remove(entityId)
                         notAlwaysInRadiusSet.remove(entityId)
-                        ageSet.remove(entityId)
                         armorSet.remove(entityId)
                     }
                 }
@@ -272,7 +261,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
-            Age.enabled && ageSet.contains(entityId) -> true
+            Age.enabled && entity.age < Age.minimum -> true
             Armor.enabled && armorSet.contains(entityId) -> true
             else -> customConditions.any { it.isBot.test(entity) }
         }
@@ -285,7 +274,6 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         swungSet.clear()
         crittedSet.clear()
         attributesSet.clear()
-        ageSet.clear()
         armorSet.clear()
     }
 

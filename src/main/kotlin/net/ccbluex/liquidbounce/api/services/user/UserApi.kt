@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.api.services.user
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.API_V3_ENDPOINT
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.core.asJson
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
@@ -47,7 +47,7 @@ object UserApi : BaseApi(API_V3_ENDPOINT) {
         "/cosmetics/self",
         JsonObject().apply {
             addProperty("uuid", uuid.toString())
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 }

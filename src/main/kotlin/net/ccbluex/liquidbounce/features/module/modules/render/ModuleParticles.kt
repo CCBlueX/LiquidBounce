@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.r
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.speed
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom

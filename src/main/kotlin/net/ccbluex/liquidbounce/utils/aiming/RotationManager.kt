@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -203,7 +204,7 @@ object RotationManager : EventListener {
     }
 
     @Suppress("unused")
-    private val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+    private val velocityHandler = handler<PlayerVelocityStrafe>(priority = MODEL_STATE) { event ->
         if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
             val rotation = currentRotation ?: return@handler
 

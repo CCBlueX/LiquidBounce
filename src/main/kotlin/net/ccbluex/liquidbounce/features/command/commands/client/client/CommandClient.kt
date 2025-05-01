@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
 
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
@@ -48,7 +47,7 @@ object CommandClient : CommandFactory {
             .subcommand(CommandClientDestructSubcommand.destructCommand())
             .subcommand(CommandClientAccountSubcommand.accountCommand())
             .subcommand(CommandClientCosmeticsSubcommand.cosmeticsCommand())
-            .subcommand(CommandClientResetSubcommand.resetCommand())
+            .subcommand(CommandClientConfigSubcommand.configCommand())
             .build()
     }
 

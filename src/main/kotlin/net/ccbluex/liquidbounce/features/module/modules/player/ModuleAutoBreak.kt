@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 
@@ -32,37 +34,23 @@ import net.minecraft.util.hit.HitResult
  */
 object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
 
-    private var wasBreaking = false
+    @Suppress("unused")
+    private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.attackKey && mc.attackCooldown <= 0) {
+            val crosshairTarget = mc.crosshairTarget
 
-    val repeatable = tickHandler {
-        val crosshairTarget = mc.crosshairTarget
+            if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
+                val blockState = crosshairTarget.blockPos.getState() ?: return@handler
+                if (blockState.isAir) {
+                    return@handler
+                }
 
-        if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
-            val blockState = crosshairTarget.blockPos.getState() ?: return@tickHandler
-            if (blockState.isAir) {
-                return@tickHandler
+                if (!interaction.isBreakingBlock) {
+                    // First click
+                    KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
+                }
+                event.isPressed = true
             }
-
-            // Start breaking
-            mc.options.attackKey.isPressed = true
-            wasBreaking = true
-        } else if (wasBreaking) {
-            // Stop breaking
-            wasBreaking = false
-            mc.options.attackKey.isPressed = false
-        }
-    }
-
-    override fun enable() {
-        // Just in case something goes wrong. o.O
-        wasBreaking = false
-    }
-
-    override fun disable() {
-        // Check if auto break was breaking a block
-        if (wasBreaking) {
-            mc.options.attackKey.isPressed = false
-            wasBreaking = false
         }
     }
 

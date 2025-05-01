@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.UV2f
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.UV2f
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.client.render.*
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter
