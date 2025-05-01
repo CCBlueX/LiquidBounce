@@ -61,6 +61,8 @@ class PolyglotScript(
         .allowExperimentalOptions(true) // Allow experimental options
         .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
         .option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+        .option("js.commonjs-require", "true")
+        .option("js.commonjs-require-cwd", file.parentFile.absolutePath)
         .apply {
             if (debugOptions.enabled) {
                 val protocolString = debugOptions.protocol.toString().lowercase()
