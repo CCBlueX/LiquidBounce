@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
@@ -50,7 +51,7 @@ object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", Category.MISC) {
     }
 
     override fun enable() {
-        isDetecting = true
+        chat(warning(message("description")))
     }
 
     override fun disable() {

@@ -479,6 +479,7 @@
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Enable this Disabler during Respawning - when you have Fly abilities. You should be able to fly around and break blocks, but cannot attack other players during this. Disable it as soon as possible, otherwise you will being timed out.",
   "liquidbounce.module.disabler.messages.minibloxProtocol": "Miniblox disabler only works with ViaFabricPlus on protocol 1.8.X.",
   "liquidbounce.module.antiCheatDetect.description": "Detects the AntiCheat of the server and notifies you.",
+  "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect will attempt to detect the server's Anti Cheat by monitoring the ping parameter the next time you join any server/game. Note that the results may not be accurate, especially if there are multiple anti-cheats on the server.",
   "liquidbounce.module.antiCheatDetect.messages.detected": "Detected %s AntiCheat.",
   "liquidbounce.module.antiCheatDetect.messages.actionNumbers": "Action numbers: %s",
   "liquidbounce.module.antiCheatDetect.messages.differences": "Differences: %s",
