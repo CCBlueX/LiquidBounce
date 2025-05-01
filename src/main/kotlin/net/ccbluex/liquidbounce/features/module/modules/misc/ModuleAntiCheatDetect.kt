@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
  * Module Anti Cheat Detect
@@ -51,7 +52,7 @@ object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", Category.MISC) {
 
     private fun alertAboutAntiCheat() {
         val antiCheat = ServerObserver.guessAntiCheat(mc.currentServerEntry?.address) ?: return
-        chat(regular(message("detected", antiCheat)))
+        chat(regular(message("detected", variable(antiCheat))))
     }
 
 }
