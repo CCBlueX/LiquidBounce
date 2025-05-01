@@ -46,12 +46,7 @@ val inGame: Boolean
 // Chat formatting
 private val clientPrefix = Text.empty()
     .formatted(Formatting.RESET, Formatting.GRAY)
-    .append(
-        gradientText("LiquidBounce",
-            Color4b(84, 218, 244),
-            Color4b(36, 55, 170),
-        )
-    )
+    .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
 
 fun regular(text: MutableText) = text.formatted(Formatting.GRAY)
