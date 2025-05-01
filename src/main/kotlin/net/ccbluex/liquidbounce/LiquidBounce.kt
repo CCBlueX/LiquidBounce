@@ -114,9 +114,14 @@ object LiquidBounce : EventListener {
         init {
             ConfigSystem.root(this)
 
-            version.onChange {
-                ConfigSystem.backup("backup-${it}-${version.inner}.zip")
-                it
+            version.onChange { previousVersion ->
+                runCatching {
+                    ConfigSystem.backup("automatic_${previousVersion}-${version.inner}")
+                }.onFailure {
+                    logger.error("Unable to create backup", it)
+                }
+
+                previousVersion
             }
         }
     }
@@ -176,7 +181,11 @@ object LiquidBounce : EventListener {
 
         // Do backup before loading configs
         if (!ConfigSystem.isFirstLaunch && !Client.jsonFile.exists()) {
-            ConfigSystem.backup("backup-unknown-${Client.version.inner}.zip")
+            runCatching {
+                ConfigSystem.backup("automatic_${Client.version.inner}")
+            }.onFailure {
+                logger.error("Unable to create backup", it)
+            }
         }
 
         // Load all configurations

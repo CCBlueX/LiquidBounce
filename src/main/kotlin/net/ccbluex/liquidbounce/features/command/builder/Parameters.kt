@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.command.builder
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.world
@@ -77,6 +79,16 @@ fun moduleParameter(
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
         .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin, validator = validator) }
+}
+
+fun configurableParameter(
+    name: String = "configurable",
+    validator: (Configurable) -> Boolean = { true }
+): ParameterBuilder<String> {
+    return ParameterBuilder
+        .begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, _ -> ConfigSystem.autoComplete(begin, validator = validator) }
 }
 
 fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
