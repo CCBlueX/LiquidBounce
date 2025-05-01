@@ -27,27 +27,32 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumsParameter
 import net.ccbluex.liquidbounce.features.command.builder.parseEnumsFromParameter
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.captureCommandSuggestions
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.formattedPluginList
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.guessAntiCheat
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.hostingInformation
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.payloadChannels
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.plugins
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.requestHostingInformation
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.serverAddress
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.serverId
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.serverType
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.serverVersion
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.tps
-import net.ccbluex.liquidbounce.utils.client.ServerObserver.transactions
 import net.minecraft.text.HoverEvent
 
 /**
- * Displays the current server information, including TPS (ticks per second) and detected server version.
+ * ServerInfo Command
+ *
+ * Displays the current server information, including:
+ * - Server Address (Typed In)
+ * - Resolved Server Address
+ * - Server ID
+ * - Server Type (Premium or Cracked)
+ * - Server Brand (Brand that the server sent us, F3 menu)
+ * - Advertised Version (Version that the server sent us)
+ * - Detected Version (Gathers actual server version from known packs packet)
+ * - TPS (Same as .tps)
+ * - Ping (Same as .ping)
+ * - Payload Channels
+ * - Transactions (5x ping payloads)
+ * - Transaction Differences
+ * - Guessed Anti Cheat (Same as AntiCheatDetect)
+ * - Hosting Information (Shown when command is being executed with hosting parameter)
+ * - Plugins (Same as Plugins Module, requires plugins detect parameter)
+ *
+ * The command supports active detection modes for more thorough analysis.
  */
 object CommandServerInfo : CommandFactory, EventListener {
 
-    @Suppress("CognitiveComplexMethod")
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("serverinfo")
@@ -61,25 +66,7 @@ object CommandServerInfo : CommandFactory, EventListener {
                 val detectionTypes = parseEnumsFromParameter<DetectionType>(args.getOrNull(0) as? String)
 
                 if (detectionTypes.isNotEmpty()) {
-                    Sequence(this) {
-                        chat(regular(command.result("detecting")))
-
-                        if (DetectionType.PLUGINS in detectionTypes) {
-                            captureCommandSuggestions()
-                            // Timeout after 5 seconds.
-                            waitConditional(20 * 5) { plugins != null }
-
-                            if (plugins == null) {
-                                chat(markAsError(command.result("pluginsDetectionTimeout")))
-                            }
-                        }
-
-                        if (DetectionType.HOSTING in detectionTypes) {
-                            requestHostingInformation()
-                        }
-
-                        printInformation(command, detectionTypes)
-                    }
+                    runActiveDetection(command, detectionTypes)
                 } else {
                     printInformation(command)
                 }
@@ -87,73 +74,132 @@ object CommandServerInfo : CommandFactory, EventListener {
             .build()
     }
 
-    private fun printInformation(command: Command, detections: List<DetectionType> = emptyList()) {
-        val notAvailableError = markAsError("N/A") // N/A should be a common understanding
+    /**
+     * Runs active detection for specified detection types
+     *
+     * @param command The command instance
+     * @param detectionTypes List of detection types to run
+     */
+    private fun runActiveDetection(command: Command, detectionTypes: List<DetectionType>) {
+        Sequence(this) {
+            chat(regular(command.result("detecting")))
 
-        val serverInfo = network.serverInfo
-        val resolvedServerAddress = serverAddress?.toString()
-        val tps = tps
-        val ping = network.getPlayerListEntry(player.uuid)?.latency ?: 0
+            // Run plugin detection if requested
+            if (DetectionType.PLUGINS in detectionTypes) {
+                ServerObserver.captureCommandSuggestions()
+                // Timeout after 5 seconds
+                waitConditional(20 * 5) { ServerObserver.plugins != null }
 
-        val advertisedVersion = "${serverInfo?.version?.convertToString()} (${serverInfo?.protocolVersion})"
-        val detectedServerVersion = serverVersion ?: "<= 1.20.4"
+                if (ServerObserver.plugins == null) {
+                    chat(markAsError(command.result("pluginsDetectionTimeout")))
+                }
+            }
 
-        chat(warning(command.result("header")))
-        chat(regular(command.result("address", serverInfo?.address?.let(::variable) ?: notAvailableError)))
-        chat(regular(command.result("resolvedAddress", resolvedServerAddress?.let(::variable) ?: notAvailableError)))
-        chat(regular(command.result("serverId", serverId?.let(::variable) ?: notAvailableError)))
-        chat(regular(command.result("serverType", serverType?.let{ variable(it.choiceName) } ?: notAvailableError)))
-        chat(regular(command.result("brand", network.brand?.let(::variable) ?: notAvailableError)))
-        chat(regular(command.result("advertisedVersion", variable(advertisedVersion))))
-        chat(regular(command.result("detectedVersion", variable(detectedServerVersion).styled {
-            it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("detectedVersion.description", variable(detectedServerVersion))))
-        })))
-        chat(regular(command.result("tps", variable(
-            if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()
-        ))))
-        chat(regular(command.result("ping", variable(ping.toString()))))
+            // Request hosting information if requested
+            if (DetectionType.HOSTING in detectionTypes) {
+                ServerObserver.requestHostingInformation()
+            }
 
-        chat(regular(command.result("channels", payloadChannels.map { id ->
-            variable(id.toString())
-        }.joinToText(regular(", ")))))
-
-        chat(regular(command.result("transactions", transactions.map { variable(it.toString()) }.joinToText(regular(", ")))))
-        chat(regular(command.result("transactionDifferences", transactions.windowed(2) { it[1] - it[0] }.map { variable(it.toString()) }.joinToText(regular(", ")))))
-        chat(regular(command.result("guessedAntiCheat", guessAntiCheat(serverInfo?.address ?: "")?.let(::variable)?.styled { style ->
-            style.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("guessedAntiCheat.description")))
-        } ?: notAvailableError)))
-
-        val ipData = hostingInformation
-        if (ipData != null) {
-            // Hosting Information
-            chat(regular(command.result("hostingIp", ipData.ip?.let(::variable) ?: notAvailableError)))
-            chat(regular(command.result("hostingHostname", ipData.hostname?.let(::variable) ?: notAvailableError)))
-            chat(regular(command.result("hostingOrganization", ipData.org?.let(::variable) ?: notAvailableError)))
-            chat(regular(command.result("hostingCountry", ipData.country?.let(::variable) ?: notAvailableError)))
-            chat(regular(command.result("hostingCity", ipData.city?.let(::variable) ?: notAvailableError)))
-            chat(regular(command.result("hostingRegion", ipData.region?.let(::variable) ?: notAvailableError)))
-        }
-
-        val plugins = plugins
-        if (plugins != null) {
-            // Plugin information
-            val pluginCount = plugins.size
-            val pluginList = formattedPluginList?.joinToText(regular(", ")) ?: notAvailableError
-            chat(regular(command.result("plugins", variable(pluginCount.toString()), pluginList)))
-        }
-
-        if (detections.isEmpty()) {
-            val detectionList = DetectionType.entries.map { detectionType ->
-                variable(detectionType.choiceName)
-            }.joinToText(regular(", "))
-            chat(warning(command.result("detectParameter", detectionList)))
+            printInformation(command, detectionTypes)
         }
     }
 
+    /**
+     * Print all server information to chat
+     *
+     * @param command The command instance
+     * @param detections Optional list of active detections that were run
+     */
+    private fun printInformation(command: Command, detections: List<DetectionType> = emptyList()) {
+        // Gather basic server information
+        val serverInfo = network.serverInfo
+        val resolvedServerAddress = ServerObserver.serverAddress?.toString()
+        val tps = ServerObserver.tps
+        val ping = network.getPlayerListEntry(player.uuid)?.latency ?: 0
+        val advertisedVersion = "${serverInfo?.version?.convertToString()} (${serverInfo?.protocolVersion})"
+        val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
+
+        chat(warning(command.result("header")))
+        command.printStyledText("address", serverInfo?.address)
+        command.printStyledText("resolvedAddress", resolvedServerAddress)
+        command.printStyledText("serverId", ServerObserver.serverId)
+        command.printStyledText("serverType", ServerObserver.serverType?.choiceName)
+        command.printStyledText("brand", network.brand)
+        command.printStyledText("advertisedVersion", advertisedVersion)
+        command.printStyledText(
+            "detectedVersion",
+            detectedServerVersion,
+            hover = HoverEvent(
+                HoverEvent.Action.SHOW_TEXT,
+                command.result("detectedVersion.description", variable(detectedServerVersion))
+            )
+        )
+
+        // Performance metrics
+        command.printStyledText(
+            "tps",
+            if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()
+        )
+        command.printStyledText("ping", ping.toString())
+
+        // Server Channels and transactions
+        val channelsText = ServerObserver.payloadChannels.map { id ->
+            variable(id.toString())
+        }.joinToText(regular(", "))
+        command.printStyledComponent("channels", channelsText)
+        val transactionsText = ServerObserver.transactions.map { variable(it.toString()) }.joinToText(regular(", "))
+        command.printStyledComponent("transactions", transactionsText)
+
+        val transactionDiffText = ServerObserver.transactions
+            .windowed(2) { it[1] - it[0] }
+            .map { variable(it.toString()) }
+            .joinToText(regular(", "))
+        command.printStyledComponent("transactionDifferences", transactionDiffText)
+
+        // Anti-cheat detection
+        val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.address ?: "")?.let(::variable)
+            ?: markAsError("N/A")
+        command.printStyledComponent(
+            "guessedAntiCheat",
+            guessedAntiCheat,
+            hover = HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("guessedAntiCheat.description"))
+        )
+
+        printHostingInformation(command)
+        printPluginInformation(command)
+
+        // Show available detection methods if none were specified
+        if (detections.isEmpty()) {
+            val detectionList = DetectionType.entries.map { variable(it.choiceName) }.joinToText(regular(", "))
+            command.printStyledComponent("detectParameter", detectionList, formatting = ::warning)
+        }
+    }
+
+    private fun printHostingInformation(command: Command) {
+        val ipData = ServerObserver.hostingInformation ?: return
+
+        command.printStyledText("hostingIp", ipData.ip)
+        command.printStyledText("hostingHostname", ipData.hostname)
+        command.printStyledText("hostingOrganization", ipData.org)
+        command.printStyledText("hostingCountry", ipData.country)
+        command.printStyledText("hostingCity", ipData.city)
+        command.printStyledText("hostingRegion", ipData.region)
+    }
+
+    private fun printPluginInformation(command: Command) {
+        val plugins = ServerObserver.plugins ?: return
+
+        val pluginCount = plugins.size
+        val pluginList = ServerObserver.formattedPluginList?.joinToText(regular(", ")) ?: markAsError("N/A")
+
+        chat(regular(command.result("plugins", variable(pluginCount.toString()), pluginList)))
+    }
+
+    /**
+     * Detection for further server information
+     */
     private enum class DetectionType(override val choiceName: String) : NamedChoice {
         PLUGINS("Plugins"),
         HOSTING("Hosting");
     }
-
 }
-

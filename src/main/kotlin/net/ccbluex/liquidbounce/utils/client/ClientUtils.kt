@@ -26,12 +26,10 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.MinecraftClient
-import net.minecraft.text.MutableText
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
+import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 import org.apache.commons.lang3.StringUtils
@@ -91,6 +89,51 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
                 .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(color.toARGB())))
         )
     }
+}
+
+/**
+ * Apply style to text with hover and click events
+ *
+ * @param text The text to apply styles to
+ * @param hover The hover event to apply
+ * @param click The click event to apply
+ * @return The styled text
+ */
+fun applyStyle(
+    text: MutableText,
+    hover: HoverEvent? = null,
+    click: ClickEvent? = null
+): MutableText {
+    return text.styled { style ->
+        var updatedStyle = style
+        hover?.let { updatedStyle = updatedStyle.withHoverEvent(it) }
+        click?.let { updatedStyle = updatedStyle.withClickEvent(it) }
+        updatedStyle
+    }
+}
+
+/**
+ * Creates text with a copy-to-clipboard click event
+ *
+ * @param text The text to make copyable
+ * @param copyContent The content to copy when clicked (defaults to text's string representation)
+ * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
+ * @return Styled text with copy functionality
+ */
+fun copyable(
+    text: MutableText,
+    copyContent: String? = null,
+    hover: HoverEvent? = HoverEvent(
+        HoverEvent.Action.SHOW_TEXT,
+        translation("liquidbounce.tooltip.clickToCopy")
+    )
+): MutableText {
+    val content = copyContent ?: text.convertToString()
+    return applyStyle(
+        text,
+        hover = hover,
+        click = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)
+    )
 }
 
 fun bypassNameProtection(text: MutableText) = text.styled {
@@ -178,7 +221,7 @@ fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
 /**
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
-fun List<Text>.joinToText(separator: Text): Text {
+fun List<Text>.joinToText(separator: Text): MutableText {
     return this.foldIndexed(Text.empty()) { index, newText, text ->
         if (index > 0) {
             newText.append(separator)
