@@ -282,7 +282,8 @@ object ServerObserver : EventListener {
         this.wasDisconnected = true
         this.intervals.clear()
         this.tps = Double.NaN
-        this.serverInfo = null
+        // Do NOT set to NULL because we need to keep the server address for reconnecting
+        // this.serverInfo = null
         this.serverVersion = null
         this.plugins = null
         this.serverAddress = null
