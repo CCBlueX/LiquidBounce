@@ -123,16 +123,13 @@ fun applyStyle(
 fun copyable(
     text: MutableText,
     copyContent: String? = null,
-    hover: HoverEvent? = HoverEvent(
-        HoverEvent.Action.SHOW_TEXT,
-        translation("liquidbounce.tooltip.clickToCopy")
-    )
+    hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
 ): MutableText {
     val content = copyContent ?: text.convertToString()
     return applyStyle(
         text,
         hover = hover,
-        click = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)
+        click = ClickEvent.CopyToClipboard(content)
     )
 }
 
