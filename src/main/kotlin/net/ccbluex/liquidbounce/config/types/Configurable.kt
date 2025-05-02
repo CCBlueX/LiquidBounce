@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet

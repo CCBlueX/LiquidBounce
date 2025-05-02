@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
 import java.util.*
 
@@ -74,6 +76,52 @@ class Command(
 
     fun result(key: String, vararg args: Any): MutableText {
         return translation("$translationBaseKey.result.$key", args = args)
+    }
+
+    /**
+     * Sends a styled command result with copyable content
+     *
+     * @param key Translation key (will be prefixed with command's translation base)
+     * @param data Optional data to be displayed and copied
+     * @param formatting Function to apply formatting to the text (default: regular)
+     * @param hover Optional hover event (defaults to "Click to copy" tooltip)
+     * @param clickAction Optional click action type (defaults to COPY_TO_CLIPBOARD)
+     */
+    fun printStyledText(
+        key: String,
+        data: String? = null,
+        formatting: (MutableText) -> MutableText = ::regular,
+        hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy")),
+        clickAction: ClickEvent.Action = ClickEvent.Action.COPY_TO_CLIPBOARD
+    ) {
+        val content = data?.let(::variable) ?: markAsError("N/A")
+        val resultText = formatting(result(key, content))
+        val clickEvent = data?.let { ClickEvent(clickAction, it) }
+
+        chat(applyStyle(resultText, hover, clickEvent))
+    }
+
+    /**
+     * Sends a styled command result with copyable content and custom text component
+     *
+     * @param key Translation key (will be prefixed with command's translation base)
+     * @param textComponent Text component to display
+     * @param copyContent Optional content to copy when clicked (defaults to text component's string representation)
+     * @param formatting Function to apply formatting to the text (default: regular)
+     * @param hover Optional hover event (defaults to "Click to copy" tooltip)
+     */
+    fun printStyledComponent(
+        key: String,
+        textComponent: MutableText? = null,
+        copyContent: String? = null,
+        formatting: (MutableText) -> MutableText = ::regular,
+        hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy"))
+    ) {
+        val displayComponent = textComponent ?: markAsError("N/A")
+        val content = copyContent ?: displayComponent.convertToString()
+        val clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)
+
+        chat(applyStyle(formatting(result(key, displayComponent)), hover, clickEvent))
     }
 
     fun resultWithTree(key: String, vararg args: Any): MutableText {

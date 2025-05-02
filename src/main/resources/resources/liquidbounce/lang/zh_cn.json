@@ -39,6 +39,16 @@
   "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "客户端UI现在已隐藏。如果你想恢复它，请输入命令‘.client appearance show’或在任何非游戏GUI中按2x CRTL+SHIFT。",
   "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.alreadyHidingAppearance": "客户端UI并非可见。如果你想恢复它，请输入命令‘.client appearance show’。",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.alreadyShowingAppearance": "客户端UI并未隐藏。你想重新开启HUD？输入：'.t HUD'。",
+  "liquidbounce.command.client.subcommand.config.subcommand.backup.result.backingUp": "正在备份 [%s]...",
+  "liquidbounce.command.client.subcommand.config.subcommand.backup.result.backedUp": "已成功备份到 %s。",
+  "liquidbounce.command.client.subcommand.config.subcommand.backup.result.restoreHelp": "你可以通过输入 “%s” 来恢复。",
+  "liquidbounce.command.client.subcommand.config.subcommand.backup.result.failedToBackup": "%s",
+  "liquidbounce.command.client.subcommand.config.subcommand.restore.result.restoring": "正在恢复 %s...",
+  "liquidbounce.command.client.subcommand.config.subcommand.restore.result.restored": "已成功从 %s 恢复。",
+  "liquidbounce.command.client.subcommand.config.subcommand.restore.result.failedToRestore": "%s",
+  "liquidbounce.command.client.subcommand.config.subcommand.reset.result.resetting": "正在重置 [%s]... 对于某些类型的可配置项，这可能无法成功。",
+  "liquidbounce.command.client.subcommand.config.subcommand.reset.result.reset": "已成功重置为默认状态。",
+  "liquidbounce.command.client.subcommand.config.subcommand.reset.result.failedToReset": "%s",
   "liquidbounce.command.client.subcommand.reload.description": "重新加载客户端。",
   "liquidbounce.command.config.subcommand.list.result.loading": "正在加载在线配置文件...",
   "liquidbounce.command.config.subcommand.load.description": "加载配置文件。",
@@ -684,5 +694,6 @@
   "liquidbounce.module.betterTab.description": "对标签列表进行了多项改进。",
   "liquidbounce.module.autoPearl.description": "跟随敌人珍珠的轨迹瞄准并投掷珍珠。",
   "liquidbounce.module.replenish.description": "自动用物品栏中的物品填充快捷栏，使物品数量保持设定的阈值。",
-  "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。"
+  "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。",
+  "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。"
 }

@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.MinecraftClient
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
+import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 import org.apache.commons.lang3.StringUtils
@@ -43,39 +43,98 @@ val inGame: Boolean
 
 // Chat formatting
 private val clientPrefix = Text.empty()
-    .styled { it.withFormatting(Formatting.RESET) }.styled { it.withFormatting(Formatting.GRAY) }
-    .append(Text.literal("Liquid")
-        .styled { it.withColor(Formatting.WHITE) }.styled { it.withFormatting(Formatting.BOLD) })
-    .append(Text.literal("Bounce")
-        .styled { it.withColor(Formatting.BLUE) }.styled { it.withFormatting(Formatting.BOLD) })
-    .append(Text.literal(" ▸ ")
-        .styled { it.withFormatting(Formatting.RESET) }.styled { it.withColor(Formatting.DARK_GRAY) })
+    .formatted(Formatting.RESET, Formatting.GRAY)
+    .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
+    .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
 
-fun dot() = regular(".")
+fun regular(text: MutableText) = text.formatted(Formatting.GRAY)
 
-fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
+fun regular(text: String) = text.asText().formatted(Formatting.GRAY)
 
-fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
+fun variable(text: MutableText) = text.formatted(Formatting.GOLD)
 
-fun variable(text: MutableText) = text.styled { it.withColor(Formatting.GOLD) }
+fun variable(text: String) = text.asText().formatted(Formatting.GOLD)
 
-fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
+fun highlight(text: MutableText) = text.formatted(Formatting.DARK_PURPLE)
 
-fun highlight(text: MutableText) = text.styled { it.withColor(Formatting.DARK_PURPLE) }
+fun highlight(text: String) = text.asText().formatted(Formatting.DARK_PURPLE)
 
-fun highlight(text: String) = text.asText().styled { it.withColor(Formatting.DARK_PURPLE) }
+fun warning(text: MutableText) = text.formatted(Formatting.YELLOW)
 
-fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
+fun warning(text: String) = text.asText().formatted(Formatting.YELLOW)
 
-fun warning(text: String) = text.asText().styled { it.withColor(Formatting.YELLOW) }
+fun markAsError(text: String) = text.asText().formatted(Formatting.RED)
 
-fun markAsError(text: String) = text.asText().styled { it.withColor(Formatting.RED) }
+fun markAsError(text: MutableText) = text.formatted(Formatting.RED)
 
-fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
+fun withColor(text: MutableText, color: TextColor) = text.styled { style -> style.withColor(color) }
+fun withColor(text: MutableText, color: Formatting) = text.formatted(color)
+fun withColor(text: String, color: Formatting) = text.asText().formatted(color)
 
-fun withColor(text: MutableText, color: TextColor) = text.styled { it.withColor(color) }
-fun withColor(text: MutableText, color: Formatting) = text.styled { it.withColor(color) }
-fun withColor(text: String, color: Formatting) = text.asText().styled { it.withColor(color) }
+/**
+ * Creates text with a color gradient between two colors.
+ *
+ * @param text The string to apply the gradient to
+ * @param startColor The first color in the gradient
+ * @param endColor The second color in the gradient
+ * @return A MutableText with the gradient applied
+ */
+fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableText {
+    return text.foldIndexed(Text.empty()) { index, newText, char ->
+        val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
+        val color = startColor.interpolateTo(endColor, factor)
+
+        newText.append(
+            Text.literal(char.toString())
+                .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(color.toARGB())))
+        )
+    }
+}
+
+/**
+ * Apply style to text with hover and click events
+ *
+ * @param text The text to apply styles to
+ * @param hover The hover event to apply
+ * @param click The click event to apply
+ * @return The styled text
+ */
+fun applyStyle(
+    text: MutableText,
+    hover: HoverEvent? = null,
+    click: ClickEvent? = null
+): MutableText {
+    return text.styled { style ->
+        var updatedStyle = style
+        hover?.let { updatedStyle = updatedStyle.withHoverEvent(it) }
+        click?.let { updatedStyle = updatedStyle.withClickEvent(it) }
+        updatedStyle
+    }
+}
+
+/**
+ * Creates text with a copy-to-clipboard click event
+ *
+ * @param text The text to make copyable
+ * @param copyContent The content to copy when clicked (defaults to text's string representation)
+ * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
+ * @return Styled text with copy functionality
+ */
+fun copyable(
+    text: MutableText,
+    copyContent: String? = null,
+    hover: HoverEvent? = HoverEvent(
+        HoverEvent.Action.SHOW_TEXT,
+        translation("liquidbounce.tooltip.clickToCopy")
+    )
+): MutableText {
+    val content = copyContent ?: text.convertToString()
+    return applyStyle(
+        text,
+        hover = hover,
+        click = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)
+    )
+}
 
 fun bypassNameProtection(text: MutableText) = text.styled {
     val color = it.color ?: TextColor.fromFormatting(Formatting.RESET)
@@ -158,6 +217,18 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  * Open uri in browser
  */
 fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
+
+/**
+ * Joins a list of [Text] into a single [Text] with the given [separator].
+ */
+fun List<Text>.joinToText(separator: Text): MutableText {
+    return this.foldIndexed(Text.empty()) { index, newText, text ->
+        if (index > 0) {
+            newText.append(separator)
+        }
+        newText.append(text)
+    }
+}
 
 @Suppress("CAST_NEVER_SUCCEEDS")
 val TextColor.bypassesNameProtection: Boolean

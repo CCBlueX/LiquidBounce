@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.randomUsername
 import org.ahocorasick.trie.Emit
 import org.ahocorasick.trie.Trie

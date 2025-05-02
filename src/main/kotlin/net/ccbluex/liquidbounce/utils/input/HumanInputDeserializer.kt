@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.brigadier.StringReader
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.StringDeserializer
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Item
