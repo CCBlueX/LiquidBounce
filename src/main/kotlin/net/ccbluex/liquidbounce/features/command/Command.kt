@@ -85,18 +85,17 @@ class Command(
      * @param data Optional data to be displayed and copied
      * @param formatting Function to apply formatting to the text (default: regular)
      * @param hover Optional hover event (defaults to "Click to copy" tooltip)
-     * @param clickAction Optional click action type (defaults to COPY_TO_CLIPBOARD)
+     * @param clickEvent Optional click action type (defaults to COPY_TO_CLIPBOARD)
      */
     fun printStyledText(
         key: String,
         data: String? = null,
         formatting: (MutableText) -> MutableText = ::regular,
-        hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy")),
-        clickAction: ClickEvent.Action = ClickEvent.Action.COPY_TO_CLIPBOARD
+        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy")),
+        clickEvent: ClickEvent = ClickEvent.CopyToClipboard(data ?: "N/A")
     ) {
         val content = data?.let(::variable) ?: markAsError("N/A")
         val resultText = formatting(result(key, content))
-        val clickEvent = data?.let { ClickEvent(clickAction, it) }
 
         chat(applyStyle(resultText, hover, clickEvent))
     }
@@ -115,11 +114,11 @@ class Command(
         textComponent: MutableText? = null,
         copyContent: String? = null,
         formatting: (MutableText) -> MutableText = ::regular,
-        hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy"))
+        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
         val content = copyContent ?: displayComponent.convertToString()
-        val clickEvent = ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, content)
+        val clickEvent = ClickEvent.CopyToClipboard(content)
 
         chat(applyStyle(formatting(result(key, displayComponent)), hover, clickEvent))
     }

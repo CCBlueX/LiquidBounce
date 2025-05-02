@@ -129,8 +129,7 @@ object CommandServerInfo : CommandFactory, EventListener {
         command.printStyledText(
             "detectedVersion",
             detectedServerVersion,
-            hover = HoverEvent(
-                HoverEvent.Action.SHOW_TEXT,
+            hover = HoverEvent.ShowText(
                 command.result("detectedVersion.description", variable(detectedServerVersion))
             )
         )
@@ -162,7 +161,7 @@ object CommandServerInfo : CommandFactory, EventListener {
         command.printStyledComponent(
             "guessedAntiCheat",
             guessedAntiCheat,
-            hover = HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("guessedAntiCheat.description"))
+            hover = HoverEvent.ShowText(command.result("guessedAntiCheat.description"))
         )
 
         printHostingInformation(command)
