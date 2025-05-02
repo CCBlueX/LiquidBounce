@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
@@ -122,6 +123,11 @@ class PolyglotScript(
 
             // Global functions
             bindings.putMember("registerScript", RegisterScript())
+        }
+        .apply {
+            if (language == "js") {
+                eval("js", resourceToString("/resources/liquidbounce/scriptapi/jvm-require.js"))
+            }
         }
 
     private val scriptText: String = file.readText()
