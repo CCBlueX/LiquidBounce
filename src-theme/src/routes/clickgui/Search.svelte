@@ -16,6 +16,7 @@
     let query: string;
     let filteredModules: Module[] = [];
     let selectedIndex = 0;
+    let searchVisible: boolean = false
 
     function reset() {
         filteredModules = [];
@@ -93,12 +94,23 @@
         }
     }
 
-    function handleWindowKeyDown() {
+    function handleWindowKeyDown(e: KeyboardEvent) {
+        if (e.ctrlKey && e.key.toLowerCase() === "f") {
+            e.preventDefault();
+            searchVisible = !searchVisible;
+            if (searchVisible && autoFocus) {
+                setTimeout(() => searchInputElement?.focus(), 0);
+            } else {
+                reset();
+            }
+            return;
+        }
+
         if (document.activeElement !== document.body) {
             return;
         }
 
-        if (autoFocus) {
+        if (autoFocus && searchVisible) {
             searchInputElement.focus();
         }
     }
@@ -137,6 +149,7 @@
 <div
         class="search"
         class:has-results={query}
+        class:hidden={!searchVisible}
         bind:this={searchContainerElement}
 >
     <input
@@ -171,7 +184,8 @@
                         </div>
                         <div class="aliases">
                             {#if aliases.length > 0}
-                                (aka {aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})
+                                (aka {aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")}
+                                )
                             {/if}
                         </div>
                     </div>
@@ -271,5 +285,9 @@
     font-size: 16px;
     color: $clickgui-text-color;
     width: 100%;
+  }
+
+  .hidden {
+    display: none;
   }
 </style>
