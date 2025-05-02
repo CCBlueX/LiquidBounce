@@ -43,7 +43,26 @@
             cSetting.value = cSetting.value.filter(b => b !== e.detail.identifier);
         }
 
-        setting = { ...cSetting };
+        setting = {...cSetting};
+        dispatch("change");
+    }
+
+    function selectAll() {
+        if (searchQuery.trim() === '') {
+            return;
+        }
+        for (const block of renderedBlocks) {
+            if (!cSetting.value.includes(block.identifier)) {
+                cSetting.value.push(block.identifier);
+            }
+        }
+        setting = {...cSetting};
+        dispatch("change");
+    }
+
+    function deselectAll() {
+        cSetting.value = cSetting.value.filter(id => !renderedBlocks.some(block => block.identifier === id));
+        setting = {...cSetting};
         dispatch("change");
     }
 </script>
@@ -51,9 +70,14 @@
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
+    <div class="action-buttons">
+        <button on:click={selectAll}>Select All</button>
+        <button on:click={deselectAll}>Deselect All</button>
+    </div>
     <div class="results">
         <VirtualList items={renderedBlocks} let:item>
-            <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
+            <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)}
+                   on:toggle={handleBlockToggle}/>
         </VirtualList>
     </div>
 </div>
@@ -89,4 +113,36 @@
     margin-bottom: 5px;
     background-color: rgba($clickgui-base-color, .36);
   }
+
+  .action-buttons {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+
+    button {
+      flex: 1 1 50%;
+      background-color: rgba($accent-color, 0.8);
+      color: $clickgui-text-color;
+      border: none;
+      padding: 6px 0;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: rgba($accent-color, 1);
+      }
+    }
+
+    .warning {
+      background-color: rgba(255, 165, 0, 0.2);
+      color: #ffa500;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+  }
+
 </style>
