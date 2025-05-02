@@ -146,6 +146,8 @@
 
 <svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
+<p class="bottom-left-hint">Press CTRL + F to toggle the searchbar.</p>
+
 <div
         class="search"
         class:has-results={query}
@@ -289,5 +291,15 @@
 
   .hidden {
     display: none;
+  }
+
+  .bottom-left-hint {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-size: 14px;
+    color: $clickgui-text-dimmed-color;
+    opacity: 0.7;
+    z-index: 9999;
   }
 </style>
