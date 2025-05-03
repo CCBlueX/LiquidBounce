@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.scope
@@ -44,7 +47,8 @@ class ScriptAsyncUtil(
     companion object TickScheduler : EventListener {
 
         /** Client HTTP requests */
-        private val requests = arrayListOf<Job>()
+        private val requestHolder = SupervisorJob()
+        private val requestScope = CoroutineScope(Dispatchers.IO + requestHolder)
 
         private val currentTickTasks = arrayListOf<BooleanSupplier>()
         private val nextTickTasks = arrayListOf<BooleanSupplier>()
@@ -64,8 +68,7 @@ class ScriptAsyncUtil(
             mc.execute {
                 currentTickTasks.clear()
                 nextTickTasks.clear()
-                requests.forEach(Job::cancel)
-                requests.clear()
+                requestHolder.cancelChildren()
             }
         }
     }
@@ -146,21 +149,25 @@ class ScriptAsyncUtil(
     }
 
     /**
-     * Example: `const result = await request(builder => builder.url('http://localhost:8080'))`
+     * Example: `const result = await request(builder => builder.url('http://localhost:15000'))`
      *
      * @return `Promise<okhttp3.Response>`
      */
     @ScriptApiRequired
     fun request(block: Consumer<okhttp3.Request.Builder>): Value = jsPromiseConstructor.newInstance(
         ProxyExecutable { (onResolve, onReject) ->
-            requests += scope.launch {
+            var response: okhttp3.Response? = null
+            requestScope.launch {
                 val request = okhttp3.Request.Builder().apply(block::accept).build()
                 val result = runCatching { HttpClient.client.newCall(request).execute() }
                 mc.execute {
                     result.getOrNull()?.let { value ->
+                        response = value
                         onResolve.executeVoid(value)
                     } ?: onReject.executeVoid(result.exceptionOrNull()!!)
                 }
+            }.invokeOnCompletion {
+                response?.close()
             }
         }
     )
