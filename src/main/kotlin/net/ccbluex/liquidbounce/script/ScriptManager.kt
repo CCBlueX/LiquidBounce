@@ -22,6 +22,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptAsyncUtil
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.Source
@@ -178,6 +179,7 @@ object ScriptManager {
             disableAll()
             unloadAll()
             ScriptAsyncUtil.TickScheduler.clear()
+            ScriptContextProvider.cleanup()
         } catch (e: Exception) {
             logger.error("Failed to unload scripts.", e)
         }

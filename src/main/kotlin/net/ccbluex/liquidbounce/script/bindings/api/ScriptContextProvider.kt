@@ -31,16 +31,13 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object ScriptContextProvider {
 
-    private lateinit var scriptAsyncUtil: ScriptAsyncUtil
     private val localStorage = ConcurrentHashMap<String, Any>()
 
-    internal fun Context.setupContext(language: String, bindings: Value) {
-        val isJs = language.equals("js", true)
-        if (!::scriptAsyncUtil.isInitialized && isJs) {
-            // Init Promise constructor
-            scriptAsyncUtil = ScriptAsyncUtil(this.getBindings(language).getMember("Promise"))
-        }
+    internal fun cleanup() {
+        localStorage.clear()
+    }
 
+    internal fun Context.setupContext(language: String, bindings: Value) {
         bindings.apply {
             // Class bindings
             // -> Client API
@@ -72,9 +69,11 @@ object ScriptContextProvider {
             // Global variables
             putMember("localStorage", localStorage)
 
-            // Async support
-            if (::scriptAsyncUtil.isInitialized && isJs) {
-                putMember("AsyncUtil", scriptAsyncUtil)
+            // Async support (JavaScript only)
+            if (language.equals("js", true)) {
+                // Init Promise constructor
+                val asyncUtil = ScriptAsyncUtil(getBindings(language).getMember("Promise"))
+                putMember("AsyncUtil", asyncUtil)
             }
         }
     }
