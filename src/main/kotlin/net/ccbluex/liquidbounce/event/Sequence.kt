@@ -63,7 +63,7 @@ object SequenceManager : EventListener {
      * This is called when a module is disabled to ensure no sequences continue running.
      */
     fun cancelAllSequences(owner: EventListener) {
-        sequences.removeAll { sequence ->
+        sequences.removeIf { sequence ->
             if (sequence.owner == owner) {
                 sequence.cancel()
                 true
