@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -24,7 +42,7 @@ object CommandClientDestructSubcommand {
                 .build()
         )
         .handler { command, args ->
-            val confirm = args.getOrNull(0) as Boolean? ?: false
+            val confirm = args.getOrNull(0) as Boolean? == true
             if (!confirm) {
                 chat(
                     regular("Do you really want to destruct the client? " +
@@ -36,7 +54,7 @@ object CommandClientDestructSubcommand {
                 return@handler
             }
 
-            val wipe = args.getOrNull(1) as Boolean? ?: false
+            val wipe = args.getOrNull(1) as Boolean? == true
 
             chat(regular("LiquidBounce is being destructed from your client..."))
             if (!wipe) {
