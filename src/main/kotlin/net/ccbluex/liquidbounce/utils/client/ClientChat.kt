@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("TooManyFunctions")
+@file:JvmName("ClientChat")
 
 package net.ccbluex.liquidbounce.utils.client
 

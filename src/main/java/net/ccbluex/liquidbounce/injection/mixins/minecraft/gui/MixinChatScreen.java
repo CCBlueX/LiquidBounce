@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
 import net.ccbluex.liquidbounce.event.events.NotificationEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
+import net.ccbluex.liquidbounce.utils.client.ClientChat;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -84,8 +84,8 @@ public abstract class MixinChatScreen extends MixinScreen {
         ChatHud chatHud = this.client.inGameHud.getChatHud();
         MixinChatHudAccessor accessor = (MixinChatHudAccessor) chatHud;
 
-        List<ChatHudLine.Visible> visibleMessages = accessor.getVisibleMessages();
-        List<ChatHudLine.Visible> messageParts = new ArrayList<>();
+        var visibleMessages = accessor.getVisibleMessages();
+        var messageParts = new kotlin.collections.ArrayDeque<ChatHudLine.Visible>();
         messageParts.add(visibleMessages.get(activeMessage[3]));
 
         for (int index = activeMessage[3] + 1; index < visibleMessages.size(); index++) {
@@ -118,7 +118,7 @@ public abstract class MixinChatScreen extends MixinScreen {
             client.keyboard.setClipboard(builder.toString());
 
             if (ModuleBetterChat.Copy.INSTANCE.getNotification()) {
-                ClientUtilsKt.notification(
+                ClientChat.notification(
                         "ChatCopy",
                         "The line is copied",
                         NotificationEvent.Severity.SUCCESS

@@ -59,10 +59,6 @@ public abstract class MixinChatHud implements ChatHudAddition {
     public abstract void scroll(int scroll);
 
     @Shadow
-    @Final
-    public List<ChatHudLine> messages;
-
-    @Shadow
     public abstract int getWidth();
 
     @Unique
@@ -119,8 +115,8 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
         var betterChat = ModuleBetterChat.INSTANCE;
         if (!betterChat.getRunning() || !betterChat.getInfiniteLength()) {
-            while(visibleMessages.size() > 100) {
-                visibleMessages.removeLast();
+            if (visibleMessages.size() > 100) {
+                visibleMessages.subList(100, visibleMessages.size()).clear();
             }
         }
 
