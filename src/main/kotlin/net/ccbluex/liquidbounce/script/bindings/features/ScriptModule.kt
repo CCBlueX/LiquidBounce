@@ -85,14 +85,6 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
         hookHandler(eventName)
     }
 
-    /**
-     * Creates a
-     * async () => void
-     */
-    fun tickLoop(handler: org.graalvm.polyglot.Value) {
-
-    }
-
     override fun enable() = callEvent("enable")
 
     override fun disable() = callEvent("disable")
