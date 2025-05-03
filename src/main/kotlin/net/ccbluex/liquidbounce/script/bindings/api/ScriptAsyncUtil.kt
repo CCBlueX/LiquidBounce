@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.script.bindings.api
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.core.HttpClient
@@ -38,6 +37,9 @@ import java.util.function.Consumer
 import java.util.function.Supplier
 
 /**
+ * Async utils including game-based tick scheduling and network requests.
+ * JavaScript-only.
+ *
  * @author MukjepScarlet
  */
 class ScriptAsyncUtil(

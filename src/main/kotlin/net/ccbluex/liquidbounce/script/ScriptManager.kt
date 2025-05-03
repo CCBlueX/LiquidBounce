@@ -103,6 +103,8 @@ object ScriptManager {
         scripts.forEach(PolyglotScript::disable)
         scripts.forEach(PolyglotScript::close)
         scripts.clear()
+        ScriptAsyncUtil.TickScheduler.clear()
+        ScriptContextProvider.cleanup()
     }
 
     /**
@@ -178,8 +180,6 @@ object ScriptManager {
         try {
             disableAll()
             unloadAll()
-            ScriptAsyncUtil.TickScheduler.clear()
-            ScriptContextProvider.cleanup()
         } catch (e: Exception) {
             logger.error("Failed to unload scripts.", e)
         }
