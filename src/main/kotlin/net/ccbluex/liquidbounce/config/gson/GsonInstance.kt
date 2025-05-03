@@ -49,6 +49,8 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -136,7 +138,9 @@ internal val accessibleInteropGson: Gson = GsonBuilder()
  * @see GsonBuilder.registerTypeAdapter
  */
 internal fun GsonBuilder.registerCommonTypeAdapters() =
-    registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
+    registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
+        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.configurableParameter
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurabl
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Util
+import java.time.LocalDateTime
 
 /**
  * Configurable Management Command
@@ -47,12 +49,6 @@ object CommandClientConfigSubcommand {
         get() = listOf(
             modulesConfigurable
         )
-
-    private val fileTimestamp: String
-        get() {
-            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")
-            return dateFormat.format(System.currentTimeMillis())
-        }
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
@@ -77,7 +73,7 @@ object CommandClientConfigSubcommand {
                     ConfigSystem.storeConfigurable(configurable)
                 }
 
-                val fileName = "manual-${fileTimestamp}"
+                val fileName = "manual-${LocalDateTime.now().toUnderlinedString()}"
                 ConfigSystem.backup(fileName, configurables)
                 fileName
             }.onFailure { exception ->

@@ -22,7 +22,7 @@ import com.vdurmont.semver4j.Semver
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.*
 
 object ClientUpdate {
@@ -31,7 +31,7 @@ object ClientUpdate {
         val inputStream = LiquidBounce::class.java.classLoader.getResourceAsStream("git.properties")
 
         if (inputStream != null) {
-            properties.load(inputStream)
+            inputStream.use { properties.load(it) }
         } else {
             properties["git.build.version"] = "unofficial"
         }
@@ -51,11 +51,10 @@ object ClientUpdate {
             val newestSemVersion = Semver(newestBuild.lbVersion, Semver.SemverType.LOOSE)
 
             val isNewer = if (LiquidBounce.IN_DEVELOPMENT) { // check if new build is newer than current build
-                val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestBuild.date)
-                val currentVersionDate =
-                    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
+                val newestVersionDate = newestBuild.date
+                val currentVersionDate = LocalDateTime.parse(gitInfo["git.commit.time"].toString())
 
-                newestVersionDate.after(currentVersionDate)
+                newestVersionDate > currentVersionDate
             } else {
                 // check if version number is higher than current version number (on release builds only!)
                 val clientSemVersion = Semver(LiquidBounce.clientVersion, Semver.SemverType.LOOSE)

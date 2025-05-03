@@ -78,7 +78,7 @@ object CommandConfig : CommandFactory {
                 val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
 
                 // In the case of the chat, we want to show the newest config at the bottom for visibility
-                configs.sortedBy { it.javaDate }.forEach {
+                configs.sortedBy { it.date }.forEach {
                     val settingName = it.settingId // there is also .name, but we use it for GUI instead
 
                     // Append spaces to the setting name to align the date and status
@@ -106,7 +106,7 @@ object CommandConfig : CommandFactory {
                         },
                         regular(spaces),
                         regular(" | "),
-                        variable(it.dateFormatted),
+                        variable(it.date.toString()),
                         regular(" | "),
                         Text.literal(it.statusType.displayName).styled { style ->
                             style
@@ -114,7 +114,7 @@ object CommandConfig : CommandFactory {
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
-                                        Text.of(it.statusDateFormatted)
+                                        Text.of(it.statusDate.toString())
                                     )
                                 )
                         },
