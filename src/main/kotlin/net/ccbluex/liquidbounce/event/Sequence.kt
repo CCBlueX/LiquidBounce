@@ -33,7 +33,7 @@ import kotlin.coroutines.suspendCoroutine
 typealias SuspendableEventHandler<T> = suspend Sequence.(T) -> Unit
 typealias SuspendableHandler = suspend Sequence.() -> Unit
 
-object SequenceManager : EventListener, CoroutineScope by CoroutineScope(Dispatchers.Unconfined + SupervisorJob()) {
+object SequenceManager : EventListener {
 
     // Running sequences
     internal val sequences = CopyOnWriteArrayList<Sequence>()
@@ -94,9 +94,10 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     init {
         // Note: It is important that this is in the constructor and NOT in the variable declaration, because
         // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
-        // overwritten by the initialization of the `totalTicks` field which results in one or less ticks of actual wait
-        // time.
-        this.coroutine = SequenceManager.launch {
+        // overwritten by the initialization of the `totalTicks` field
+        // which results in one or fewer ticks of actual wait time.
+        @OptIn(DelicateCoroutinesApi::class)
+        this.coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
             SequenceManager.sequences += this@Sequence
             coroutineRun()
             SequenceManager.sequences -= this@Sequence
