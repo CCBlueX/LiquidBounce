@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,6 +35,7 @@ import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyExecutable
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
+import java.util.function.Supplier
 
 /**
  * @author MukjepScarlet
@@ -47,8 +47,8 @@ class ScriptAsyncUtil(
     companion object TickScheduler : EventListener {
 
         /** Client HTTP requests */
-        private val requestHolder = SupervisorJob()
-        private val requestScope = CoroutineScope(Dispatchers.IO + requestHolder)
+        private val scriptJobHolder = SupervisorJob()
+        private val scriptIoScope = CoroutineScope(Dispatchers.IO + scriptJobHolder)
 
         private val currentTickTasks = arrayListOf<BooleanSupplier>()
         private val nextTickTasks = arrayListOf<BooleanSupplier>()
@@ -68,7 +68,7 @@ class ScriptAsyncUtil(
             mc.execute {
                 currentTickTasks.clear()
                 nextTickTasks.clear()
-                requestHolder.cancelChildren()
+                scriptJobHolder.cancelChildren()
             }
         }
     }
@@ -108,7 +108,9 @@ class ScriptAsyncUtil(
      * @return `Promise<number>`
      */
     @ScriptApiRequired
-    fun until(condition: BooleanSupplier): Value = jsPromiseConstructor.newInstance(
+    fun until(
+        condition: BooleanSupplier
+    ): Value = jsPromiseConstructor.newInstance(
         ProxyExecutable { (onResolve, onReject) ->
             var waitingTick = 0
             schedule {
@@ -149,25 +151,41 @@ class ScriptAsyncUtil(
     }
 
     /**
+     * Sends an HTTP request or websocket request asynchronously. (based on [okhttp3])
+     * JS `Promise` result will be resolved or rejected on Render thread.
+     *
      * Example: `const result = await request(builder => builder.url('http://localhost:15000'))`
      *
      * @return `Promise<okhttp3.Response>`
      */
     @ScriptApiRequired
-    fun request(block: Consumer<okhttp3.Request.Builder>): Value = jsPromiseConstructor.newInstance(
+    fun request(
+        block: Consumer<okhttp3.Request.Builder>
+    ): Value = asyncTask {
+        val request = okhttp3.Request.Builder().apply(block::accept).build()
+        HttpClient.client.newCall(request).execute()
+    }
+
+    /**
+     * Starts an async task on [Dispatchers.IO], returns a `Promise`.
+     * JS `Promise` result will be resolved or rejected on Render thread.
+     * You can use utils from [java.util.concurrent] to control your tasks.
+     *
+     * @return `Promise<T>`
+     */
+    @ScriptApiRequired
+    fun <T> asyncTask(
+        block: Supplier<T>
+    ): Value = jsPromiseConstructor.newInstance(
         ProxyExecutable { (onResolve, onReject) ->
-            var response: okhttp3.Response? = null
-            requestScope.launch {
-                val request = okhttp3.Request.Builder().apply(block::accept).build()
-                val result = runCatching { HttpClient.client.newCall(request).execute() }
+            scriptIoScope.launch {
+                val result = runCatching { block.get() }
+                // Resume on Render thread
                 mc.execute {
                     result.getOrNull()?.let { value ->
-                        response = value
                         onResolve.executeVoid(value)
                     } ?: onReject.executeVoid(result.exceptionOrNull()!!)
                 }
-            }.invokeOnCompletion {
-                response?.close()
             }
         }
     )
