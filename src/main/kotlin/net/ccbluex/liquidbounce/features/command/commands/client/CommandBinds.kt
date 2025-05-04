@@ -30,8 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.ccbluex.liquidbounce.utils.input.availableMouseKeys
-import net.ccbluex.liquidbounce.utils.input.availableKeyboardKeys
 import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Formatting
 import kotlin.math.ceil
@@ -108,8 +106,7 @@ object CommandBinds : CommandFactory {
                         .append(module.name + " (")
                         .styled { it.withColor(Formatting.GRAY) }
                         .append(
-                            module.bind.keyName.asText()
-                                .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
+                            module.bind.keyName.asText().formatted(Formatting.DARK_GRAY).bold(true)
                         )
                         .append(")")
                         .styled { it.withColor(Formatting.GRAY) },

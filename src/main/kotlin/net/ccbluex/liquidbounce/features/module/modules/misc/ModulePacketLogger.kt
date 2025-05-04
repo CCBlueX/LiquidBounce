@@ -78,7 +78,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val text = Text.empty().styled { it.withFormatting(Formatting.WHITE) }
+        val text = Text.empty().formatted(Formatting.WHITE)
         if (origin == TransferOrigin.RECEIVE) {
             text.append(message("receive"))
         } else {
@@ -96,9 +96,9 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         text.append(packetName)
 
         if (canceled) {
-            text.append(" (".asText().styled { it.withFormatting(Formatting.RED) })
-            text.append(message("canceled").styled { it.withFormatting(Formatting.RED) })
-            text.append(")".asText().styled { it.withFormatting(Formatting.RED) })
+            text.append(" (".asText().formatted(Formatting.RED))
+            text.append(message("canceled").formatted(Formatting.RED))
+            text.append(")".asText().formatted(Formatting.RED))
         }
 
         text.appendFields(clazz, packet)
@@ -158,8 +158,8 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                     "null"
                 }
 
-                append("-$name: ".asText().styled { it.withFormatting(Formatting.GRAY) })
-                append("$value".asText().styled { it.withFormatting(Formatting.GRAY) })
+                append("-$name: ".asText().formatted(Formatting.GRAY))
+                append("$value".asText().formatted(Formatting.GRAY))
             }
 
             currentClass = currentClass.superclass
