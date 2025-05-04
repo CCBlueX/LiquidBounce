@@ -60,16 +60,17 @@ object CommandClientIntegrationSubcommand {
 
             chat(
                 regular("Base URL: ")
-                    .append(variable(baseUrl).styled {
-                        it.withUnderline(true)
-                            .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
-                            .withHoverEvent(
+                    .append(
+                        variable(baseUrl)
+                            .underline(true)
+                            .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
+                            .onHover(
                                 HoverEvent(
                                     HoverEvent.Action.SHOW_TEXT,
                                     regular("Click to open the integration URL in your browser.")
                                 )
                             )
-                    }),
+                    ),
                 metadata = MessageMetadata(
                     prefix = false
                 )
@@ -85,16 +86,17 @@ object CommandClientIntegrationSubcommand {
 
                 chat(
                     regular("-> $upperFirstName (")
-                        .append(variable("Browser").styled {
-                            it.withUnderline(true)
-                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))
-                                .withHoverEvent(
+                        .append(
+                            variable("Browser")
+                                .underline(true)
+                                .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                                .onHover(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
                                         regular("Click to open the URL in your browser.")
                                     )
                                 )
-                        })
+                        )
                         .append(regular(", "))
                         .append(
                             variable("Clipboard")

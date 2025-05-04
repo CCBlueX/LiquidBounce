@@ -87,6 +87,10 @@ fun MutableText.onClick(event: ClickEvent?) = apply {
     style = style.withClickEvent(event)
 }
 
+fun MutableText.onClick(callback: Runnable) = apply {
+    style = style.withClickEvent(RunnableClickEvent(callback))
+}
+
 /**
  * Creates text with a color gradient between two colors.
  *
