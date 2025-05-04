@@ -83,11 +83,11 @@
     async function refreshProxies() {
         proxies = await getProxies();
 
-        let c = new Set();
+        const c = new Set<string>();
         for (const p of proxies) {
             c.add(convertCountryCode(p.ipInfo?.country));
         }
-        allCountries = Array.from(c) as string[];
+        allCountries = Array.from(c);
         countries = allCountries;
     }
 
@@ -201,6 +201,7 @@
     <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
                     host={currentEditProxy.host}
                     port={currentEditProxy.port}
+                    proxyType={currentEditProxy.type ?? "SOCKS5"}
                     forwardAuthentication={currentEditProxy.forwardAuthentication}
                     username={currentEditProxy.credentials?.username ?? ""}
                     password={currentEditProxy.credentials?.password ?? ""}
@@ -226,6 +227,7 @@
 
                 <svelte:fragment slot="tag">
                     <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
+                    <MenuListItemTag text={proxy.type ?? "SOCKS5"}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">

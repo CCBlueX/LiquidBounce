@@ -28,6 +28,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
@@ -86,6 +87,7 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
         val port: Int,
         val username: String,
         val password: String,
+        val type: Proxy.Type,
         val forwardAuthentication: Boolean
     )
     val body = requestObject.asJson<ProxyRequest>()
@@ -98,7 +100,7 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
         return httpForbidden("No port")
     }
 
-    ProxyManager.addProxy(body.host, body.port, body.username, body.password)
+    ProxyManager.addProxy(body.host, body.port, body.username, body.password, body.type, body.forwardAuthentication)
     return httpOk(emptyJsonObject())
 }
 
@@ -120,7 +122,7 @@ fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
                     val password = split[3]
                     ProxyManager.addProxy(host, port, username, password)
                 } else {
-                    ProxyManager.addProxy(host, port, "", "")
+                    ProxyManager.addProxy(host, port)
                 }
             }
         }
@@ -136,6 +138,7 @@ fun postEditProxy(requestObject: RequestObject): FullHttpResponse {
         val id: Int,
         val host: String,
         val port: Int,
+        val type: Proxy.Type,
         val username: String,
         val password: String,
         val forwardAuthentication: Boolean
@@ -150,7 +153,7 @@ fun postEditProxy(requestObject: RequestObject): FullHttpResponse {
         return httpForbidden("No port")
     }
 
-    ProxyManager.editProxy(body.id, body.host, body.port, body.username, body.password, body.forwardAuthentication)
+    ProxyManager.editProxy(body.id, body.host, body.port, body.username, body.password, body.type, body.forwardAuthentication)
     return httpOk(emptyJsonObject())
 }
 
