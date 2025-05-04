@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
  */
 object CommandValue : CommandFactory {
 
-    @Suppress("SwallowedException", "LongMethod")
+    @Suppress("SwallowedException", "LongMethod", "CognitiveComplexMethod")
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("value")
