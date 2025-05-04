@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
  * Value Command
@@ -83,7 +84,7 @@ object CommandValue : CommandFactory {
                         }
 
                         chat(
-                            regular(command.result("success", valueName, module.name)),
+                            regular(command.result("success", variable(valueName), variable(module.name))),
                             metadata = MessageMetadata(id = "CValue#success${module.name}")
                         )
                     }
@@ -117,7 +118,7 @@ object CommandValue : CommandFactory {
                         value.restore()
                         ModuleClickGui.reloadView()
                         chat(
-                            regular(command.result("resetSuccess", valueName, module.name)),
+                            regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
                             metadata = MessageMetadata(id = "CValue#reset${module.name}")
                         )
                     }
@@ -142,7 +143,7 @@ object CommandValue : CommandFactory {
                             .forEach { it.restore() }
                         ModuleClickGui.reloadView()
                         chat(
-                            regular(command.result("resetAllSuccess", module.name)),
+                            regular(command.result("resetAllSuccess", variable(module.name))),
                             metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
                         )
                     }
