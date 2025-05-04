@@ -115,9 +115,8 @@ object CommandConfig : CommandFactory {
                                 )
                             )
                         ,
-                        regular(" | ${it.serverAddress ?: "Global"}"), metadata = MessageMetadata(
-                            prefix = false
-                        )
+                        regular(" | ${it.serverAddress ?: "Global"}"),
+                        metadata = MessageMetadata(prefix = false)
                     )
                 }
             }.onFailure {

@@ -87,9 +87,13 @@ inline fun MutableText.onClick(event: ClickEvent?): MutableText =
 inline fun MutableText.onClick(callback: Runnable): MutableText =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
-inline operator fun MutableText.plus(other: String): MutableText = this.append(other)
+inline operator fun MutableText.plusAssign(other: String) {
+    this.append(other)
+}
 
-inline operator fun MutableText.plus(other: Text): MutableText = this.append(other)
+inline operator fun MutableText.plusAssign(other: Text) {
+    this.append(other)
+}
 
 /**
  * Creates text with a color gradient between two colors.
@@ -202,12 +206,15 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
 fun List<Text>.joinToText(separator: Text): MutableText {
-    return this.foldIndexed(Text.empty()) { index, newText, text ->
-        if (index > 0) {
-            newText.append(separator)
+    val result = Text.empty()
+    with(iterator()) {
+        result += next()
+        while (hasNext()) {
+            result += separator
+            result += next()
         }
-        newText.append(text)
     }
+    return result
 }
 
 val TextColor.bypassesNameProtection: Boolean

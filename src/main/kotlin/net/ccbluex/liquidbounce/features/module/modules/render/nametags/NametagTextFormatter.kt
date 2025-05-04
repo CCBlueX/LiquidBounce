@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
@@ -107,7 +106,11 @@ class NametagTextFormatter(private val entity: Entity) {
                 else -> Formatting.GREEN
             }
 
-            return regular(" [") + (playerPing.toString() + "ms").asText().formatted(coloringBasedOnPing) + regular("]")
+            return regular(" [")
+                .append(
+                    (playerPing.toString() + "ms").asText().formatted(coloringBasedOnPing)
+                )
+                .append(regular("]"))
         }
 
     private val healthText: Text
