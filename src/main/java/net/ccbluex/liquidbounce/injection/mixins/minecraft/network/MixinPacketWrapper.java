@@ -23,6 +23,7 @@ import com.viaversion.viaversion.api.protocol.packet.PacketType;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3;
+import net.ccbluex.liquidbounce.utils.client.ClientChat;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +58,7 @@ public abstract class MixinPacketWrapper {
                 ci.cancel();
             }
         } catch (Exception e) {
-            ClientUtilsKt.chat("§cInventory packet duplication prevention check failed, report to developers!");
+            ClientChat.chat("§cInventory packet duplication prevention check failed, report to developers!");
             ClientUtilsKt.getLogger().error("Inventory packet duplication prevention check failed", e);
         }
     }

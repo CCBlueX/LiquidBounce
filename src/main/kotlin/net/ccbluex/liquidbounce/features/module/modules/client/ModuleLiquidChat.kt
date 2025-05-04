@@ -44,11 +44,10 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     private val chatClient = ChatClient()
     private val prefix = Text.empty()
-        .styled { it.withFormatting(Formatting.RESET) }.styled { it.withFormatting(Formatting.GRAY) }
-        .append(Text.literal("LiquidChat")
-            .styled { it.withColor(Formatting.BLUE) }).styled { it.withFormatting(Formatting.BOLD) }
-        .append(Text.literal(" ▸ ")
-            .styled { it.withFormatting(Formatting.RESET) }.styled { it.withColor(Formatting.DARK_GRAY) })
+        .formatted(Formatting.RESET).formatted(Formatting.GRAY)
+        .append(Text.literal(this.name).withColor(Formatting.BLUE))
+        .formatted(Formatting.BOLD)
+        .append(Text.literal(" ▸ ").formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
@@ -135,15 +134,15 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     val handleChatMessage = handler<ClientChatMessageEvent> { event ->
         when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT -> writeChat(
-                event.user.name.asText().styled { it.withFormatting(Formatting.GRAY) }
-                    .append(" ▸ ".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
-                    .append(event.message.asText().styled { it.withFormatting(Formatting.GRAY) })
+                event.user.name.asText().formatted(Formatting.GRAY)
+                    .append(" ▸ ".asText().formatted(Formatting.DARK_GRAY))
+                    .append(event.message.asText().formatted(Formatting.GRAY))
             )
             ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT -> writeChat(
-                "[".asText().styled { it.withFormatting(Formatting.DARK_GRAY) }
-                    .append(event.user.name.asText().styled { it.withFormatting(Formatting.BLUE) })
-                    .append("] ".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
-                    .append(event.message.asText().styled { it.withFormatting(Formatting.GRAY) })
+                "[".asText().formatted(Formatting.DARK_GRAY)
+                    .append(event.user.name.asText().formatted(Formatting.BLUE))
+                    .append("] ".asText().formatted(Formatting.DARK_GRAY))
+                    .append(event.message.asText().formatted(Formatting.GRAY))
             )
         }
     }

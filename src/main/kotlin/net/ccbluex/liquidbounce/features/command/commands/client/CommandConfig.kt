@@ -89,38 +89,34 @@ object CommandConfig : CommandFactory {
                     )
 
                     chat(
-                        variable(settingName).styled { style ->
-                            style
-                                .withClickEvent(
-                                    ClickEvent(
-                                        ClickEvent.Action.SUGGEST_COMMAND,
-                                        ".config load $settingName"
-                                    )
+                        variable(settingName)
+                            .onClick(
+                                ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                    ".config load $settingName"
                                 )
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of("§7Click to load $settingName")
-                                    )
+                            )
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of("§7Click to load $settingName")
                                 )
-                        },
+                            ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName).styled { style ->
-                            style
-                                .withFormatting(it.statusType.formatting)
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of(it.statusDateFormatted)
-                                    )
+                        Text.literal(it.statusType.displayName)
+                            .formatted(it.statusType.formatting)
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of(it.statusDateFormatted)
                                 )
-                        },
-                        regular(" | ${it.serverAddress ?: "Global"}"), metadata = MessageMetadata(
-                            prefix = false
-                        )
+                            )
+                        ,
+                        regular(" | ${it.serverAddress ?: "Global"}"),
+                        metadata = MessageMetadata(prefix = false)
                     )
                 }
             }.onFailure {

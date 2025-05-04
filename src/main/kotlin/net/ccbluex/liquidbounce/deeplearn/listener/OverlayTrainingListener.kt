@@ -24,10 +24,10 @@ import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener
 import ai.djl.training.listener.TrainingListenerAdapter
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
@@ -71,10 +71,10 @@ class OverlayTrainingListener(
             .append(regular("Batch "))
             .append(variable("$progress%"))
             .append(regular("\n".repeat(1)))
-            .append(withColor("[", Formatting.GRAY))
-            .append(withColor("█".repeat(progress / 4), Formatting.GREEN))
-            .append(withColor("░".repeat(25 - progress / 4), Formatting.DARK_GRAY))
-            .append(withColor("]", Formatting.GRAY))
+            .append("[".asText().formatted(Formatting.GRAY))
+            .append("█".repeat(progress / 4).asText().formatted(Formatting.GREEN))
+            .append("░".repeat(25 - progress / 4).asText().formatted(Formatting.DARK_GRAY))
+            .append("]".asText().formatted(Formatting.GRAY))
 
         RenderSystem.recordRenderCall {
             mc.inGameHud.setOverlayMessage(progressBar, false)
