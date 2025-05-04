@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -38,118 +37,116 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to change values of a specific module.
  */
+@Suppress("SwallowedException")
 object CommandValue : CommandFactory {
 
-    @Suppress("SwallowedException")
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("value")
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("set")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<ClientModule>("moduleName")
-                            .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                            .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                            .required()
-                            .build()
-                    )
-                    .parameter(
-                        valueNameParameter()
-                            .required()
-                            .build()
-                    )
-                    .parameter(
-                        valueTypeParameter()
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val module = args[0] as ClientModule
-                        val valueName = args[1] as String
-                        val valueString = args[2] as String
+    override fun createCommand() = CommandBuilder
+        .begin("value")
+        .hub()
+        .subcommand(setSubCommand())
+        .subcommand(resetSubCommand())
+        .subcommand(resetAllSubCommand())
+        .build()
 
-                        val value = module.getContainedValuesRecursively()
-                            .filter { !it.name.equals("Bind", true) }
-                            .firstOrNull { it.name.equals(valueName, true) }
-                            ?: throw CommandException(command.result("valueNotFound", valueName))
+    private fun setSubCommand() = CommandBuilder
+        .begin("set")
+        .parameter(
+            ParameterBuilder
+                .begin<ClientModule>("moduleName")
+                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
+                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+                .required()
+                .build()
+        )
+        .parameter(
+            valueNameParameter()
+                .required()
+                .build()
+        )
+        .parameter(
+            valueTypeParameter()
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val module = args[0] as ClientModule
+            val valueName = args[1] as String
+            val valueString = args[2] as String
 
-                        try {
-                            value.setByString(valueString)
-                            ModuleClickGui.reloadView()
-                        } catch (e: Exception) {
-                            throw CommandException(command.result("valueError", valueName, e.message ?: ""))
-                        }
+            val value = module.getContainedValuesRecursively()
+                .filter { !it.name.equals("Bind", true) }
+                .firstOrNull { it.name.equals(valueName, true) }
+                ?: throw CommandException(command.result("valueNotFound", valueName))
 
-                        chat(
-                            regular(command.result("success", variable(valueName), variable(module.name))),
-                            metadata = MessageMetadata(id = "CValue#success${module.name}")
-                        )
-                    }
-                    .build()
+            try {
+                value.setByString(valueString)
+                ModuleClickGui.reloadView()
+            } catch (e: Exception) {
+                throw CommandException(command.result("valueError", valueName, e.message ?: ""))
+            }
+
+            chat(
+                regular(command.result("success", variable(valueName), variable(module.name))),
+                metadata = MessageMetadata(id = "CValue#success${module.name}")
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("reset")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<ClientModule>("moduleName")
-                            .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                            .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                            .required()
-                            .build()
-                    )
-                    .parameter(
-                        valueNameParameter()
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val module = args[0] as ClientModule
-                        val valueName = args[1] as String
+        }
+        .build()
 
-                        val value = module.getContainedValuesRecursively()
-                            .filter { !it.name.equals("Bind", true) }
-                            .firstOrNull { it.name.equals(valueName, true) }
-                            ?: throw CommandException(command.result("valueNotFound", valueName))
+    private fun resetSubCommand() = CommandBuilder
+        .begin("reset")
+        .parameter(
+            ParameterBuilder
+                .begin<ClientModule>("moduleName")
+                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
+                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+                .required()
+                .build()
+        )
+        .parameter(
+            valueNameParameter()
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val module = args[0] as ClientModule
+            val valueName = args[1] as String
 
-                        value.restore()
-                        ModuleClickGui.reloadView()
-                        chat(
-                            regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
-                            metadata = MessageMetadata(id = "CValue#reset${module.name}")
-                        )
-                    }
-                    .build()
+            val value = module.getContainedValuesRecursively()
+                .filter { !it.name.equals("Bind", true) }
+                .firstOrNull { it.name.equals(valueName, true) }
+                ?: throw CommandException(command.result("valueNotFound", valueName))
+
+            value.restore()
+            ModuleClickGui.reloadView()
+            chat(
+                regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
+                metadata = MessageMetadata(id = "CValue#reset${module.name}")
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("reset-all")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<ClientModule>("moduleName")
-                            .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                            .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val module = args[0] as ClientModule
+        }
+        .build()
 
-                        module.getContainedValuesRecursively()
-                            .filter { !it.name.equals("Bind", true) }
-                            .forEach { it.restore() }
-                        ModuleClickGui.reloadView()
-                        chat(
-                            regular(command.result("resetAllSuccess", variable(module.name))),
-                            metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
-                        )
-                    }
-                    .build()
+    private fun resetAllSubCommand() = CommandBuilder
+        .begin("reset-all")
+        .parameter(
+            ParameterBuilder
+                .begin<ClientModule>("moduleName")
+                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
+                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val module = args[0] as ClientModule
+
+            module.getContainedValuesRecursively()
+                .filter { !it.name.equals("Bind", true) }
+                .forEach { it.restore() }
+            ModuleClickGui.reloadView()
+            chat(
+                regular(command.result("resetAllSuccess", variable(module.name))),
+                metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
             )
-            .build()
-    }
+        }
+        .build()
 
 }
