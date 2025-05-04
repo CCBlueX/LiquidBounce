@@ -650,6 +650,7 @@
   "liquidbounce.module.serverCrasher.messages.signExploit.missingProtocolTranslator": "ViaFabricPlus is required for this exploit to work.",
   "liquidbounce.module.serverCrasher.messages.signExploit.wrongProtocolVersion": "Select 1.8 as protocol version for this exploit to work.",
   "liquidbounce.module.serverCrasher.messages.signExploit.alteredSignPacket": "Successfully altered sign packet with exploit.",
+  "liquidbounce.module.serverCrasher.messages.bundleExploit.notBundle": "You need to be holding a bundle containing at least one item.",
   "liquidbounce.module.spider.description": "Allows you to climb walls like spiderman.",
   "liquidbounce.module.offhand.description": "Manages your offhand.",
   "liquidbounce.module.skinDerp.description": "Makes the different layers of your skin turn on and off.",
