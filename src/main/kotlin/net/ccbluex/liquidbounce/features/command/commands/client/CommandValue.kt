@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.valueNameParameter
+import net.ccbluex.liquidbounce.features.command.builder.valueTypeParameter
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -37,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
  */
 object CommandValue : CommandFactory {
 
-    @Suppress("SwallowedException", "LongMethod", "CognitiveComplexMethod")
+    @Suppress("SwallowedException")
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("value")
@@ -54,52 +56,16 @@ object CommandValue : CommandFactory {
                             .build()
                     )
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("valueName")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { begin, args ->
-                                val moduleName = args[2]
-                                val module = ModuleManager.find { it.name.equals(moduleName, true) }
-                                    ?: return@autocompletedWith emptyList()
-
-                                val values = module.getContainedValuesRecursively()
-                                    .filter { !it.name.equals("Bind", true) }
-                                    .map { it.name }
-                                values.filter { it.startsWith(begin, true) }
-                            }
+                        valueNameParameter()
                             .required()
                             .build()
                     )
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("value")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { begin, args ->
-                                val moduleName = args[2]
-                                val module = ModuleManager.find {
-                                    it.name.equals(moduleName, true)
-                                } ?: return@autocompletedWith emptyList()
-
-                                val valueName = args[3]
-
-                                val value = module.getContainedValuesRecursively().firstOrNull {
-                                    it.name.equals(valueName, true)
-                                } ?: return@autocompletedWith emptyList()
-
-                                val options = value.valueType.completer.possible(value)
-                                options.filter { it.startsWith(begin, true) }
-                            }
+                        valueTypeParameter()
                             .required()
                             .build()
                     )
                     .handler { command, args ->
-                        print("set: ")
-                        var i = 0
-                        for (arg in args) {
-                            println("${arg} " + i)
-                            i++;
-                        }
-                        println("-> ${args.size}")
                         val module = args[0] as ClientModule
                         val valueName = args[1] as String
                         val valueString = args[2] as String
@@ -135,30 +101,11 @@ object CommandValue : CommandFactory {
                             .build()
                     )
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("valueName")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { begin, args ->
-                                val moduleName = args[2]
-                                val module = ModuleManager.find { it.name.equals(moduleName, true) }
-                                    ?: return@autocompletedWith emptyList()
-
-                                val values = module.getContainedValuesRecursively()
-                                    .filter { !it.name.equals("Bind", true) }
-                                    .map { it.name }
-                                values.filter { it.startsWith(begin, true) }
-                            }
+                        valueNameParameter()
                             .required()
                             .build()
                     )
                     .handler { command, args ->
-                        print("reset: ")
-                        var i = 0
-                        for (arg in args) {
-                            println("${arg} " + i)
-                            i++;
-                        }
-                        println("-> ${args.size}")
                         val module = args[0] as ClientModule
                         val valueName = args[1] as String
 
@@ -188,14 +135,6 @@ object CommandValue : CommandFactory {
                             .build()
                     )
                     .handler { command, args ->
-                        print("reset-all: ")
-                        var i = 0
-                        for (arg in args) {
-                            println("${arg} " + i)
-                            i++;
-                        }
-                        println("-> ${args.size}")
-
                         val module = args[0] as ClientModule
 
                         module.getContainedValuesRecursively()
