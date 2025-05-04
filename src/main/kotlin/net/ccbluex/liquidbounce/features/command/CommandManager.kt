@@ -91,7 +91,6 @@ object CommandExecutor : EventListener {
                             } else {
                                 append("OR ")
                             }
-                            append(CommandManager.Options.prefix)
                             append(usage)
                         }.asText().formatted(Formatting.RED),
                         metadata = data
