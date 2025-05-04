@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 /**
  * Value Command
  *
- * Allows you to set the value of a specific module.
+ * Allows you to set/reset the value of a specific module.
  */
 object CommandValue : CommandFactory {
 
@@ -51,22 +51,22 @@ object CommandValue : CommandFactory {
             )
             .parameter(
                 ParameterBuilder
-                    .begin<String>("valueName")
+                    .begin<String>("valueName/resetAllValues")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .autocompletedWith { begin, args ->
                         val module = ModuleManager.find { it.name.equals(args[1], true) }
-                        if (module == null) return@autocompletedWith emptyList()
-
-                        module.getContainedValuesRecursively()
-                            .filter { it.name.startsWith(begin, true) }
-                            .map { it.name }
+                        if (module == null) return@autocompletedWith listOf("resetAllValues")
+                        val values = module.getContainedValuesRecursively()
+                            .filter { !it.name.equals("Bind", true) }
+                            .map { it.name } + "resetAllValues"
+                        values.filter { it.startsWith(begin, true) }
                     }
                     .required()
                     .build()
             )
             .parameter(
                 ParameterBuilder
-                    .begin<String>("value")
+                    .begin<String>("value/reset")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .autocompletedWith { begin, args ->
                         val moduleName = args.getOrNull(1) ?: return@autocompletedWith emptyList()
@@ -75,36 +75,62 @@ object CommandValue : CommandFactory {
                         } ?: return@autocompletedWith emptyList()
 
                         val valueName = args.getOrNull(2) ?: return@autocompletedWith emptyList()
+                        if (valueName.equals("resetAllValues", true)) return@autocompletedWith emptyList()
+
                         val value = module.getContainedValuesRecursively().firstOrNull {
                             it.name.equals(valueName, true)
                         } ?: return@autocompletedWith emptyList()
 
-                        val options = value.valueType.completer.possible(value)
+                        val options = value.valueType.completer.possible(value) + "reset"
                         options.filter { it.startsWith(begin, true) }
                     }
-                    .required()
+                    .optional()
                     .build()
             )
             .handler { command, args ->
                 val module = args[0] as ClientModule
                 val valueName = args[1] as String
-                val valueString = args[2] as String
+
+                if (valueName.equals("resetAllValues", true)) {
+                    module.getContainedValuesRecursively()
+                        .filter { !it.name.equals("Bind", true) }
+                        .forEach { it.restore() }
+                    ModuleClickGui.reloadView()
+                    chat(
+                        regular(command.result("resetAllSuccess", module.name)),
+                        metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
+                    )
+                    return@handler
+                }
+
+                val valueOrReset = args.getOrNull(2) as? String
+                    ?: throw CommandException(command.result("valueNotFound", valueName))
 
                 val value = module.getContainedValuesRecursively()
+                    .filter { !it.name.equals("Bind", true) }
                     .firstOrNull { it.name.equals(valueName, true) }
                     ?: throw CommandException(command.result("valueNotFound", valueName))
 
-                try {
-                    value.setByString(valueString)
+                if (valueOrReset.equals("reset", true)) {
+                    value.restore()
                     ModuleClickGui.reloadView()
-                } catch (e: Exception) {
-                    throw CommandException(command.result("valueError", valueName, e.message ?: ""))
-                }
+                    chat(
+                        regular(command.result("resetSuccess", valueName, module.name)),
+                        metadata = MessageMetadata(id = "CValue#reset${module.name}")
+                    )
+                } else {
+                    try {
+                        value.setByString(valueOrReset)
+                        ModuleClickGui.reloadView()
+                    } catch (e: Exception) {
+                        throw CommandException(command.result("valueError", valueName, e.message ?: ""))
+                    }
 
-                chat(
-                    regular(command.result("success")),
-                    metadata = MessageMetadata(id = "CValue#success${module.name}")
-                )
+                    chat(
+                        regular(command.result("success")),
+                        metadata = MessageMetadata(id = "CValue#success${module.name}")
+                    )
+                }
             }
             .build()
     }
