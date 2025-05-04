@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
@@ -131,10 +132,4 @@ class NametagTextFormatter(private val entity: Entity) {
 
 private fun Formatting.toTextColor(): TextColor {
     return TextColor.fromFormatting(this)!!
-}
-
-operator fun MutableText.plus(text: MutableText): MutableText {
-    this.append(text)
-
-    return this
 }

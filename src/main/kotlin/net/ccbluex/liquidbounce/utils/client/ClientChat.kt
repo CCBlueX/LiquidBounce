@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
+@file:Suppress("TooManyFunctions", "NOTHING_TO_INLINE")
 @file:JvmName("ClientChat")
 
 package net.ccbluex.liquidbounce.utils.client
@@ -57,35 +57,37 @@ fun markAsError(text: String): MutableText = text.asText().formatted(Formatting.
 
 fun markAsError(text: MutableText): MutableText = text.formatted(Formatting.RED)
 
-fun MutableText.withColor(value: Formatting?): MutableText =
+inline fun MutableText.withColor(value: Formatting?): MutableText =
     setStyle(style.withColor(value))
 
-fun MutableText.withColor(value: TextColor?): MutableText =
+inline fun MutableText.withColor(value: TextColor?): MutableText =
     setStyle(style.withColor(value))
 
-fun MutableText.bold(value: Boolean?): MutableText =
+inline fun MutableText.bold(value: Boolean?): MutableText =
     setStyle(style.withBold(value))
 
-fun MutableText.obfuscated(value: Boolean?): MutableText =
+inline fun MutableText.obfuscated(value: Boolean?): MutableText =
     setStyle(style.withObfuscated(value))
 
-fun MutableText.strikethrough(value: Boolean?): MutableText =
+inline fun MutableText.strikethrough(value: Boolean?): MutableText =
     setStyle(style.withStrikethrough(value))
 
-fun MutableText.underline(value: Boolean?): MutableText =
+inline fun MutableText.underline(value: Boolean?): MutableText =
     setStyle(style.withUnderline(value))
 
-fun MutableText.italic(value: Boolean?): MutableText =
+inline fun MutableText.italic(value: Boolean?): MutableText =
     setStyle(style.withItalic(value))
 
-fun MutableText.onHover(event: HoverEvent?): MutableText =
+inline fun MutableText.onHover(event: HoverEvent?): MutableText =
     setStyle(style.withHoverEvent(event))
 
-fun MutableText.onClick(event: ClickEvent?): MutableText =
+inline fun MutableText.onClick(event: ClickEvent?): MutableText =
     setStyle(style.withClickEvent(event))
 
-fun MutableText.onClick(callback: Runnable): MutableText =
+inline fun MutableText.onClick(callback: Runnable): MutableText =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
+
+inline operator fun MutableText.plus(other: Text): MutableText = this.append(other)
 
 /**
  * Creates text with a color gradient between two colors.
