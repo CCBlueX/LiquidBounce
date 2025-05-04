@@ -87,6 +87,8 @@ inline fun MutableText.onClick(event: ClickEvent?): MutableText =
 inline fun MutableText.onClick(callback: Runnable): MutableText =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
+inline operator fun MutableText.plus(other: String): MutableText = this.append(other)
+
 inline operator fun MutableText.plus(other: Text): MutableText = this.append(other)
 
 /**
@@ -155,14 +157,6 @@ data class MessageMetadata(
     val remove: Boolean = true,
     val count: Int = 1
 )
-
-@Deprecated(
-    "Replaced by MessageMetadata. Use chat(vararg texts: Text, metadata: MessageMetadata) instead.",
-    replaceWith = ReplaceWith("chat(*texts, metadata = MessageMetadata(prefix = prefix))")
-)
-fun chat(vararg texts: Text, prefix: Boolean) {
-    chat(texts = texts, metadata = MessageMetadata(prefix = prefix))
-}
 
 /**
  * Adds a new chat message.
