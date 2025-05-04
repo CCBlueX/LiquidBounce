@@ -53,6 +53,7 @@
 
     function cleanup() {
         requiresAuthentication = false;
+        proxyType = "SOCKS5";
         hostPort = "";
         username = "";
         password = "";

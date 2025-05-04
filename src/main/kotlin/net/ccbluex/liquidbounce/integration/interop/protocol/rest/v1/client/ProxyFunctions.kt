@@ -75,6 +75,7 @@ fun getProxies(requestObject: RequestObject) = httpOk(JsonArray().apply {
     ProxyManager.proxies.forEachIndexed { index, proxy ->
         add(interopGson.toJsonTree(proxy).asJsonObject.apply {
             addProperty("id", index)
+            addProperty("type", (proxy.type ?: Proxy.Type.SOCKS5).toString())
         })
     }
 })
