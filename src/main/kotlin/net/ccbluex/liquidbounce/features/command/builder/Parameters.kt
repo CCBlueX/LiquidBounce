@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
