@@ -57,39 +57,35 @@ fun markAsError(text: String): MutableText = text.asText().formatted(Formatting.
 
 fun markAsError(text: MutableText): MutableText = text.formatted(Formatting.RED)
 
-fun withColor(text: String, color: Formatting): MutableText = text.asText().formatted(color)
+fun MutableText.withColor(value: Formatting?): MutableText =
+    setStyle(style.withColor(value))
 
-fun MutableText.bold(value: Boolean?) = apply {
-    style = style.withBold(value)
-}
+fun MutableText.withColor(value: TextColor?): MutableText =
+    setStyle(style.withColor(value))
 
-fun MutableText.obfuscated(value: Boolean?) = apply {
-    style = style.withObfuscated(value)
-}
+fun MutableText.bold(value: Boolean?): MutableText =
+    setStyle(style.withBold(value))
 
-fun MutableText.strikethrough(value: Boolean?) = apply {
-    style = style.withStrikethrough(value)
-}
+fun MutableText.obfuscated(value: Boolean?): MutableText =
+    setStyle(style.withObfuscated(value))
 
-fun MutableText.underline(value: Boolean?) = apply {
-    style = style.withUnderline(value)
-}
+fun MutableText.strikethrough(value: Boolean?): MutableText =
+    setStyle(style.withStrikethrough(value))
 
-fun MutableText.italic(value: Boolean?) = apply {
-    style = style.withItalic(value)
-}
+fun MutableText.underline(value: Boolean?): MutableText =
+    setStyle(style.withUnderline(value))
 
-fun MutableText.onHover(event: HoverEvent?) = apply {
-    style = style.withHoverEvent(event)
-}
+fun MutableText.italic(value: Boolean?): MutableText =
+    setStyle(style.withItalic(value))
 
-fun MutableText.onClick(event: ClickEvent?) = apply {
-    style = style.withClickEvent(event)
-}
+fun MutableText.onHover(event: HoverEvent?): MutableText =
+    setStyle(style.withHoverEvent(event))
 
-fun MutableText.onClick(callback: Runnable) = apply {
-    style = style.withClickEvent(RunnableClickEvent(callback))
-}
+fun MutableText.onClick(event: ClickEvent?): MutableText =
+    setStyle(style.withClickEvent(event))
+
+fun MutableText.onClick(callback: Runnable): MutableText =
+    setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
 /**
  * Creates text with a color gradient between two colors.
@@ -105,8 +101,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            Text.literal(char.toString())
-                .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(color.toARGB())))
+            Text.literal(char.toString()).withColor(color.toARGB())
         )
     }
 }

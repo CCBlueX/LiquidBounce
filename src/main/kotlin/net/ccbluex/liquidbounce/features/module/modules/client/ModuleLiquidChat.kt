@@ -45,10 +45,9 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     private val chatClient = ChatClient()
     private val prefix = Text.empty()
         .formatted(Formatting.RESET).formatted(Formatting.GRAY)
-        .append(Text.literal(this.name)
-            .styled { it.withColor(Formatting.BLUE) }).formatted(Formatting.BOLD)
-        .append(Text.literal(" ▸ ")
-            .formatted(Formatting.RESET).styled { it.withColor(Formatting.DARK_GRAY) })
+        .append(Text.literal(this.name).withColor(Formatting.BLUE))
+        .formatted(Formatting.BOLD)
+        .append(Text.literal(" ▸ ").formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
