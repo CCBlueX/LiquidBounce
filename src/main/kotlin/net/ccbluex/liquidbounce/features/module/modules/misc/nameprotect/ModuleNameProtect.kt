@@ -236,8 +236,8 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
 /**
  * Sanitizes texts which are sent to the client.
- * 1. degenerates legacy formatting into new formatting [LegacyTextSanitizer]
- * 2. applies [ModuleNameProtect] - if needed
+ * 1. Degenerates legacy formatting into new formatting [LegacyTextSanitizer]
+ * 2. Applies [ModuleNameProtect] - if needed
  */
 fun Text.sanitizeForeignInput(): Text {
     val degeneratedText = LegacyTextSanitizer.SanitizedLegacyText(this)
