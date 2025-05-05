@@ -37,7 +37,7 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public enum VfpCompatibility {
 
-    INSTANCE;
+    INSTANCE; // Enforced singleton instance
 
     public ClientProtocolVersion unsafeGetProtocolVersion() {
         try {
@@ -91,6 +91,18 @@ public enum VfpCompatibility {
         }
     }
 
+    public boolean isOlderThanOrEqual1_7_10() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            // Check if the version is older or equal than 1.7.10
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
     public boolean isEqual1_8() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
@@ -115,30 +127,6 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOlderThanOrEqual1_7_10() {
-        try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
-
-            // Check if the version is older or equal than 1.7.10
-            return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
-        } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
-            return false;
-        }
-    }
-
-    public boolean isNewerThanOrEqual1_16() {
-        try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
-
-            // Check if the version is older or equal than 1.12.2
-            return version.newerThanOrEqualTo(ProtocolVersion.v1_16);
-        } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.16", throwable);
-            return false;
-        }
-    }
-
     public boolean isOlderThanOrEqual1_11_1() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
@@ -147,6 +135,30 @@ public enum VfpCompatibility {
             return version.olderThanOrEqualTo(ProtocolVersion.v1_11_1);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.11.1", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_12_2() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            // Check if the version is older or equal than 1.12.2
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_12_2);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.12.2", throwable);
+            return false;
+        }
+    }
+
+    public boolean isNewerThanOrEqual1_16() {
+        try {
+            var version = ViaFabricPlus.getImpl().getTargetVersion();
+
+            // Check if the version is newer than or equal to 1.16
+            return version.newerThanOrEqualTo(ProtocolVersion.v1_16);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.16", throwable);
             return false;
         }
     }
