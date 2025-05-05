@@ -106,7 +106,7 @@ object CommandConfig : CommandFactory {
                         },
                         regular(spaces),
                         regular(" | "),
-                        variable(it.date.toString()),
+                        variable(it.dateFormatted),
                         regular(" | "),
                         Text.literal(it.statusType.displayName).styled { style ->
                             style
@@ -114,7 +114,7 @@ object CommandConfig : CommandFactory {
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
-                                        Text.of(it.statusDate.toString())
+                                        Text.of(it.statusDateFormatted)
                                     )
                                 )
                         },
