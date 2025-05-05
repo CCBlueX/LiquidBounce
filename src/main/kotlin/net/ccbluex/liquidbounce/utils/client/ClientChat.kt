@@ -207,6 +207,10 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  */
 fun List<Text>.joinToText(separator: Text): MutableText {
     val result = Text.empty()
+    if (isEmpty()) {
+        return result
+    }
+
     with(iterator()) {
         result += next()
         while (hasNext()) {
