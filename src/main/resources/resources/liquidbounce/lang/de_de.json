@@ -717,6 +717,6 @@
   "liquidbounce.command.serverinfo.result.detecting": "Serverinformationen werden ermittelt...",
   "liquidbounce.command.serverinfo.result.detectParameter": "Führe den Befehl mit dem Erkennungsparameter [%s] erneut aus, um detailliertere Informationen zu erhalten.",
   "liquidbounce.command.serverinfo.result.pluginsDetectionTimeout": "Plugin-Erkennung ist ausgetimed. Dies könnte daran liegen, dass der Server die Anfrage blockiert.",
-  "liquidbounce.tooltip.clickToCopy": "Click to copy",
+  "liquidbounce.tooltip.clickToCopy": "Klicke zum Kopieren",
   "liquidbounce.module.plugins.messages.plugins": "Plugins (%s): %s"
 }
