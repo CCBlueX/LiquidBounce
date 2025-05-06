@@ -91,6 +91,7 @@ object CommandExecutor : EventListener {
                             } else {
                                 append("OR ")
                             }
+                            append(CommandManager.Options.prefix)
                             append(usage)
                         }.asText().formatted(Formatting.RED),
                         metadata = data
@@ -296,7 +297,6 @@ object CommandManager : Iterable<Command> by commands {
                     distance
                 }.take(Options.hintCount).map { command ->
                     buildString {
-                        append(Options.prefix)
                         append(command.name)
                         if (command.aliases.isNotEmpty()) {
                             command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
@@ -397,7 +397,7 @@ object CommandManager : Iterable<Command> by commands {
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
             is ParameterValidationResult.Ok -> {
-                return validationResult.mappedResult!!
+                return validationResult.mappedResult
             }
             is ParameterValidationResult.Error -> {
                 throw CommandException(
