@@ -45,7 +45,10 @@
         await refreshSession();
     });
 
-    // TODO: also listen for remove
+    listen("accountManagerRemoval", async () => {
+       await refreshAccounts();
+    });
+
     listen("accountManagerAddition", async () => {
         await refreshAccounts();
     });
