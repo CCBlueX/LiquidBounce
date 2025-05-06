@@ -673,7 +673,7 @@
   "liquidbounce.module.particles.description": "Zeigt Partikel beim Angriff eines z.B. Spielers an.",
   "liquidbounce.module.elytraTarget.description": "Verfolgt dein Ziel mit einer Elytra.",
   "liquidbounce.module.dupe.messages.singleplayer": "Du kannst keine Duplizierungs-Exploits im Einzelspielermodus ausführen, da sie Serverfehler ausnutzen. Verwende stattdessen den Kreativmodus.",
-  "liquidbounce.module.dupe.messages.creative": "Du bist im Kreativmodus, warum möchtest du duplizieren?",
+  "liquidbounce.module.dupe.messages.creative": "Du bist bereits im Kreativmodus - du brauchst keinen Dupe Exploit, um Items zu duplizieren.",
   "liquidbounce.module.dupe.messages.requiresItem": "Du brauchst einen %s in deiner Hotbar, um die duplizierung  auszuführen.",
   "liquidbounce.module.serverCrasher.messages.singleplayer": "Server Crasher ist nur für Mehrspielerserver.",
   "liquidbounce.module.antiCheatDetect.description": "Erkennt das AntiCheat des Servers und benachrichtigt dich.",
