@@ -53,6 +53,7 @@
     function handleWindowClick(e: MouseEvent) {
         if (!accountElement.contains(e.target as Node)) {
             expanded = false;
+            searchQuery = "";
         }
     }
 
@@ -61,6 +62,10 @@
             expanded = true;
         } else {
             expanded = !headerElement.contains(e.target as Node);
+        }
+
+        if (!expanded) {
+            searchQuery = "";
         }
     }
 
