@@ -1,6 +1,13 @@
 <script lang="ts">
     import ToolTip from "../../ToolTip.svelte";
-    import {getAccounts, getSession, openScreen, loginToAccount} from "../../../../../integration/rest";
+    import {
+        getAccounts,
+        getSession,
+        openScreen,
+        loginToAccount,
+        directLoginToCrackedAccount,
+        randomUsername
+    } from "../../../../../integration/rest";
     import {onMount} from "svelte";
     import {listen} from "../../../../../integration/ws";
     import {location} from "svelte-spa-router";
@@ -46,7 +53,7 @@
     });
 
     listen("accountManagerRemoval", async () => {
-       await refreshAccounts();
+        await refreshAccounts();
     });
 
     listen("accountManagerAddition", async () => {
@@ -62,7 +69,8 @@
 
     function handleSelectClick(e: MouseEvent) {
         if (!expanded) {
-            expanded = true;
+            // Prevent icon buttons from opening quick switcher
+            expanded = !(e.target as HTMLElement).classList.contains("icon");
         } else {
             expanded = !headerElement.contains(e.target as Node);
         }
@@ -80,6 +88,11 @@
         });
 
         await loginToAccount(account.id);
+    }
+
+    async function loginWithRandomUsername() {
+        const username = await randomUsername();
+        await directLoginToCrackedAccount(username, false);
     }
 </script>
 
@@ -100,12 +113,19 @@
                 <span class="offline">Offline</span>
             {/if}
         </div>
-        <button class="button-change-account" disabled={inAccountManager} type="button"
-                on:click={() => openScreen("altmanager")}>
-            <ToolTip text="Change account"/>
+        <div class="buttons">
+            <button class="icon-button" type="button" on:click={loginWithRandomUsername}>
+                <ToolTip text="Random username"/>
 
-            <img class="icon" src="img/menu/icon-pen.svg" alt="change account">
-        </button>
+                <img class="icon" src="img/menu/account/icon-random.svg" alt="random username">
+            </button>
+            <button class="icon-button" disabled={inAccountManager} type="button"
+                    on:click={() => openScreen("altmanager")}>
+                <ToolTip text="Change account"/>
+
+                <img class="icon" src="img/menu/icon-pen.svg" alt="change account">
+            </button>
+        </div>
     </div>
 
     {#if expanded}
@@ -117,8 +137,9 @@
                     <div class="account-list">
                         {#each renderedAccounts as a}
                             <div on:click={() => login(a)} class="account-item"
-                                 transition:slide|global={{ duration: 200, easing: quintOut }} class:active={a.username === username}>
-                                <Avatar url={a.avatar} />
+                                 transition:slide|global={{ duration: 200, easing: quintOut }}
+                                 class:active={a.username === username}>
+                                <Avatar url={a.avatar}/>
                                 <div class="username">{a.username}</div>
                                 <div class="type">{a.type}</div>
                             </div>
@@ -192,13 +213,21 @@
       }
     }
 
-    .button-change-account {
+    .buttons {
+      grid-area: c;
+      display: flex;
+      column-gap: 20px;
+      align-items: center;
+    }
+
+    .icon-button {
       background-color: transparent;
       border: none;
-      grid-area: c;
       position: relative;
       height: max-content;
       cursor: pointer;
+      display: flex;
+      align-items: center;
 
       &:disabled {
         pointer-events: none;
