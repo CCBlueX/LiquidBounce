@@ -102,7 +102,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
                     highlight(throwable.javaClass.simpleName),
                     regular("]: "),
                     variable(throwable.message ?: ""),
-                    prefix = false
+                    metadata = MessageMetadata(prefix = false)
                 )
 
             }
