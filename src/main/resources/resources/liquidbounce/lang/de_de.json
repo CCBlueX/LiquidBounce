@@ -647,8 +647,8 @@
 
   "liquidbounce.command.models.subcommand.create.result.modelExists": "❌ Das Modell %s existiert bereits.",
   "liquidbounce.command.models.subcommand.create.result.trainingStart": "⚡ Training wurde für das Modell %s gestartet...",
-  "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ %s Exemplare in %s geladen.",
-  "liquidbounce.command.models.subcommand.create.result.noSamples": "❌ Du hast derzeit keine Exemplare. Verwende [DebugRecorder], um welche aufzuzeichnen.",
+  "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ %s Daten in %s geladen.",
+  "liquidbounce.command.models.subcommand.create.result.noSamples": "❌ Du hast derzeit keine Daten. Verwende [DebugRecorder], um welche aufzuzeichnen.",
   "liquidbounce.command.models.subcommand.create.result.preparedData": "✔ Datenset vorbereitet in %s.",
   "liquidbounce.command.models.subcommand.create.result.trainingEnd": "✔ Das Modell %s wurde trainiert und erfolgreich in %s gespeichert.",
   "liquidbounce.command.models.subcommand.create.result.trainingFailed": "❌ Das Training ist mit dem Fehlercode %s fehlgeschlagen.",
@@ -656,8 +656,8 @@
 
   "liquidbounce.command.models.subcommand.improve.result.modelNotFound": "❌ Das Modell %s konnte nicht gefunden werden.",
   "liquidbounce.command.models.subcommand.improve.result.trainingStart": "⚡ Training wurde für das Modell %s gestartet...",
-  "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ Keine Exemplare für das Modell %s gefunden.",
-  "liquidbounce.command.models.subcommand.improve.result.samplesLoaded": "✔ %s Exemplare in %s geladen.",
+  "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ Keine Daten für das Modell %s gefunden.",
+  "liquidbounce.command.models.subcommand.improve.result.samplesLoaded": "✔ %s Daten in %s geladen.",
   "liquidbounce.command.models.subcommand.improve.result.preparedData": "✔ Datenset vorbereitet in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingEnd": "✔ Das Modell %s wurde trainiert und erfolgreich in %s gespeichert.",
   "liquidbounce.command.models.subcommand.improve.result.trainingFailed": "❌ Das Training ist mit dem Fehlercode %s fehlgeschlagen.",
@@ -716,7 +716,7 @@
   "liquidbounce.command.serverinfo.result.nan": "noch nicht berechnet",
   "liquidbounce.command.serverinfo.result.detecting": "Serverinformationen werden ermittelt...",
   "liquidbounce.command.serverinfo.result.detectParameter": "Führe den Befehl mit dem Erkennungsparameter [%s] erneut aus, um detailliertere Informationen zu erhalten.",
-  "liquidbounce.command.serverinfo.result.pluginsDetectionTimeout": "Plugin-Erkennung ist abgelaufen. Dies könnte daran liegen, dass der Server die Anfrage blockiert.",
+  "liquidbounce.command.serverinfo.result.pluginsDetectionTimeout": "Plugin-Erkennung ist ausgetimed. Dies könnte daran liegen, dass der Server die Anfrage blockiert.",
   "liquidbounce.tooltip.clickToCopy": "Click to copy",
   "liquidbounce.module.plugins.messages.plugins": "Plugins (%s): %s"
 }
