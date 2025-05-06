@@ -8,6 +8,7 @@
     import {fade, slide} from "svelte/transition";
     import type {Account} from "../../../../../integration/types";
     import Avatar from "./Avatar.svelte";
+    import {notification} from "../notification_store";
 
     let username = "";
     let avatar = "";
@@ -63,6 +64,15 @@
         }
     }
 
+    async function login(account: Account) {
+        notification.set({
+            title: "AltManager",
+            message: "Logging in...",
+            error: false
+        });
+
+        await loginToAccount(account.id);
+    }
 </script>
 
 <svelte:window on:click={handleWindowClick}/>
@@ -98,7 +108,7 @@
                 {#if renderedAccounts.length > 0}
                     <div class="account-list">
                         {#each renderedAccounts as a}
-                            <div on:click={() => loginToAccount(a.id)} class="account-item"
+                            <div on:click={() => login(a)} class="account-item"
                                  transition:slide|global={{ duration: 200, easing: quintOut }} class:active={a.username === username}>
                                 <Avatar url={a.avatar} />
                                 <div class="username">{a.username}</div>
