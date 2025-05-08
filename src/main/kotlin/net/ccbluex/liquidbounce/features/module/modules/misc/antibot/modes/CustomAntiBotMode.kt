@@ -322,7 +322,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         }),
         DEFAULT_COLOR("DefaultColor", { suspected ->
             val name = suspected.displayName?.convertToString()?.replace("§r", "")
-            name == null || name !in "§"
+            name == null || '§' !in name
         })
     }
 }
