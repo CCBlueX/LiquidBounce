@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.item.material
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -56,7 +57,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
     }
 
-    private val customConditions by multiEnumChoice<CustomConditions>(
+    private val customConditions by multiEnumChoice(
         "Conditions",
         CustomConditions.NO_GAME_MODE,
         CustomConditions.ILLEGAL_PITCH,
@@ -318,6 +319,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         }),
         ATTRIBUTES("Attributes", { suspected ->
             !attributesSet.contains(suspected.id)
+        }),
+        DEFAULT_COLOR("DefaultColor", { suspected ->
+            val name = suspected.displayName?.convertToString()?.replace("§r", "")
+            name == null || name !in "§"
         })
     }
 }
