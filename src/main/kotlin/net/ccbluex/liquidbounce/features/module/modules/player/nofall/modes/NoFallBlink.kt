@@ -138,7 +138,7 @@ internal object NoFallBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && blinkFall) {
+        if (event.origin == TransferOrigin.OUTGOING && blinkFall) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

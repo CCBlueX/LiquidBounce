@@ -104,7 +104,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin != TransferOrigin.RECEIVE || event.isCancelled) {
+        if (event.origin != TransferOrigin.INCOMING || event.isCancelled) {
             return@handler
         }
 
