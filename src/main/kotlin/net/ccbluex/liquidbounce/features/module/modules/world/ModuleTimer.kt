@@ -49,7 +49,7 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val speed by float("Speed", 2f, 0.1f..10f)
+        private val speed by float("Speed", 2f, 0.1f..20f)
 
         val repeatable = tickHandler {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
@@ -62,9 +62,9 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
+        private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..20f)
         private val normalSpeedTicks by int("NormalSpeedTicks", 20, 1..500, "ticks")
-        private val boostSpeed by float("BoostSpeed", 2f, 0.1f..10f)
+        private val boostSpeed by float("BoostSpeed", 2f, 0.1f..20f)
         private val boostSpeedTicks by int("BoostSpeedTicks", 20, 1..500, "ticks")
         private val onMove by boolean("OnMove", false)
         private var currentState: TimerState = TimerState.NORMAL_SPEED
@@ -108,8 +108,8 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..10f)
-        private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..10f)
+        private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..20f)
+        private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..20f)
 
         private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60, "ticks")
         private var boostCapable = 0
