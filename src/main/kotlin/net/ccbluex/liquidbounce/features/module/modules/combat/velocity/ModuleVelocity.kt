@@ -99,7 +99,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
                     }
                 }
 
-                val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+                val packetEvent = PacketEvent(TransferOrigin.INCOMING, packet, false)
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {

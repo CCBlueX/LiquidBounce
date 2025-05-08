@@ -53,7 +53,7 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND) {
+        if (event.origin != TransferOrigin.OUTGOING) {
             return@handler
         }
 
