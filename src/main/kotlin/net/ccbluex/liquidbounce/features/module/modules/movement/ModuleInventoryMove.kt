@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpenServerSide
 import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
@@ -47,7 +48,6 @@ import org.lwjgl.glfw.GLFW.GLFW_RELEASE
  *
  * Allows you to walk while an inventory is opened.
  */
-
 object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     private val behavior by enumChoice("Behavior", NORMAL)
@@ -56,6 +56,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         NORMAL("Normal"),
         SAFE("Safe"), // disable clicks while moving
         UNDETECTABLE("Undetectable"), // stop in inventory
+    }
+
+    private val additions by multiEnumChoice<Additions>("Additions")
+
+    enum class Additions(override val choiceName: String) : NamedChoice {
+        NO_INVENTORY_CLOSE_PACKET("NoInventoryClosePacket"),
+        NO_SPRINT("NoSprint")
     }
 
     private val passthroughSneak by boolean("PassthroughSneak", false)
@@ -131,6 +138,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         tree(BlinkFeature)
     }
 
+    @Suppress("ComplexCondition", "ReturnCount")
     fun shouldHandleInputs(keyBinding: KeyBinding): Boolean {
         val screen = mc.currentScreen ?: return true
 
@@ -148,6 +156,29 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     }
 
     @Suppress("unused")
+    private val noSprintHandler = handler<SprintEvent>(priority = READ_FINAL_STATE) { event ->
+        if (Additions.NO_SPRINT in additions && event.sprint && isInInventoryScreen) {
+           event.sprint = false
+        }
+    }
+
+    @Suppress("unused", "ComplexCondition")
+    private val noInventoryOpenPacketHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (Additions.NO_INVENTORY_CLOSE_PACKET !in additions) {
+            return@handler
+        }
+
+        if (
+            (packet is CloseHandledScreenC2SPacket && packet.syncId == 0 && !isInventoryOpenServerSide)
+            || (packet is ClientCommandC2SPacket && packet.mode == ClientCommandC2SPacket.Mode.OPEN_INVENTORY)
+        ) {
+            event.cancelEvent()
+        }
+    }
+
+    @Suppress("unused", "ComplexCondition")
     val keyHandler = handler<KeyboardKeyEvent> { event ->
         val key = movementKeys.keys.find { it.matchesKey(event.keyCode, event.scanCode) } ?: return@handler
         val pressed = shouldHandleInputs(key) && event.action != GLFW_RELEASE
