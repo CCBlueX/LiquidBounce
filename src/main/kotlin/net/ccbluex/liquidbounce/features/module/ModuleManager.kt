@@ -327,6 +327,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleInventoryCleaner,
             ModuleNoFall,
             ModuleNoRotateSet,
+            ModuleNoSlotSet,
             ModuleReach,
             ModuleAutoQueue,
             ModuleSmartEat,
