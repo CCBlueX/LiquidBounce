@@ -124,13 +124,12 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
  */
 fun MutableText.copyable(
     copyContent: String = convertToString(),
-    hover: HoverEvent? = HoverEvent(
-        HoverEvent.Action.SHOW_TEXT,
+    hover: HoverEvent? = HoverEvent.ShowText(
         translation("liquidbounce.tooltip.clickToCopy")
     )
 ): MutableText = apply {
     hover?.let(::onHover)
-    onClick(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copyContent))
+    onClick(ClickEvent.CopyToClipboard(copyContent))
 }
 
 fun MutableText.bypassNameProtection(): MutableText = styled {

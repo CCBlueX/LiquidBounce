@@ -49,7 +49,7 @@ object CommandHelp : CommandFactory {
                     .build()
             )
             .handler { command, args ->
-                val page = if (args.size > 0) {
+                val page = if (args.isNotEmpty()) {
                     args[0] as Int
                 } else {
                     1
@@ -116,9 +116,9 @@ object CommandHelp : CommandFactory {
                     .append(
                         regular(alias)
                             .formatted(Formatting.GRAY)
-                            .onClick {
+                            .onClick({
                                 mc.execute { mc.setScreen(ChatScreen(CommandManager.Options.prefix + alias)) }
-                            }
+                            } as Runnable)
                     )
             }
         }
@@ -139,9 +139,9 @@ object CommandHelp : CommandFactory {
                 .append(
                     commandStart.asText()
                         .formatted(Formatting.GRAY)
-                        .onClick {
+                        .onClick({
                             mc.execute { mc.setScreen(ChatScreen(commandStart)) }
-                        }
+                        } as Runnable)
                 )
                 .append(aliasesText),
             metadata = MessageMetadata(id = "CommandHelp#Info", remove = false)
@@ -155,21 +155,21 @@ object CommandHelp : CommandFactory {
             "".asText()
                 .styled { it.withColor(Formatting.GRAY) }
                 .append("<--".asText()
-                    .onClick {
+                    .onClick({
                         printMessage(
                             command,
                             previousPage,
                             maxPage,
                             commands
                         )
-                    }
+                    } as Runnable)
                     .onHover(HoverEvent.ShowText(command.result("previous")))
                 )
                 .append("[$page]")
                 .append("-->".asText()
-                    .onClick {
+                    .onClick({
                         printMessage(command, nextPage, maxPage, commands)
-                    }
+                    } as Runnable)
                     .onHover(HoverEvent.ShowText(command.result("next")))
                 ),
             metadata = MessageMetadata(id = "CommandHelp#Next")

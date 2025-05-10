@@ -85,7 +85,7 @@ object CommandDebug : CommandFactory {
                 }.append(
                     Text.literal(paste)
                         .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent.OpenUrl(URI(paste))
+                        .onClick(ClickEvent.OpenUrl(URI(paste)))
                 )
             )
         }
