@@ -19,11 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.effect.StatusEffect
@@ -87,7 +88,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     override fun disable() {
         for (configurable in statusEffectValues) {
-            if (configurable.enabled && player.getStatusEffect(configurable.registryEntry) == configurable.instance) {
+            if (configurable.enabled && player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
                 player.removeStatusEffect(configurable.registryEntry)
             }
         }
@@ -95,7 +96,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     override fun enable() {
         if (statusEffectValues.none { it.enabled }) {
-            chat(message("nothingEnabled"), this)
+            notification(this.name, message("nothingEnabled"), NotificationEvent.Severity.ERROR)
             this.enabled = false
         }
     }
@@ -105,7 +106,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         for (configurable in statusEffectValues) {
             if (configurable.enabled) {
                 player.addStatusEffect(configurable.instance)
-            } else if (player.getStatusEffect(configurable.registryEntry) == configurable.instance) {
+            } else if (player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
                 player.removeStatusEffect(configurable.registryEntry)
             }
         }
