@@ -32,6 +32,11 @@ import net.minecraft.entity.effect.StatusEffects.*
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Language
 
+/**
+ * PotionSpoof
+ *
+ * Allows the player to have potion effects without actually having the potion.
+ */
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     private const val SPOOF_DURATION = 0
@@ -51,19 +56,14 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         OOZING, INFESTED
     )
 
-    private val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
-        val map = HashMap<String, String>(8192)
-        Language.load(stream, map::put)
-        map
-    }
-
     private class StatusEffectConfigurable(
         val registryEntry: RegistryEntry<StatusEffect>,
-        translationKey: String = "effect.minecraft." + registryEntry.key.get().value.toShortTranslationKey()
+        translationKey: String = "effect.minecraft." + registryEntry.key.get().value.toShortTranslationKey(),
+        specifiedLanguage: Map<String, String>,
     ) : ToggleableConfigurable(
         parent = this,
         // Value name (en_us)
-        name = language.getOrDefault(translationKey, "Unknown"),
+        name = specifiedLanguage.getOrDefault(translationKey, "Unknown"),
         enabled = false,
         // Localized name
         aliases = if (I18n.hasTranslation(translationKey)) arrayOf(I18n.translate(translationKey)) else emptyArray()
@@ -75,7 +75,17 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
             private set
     }
 
-    private val statusEffectValues = ALL_STATUS_EFFECT.mapArray(::StatusEffectConfigurable).onEach(::tree)
+    private val statusEffectValues = run {
+        val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
+            val map = HashMap<String, String>(8192)
+            Language.load(stream, map::put)
+            map
+        }
+
+        ALL_STATUS_EFFECT.mapArray {
+            tree(StatusEffectConfigurable(it, specifiedLanguage = language))
+        }
+    }
 
     override fun disable() {
         for (configurable in statusEffectValues) {
@@ -87,7 +97,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     override fun enable() {
         if (statusEffectValues.none { it.enabled }) {
-            chat("Nothing enabled", this)
+            chat(message("nothingEnabled"), this)
             this.enabled = false
         }
     }
