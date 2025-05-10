@@ -39,8 +39,6 @@ import net.minecraft.util.Language
  */
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
-    private const val SPOOF_DURATION = 0
-
     /**
      * @see net.minecraft.entity.effect.StatusEffects
      */
@@ -69,9 +67,9 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         aliases = if (I18n.hasTranslation(translationKey)) arrayOf(I18n.translate(translationKey)) else emptyArray()
     ) {
         private val level = int("Level", 1, 1..10).onChanged {
-            StatusEffectInstance(registryEntry, SPOOF_DURATION, it - 1, false, false)
+            instance = StatusEffectInstance(registryEntry, 0, it - 1)
         }
-        var instance = StatusEffectInstance(registryEntry, SPOOF_DURATION, level.get() - 1, false, false)
+        var instance: StatusEffectInstance = StatusEffectInstance(registryEntry, 0, level.get() - 1)
             private set
     }
 
@@ -105,11 +103,10 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
         for (configurable in statusEffectValues) {
-            val enabled = configurable.enabled
-            val hasEffect = player.getStatusEffect(configurable.registryEntry) == configurable.instance
-            when {
-                !enabled && hasEffect -> player.removeStatusEffect(configurable.registryEntry)
-                enabled && !hasEffect -> player.addStatusEffect(configurable.instance)
+            if (configurable.enabled) {
+                player.addStatusEffect(configurable.instance)
+            } else if (player.getStatusEffect(configurable.registryEntry) == configurable.instance) {
+                player.removeStatusEffect(configurable.registryEntry)
             }
         }
     }
