@@ -25,15 +25,20 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects.*
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.util.Language
 
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     private const val SPOOF_DURATION = 0
 
+    /**
+     * @see net.minecraft.entity.effect.StatusEffects
+     */
     private val ALL_STATUS_EFFECT = arrayOf(
         SPEED, SLOWNESS, HASTE, MINING_FATIGUE, STRENGTH,
         INSTANT_HEALTH, INSTANT_DAMAGE, JUMP_BOOST, NAUSEA,
@@ -46,9 +51,23 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         OOZING, INFESTED
     )
 
+    private val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
+        val map = HashMap<String, String>(8192)
+        Language.load(stream, map::put)
+        map
+    }
+
     private class StatusEffectConfigurable(
-        val registryEntry: RegistryEntry<StatusEffect>
-    ) : ToggleableConfigurable(parent = this, name = registryEntry.idAsString, enabled = false) {
+        val registryEntry: RegistryEntry<StatusEffect>,
+        translationKey: String = "effect.minecraft." + registryEntry.key.get().value.toShortTranslationKey()
+    ) : ToggleableConfigurable(
+        parent = this,
+        // Value name (en_us)
+        name = language.getOrDefault(translationKey, "Unknown"),
+        enabled = false,
+        // Localized name
+        aliases = if (I18n.hasTranslation(translationKey)) arrayOf(I18n.translate(translationKey)) else emptyArray()
+    ) {
         private val level = int("Level", 1, 1..10).onChanged {
             StatusEffectInstance(registryEntry, SPOOF_DURATION, it - 1, false, false)
         }
