@@ -81,7 +81,7 @@ plugins {
 }
 
 base {
-    archivesBaseName = project.archives_base_name
+    archivesName = project.archives_name
     version = project.mod_version
     group = project.maven_group
 }
@@ -422,7 +422,7 @@ jar {
     // Rename the project"s license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
         rename {
-            "${it}_${project.archives_base_name}"
+            "${it}_${project.archives_name}"
         }
     }
 
