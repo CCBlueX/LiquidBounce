@@ -19,12 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.effect.StatusEffect
@@ -91,13 +89,6 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
             if (configurable.enabled && player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
                 player.removeStatusEffect(configurable.registryEntry)
             }
-        }
-    }
-
-    override fun enable() {
-        if (statusEffectValues.none { it.enabled }) {
-            notification(this.name, message("nothingEnabled"), NotificationEvent.Severity.ERROR)
-            this.enabled = false
         }
     }
 
