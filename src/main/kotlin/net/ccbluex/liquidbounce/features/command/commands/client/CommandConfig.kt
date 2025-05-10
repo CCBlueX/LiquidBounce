@@ -89,35 +89,31 @@ object CommandConfig : CommandFactory {
                     )
 
                     chat(
-                        variable(settingName).styled { style ->
-                            style
-                                .withClickEvent(
-                                    ClickEvent.SuggestCommand(
-                                        ".config load $settingName"
-                                    )
+                        variable(settingName)
+                            .onClick(
+                                ClickEvent.SuggestCommand(
+                                    ".config load $settingName"
                                 )
-                                .withHoverEvent(
-                                    HoverEvent.ShowText(
-                                        Text.of("§7Click to load $settingName")
-                                    )
+                            )
+                            .onHover(
+                                HoverEvent.ShowText(
+                                    Text.of("§7Click to load $settingName")
                                 )
-                        },
+                            ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName).styled { style ->
-                            style
-                                .withFormatting(it.statusType.formatting)
-                                .withHoverEvent(
-                                    HoverEvent.ShowText(
-                                        Text.of(it.statusDateFormatted)
-                                    )
+                        Text.literal(it.statusType.displayName)
+                            .formatted(it.statusType.formatting)
+                            .onHover(
+                                HoverEvent.ShowText(
+                                    Text.of(it.statusDateFormatted)
                                 )
-                        },
-                        regular(" | ${it.serverAddress ?: "Global"}"), metadata = MessageMetadata(
-                            prefix = false
-                        )
+                            )
+                        ,
+                        regular(" | ${it.serverAddress ?: "Global"}"),
+                        metadata = MessageMetadata(prefix = false)
                     )
                 }
             }.onFailure {

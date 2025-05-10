@@ -70,24 +70,31 @@ object CommandExecutor : EventListener {
         } catch (e: CommandException) {
             mc.inGameHud.chatHud.removeMessage("CommandManager#error")
             val data = MessageMetadata(id = "CommandManager#error", remove = false)
-            chat(e.text.styled { it.withColor(Formatting.RED) }, metadata = data)
-            chat("Usage: ".asText().styled { it.withColor(Formatting.RED) }, metadata = data)
+            chat(e.text.formatted(Formatting.RED), metadata = data)
 
-            if (e.usageInfo != null) {
+            if (!e.usageInfo.isNullOrEmpty()) {
+                chat("Usage: ".asText().formatted(Formatting.RED), metadata = data)
+
                 var first = true
 
                 // Zip the usage info together, e.g.
                 //  .friend add <name> [<alias>]
                 //  OR .friend remove <name>
-                e.usageInfo.forEach { usage ->
+                for (usage in e.usageInfo) {
                     chat(
-                        "${if (first) "" else "OR "}.$usage".asText().styled { it.withColor(Formatting.RED) },
+                        buildString {
+                            if (first) {
+                                first = false
+                            } else {
+                                append("OR ")
+                            }
+                            append(CommandManager.Options.prefix)
+                            append(usage)
+                        }.asText().formatted(Formatting.RED),
                         metadata = data
                     )
 
-                    if (first) {
-                        first = false
-                    }
+                    first = false
                 }
             }
         } catch (e: Exception) {

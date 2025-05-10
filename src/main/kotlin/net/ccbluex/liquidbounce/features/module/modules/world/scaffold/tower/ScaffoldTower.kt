@@ -16,24 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.exploit.phase
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseBlink
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseHypixel
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseIntave
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
+import net.minecraft.util.math.BlockPos
 
-/**
- * Module Phase.
- *
- * Phases you through blocks.
- */
-object ModulePhase : ClientModule("Phase", Category.EXPLOIT) {
+open class ScaffoldTower(override val name: String) : Choice(name) {
 
-    val mode = choices(
-        "Mode", PhaseHypixel, arrayOf(
-            PhaseHypixel, PhaseIntave, PhaseBlink
-        )
-    ).apply { tagBy(this) }
+    override val parent: ChoiceConfigurable<*>
+        get() = towerMode
+
+    /**
+     * Overwrites the [ModuleScaffold.getTargetedPosition] with a tower-specific one.
+     */
+    open fun getTargetedPosition(blockPos: BlockPos): BlockPos {
+        return blockPos.add(0, -1, 0)
+    }
+
 }

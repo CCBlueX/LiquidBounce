@@ -205,7 +205,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
     @Suppress("unused")
     private val blinkHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND) {
+        if (event.origin != TransferOrigin.OUTGOING) {
             return@handler
         }
 

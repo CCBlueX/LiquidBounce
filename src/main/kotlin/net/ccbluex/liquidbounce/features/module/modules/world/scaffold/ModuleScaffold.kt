@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.ints.IntObjectPair
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.NoneChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
@@ -33,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
@@ -51,8 +51,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -112,6 +110,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private val sameYMode by enumChoice("SameY", SameYMode.OFF)
 
+    @Suppress("unused")
     private enum class SameYMode(
         override val choiceName: String,
         val getTargetedBlockPos: (BlockPos) -> BlockPos?
@@ -145,10 +144,13 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     }
 
+    /**
+     * Scaffold tower mode
+     */
     @Suppress("UnusedPrivateProperty")
     val towerMode = choices("Tower", 0) { choices ->
         arrayOf(
-            NoneChoice(choices),
+            ScaffoldTowerNone,
             ScaffoldTowerMotion,
             ScaffoldTowerPulldown,
             ScaffoldTowerKarhu,
@@ -158,7 +160,13 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     internal val isTowering: Boolean
-        get() = towerMode.choices.indexOf(towerMode.activeChoice) != 0 && mc.options.jumpKey.isPressed
+        get() = if (towerMode.activeChoice != ScaffoldTowerNone && mc.options.jumpKey.isPressed) {
+            this.wasTowering = true
+            true
+        } else {
+            false
+        }
+    private var wasTowering: Boolean = false
 
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
@@ -442,12 +450,16 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             // Placement Y is the Y coordinate of the block below the player
             placementY = player.blockPos.y - 1
             jumps++
+            wasTowering = false
         }
 
         if (mc.options.jumpKey.isPressed) {
             startY = player.blockPos.y
             jumps = 2
         }
+
+        debugParameter("IsTowering") { isTowering }
+        debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
 
@@ -598,6 +610,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     }
 
     internal fun getTargetedPosition(blockPos: BlockPos): BlockPos {
+        if (isTowering || wasTowering) {
+            return towerMode.activeChoice.getTargetedPosition(blockPos)
+        }
+
         if (ScaffoldDownFeature.running && ScaffoldDownFeature.shouldGoDown) {
             return blockPos.add(0, -2, 0)
         }
@@ -606,28 +622,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             return blockPos.add(0, 3, 0)
         }
 
-        if (!isTowering) {
-            sameYMode.getTargetedBlockPos(blockPos)?.let { return it }
-        } else if (towerMode.activeChoice == ScaffoldTowerHypixel && !player.moving) {
-            // Find the block closest to the player
-            val blocks = arrayOf(
-                blockPos.add(0, 0, 1),
-                blockPos.add(0, 0, -1),
-                blockPos.add(1, 0, 0),
-                blockPos.add(-1, 0, 0)
-            )
-
-            val blockOffset = blocks.minByOrNull {
-                it.getCenterDistanceSquared()
-            }?.add(0, -1, 0) ?: blockPos
-
-            // Check if block next to the player is solid
-            if (!blockOffset.getState()!!.isSolidBlock(world, blockOffset)) {
-                return blockOffset
-            }
-        }
-
-        return blockPos.add(0, -1, 0)
+        return sameYMode.getTargetedBlockPos(blockPos)
+            ?: blockPos.add(0, -1, 0)
     }
 
     private fun simulatePlacementAttempts(

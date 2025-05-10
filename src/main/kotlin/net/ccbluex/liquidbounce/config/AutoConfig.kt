@@ -114,7 +114,7 @@ object AutoConfig {
         modules: List<Configurable> = emptyList<Configurable>()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
-        chat(regular("Auto Config").styled { it.withFormatting(Formatting.LIGHT_PURPLE).withBold(true) })
+        chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
 
         val name = jsonObject.string("name") ?: throw IllegalArgumentException("Auto Config has no name")
         when (name) {

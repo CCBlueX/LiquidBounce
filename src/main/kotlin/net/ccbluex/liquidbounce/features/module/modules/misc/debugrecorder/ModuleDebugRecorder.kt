@@ -79,11 +79,10 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC, disabl
             }.onFailure {
                 chat(markAsError("Failed to write log to file $it".asText()))
             }.onSuccess { path ->
-                val text = path.asText().styled {
-                    it.withUnderline(true)
-                        .withHoverEvent(HoverEvent.ShowText(regular("Browse...")))
-                        .withClickEvent(ClickEvent.OpenFile(path.toString()))
-                }
+                val text = path.asText()
+                    .underline(true)
+                    .onHover(HoverEvent.ShowText(regular("Browse...")))
+                    .onClick(ClickEvent.OpenFile(path.toString()))
 
                 chat(regular("Log was written to "), text, regular("."))
             }

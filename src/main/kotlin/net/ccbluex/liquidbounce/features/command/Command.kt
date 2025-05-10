@@ -97,7 +97,7 @@ class Command(
         val content = data?.let(::variable) ?: markAsError("N/A")
         val resultText = formatting(result(key, content))
 
-        chat(applyStyle(resultText, hover, clickEvent))
+        chat(resultText.onHover(hover).onClick(clickEvent))
     }
 
     /**
@@ -118,9 +118,8 @@ class Command(
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
         val content = copyContent ?: displayComponent.convertToString()
-        val clickEvent = ClickEvent.CopyToClipboard(content)
 
-        chat(applyStyle(formatting(result(key, displayComponent)), hover, clickEvent))
+        chat(formatting(result(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }
 
     fun resultWithTree(key: String, vararg args: Any): MutableText {

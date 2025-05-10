@@ -86,25 +86,20 @@ object CommandFriend : CommandFactory {
 
                     FriendManager.friends.forEachIndexed { index, friend ->
                         val alias = friend.alias ?: friend.getDefaultName(index)
-                        val copyText = regular("Copy ${friend.name}")
 
-                        val formattedFriendName = bypassNameProtection(variable(friend.name))
-                        val friendTextWithEvent = formattedFriendName.styled {
-                            it.withClickEvent(ClickEvent.CopyToClipboard(friend.name))
-                                .withHoverEvent(HoverEvent.ShowText(copyText))
-                                .withItalic(true)
-                        }
+                        val friendTextWithEvent = variable(friend.name)
+                            .bypassNameProtection()
+                            .copyable(copyContent = friend.name)
+                            .italic(true)
 
-                        val removeButton = regular("[X]").styled {
-                            val removeCommand = ".friend remove ${friend.name}"
-                            val removeText = regular("Remove ${friend.name}")
+                        val removeCommand = ".friend remove ${friend.name}"
+                        val removeText = regular("Remove ${friend.name}")
 
-                            it
-                                .withFormatting(Formatting.RED)
-                                .withBold(true)
-                                .withHoverEvent(HoverEvent.ShowText(removeText))
-                                .withClickEvent(ClickEvent.SuggestCommand(removeCommand))
-                        }
+                        val removeButton = regular("[X]")
+                            .formatted(Formatting.RED)
+                            .bold(true)
+                            .onHover(HoverEvent.ShowText(removeText))
+                            .onClick(ClickEvent.SuggestCommand(removeCommand))
 
                         chat(
                             regular("- "),

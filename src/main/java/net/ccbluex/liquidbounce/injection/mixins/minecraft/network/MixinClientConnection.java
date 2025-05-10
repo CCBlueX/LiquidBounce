@@ -51,7 +51,7 @@ public abstract class MixinClientConnection {
      */
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void hookSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
-        final PacketEvent event = new PacketEvent(TransferOrigin.SEND, packet, true);
+        final PacketEvent event = new PacketEvent(TransferOrigin.OUTGOING, packet, true);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -83,7 +83,7 @@ public abstract class MixinClientConnection {
             return;
         }
 
-        final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+        final PacketEvent event = new PacketEvent(TransferOrigin.INCOMING, packet, true);
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();

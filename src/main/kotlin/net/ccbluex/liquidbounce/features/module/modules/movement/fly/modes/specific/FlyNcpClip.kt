@@ -185,7 +185,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (blink && shouldLag && event.origin == TransferOrigin.SEND) {
+        if (blink && shouldLag && event.origin == TransferOrigin.OUTGOING) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

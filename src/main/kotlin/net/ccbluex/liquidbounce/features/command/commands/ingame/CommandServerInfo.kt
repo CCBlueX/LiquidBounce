@@ -120,8 +120,8 @@ object CommandServerInfo : CommandFactory, EventListener {
         val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
 
         chat(warning(command.result("header")))
-        command.printStyledText("address", serverInfo?.address)
-        command.printStyledText("resolvedAddress", resolvedServerAddress)
+        command.printStyledText("address", serverInfo?.address?.hideSensitiveAddress())
+        command.printStyledText("resolvedAddress", resolvedServerAddress?.hideSensitiveAddress())
         command.printStyledText("serverId", ServerObserver.serverId)
         command.printStyledText("serverType", ServerObserver.serverType?.choiceName)
         command.printStyledText("brand", network.brand)

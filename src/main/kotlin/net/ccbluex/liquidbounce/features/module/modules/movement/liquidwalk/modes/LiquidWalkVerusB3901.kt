@@ -62,7 +62,7 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.SEND && packet is PlayerMoveC2SPacket) {
+        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
             if (!mc.options.sneakKey.isPressed &&
                 !player.isTouchingWater &&
                 standingOnWater() &&

@@ -120,7 +120,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
         val timeStamp = inventoryMap[player]?.timeMap?.getLong(event.itemStack)?.takeIf { it != 0L } ?: return@handler
         val lastSeen = System.currentTimeMillis() - timeStamp
         event.lore.add(
-            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().styled { it.withFormatting(Formatting.GRAY) }
+            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().formatted(Formatting.GRAY)
         )
     }
 

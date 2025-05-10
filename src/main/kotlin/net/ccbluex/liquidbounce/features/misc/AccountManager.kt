@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -325,7 +326,9 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun removeAccount(id: Int): MinecraftAccount {
-        return accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+        val account = accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+        EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
+        return account;
     }
 
     fun newSessionAccount(token: String) {

@@ -42,13 +42,13 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.minecraft.SharedConstants
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
-import java.io.StringWriter
 import java.net.URI
 
 /**
@@ -61,30 +61,33 @@ import java.net.URI
  */
 object CommandDebug : CommandFactory {
 
+    private val gson = GsonBuilder()
+        .setPrettyPrinting()
+        .create()
+
     override fun createCommand() = CommandBuilder.begin("debug")
         .handler { _, _ ->
             chat("§7Collecting debug information...")
 
-            val autoConfig = StringWriter().use { writer ->
-                serializeAutoConfig(writer)
-                writer.toString()
+            val autoConfig = okio.Buffer().use {
+                serializeAutoConfig(it.outputStream().writer())
+                it.readUtf8()
             }
             val autoConfigPaste = uploadToPaste(autoConfig)
             val debugJson = createDebugJson(autoConfigPaste)
 
-            val content = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(debugJson)
+            val content = gson.toJson(debugJson)
             val paste = uploadToPaste(content)
 
-            chat(Text.literal("Debug information has been uploaded to: ").styled { style ->
-                style.withColor(TextColor.fromFormatting(Formatting.GREEN))
-            }.append(Text.literal(paste).styled { style ->
-                style.withColor(Formatting.YELLOW).withClickEvent(
-                    ClickEvent.OpenUrl(URI(paste))
+            chat(
+                Text.literal("Debug information has been uploaded to: ").styled { style ->
+                    style.withColor(TextColor.fromFormatting(Formatting.GREEN))
+                }.append(
+                    Text.literal(paste)
+                        .formatted(Formatting.YELLOW)
+                        .onClick(ClickEvent.OpenUrl(URI(paste))
                 )
-            }))
+            )
         }
         .build()
 

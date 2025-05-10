@@ -17,7 +17,7 @@ internal object NoSlowBlockingBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND || !player.isBlockAction) {
+        if (event.origin != TransferOrigin.OUTGOING || !player.isBlockAction) {
             return@handler
         }
 
