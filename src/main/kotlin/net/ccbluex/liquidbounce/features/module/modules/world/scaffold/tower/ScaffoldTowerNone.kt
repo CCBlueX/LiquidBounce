@@ -16,24 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.exploit.phase
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseBlink
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseHypixel
-import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.modes.PhaseIntave
-
-/**
- * Module Phase.
- *
- * Phases you through blocks.
- */
-object ModulePhase : ClientModule("Phase", Category.EXPLOIT) {
-
-    val mode = choices(
-        "Mode", PhaseHypixel, arrayOf(
-            PhaseHypixel, PhaseIntave, PhaseBlink
-        )
-    ).apply { tagBy(this) }
-}
+object ScaffoldTowerNone : ScaffoldTower("None")

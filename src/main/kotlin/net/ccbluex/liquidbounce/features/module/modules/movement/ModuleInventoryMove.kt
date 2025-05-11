@@ -94,7 +94,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         private val fakeLagHandler = handler<QueuePacketEvent> { event ->
             val packet = event.packet
 
-            if (mc.currentScreen is HandledScreen<*> && event.origin == TransferOrigin.SEND) {
+            if (mc.currentScreen is HandledScreen<*> && event.origin == TransferOrigin.OUTGOING) {
                 event.action = when (packet) {
                     is ClickSlotC2SPacket,
                     is ButtonClickC2SPacket,

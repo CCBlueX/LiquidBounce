@@ -159,6 +159,10 @@ class AccountManagerLoginResultEvent(val username: String? = null, val error: St
 @WebSocketEvent
 class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
 
+@Nameable("accountManagerRemoval")
+@WebSocketEvent
+class AccountManagerRemovalResultEvent(val username: String?) : Event()
+
 @Nameable("proxyAdditionResult")
 @WebSocketEvent
 class ProxyAdditionResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event()

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.ccbluex.liquidbounce.config.types.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
@@ -208,7 +208,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-        !(ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() instanceof NoneChoice) &&
+        ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
         ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
 
         if (noJumpDelay || towerActive) {
