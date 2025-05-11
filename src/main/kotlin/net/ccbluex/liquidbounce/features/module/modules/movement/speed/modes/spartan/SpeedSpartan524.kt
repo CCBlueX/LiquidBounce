@@ -39,10 +39,11 @@ import net.minecraft.item.Items
  * @testedOn minecraft.vagdedes.com
  * @note it will flag randomly, that's just spartan for you
  */
-class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Spartan v4.0.4.3") {
+class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3") {
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (!mc.options.forwardKey.isPressed) {
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!player.input.playerInput.forward) {
             return@handler
         }
 
@@ -67,13 +68,15 @@ class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Sp
  * @testedOn minecraft.vagdedes.com
  * @note it will flag randomly, that's just spartan for you. Could flag anywhere from 0-20vl if you do 180's with it on
  */
-class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Choice("Spartan v4.0.4.3 FastFall") {
+class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3-FastFall") {
+
     override fun disable() {
         player.stopXZVelocity()
     }
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (!mc.options.forwardKey.isPressed) {
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!player.input.playerInput.forward) {
             return@handler
         }
 
