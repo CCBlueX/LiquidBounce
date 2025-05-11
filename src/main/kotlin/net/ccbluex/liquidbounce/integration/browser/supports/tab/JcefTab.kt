@@ -63,7 +63,7 @@ class JcefTab(
 
     private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
     private val texture = RenderSystem.getDevice().createTexture(
-        null as String?, TextureFormat.RGBA8,
+        textureId.path, TextureFormat.RGBA8,
         position.width, position.height, 1
     )
 
@@ -72,11 +72,9 @@ class JcefTab(
 
     init {
         assert(texture == null) { "texture can't be null" }
+        (texture as GlTexture).glId = mcefBrowser.renderer.textureID
         mcefBrowser.renderer.textureID = (texture as GlTexture).glId
-        mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            @JvmField
-            val glTexture: GpuTexture = texture
-        })
+        mc.textureManager.registerTexture(textureId, texture as AbstractTexture) // it works
     }
 
     override fun forceReload() {
