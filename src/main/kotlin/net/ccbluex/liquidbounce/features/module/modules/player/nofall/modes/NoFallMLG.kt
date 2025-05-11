@@ -62,7 +62,17 @@ internal object NoFallMLG : Choice("MLG") {
     private var currentTarget: PlacementPlan? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
-    private val netherItems = arrayOf(Items.COBWEB, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK)
+    private val netherItems =
+        arrayOf(
+            // overworld
+            Items.COBWEB,
+            Items.POWDER_SNOW_BUCKET,
+            Items.HAY_BLOCK,
+            Items.SLIME_BLOCK,
+            Items.HONEY_BLOCK,
+            // nether
+            Items.TWISTING_VINES,
+        )
     private val normalItems = arrayOf(Items.WATER_BUCKET) + netherItems
 
     private val itemsForMLG
@@ -73,46 +83,52 @@ internal object NoFallMLG : Choice("MLG") {
     }
 
     @Suppress("unused")
-    private val tickMovementHandler = handler<RotationUpdateEvent> {
-        val currentGoal = this.getCurrentGoal()
+    private val tickMovementHandler =
+        handler<RotationUpdateEvent> {
+            val currentGoal = this.getCurrentGoal()
 
-        this.currentTarget = currentGoal
+            this.currentTarget = currentGoal
 
-        if (currentGoal == null) {
-            return@handler
+            if (currentGoal == null) {
+                return@handler
+            }
+
+            RotationManager.setRotationTarget(
+                currentGoal.placementTarget.rotation,
+                configurable = rotationsConfigurable,
+                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+                provider = ModuleNoFall,
+            )
         }
-
-        RotationManager.setRotationTarget(
-            currentGoal.placementTarget.rotation,
-            configurable = rotationsConfigurable,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoFall
-        )
-    }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val target = currentTarget ?: return@tickHandler
+    private val tickHandler =
+        tickHandler {
+            val target = currentTarget ?: return@tickHandler
 
-        val rayTraceResult = raycast()
+            val rayTraceResult = raycast()
 
-        if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@tickHandler
+            if (!target.doesCorrespondTo(rayTraceResult)) {
+                return@tickHandler
+            }
+
+            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+
+            val onSuccess: () -> Boolean = {
+                lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
+
+                true
+            }
+
+            doPlacement(
+                rayTraceResult,
+                hand = target.hotbarItemSlot.useHand,
+                onItemUseSuccess = onSuccess,
+                onPlacementSuccess = onSuccess,
+            )
+
+            currentTarget = null
         }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-
-        val onSuccess: () -> Boolean = {
-            lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
-
-            true
-        }
-
-        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
-            onItemUseSuccess = onSuccess, onPlacementSuccess = onSuccess)
-
-        currentTarget = null
-    }
 
     /**
      * Finds something to do, either
@@ -176,20 +192,23 @@ internal object NoFallMLG : Choice("MLG") {
         return findPlacementPlanAtPos(collision.up(), itemForMLG)
     }
 
-    private fun findPlacementPlanAtPos(pos: BlockPos, item: HotbarItemSlot): PlacementPlan? {
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = item.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
-        )
+    private fun findPlacementPlanAtPos(
+        pos: BlockPos,
+        item: HotbarItemSlot,
+    ): PlacementPlan? {
+        val options =
+            BlockPlacementTargetFindingOptions(
+                BlockOffsetOptions(
+                    listOf(Vec3i.ZERO),
+                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                ),
+                FaceHandlingOptions(CenterTargetPositionFactory),
+                stackToPlaceWith = item.itemStack,
+                PlayerLocationOnPlacement(position = player.pos),
+            )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null
 
         return PlacementPlan(pos, bestPlacementPlan, item)
     }
-
 }
