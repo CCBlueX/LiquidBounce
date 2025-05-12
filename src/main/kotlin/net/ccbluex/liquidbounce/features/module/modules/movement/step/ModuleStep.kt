@@ -33,11 +33,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.airTicks
+import net.ccbluex.liquidbounce.utils.entity.canStep
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
-import kotlin.math.round
 
 /**
  * Step module
@@ -250,7 +250,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
         @Suppress("unused")
         private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-            if (event.origin == TransferOrigin.SEND && stepping) {
+            if (event.origin == TransferOrigin.OUTGOING && stepping) {
                 event.action = PacketQueueManager.Action.QUEUE
             }
         }

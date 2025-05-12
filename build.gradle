@@ -188,14 +188,14 @@ dependencies {
 
     // ScriptAPI
     includeDependency "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
-    includeDependency "org.graalvm.polyglot:polyglot:24.0.2"
-    includeDependency "org.graalvm.polyglot:js-community:24.0.2"
-    includeDependency "org.graalvm.polyglot:tools-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:python-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:wasm-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:java-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:ruby-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:llvm-native-community:24.0.2"
+    includeDependency "org.graalvm.polyglot:polyglot:$polyglot_version"
+    includeDependency "org.graalvm.polyglot:js-community:$polyglot_version"
+    includeDependency "org.graalvm.polyglot:tools-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:python-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:wasm-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:java-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:ruby-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:llvm-native-community:$polyglot_version"
 
     // Machine Learning
     includeDependency "ai.djl:api:${djl_version}"

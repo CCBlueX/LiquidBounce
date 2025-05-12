@@ -50,7 +50,7 @@ object CriticalsBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
+        if (event.origin == TransferOrigin.OUTGOING && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
             if (PacketQueueManager.isAboveTime(nextDelay.toLong())) {
                 nextDelay = delay.random()
                 return@handler

@@ -605,7 +605,7 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
-fun Entity.doesCollideAt(pos: Vec3d): Boolean {
+fun Entity.doesCollideAt(pos: Vec3d = player.pos): Boolean {
     return !world.getBlockCollisions(this, getBoundingBoxAt(pos)).all(VoxelShapes.empty()::equals)
 }
 

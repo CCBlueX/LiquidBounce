@@ -106,7 +106,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     "FakeLag", "Unable to evade arrow. Blinking.",
                     NotificationEvent.Severity.INFO
                 )
-                PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.SEND }
+                PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("FakeLag", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
                 PacketQueueManager.flush(evadingPacket.idx + 1)
@@ -119,7 +119,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND || player.isDead || player.isTouchingWater
+        if (event.origin != TransferOrigin.OUTGOING || player.isDead || player.isTouchingWater
             || mc.currentScreen != null
         ) {
             return@handler

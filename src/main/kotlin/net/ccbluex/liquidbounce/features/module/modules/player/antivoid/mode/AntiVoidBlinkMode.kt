@@ -48,7 +48,7 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && requiresLag) {
+        if (event.origin == TransferOrigin.OUTGOING && requiresLag) {
             event.action = Action.QUEUE
         }
     }

@@ -79,7 +79,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         }
 
         val text = Text.empty().formatted(Formatting.WHITE)
-        if (origin == TransferOrigin.RECEIVE) {
+        if (origin == TransferOrigin.INCOMING) {
             text.append(message("receive"))
         } else {
             text.append(message("send"))
@@ -182,7 +182,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         override val choiceName: String,
         val origin: TransferOrigin,
     ) : NamedChoice {
-        CLIENT("Client", TransferOrigin.RECEIVE),
-        SERVER("Server", TransferOrigin.SEND)
+        CLIENT("Client", TransferOrigin.INCOMING),
+        SERVER("Server", TransferOrigin.OUTGOING)
     }
 }

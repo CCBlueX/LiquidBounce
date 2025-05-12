@@ -73,7 +73,7 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
     private val packetHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin != TransferOrigin.RECEIVE) {
+        if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 
