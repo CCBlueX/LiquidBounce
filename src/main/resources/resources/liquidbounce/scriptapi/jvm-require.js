@@ -26,7 +26,7 @@
     // Replace require with our version
     globalThis.require = function jvmRequire(modulePath) {
         // Check if this path starts with $jvm
-        const prefix = '@jvm/types/'
+        const prefix = 'jvm-types'
         if (modulePath.startsWith(prefix)) {
             // Extract the actual Java type path by removing the $jvm prefix
             const javaTypePath = modulePath.substring(prefix.length).replaceAll("/", "."); // Remove '$jvm/'
