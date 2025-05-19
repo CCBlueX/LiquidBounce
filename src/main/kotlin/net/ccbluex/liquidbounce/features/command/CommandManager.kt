@@ -43,9 +43,12 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
+import kotlin.math.min
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.convertToString(), cause)
@@ -60,7 +63,7 @@ object CommandExecutor : EventListener {
      * Handles command execution
      */
     @Suppress("unused")
-    val chatEventHandler = handler<ChatSendEvent> {
+    private val chatEventHandler = handler<ChatSendEvent>(priority = FIRST_PRIORITY) {
         if (!it.message.startsWith(CommandManager.Options.prefix)) {
             return@handler
         }
@@ -139,6 +142,10 @@ object CommandManager : Iterable<Command> by commands {
          */
         var prefix by text("prefix", ".")
 
+        /**
+         * How many hints should we give for unknown commands?
+         */
+        val hintCount by int("HintCount", 5, 0..10)
     }
 
     init {
@@ -275,7 +282,28 @@ object CommandManager : Iterable<Command> by commands {
             translation(
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
-            )
+            ),
+            usageInfo = if (commands.isEmpty() || Options.hintCount == 0) {
+                null
+            } else {
+                commands.sortedBy { command ->
+                    var distance = levenshtein(args[0], command.name)
+                    if (command.aliases.isNotEmpty()) {
+                        distance = min(
+                            distance,
+                            command.aliases.minOf { levenshtein(args[0], it) }
+                        )
+                    }
+                    distance
+                }.take(Options.hintCount).map { command ->
+                    buildString {
+                        append(command.name)
+                        if (command.aliases.isNotEmpty()) {
+                            command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
+                        }
+                    }
+                }
+            }
         )
         val command = pair.first
 
@@ -369,7 +397,7 @@ object CommandManager : Iterable<Command> by commands {
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
             is ParameterValidationResult.Ok -> {
-                return validationResult.mappedResult!!
+                return validationResult.mappedResult
             }
             is ParameterValidationResult.Error -> {
                 throw CommandException(
