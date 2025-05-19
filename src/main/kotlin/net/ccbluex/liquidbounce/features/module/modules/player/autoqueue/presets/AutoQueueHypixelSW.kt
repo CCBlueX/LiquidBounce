@@ -46,7 +46,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
         }
 
         // Send join command
-        network.sendCommand("play ${gameMode.joinName}")
+        network.sendChatCommand("play ${gameMode.joinName}")
         waitTicks(20)
     }
 

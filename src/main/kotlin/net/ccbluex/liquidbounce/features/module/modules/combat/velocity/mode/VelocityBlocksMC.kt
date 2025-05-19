@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
+import net.ccbluex.liquidbounce.utils.entity.copy
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 /**
@@ -39,8 +41,8 @@ internal object VelocityBlocksMC : VelocityMode("BlocksMC") {
         // Check if this is a regular velocity update
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             event.cancelEvent()
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+            network.sendPacket(PlayerInputC2SPacket(player.lastPlayerInput.copy(sneak = true)))
+            network.sendPacket(PlayerInputC2SPacket(player.lastPlayerInput.copy(sneak = false)))
         }
     }
 

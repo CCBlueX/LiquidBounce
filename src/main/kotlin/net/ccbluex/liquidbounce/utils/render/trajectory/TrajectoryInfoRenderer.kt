@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
+import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -91,7 +92,7 @@ class TrajectoryInfoRenderer(
         color: Color4b,
         matrixStack: MatrixStack
     ): HitResult? {
-        // Start drawing of path
+        // Start drawing of the path
         val positions = mutableListOf<Vec3d>()
 
         val hitResult = runSimulation(maxTicks, positions)
@@ -111,9 +112,9 @@ class TrajectoryInfoRenderer(
     ): HitResult? {
         var currTicks = 0
 
-        for (ignored in 0 until maxTicks) {
+        repeat(maxTicks) {
             if (pos.y < world.bottomY) {
-                break
+                return@repeat
             }
 
             val prevPos = pos
@@ -142,7 +143,7 @@ class TrajectoryInfoRenderer(
             velocity *= drag
             velocity -= Vec3d(0.0, trajectoryInfo.gravity, 0.0)
 
-            // Draw path
+            // Draw the path
             outPositions += pos
 
             currTicks++
@@ -170,7 +171,7 @@ class TrajectoryInfoRenderer(
 
         val entityHitResult = ProjectileUtil.getEntityCollision(
             world,
-            owner,
+            null, // TODO(port/1.21.6): please work
             posBefore,
             posAfter,
             hitbox.offset(pos).stretch(velocity).expand(1.0)
