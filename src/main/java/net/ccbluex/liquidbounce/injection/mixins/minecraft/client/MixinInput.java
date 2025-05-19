@@ -45,7 +45,7 @@ public abstract class MixinInput implements InputAddition {
     private boolean hookOmnidirectionalSprint(boolean original) {
         // Allow omnidirectional sprinting
         if (ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
-            return this.getMovementInput().x > 1.0E-5F || this.getMovementInput().y > 1.0E-5F;
+            return this.getMovementInput().y > 1.0E-5F || this.getMovementInput().x > 1.0E-5F;
         }
 
         return original;

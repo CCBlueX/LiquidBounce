@@ -363,20 +363,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 //        return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
 //    }
 
-//    TODO: also fix this
-//    @ModifyReturnValue(method = "isWalking", at = @At("RETURN"))
-//    private boolean hookIsWalking(boolean original) {
-//        if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
-//            return original;
-//        }
-//
-//        var hasMovement = Math.abs(input.movementForward) > 1.0E-5F ||
-//                Math.abs(input.movementSideways) > 1.0E-5F;
-//        var isWalking = (double) Math.abs(input.movementForward) >= 0.8 ||
-//                (double) Math.abs(input.movementSideways) >= 0.8;
-//        return this.isSubmergedInWater() ? hasMovement : isWalking;
-//    }
-
     @ModifyExpressionValue(method = "sendSprintingPacket", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z")
