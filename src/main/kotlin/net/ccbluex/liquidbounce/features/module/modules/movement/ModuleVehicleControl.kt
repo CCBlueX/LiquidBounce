@@ -165,7 +165,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
                 waitTicks(unhookAfter)
                 vehicleId = player.controllingVehicle?.id ?: return@tickHandler
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendSneaking(true)
                 player.stopRiding()
                 waitTicks(hookAfter - 1)
             }

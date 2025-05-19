@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.sendSneaking
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 /**
@@ -71,13 +72,13 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             }
 
             if (!networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendSneaking(true)
             }
         }
 
         override fun disable() {
             if (networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                network.sendSneaking(false)
                 networkSneaking = false
             }
         }
@@ -112,12 +113,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
                 EventState.POST -> {
                     if (networkSneaking) {
-                        network.sendPacket(
-                            ClientCommandC2SPacket(
-                                player,
-                                ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
-                            )
-                        )
+                        network.sendSneaking(true)
                         networkSneaking = true
                     }
                 }
@@ -126,7 +122,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         override fun disable() {
             if (networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                network.sendSneaking(false)
                 networkSneaking = false
             }
         }
