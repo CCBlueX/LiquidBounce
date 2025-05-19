@@ -70,10 +70,12 @@ object VelocityIntave : VelocityMode("Intave") {
         private var currentDelay = 0
         private var delayCounter = 0
 
+        private var isFallDamage = false
+
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {
             val shouldJump = Math.random() * 100 < chance && player.hurtTime > 5
-            val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
+            val canJump = player.isOnGround && isFallDamage && mc.currentScreen !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 
             if (randomize.enabled) {
