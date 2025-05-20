@@ -44,8 +44,8 @@ class ApiConfig(
             // as they are vulnerable to MITM attacks and data leaks.
             // A VPN or a proxy can be used to secure the connection.
             // TODO: Because we cannot request confirmation from the user, we should not use this URL at all.
-            //   The only way to use this URL is to set the system property `net.ccbluex.liquidbounce.api.url` to this URL
-            //   which the LiquidLauncher does when the user has confirmed it.
+            //   The only way to use this URL is to set the property `net.ccbluex.liquidbounce.api.url` to
+            //   this URL which the LiquidLauncher does when the user has confirmed it.
             // "http://nossl.api.liquidbounce.net"
         )
 
