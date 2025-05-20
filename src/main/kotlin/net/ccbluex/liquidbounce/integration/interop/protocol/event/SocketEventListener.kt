@@ -19,7 +19,7 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.JsonObject
+import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
@@ -49,10 +49,7 @@ class SocketEventListener : EventListener {
             error("Event $name is already registered")
         }
 
-        val eventHook = EventHook<Event>(
-            this,
-            { writeToSockets(it) }
-        )
+        val eventHook = EventHook(this, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
         EventManager.registerEventHook(eventClass.java, eventHook)
@@ -66,18 +63,23 @@ class SocketEventListener : EventListener {
     }
 
     private fun writeToSockets(event: Event) {
+        data class WSEventData(val name: String, val event: JsonElement)
+
         val json = runCatching {
             val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
-
-            val jsonObj = JsonObject()
-            jsonObj.addProperty("name", event::class.eventName)
-            jsonObj.add("event", webSocketAnnotation.serializer.gson.toJsonTree(event))
-            interopGson.toJson(jsonObj)
+            interopGson.toJson(
+                WSEventData(
+                    name = event::class.eventName,
+                    event = webSocketAnnotation.serializer.gson.toJsonTree(event)
+                )
+            )
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return
 
-        httpServer.webSocketController.broadcast(json)
+        httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
+            logger.error("WebSocket broadcast failed", t)
+        }
     }
 
 
