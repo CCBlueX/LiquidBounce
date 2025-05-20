@@ -16,7 +16,7 @@
     let query: string;
     let filteredModules: Module[] = [];
     let selectedIndex = 0;
-    let searchVisible: boolean = false
+    let searchVisible: boolean = localStorage.getItem("searchVisible") === "true";
 
     function reset() {
         filteredModules = [];
@@ -88,6 +88,18 @@
         await setModuleEnabled(name, enabled);
     }
 
+    function toggleSearchVisibility() {
+        searchVisible = !searchVisible;
+        localStorage.setItem("searchVisible", String(searchVisible));
+
+        if (searchVisible && autoFocus) {
+            setTimeout(() => searchInputElement?.focus(), 0);
+        } else {
+            reset();
+        }
+    }
+
+
     function handleWindowClick(e: MouseEvent) {
         if (!searchContainerElement.contains(e.target as Node)) {
             reset();
@@ -97,12 +109,7 @@
     function handleWindowKeyDown(e: KeyboardEvent) {
         if (e.ctrlKey && e.key.toLowerCase() === "f") {
             e.preventDefault();
-            searchVisible = !searchVisible;
-            if (searchVisible && autoFocus) {
-                setTimeout(() => searchInputElement?.focus(), 0);
-            } else {
-                reset();
-            }
+            toggleSearchVisibility();
             return;
         }
 
