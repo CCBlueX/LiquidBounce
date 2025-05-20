@@ -57,8 +57,10 @@ class SocketEventListener : EventListener {
     }
 
     fun unregister(name: String) {
-        val (eventClass, eventHook) = registeredEvents.entries.find { it.key.eventName == name } ?:
+        val eventClass = events[name] ?:
             throw IllegalArgumentException("Unknown event: $name")
+        val eventHook = registeredEvents[eventClass] ?:
+            throw IllegalArgumentException("No EventHook for event: $eventClass")
 
         EventManager.unregisterEventHook(eventClass.java, eventHook)
     }
