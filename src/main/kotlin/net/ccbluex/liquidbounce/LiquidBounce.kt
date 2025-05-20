@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
@@ -256,6 +257,10 @@ object LiquidBounce : EventListener {
      * which do not rely on the main thread.
      */
     private fun initializeResources() = runBlocking {
+        logger.info("Initializing API...")
+        // Lookup API config
+        ApiConfig.config
+
         listOf(
             scope.async {
                 // Load translations
