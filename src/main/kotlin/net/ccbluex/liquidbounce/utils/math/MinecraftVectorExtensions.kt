@@ -141,3 +141,5 @@ fun Vec3d.preferOver(other: Vec3d): Vec3d {
     val z = if (this.z == 0.0) other.z else this.z
     return Vec3d(x, y, z)
 }
+
+fun Vec3d.withY(y: Double): Vec3d = Vec3d(this.x, y, this.z)

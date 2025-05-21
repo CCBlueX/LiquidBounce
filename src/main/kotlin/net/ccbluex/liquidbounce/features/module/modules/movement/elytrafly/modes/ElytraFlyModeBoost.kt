@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.Modul
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.withY
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
@@ -36,8 +37,6 @@ import kotlin.math.min
  * Allows to fly with elytra without fireworks by simulating natural flight mechanics
  */
 internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
-
-    private fun Vec3d.withY(y: Double): Vec3d = Vec3d(this.x, y, this.z)
 
     private val boostSpeed by float("Speed", 0.9f, 0.5f..2.0f)
     private val acceleration by float("Acceleration", 0.01f, 0.005f..0.05f)
@@ -209,6 +208,9 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
         val pullUpBoost = divePullUpBoost.toDouble() * 0.1
         
         event.movement = when {
+            mc.options.jumpKey.isPressed && mc.options.sneakKey.isPressed -> {
+                event.movement.withY(event.movement.y - 0.008 + naturalLift + pullUpBoost)
+            }
             mc.options.jumpKey.isPressed -> {
                 val upSpeed = (ModuleElytraFly.Speed.vertical.toDouble() * verticalControl) + pullUpBoost
                 event.movement.withY(event.movement.y + upSpeed)
