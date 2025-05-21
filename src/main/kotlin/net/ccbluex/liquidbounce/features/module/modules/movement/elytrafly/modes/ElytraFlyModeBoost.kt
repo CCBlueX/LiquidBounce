@@ -64,8 +64,7 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     }
     
     private fun isNearGround(): Boolean = 
-        smartGround && 
-        world.getBlockCollisions(
+        smartGround && world.getBlockCollisions(
             player, 
             player.boundingBox.offset(0.0, -groundDistance.toDouble(), 0.0)
         ).iterator().hasNext()
