@@ -36,6 +36,7 @@ import kotlin.math.min
  *
  * Allows to fly with elytra without fireworks by simulating natural flight mechanics
  */
+@Suppress("MagicNumber")
 internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
 
     private val boostSpeed by float("Speed", 0.9f, 0.5f..2.0f)
@@ -46,11 +47,14 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     private val groundDistance by float("GroundDistance", 3.0f, 1.5f..7.0f)
     private val verticalControl by float("VerticalControl", 0.8f, 0.2f..1.0f)
     
-    private var currentAcceleration = 0.0f
-    private var currentDiveSpeed = 0.0f
-    
     private val diveAcceleration by float("DiveAcceleration", 0.05f, 0.01f..0.1f)
     private val diveEfficiency by float("DiveEfficiency", 0.8f, 0.4f..1.5f)
+    
+    private var currentAcceleration = 0f
+    private var currentDiveSpeed = 0f
+    
+    private const val MAX_DIVE_SPEED_MULTIPLIER = 1.2f
+    private const val DIVE_SPEED_REDUCTION = 0.01f
 
     override fun enable() {
         resetState()
@@ -61,8 +65,8 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     }
     
     private fun resetState() {
-        currentAcceleration = 0.0f
-        currentDiveSpeed = 0.0f
+        currentAcceleration = 0f
+        currentDiveSpeed = 0f
     }
     
     private fun isNearGround(): Boolean = 
@@ -95,7 +99,7 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     
     private fun handleDiving(): Float {
         if (!diveMechanics) {
-            currentDiveSpeed = max(0f, currentDiveSpeed - 0.01f)
+            currentDiveSpeed = max(0f, currentDiveSpeed - DIVE_SPEED_REDUCTION)
             return 0f
         }
         
@@ -105,11 +109,11 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
             val diveFactor = min(player.pitch / 90f, 1f)
             currentDiveSpeed = min(
                 currentDiveSpeed + diveAcceleration * diveFactor,
-                1.2f  // Maximum dive speed multiplier
+                MAX_DIVE_SPEED_MULTIPLIER
             )
             return 0f
         } else {
-            currentDiveSpeed = max(0f, currentDiveSpeed - 0.01f)
+            currentDiveSpeed = max(0f, currentDiveSpeed - DIVE_SPEED_REDUCTION)
             
             if (player.pitch < 0 && oldDiveSpeed > 0) {
                 return oldDiveSpeed * (-player.pitch / 90f) * diveEfficiency
