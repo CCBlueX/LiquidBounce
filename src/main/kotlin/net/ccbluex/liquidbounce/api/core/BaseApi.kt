@@ -53,6 +53,11 @@ abstract class BaseApi(protected val baseUrl: String) {
         headers(this)
     }, body = body).parse()
 
+    protected suspend inline fun <reified T> head(
+        endpoint: String,
+        crossinline headers: Headers.Builder.() -> Unit = {}
+    ): T = request(endpoint, HttpMethod.HEAD, headers)
+
     protected suspend inline fun <reified T> get(
         endpoint: String,
         crossinline headers: Headers.Builder.() -> Unit = {}

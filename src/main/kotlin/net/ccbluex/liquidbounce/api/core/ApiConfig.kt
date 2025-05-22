@@ -92,7 +92,7 @@ class ApiConfig(
             for (url in API_URLS) {
                 try {
                     // Throws [HttpException] when not successful
-                    HttpClient.request(url, HttpMethod.GET)
+                    HttpClient.request(url, HttpMethod.HEAD).close()
 
                     logger.info("API endpoint '$url' is available")
                     return ApiConfig(
