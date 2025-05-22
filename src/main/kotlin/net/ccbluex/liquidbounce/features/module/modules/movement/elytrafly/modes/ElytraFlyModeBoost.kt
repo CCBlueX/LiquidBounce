@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.Modul
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.withY
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
@@ -200,18 +200,18 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
         
         event.movement = when {
             mc.options.jumpKey.isPressed && mc.options.sneakKey.isPressed -> {
-                event.movement.withY(event.movement.y - 0.008 + naturalLift + divePullUpBoost)
+                event.movement.copy(y = event.movement.y - 0.008 + naturalLift + divePullUpBoost)
             }
             mc.options.jumpKey.isPressed -> {
                 val upSpeed = (ModuleElytraFly.Speed.vertical.toDouble() * verticalControl) + divePullUpBoost
-                event.movement.withY(event.movement.y + upSpeed)
+                event.movement.copy(y = event.movement.y + upSpeed)
             }
             mc.options.sneakKey.isPressed -> {
                 val downSpeed = ModuleElytraFly.Speed.vertical.toDouble() * verticalControl
-                event.movement.withY(event.movement.y - downSpeed)
+                event.movement.copy(y = event.movement.y - downSpeed)
             }
             else -> {
-                event.movement.withY(event.movement.y - 0.008 + naturalLift + divePullUpBoost)
+                event.movement.copy(y = event.movement.y - 0.008 + naturalLift + divePullUpBoost)
             }
         }
     }
