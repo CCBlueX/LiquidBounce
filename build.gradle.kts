@@ -1,8 +1,7 @@
 import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 /*
@@ -344,8 +343,8 @@ tasks.register("verifyI18nJsonKeys") {
             throw GradleException("Baseline file $baselineFileName not found in ${i18nDir}.")
         }
 
-        val gson = Gson()
-        fun readJsonObject(file: File) = file.inputStream().bufferedReader().use { gson.fromJson(it, JsonObject::class.java) }
+        @Suppress("UNCHECKED_CAST")
+        fun readJsonObject(file: File) = file.inputStream().use(JsonSlurper()::parse) as Map<String, String>
 
         val baseline = readJsonObject(baselineFile)
 
@@ -353,7 +352,7 @@ tasks.register("verifyI18nJsonKeys") {
             if (file.name.endsWith(".json") && file.name != baselineFileName) {
                 val currentFile = readJsonObject(file)
 
-                val missingKeys = baseline.keySet() - currentFile.keySet()
+                val missingKeys = baseline.keys - currentFile.keys
 
                 if (missingKeys.isEmpty()) {
                     logger.info("${file.name} is complete. No missing keys.")
