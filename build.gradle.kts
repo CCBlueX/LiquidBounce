@@ -1,9 +1,3 @@
-import com.github.gradle.node.npm.task.NpmTask
-import com.github.gradle.node.task.NodeTask
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
-
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -22,6 +16,12 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
+import com.github.gradle.node.npm.task.NpmTask
+import com.github.gradle.node.task.NodeTask
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 plugins {
     id("fabric-loom")
