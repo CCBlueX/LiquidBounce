@@ -11,7 +11,7 @@ private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSecon
 fun Project.getContributors(repoOwner: String, repoName: String): List<String> = try {
     val githubToken: String? = System.getenv("GITHUB_TOKEN")
 
-    val request = HttpRequest.newBuilder(URI("https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=100"))
+    val request = HttpRequest.newBuilder(URI("https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=200"))
         .GET()
         .timeout(Duration.ofSeconds(5))
         .header("User-Agent", "LiquidBounce-App")
