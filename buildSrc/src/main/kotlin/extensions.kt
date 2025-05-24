@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 import groovy.json.JsonSlurper
-import org.gradle.api.Project
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -31,9 +31,11 @@ private val httpClient = HttpClient.newBuilder()
     .executor(Executors.newVirtualThreadPerTaskExecutor())
     .build()
 
+internal val logger = LoggerFactory.getLogger("buildSrc")
+
 private val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
 
-fun Project.getContributors(repoOwner: String, repoName: String): List<String> = try {
+fun getContributors(repoOwner: String, repoName: String): List<String> = try {
     val githubToken: String? = System.getenv("GITHUB_TOKEN")
 
     fun HttpRequest.Builder.generalSettings() = this
@@ -103,4 +105,3 @@ fun Project.getContributors(repoOwner: String, repoName: String): List<String> =
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
 }
-

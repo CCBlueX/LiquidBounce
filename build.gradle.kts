@@ -88,9 +88,11 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven {
+        name = "CCBlueX"
         url = uri("https://maven.ccbluex.net/releases")
     }
     maven {
+        name = "Fabric"
         url = uri("https://maven.fabricmc.net/")
     }
     maven {
@@ -407,7 +409,7 @@ tasks.jar {
         }
     }
 
-    from(files(configurations.mappings.get().map(::zipTree))) {
+    from(files(project.configurations.mappings.get().map(::zipTree))) {
         include("mappings/mappings.tiny")
     }
 }
