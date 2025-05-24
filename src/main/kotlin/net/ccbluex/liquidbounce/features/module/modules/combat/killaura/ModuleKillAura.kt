@@ -161,7 +161,7 @@ object ModuleKillAura : ClientModule("MaZiAura", Category.COMBAT) {
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
-            InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen
+            isInventoryOpen || mc.currentScreen is GenericContainerScreen
 
         val shouldResetTarget = player.isSpectator || player.isDead || !requirementsMet
 
