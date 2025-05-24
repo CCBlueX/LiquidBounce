@@ -207,11 +207,9 @@ dependencies {
 tasks.processResources {
     dependsOn("bundleTheme")
 
-    val contributors by lazy {
-        JsonOutput.prettyPrint(
-            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-        )
-    }
+    val contributors = JsonOutput.prettyPrint(
+        JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
+    )
 
     inputs.property("version", mod_version)
 
@@ -359,13 +357,13 @@ tasks.register("verifyI18nJsonKeys") {
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun readJsonObject(file: File) = file.inputStream().use(JsonSlurper()::parse) as Map<String, String>
+        fun File.readJsonObject() = inputStream().use(JsonSlurper()::parse) as Map<String, String>
 
-        val baseline = readJsonObject(baselineFile)
+        val baseline = baselineFile.readJsonObject()
 
         i18nDir.listFiles()?.forEach { file ->
             if (file.name.endsWith(".json") && file.name != baselineFileName) {
-                val currentFile = readJsonObject(file)
+                val currentFile = file.readJsonObject()
 
                 val missingKeys = baseline.keys - currentFile.keys
 

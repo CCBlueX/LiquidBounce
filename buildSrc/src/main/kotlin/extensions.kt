@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 import groovy.json.JsonSlurper
-import org.slf4j.LoggerFactory
+import org.gradle.api.Task
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -31,11 +31,12 @@ private val httpClient = HttpClient.newBuilder()
     .executor(Executors.newVirtualThreadPerTaskExecutor())
     .build()
 
-internal val logger = LoggerFactory.getLogger("buildSrc")
+private inline val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
 
-private val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
-
-fun getContributors(repoOwner: String, repoName: String): List<String> = try {
+/**
+ * [API Docs](https://docs.github.com/zh/rest/collaborators/collaborators?apiVersion=2022-11-28)
+ */
+fun Task.getContributors(repoOwner: String, repoName: String): List<String> = try {
     val githubToken: String? = System.getenv("GITHUB_TOKEN")
 
     fun HttpRequest.Builder.generalSettings() = this
@@ -85,8 +86,8 @@ fun getContributors(repoOwner: String, repoName: String): List<String> = try {
                 if (response.isSuccessful) {
                     try {
                         @Suppress("UNCHECKED_CAST")
-                        response.body().reader().use { reader ->
-                            (JsonSlurper().parse(reader) as List<Map<String, Any?>>)
+                        response.body().use { inputStream ->
+                            (JsonSlurper().parse(inputStream) as List<Map<String, Any?>>)
                                 .mapNotNull {
                                     if (it["type"] == "User") it["login"] as String else null
                                 }
@@ -96,11 +97,15 @@ fun getContributors(repoOwner: String, repoName: String): List<String> = try {
                         emptyList()
                     }
                 } else {
-                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()})", response.body().reader().readText())
+                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
                     emptyList()
                 }
             }
-    }.flatMapTo(ArrayList(perPage * maxPage)) { it.get() }
+    }.flatMapTo(ArrayList(perPage * maxPage)) {
+        it.get()
+    }.also {
+        logger.info("Successfully collected ${it.size} contributors")
+    }
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
