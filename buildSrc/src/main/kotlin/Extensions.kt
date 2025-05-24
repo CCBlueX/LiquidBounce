@@ -23,9 +23,13 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
-private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
+private val httpClient = HttpClient.newBuilder()
+    .connectTimeout(Duration.ofSeconds(5))
+    .executor(Executors.newVirtualThreadPerTaskExecutor())
+    .build()
 
 private val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
 
@@ -94,7 +98,7 @@ fun Project.getContributors(repoOwner: String, repoName: String): List<String> =
                     emptyList()
                 }
             }
-    }.flatMap { it.get() }
+    }.flatMapTo(ArrayList(perPage * maxPage)) { it.get() }
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
