@@ -32,10 +32,21 @@ plugins {
     id("org.jetbrains.dokka") version "1.9.10"
 }
 
+val archives_base_name: String by project
+val mod_version: String by project
+val maven_group: String by project
+
+val minecraft_version: String by project
+val fabric_version: String by project
+val loader_version: String by project
+val min_loader_version: String by project
+val fabric_kotlin_version: String by project
+val viafabricplus_version: String by project
+
 base {
-    archivesName = project.properties["archives_base_name"] as String
-    version = project.properties["mod_version"] as String
-    group = project.properties["maven_group"] as String
+    archivesName = archives_base_name
+    version = mod_version
+    group = maven_group
 }
 
 val includeDependency: Configuration by configurations.creating
@@ -114,13 +125,13 @@ loom {
 
 dependencies {
     // Minecraft
-    minecraft("com.mojang:minecraft:${project.properties["minecraft_version"]}")
+    minecraft("com.mojang:minecraft:${minecraft_version}")
     mappings("net.fabricmc:yarn:${project.properties["yarn_mappings"]}:v2")
 
     // Fabric
-    modImplementation("net.fabricmc:fabric-loader:${project.properties["loader_version"]}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.properties["fabric_version"]}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${project.properties["fabric_kotlin_version"]}")
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    modImplementation("net.fabricmc:fabric-language-kotlin:${fabric_kotlin_version}")
 
     // Mod menu
     modImplementation("com.terraformersmc:modmenu:${project.properties["mod_menu_version"]}")
@@ -130,8 +141,8 @@ dependencies {
     modImplementation("maven.modrinth:lithium:${project.properties["lithium_version"]}")
 
     // ViaFabricPlus
-    modImplementation("com.viaversion:viafabricplus-api:${project.properties["viafabricplus_version"]}")
-    modRuntimeOnly("com.viaversion:viafabricplus:${project.properties["viafabricplus_version"]}")
+    modImplementation("com.viaversion:viafabricplus-api:${viafabricplus_version}")
+    modRuntimeOnly("com.viaversion:viafabricplus:${viafabricplus_version}")
 
     // Minecraft Authlib
     includeDependency("com.github.CCBlueX:mc-authlib:${project.properties["mc_authlib_version"]}")
@@ -194,31 +205,33 @@ dependencies {
 tasks.processResources {
     dependsOn("bundleTheme")
 
-    val contributors = JsonOutput.prettyPrint(
-        JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-    )
+    val contributors by lazy {
+        JsonOutput.prettyPrint(
+            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
+        )
+    }
 
-    inputs.property("version", project.version)
+    inputs.property("version", mod_version)
 
-    inputs.property("minecraft_version", project.properties["minecraft_version"])
-    inputs.property("fabric_version", project.properties["fabric_version"])
-    inputs.property("loader_version", project.properties["loader_version"])
-    inputs.property("min_loader_version", project.properties["min_loader_version"])
-    inputs.property("fabric_kotlin_version", project.properties["fabric_kotlin_version"])
-    inputs.property("viafabricplus_version", project.properties["viafabricplus_version"])
+    inputs.property("minecraft_version", minecraft_version)
+    inputs.property("fabric_version", fabric_version)
+    inputs.property("loader_version", loader_version)
+    inputs.property("min_loader_version", min_loader_version)
+    inputs.property("fabric_kotlin_version", fabric_kotlin_version)
+    inputs.property("viafabricplus_version", viafabricplus_version)
     inputs.property("contributors", contributors)
 
     filesMatching("fabric.mod.json") {
         expand(
             mapOf(
-                "version" to project.version,
-                "minecraft_version" to project.properties["minecraft_version"],
-                "fabric_version" to project.properties["fabric_version"],
-                "loader_version" to project.properties["loader_version"],
-                "min_loader_version" to project.properties["min_loader_version"],
+                "version" to mod_version,
+                "minecraft_version" to minecraft_version,
+                "fabric_version" to fabric_version,
+                "loader_version" to loader_version,
+                "min_loader_version" to min_loader_version,
                 "contributors" to contributors,
-                "fabric_kotlin_version" to project.properties["fabric_kotlin_version"],
-                "viafabricplus_version" to project.properties["viafabricplus_version"]
+                "fabric_kotlin_version" to fabric_kotlin_version,
+                "viafabricplus_version" to viafabricplus_version,
             )
         )
     }
@@ -390,7 +403,7 @@ tasks.jar {
     // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
         rename {
-            "${it}_${project.properties["archives_base_name"]}"
+            "${it}_${archives_base_name}"
         }
     }
 
