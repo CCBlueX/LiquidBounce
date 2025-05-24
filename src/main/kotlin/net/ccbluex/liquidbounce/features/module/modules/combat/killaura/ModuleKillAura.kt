@@ -77,7 +77,7 @@ import kotlin.math.pow
  * Automatically attacks enemies.
  */
 @Suppress("MagicNumber")
-object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
+object ModuleKillAura : ClientModule("MaZiAura", Category.COMBAT) {
 
     // Attack speed
     val clickScheduler = tree(KillAuraClicker)

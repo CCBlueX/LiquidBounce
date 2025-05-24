@@ -103,8 +103,8 @@ object LiquidBounce : EventListener {
      *
      * WARNING: Please read the GNU General Public License
      */
-    const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_AUTHOR = "CCBlueX"
+    const val CLIENT_NAME = "麻子Bounce"
+    const val CLIENT_AUTHOR = "余胜军"
 
     private object Client : Configurable("Client") {
         val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
