@@ -71,7 +71,7 @@ fun Project.getContributors(repoOwner: String, repoName: String): List<String> =
     val perPage = 100 // Maximum is 100
     val maxPage = httpClient.fetchLastPage(baseUrl, perPage)
 
-    (1.. maxPage).map { page ->
+    (1..maxPage).map { page ->
         val request = HttpRequest.newBuilder()
             .uri(URI("$baseUrl?per_page=$perPage&page=$page"))
             .GET()
