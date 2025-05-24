@@ -23,15 +23,17 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.util.regex.Pattern
 
 private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
+
+private val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
 
 fun Project.getContributors(repoOwner: String, repoName: String): List<String> = try {
     val githubToken: String? = System.getenv("GITHUB_TOKEN")
 
-    val request = HttpRequest.newBuilder(URI("https://api.github.com/repos/${repoOwner}/${repoName}/contributors?per_page=200"))
-        .GET()
-        .timeout(Duration.ofSeconds(5))
+    fun HttpRequest.Builder.generalSettings() = this
+        .timeout(Duration.ofSeconds(10))
         .header("User-Agent", "LiquidBounce-App")
         .header("X-GitHub-Api-Version", "2022-11-28")
         .header("Accept", "application/vnd.github+json")
@@ -39,26 +41,60 @@ fun Project.getContributors(repoOwner: String, repoName: String): List<String> =
             if (!githubToken.isNullOrBlank())
                 header("Authorization", "Bearer $githubToken")
         }
-        .build()
 
-    val response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
+    fun HttpClient.fetchLastPage(baseUrl: String, perPage: Int): Int {
+        val request = HttpRequest.newBuilder()
+            .uri(URI("$baseUrl?per_page=$perPage"))
+            .HEAD()
+            .generalSettings()
+            .build()
 
-    if (response.statusCode() in 200..299) {
-        try {
-            @Suppress("UNCHECKED_CAST")
-            response.body().reader().use { reader ->
-                (JsonSlurper().parse(reader) as List<Any?>)
-                    .map { (it as? Map<String, Any?>)?.get("login") as? String }
-                    .filter { !it.isNullOrBlank() && !it.contains("[bot]") } as List<String>
-            }
-        } catch (e: Exception) {
-            logger.error("Failed to parse GitHub API response for $repoOwner:$repoName", e)
-            emptyList()
+        val response = send(request, HttpResponse.BodyHandlers.discarding())
+
+        return if (response.isSuccessful) {
+            val linkHeader = response.headers().firstValue("link").orElse("")
+            val pattern = Pattern.compile("&page=(\\d+)>; rel=\"last\"")
+            val matcher = pattern.matcher(linkHeader)
+            return if (matcher.find()) matcher.group(1).toInt() else 1
+        } else {
+            logger.error("HEAD request to ${response.uri()} failed with status: ${response.statusCode()}")
+            1
         }
-    } else {
-        logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()})", response.body().reader().readText())
-        emptyList()
     }
+
+    val baseUrl = "https://api.github.com/repos/${repoOwner}/${repoName}/contributors"
+
+    val perPage = 100 // Maximum is 100
+    val maxPage = httpClient.fetchLastPage(baseUrl, perPage)
+
+    (1.. maxPage).map { page ->
+        val request = HttpRequest.newBuilder()
+            .uri(URI("$baseUrl?per_page=$perPage&page=$page"))
+            .GET()
+            .generalSettings()
+            .build()
+
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+            .thenApply { response ->
+                if (response.isSuccessful) {
+                    try {
+                        @Suppress("UNCHECKED_CAST")
+                        response.body().reader().use { reader ->
+                            (JsonSlurper().parse(reader) as List<Map<String, Any?>>)
+                                .mapNotNull {
+                                    if (it["type"] == "User") it["login"] as String else null
+                                }
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Failed to parse GitHub API response for $repoOwner:$repoName", e)
+                        emptyList()
+                    }
+                } else {
+                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()})", response.body().reader().readText())
+                    emptyList()
+                }
+            }
+    }.flatMap { it.get() }
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
