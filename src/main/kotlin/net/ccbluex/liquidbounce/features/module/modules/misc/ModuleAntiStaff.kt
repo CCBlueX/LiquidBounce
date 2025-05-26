@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn.requestStaffList
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
@@ -20,138 +19,97 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
  */
 object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
 
-    /**
-     * Attempts to find a difference in the player list size in comparison
-     * to the UPDATE_LATENCY list of the [PlayerListS2CPacket].
-     */
-    object VanishCheck : ToggleableConfigurable(this, "VanishCheck", false) {
+    private val showInTabList by boolean("ShowInTabList", true)
+    private val serverStaffList = hashMapOf<String, Set<String>>()
 
-        private var wasInVanish = false
+    override fun enable() {
+        val serverEntry = mc.currentServerEntry ?: return
+        val address = serverEntry.address.dropPort().rootDomain()
 
-        @Suppress("unused")
-        private val packetHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
-
-            if (packet is PlayerListS2CPacket) {
-                val actions = packet.actions
-
-                if (actions.contains(PlayerListS2CPacket.Action.UPDATE_LATENCY)) {
-                    if (packet.entries.size != network.playerList?.size) {
-                        wasInVanish = true
-                        alert("staffVanish")
-                    } else if (wasInVanish) {
-                        wasInVanish = false
-                        alert("staffUnvanished")
-                    }
-                }
-            }
+        if (serverStaffList.containsKey(address)) {
+            return
         }
+        serverStaffList[address] = emptySet()
 
+        withScope {
+            loadStaffList(address)
+        }
+        super.enable()
     }
 
-    object UsernameCheck : ToggleableConfigurable(this, "UsernameCheck", false) {
+    @Suppress("unused")
+    val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
+        val address = event.serverInfo.address.dropPort().rootDomain()
 
-        private val showInTabList by boolean("ShowInTabList", true)
-        private val serverStaffList = hashMapOf<String, Set<String>>()
-
-        override fun enable() {
-            val serverEntry = mc.currentServerEntry ?: return
-            val address = serverEntry.address.dropPort().rootDomain()
-
-            if (serverStaffList.containsKey(address)) {
-                return
-            }
-            serverStaffList[address] = emptySet()
-
-            withScope {
-                loadStaffList(address)
-            }
-            super.enable()
+        if (serverStaffList.containsKey(address)) {
+            return@sequenceHandler
         }
+        serverStaffList[address] = emptySet()
 
-        @Suppress("unused")
-        val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
-            val address = event.serverInfo.address.dropPort().rootDomain()
+        // Keeps us from loading the staff list multiple times
+        waitUntil { inGame && mc.currentScreen != null }
 
-            if (serverStaffList.containsKey(address)) {
-                return@sequenceHandler
-            }
-            serverStaffList[address] = emptySet()
-
-            // Keeps us from loading the staff list multiple times
-            waitUntil { inGame && mc.currentScreen != null }
-
-            // Load the staff list
-            waitFor(Dispatchers.IO) {
-                loadStaffList(address)
-            }
+        // Load the staff list
+        waitFor(Dispatchers.IO) {
+            loadStaffList(address)
         }
+    }
 
-        @Suppress("unused")
-        private val packetHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
 
-            if (packet is PlayerListS2CPacket) {
-                // playerAdditionEntries returns empty if the packet is not marked with ADD_PLAYER
-                val entries = packet.playerAdditionEntries
+        if (packet is PlayerListS2CPacket) {
+            // playerAdditionEntries returns empty if the packet is not marked with ADD_PLAYER
+            val entries = packet.playerAdditionEntries
 
-                for (entry in entries) {
-                    val profile = entry.profile ?: continue
+            for (entry in entries) {
+                val profile = entry.profile ?: continue
 
-                    if (isStaff(profile.name)) {
-                        alert("staffAlert", profile.name)
-                    }
+                if (isStaff(profile.name)) {
+                    alert("staffAlert", profile.name)
                 }
             }
         }
+    }
 
-        suspend fun loadStaffList(address: String) {
-            try {
-                val staffs = requestStaffList(address)
-                serverStaffList[address] = staffs
+    suspend fun loadStaffList(address: String) {
+        try {
+            val staffs = requestStaffList(address)
+            serverStaffList[address] = staffs
 
-                logger.info("[AntiStaff] Loaded ${staffs.size} staff member for $address")
-                notification("AntiStaff", message("staffsLoaded", staffs.size, address),
-                    NotificationEvent.Severity.SUCCESS)
-            } catch (httpException: HttpException) {
-                when (httpException.code) {
-                    404 -> notification("AntiStaff", message("noStaffs", address),
-                        NotificationEvent.Severity.ERROR)
-                    else -> notification("AntiStaff", message("staffsFailed", address, httpException.code),
-                        NotificationEvent.Severity.ERROR)
-                }
-            } catch (exception: Exception) {
-                logger.error("Failed to load staff list of $address", exception)
-                notification("AntiStaff", message("staffsFailed", address, exception.javaClass.simpleName),
+            logger.info("[AntiStaff] Loaded ${staffs.size} staff member for $address")
+            notification("AntiStaff", message("staffsLoaded", staffs.size, address),
+                NotificationEvent.Severity.SUCCESS)
+        } catch (httpException: HttpException) {
+            when (httpException.code) {
+                404 -> notification("AntiStaff", message("noStaffs", address),
                     NotificationEvent.Severity.ERROR)
+                else -> notification("AntiStaff", message("staffsFailed", address,
+                    httpException.code), NotificationEvent.Severity.ERROR)
             }
+        } catch (exception: Exception) {
+            logger.error("Failed to load staff list of $address", exception)
+            notification("AntiStaff", message("staffsFailed", address,
+                exception.javaClass.simpleName), NotificationEvent.Severity.ERROR)
         }
-
-        fun shouldShowAsStaffOnTab(username: String): Boolean {
-            if (!showInTabList || !ModuleAntiStaff.running || !enabled) {
-                return false
-            }
-
-            return isStaff(username)
-        }
-
-        private fun isStaff(username: String): Boolean {
-            val serverEntry = mc.currentServerEntry ?: return false
-            val serverAddress = serverEntry.address?.dropPort()?.rootDomain() ?: return false
-            val staffs = serverStaffList[serverAddress] ?: return false
-
-            return staffs.contains(username)
-
-        }
-
-        override val running
-            get() = ModuleAntiStaff.running && enabled
-
     }
 
-    init {
-        tree(VanishCheck)
-        tree(UsernameCheck)
+    fun shouldShowAsStaffOnTab(username: String): Boolean {
+        if (!showInTabList || !ModuleAntiStaff.running || !enabled) {
+            return false
+        }
+
+        return isStaff(username)
+    }
+
+    private fun isStaff(username: String): Boolean {
+        val serverEntry = mc.currentServerEntry ?: return false
+        val serverAddress = serverEntry.address?.dropPort()?.rootDomain() ?: return false
+        val staffs = serverStaffList[serverAddress] ?: return false
+
+        return staffs.contains(username)
+
     }
 
     /**
