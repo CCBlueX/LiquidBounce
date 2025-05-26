@@ -13,8 +13,6 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 
 /**
@@ -22,26 +20,16 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
  */
 object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
 
-    object VelocityCheck : ToggleableConfigurable(this, "VelocityCheck", true) {
-
-        val packetHandler = handler<PacketEvent>(priority = CRITICAL_MODIFICATION) { event ->
-            val packet = event.packet
-
-            // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                if (packet.velocityX == 0 && packet.velocityZ == 0 && packet.velocityY / 8000.0 > 0.075) {
-                    // alert the user
-                    alertAboutStaff()
-                    return@handler
-                }
-            }
-        }
-
-    }
-
+    /**
+     * Attempts to find a difference in the player list size in comparison
+     * to the UPDATE_LATENCY list of the [PlayerListS2CPacket].
+     */
     object VanishCheck : ToggleableConfigurable(this, "VanishCheck", false) {
 
-        val packetHandler = handler<PacketEvent> { event ->
+        private var wasInVanish = false
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
             if (packet is PlayerListS2CPacket) {
@@ -49,9 +37,11 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
 
                 if (actions.contains(PlayerListS2CPacket.Action.UPDATE_LATENCY)) {
                     if (packet.entries.size != network.playerList?.size) {
-                        alertAboutStaff()
-                    } else {
-                        notification("AntiStaff", message("vanishClear"), NotificationEvent.Severity.INFO)
+                        wasInVanish = true
+                        alert("staffVanish")
+                    } else if (wasInVanish) {
+                        wasInVanish = false
+                        alert("staffUnvanished")
                     }
                 }
             }
@@ -62,7 +52,6 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     object UsernameCheck : ToggleableConfigurable(this, "UsernameCheck", false) {
 
         private val showInTabList by boolean("ShowInTabList", true)
-
         private val serverStaffList = hashMapOf<String, Set<String>>()
 
         override fun enable() {
@@ -98,7 +87,8 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
             }
         }
 
-        val packetHandler = handler<PacketEvent> { event ->
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
             if (packet is PlayerListS2CPacket) {
@@ -109,7 +99,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
                     val profile = entry.profile ?: continue
 
                     if (isStaff(profile.name)) {
-                        alertAboutStaff(profile.name)
+                        alert("staffAlert", profile.name)
                     }
                 }
             }
@@ -160,7 +150,6 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     }
 
     init {
-        tree(VelocityCheck)
         tree(VanishCheck)
         tree(UsernameCheck)
     }
@@ -168,12 +157,11 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     /**
      * Alert the user about staff watching them.
      */
-    private fun alertAboutStaff(username: String? = null) {
-        val messageKey = if (username == null) "staffDetected" else "specificStaffDetected"
-        val message = message(messageKey, username ?: "")
+    private fun alert(key: String, username: String? = null) {
+        val message = message(key, username ?: "")
         notification("Staff Detected", message, NotificationEvent.Severity.INFO)
         chat(
-            warning(message(messageKey, username ?: "")),
+            warning(message(key, username ?: "")),
             metadata = MessageMetadata(id = "${this.name}#${username ?: "generic"}")
         )
     }
