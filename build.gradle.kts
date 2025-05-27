@@ -339,47 +339,11 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
 
 // i18n check
 
-tasks.register("verifyI18nJsonKeys") {
-    val baselineFileName = "en_us.json"
-    val i18nDir = file("src/main/resources/resources/liquidbounce/lang")
-
-    group = "verification"
-    description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
-
-    doLast {
-        if (!i18nDir.exists() || !i18nDir.isDirectory()) {
-            throw GradleException("The specified directory $i18nDir does not exist or is not a directory.")
-        }
-
-        val baselineFile = File(i18nDir, baselineFileName)
-        if (!baselineFile.exists()) {
-            throw GradleException("Baseline file $baselineFileName not found in ${i18nDir}.")
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        fun File.readJsonObject() = inputStream().use(JsonSlurper()::parse) as Map<String, String>
-
-        val baseline = baselineFile.readJsonObject()
-
-        i18nDir.listFiles()?.forEach { file ->
-            if (file.name.endsWith(".json") && file.name != baselineFileName) {
-                val currentFile = file.readJsonObject()
-
-                val missingKeys = baseline.keys - currentFile.keys
-
-                if (missingKeys.isEmpty()) {
-                    logger.info("${file.name} is complete. No missing keys.")
-                } else {
-                    val limitedMissingKeys = missingKeys.take(5)
-                    val output = limitedMissingKeys.joinToString(
-                        separator = ", ",
-                        postfix = if (missingKeys.size > 5) ", ..." else ""
-                    )
-                    logger.warn("${file.name} is missing the following keys (${missingKeys.size}): $output")
-                }
-            }
-        }
-    }
+tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
+    val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
+    baselineFile.set(languageFolder.resolve("en_us.json"))
+    files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
+    consoleOutputCount.set(5)
 }
 
 java {
