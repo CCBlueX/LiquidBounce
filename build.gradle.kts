@@ -20,7 +20,6 @@
 import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 plugins {
@@ -52,6 +51,11 @@ base {
 val includeDependency: Configuration by configurations.creating
 val includeModDependency: Configuration by configurations.creating
 
+/**
+ * Provided by:
+ * - Minecraft
+ * - Mod dependencies
+ */
 fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
 
@@ -67,7 +71,9 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.slf4j", module = "slf4j-api")
     exclude(group = "com.mojang", module = "authlib")
 
+    // Note: from Netty HTTP Server, not all components are used
     exclude(group = "io.netty", module = "netty-all")
+
     exclude(group = "io.netty", module = "netty-buffer")
     exclude(group = "io.netty", module = "netty-codec")
     exclude(group = "io.netty", module = "netty-common")
@@ -340,8 +346,13 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
 // i18n check
 
 tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
+    val baselineFileName = "en_us.json"
+
+    group = "verification"
+    description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
+
     val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
-    baselineFile.set(languageFolder.resolve("en_us.json"))
+    baselineFile.set(languageFolder.resolve(baselineFileName))
     files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
     consoleOutputCount.set(5)
 }
