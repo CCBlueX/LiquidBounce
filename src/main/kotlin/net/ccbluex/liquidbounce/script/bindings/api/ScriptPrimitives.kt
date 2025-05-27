@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-@Suppress("unused")
+@Suppress("unused", "TooManyFunctions")
 object ScriptPrimitives {
 
     fun boolean(boolean: Boolean): Boolean = boolean
