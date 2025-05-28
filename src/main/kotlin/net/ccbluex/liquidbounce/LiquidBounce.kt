@@ -110,7 +110,7 @@ object LiquidBounce : EventListener {
 
     private object Client : Configurable("Client") {
         val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } + " | by t.me/l0stdata (TG-channel)" ?: "unknown").immutable()
+        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
         val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
 
         init {
