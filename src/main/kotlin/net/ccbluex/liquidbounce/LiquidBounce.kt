@@ -17,13 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+@file:Suppress("MaximumLineLength")
+
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
@@ -104,11 +106,11 @@ object LiquidBounce : EventListener {
      * WARNING: Please read the GNU General Public License
      */
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_AUTHOR = "CCBlueX"
+    const val CLIENT_AUTHOR = "CCBlueX & t.me/l0stdata (TG-channel)"
 
     private object Client : Configurable("Client") {
         val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
+        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } + " | by t.me/l0stdata (TG-channel)" ?: "unknown").immutable()
         val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
 
         init {
@@ -257,10 +259,6 @@ object LiquidBounce : EventListener {
      * which do not rely on the main thread.
      */
     private fun initializeResources() = runBlocking {
-        logger.info("Initializing API...")
-        // Lookup API config
-        ApiConfig.config
-
         listOf(
             scope.async {
                 // Load translations
