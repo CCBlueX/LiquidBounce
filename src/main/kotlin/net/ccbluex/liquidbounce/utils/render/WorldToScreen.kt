@@ -43,7 +43,7 @@ object WorldToScreen : EventListener {
             val matrixStack = event.matrixStack
 
             this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
-            this.projectionMatrix = RenderSystem.getProjectionMatrix()
+            this.projectionMatrix = RenderSystem.getProjectionMatrixBuffer().buffer
         }
 
     fun calculateScreenPos(

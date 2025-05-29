@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
@@ -50,8 +51,8 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         super.render(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
-//        RenderSystem.disableDepthTest()
-        context.matrices.push()
+        GlStateManager._disableDepthTest()
+        context.matrices.pushMatrix()
         context.matrices.translate(x.toFloat(), y.toFloat(), 0.0f)
         var hoveredSlot: Slot? = null
 
@@ -64,11 +65,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
                 hoveredSlot = slot
                 if (slot.canBeHighlighted()) {
                     // draw slot highlight
-                    context.fillGradient(
-                        RenderLayer.getGuiOverlay(),
-                        slot.x, slot.y, slot.x + 16, slot.y + 16,
-                        -2130706433, -2130706433, 0
-                    )
+                    context.fillGradient(slot.x, slot.y, slot.x + 16, slot.y + 16, -2130706433, -2130706433)
                 }
             }
         }
@@ -78,8 +75,8 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
             drawItem(context, cursorStack, mouseX - x - 8, mouseY - y - 8)
         }
 
-        context.matrices.pop()
-//        RenderSystem.enableDepthTest()
+        context.matrices.popMatrix()
+        GlStateManager._enableDepthTest()
 
         if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasStack()) {
             val hoveredItemStack = hoveredSlot.stack
@@ -96,15 +93,15 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
     }
 
     private fun drawItem(context: DrawContext, stack: ItemStack, x: Int, y: Int) {
-        context.matrices.push()
+        context.matrices.pushMatrix()
         context.matrices.translate(0f, 0f, 232f)
         context.drawItem(stack, x, y)
         context.drawStackOverlay(textRenderer, stack, x, y, null)
-        context.matrices.pop()
+        context.matrices.popMatrix()
     }
 
     private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
+        context.drawTexture(RenderPipeline, BACKGROUND_TEXTURE, x, y,
             0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
         player()?.let { player ->
             drawEntity(
