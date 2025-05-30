@@ -438,7 +438,6 @@
   "liquidbounce.module.antiLevitation.description": "避免受到失重/缓降效果。",
   "liquidbounce.module.antiReducedDebugInfo.description": "允许你看到完整的F3调试信息。",
   "liquidbounce.module.antiStaff.description": "当服务器的余胜军旁观你时提醒你。",
-  "liquidbounce.module.antiStaff.messages.staffDetected": "余胜军正在旁观你。",
   "liquidbounce.module.antiStaff.messages.specificStaffDetected": "%s 是一名余胜军。",
   "liquidbounce.module.antiStaff.messages.noStaffs": "没有适用于 %s 的余胜军名单。",
   "liquidbounce.module.antiStaff.messages.staffsFailed": "无法加载 %s 的员工名单，代码为 %s。",

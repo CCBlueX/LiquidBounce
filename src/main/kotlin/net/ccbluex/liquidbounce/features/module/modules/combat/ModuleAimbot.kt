@@ -120,18 +120,17 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
-        }
-
         if (IgnoreOpened.SCREEN !in ignores && mc.currentScreen != null) {
             return@handler
         }
 
-        if (IgnoreOpened.CONTAINER !in ignores
-            && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>)
-        ) {
+        if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
+                mc.currentScreen is HandledScreen<*>)) {
             return@handler
+        }
+
+        renderEnvironmentForWorld(matrixStack) {
+            targetRenderer.render(this, target, partialTicks)
         }
 
         val currentRotation = playerRotation ?: return@handler
