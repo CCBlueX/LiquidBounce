@@ -10,6 +10,7 @@ internal enum class NametagShowOptions(
     PING("Ping"),
     ITEMS("Items"),
     ITEM_INFO("ItemInfo"),
+    ENCHANTMENTS("Enchantments"),
     BORDER("Border");
 
     fun isShowing() = this in ModuleNametags.show
