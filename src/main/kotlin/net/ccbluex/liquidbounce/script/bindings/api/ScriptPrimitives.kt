@@ -18,6 +18,15 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+/**
+ * Because the languages used in scripts usually
+ * have very broad requirements for numeric types.
+ * For example, all numbers in JS are [Double],
+ * which can cause problems on interoperations.
+ *
+ * The functions provided by this util can explicitly
+ * convert script numbers or strings into primitives of the JVM.
+ */
 @Suppress("unused", "TooManyFunctions")
 object ScriptPrimitives {
 
