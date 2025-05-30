@@ -131,12 +131,10 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
 fun ClientPlayerEntity.isCloseToEdge(
     directionalInput: DirectionalInput,
     distance: Double = 0.1,
-    pos: Vec3d = this.pos
+    pos: Vec3d = this.pos,
 ): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
-
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
-
     simulatedInput.set(
         jump = false,
         sneak = false
@@ -147,11 +145,9 @@ fun ClientPlayerEntity.isCloseToEdge(
     )
 
     simulatedPlayer.pos = pos
-
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.velocity
-
     val direction = if (nextVelocity.horizontalLengthSquared() > 0.003 * 0.003) {
         nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
     } else {

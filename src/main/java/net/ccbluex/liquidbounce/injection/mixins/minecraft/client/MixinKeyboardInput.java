@@ -24,7 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
 import net.ccbluex.liquidbounce.event.events.SprintEvent;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.input.InputTracker;
