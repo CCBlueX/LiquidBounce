@@ -1,6 +1,6 @@
 <div align="center">
 <p>
-    <img width="200" src="https://github.com/SmallStackApple/MaZiBounce/blob/nextgen/src/main/resources/resources/liquidbounce/lb-logo.png?raw=true">
+    <img width="200" src="https://raw.githubusercontent.com/SmallStackApple/MaZiBounce/refs/heads/nextgen/src/main/resources/resources/liquidbounce/logo_banner.png">
 </p>
 
 [Website](https://liquidbounce.net) |
