@@ -93,7 +93,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
-            logger.error("Failed to connect to Discord RPC.", it)
+            logger.info("Failed to connect to Discord RPC.", it)
 
             if (it is NoDiscordClientException) {
                 notification(
