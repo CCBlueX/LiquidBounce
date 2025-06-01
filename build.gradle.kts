@@ -390,10 +390,6 @@ tasks.jar {
     }
 }
 
-tasks.remapJar {
-    addNestedDependencies = true
-}
-
 tasks.register<Copy>("copyZipInclude") {
     from("zip_include/")
     into("build/libs/zip")
