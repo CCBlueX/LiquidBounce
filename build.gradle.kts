@@ -87,7 +87,7 @@ includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
 configurations.include.get().extendsFrom(includeModDependency)
-configurations.modImplementation.get().extendsFrom(includeModDependency)
+configurations.modApi.get().extendsFrom(includeModDependency)
 configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
 
 repositories {
@@ -134,29 +134,29 @@ loom {
 dependencies {
     // Minecraft
     minecraft("com.mojang:minecraft:${minecraft_version}")
-    mappings("net.fabricmc:yarn:${project.properties["yarn_mappings"]}:v2")
+    mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
 
     // Fabric
-    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${fabric_kotlin_version}")
+    modApi("net.fabricmc:fabric-loader:${loader_version}")
+    modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    modApi("net.fabricmc:fabric-language-kotlin:${fabric_kotlin_version}")
 
     // Mod menu
-    modImplementation("com.terraformersmc:modmenu:${project.properties["mod_menu_version"]}")
+    modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
 
     // Recommended mods (on IDE)
-    modImplementation("maven.modrinth:sodium:${project.properties["sodium_version"]}")
-    modImplementation("maven.modrinth:lithium:${project.properties["lithium_version"]}")
+    modApi("maven.modrinth:sodium:${project.property("sodium_version")}")
+    modApi("maven.modrinth:lithium:${project.property("lithium_version")}")
 
     // ViaFabricPlus
-    modImplementation("com.viaversion:viafabricplus-api:${viafabricplus_version}")
+    modApi("com.viaversion:viafabricplus-api:${viafabricplus_version}")
     modRuntimeOnly("com.viaversion:viafabricplus:${viafabricplus_version}")
 
     // Minecraft Authlib
-    includeDependency("com.github.CCBlueX:mc-authlib:${project.properties["mc_authlib_version"]}")
+    includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
-    includeModDependency("com.github.CCBlueX:mcef:${project.properties["mcef_version"]}")
+    includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.2.1")
 
     // Discord RPC Support
@@ -164,20 +164,20 @@ dependencies {
 
     // ScriptAPI
     includeDependency("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
-    includeDependency("org.graalvm.polyglot:polyglot:${project.properties["polyglot_version"]}")
-    includeDependency("org.graalvm.polyglot:js-community:${project.properties["polyglot_version"]}")
-    includeDependency("org.graalvm.polyglot:tools-community:${project.properties["polyglot_version"]}")
-//    includeDependency("org.graalvm.polyglot:python-community:${project.properties["polyglot_version"]}")
-//    includeDependency("org.graalvm.polyglot:wasm-community:${project.properties["polyglot_version"]}")
-//    includeDependency("org.graalvm.polyglot:java-community:${project.properties["polyglot_version"]}")
-//    includeDependency("org.graalvm.polyglot:ruby-community:${project.properties["polyglot_version"]}")
-//    includeDependency("org.graalvm.polyglot:llvm-native-community:${project.properties["polyglot_version"]}")
+    includeDependency("org.graalvm.polyglot:polyglot:${project.property("polyglot_version")}")
+    includeDependency("org.graalvm.polyglot:js-community:${project.property("polyglot_version")}")
+    includeDependency("org.graalvm.polyglot:tools-community:${project.property("polyglot_version")}")
+//    includeDependency("org.graalvm.polyglot:python-community:${project.property("polyglot_version")}")
+//    includeDependency("org.graalvm.polyglot:wasm-community:${project.property("polyglot_version")}")
+//    includeDependency("org.graalvm.polyglot:java-community:${project.property("polyglot_version")}")
+//    includeDependency("org.graalvm.polyglot:ruby-community:${project.property("polyglot_version")}")
+//    includeDependency("org.graalvm.polyglot:llvm-native-community:${project.property("polyglot_version")}")
 
     // Machine Learning
-    includeDependency("ai.djl:api:${project.properties["djl_version"]}")
-    includeDependency("ai.djl.pytorch:pytorch-engine:${project.properties["djl_version"]}")
-//    runtimeOnly("ai.djl.mxnet:mxnet-engine:${project.properties["djl_version"]}")
-//    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.properties["djl_version"]}")
+    includeDependency("ai.djl:api:${project.property("djl_version")}")
+    includeDependency("ai.djl.pytorch:pytorch-engine:${project.property("djl_version")}")
+//    runtimeOnly("ai.djl.mxnet:mxnet-engine:${project.property("djl_version")}")
+//    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
     includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
@@ -203,9 +203,9 @@ dependencies {
             val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
                 isTransitive = false
             }
-            val implementationDependency = dependencies.implementation(compileOnlyApiDependency)!!
+            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
 
-            dependencies.include(implementationDependency)
+            dependencies.include(apiDependency)
         }
     }
 }
