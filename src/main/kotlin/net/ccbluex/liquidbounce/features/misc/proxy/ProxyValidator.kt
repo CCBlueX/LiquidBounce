@@ -136,7 +136,6 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
     logger.info("Sent query request via proxy [$host:$port]")
 }.onFailure { throwable -> failure(throwable) }
 
-
 private fun Proxy.connect(
     address: InetSocketAddress,
     useEpoll: Boolean,
