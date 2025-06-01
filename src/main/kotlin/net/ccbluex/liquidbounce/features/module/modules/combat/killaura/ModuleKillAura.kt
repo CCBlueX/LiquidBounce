@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
@@ -59,7 +60,6 @@ import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -77,7 +77,7 @@ import kotlin.math.pow
  * Automatically attacks enemies.
  */
 @Suppress("MagicNumber")
-object ModuleKillAura : ClientModule("MaZiAura", Category.COMBAT) {
+object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     // Attack speed
     val clickScheduler = tree(KillAuraClicker)
@@ -472,8 +472,9 @@ object ModuleKillAura : ClientModule("MaZiAura", Category.COMBAT) {
     internal fun validateAttack(target: Entity? = null): Boolean {
         val criticalHit = target == null || player.isGliding || criticalsSelectionMode.isCriticalHit(target)
         val isInInventoryScreen = isInventoryOpen || isInContainerScreen
+        val scaffoldEnabled = ModuleManager.getModuleByName("Scaffold")?.running == true
 
-        return criticalHit && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+        return criticalHit && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing) && !scaffoldEnabled
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
