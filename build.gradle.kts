@@ -48,7 +48,10 @@ base {
     group = maven_group
 }
 
+/** Includes non-mod dependency recursively in the JAR file */
 val includeDependency: Configuration by configurations.creating
+
+/** Includes mod in the JAR file */
 val includeModDependency: Configuration by configurations.creating
 
 /**
@@ -385,6 +388,10 @@ tasks.jar {
     from(files(project.configurations.mappings.get().map(::zipTree))) {
         include("mappings/mappings.tiny")
     }
+}
+
+tasks.remapJar {
+    addNestedDependencies = true
 }
 
 tasks.register<Copy>("copyZipInclude") {
