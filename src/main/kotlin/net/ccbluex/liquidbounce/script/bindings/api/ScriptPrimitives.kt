@@ -46,6 +46,12 @@ object ScriptPrimitives {
 
     fun short(string: String?): Short = string?.toShort() ?: 0.toShort()
 
+    fun char(char: Char): Char = char
+
+    fun char(long: Long): Char = long.toInt().toChar()
+
+    fun char(string: String?): Char = string?.firstOrNull() ?: 0.toChar()
+
     fun int(int: Int): Int = int
 
     fun int(long: Long): Int = long.toInt()
