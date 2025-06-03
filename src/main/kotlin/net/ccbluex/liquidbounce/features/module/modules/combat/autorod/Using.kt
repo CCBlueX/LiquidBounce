@@ -24,16 +24,15 @@ internal class Using : Configurable("Using") {
     internal fun startRodUsing(slot: HotbarItemSlot) = push.testPushRod {
         val (yaw, pitch) = RotationManager.currentRotation ?: player.rotation
 
-        interactItem(slot.useHand, yaw, pitch) {
-            slot.takeIf { it !is OffHandSlot }
-                ?.hotbarSlotForServer
-                ?.let {
-                    resetSlot = player.inventory.selectedSlot
+        slot.takeIf { it !is OffHandSlot }
+            ?.hotbarSlotForServer
+            ?.let {
+                resetSlot = player.inventory.selectedSlot
 
-                    player.inventory.selectedSlot = it
-                    interaction.syncSelectedSlot()
-                }
-        }
+                player.inventory.selectedSlot = it
+                interaction.syncSelectedSlot()
+            }
+        interactItem(slot.useHand, yaw, pitch)
 
         isUsingRod = true
         pullback.reset()
