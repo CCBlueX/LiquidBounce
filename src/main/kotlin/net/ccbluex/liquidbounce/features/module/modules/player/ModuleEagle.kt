@@ -90,6 +90,8 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.SAFETY_FEATURE
     ) { event ->
+        if (event.sneak) return@handler
+
         val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event)
 
         event.sneak = shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())
