@@ -20,11 +20,8 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors
 
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 /**
@@ -40,19 +37,6 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
     private var ticksElapsed = 0
     private var currentTransitionInDuration = stopDuration.random()
 
-    val isInStopState: Boolean
-        get() = enabled && ticksElapsed < currentTransitionInDuration
-
-    @Suppress("unused")
-    private val gameHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        if (rate > (0..100).random()) {
-            currentTransitionInDuration = stopDuration.random()
-            ticksElapsed = 0
-        } else {
-            ticksElapsed++
-        }
-    }
-
     override fun process(
         rotationTarget: RotationTarget,
         currentRotation: Rotation,
@@ -62,7 +46,14 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
             return targetRotation
         }
 
-        return if (isInStopState) {
+        // If the rate is met, we will stop the rotation for a random duration
+        if (rate > (0..100).random()) {
+            currentTransitionInDuration = stopDuration.random()
+            ticksElapsed = 0
+        }
+
+        return if (ticksElapsed < currentTransitionInDuration) {
+            ticksElapsed++
             currentRotation.towardsLinear(targetRotation, (0.0f..0.1f).random(), (0.0f..0.1f).random())
         } else {
             targetRotation

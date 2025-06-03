@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
+import kotlin.math.max
 
 /**
  * Normal clicking but with a stabilized click cycle.
  */
-class StabilizedPattern : ClickPattern {
+object StabilizedPattern : ClickPattern {
 
     override fun fill(
         clickArray: IntArray,
@@ -39,10 +40,9 @@ class StabilizedPattern : ClickPattern {
 
         var currentIndex = 0
 
-        @Suppress("UnusedPrivateProperty")
-        for (i in 0 until clicks) {
+        repeat(clicks) {
             clickArray[currentIndex % clickArray.size]++
-            currentIndex += if (interval > 0) interval else 1
+            currentIndex += max(interval, 1)
             if (remainder > 0) {
                 currentIndex++
                 remainder--

@@ -510,6 +510,7 @@
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Перезавантаження успішне",
   "liquidbounce.module.autoShop.messages.loadError": "Помилка завантаження",
   "liquidbounce.module.bookBot.description": "Автоматично пише в книгах.",
+  "liquidbounce.module.logoffSpot.description": "Дозволяє бачити гравців, які вийшли з сервера або знаходяться поза межами відображення.",
   "liquidbounce.module.betterTab.description": "Різноманітні покращення списку вкладок.",
   "liquidbounce.module.autoPearl.description": "Прицілюється та кидає перлину по траєкторії ворожої перлини."
 }

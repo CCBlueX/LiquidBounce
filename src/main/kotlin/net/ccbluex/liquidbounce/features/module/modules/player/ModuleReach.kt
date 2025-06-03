@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  */
 
 object ModuleReach : ClientModule("Reach", Category.PLAYER) {
-
     val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
     val blockReach by float("BlockReach", 5f, 4.5f..8f)
 }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -42,19 +43,18 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
     val listOfModules = arrayListOf(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura)
-    private val onFlag by boolean("OnFlag", false)
-    private val onDeath by boolean("OnDeath", false)
+    private val disableOn by multiEnumChoice<DisableOn>("On")
 
     @Suppress("unused")
     val worldChangesHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && onFlag) {
+        if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
     }
 
     @Suppress("unused")
     val deathHandler = handler<DeathEvent> {
-        if (onDeath) disableAndNotify("your death")
+        if (DisableOn.DEATH in disableOn) disableAndNotify("your death")
     }
 
     private fun disableAndNotify(reason: String) {
@@ -68,5 +68,10 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
             }
             notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
         }
+    }
+
+    private enum class DisableOn(override val choiceName: String) : NamedChoice {
+        FLAG("Flag"),
+        DEATH("Death")
     }
 }

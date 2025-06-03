@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
 import net.ccbluex.liquidbounce.utils.math.Vec2i;
@@ -67,6 +69,13 @@ public abstract class MixinScreen {
     @Inject(method = "init()V", at = @At("TAIL"))
     protected void init(CallbackInfo ci) {
         ThemeManager.INSTANCE.initialiseBackground();
+    }
+
+    @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
+    private void hookRenderInGameBackground(DrawContext context, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.booleans.BooleanDoubleImmutablePair
 import it.unimi.dsi.fastutil.objects.ObjectDoubleImmutablePair
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -54,38 +55,16 @@ import kotlin.math.max
  */
 object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManagerSubscriber {
 
-    /**
-     * When enabled, only places when entities are about to enter a hole, otherwise fills all holes.
-     */
-    private val smart by boolean("Smart", true)
-
-    /**
-     * Prevents the module from filling the hole you want to enter.
-     * The criteria to allow filling are:
-     * The hole is higher than you, the hole doesn't intersect your own fill area, or you are already in a hole.
-     */
-    private val preventSelfFill by boolean("PreventSelfFill", true)
-
-    /**
-     * Only operate when you're in a hole yourself.
-     */
-    private val onlyWhenSelfInHole by boolean("OnlyWhenSelfInHole", false)
+    private val features by multiEnumChoice("Features",
+        Features.SMART,
+        Features.PREVENT_SELF_FILL,
+        Features.CHECK_MOVEMENT
+    )
 
     /**
      * The area around entities' feet that will be checked for holes.
      */
     private val fillArea by int("Area", 2, 1..5)
-
-    /**
-     * Checks the movement angle. Won't fill holes that lie further away than 30° from the entities' velocity direction.
-     * Only applies when smart is enabled.
-     */
-    private val checkMovement by boolean("CheckMovement", true)
-
-    /**
-     * Only fills 1x1 holes - ignores 2x2 and 2x1 holes.
-     */
-    private val only1by1 by boolean("Only1x1", false)
 
     /**
      * How the blocklist is used.
@@ -125,11 +104,11 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         // all holes, if required 1x1 holes filtered out
-        val holes = HoleTracker.holes.filter { !only1by1 || it.type == Hole.Type.ONE_ONE }
+        val holes = HoleTracker.holes.filter { Features.ONLY_ONE_BY_ONE !in features || it.type == Hole.Type.ONE_ONE }
 
         val blockPos = player.blockPos
         val selfInHole = holes.any { it.contains(blockPos) }
-        if (onlyWhenSelfInHole && !selfInHole) {
+        if (Features.ONLY_WHEN_SELF_IN_HOLE in features && !selfInHole) {
             return@handler
         }
 
@@ -138,7 +117,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         val blocks = linkedSetOf<BlockPos>()
         val holeContext = HoleContext(holes, selfInHole, selfRegion, blocks)
 
-        if (!smart) {
+        if (Features.SMART !in features) {
             collectHolesSimple(holeContext)
         } else {
             val availableItems = getAvailableItemsCount()
@@ -166,14 +145,15 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         return itemCount
     }
 
+    @Suppress("ComplexCondition")
     private fun collectHolesSimple(holeContext: HoleContext) {
         holeContext.holes.forEach { hole ->
             val y = hole.positions.from.y + 1.0
-            if (!preventSelfFill ||
-                y > player.y ||
-                holeContext.selfInHole ||
-                !hole.positions.intersects(holeContext.selfRegion)
-                ) {
+            if (Features.PREVENT_SELF_FILL !in features
+                || y > player.y
+                || holeContext.selfInHole
+                || !hole.positions.intersects(holeContext.selfRegion)
+            ) {
                 hole.positions.mapTo(holeContext.blocks) { it.toImmutable() }
             }
         }
@@ -254,10 +234,12 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         val y = hole.positions.from.y + 1.0
         val movingTowardsHole = isMovingTowardsHole(hole, entity)
         val requirementsMet = movingTowardsHole.firstBoolean() && hole.positions.intersects(region) && y <= entity.y
-        val noSelfFillViolation = !preventSelfFill ||
-            y > player.y ||
-            selfInHole ||
-            !hole.positions.intersects(selfRegion)
+
+        val noSelfFillViolation =
+            Features.PREVENT_SELF_FILL !in features
+            || y > player.y
+            || selfInHole
+            || !hole.positions.intersects(selfRegion)
 
         return BooleanDoubleImmutablePair(requirementsMet && noSelfFillViolation, movingTowardsHole.rightDouble())
     }
@@ -271,7 +253,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         val normalizedDelta = Vector2d(holePos.x - playerPos.x, holePos.z - playerPos.z).normalize()
         val angle = acos(normalizedDelta.dot(normalizedVelocity))
 
-        if (!checkMovement) {
+        if (Features.CHECK_MOVEMENT !in features) {
             return BooleanDoubleImmutablePair(true, angle)
         }
 
@@ -286,4 +268,36 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         val blocks: MutableSet<BlockPos>
     )
 
+    private enum class Features(
+        override val choiceName: String
+    ) : NamedChoice {
+        /**
+         * When enabled, only places when entities are about to enter a hole, otherwise fills all holes.
+         */
+        SMART("Smart"),
+
+        /**
+         * Prevents the module from filling the hole you want to enter.
+         * The criteria to allow filling are:
+         * The hole is higher than you, the hole doesn't intersect your own fill area, or you are already in a hole.
+         */
+        PREVENT_SELF_FILL("PreventSelfFill"),
+
+        /**
+         * Only operate when you're in a hole yourself.
+         */
+        ONLY_WHEN_SELF_IN_HOLE("OnlyWhenSelfInHole"),
+
+        /**
+         * Checks the movement angle.
+         * Won't fill holes that lie further away than 30° from the entities' velocity direction.
+         * Only applies when smart is enabled.
+         */
+        CHECK_MOVEMENT("CheckMovement"),
+
+        /**
+         * Only fills 1x1 holes - ignores 2x2 and 2x1 holes.
+         */
+        ONLY_ONE_BY_ONE("Only1x1")
+    }
 }

@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.engine.UV2f
+import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import org.lwjgl.opengl.GL11

@@ -47,16 +47,22 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
+            // Generic modes
             VelocityModify,
-            VelocityHypixel,
+            VelocityReversal,
             VelocityStrafe,
+            VelocityJumpReset,
+
+            // Server modes
+            VelocityHypixel,
+            VelocityDexland,
+            VelocityHylex,
+            VelocityBlocksMC,
+
+            // Anti cheat modes
             VelocityAAC442,
             VelocityExemptGrim117,
-            VelocityDexland,
-            VelocityJumpReset,
-            VelocityIntave,
-            VelocityHylex,
-            VelocityBlocksMC
+            VelocityIntave
         )
     ).apply(::tagBy)
 
@@ -93,7 +99,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
                     }
                 }
 
-                val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+                val packetEvent = PacketEvent(TransferOrigin.INCOMING, packet, false)
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {

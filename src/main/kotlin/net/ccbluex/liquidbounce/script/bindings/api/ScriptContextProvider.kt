@@ -23,11 +23,14 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
 import net.minecraft.util.math.*
 import org.graalvm.polyglot.Value
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The main hub of the ScriptAPI that provides access to a useful set of members.
  */
 object ScriptContextProvider {
+
+    private val localStorage = ConcurrentHashMap<String, Any>()
 
     internal fun setupContext(bindings: Value) = bindings.apply {
         // Class bindings
@@ -56,6 +59,9 @@ object ScriptContextProvider {
         putMember("ReflectionUtil", ScriptReflectionUtil())
         putMember("ParameterValidator", ScriptParameterValidator(bindings))
         putMember("UnsafeThread", ScriptUnsafeThread)
+
+        // Global variables
+        putMember("localStorage", localStorage) // Script scope
     }
 
 }

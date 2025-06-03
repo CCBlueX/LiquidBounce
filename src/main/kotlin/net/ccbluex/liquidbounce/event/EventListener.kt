@@ -44,12 +44,12 @@ interface EventListener {
         get() = parent()?.running ?: !isDestructed
 
     /**
-     * Parent listenable
+     * Parent [EventListener]
      */
     fun parent(): EventListener? = null
 
     /**
-     * Children listenables
+     * Children [EventListener]
      */
     fun children(): List<EventListener> = emptyList()
 
@@ -78,7 +78,7 @@ inline fun <reified T : Event> EventListener.handler(
 
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
-    noinline handler: Handler<T>
+    crossinline handler: Handler<T>
 ): EventHook<T> {
     lateinit var eventHook: EventHook<T>
     eventHook = EventHook(this, {
@@ -93,7 +93,7 @@ inline fun <reified T : Event> EventListener.once(
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
-    noinline eventHandler: SuspendableEventHandler<T>
+    crossinline eventHandler: SuspendableEventHandler<T>
 ) {
     handler<T>(priority) { event -> Sequence(this) { eventHandler(event) } }
 }

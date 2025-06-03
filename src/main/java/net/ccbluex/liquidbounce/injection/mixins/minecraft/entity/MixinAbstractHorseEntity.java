@@ -31,13 +31,7 @@ public class MixinAbstractHorseEntity {
 
     @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
     private boolean isSaddled(boolean original) {
-        // If entity control is enabled and enforce saddled is enabled,
-        // return always true and pretend the entity is saddled
-        if (ModuleEntityControl.INSTANCE.getRunning() && ModuleEntityControl.INSTANCE.getEnforceSaddled()) {
-            return true;
-        }
-
-        return original;
+        return ModuleEntityControl.getEnforceSaddled() || original;
     }
 
 }

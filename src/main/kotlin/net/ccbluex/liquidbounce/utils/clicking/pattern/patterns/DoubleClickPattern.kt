@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
  *
  * @note In the past I had a mouse with this feature and I always used it. @1zuna
  */
-class DoubleClickPattern : ClickPattern {
+object DoubleClickPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,

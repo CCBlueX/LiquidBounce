@@ -76,8 +76,18 @@ class InterpolationAngleSmooth(
         } ?: 0f
         ModuleDebug.debugParameter(this, "Direction Change", directionChange)
 
-        val horizontalSpeed = horizontalSpeed.random().toFloat() / 100.0f
-        val verticalSpeed = verticalSpeed.random().toFloat() / 100.0f
+        val horizontalSpeed = if (rotationTarget != null) {
+            horizontalSpeed.random()
+        } else {
+            horizontalSpeed.start
+        }.toFloat() / 100.0f
+
+        val verticalSpeed = if (rotationTarget != null) {
+            verticalSpeed.random()
+        } else {
+            verticalSpeed.start
+        }.toFloat() / 100.0f
+
         ModuleDebug.debugParameter(this, "Horizontal Speed", horizontalSpeed)
         ModuleDebug.debugParameter(this, "Vertical Speed", verticalSpeed)
 

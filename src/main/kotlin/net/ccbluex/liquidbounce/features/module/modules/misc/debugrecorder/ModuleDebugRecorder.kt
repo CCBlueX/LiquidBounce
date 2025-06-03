@@ -13,7 +13,12 @@ import net.minecraft.text.HoverEvent
 import java.text.SimpleDateFormat
 import java.util.*
 
-object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC) {
+object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC, disableOnQuit = true) {
+
+    init {
+        // [Debug Recorder] is usually used by developers and testers and is not needed in the auto config.
+        doNotIncludeAlways()
+    }
 
     val modes = choices("Mode", GenericDebugRecorder, arrayOf(
         MinaraiCombatRecorder,
@@ -74,11 +79,10 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC) {
             }.onFailure {
                 chat(markAsError("Failed to write log to file $it".asText()))
             }.onSuccess { path ->
-                val text = path.asText().styled {
-                    it.withUnderline(true)
-                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, regular("Browse...")))
-                        .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_FILE, path.toString()))
-                }
+                val text = path.asText()
+                    .underline(true)
+                    .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, regular("Browse...")))
+                    .onClick(ClickEvent(ClickEvent.Action.OPEN_FILE, path.toString()))
 
                 chat(regular("Log was written to "), text, regular("."))
             }

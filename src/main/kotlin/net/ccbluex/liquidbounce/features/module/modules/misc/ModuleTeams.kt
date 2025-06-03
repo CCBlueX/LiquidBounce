@@ -18,19 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.Text
 import java.awt.Color
 
 /**
@@ -40,21 +39,16 @@ import java.awt.Color
  */
 object ModuleTeams : ClientModule("Teams", Category.MISC) {
 
-    private val scoreboard by boolean("ScoreboardTeam", true)
-    private val nameColor by boolean("NameColor", true)
-    private val prefix by boolean("Prefix", false)
+    private val matches by multiEnumChoice("Matches",
+        Matches.SCOREBOARD_TEAM,
+        Matches.NAME_COLOR
+    )
 
-    private object Armor : ToggleableConfigurable(this, "ArmorColor", true) {
-        val helmet by boolean("Helmet", true)
-        val chestPlate by boolean("Chestplate", false)
-        val pants by boolean("Pants", false)
-        val boots by boolean("Boots", false)
-    }
+    private val armorColor by multiEnumChoice("ArmorColor",
+        ArmorColor.HELMET
+    )
 
-    init {
-        tree(Armor)
-    }
-
+    @Suppress("unused")
     val entityTagEvent = handler<TagEntityEvent> {
         val entity = it.entity
 
@@ -71,95 +65,94 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
      */
-    private fun isInClientPlayersTeam(entity: LivingEntity): Boolean {
-        if (scoreboard && player.isTeammate(entity)) {
-            return true
-        }
-
-        val clientDisplayName = player.displayName
-        val targetDisplayName = entity.displayName
-
-        if (clientDisplayName == null || targetDisplayName == null) {
-            return false
-        }
-
-        return checkName(clientDisplayName, targetDisplayName) ||
-            checkPrefix(targetDisplayName, clientDisplayName) ||
-            checkArmor(entity)
-    }
-
-    /**
-     * Checks if both names have the same color.
-     */
-    private fun checkName(clientDisplayName: Text, targetDisplayName: Text): Boolean {
-        if (!nameColor) {
-            return false
-        }
-
-        val targetColor = clientDisplayName.style.color
-        val clientColor = targetDisplayName.style.color
-
-        return targetColor != null && clientColor != null && targetColor == clientColor
-    }
-
-    /**
-     * Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers.
-     */
-    private fun checkPrefix(targetDisplayName: Text, clientDisplayName: Text): Boolean {
-        if (!prefix) {
-            return false
-        }
-
-        val targetName = targetDisplayName.string
-            .stripMinecraftColorCodes()
-        val clientName = clientDisplayName.string
-            .stripMinecraftColorCodes()
-        val targetSplit = targetName.split(" ")
-        val clientSplit = clientName.split(" ")
-
-        // Check if both names have a prefix
-        return targetSplit.size > 1 && clientSplit.size > 1 && targetSplit[0] == clientSplit[0]
-    }
+    @Suppress("ReturnCount")
+    private fun isInClientPlayersTeam(entity: LivingEntity) =
+        matches.any { it.testMatches(entity) } || checkArmor(entity)
 
     /**
      * Checks if the color of any armor piece matches.
      */
-    private fun checkArmor(entity: LivingEntity): Boolean {
-        if (!Armor.enabled || entity !is PlayerEntity) {
-            return false
-        }
-
-        val hasMatchingArmorColor = listOf(
-            Armor.helmet to 3,
-            Armor.chestPlate to 2,
-            Armor.pants to 1,
-            Armor.boots to 0
-        ).any { (enabled, slot) ->
-            enabled && matchesArmorColor(entity, slot)
-        }
-
-        return hasMatchingArmorColor
-    }
-
-    /**
-     * Checks if the color of the item in the [armorSlot] of
-     * the [player] matches the user's armor color in the same slot.
-     */
-    private fun matchesArmorColor(player: PlayerEntity, armorSlot: Int): Boolean {
-        val ownStack = this.player.inventory.getArmorStack(armorSlot)
-        val otherStack = player.inventory.getArmorStack(armorSlot)
-
-        // returns false if the armor is not dyeable (e.g., iron armor)
-        // to avoid a false positive from `null == null`
-        val ownColor = ownStack.getArmorColor() ?: return false
-        val otherColor = otherStack.getArmorColor() ?: return false
-
-        return ownColor == otherColor
-    }
+    private fun checkArmor(entity: LivingEntity) =
+        entity is PlayerEntity && armorColor.any { it.matchesArmorColor(entity) }
 
     /**
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
-    fun getTeamColor(entity: Entity)
+    private fun getTeamColor(entity: Entity)
         = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
+
+    @Suppress("unused")
+    private enum class Matches(
+        override val choiceName: String,
+        val testMatches: (suspected: LivingEntity) -> Boolean
+    ) : NamedChoice {
+        /**
+         * Check if [LivingEntity] is in your own team using scoreboard,
+         */
+        SCOREBOARD_TEAM("ScoreboardTeam", { suspected ->
+            player.isTeammate(suspected)
+        }),
+
+        /**
+         * Checks if both names have the same color.
+         */
+        NAME_COLOR("NameColor", { suspected ->
+            val targetColor = player.displayName?.style?.color
+            val clientColor = suspected.displayName?.style?.color
+
+            targetColor != null
+                && clientColor != null
+                && targetColor == clientColor
+        }),
+
+        /**
+         * Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers.
+         */
+        PREFIX("Prefix", { suspected ->
+            val targetSplit = suspected.displayName
+                ?.string
+                ?.stripMinecraftColorCodes()
+                ?.split(" ")
+
+            val clientSplit = player.displayName
+                ?.string
+                ?.stripMinecraftColorCodes()
+                ?.split(" ")
+
+
+            targetSplit != null
+                && clientSplit != null
+                && targetSplit.size > 1
+                && clientSplit.size > 1
+                && targetSplit[0] == clientSplit[0]
+        })
+    }
+
+    @Suppress("unused", "MagicNumber")
+    private enum class ArmorColor(
+        override val choiceName: String,
+        val slot: Int
+    ) : NamedChoice {
+        HELMET("Helmet", 3),
+        CHESTPLATE("Chestplate", 2),
+        PANTS("Pants", 1),
+        BOOTS("Boots", 0);
+
+        /**
+         * Checks if the color of the item in the [slot] of
+         * the [player] matches the user's armor color in the same slot.
+         */
+        @Suppress("ReturnCount")
+        fun matchesArmorColor(suspected: PlayerEntity): Boolean {
+            val ownStack = player.inventory.getArmorStack(slot)
+            val otherStack = suspected.inventory.getArmorStack(slot)
+
+            // returns false if the armor is not dyeable (e.g., iron armor)
+            // to avoid a false positive from `null == null`
+            val ownColor = ownStack.getArmorColor() ?: return false
+            val otherColor = otherStack.getArmorColor() ?: return false
+
+            return ownColor == otherColor
+        }
+    }
 }

@@ -118,7 +118,9 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         "Placing",
         ModuleCrystalAura,
         Priority.IMPORTANT_FOR_USAGE_2,
-        slotFinder = { _ -> Slots.Hotbar.findSlot(Items.OBSIDIAN) ?: Slots.Hotbar.findSlot(Items.BEDROCK) }
+        slotFinder = { _ ->
+            Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN) ?: Slots.OffhandWithHotbar.findSlot(Items.BEDROCK)
+        }
     ))
 
     var currentTarget: PlacementPositionCandidate? = null

@@ -75,6 +75,9 @@ class SprintEvent(val directionalInput: DirectionalInput, var sprint: Boolean, v
     }
 }
 
+@Nameable("sneakNetwork")
+class SneakNetworkEvent(val directionalInput: DirectionalInput, var sneak: Boolean) : Event()
+
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
 

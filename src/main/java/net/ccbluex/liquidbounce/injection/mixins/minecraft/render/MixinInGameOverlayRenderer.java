@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.gui.hud.InGameOverlayRenderer;
 import net.minecraft.client.render.VertexConsumer;
@@ -39,13 +40,12 @@ public abstract class MixinInGameOverlayRenderer {
         return vertexConsumer.color(red,
                 green,
                 blue,
-                ModuleAntiBlind.INSTANCE.getRunning() ? ModuleAntiBlind.INSTANCE.getFireOpacity() * alpha : alpha);
+                ModuleAntiBlind.INSTANCE.getFireOpacityPercentage() * alpha);
     }
 
     @Inject(method = "renderInWallOverlay", at = @At("HEAD"), cancellable = true)
     private static void hookWallOverlay(Sprite sprite, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-        var antiBlind = ModuleAntiBlind.INSTANCE;
-        if (antiBlind.getRunning() && antiBlind.getWallOverlay()) {
+        if (!ModuleAntiBlind.canRender(DoRender.WALL_OVERLAY)) {
             ci.cancel();
         }
     }

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -102,8 +102,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
         }
 
-        private fun collectBoxesToDraw(event: WorldRenderEvent): List<Triple<Vec3d, Box, Color4b>> {
-            val queuedBoxes = mutableListOf<Triple<Vec3d, Box, Color4b>>()
+        @JvmRecord
+        private data class BoxRecord(val pos: Vec3d, val box: Box, val color: Color4b)
+
+        private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
+            val queuedBoxes = mutableListOf<BoxRecord>()
 
             for ((pos, type) in StorageScanner.trackedBlockMap) {
                 val color = type.color
@@ -125,7 +128,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     outlineShape.boundingBox
                 }
 
-                queuedBoxes.add(Triple(pos.toVec3d(), boundingBox, color))
+                queuedBoxes.add(BoxRecord(pos.toVec3d(), boundingBox, color))
             }
 
             for (entity in world.entities) {
@@ -137,7 +140,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 val d = dimensions.width.toDouble() / 2.0
                 val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
 
-                queuedBoxes.add(Triple(pos, box, type.color))
+                queuedBoxes.add(BoxRecord(pos, box, type.color))
             }
 
             return queuedBoxes

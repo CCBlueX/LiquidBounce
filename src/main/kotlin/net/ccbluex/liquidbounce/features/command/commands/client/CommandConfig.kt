@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import java.io.Reader
 
 /**
  * Config Command
@@ -88,38 +89,34 @@ object CommandConfig : CommandFactory {
                     )
 
                     chat(
-                        variable(settingName).styled { style ->
-                            style
-                                .withClickEvent(
-                                    ClickEvent(
-                                        ClickEvent.Action.SUGGEST_COMMAND,
-                                        ".config load $settingName"
-                                    )
+                        variable(settingName)
+                            .onClick(
+                                ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                    ".config load $settingName"
                                 )
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of("§7Click to load $settingName")
-                                    )
+                            )
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of("§7Click to load $settingName")
                                 )
-                        },
+                            ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName).styled { style ->
-                            style
-                                .withFormatting(it.statusType.formatting)
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of(it.statusDateFormatted)
-                                    )
+                        Text.literal(it.statusType.displayName)
+                            .formatted(it.statusType.formatting)
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of(it.statusDateFormatted)
                                 )
-                        },
-                        regular(" | ${it.serverAddress ?: "Global"}"), metadata = MessageMetadata(
-                            prefix = false
-                        )
+                            )
+                        ,
+                        regular(" | ${it.serverAddress ?: "Global"}"),
+                        metadata = MessageMetadata(prefix = false)
                     )
                 }
             }.onFailure {
@@ -153,10 +150,10 @@ object CommandConfig : CommandFactory {
                 runCatching {
                     if (name.startsWith("http")) {
                         // Load the config from the specified URL
-                        HttpClient.request(name, HttpMethod.GET).parse<String>().reader()
+                        HttpClient.request(name, HttpMethod.GET).parse<Reader>()
                     } else {
                         // Get online config from API
-                        ClientApi.requestSettingsScript(name).reader()
+                        ClientApi.requestSettingsScript(name)
                     }
                 }.onSuccess { sourceReader ->
                     AutoConfig.withLoading {

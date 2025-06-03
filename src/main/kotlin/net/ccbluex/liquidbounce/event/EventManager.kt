@@ -51,6 +51,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     InputHandleEvent::class,
     MovementInputEvent::class,
     SprintEvent::class,
+    SneakNetworkEvent::class,
     KeyEvent::class,
     MouseRotationEvent::class,
     KeybindChangeEvent::class,
@@ -102,6 +103,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     WorldChangeEvent::class,
     AccountManagerMessageEvent::class,
     AccountManagerAdditionResultEvent::class,
+    AccountManagerRemovalResultEvent::class,
     AccountManagerLoginResultEvent::class,
     VirtualScreenEvent::class,
     FpsChangeEvent::class,
@@ -137,7 +139,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClickGuiValueChangeEvent::class,
     BlockAttackEvent::class,
     QueuePacketEvent::class,
-    MinecraftAutoJumpEvent::class
+    MinecraftAutoJumpEvent::class,
+    WorldEntityRemoveEvent::class,
 )
 
 /**

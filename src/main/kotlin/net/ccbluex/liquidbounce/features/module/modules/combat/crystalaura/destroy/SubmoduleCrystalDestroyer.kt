@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.FULL_BOX
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
@@ -42,8 +42,8 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
 
     val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     private val delay by int("Delay", 0, 0..1000, "ms")
-    val range by float("Range", 4.5F, 1.0F..5.0F)
-    val wallsRange by float("WallsRange", 4.5F, 1.0F..5.0F)
+    val range by float("Range", 4.5f, 1f..6f)
+    val wallsRange by float("WallsRange", 4.5f, 0f..6f)
 
     // prioritizes faces that are visible, might make the crystal aura slower
     private val prioritizeVisibleFaces by boolean("PrioritizeVisibleFaces", false)

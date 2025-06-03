@@ -38,7 +38,8 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      * but the file should always be lowercase.
      */
     val baseModels = arrayOf(
-        "Base"
+        "21KC11KP",
+        "19KC8KP"
     )
 
     /**

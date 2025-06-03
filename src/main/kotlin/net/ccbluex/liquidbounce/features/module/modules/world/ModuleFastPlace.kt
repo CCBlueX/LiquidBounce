@@ -18,11 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.item.BlockItem
+import net.minecraft.item.Item
+import net.minecraft.item.ProjectileItem
+import java.util.function.Predicate
 
 /**
  * FastPlace module
@@ -30,15 +34,26 @@ import net.minecraft.item.BlockItem
  * Allows you to place blocks faster.
  */
 object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
-
     private val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
-    private val onlyBlock by boolean("OnlyBlock", true)
+    private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
 
     @Suppress("unused")
     private val useCooldownHandler = handler<UseCooldownEvent> { event ->
-        if (onlyBlock && player.mainHandStack.item !is BlockItem) return@handler
-
-        event.cooldown = cooldown
+        val mainHandItem = player.mainHandStack.item
+        val offHandItem = player.offHandStack.item
+        if (applyTo.any {
+            it.condition.test(mainHandItem) || it.condition.test(offHandItem)
+        }) {
+            event.cooldown = cooldown
+        }
     }
 
+    @Suppress("unused")
+    private enum class ApplyTo(
+        override val choiceName: String,
+        val condition: Predicate<Item>
+    ): NamedChoice {
+        PROJECTILES("Projectiles", { item -> item is ProjectileItem }),
+        BLOCKS("Blocks", { item -> item is BlockItem })
+    }
 }

@@ -25,27 +25,36 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 internal object VelocityHypixel : VelocityMode("Hypixel") {
-    var buffer = 0.0
+
+    private var absorbedVelocity = false
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-
+        
         if (ModuleFly.enabled) {
             return@handler
         }
 
+        // Check if this is a regular velocity update
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            event.cancelEvent()
-            buffer += packet.velocityY
+            if (!player.isOnGround) {
+                if (!absorbedVelocity) {
+                    event.cancelEvent()
+                    absorbedVelocity = true
+                    return@handler
+                }
+            }
+            packet.velocityX = (player.velocity.x * 8000).toInt()
+            packet.velocityZ = (player.velocity.z * 8000).toInt()
         }
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        if (player.isOnGround && buffer > 0) {
-            buffer -= buffer.coerceAtMost(0.42)
-            player.velocity.y = 0.42
+    private val gameHandler = tickHandler {
+        if (player.isOnGround) {
+            absorbedVelocity = false
         }
     }
+
 }

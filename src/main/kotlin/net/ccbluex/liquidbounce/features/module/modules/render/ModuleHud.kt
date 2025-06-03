@@ -66,6 +66,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         state
     }
 
+    val centeredCrosshair by boolean("CenteredCrosshair", false)
+
     val isBlurEffectActive
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
 

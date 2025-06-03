@@ -37,6 +37,10 @@ import java.util.*
  */
 object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val joinMessages by boolean("JoinMessages", true)
     private val joinMessageFormat by text("JoinMessageFormat", "%s joined")
 

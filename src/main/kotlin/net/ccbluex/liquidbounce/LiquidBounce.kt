@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
@@ -30,6 +31,8 @@ import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
+import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.event.EventListener
@@ -38,7 +41,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -67,7 +69,11 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -100,9 +106,29 @@ object LiquidBounce : EventListener {
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
 
-    val clientVersion = gitInfo["git.build.version"]?.toString() ?: "unknown"
-    val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
-    val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
+    private object Client : Configurable("Client") {
+        val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
+        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
+        val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
+
+        init {
+            ConfigSystem.root(this)
+
+            version.onChange { previousVersion ->
+                runCatching {
+                    ConfigSystem.backup("automatic_${previousVersion}-${version.inner}")
+                }.onFailure {
+                    logger.error("Unable to create backup", it)
+                }
+
+                previousVersion
+            }
+        }
+    }
+
+    val clientVersion by Client.version
+    val clientCommit by Client.commit
+    val clientBranch by Client.branch
 
     /**
      * Defines if the client is in development mode.
@@ -137,6 +163,7 @@ object LiquidBounce : EventListener {
         RenderSystem.assertOnRenderThread()
 
         // Initialize managers and features
+        Client
         initializeManagers()
         initializeFeatures()
         initializeResources()
@@ -150,6 +177,15 @@ object LiquidBounce : EventListener {
             logger.info("AMD Vega iGPU detected, enabling different line smooth handling. " +
                 "If you believe this is a mistake, please create an issue at " +
                 "https://github.com/CCBlueX/LiquidBounce/issues.")
+        }
+
+        // Do backup before loading configs
+        if (!ConfigSystem.isFirstLaunch && !Client.jsonFile.exists()) {
+            runCatching {
+                ConfigSystem.backup("automatic_${Client.version.inner}")
+            }.onFailure {
+                logger.error("Unable to create backup", it)
+            }
         }
 
         // Load all configurations
@@ -191,14 +227,13 @@ object LiquidBounce : EventListener {
         FriendManager
         InventoryManager
         WorldToScreen
-        Reconnect
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)
         ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
         PostRotationExecutor
-        TpsObserver
+        ServerObserver
         ItemImageAtlas
     }
 
@@ -222,6 +257,10 @@ object LiquidBounce : EventListener {
      * which do not rely on the main thread.
      */
     private fun initializeResources() = runBlocking {
+        logger.info("Initializing API...")
+        // Lookup API config
+        ApiConfig.config
+
         listOf(
             scope.async {
                 // Load translations
@@ -309,6 +348,8 @@ object LiquidBounce : EventListener {
                     DeepLearningEngine.init(task)
                     ModelHolster.load()
                 }.onFailure { exception ->
+                    task.subTasks.clear()
+
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.
                     logger.info("Failed to initialize deep learning.", exception)
@@ -377,7 +418,9 @@ object LiquidBounce : EventListener {
                 // Run resource reloader directly as fallback
                 clientInitializer.reload(resourceManager)
             }
-        }.onFailure(ErrorHandler::fatal)
+        }.onFailure {
+            ErrorHandler.fatal(it, additionalMessage = "Client start")
+        }
     }
 
     @Suppress("unused")
@@ -403,7 +446,9 @@ object LiquidBounce : EventListener {
         override fun reload(manager: ResourceManager) {
             runCatching(::initializeClient).onSuccess {
                 logger.info("$CLIENT_NAME has been successfully initialized.")
-            }.onFailure(ErrorHandler::fatal)
+            }.onFailure {
+                ErrorHandler.fatal(it, additionalMessage = "Client resource reloader")
+            }
         }
     }
 

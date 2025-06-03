@@ -115,11 +115,9 @@ object CommandHelp : CommandFactory {
                     .append(variable(", "))
                     .append(
                         regular(alias)
-                            .styled { it.withColor(Formatting.GRAY) }
-                            .styled {
-                                it.withClickEvent(RunnableClickEvent {
-                                    mc.run { mc.setScreen(ChatScreen(CommandManager.Options.prefix + alias)) }
-                                })
+                            .formatted(Formatting.GRAY)
+                            .onClick {
+                                mc.execute { mc.setScreen(ChatScreen(CommandManager.Options.prefix + alias)) }
                             }
                     )
             }
@@ -132,22 +130,18 @@ object CommandHelp : CommandFactory {
         val commandStart = prefix + cmd.name
         chat(
             "- ".asText()
-                .styled { it.withColor(Formatting.BLUE) }
-                .styled {
-                    it.withHoverEvent(
-                        HoverEvent(
-                            HoverEvent.Action.SHOW_TEXT,
-                            translation("liquidbounce.command.${cmd.name}.description")
-                        )
+                .formatted(Formatting.BLUE)
+                .onHover(
+                    HoverEvent(
+                        HoverEvent.Action.SHOW_TEXT,
+                        translation("liquidbounce.command.${cmd.name}.description")
                     )
-                }
+                )
                 .append(
                     commandStart.asText()
-                        .styled { it.withColor(Formatting.GRAY) }
-                        .styled {
-                            it.withClickEvent(RunnableClickEvent {
-                                mc.run { mc.setScreen(ChatScreen(commandStart)) }
-                            })
+                        .formatted(Formatting.GRAY)
+                        .onClick {
+                            mc.execute { mc.setScreen(ChatScreen(commandStart)) }
                         }
                 )
                 .append(aliasesText),
@@ -162,28 +156,22 @@ object CommandHelp : CommandFactory {
             "".asText()
                 .styled { it.withColor(Formatting.GRAY) }
                 .append("<--".asText()
-                    .styled {
-                        it.withClickEvent(RunnableClickEvent {
-                            printMessage(
-                                command,
-                                previousPage,
-                                maxPage,
-                                commands
-                            )
-                        })
+                    .onClick {
+                        printMessage(
+                            command,
+                            previousPage,
+                            maxPage,
+                            commands
+                        )
                     }
-                    .styled {
-                        it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("previous")))
-                    }
+                    .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("previous")))
                 )
                 .append("[$page]")
                 .append("-->".asText()
-                    .styled {
-                        it.withClickEvent(RunnableClickEvent { printMessage(command, nextPage, maxPage, commands) })
+                    .onClick {
+                        printMessage(command, nextPage, maxPage, commands)
                     }
-                    .styled {
-                        it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("next")))
-                    }
+                    .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("next")))
                 ),
             metadata = MessageMetadata(id = "CommandHelp#Next")
         )

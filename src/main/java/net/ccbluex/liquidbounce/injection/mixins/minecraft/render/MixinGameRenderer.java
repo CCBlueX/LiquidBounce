@@ -219,7 +219,7 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
     private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
-        if (ModuleAntiBlind.INSTANCE.getRunning() && ModuleAntiBlind.INSTANCE.getFloatingItems()) {
+        if (!ModuleAntiBlind.canRender(DoRender.FLOATING_ITEMS)) {
             ci.cancel();
         }
     }
@@ -248,8 +248,7 @@ public abstract class MixinGameRenderer {
 
     @ModifyExpressionValue(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
     private float hookNausea(float original) {
-        var antiBlind = ModuleAntiBlind.INSTANCE;
-        if (antiBlind.getRunning() && antiBlind.getAntiNausea()) {
+        if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             return 0f;
         }
 

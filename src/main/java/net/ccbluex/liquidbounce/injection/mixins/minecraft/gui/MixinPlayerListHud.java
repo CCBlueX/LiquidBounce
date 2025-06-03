@@ -27,6 +27,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import net.ccbluex.liquidbounce.features.misc.FriendManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
+import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -80,7 +81,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.Visibility.INSTANCE.getHeader() ? original : null;
+        return ModuleBetterTab.isVisible(Visibility.HEADER) ? original : null;
     }
 
     @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/PlayerListHud;footer:Lnet/minecraft/text/Text;", ordinal = 0))
@@ -89,7 +90,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.Visibility.INSTANCE.getFooter() ? original : null;
+        return ModuleBetterTab.isVisible(Visibility.FOOTER) ? original : null;
     }
 
     @ModifyExpressionValue(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/PlayerListHud$ScoreDisplayEntry;name:Lnet/minecraft/text/Text;"))
@@ -98,7 +99,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.Visibility.INSTANCE.getNameOnly() ? Text.of(entry.getProfile().getName()) : original;
+        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().getName()) : original;
 
     }
 
@@ -108,7 +109,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.Visibility.INSTANCE.getNameOnly() ? Text.of(entry.getProfile().getName()) : original;
+        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().getName()) : original;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
@@ -118,7 +119,8 @@ public abstract class MixinPlayerListHud {
         }
 
         int playerCount = collectPlayerEntries().size();
-        int columns = MathHelper.ceil((double) playerCount / ModuleBetterTab.Limits.INSTANCE.getHeight());
+        int height = Math.max(1, ModuleBetterTab.Limits.INSTANCE.getHeight());
+        int columns = Math.max(1, MathHelper.ceil((double) playerCount / height));
         int rows = MathHelper.ceil((double) playerCount / columns);
         o.set(rows);
         p.set(columns);
@@ -178,7 +180,7 @@ public abstract class MixinPlayerListHud {
 
     @ModifyReturnValue(method = "getPlayerName", at = @At("RETURN"))
     private Text modifyPlayerName(Text original, PlayerListEntry entry) {
-        if (ModuleAntiStaff.UsernameCheck.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
             return original.copy().append(Text.literal(" - (Staff)").withColor(Colors.LIGHT_RED));
         }
 

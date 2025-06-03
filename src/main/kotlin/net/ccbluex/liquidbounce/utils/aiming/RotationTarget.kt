@@ -37,7 +37,7 @@ import net.minecraft.entity.Entity
 @Suppress("LongParameterList")
 class RotationTarget(
     val rotation: Rotation,
-    val entity: Entity? = null,
+    var entity: Entity? = null,
     /**
      * The rotation processors which are being used to calculate the next rotation.
      * This list should start with [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth]
@@ -76,6 +76,7 @@ class RotationTarget(
      */
     fun towards(currentRotation: Rotation, isResetting: Boolean): Rotation {
         if (isResetting) {
+            entity = null
             return process(currentRotation, player.rotation)
         }
 

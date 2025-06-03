@@ -48,6 +48,10 @@ object ModuleMiddleClickAction : ClientModule(
     aliases = arrayOf("FriendClicker", "MiddleClickPearl")
 ) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun disable() {

@@ -194,7 +194,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     }
 
     private fun slotFinder(pos: BlockPos?): HotbarItemSlot? {
-        val blockSlots = Slots.Hotbar.mapNotNull {
+        val blockSlots = Slots.OffhandWithHotbar.mapNotNull {
             it to (it.itemStack.getBlock()?.takeIf { b -> filter(b, blocks) } ?: return@mapNotNull null)
         }
 

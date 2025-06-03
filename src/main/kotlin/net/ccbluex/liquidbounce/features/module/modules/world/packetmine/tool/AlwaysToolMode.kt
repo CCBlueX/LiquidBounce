@@ -42,9 +42,9 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
 
             val packet = event.packet
             val serverInitiatedSwitch = packet is UpdateSelectedSlotS2CPacket &&
-                packet.slot == getSlot(target.blockState)?.firstInt()
+                    packet.slot == getSlot(target.blockState)?.firstInt()
             val clientInitiatedSwitch = packet is UpdateSelectedSlotC2SPacket &&
-                packet.selectedSlot == getSlot(target.blockState)?.firstInt()
+                    packet.selectedSlot == getSlot(target.blockState)?.firstInt()
             if (serverInitiatedSwitch || clientInitiatedSwitch) {
                 ModulePacketMine._resetTarget()
             }

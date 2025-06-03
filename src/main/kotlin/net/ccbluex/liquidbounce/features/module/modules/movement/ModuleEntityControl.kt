@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -27,8 +28,18 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Control rideable entities without a saddle
  */
 object ModuleEntityControl : ClientModule("EntityControl", Category.MOVEMENT) {
+    private val enforce by multiEnumChoice("Enforce", Enforce.entries)
 
-    val enforceSaddled by boolean("EnforceSaddled", true)
-    val enforceJumpStrength by boolean("EnforceJumpStrength", true)
+    @JvmStatic
+    val enforceSaddled get() = running && Enforce.SADDLED in enforce
 
+    @JvmStatic
+    val enforceJumpStrength get() = running && Enforce.JUMP_STRENGTH in enforce
+
+    private enum class Enforce(
+        override val choiceName: String
+    ) : NamedChoice {
+        SADDLED("Saddled"),
+        JUMP_STRENGTH("JumpStrength"),
+    }
 }

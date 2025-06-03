@@ -34,8 +34,20 @@ object IntRangeAdapter : JsonSerializer<IntRange>, JsonDeserializer<IntRange> {
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): IntRange {
-        val obj = json.asJsonObject
+        if (json.isJsonPrimitive) {
+            val primitive = json.asJsonPrimitive
+            if (!primitive.isNumber) {
+                throw JsonParseException("Expected number, got ${primitive.asString}")
+            }
 
+            return IntRange(primitive.asInt, primitive.asInt)
+        }
+
+        if (!json.isJsonObject) {
+            throw JsonParseException("Expected object, got ${json.javaClass.name}")
+        }
+
+        val obj = json.asJsonObject
         return obj["from"].asInt..obj["to"].asInt
     }
 

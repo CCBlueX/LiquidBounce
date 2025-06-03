@@ -29,6 +29,15 @@ data class DirectionalInput(
         right = movementSideways < 0.0
     )
 
+    fun invert(): DirectionalInput {
+        return DirectionalInput(
+            forwards = backwards,
+            backwards = forwards,
+            left = right,
+            right = left
+        )
+    }
+
     override fun equals(other: Any?): Boolean {
         return other is DirectionalInput &&
             forwards == other.forwards &&

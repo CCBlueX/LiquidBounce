@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,24 +30,17 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Disables pushing from other players and some other situations where someone/something can push.
  */
 object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
+    private val noPushBy = multiEnumChoice("PushBy",
+        NoPushBy.ENTITIES,
+        NoPushBy.LIQUIDS
+    )
 
-    private val entities by boolean("Entities", true)
-    private val blocks by boolean("Blocks", true)
-    private val fishingRod by boolean("FishingRod", false)
-    private val liquids by boolean("Liquids", false)
-    private val sinking by boolean("Sinking", false)
-
-    fun isLiquids() = running && liquids
-
-    fun isEntities() = running && entities
-
-    fun isBlocks() = running && blocks
-
-    fun isFishingRod() = running && fishingRod
+    @JvmStatic
+    fun canPush(by: NoPushBy) = !running || by in noPushBy
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (!sinking) {
+        if (NoPushBy.SINKING !in noPushBy) {
             return@handler
         }
 
@@ -58,5 +52,12 @@ object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
             player.velocity.y = 0.0
         }
     }
+}
 
+enum class NoPushBy(override val choiceName: String): NamedChoice {
+    ENTITIES("Entities"),
+    BLOCKS("Blocks"),
+    FISHING_ROD("FishingRod"),
+    LIQUIDS("Liquids"),
+    SINKING("Sinking")
 }

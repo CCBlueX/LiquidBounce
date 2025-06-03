@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleB
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack.processPackets
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack.shouldCancelPackets
 import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.client.inGame
 
 /**
  * Backtrack's own packet manager. It is meant to be replaced by [PacketQueueManager]
@@ -50,6 +51,11 @@ object BacktrackPacketManager : EventListener {
      */
     @Suppress("unused")
     private val handleTickPacketProcess = handler<TickPacketProcessEvent> {
+        if (!inGame) {
+            clear(clearOnly = true)
+            return@handler
+        }
+
         if (shouldCancelPackets()) {
             processPackets()
         } else {
@@ -66,4 +72,5 @@ object BacktrackPacketManager : EventListener {
             currentDelay = delay.random()
         }
     }
+
 }

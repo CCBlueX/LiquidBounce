@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
@@ -29,9 +30,7 @@ import net.minecraft.item.Items
  *
  * Protects you from taking fall damage.
  */
-
 object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
-
     internal val modes = choices(
         "Mode", NoFallSpoofGround, arrayOf(
             NoFallSpoofGround,
@@ -52,36 +51,39 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
         )
     ).apply(::tagBy)
 
-    private var notWhileGliding by boolean("NotWhileGliding", true)
-    private var notWithMace by boolean("NotWithMace", true)
+    private val notConditions by multiEnumChoice<NotConditions>("Not")
 
     override val running: Boolean
-        get() {
-            if (!super.running) {
-                return false
-            }
+        get() = when {
+            !super.running -> false
 
             // In creative mode, we don't need to reduce fall damage
-            if (player.isCreative || player.isSpectator) {
-                return false
-            }
+            player.isCreative || player.isSpectator -> false
 
             // Check if we are invulnerable or flying
-            if (player.abilities.invulnerable || player.abilities.flying) {
-                return false
-            }
+            player.abilities.invulnerable || player.abilities.flying -> false
 
-            // With Elytra - we don't want to reduce fall damage.
-            if (notWhileGliding && player.isGliding && player.isInPose(EntityPose.GLIDING)) {
-                return false
-            }
-
-            // Check if we are holding a mace
-            if (notWithMace && player.mainHandStack.item == Items.MACE) {
-                return false
-            }
-
-            return true
+            // Test other conditions
+            else -> notConditions.none { it.testCondition() }
         }
 
+    @Suppress("unused")
+    private enum class NotConditions(
+        override val choiceName: String,
+        val testCondition: () -> Boolean
+    ) : NamedChoice {
+        /**
+         * With Elytra - we don't want to reduce fall damage.
+         */
+        WHILE_GLIDING("WhileGliding", {
+            player.isGliding && player.isInPose(EntityPose.GLIDING)
+        }),
+
+        /**
+         * Check if we are holding a mace
+         */
+        WITH_MACE("WithMace", {
+            player.mainHandStack.item == Items.MACE
+        })
+    }
 }

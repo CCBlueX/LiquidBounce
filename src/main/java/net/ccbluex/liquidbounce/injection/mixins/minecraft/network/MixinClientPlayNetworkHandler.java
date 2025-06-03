@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
+import net.ccbluex.liquidbounce.features.module.modules.player.Limit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -113,7 +114,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
     @ModifyExpressionValue(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ExplosionS2CPacket;playerKnockback()Ljava/util/Optional;"))
     private Optional<Vec3d> onExplosionVelocity(Optional<Vec3d> original) {
         var present = original.isPresent();
-        if (present && ModuleAntiExploit.INSTANCE.getRunning() && ModuleAntiExploit.INSTANCE.getLimitExplosionStrength()) {
+        if (present && ModuleAntiExploit.canLimit(Limit.EXPLOSION_STRENGTH)) {
             var vec = original.get();
             double fixedX = MathHelper.clamp(vec.x, -10.0, 10.0);
             double fixedY = MathHelper.clamp(vec.y, -10.0, 10.0);
@@ -131,7 +132,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @ModifyExpressionValue(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getCount()I", ordinal = 1))
     private int onParticleAmount(int original) {
-        if (ModuleAntiExploit.INSTANCE.getRunning() && ModuleAntiExploit.INSTANCE.getLimitParticlesAmount() && 500 <= original) {
+        if (ModuleAntiExploit.canLimit(Limit.PARTICLES_AMOUNT) && 500 <= original) {
             ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too many particles", true);
             return 100;
         }
@@ -140,7 +141,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @ModifyExpressionValue(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getSpeed()F"))
     private float onParticleSpeed(float original) {
-        if (ModuleAntiExploit.INSTANCE.getRunning() && ModuleAntiExploit.INSTANCE.getLimitParticlesSpeed() && 10.0f <= original) {
+        if (ModuleAntiExploit.canLimit(Limit.PARTICLES_SPEED) && 10.0f <= original) {
             ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too fast particles speed", true);
             return 10.0f;
         }

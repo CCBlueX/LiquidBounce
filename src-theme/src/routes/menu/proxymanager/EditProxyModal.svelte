@@ -6,9 +6,11 @@
     import {editProxy as editProxyRest} from "../../../integration/rest";
     import {afterUpdate} from "svelte";
     import {listen} from "../../../integration/ws";
+    import SingleSelect from "../common/setting/select/SingleSelect.svelte";
 
     export let visible: boolean;
     export let id: number;
+    export let proxyType: string;
     export let host: string;
     export let port: number;
     export let username: string;
@@ -16,7 +18,7 @@
     export let requiresAuthentication: boolean;
     export let forwardAuthentication: boolean;
 
-    let hostPort = "";
+    let hostPort = `${host}:${port}`;
     let loading = false;
 
     $: disabled = validateInput(requiresAuthentication, hostPort, username, password);
@@ -26,10 +28,6 @@
             password = "";
         }
     }
-
-    afterUpdate(() => {
-        hostPort = `${host}:${port}`;
-    });
 
     function validateInput(requiresAuthentication: boolean, hostPort: string, username: string, password: string): boolean {
         let valid = /.+:[0-9]+/.test(hostPort);
@@ -49,7 +47,7 @@
         const [host, port] = hostPort.split(":");
 
         loading = true;
-        await editProxyRest(id, host, parseInt(port), username, password, forwardAuthentication);
+        await editProxyRest(id, host, parseInt(port), username, password, proxyType, forwardAuthentication);
     }
 
     listen("proxyEditResult", () => {
@@ -60,6 +58,7 @@
 
 <Modal title="Edit Proxy" bind:visible={visible}>
     <IconTextInput title="Host:Port" icon="server" pattern=".+:[0-9]+" bind:value={hostPort}/>
+    <SingleSelect title="Proxy Type" options={["HTTP", "SOCKS5"]} bind:value={proxyType}/>
     <SwitchSetting title="Requires Authentication" bind:value={requiresAuthentication}/>
     {#if requiresAuthentication}
         <IconTextInput title="Username" icon="user" bind:value={username}/>

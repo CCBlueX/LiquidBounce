@@ -35,10 +35,12 @@ import net.ccbluex.liquidbounce.utils.client.logger
  */
 object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)
-        .doNotIncludeAlways() // Keeps API key private
     private val openAiKey by text("OpenAiKey", "")
-        .doNotIncludeAlways() // Keeps API key private
     private val model by text("Model", "gpt-4o-mini") // GPT 4O Mini should be enough for this
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
         "ms")

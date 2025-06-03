@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -125,6 +126,23 @@ object RotationManager : EventListener {
     }
 
     /**
+     * Checks if the rotation is allowed to be updated
+     */
+    fun isRotatingAllowed(rotationTarget: RotationTarget): Boolean {
+        if (!allowedToUpdate()) {
+            return false
+        }
+
+        if (rotationTarget.considerInventory) {
+            if (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    /**
      * Update current rotation to a new rotation step
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
@@ -135,11 +153,7 @@ object RotationManager : EventListener {
         val rotationTarget = this.rotationTarget
 
         // Prevents any rotation changes when inventory is opened
-        val allowedRotation = ((!InventoryManager.isInventoryOpen &&
-            mc.currentScreen !is GenericContainerScreen) || !activeRotationTarget.considerInventory)
-            && allowedToUpdate()
-
-        if (allowedRotation) {
+        if (isRotatingAllowed(activeRotationTarget)) {
             val fromRotation = currentRotation ?: playerRotation
             val rotation = activeRotationTarget.towards(fromRotation, rotationTarget == null)
                 // After generating the next rotation, we need to normalize it
@@ -190,7 +204,7 @@ object RotationManager : EventListener {
     }
 
     @Suppress("unused")
-    private val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+    private val velocityHandler = handler<PlayerVelocityStrafe>(priority = MODEL_STATE) { event ->
         if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
             val rotation = currentRotation ?: return@handler
 

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -39,15 +40,13 @@ import net.minecraft.screen.slot.SlotActionType
  *
  * @author ccetl
  */
+@Suppress("MagicNumber")
 object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = arrayOf("Refill")) {
-
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")
-    private val cleanUp by boolean("CleanUp", true)
-    private val usePickupAll by boolean("UsePickupAll", false)
-    private val insideOfInventories by boolean("InsideOfInventories", false)
-    private val insideOfChests by boolean("InsideOfChests", false)
+    private val features by multiEnumChoice("Features", Features.CLEANUP)
+    private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
     private val trackedHotbarItems = Array<Item>(9) { Items.AIR }
     private val chronometer = Chronometer()
@@ -99,7 +98,15 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
                 .filter { it.itemStack.item == item }
                 .sortedWith(
                     // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
-                    if (cleanUp) compareBy { it.itemStack.count } else compareByDescending { it.itemStack.count }
+                    if (Features.CLEANUP in features) {
+                        compareBy {
+                            it.itemStack.count
+                        }
+                    } else {
+                        compareByDescending {
+                            it.itemStack.count
+                        }
+                    }
                 )
 
             // no stack to refill found
@@ -109,7 +116,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
             }
 
             // refill
-            if (usePickupAll && currentStackNotEmpty) {
+            if (Features.USE_PICKUP_ALL in features && currentStackNotEmpty) {
                 event.schedule(
                     constraints,
                     ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP),
@@ -154,7 +161,26 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
 
     override val running: Boolean
         get() = super.running &&
-            (insideOfChests || (mc.currentScreen !is HandledScreen<*> || mc.currentScreen is InventoryScreen)) &&
-            (insideOfInventories || mc.currentScreen !is InventoryScreen)
+            (InsideOf.CHESTS in insideOf
+                || (mc.currentScreen !is HandledScreen<*>
+                || mc.currentScreen is InventoryScreen)
+            ) &&
+            (InsideOf.INVENTORIES in insideOf
+                || mc.currentScreen !is InventoryScreen
+            )
 
+    private enum class Features(
+        override val choiceName: String
+    ) : NamedChoice {
+        CLEANUP("CleanUp"),
+        USE_PICKUP_ALL("UsePickupAll")
+    }
+
+    @Suppress("unused")
+    private enum class InsideOf(
+        override val choiceName: String
+    ) : NamedChoice {
+        CHESTS("Chests"),
+        INVENTORIES("Inventories")
+    }
 }

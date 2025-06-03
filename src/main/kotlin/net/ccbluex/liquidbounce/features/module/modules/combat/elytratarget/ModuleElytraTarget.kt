@@ -14,7 +14,7 @@ import net.minecraft.entity.LivingEntity
  * Following the target on elytra.
  * Works with [ModuleKillAura] together
  *
- * https://youtu.be/1wa8uKH_apY?si=H84DmdQ2HtvArIPZ
+ * https://youtu.be/1wa8uKH_apY
  *
  * @author sqlerrorthing
  */

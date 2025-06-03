@@ -34,6 +34,10 @@ import kotlin.random.Random
  */
 object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = true) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val delay by intRange("Delay", 2..4, 0..300, "secs")
     private val mps by intRange("MPS", 1..1, 1..500, "messages")
     private val message by textArray("Message", mutableListOf(
@@ -41,13 +45,10 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         "I'm using LiquidBounce Nextgen and you should too!",
         "Check out LiquidBounce Nextgen - the best Minecraft client!",
         "Tired of losing? Try LiquidBounce Nextgen!",
-    )).doNotIncludeAlways()
+    ))
     private val pattern by enumChoice("Pattern", SpammerPattern.RANDOM)
-        .doNotIncludeAlways()
     private val messageConverterMode by enumChoice("MessageConverter", MessageConverterMode.LEET_CONVERTER)
-        .doNotIncludeAlways()
     private val customFormatter by boolean("CustomFormatter", false)
-        .doNotIncludeAlways()
 
     private var linear = 0
 

@@ -74,7 +74,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
             chat("✧ Starting training...")
         } else {
             waitUntil {
-                var target = target ?: return@waitUntil true
+                val target = target ?: return@waitUntil true
 
                 val next = RotationManager.currentRotation ?: player.rotation
                 val current = RotationManager.previousRotation ?: player.lastRotation

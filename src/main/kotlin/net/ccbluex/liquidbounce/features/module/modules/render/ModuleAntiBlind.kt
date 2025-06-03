@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -26,17 +27,68 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Protects you from potentially annoying screen effects that block your view.
  */
+@Suppress("MagicNumber")
 object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = arrayOf("NoRender")) {
-    val antiBlind by boolean("DisableBlindingEffect", true)
-    val antiDarkness by boolean("DisableDarknessEffect", true)
-    val antiNausea by boolean("DisableNauseaEffect", true)
-    val pumpkinBlur by boolean("DisablePumpkinBlur", true)
-    val liquidsFog by boolean("DisableLiquidsFog", true)
-    val powderSnowFog by boolean("DisablePowderSnowFog", true)
-    val floatingItems by boolean("DisableFloatingItems", true)
-    val portalOverlay by boolean("DisablePortalOverlay", true)
-    val wallOverlay by boolean("DisableWallOverlay", true)
-    val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
-    val bossBars by boolean("DisableBossBars", true)
-    val explosionParticles by boolean("DisableExplosionParticles", false)
+    private val render = multiEnumChoice("DoRender",
+        DoRender.ARMOR,
+        DoRender.MOB_IN_SPAWNER,
+        DoRender.ENCHANT_TABLE_BOOK,
+        DoRender.EAT_PARTICLES,
+        DoRender.BLOCK_BREAK_PARTICLES,
+        DoRender.BLOCK_BREAK_OVERLAY,
+        DoRender.TITLE,
+        DoRender.MAP_CONTENTS,
+        DoRender.MAP_MARKERS,
+        DoRender.FALLING_BLOCKS,
+        DoRender.BEACON_BEAMS,
+        DoRender.SKYLIGHT_UPDATES,
+        DoRender.GUI_BACKGROUND,
+        DoRender.SPYGLASS_OVERLAY,
+        DoRender.SIGN_TEXT,
+        DoRender.INVISIBLE_ENTITIES,
+        DoRender.BOSS_BARS,
+        DoRender.EXPLOSION_PARTICLES,
+    ).also { tagBy(it) }
+
+    private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
+
+    @JvmStatic
+    fun canRender(choice: DoRender) = !running || choice in render
+
+    val fireOpacityPercentage get() =
+        if (running) {
+            fireOpacity / 100.0f
+        } else {
+            1.0f
+        }
+}
+
+enum class DoRender(override val choiceName: String) : NamedChoice {
+    BLINDING("Blinding"),
+    DARKNESS("Darkness"),
+    NAUSEA("Nausea"),
+    ARMOR("Armor"),
+    MOB_IN_SPAWNER("MobInSpawner"),
+    ENCHANT_TABLE_BOOK("EnchantTableBook"),
+    EAT_PARTICLES("EatParticles"),
+    BLOCK_BREAK_PARTICLES("BlockBreakParticles"),
+    BLOCK_BREAK_OVERLAY("BlockBreakOverlay"),
+    TITLE("Title"),
+    PUMPKIN_BLUR("PumpkinBlur"),
+    LIQUIDS_FOG("LiquidsFog"),
+    POWDER_SNOW_FOG("PowderSnowFog"),
+    FLOATING_ITEMS("FloatingItems"),
+    MAP_CONTENTS("MapContents"),
+    MAP_MARKERS("MapMarkers"),
+    PORTAL_OVERLAY("PortalOverlay"),
+    WALL_OVERLAY("WallOverlay"),
+    FALLING_BLOCKS("FallingBlocks"),
+    BEACON_BEAMS("BeaconBeams"),
+    SKYLIGHT_UPDATES("SkylightUpdates"),
+    GUI_BACKGROUND("GuiBackground"),
+    SPYGLASS_OVERLAY("SpyglassOverlay"),
+    SIGN_TEXT("SignText"),
+    INVISIBLE_ENTITIES("InvisibleEntities"),
+    BOSS_BARS("BossBars"),
+    EXPLOSION_PARTICLES("ExplosionParticles")
 }

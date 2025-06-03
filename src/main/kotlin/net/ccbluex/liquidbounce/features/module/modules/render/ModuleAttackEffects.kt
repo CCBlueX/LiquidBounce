@@ -27,12 +27,13 @@ import net.minecraft.block.Blocks
 import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.entity.LivingEntity
 import net.minecraft.particle.ParticleTypes
+import net.minecraft.sound.SoundEvent
 import net.minecraft.sound.SoundEvents
 
+@Suppress("MagicNumber")
 object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
 
     enum class Particle(override val choiceName: String) : NamedChoice {
-        NONE("None"),
         BLOOD("Blood"),
         FIRE("Fire"),
         HEART("Heart"),
@@ -42,16 +43,25 @@ object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
         CRITS("Crits")
     }
 
-    private val particle by enumChoice("Particle", Particle.FIRE)
-    private val amount by int("ParticleAmount", 1, 1..20)
-
-    enum class Sound(override val choiceName: String) : NamedChoice {
-        NONE("None"),
-        HIT("Hit"),
-        ORB("Orb")
+    @Suppress("unused")
+    enum class Sound(
+        override val choiceName: String,
+        val soundEvent: SoundEvent
+    ) : NamedChoice {
+        HIT("Hit", SoundEvents.ENTITY_ARROW_HIT),
+        ORB("Orb", SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP)
     }
 
-    private val sound by enumChoice("Sound", Sound.ORB)
+    private val particle by multiEnumChoice(
+        "Particle",
+        Particle.FIRE
+    )
+
+    private val sound by multiEnumChoice("Sound",
+        Sound.ORB
+    )
+
+    private val amount by int("ParticleAmount", 1, 1..20)
 
     @Suppress("unused")
     val onAttack = handler<AttackEntityEvent> { event ->
@@ -69,17 +79,13 @@ object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
     private fun doSound() {
         mc.soundManager.play(
             PositionedSoundInstance.master(
-                when (sound) {
-                    Sound.HIT -> SoundEvents.ENTITY_ARROW_HIT
-                    Sound.ORB -> SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP
-                    Sound.NONE -> return
-                }, 1F
+                (sound.randomOrNull() ?: return).soundEvent, 1f
             )
         )
     }
 
     private fun doEffect(target: LivingEntity) {
-        when (particle) {
+        when (particle.randomOrNull()) {
             Particle.BLOOD -> world.addBlockBreakParticles(
                 target.blockPos.up(1),
                 Blocks.REDSTONE_BLOCK.defaultState

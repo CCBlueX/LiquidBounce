@@ -106,7 +106,7 @@ data class PlayerData(
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
             player.absorptionAmount.fixNaN(),
-            player.armor,
+            player.armor.coerceAtMost(20),
             min(player.hungerManager.foodLevel, 20),
             player.air,
             player.maxAir,

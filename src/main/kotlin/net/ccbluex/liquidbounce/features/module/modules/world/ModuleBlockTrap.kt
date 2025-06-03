@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleBlockTrap.floor
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
@@ -50,27 +49,12 @@ import kotlin.math.min
  *
  * @author ccetl
  */
+@Suppress("MagicNumber")
 object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
-    /**
-     * Places two blocks above the target's head so that they can't mine the block and at the same time tower up to
-     * escape.
-     */
-    private val doubleAbove by boolean("DoubleAbove", false)
+    private val doublePlace by multiEnumChoice<DoublePlace>("DoublePlace")
 
-    /**
-     * Allows placing crystals next to their legs and keep them at the spot when disabled.
-     */
-    private val legs by boolean("Legs", true)
-
-    private val floor by boolean("Floor", true)
-
-    /**
-     * Places two layers below the target so they can't mine the block below them and possible fall down.
-     *
-     * Requires [floor] to be enabled.
-     */
-    private val doubleBelow by boolean("DoubleBelow", false)
+    private val placeAt by multiEnumChoice("PlaceAt", PlaceAt.entries)
 
     /**
      * Replaces broken blocks instantly.
@@ -127,6 +111,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         placer.placeInstantOnBlockUpdate(it)
     }
 
+    @Suppress("ComplexCondition")
     private fun findTrapPlan(target: Entity): Set<BlockPos> {
         var highestY = Int.MIN_VALUE
         var lowestY = Int.MAX_VALUE
@@ -164,8 +149,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
     private fun tweakPlan(currentPlan: Set<BlockPos>, lowestY: Int, highestY: Int): Set<BlockPos> {
         // step two tweaking with options
-        val shouldFilterLegsOut = !legs // && highestY - lowestY > 3
-        val shouldFilterFloorOut = !floor
+        val shouldFilterLegsOut = PlaceAt.LEGS !in placeAt // && highestY - lowestY > 3
+        val shouldFilterFloorOut = PlaceAt.FLOOR !in placeAt
         val filteredList = currentPlan.filterNot {
             shouldFilterLegsOut && it.y == lowestY + 1 || shouldFilterFloorOut && it.y == lowestY
         }
@@ -173,8 +158,12 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         val additions = mutableListOf<BlockPos>()
         filteredList.forEach { pos ->
             when {
-                doubleBelow && floor && pos.y == lowestY -> additions.add(pos.down())
-                doubleAbove && pos.y == highestY -> additions.add(pos.up())
+                DoublePlace.BELOW in doublePlace
+                    && PlaceAt.FLOOR in placeAt
+                    && pos.y == lowestY -> additions.add(pos.down())
+
+                DoublePlace.ABOVE in doublePlace
+                    && pos.y == highestY -> additions.add(pos.up())
             }
         }
 
@@ -195,4 +184,34 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         LOWEST("Lowest", compareBy { it.y })
     }
 
+    private enum class PlaceAt(
+        override val choiceName: String
+    ) : NamedChoice {
+        /**
+         * Allows placing crystals next to their legs and keep them at the spot when disabled.
+         */
+        LEGS("Legs"),
+
+        /**
+         * Allows placing crystals next to floor and keep them at the spot when disabled.
+         */
+        FLOOR("Floor")
+    }
+
+    private enum class DoublePlace(
+        override val choiceName: String
+    ) : NamedChoice {
+        /**
+         * Places two blocks above the target's head so that they can't mine the block and at the same time tower up to
+         * escape.
+         */
+        ABOVE("Above"),
+
+        /**
+         * Places two layers below the target so they can't mine the block below them and possible fall down.
+         *
+         * Requires [PlaceAt.FLOOR] to be enabled.
+         */
+        BELOW("Below")
+    }
 }

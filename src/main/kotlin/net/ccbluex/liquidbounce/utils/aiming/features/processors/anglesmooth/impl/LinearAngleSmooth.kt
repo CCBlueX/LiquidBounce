@@ -43,10 +43,12 @@ class LinearAngleSmooth(
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Pair<Float, Float> {
-        val horizontalFactor = horizontalTurnSpeed.random()
-        val verticalFactor = verticalTurnSpeed.random()
-
-        return horizontalFactor to verticalFactor
+        return if (rotationTarget != null) {
+            horizontalTurnSpeed.random() to verticalTurnSpeed.random()
+        } else {
+            // Slowest turn speed, so we can calculate the slowest turn speed
+            horizontalTurnSpeed.start to verticalTurnSpeed.start
+        }
     }
 
 }

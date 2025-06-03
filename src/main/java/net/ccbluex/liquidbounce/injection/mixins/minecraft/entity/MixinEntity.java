@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -91,8 +92,8 @@ public abstract class MixinEntity {
             return original;
         }
 
-        return ModuleNoPush.INSTANCE.isLiquids()
-                ? Vec3d.ZERO : original;
+        return ModuleNoPush.canPush(NoPushBy.LIQUIDS)
+                ? original : Vec3d.ZERO;
     }
 
     /**

@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
@@ -37,13 +38,18 @@ import net.minecraft.util.math.Vec3d
  *
  * Allows you to see where projectile items will land.
  */
-
+@Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
-    private val alwaysShowBow by boolean("AlwaysShowBow", false)
-    private val otherPlayers by boolean("OtherPlayers", true)
-    private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)
-    private val activeTrajectoryOther by boolean("ActiveTrajectoryOther", false)
+    private val show by multiEnumChoice("Show",
+        Show.OTHER_PLAYERS,
+        Show.ACTIVE_TRAJECTORY_ARROW
+    )
+
+    private val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
+    private val otherPlayers get() = Show.OTHER_PLAYERS in show
+    private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
+    private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
@@ -120,4 +126,12 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         )
     }
 
+    private enum class Show(
+        override val choiceName: String
+    ) : NamedChoice {
+        ALWAYS_SHOW_BOW("AlwaysShowBow"),
+        OTHER_PLAYERS("OtherPlayers"),
+        ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),
+        ACTIVE_TRAJECTORY_OTHER("ActiveTrajectoryOther"),
+    }
 }

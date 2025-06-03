@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
@@ -36,14 +36,15 @@ import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
 import kotlin.math.roundToInt
 
+@Suppress("MagicNumber")
 class NametagTextFormatter(private val entity: Entity) {
     fun format(): Text {
         val outputText = Text.empty()
 
-        if (ModuleNametags.ShowOptions.distance) {
+        if (NametagShowOptions.DISTANCE.isShowing()) {
             outputText.append(this.distanceText).append(" ")
         }
-        if (ModuleNametags.ShowOptions.ping) {
+        if (NametagShowOptions.PING.isShowing()) {
             outputText.append(this.pingText).append(" ")
         }
 
@@ -51,19 +52,19 @@ class NametagTextFormatter(private val entity: Entity) {
         val nameColor = this.nameColor
 
         val nameText: Text = if (nameColor != null) {
-            name.string.asText().styled { it.withColor(nameColor) }
+            name.string.asText().withColor(nameColor)
         } else {
             name
         }
 
         outputText.append(nameText)
 
-        if (ModuleNametags.ShowOptions.health) {
+        if (NametagShowOptions.HEALTH.isShowing()) {
             outputText.append(" ").append(this.healthText)
         }
 
         if (this.isBot) {
-            outputText.append(" ").append("Bot".asText().styled { it.withColor(Formatting.RED).withBold(true) })
+            outputText.append(" ").append("Bot".asText().formatted().bold(true).withColor(Formatting.RED))
         }
 
         return outputText
@@ -88,7 +89,7 @@ class NametagTextFormatter(private val entity: Entity) {
         get() {
             val playerDistanceRounded = player.distanceTo(entity).roundToInt()
 
-            return withColor("${playerDistanceRounded}m", Formatting.GRAY)
+            return "${playerDistanceRounded}m".asText().formatted(Formatting.GRAY)
         }
 
     private fun getPing(entity: Entity): Int? {
@@ -105,7 +106,11 @@ class NametagTextFormatter(private val entity: Entity) {
                 else -> Formatting.GREEN
             }
 
-            return regular(" [") + withColor(playerPing.toString() + "ms", coloringBasedOnPing) + regular("]")
+            return regular(" [")
+                .append(
+                    (playerPing.toString() + "ms").asText().formatted(coloringBasedOnPing)
+                )
+                .append(regular("]"))
         }
 
     private val healthText: Text
@@ -123,17 +128,11 @@ class NametagTextFormatter(private val entity: Entity) {
                 else -> Formatting.RED
             }
 
-            return withColor("$actualHealth HP", healthColor)
+            return "$actualHealth HP".asText().formatted(healthColor)
 
         }
 }
 
 private fun Formatting.toTextColor(): TextColor {
-    return TextColor(this.colorValue!!, this.name)
-}
-
-operator fun MutableText.plus(text: MutableText): MutableText {
-    this.append(text)
-
-    return this
+    return TextColor.fromFormatting(this)!!
 }

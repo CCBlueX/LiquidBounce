@@ -18,56 +18,49 @@
     import BindSetting from "../BindSetting.svelte";
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
+    import MultiChooseSetting from "../MultiChooseSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
-    export let skipAnimationDelay = false;
-
-    let ready = skipAnimationDelay;
-
-    onMount(() => {
-        setTimeout(() => {
-            ready = true;
-        }, 200)
-    });
 </script>
 
-{#if ready}
-    <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
-        {#if setting.valueType === "BOOLEAN"}
-            <BooleanSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "CHOICE"}
-            <ChoiceSetting {path} bind:setting={setting} on:change/>
-        {:else if setting.valueType === "CHOOSE"}
-            <ChooseSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "TOGGLEABLE"}
-            <TogglableSetting {path} bind:setting={setting} on:change/>
-        {:else if setting.valueType === "INT"}
-            <IntSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "INT_RANGE"}
-            <IntRangeSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "FLOAT"}
-            <FloatSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "FLOAT_RANGE"}
-            <FloatRangeSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "CONFIGURABLE"}
-            <ConfigurableSetting {path} bind:setting={setting} on:change/>
-        {:else if setting.valueType === "COLOR"}
-            <ColorSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "TEXT"}
-            <TextSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "BLOCKS"}
-            <BlocksSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "TEXT_ARRAY"}
-            <TextArraySetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "BIND"}
-            <BindSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "VECTOR_I" || setting.valueType === "VECTOR_D" }
-            <VectorSetting bind:setting={setting} on:change/>
-        {:else if setting.valueType === "KEY"}
-            <KeySetting bind:setting={setting} on:change/>
-        {:else}
-            <div style="color: white">Unsupported setting {setting.valueType}</div>
-        {/if}
-    </div>
-{/if}
+
+<div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
+    {#if setting.valueType === "BOOLEAN"}
+        <BooleanSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "CHOICE"}
+        <ChoiceSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "CHOOSE"}
+        <ChooseSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "MULTI_CHOOSE"}
+        <MultiChooseSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "TOGGLEABLE"}
+        <TogglableSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "INT"}
+        <IntSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "INT_RANGE"}
+        <IntRangeSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "FLOAT"}
+        <FloatSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "FLOAT_RANGE"}
+        <FloatRangeSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "CONFIGURABLE"}
+        <ConfigurableSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "COLOR"}
+        <ColorSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "TEXT"}
+        <TextSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "BLOCKS"}
+        <BlocksSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "TEXT_ARRAY"}
+        <TextArraySetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "BIND"}
+        <BindSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "VECTOR_I" || setting.valueType === "VECTOR_D" }
+        <VectorSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "KEY"}
+        <KeySetting bind:setting={setting} on:change/>
+    {:else}
+        <div style="color: white">Unsupported setting {setting.valueType}</div>
+    {/if}
+</div>

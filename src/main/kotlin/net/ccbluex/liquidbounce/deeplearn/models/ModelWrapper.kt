@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
+import java.util.*
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32
@@ -112,7 +113,8 @@ abstract class ModelWrapper<I, O>(
         if (folder.exists()) {
             load(folder.toPath())
         } else {
-            javaClass.getResourceAsStream("/resources/liquidbounce/models/${name.lowercase()}.params")!!.use { stream ->
+            val lowercaseName = name.lowercase(Locale.ENGLISH)
+            javaClass.getResourceAsStream("/resources/liquidbounce/models/${lowercaseName}.params")!!.use { stream ->
                 load(stream)
             }
         }

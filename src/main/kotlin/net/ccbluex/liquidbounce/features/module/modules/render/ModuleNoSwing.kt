@@ -27,20 +27,16 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Disables the swing effect.
  */
-
 object ModuleNoSwing : ClientModule("NoSwing", Category.RENDER) {
-    private val mode by enumChoice("Mode", Mode.HIDE_BOTH)
+    private val hideFor by multiEnumChoice("HideFor", HideFor.entries)
 
-    fun shouldHideForServer() = this.running && mode.hideServerSide
-    fun shouldHideForClient() = this.running && mode.hideClientSide
+    fun shouldHideForServer() = this.running && HideFor.SERVER in hideFor
+    fun shouldHideForClient() = this.running && HideFor.CLIENT in hideFor
 
-    private enum class Mode(
-        override val choiceName: String,
-        val hideClientSide: Boolean,
-        val hideServerSide: Boolean
-    ): NamedChoice {
-        HIDE_BOTH("HideForBoth", true, true),
-        HIDE_CLIENT("HideForClient", true, false),
-        HIDE_SERVER("HideForServer", false, true),
+    private enum class HideFor(
+        override val choiceName: String
+    ) : NamedChoice {
+        CLIENT("Client"),
+        SERVER("Server")
     }
 }

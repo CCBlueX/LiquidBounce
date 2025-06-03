@@ -123,8 +123,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
-        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && module.getRunning() && module.getMiningFatigue()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleNoSlowBreak.getMiningFatigue()) {
             return false;
         }
 
@@ -135,8 +134,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
-        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && module.getRunning() && module.getWater()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleNoSlowBreak.getWater()) {
             return false;
         }
 
@@ -147,7 +145,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            if (ModuleNoSlowBreak.INSTANCE.getRunning() && ModuleNoSlowBreak.INSTANCE.getOnAir()) {
+            if (ModuleNoSlowBreak.getOnAir()) {
                 return true;
             }
 

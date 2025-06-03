@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.render
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
-import oshi.PlatformEnum.*
-import oshi.SystemInfo
+import net.minecraft.util.Util
+import net.minecraft.util.Util.OperatingSystem.*
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -33,9 +33,9 @@ object FontManager {
      * As fallback, we can use a common font that is available on all systems.
      */
     private val COMMON_FONT = runCatching {
-        when (SystemInfo.getCurrentPlatform()) {
+        when (Util.getOperatingSystem()) {
             WINDOWS -> systemFont("Segoe UI")
-            MACOS -> systemFont("Helvetica")
+            OSX -> systemFont("Helvetica")
             LINUX -> systemFont("DejaVu Sans")
             else -> systemFont("Arial")
         }
@@ -47,9 +47,9 @@ object FontManager {
      * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
      */
     private val CJK_FONT = runCatching {
-        when (SystemInfo.getCurrentPlatform()) {
+        when (Util.getOperatingSystem()) {
             WINDOWS -> systemFont("Microsoft YaHei")
-            MACOS -> systemFont("PingFang SC")
+            OSX -> systemFont("PingFang SC")
             LINUX -> systemFont("Noto Sans CJK")
             else -> null // No default CJK font available
         }

@@ -123,7 +123,7 @@ data class Rotation(
         )
     }
 
-    fun approximatelyEquals(other: Rotation, tolerance: Float = 8f): Boolean {
+    fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }
 

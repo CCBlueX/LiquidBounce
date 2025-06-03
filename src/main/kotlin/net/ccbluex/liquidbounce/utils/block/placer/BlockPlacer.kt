@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap
 import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -28,7 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.FULL_BOX
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
@@ -80,8 +81,11 @@ class BlockPlacer(
      */
     val sneak by int("Sneak", 1, 0..10, "ticks")
 
-    val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    val ignoreUsingItem by boolean("IgnoreUsingItem", true)
+    private val ignores by multiEnumChoice("Ignore", Ignore.entries)
+
+    val ignoreOpenInventory get() = Ignore.OPEN_INVENTORY in ignores
+
+    val ignoreUsingItem get() = Ignore.USING_ITEM in ignores
 
     val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
@@ -188,7 +192,7 @@ class BlockPlacer(
         }
 
         // find the best path
-        blocks.keys.filterNot { inaccessible.contains(it) }.forEach { pos ->
+        (blocks.keys - inaccessible).forEach { pos ->
             support.findSupport(pos)?.let { path ->
                 val size = path.size
                 if (supportPath == null || supportPath!!.size > size) {
@@ -211,9 +215,7 @@ class BlockPlacer(
         currentPlaceCandidates.forEach(this::removeFromQueue)
 
         supportPath?.let { path ->
-            path.filter { pos ->
-                !blocks.contains(pos)
-            }.forEach { pos ->
+            (path - blocks.keys).forEach { pos ->
                 addToQueue(pos, isSupport = true)
             }
             scheduleCurrentPlacements(itemStack)
@@ -325,11 +327,11 @@ class BlockPlacer(
             placementTarget.direction
         ) ?: return
 
-        SilentHotbar.selectSlotSilently(this, slot.hotbarSlot, slotResetDelay.random())
+        SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
 
         if (slot.itemStack.item !is BlockItem || pos.getState()!!.isReplaceable) {
             // place the block
-            doPlacement(blockHitResult, swingMode = swingMode)
+            doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
             placedRenderer.addBlock(pos)
         }
 
@@ -394,7 +396,7 @@ class BlockPlacer(
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        if (blocks.contains(pos)) {
+        if (blocks.containsKey(pos)) {
             return
         }
 
@@ -445,4 +447,8 @@ class BlockPlacer(
 
     override fun parent(): EventListener = module
 
+    private enum class Ignore(override val choiceName: String) : NamedChoice {
+        OPEN_INVENTORY("OpenInventory"),
+        USING_ITEM("UsingItem")
+    }
 }

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -45,9 +46,7 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = arrayO
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
 
-    private val notInTheAir by boolean("NotInTheAir", true)
-    private val notDuringMove by boolean("NotDuringMove", false)
-    private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
+    private val conditions by multiEnumChoice("Conditions", UseConditions.NOT_IN_THE_AIR)
     private val stopInput by boolean("StopInput", false)
 
     /**
@@ -68,20 +67,10 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = arrayO
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val accelerateNow: Boolean
-        get() {
-            if (notInTheAir && !player.isOnGround) {
-                return false
-            }
-
-            if (notDuringMove && player.moving) {
-                return false
-            }
-
-            if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
-                return false
-            }
-
-            return player.isUsingItem && player.activeItem.isConsumable
+        get() = if (conditions.any { it.meetsConditions() }) {
+            false
+        } else {
+            player.isUsingItem && player.activeItem.isConsumable
         }
 
     @Suppress("unused")
@@ -145,4 +134,19 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = arrayO
 
     }
 
+    @Suppress("unused")
+    private enum class UseConditions(
+        override val choiceName: String,
+        val meetsConditions: () -> Boolean
+    ) : NamedChoice {
+        NOT_IN_THE_AIR("NotInTheAir", {
+            !player.isOnGround
+        }),
+        NOT_DURING_MOVE("NotDuringMove", {
+            player.moving
+        }),
+        NOT_DURING_REGENERATION("NotDuringRegeneration", {
+            player.hasStatusEffect(StatusEffects.REGENERATION)
+        })
+    }
 }

@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.djl;
 
 import ai.djl.util.Utils;
+import net.ccbluex.liquidbounce.api.core.HttpClient;
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine;
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
@@ -38,7 +39,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static ai.djl.util.Utils.isOfflineMode;
 
@@ -50,12 +50,7 @@ public class MixinUtils {
     private static final ThreadLocal<String> CURRENT_URL = new ThreadLocal<>();
 
     @Unique
-    private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
-            .connectTimeout(3, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .followRedirects(true)
-            .followSslRedirects(true)
+    private static final OkHttpClient CLIENT = HttpClient.getClient().newBuilder()
             .addNetworkInterceptor(new OkHttpProgressInterceptor((bytesRead, contentLength, done) -> {
                 var url = CURRENT_URL.get();
                 var mainTask = DeepLearningEngine.getTask();
@@ -93,14 +88,9 @@ public class MixinUtils {
                 throw new IOException("Offline model is enabled.");
             }
 
-            var headersBuilder = new Headers.Builder();
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                headersBuilder.add(entry.getKey(), entry.getValue());
-            }
-
             var request = new Request.Builder()
                     .url(url)
-                    .headers(headersBuilder.build())
+                    .headers(Headers.of(headers))
                     .build();
             CURRENT_URL.set(url.toString());
             var response = CLIENT.newCall(request).execute();

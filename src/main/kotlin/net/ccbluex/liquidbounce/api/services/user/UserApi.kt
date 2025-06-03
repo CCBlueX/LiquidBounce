@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.api.services.user
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.api.core.API_V3_ENDPOINT
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.core.asJson
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
@@ -31,7 +31,7 @@ import java.util.*
 /**
  * API for user-related endpoints that require authentication
  */
-object UserApi : BaseApi(API_V3_ENDPOINT) {
+object UserApi : BaseApi(config.apiEndpointV3) {
 
     suspend fun getUserInformation(session: OAuthSession) = get<UserInformation>(
         "/oauth/user",
@@ -47,7 +47,7 @@ object UserApi : BaseApi(API_V3_ENDPOINT) {
         "/cosmetics/self",
         JsonObject().apply {
             addProperty("uuid", uuid.toString())
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 }

@@ -19,22 +19,25 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.ccbluex.liquidbounce.config.types.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundCategory;
@@ -130,7 +133,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "hasStatusEffect", at = @At("HEAD"), cancellable = true)
     private void hookAntiNausea(RegistryEntry<StatusEffect> effect, CallbackInfoReturnable<Boolean> cir) {
-        if (effect == StatusEffects.NAUSEA && ModuleAntiBlind.INSTANCE.getRunning() && ModuleAntiBlind.INSTANCE.getAntiNausea()) {
+        if (effect == StatusEffects.NAUSEA && !ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             cir.setReturnValue(false);
             cir.cancel();
         }
@@ -193,7 +196,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
     private void hookNoPush(CallbackInfo callbackInfo) {
-        if (ModuleNoPush.INSTANCE.isEntities()) {
+        if (!ModuleNoPush.canPush(NoPushBy.ENTITIES)) {
             callbackInfo.cancel();
         }
     }
@@ -205,7 +208,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-        !(ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() instanceof NoneChoice) &&
+        ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
         ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
 
         if (noJumpDelay || towerActive) {
@@ -258,6 +261,13 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return rotation.getPitch();
+    }
+
+    @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
+    private void hookEatParticles(ItemStack stack, int count, CallbackInfo ci) {
+        if (stack.getComponents().contains(DataComponentTypes.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
+            ci.cancel();
+        }
     }
 
     /**

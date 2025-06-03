@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,14 +34,24 @@ import net.minecraft.client.gui.screen.DeathScreen
  * Quality of life improvements to the in-game chat.
  */
 object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = arrayOf("AntiSpam")) {
+    private val features by multiEnumChoice("Features",
+        Features.INFINITE,
+        Features.ANTI_CLEAR,
+        Features.KEEP_AFTER_DEATH
+    )
 
-    val infiniteLength by boolean("Infinite", true)
-    val antiClear by boolean("AntiClear", true)
+    val infiniteLength get() = Features.INFINITE in features
+    val antiClear get() = Features.ANTI_CLEAR in features
+
+    /**
+     * Allows you to transform your message text to unicode.
+     */
+    private val forceUnicodeChat get() = Features.FORCE_UNICODE_CHAT in features
 
     /**
      * Allows you to use the chat on the death screen.
      */
-    private val keepAfterDeath by boolean("KeepAfterDeath", true)
+    private val keepAfterDeath get() = Features.KEEP_AFTER_DEATH in features
 
     private object AppendPrefix : MessageModifier("AppendPrefix", false) {
         val prefix by text("Prefix", "> ")
@@ -59,11 +70,6 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         tree(AppendPrefix)
         tree(AppendSuffix)
     }
-
-    /**
-     * Allows you to transform your message text to unicode.
-     */
-    private val forceUnicodeChat by boolean("ForceUnicodeChat", false)
 
     init {
         treeAll(
@@ -129,15 +135,21 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         name: String,
         enabled: Boolean
     ) : ToggleableConfigurable(this, name, enabled) {
-        fun modifyMessage(content: String): String {
+        fun modifyMessage(content: String) =
             if (!this.enabled) {
-                return content
+                content
+            } else {
+                getMessage(content)
             }
-
-            return getMessage(content)
-        }
 
         abstract fun getMessage(content: String): String
     }
 
+    @Suppress("unused")
+    private enum class Features(override val choiceName: String) : NamedChoice {
+        INFINITE("Infinite"),
+        ANTI_CLEAR("AntiClear"),
+        KEEP_AFTER_DEATH("KeepAfterDeath"),
+        FORCE_UNICODE_CHAT("ForceUnicodeChat")
+    }
 }

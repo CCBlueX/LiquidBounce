@@ -507,5 +507,6 @@
   "liquidbounce.module.autoFish.value.recastDelay.description": "Atraso de novo lançamento.",
   "liquidbounce.module.bookBot.description": "Escreve automaticamente em livros.",
   "liquidbounce.module.betterTab.description": "Diversas melhorias na lista de abas.",
+  "liquidbounce.module.logoffSpot.description": "Permite ver jogadores que saíram do servidor ou estão fora do alcance de exibição.",
   "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
 }

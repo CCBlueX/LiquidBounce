@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.*
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -74,7 +74,7 @@ open class Clicker<T>(
             fill()
         }
 
-    val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
+    private val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
         tree(ItemCooldown(parent))
     } else {
         null
@@ -87,11 +87,10 @@ open class Clicker<T>(
      * This is useful for anti-cheats that detect if you are ignoring this cooldown.
      * Applies to the FailSwing feature as well.
      */
-    var attackCooldown: Value<Boolean>? = null
-    init {
-        if (keyBinding == mc.options.attackKey) {
-            attackCooldown = boolean("AttackCooldown", true)
-        }
+    private val attackCooldown: Value<Boolean>? = if (keyBinding == mc.options.attackKey) {
+        boolean("AttackCooldown", true)
+    } else {
+        null
     }
 
     private val passesAttackCooldown
@@ -159,13 +158,11 @@ open class Clicker<T>(
     fun click(block: () -> Boolean) {
         val clicks = getClickAmount()
 
-        ModuleDebug.apply {
-            debugParameter(this@Clicker, "Current Clicks", clicks)
-            debugParameter(this@Clicker, "Peek Clicks", clickArray.get(1))
-            debugParameter(this@Clicker, "Last Click Passed", lastClickPassed)
-            debugParameter(this@Clicker, "Attack Cooldown", mc.attackCooldown)
-            debugParameter(this@Clicker, "Item Cooldown", itemCooldown?.cooldownProgress() ?: 0.0f)
-        }
+        debugParameter("Current Clicks") { clicks }
+        debugParameter("Peek Clicks") { clickArray.get(1) }
+        debugParameter("Last Click Passed") { lastClickPassed }
+        debugParameter("Attack Cooldown") { mc.attackCooldown }
+        debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
         var clickAmount = 0
 
@@ -196,14 +193,12 @@ open class Clicker<T>(
             clickArray.push(cycleArray)
         }
 
-        ModuleDebug.debugParameter(this@Clicker, "Click Technique", pattern.choiceName)
-        ModuleDebug.debugParameter(
-            this@Clicker,
-            "Click Array",
+        debugParameter("Click Technique") { pattern.choiceName }
+        debugParameter("Click Array") {
             clickArray.array.withIndex().joinToString { (i, v) ->
                 if (i == clickArray.head) "*$v" else v.toString()
             }
-        )
+        }
     }
 
     private fun fill() {
@@ -224,13 +219,13 @@ open class Clicker<T>(
         override val choiceName: String,
         val pattern: ClickPattern
     ) : NamedChoice {
-        STABILIZED("Stabilized", StabilizedPattern()),
-        EFFICIENT("Efficient", EfficientPattern()),
-        SPAMMING("Spamming", SpammingPattern()),
-        DOUBLE_CLICK("DoubleClick", DoubleClickPattern()),
-        DRAG("Drag", DragPattern()),
-        BUTTERFLY("Butterfly", ButterflyPattern()),
-        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern());
+        STABILIZED("Stabilized", StabilizedPattern),
+        EFFICIENT("Efficient", EfficientPattern),
+        SPAMMING("Spamming", SpammingPattern),
+        DOUBLE_CLICK("DoubleClick", DoubleClickPattern),
+        DRAG("Drag", DragPattern),
+        BUTTERFLY("Butterfly", ButterflyPattern),
+        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern);
     }
 
 }

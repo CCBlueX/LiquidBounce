@@ -42,23 +42,24 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     private val literalNPC by boolean("LiteralNPC", false)
 
-    val tagHandler = handler<TagEntityEvent> {
-        if (it.entity is PlayerEntity && isBot(it.entity)) {
+    @Suppress("unused")
+    private val tagHandler = handler<TagEntityEvent> {
+        if (isBot(it.entity)) {
            it.ignore()
         }
     }
 
+    private fun reset() = this.modes.choices.forEach {
+        (it as IAntiBotMode).reset()
+    }
+
     override fun disable() {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+        reset()
     }
 
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+        reset()
     }
 
     fun isADuplicate(profile: GameProfile): Boolean {

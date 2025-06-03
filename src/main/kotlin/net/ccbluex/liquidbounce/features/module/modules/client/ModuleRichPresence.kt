@@ -93,7 +93,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
-            logger.error("Failed to connect to Discord RPC.", it)
+            logger.info("Failed to connect to Discord RPC.", it)
 
             if (it is NoDiscordClientException) {
                 notification(
@@ -113,16 +113,16 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
         }.onSuccess {
             logger.info("Successfully connected to Discord RPC.")
         }
-        super.enable()
     }
 
     private fun shutdownIpc() {
-        if (ipcClient == null || ipcClient?.status != PipeStatus.CONNECTED) {
+        val ipcClient = ipcClient
+        if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
             return
         }
 
         runCatching {
-            ipcClient?.close()
+            ipcClient.close()
         }.onFailure {
             logger.error("Failed to close Discord RPC.", it)
         }.onSuccess {
@@ -145,14 +145,15 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
                 shutdownIpc()
             }
 
+            val ipcClient = ipcClient
             // Check ipc client is connected and send rpc
-            if (ipcClient == null || ipcClient!!.status != PipeStatus.CONNECTED) {
+            if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
                 return@waitFor
             }
 
             val ipcConfiguration = ipcConfiguration ?: return@waitFor
 
-            ipcClient!!.sendRichPresence {
+            ipcClient.sendRichPresence {
                 // Set playing time
                 setStartTimestamp(timestamp)
 
@@ -196,7 +197,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
         .replace("%enabledModules%", ModuleManager.count { it.running }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
         .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
-        .replace("%server%", hideSensitiveAddress(mc.currentServerEntry?.address ?: "none"))
+        .replace("%server%", (mc.currentServerEntry?.address ?: "none").hideSensitiveAddress())
 
     private inline fun IPCClient.sendRichPresence(builderAction: RichPresence.Builder.() -> Unit) =
         sendRichPresence(RichPresence.Builder().apply(builderAction).build())

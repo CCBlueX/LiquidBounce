@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
@@ -50,11 +50,11 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
     val oldVersion by boolean("1_12_2", false)
     private val delay by int("Delay", 0, 0..1000, "ms")
-    val range by float("Range", 4.5F, 1.0F..5.0F).onChanged {
+    val range by float("Range", 4.5f, 1f..6f).onChanged {
         CrystalAuraPlaceTargetFactory.updateSphere()
     }
 
-    val wallsRange by float("WallsRange", 4.5F, 1.0F..5.0F).onChanged {
+    val wallsRange by float("WallsRange", 4.5f, 0f..6f).onChanged {
         CrystalAuraPlaceTargetFactory.updateSphere()
     }
 
@@ -210,11 +210,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     }
 
     private fun getSlot(): Int? {
-        return if (OffHandSlot.itemStack.item == Items.END_CRYSTAL) {
-            OffHandSlot.hotbarSlotForServer
-        } else {
-            Slots.Hotbar.findSlotIndex(Items.END_CRYSTAL)
-        }
+        return Slots.OffhandWithHotbar.findClosestSlot(Items.END_CRYSTAL)?.hotbarSlotForServer
     }
 
     fun getMaxRange() = max(range, wallsRange)

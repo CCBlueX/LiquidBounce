@@ -316,8 +316,7 @@
 	"liquidbounce.module.antiReducedDebugInfo.description": "拡張デバッグ情報を表示できます。",
 	"liquidbounce.module.antiStaff.description": "サーバースタッフがあなたのことを監視しているときに通知します。",
 	"liquidbounce.module.antiStaff.messages.noStaffs": "%sによって利用可能なサーバースタッフリストがありません。",
-	"liquidbounce.module.antiStaff.messages.specificStaffDetected": "%sはサーバースタッフです。",
-	"liquidbounce.module.antiStaff.messages.staffDetected": "サーバースタッフがあなたのことを監視しています。",
+	"liquidbounce.module.antiStaff.messages.staffAlert": "%sはサーバースタッフです。",
 	"liquidbounce.module.antiStaff.messages.staffsFailed": "サーバースタッフリストの読み込みに失敗しました。理由: '%s' コード: %sです。",
 	"liquidbounce.module.antiStaff.messages.staffsLoaded": "%sは%sによりスタッフメンバーとして読み込まれました。",
 	"liquidbounce.module.antiStaff.messages.vanishClear": "消えたプレイヤーは見つかりませんでした。",
@@ -506,5 +505,6 @@
 	"liquidbounce.module.zoot.description": "すべての悪い効果/火を取り除きます。",
 	"modmenu.descriptionTranslation.liquidbounce": "無料でオープンソースのハッククライアント",
     "liquidbounce.module.betterTab.description": "タブリストに複数の改良を加えました。",
+    "liquidbounce.module.logoffSpot.description": "サーバーから退出したプレイヤーや、描画範囲外のプレイヤーを表示できるようにします。",
     "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる."
 }

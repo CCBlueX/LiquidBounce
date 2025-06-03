@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.text.Text
 
@@ -33,19 +33,22 @@ import net.minecraft.text.Text
  * @author sqlerrorthing
  * @since 12/28/2024
  **/
+@Suppress("MagicNumber")
 object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
 
     val sorting by enumChoice("Sorting", Sorting.VANILLA)
 
+    private val visibility by multiEnumChoice("Visibility",
+        Visibility.HEADER,
+        Visibility.FOOTER
+    )
+
+    @JvmStatic
+    fun isVisible(visibility: Visibility) = visibility in this.visibility
+
     object Limits : Configurable("Limits") {
         val tabSize by int("TabSize", 80, 1..1000)
         val height by int("ColumnHeight", 20, 1..100)
-    }
-
-    object Visibility : Configurable("Visibility") {
-        val header by boolean("Header", true)
-        val footer by boolean("Footer", true)
-        val nameOnly by boolean("NameOnly", false)
     }
 
     object Highlight : ToggleableConfigurable(ModuleBetterTab, "Highlight", true) {
@@ -76,7 +79,6 @@ object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
     init {
         treeAll(
             Limits,
-            Visibility,
             Highlight,
             AccurateLatency,
             PlayerHider
@@ -88,7 +90,7 @@ object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
 class PlayerFilter: Configurable("Filter") {
     private var filters = setOf<Regex>()
 
-    private val filterType by enumChoice("FilterBy", Filter.BOTH)
+    private val filterBy by multiEnumChoice("FilterBy", Filter.entries)
 
     @Suppress("unused")
     private val names by textArray("Names", mutableListOf()).onChanged { newValue ->
@@ -102,7 +104,7 @@ class PlayerFilter: Configurable("Filter") {
     }
 
     fun isInFilter(entry: PlayerListEntry) = filters.any { regex ->
-        filterType.matches(entry, regex)
+        filterBy.any { filter -> filter.matches(entry, regex) }
     }
 
     @Suppress("unused")
@@ -110,10 +112,6 @@ class PlayerFilter: Configurable("Filter") {
         override val choiceName: String,
         val matches: PlayerListEntry.(Regex) -> Boolean
     ) : NamedChoice {
-        BOTH("Both", { regex ->
-            DISPLAY_NAME.matches(this, regex) || PLAYER_NAME.matches(this, regex)
-        }),
-
         DISPLAY_NAME("DisplayName", { regex ->
             this.displayName?.string?.let { regex.matches(it) } ?: false
         }),
@@ -138,4 +136,12 @@ enum class Sorting(
     NONE("None", { _, _ -> 0 })
 }
 
+@Suppress("unused")
+enum class Visibility(
+    override val choiceName: String
+) : NamedChoice {
+    HEADER("Header"),
+    FOOTER("Footer"),
+    NAME_ONLY("NameOnly")
+}
 

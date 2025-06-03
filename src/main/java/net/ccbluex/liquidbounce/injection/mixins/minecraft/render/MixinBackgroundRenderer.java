@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.block.enums.CameraSubmersionType;
@@ -47,31 +48,29 @@ public abstract class MixinBackgroundRenderer {
         return list.stream().filter(modifier -> {
             final var effect = modifier.getStatusEffect();
 
-            final var module = ModuleAntiBlind.INSTANCE;
-
-            if (!module.getRunning()) {
+            if (!ModuleAntiBlind.INSTANCE.getRunning()) {
                 return true;
             }
 
-            return !((StatusEffects.BLINDNESS == effect && module.getAntiBlind()) ||
-                    (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
+            return !(StatusEffects.BLINDNESS == effect && !ModuleAntiBlind.canRender(DoRender.BLINDING)) ||
+                    (StatusEffects.DARKNESS == effect && !ModuleAntiBlind.canRender(DoRender.DARKNESS));
         });
     }
 
     @ModifyReturnValue(method = "applyFog", at = @At("RETURN"))
     private static Fog injectFog(Fog original, @Local(argsOnly = true) Camera camera, @Local(argsOnly = true, ordinal = 0) float viewDistance) {
-        var antiBlind = ModuleAntiBlind.INSTANCE;
         var customAmbienceFog = ModuleCustomAmbience.FogConfigurable.INSTANCE;
-        if (!antiBlind.getRunning() || customAmbienceFog.getRunning() || !fogEnabled) {
+        if (!ModuleAntiBlind.INSTANCE.getRunning() || customAmbienceFog.getRunning() || !fogEnabled) {
             return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyFog(camera, viewDistance, original);
         }
 
         CameraSubmersionType type = camera.getSubmersionType();
-        if (antiBlind.getPowderSnowFog() && type == CameraSubmersionType.POWDER_SNOW) {
+
+        if (!ModuleAntiBlind.canRender(DoRender.POWDER_SNOW_FOG) && type == CameraSubmersionType.POWDER_SNOW) {
             return new Fog(-8f, viewDistance * 0.5f, original.shape(), original.red(), original.green(), original.blue(), original.alpha());
         }
 
-        if (antiBlind.getLiquidsFog()) {
+        if (!ModuleAntiBlind.canRender(DoRender.LIQUIDS_FOG)) {
             // Renders fog same as spectator.
             switch (type) {
                 case LAVA -> {

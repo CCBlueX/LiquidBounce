@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -46,15 +48,13 @@ import kotlin.random.Random
  */
 
 object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
-
     private val modes = choices(
-        "Mode", RandomMode, arrayOf(
-            OldMode, RandomMode, CustomMode
+        "Mode", RandomInteraction, arrayOf(
+            OldMode, RandomInteraction, CustomMode
         )
     )
 
     private object OldMode : Choice("Old") {
-
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
@@ -73,53 +73,26 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
 
     }
 
-    private object RandomMode : Choice("Random") {
-
+    private object RandomInteraction : Choice("RandomInteraction") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var randomDirection = DirectionalInput.NONE
 
+        private val interactions by multiEnumChoice("Interaction",
+            Interaction.YAW,
+            Interaction.PITCH,
+            Interaction.SWING_HAND,
+        )
+
+        private val delay by intRange("Delay", 4..7, 0..20, suffix = "ticks")
+
         @Suppress("unused")
         val repeatable = tickHandler {
-            when (Random.nextInt(0, 6)) {
-                0 -> {
-                    once<MovementInputEvent> { event ->
-                        event.jump = true
-                    }
-                }
-
-                1 -> {
-                    if (!player.handSwinging) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    }
-                }
-
-                2 -> {
-                    // Allows every kind of direction
-                    randomDirection = DirectionalInput(
-                        Random.nextBoolean(),
-                        Random.nextBoolean(),
-                        Random.nextBoolean(),
-                        Random.nextBoolean()
-                    )
-                    waitTicks((3..7).random())
-                    randomDirection = DirectionalInput.NONE
-                }
-
-                3 -> {
-                    player.inventory.selectedSlot = Random.nextInt(0, 9)
-                }
-
-                4 -> {
-                    player.yaw += (-180f..180f).random()
-                }
-
-                5 -> {
-                    player.pitch = ((-5f..5f).random() + player.pitch).coerceIn(-90f, 90f)
-                }
+            interactions.randomOrNull()?.let {
+                it.perform(this@tickHandler)
+                waitTicks(delay.random())
             }
-            waitTicks((4..7).random())
         }
 
         @Suppress("unused")
@@ -127,6 +100,41 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             it.directionalInput = randomDirection
         }
 
+        @Suppress("unused", "MagicNumber")
+        private enum class Interaction(
+            override val choiceName: String,
+            val perform: suspend Sequence.() -> Unit,
+        ): NamedChoice {
+            JUMP("Jump", {
+                waitNext<MovementInputEvent> { event ->
+                    event.jump = true
+                }
+            }),
+            SWING_HAND("SwingHand", {
+                if (!player.handSwinging) {
+                    player.swingHand(Hand.MAIN_HAND)
+                }
+            }),
+            CHANGE_SLOT("ChangeSlot", {
+                player.inventory.selectedSlot = Random.nextInt(0, 9)
+            }),
+            YAW("Yaw", {
+                player.yaw += (-180f..180f).random()
+            }),
+            PITCH("Pitch", {
+                player.pitch = ((-5f..5f).random() + player.pitch).coerceIn(-90f, 90f)
+            }),
+            RANDOM_DIRECTION("RandomDirection", {
+                randomDirection = DirectionalInput(
+                    Random.nextBoolean(),
+                    Random.nextBoolean(),
+                    Random.nextBoolean(),
+                    Random.nextBoolean()
+                )
+                waitTicks(delay.random())
+                randomDirection = DirectionalInput.NONE
+            })
+        }
     }
 
     private object CustomMode : Choice("Custom") {
@@ -168,7 +176,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                once<MovementInputEvent> { event ->
+                waitNext<MovementInputEvent> { event ->
                     event.jump = true
                 }
             }

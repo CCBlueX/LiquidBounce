@@ -41,6 +41,10 @@ import kotlin.math.pow
  */
 object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val mode = choices("Mode", Temporary, arrayOf(Temporary, Filter))
 
     /**

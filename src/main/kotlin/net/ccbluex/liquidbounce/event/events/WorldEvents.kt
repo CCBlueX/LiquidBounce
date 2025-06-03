@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.shape.VoxelShape
 
@@ -70,3 +70,6 @@ class PlayerEquipmentChangeEvent(
 
 @Nameable("fluidPush")
 class FluidPushEvent : CancellableEvent()
+
+@Nameable("worldEntityRemove")
+class WorldEntityRemoveEvent(val entity: Entity) : Event()

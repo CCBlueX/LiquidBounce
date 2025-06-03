@@ -33,8 +33,11 @@ abstract class FactorAngleSmooth(name: String, parent: ChoiceConfigurable<*>) : 
      * @param currentRotation The current rotation
      * @param targetRotation The target rotation
      */
-    abstract fun calculateFactors(rotationTarget: RotationTarget?, currentRotation: Rotation, targetRotation: Rotation):
-        Pair<Float, Float>
+    abstract fun calculateFactors(
+        rotationTarget: RotationTarget?,
+        currentRotation: Rotation,
+        targetRotation: Rotation
+    ): Pair<Float, Float>
 
     override fun process(
         rotationTarget: RotationTarget,
@@ -47,10 +50,11 @@ abstract class FactorAngleSmooth(name: String, parent: ChoiceConfigurable<*>) : 
 
     override fun calculateTicks(currentRotation: Rotation, targetRotation: Rotation): Int {
         var currentRotation = currentRotation
-        var ticks = 0
+        var ticks = -1
 
         do {
             val (horizontalFactor, verticalFactor) = calculateFactors(null, currentRotation, targetRotation)
+
             currentRotation = currentRotation.towardsLinear(targetRotation, horizontalFactor, verticalFactor)
             ticks++
         } while (!currentRotation.approximatelyEquals(targetRotation) && ticks < 80)

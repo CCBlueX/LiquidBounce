@@ -33,23 +33,23 @@ import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
-import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
 import net.minecraft.SharedConstants
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
-import java.io.StringWriter
+import java.util.EnumSet
 
 /**
  * Debug Command to collect information about the client
@@ -61,30 +61,33 @@ import java.io.StringWriter
  */
 object CommandDebug : CommandFactory {
 
+    private val gson = GsonBuilder()
+        .setPrettyPrinting()
+        .create()
+
     override fun createCommand() = CommandBuilder.begin("debug")
         .handler { _, _ ->
             chat("§7Collecting debug information...")
 
-            val autoConfig = StringWriter().use { writer ->
-                serializeAutoConfig(writer)
-                writer.toString()
+            val autoConfig = okio.Buffer().use {
+                serializeAutoConfig(it.outputStream().writer())
+                it.readUtf8()
             }
             val autoConfigPaste = uploadToPaste(autoConfig)
             val debugJson = createDebugJson(autoConfigPaste)
 
-            val content = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(debugJson)
+            val content = gson.toJson(debugJson)
             val paste = uploadToPaste(content)
 
-            chat(Text.literal("Debug information has been uploaded to: ").styled { style ->
-                style.withColor(TextColor.fromFormatting(Formatting.GREEN))
-            }.append(Text.literal(paste).styled { style ->
-                style.withColor(Formatting.YELLOW).withClickEvent(
-                    ClickEvent(ClickEvent.Action.OPEN_URL, paste)
+            chat(
+                Text.literal("Debug information has been uploaded to: ").styled { style ->
+                    style.withColor(TextColor.fromFormatting(Formatting.GREEN))
+                }.append(
+                    Text.literal(paste)
+                        .formatted(Formatting.YELLOW)
+                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
                 )
-            }))
+            )
         }
         .build()
 
@@ -161,7 +164,7 @@ object CommandDebug : CommandFactory {
             }
         })
 
-        add("enemies", ConfigSystem.serializeConfigurable(combatTargetsConfigurable, publicGson))
+        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, EnumSet::class.javaObjectType))
     }
 
     /**

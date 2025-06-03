@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("WildcardImport")
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
@@ -43,12 +44,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.aiming.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -75,6 +76,7 @@ import kotlin.math.pow
  *
  * Automatically attacks enemies.
  */
+@Suppress("MagicNumber")
 object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     // Attack speed
@@ -97,12 +99,16 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     // Target
     val targetTracker = tree(KillAuraTargetTracker)
-    val requirements = tree(KillAuraRequirements)
 
     // Rotation
     private val rotations = tree(KillAuraRotationsConfigurable)
 
     private val pointTracker = tree(PointTracker())
+
+    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+
+    private val requirementsMet
+        get() = requires.all { it.meets() }
 
     // Bypass techniques
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -157,7 +163,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen
 
-        val shouldResetTarget = player.isSpectator || player.isDead || !requirements.requirementsMet
+        val shouldResetTarget = player.isSpectator || player.isDead || !requirementsMet
 
         if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
             // Reset current target
@@ -190,9 +196,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
-            if (KillAuraFailSwing.enabled && requirements.requirementsMet) {
+            if (KillAuraFailSwing.enabled && requirementsMet) {
                 if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.tickOff)
+                    waitTicks(KillAuraAutoBlock.currentTickOff)
                 }
                 dealWithFakeSwing(this, null)
             }
@@ -200,7 +206,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         }
 
         // Check if the module should (not) continue after the blocking state is updated
-        if (!requirements.requirementsMet) {
+        if (!requirementsMet) {
             return@tickHandler
         }
 
@@ -242,7 +248,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         }
     }
 
-    @Suppress("CognitiveComplexMethod")
+    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
     private suspend fun attackTarget(sequence: Sequence, target: Entity, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
@@ -270,7 +276,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             // Deal with fake swing
             if (KillAuraFailSwing.enabled) {
                 if (hasUnblocked) {
-                    sequence.waitTicks(KillAuraAutoBlock.tickOff)
+                    sequence.waitTicks(KillAuraAutoBlock.currentTickOff)
                 }
 
                 dealWithFakeSwing(sequence, target)
@@ -300,7 +306,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.tickOff > 0 && clickScheduler.willClickAt(KillAuraAutoBlock.tickOff)
+        } else if (KillAuraAutoBlock.currentTickOff > 0 && clickScheduler.willClickAt(KillAuraAutoBlock.currentTickOff)
             && KillAuraAutoBlock.shouldUnblockToHit) {
             KillAuraAutoBlock.stopBlocking(pauses = true)
         } else {
@@ -353,13 +359,14 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         }
     }
 
+    @Suppress("ReturnCount")
     private fun processTarget(
         entity: LivingEntity,
         maximumRange: Float,
         situation: PointTracker.AimSituation
     ): Boolean {
         val (rotation, _) = getSpot(entity, maximumRange.toDouble(), situation) ?: return false
-        val ticks = rotations.howLongToReach(rotation)
+        val ticks = rotations.calculateTicks(rotation)
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation Ticks", ticks)
 
         when (rotations.rotationTiming) {

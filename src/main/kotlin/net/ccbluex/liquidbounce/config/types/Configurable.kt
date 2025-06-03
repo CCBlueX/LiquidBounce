@@ -19,9 +19,11 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
@@ -29,6 +31,8 @@ import net.minecraft.item.Item
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.glfw.GLFW
+import java.util.*
+import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(
@@ -228,7 +232,7 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
-    fun textArray(name: String, default: MutableList<String>) =
+    fun <C : MutableCollection<String>> textArray(name: String, default: C) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
     fun curve(name: String, default: Easing) = enumChoice(name, default)
@@ -241,13 +245,42 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
 
-    fun blocks(name: String, default: MutableSet<Block>) =
+    fun <C : MutableCollection<Block>> blocks(name: String, default: C) =
         value(name, default, ValueType.BLOCKS, ListValueType.Block)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun items(name: String, default: MutableList<Item>) =
+    fun <C : MutableCollection<Item>> items(name: String, default: C) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        vararg default: T,
+        canBeNone: Boolean = true
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: EnumEntries<T>,
+        canBeNone: Boolean = true
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: EnumSet<T> = emptyEnumSet(),
+        canBeNone: Boolean = true
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default.toEnumSet(), enumValues<T>().toEnumSet(), canBeNone)
+
+    fun <T> multiEnumChoice(
+        name: String,
+        default: EnumSet<T>,
+        choices: EnumSet<T>,
+        canBeNone: Boolean = true
+    ) where T : Enum<T>, T : NamedChoice =
+        MultiChooseEnumListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice = enumChoice(name, default, enumValues<T>())

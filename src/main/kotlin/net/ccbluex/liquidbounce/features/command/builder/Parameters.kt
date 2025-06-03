@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -19,6 +20,9 @@
 
 package net.ccbluex.liquidbounce.features.command.builder
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.world
@@ -79,6 +83,49 @@ fun moduleParameter(
         .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin, validator = validator) }
 }
 
+fun valueNameParameter(name: String = "valueName") = ParameterBuilder
+    .begin<String>(name)
+    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+    .autocompletedWith { begin, args ->
+        val moduleName = args[2]
+        val module = ModuleManager.find { module -> module.name.equals(moduleName, true) }
+            ?: return@autocompletedWith emptyList()
+
+        val values = module.getContainedValuesRecursively()
+            .filter { !it.name.equals("Bind", true) }
+            .map { it.name }
+        values.filter { it.startsWith(begin, true) }
+    }
+
+fun valueTypeParameter(name: String = "value") = ParameterBuilder
+    .begin<String>(name)
+    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+    .autocompletedWith { begin, args ->
+        val moduleName = args[2]
+        val module = ModuleManager.find {
+            it.name.equals(moduleName, true)
+        } ?: return@autocompletedWith emptyList()
+
+        val valueName = args[3]
+
+        val value = module.getContainedValuesRecursively().firstOrNull {
+            it.name.equals(valueName, true)
+        } ?: return@autocompletedWith emptyList()
+
+        val options = value.valueType.completer.possible(value)
+        options.filter { it.startsWith(begin, true) }
+    }
+
+fun configurableParameter(
+    name: String = "configurable",
+    validator: (Configurable) -> Boolean = { true }
+): ParameterBuilder<String> {
+    return ParameterBuilder
+        .begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, _ -> ConfigSystem.autoComplete(begin, validator = validator) }
+}
+
 fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
     return ParameterBuilder
         .begin<String>(name)
@@ -86,4 +133,37 @@ fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
         .useMinecraftAutoCompletion()
 }
 
+inline fun <reified T> enumsParameter(
+    name: String = "enum"
+): ParameterBuilder<String> where T : Enum<*>, T : NamedChoice {
+    return ParameterBuilder
+        .begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, _ ->
+            val parts = begin.split(",")
+            val matchingPrefix = parts.last().trim()
+            val resultPrefix = if (parts.size > 1) parts.subList(0, parts.size - 1).joinToString(",") + "," else ""
 
+            val suggestions = T::class.java.enumConstants
+                .toList()
+                .map { (it as NamedChoice).choiceName }
+                .filter { it.startsWith(matchingPrefix, ignoreCase = true) }
+
+            suggestions.map {
+                if (resultPrefix.isNotEmpty()) {
+                    resultPrefix + it
+                } else {
+                    it
+                }
+            }
+        }
+}
+
+inline fun <reified T> parseEnumsFromParameter(
+    name: String?,
+): List<T> where T : Enum<T>, T : NamedChoice {
+    if (name == null) return emptyList()
+    return name.split(",").mapNotNull { enumName ->
+        enumValues<T>().firstOrNull { it.choiceName.equals(enumName.trim(), ignoreCase = true) }
+    }
+}

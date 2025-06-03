@@ -20,10 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
 import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -112,9 +109,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     // Turns off blinking when the darkness effect is active.
     @Redirect(method = "getDarknessFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Lnet/minecraft/entity/effect/StatusEffectInstance;"))
     private StatusEffectInstance injectAntiDarkness(ClientPlayerEntity instance, RegistryEntry<StatusEffect> registryEntry) {
-        final var module = ModuleAntiBlind.INSTANCE;
-
-        if (module.getRunning() && module.getAntiDarkness()) {
+        if (!ModuleAntiBlind.canRender(DoRender.DARKNESS)) {
             return null;
         }
 

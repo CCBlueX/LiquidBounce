@@ -440,5 +440,6 @@
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
   "liquidbounce.module.autoBalls.description": "Automatically throws snowballs at your enemies.",
   "liquidbounce.module.betterTab.description": "Multiple enhancements to the tab list.",
+  "liquidbounce.module.logoffSpot.description": "Allows you to see players who have left the server or are out of render distance.",
   "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
 }

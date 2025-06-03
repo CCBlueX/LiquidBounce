@@ -43,7 +43,10 @@ object LanguageManager : Configurable("lang") {
         "ru_ru",
         "ua_ua",
         "en_pt",
-        "pt_br"
+        "pt_br",
+        "tr_tr",
+        "nl_nl",
+        "nl_be"
     )
     private val languageMap = ConcurrentHashMap<String, ClientLanguage>()
 

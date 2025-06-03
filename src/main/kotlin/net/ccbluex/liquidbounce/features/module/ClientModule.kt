@@ -171,7 +171,7 @@ open class ClientModule(
 
     // Tag to be displayed on the HUD
     open val tag: String?
-        get() = this.tagValue?.getValue()?.toString()
+        get() = this.tagValue?.getTagValue()?.toString()
 
     private var tagValue: Value<*>? = null
 

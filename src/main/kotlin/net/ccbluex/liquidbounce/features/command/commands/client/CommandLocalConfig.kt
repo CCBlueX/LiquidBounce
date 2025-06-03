@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Util
 
@@ -126,8 +128,15 @@ object CommandLocalConfig : CommandFactory {
                 .required()
                 .build()
         )
+        .parameter(
+            moduleParameter()
+                .optional()
+                .build()
+        )
         .handler { command, args ->
             val name = args[0] as String
+            val moduleNames = args.getOrNull(1) as String?
+            val modules = ModuleManager.parseModulesFromParameter(moduleNames)
 
             ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                 if (!exists()) {
@@ -135,8 +144,10 @@ object CommandLocalConfig : CommandFactory {
                     return@handler
                 }
 
-                AutoConfig.withLoading {
-                    AutoConfig.loadAutoConfig(bufferedReader())
+                bufferedReader().use { r ->
+                    AutoConfig.withLoading {
+                        AutoConfig.loadAutoConfig(r, modules)
+                    }
                 }
             }.onFailure { error ->
                 logger.error("Failed to load config $name", error)

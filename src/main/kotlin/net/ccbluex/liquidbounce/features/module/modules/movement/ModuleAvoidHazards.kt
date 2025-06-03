@@ -18,13 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.*
+import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -33,18 +36,13 @@ import net.minecraft.util.shape.VoxelShapes
  * Prevents you walking into blocks that might be malicious for you.
  */
 object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
-
-    private val cacti by boolean("Cacti", true)
-    private val berryBush by boolean("BerryBush", true)
-    private val pressurePlates by boolean("PressurePlates", true)
-    private val fire by boolean("Fire", true)
-    private val lava by boolean("Lava", true)
-    private val magmaBlocks by boolean("MagmaBlocks", true)
+    private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
     // Conflicts with AvoidHazards
-    val cobWebs by boolean("Cobwebs", true)
+    val cobWebs get() = Avoid.COBWEB in avoid
 
-    val UNSAFE_BLOCK_CAP = Block.createCuboidShape(
+    @Suppress("MagicNumber")
+    private val UNSAFE_BLOCK_CAP = Block.createCuboidShape(
         0.0,
         0.0,
         0.0,
@@ -55,19 +53,36 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        val block = event.state.block
-        val fluidState = event.state.fluidState
-
-        event.shape = when {
-            block is CactusBlock && cacti -> VoxelShapes.fullCube()
-            block is SweetBerryBushBlock && berryBush -> VoxelShapes.fullCube()
-            block is FireBlock && fire -> VoxelShapes.fullCube()
-            block is CobwebBlock && cobWebs -> VoxelShapes.fullCube()
-            block is AbstractPressurePlateBlock && pressurePlates -> UNSAFE_BLOCK_CAP
-            event.pos.down().getBlock() is MagmaBlock && magmaBlocks -> UNSAFE_BLOCK_CAP
-            (fluidState.isOf(Fluids.LAVA) || fluidState.isOf(Fluids.FLOWING_LAVA)) && lava -> VoxelShapes.fullCube()
-            else -> return@handler
+        avoid.find { it.test(event.state.block, event.state.fluidState, event.pos) }?.let {
+            event.shape = if (it.fullCube) VoxelShapes.fullCube() else UNSAFE_BLOCK_CAP
         }
     }
 
+    private enum class Avoid(
+        override val choiceName: String,
+        val fullCube: Boolean = true,
+        val test: (block: Block, fluidState: FluidState, pos: BlockPos) -> Boolean
+    ) : NamedChoice {
+        CACTI("Cacti", test = { block, _, _ ->
+            block is CactusBlock
+        }),
+        BERRY_BUSH("BerryBush", test = { block, _, _ ->
+            block is SweetBerryBushBlock
+        }),
+        FIRE("Fire", test = { block, _, _, ->
+            block is FireBlock
+        }),
+        COBWEB("Cobwebs", test = { block, _, _, ->
+            block is CobwebBlock
+        }),
+        PRESSURE_PLATES("PressurePlates", fullCube = false, test = { block, _, _ ->
+            block is AbstractPressurePlateBlock
+        }),
+        MAGMA("MagmaBlocks", fullCube = false, test = { _, _, pos ->
+            pos.down().getBlock() is MagmaBlock
+        }),
+        LAVA("Lava", test = { _, fluidState, _ ->
+            fluidState.isOf(Fluids.LAVA) || fluidState.isOf(Fluids.FLOWING_LAVA)
+        })
+    }
 }

@@ -75,18 +75,18 @@ object KillAuraClicker : Clicker<ModuleKillAura>(ModuleKillAura, mc.options.atta
             }
 
             if (player.isBlockAction) {
-                if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayCurrentlyAttackWhileUsing()) {
+                if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                     return true
                 }
 
                 if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.shouldUnblockToHit) {
                     // Wait for the tick off time to be over, if it's not 0
                     // Ideally this should not happen.
-                    if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.tickOff > 0) {
-                        sequence.waitTicks(KillAuraAutoBlock.tickOff)
+                    if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.currentTickOff > 0) {
+                        sequence.waitTicks(KillAuraAutoBlock.currentTickOff)
                     }
                 }
-            } else if (player.isUsingItem && !ModuleMultiActions.mayCurrentlyAttackWhileUsing()) {
+            } else if (player.isUsingItem && !ModuleMultiActions.mayAttackWhileUsing()) {
                 // return if it's not allowed to attack while the player is using another item that's not a shield
                 return true
             }

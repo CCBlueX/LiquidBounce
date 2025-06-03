@@ -312,9 +312,7 @@ class Theme(val name: String) : Closeable {
                 folder.deleteRecursively()
             }
 
-            runBlocking {
-                extractZip(stream, folder)
-            }
+            extractZip(stream, folder)
             folder.deleteOnExit()
 
             Theme("default")

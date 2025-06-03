@@ -35,6 +35,7 @@ object SpooferResourcePack : ToggleableConfigurable(name = "ResourceSpoofer", en
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
+        val network = mc.networkHandler ?: return@handler
 
         if (packet is ResourcePackSendS2CPacket) {
             val id = packet.id

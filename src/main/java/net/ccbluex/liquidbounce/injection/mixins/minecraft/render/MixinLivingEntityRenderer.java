@@ -27,9 +27,10 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.ccbluex.liquidbounce.render.engine.Color4b;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.MinecraftClient;
@@ -60,7 +61,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
     @Unique
     private Pair<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
-        if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.getBodyParts().allows(bodyPart)) {
+        if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.isPartAllowed(bodyPart)) {
             var rotation = ModuleRotations.INSTANCE.getModelRotation();
             var prevRotation = ModuleRotations.INSTANCE.getPrevModelRotation();
 
@@ -121,6 +122,10 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
     @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
     private void injectTrueSight(EntityModel instance, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int color, Operation<Void> original, @Local(argsOnly = true) S livingEntityRenderState) {
+        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(livingEntityRenderState)) {
+            color = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+        }
+
         var trueSightModule = ModuleTrueSight.INSTANCE;
         var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
         if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
@@ -131,6 +136,10 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
     @ModifyReturnValue(method = "getRenderLayer", at = @At("RETURN"))
     private RenderLayer injectTrueSight(RenderLayer original, S state, boolean showBody, boolean translucent, boolean showOutline) {
+        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
+            return RenderLayer.getItemEntityTranslucentCull(this.getTexture(state));
+        }
+
         if (ModuleTrueSight.canRenderEntities(state) && !showBody && !translucent && !showOutline) {
             state.invisible = false;
             return RenderLayer.getItemEntityTranslucentCull(this.getTexture(state));

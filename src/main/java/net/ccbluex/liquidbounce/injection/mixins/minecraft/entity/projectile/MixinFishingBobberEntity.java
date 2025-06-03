@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.projectile;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.FishingBobberEntity;
@@ -29,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.At;
 /**
  * MixinFishingBobberEntity
  *
- * @author sqlerrorthing
+ * @author sqlerrorthing, 1zun4
  * @since 12/28/2024
  **/
 @Mixin(FishingBobberEntity.class)
@@ -37,7 +38,7 @@ public abstract class MixinFishingBobberEntity {
 
     @WrapWithCondition(method = "handleStatus", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/FishingBobberEntity;pullHookedEntity(Lnet/minecraft/entity/Entity;)V"))
     private boolean hookNoPushByFishingRod(FishingBobberEntity instance, Entity entity) {
-        return entity != MinecraftClient.getInstance().player || !ModuleNoPush.INSTANCE.isFishingRod();
+        return entity != MinecraftClient.getInstance().player || ModuleNoPush.canPush(NoPushBy.FISHING_ROD);
     }
 
 }

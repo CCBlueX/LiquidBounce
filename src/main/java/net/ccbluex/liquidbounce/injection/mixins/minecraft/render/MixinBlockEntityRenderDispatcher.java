@@ -51,10 +51,10 @@ public class MixinBlockEntityRenderDispatcher {
             if (type != null && type.shouldRender(blockEntity.getPos())) {
                 var color = type.getColor();
 
-                if (color.getA() > 0) {
+                if (color.a() > 0) {
                     var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
                             .getOutlineVertexConsumers();
-                    outlineVertexConsumerProvider.setColor(color.getR(), color.getG(), color.getB(), 255);
+                    outlineVertexConsumerProvider.setColor(color.r(), color.g(), color.b(), 255);
                     OutlineFlag.drawOutline = true;
                     return outlineVertexConsumerProvider;
                 }

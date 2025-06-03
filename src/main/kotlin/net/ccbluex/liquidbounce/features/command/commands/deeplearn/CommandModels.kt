@@ -166,6 +166,11 @@ object CommandModels : CommandFactory {
             )
         }
 
+        if (samples.isEmpty()) {
+            chat(markAsError(command.result("noSamples")))
+            return@runCatching
+        }
+
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         @Suppress("ArrayInDataClass")
@@ -191,7 +196,7 @@ object CommandModels : CommandFactory {
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))
     }.onFailure { error ->
-        chat(markAsError(command.result("trainingError", error.localizedMessage)))
+        chat(markAsError(command.result("trainingFailed", error.localizedMessage)))
     }
 
 }

@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.config.types.DynamicConfigurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.createZipArchive
+import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -42,6 +44,9 @@ import java.io.Writer
 @Suppress("TooManyFunctions")
 object ConfigSystem {
 
+    var isFirstLaunch: Boolean = false
+        private set
+
     // Config directory folder
     val rootFolder = File(
         mc.runDirectory, LiquidBounce.CLIENT_NAME
@@ -49,6 +54,7 @@ object ConfigSystem {
         // Check if there is already a config folder and if not create new folder
         // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
+            isFirstLaunch = true
             mkdir()
         }
     }
@@ -64,8 +70,18 @@ object ConfigSystem {
         }
     }
 
+    internal val backupFolder = File(
+        rootFolder, "backups"
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
+        if (!exists()) {
+            mkdir()
+        }
+    }
+
     // A mutable list of all root configurable classes (and their subclasses)
-    private val configurables: MutableList<Configurable> = mutableListOf()
+    val configurables = ArrayList<Configurable>()
 
     /**
      * Create new root configurable
@@ -93,12 +109,42 @@ object ConfigSystem {
         return configurable
     }
 
+    val Configurable.jsonFile: File
+        get() {
+            require(this in configurables) { "${this.name} is not root configurable" }
+            return File(rootFolder, "${this.loweredName}.json")
+        }
+
+    /**
+     * Create a ZIP file of root configurable files
+     */
+    fun backup(fileName: String, configurables: List<Configurable> = this.configurables) {
+        val zipFile = File(backupFolder, "$fileName.zip")
+        check(!zipFile.exists()) { "Backup file already exists" }
+
+        configurables.map { configurable -> configurable.jsonFile }.createZipArchive(zipFile)
+    }
+
+    /**
+     * Restore a backup from a ZIP file to the root configurable files
+     */
+    fun restore(fileName: String) {
+        val zipFile = File(backupFolder, "$fileName.zip")
+        check(zipFile.exists()) { "Backup file does not exist" }
+
+        // Store all configurables to make sure they are up to date,
+        // before we overwrite some of them through [extractZip]
+        storeAll()
+        extractZip(zipFile, rootFolder)
+        loadAll()
+    }
+
     /**
      * All configurables should load now.
      */
     fun loadAll() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.loweredName}.json").runCatching {
+            configurable.jsonFile.runCatching {
                 if (!exists()) {
                     // Do not try to load a non-existing file
                     return@runCatching
@@ -133,7 +179,7 @@ object ConfigSystem {
      * The configurable should be known to the config system.
      */
     fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
-        File(rootFolder, "${configurable.loweredName}.json").runCatching {
+        configurable.jsonFile.runCatching {
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
@@ -220,7 +266,7 @@ object ConfigSystem {
     /**
      * Deserialize a value from a json object
      */
-    internal fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+    private fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
         // In the case of a configurable, we need to go deeper and deserialize the configurable itself
         if (value is Configurable) {
             runCatching {
@@ -266,5 +312,27 @@ object ConfigSystem {
         }
     }
 
+    inline fun autoComplete(begin: String, validator: (Configurable) -> Boolean = { true }): List<String> {
+        val parts = begin.split(",")
+        val matchingPrefix = parts.last()
+        val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
+        return configurables.filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
+            .map { configurable ->
+                if (parts.size == 1) {
+                    configurable.name.lowercase()
+                } else {
+                    resultPrefix + configurable.name.lowercase()
+                }
+            }
+    }
+
+    fun parseConfigurablesFromParameter(name: String?): List<Configurable> {
+        if (name == null) return emptyList()
+        return name.split(",").mapNotNull { getConfigurableByName(it) }
+    }
+
+    fun getConfigurableByName(name: String): Configurable? {
+        return configurables.firstOrNull { it.name.equals(name, true) }
+    }
 
 }

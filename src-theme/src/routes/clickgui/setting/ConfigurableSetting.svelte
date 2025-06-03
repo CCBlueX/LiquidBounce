@@ -1,12 +1,9 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {
-        ModuleSetting,
-        ConfigurableSetting,
-    } from "../../../integration/types";
+    import type {ConfigurableSetting, ModuleSetting,} from "../../../integration/types";
     import GenericSetting from "./common/GenericSetting.svelte";
     import ExpandArrow from "./common/ExpandArrow.svelte";
-    import { setItem } from "../../../integration/persistent_storage";
+    import {setItem} from "../../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
@@ -23,13 +20,11 @@
     }
 
     let expanded = localStorage.getItem(thisPath) === "true";
-    let skipAnimationDelay = false;
 
     $: setItem(thisPath, expanded.toString());
 
     function toggleExpanded() {
         expanded = !expanded;
-        skipAnimationDelay = true;
     }
 </script>
 
@@ -37,13 +32,13 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="head" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
         <div class="title">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
+        <ExpandArrow bind:expanded />
     </div>
 
     {#if expanded}
         <div class="nested-settings">
             {#each cSetting.value as setting (setting.name)}
-                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting on:change={handleChange}/>
+                <GenericSetting path={thisPath} bind:setting on:change={handleChange}/>
             {/each}
         </div>
     {/if}

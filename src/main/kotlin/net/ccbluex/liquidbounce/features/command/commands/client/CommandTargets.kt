@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.combat.TargetConfigurable
-import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
-import net.ccbluex.liquidbounce.utils.combat.visualTargetsConfigurable
+import net.ccbluex.liquidbounce.utils.combat.Targets
 
 /**
  * Enemy Command
@@ -44,35 +42,27 @@ object CommandTargets : CommandFactory {
             CommandBuilder
                 .begin("combat")
                 .hub()
-                .fromTargetConfigurable(combatTargetsConfigurable)
+                .fromTargets(ModuleTargets.combatConfigurable)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
                 .hub()
-                .fromTargetConfigurable(visualTargetsConfigurable)
+                .fromTargets(ModuleTargets.visualConfigurable)
                 .build()
         )
         .hub()
         .build()
 
-    private fun CommandBuilder.fromTargetConfigurable(targetConfigurable: TargetConfigurable): CommandBuilder {
+    private fun CommandBuilder.fromTargets(targets: MultiChooseEnumListValue<Targets>): CommandBuilder {
         // Create sub-command for each value entry
-        for (entry in targetConfigurable.inner) {
-            // Should not happen, but I prefer to check it for the future in case of changes
-            if (entry.valueType != ValueType.BOOLEAN) {
-                continue
-            }
-
+        for (entry in targets.choices) {
             subcommand(
                 CommandBuilder
-                    .begin(entry.loweredName)
+                    .begin(entry.choiceName.lowercase())
                     .handler { command, _ ->
-                        // Since we know it is a boolean, we will cast it and flip the value
-                        val state = !(entry.get() as Boolean)
-                        // Hacky way to update the value, but it works
-                        entry.setByString(state.toString())
+                        val state = targets.toggle(entry)
 
                         val localizedState = if (state) {
                             "enabled"
@@ -85,7 +75,6 @@ object CommandTargets : CommandFactory {
                         )
 
                         ModuleClickGui.reloadView()
-                        ConfigSystem.storeConfigurable(combatTargetsConfigurable)
                     }
                     .build()
             )

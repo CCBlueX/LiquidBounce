@@ -86,25 +86,20 @@ object CommandFriend : CommandFactory {
 
                     FriendManager.friends.forEachIndexed { index, friend ->
                         val alias = friend.alias ?: friend.getDefaultName(index)
-                        val copyText = regular("Copy ${friend.name}")
 
-                        val formattedFriendName = bypassNameProtection(variable(friend.name))
-                        val friendTextWithEvent = formattedFriendName.styled {
-                            it.withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, friend.name))
-                                .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, copyText))
-                                .withItalic(true)
-                        }
+                        val friendTextWithEvent = variable(friend.name)
+                            .bypassNameProtection()
+                            .copyable(copyContent = friend.name)
+                            .italic(true)
 
-                        val removeButton = regular("[X]").styled {
-                            val removeCommand = ".friend remove ${friend.name}"
-                            val removeText = regular("Remove ${friend.name}")
+                        val removeCommand = ".friend remove ${friend.name}"
+                        val removeText = regular("Remove ${friend.name}")
 
-                            it
-                                .withFormatting(Formatting.RED)
-                                .withBold(true)
-                                .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, removeText))
-                                .withClickEvent(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, removeCommand))
-                        }
+                        val removeButton = regular("[X]")
+                            .formatted(Formatting.RED)
+                            .bold(true)
+                            .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, removeText))
+                            .onClick(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, removeCommand))
 
                         chat(
                             regular("- "),

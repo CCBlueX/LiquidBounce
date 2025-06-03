@@ -19,20 +19,30 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
-import net.ccbluex.liquidbounce.utils.combat.*
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.c2s.play.*
-import net.minecraft.network.packet.s2c.play.*
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -40,17 +50,31 @@ import kotlin.jvm.optionals.getOrNull
  *
  * Holds back packets to prevent you from being hit by an enemy.
  */
-@Suppress("detekt:all")
+@Suppress("MagicNumber")
 object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
-
     private val range by floatRange("Range", 2f..5f, 0f..10f)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
     private val recoilTime by int("RecoilTime", 250, 0..1000, "ms")
     private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
 
-    private val flushOnEntityInteract by boolean("FlushOnEntityInteract", true)
-    private val flushOnBlockInteract by boolean("FlushOnBlockInteract", true)
-    private val flushOnAction by boolean("FlushOnAction", true)
+    private val flushOn by multiEnumChoice("FlushOn", FlushOn.entries)
+
+    private enum class FlushOn(
+        override val choiceName: String,
+        val testPacket: (packet: Packet<*>?) -> Boolean
+    ) : NamedChoice {
+        ENTITY_INTERACT("EntityInteract", {
+            it is PlayerInteractEntityC2SPacket
+            || it is HandSwingC2SPacket
+        }),
+        BLOCK_INTERACT("BlockInteract", {
+            it is PlayerInteractBlockC2SPacket
+            || it is UpdateSignC2SPacket
+        }),
+        ACTION("Action", {
+            it is PlayerActionC2SPacket
+        })
+    }
 
     private enum class Mode(override val choiceName: String) : NamedChoice {
         CONSTANT("Constant"),
@@ -82,7 +106,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     "FakeLag", "Unable to evade arrow. Blinking.",
                     NotificationEvent.Severity.INFO
                 )
-                PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.SEND }
+                PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("FakeLag", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
                 PacketQueueManager.flush(evadingPacket.idx + 1)
@@ -93,9 +117,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
         }
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND || player.isDead || player.isTouchingWater
+        if (event.origin != TransferOrigin.OUTGOING || player.isDead || player.isTouchingWater
             || mc.currentScreen != null
         ) {
             return@handler
@@ -110,6 +134,11 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             return@handler
         }
 
+        if (flushOn.any { it.testPacket(event.packet) }) {
+            chronometer.reset()
+            return@handler
+        }
+
         when (val packet = event.packet) {
 
             is PlayerPositionLookS2CPacket,
@@ -120,22 +149,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
             is PlayerInteractEntityC2SPacket,
             is HandSwingC2SPacket -> {
-                if (flushOnEntityInteract) {
-                    chronometer.reset()
-                    return@handler
-                }
-            }
-
-            is PlayerInteractBlockC2SPacket,
-            is UpdateSignC2SPacket -> {
-                if (flushOnBlockInteract) {
-                    chronometer.reset()
-                    return@handler
-                }
-            }
-
-            is PlayerActionC2SPacket -> {
-                if (flushOnAction) {
+                if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()
                     return@handler
                 }
@@ -143,7 +157,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
-                if (packet.entityId == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
+                if (packet.entityId == player.id
+                    && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)
+                ) {
                     chronometer.reset()
                     return@handler
                 }

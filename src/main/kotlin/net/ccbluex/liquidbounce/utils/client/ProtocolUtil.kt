@@ -25,7 +25,6 @@ import com.viaversion.viafabricplus.ViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
-import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 
 // Only runs once
@@ -134,6 +133,7 @@ fun openVfpProtocolSelection() {
     VfpCompatibility.INSTANCE.unsafeOpenVfpProtocolSelection()
 }
 
+@Suppress("FunctionName")
 fun send1_8SignUpdate(blockPos: BlockPos, lines: Array<String>) {
     require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
     require(isEqual1_8) { "Not 1.8 protocol" }
@@ -141,10 +141,10 @@ fun send1_8SignUpdate(blockPos: BlockPos, lines: Array<String>) {
     VfpCompatibility1_8.INSTANCE.sendSignUpdate(blockPos, lines)
 }
 
-fun send1_8BlockPlacement(blockPos: BlockPos, face: Int, heldItem: ItemStack,
-                          facingXIn: Float, facingYIn: Float, facingZIn: Float) {
+@Suppress("FunctionName")
+fun send1_8PlayerInput(sideways: Float, forward: Float, jumping: Boolean, sneaking: Boolean) {
     require(usesViaFabricPlus) { "ViaFabricPlus is missing" }
     require(isEqual1_8) { "Not 1.8 protocol" }
 
-    VfpCompatibility1_8.INSTANCE.sendBlockPlacement(blockPos, face, heldItem, facingXIn, facingYIn, facingZIn)
+    VfpCompatibility1_8.INSTANCE.sendPlayerInput(sideways, forward, jumping, sneaking)
 }

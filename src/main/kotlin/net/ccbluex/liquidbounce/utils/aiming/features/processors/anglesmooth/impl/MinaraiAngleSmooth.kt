@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
 import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.NoneAngleSmooth
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
@@ -48,7 +50,10 @@ import kotlin.time.measureTimedValue
  * and then train a model - after that you will be able to use it with
  * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.MinaraiAngleSmooth].
  */
-class MinaraiAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Minarai", parent) {
+class MinaraiAngleSmooth(
+    parent: ChoiceConfigurable<*>,
+    val fallback: AngleSmooth
+) : AngleSmooth("Minarai", parent) {
 
     private val choices = choices("Model", 0) { local ->
         models.onChanged { _ ->
@@ -83,14 +88,27 @@ class MinaraiAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Minarai",
 
     private val outputMultiplier = tree(OutputMultiplier())
 
+    companion object {
+        private const val UNSUPPORTED_NOTIFICATION_TIME = 5000L
+        private val notificationChronometer = Chronometer()
+    }
+
     override fun process(
         rotationTarget: RotationTarget,
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Rotation {
         if (!DeepLearningEngine.isInitialized) {
-            chat(markAsError("No deep learning engine found."))
-            return currentRotation
+            if (notificationChronometer.hasElapsed(UNSUPPORTED_NOTIFICATION_TIME)) {
+                chat(markAsError(translation("liquidbounce.unsupportedDeepLearning")))
+                chat(markAsError(translation(
+                    "liquidbounce.rotationSystem.angleSmooth.minarai.fallback",
+                    fallback.name
+                )))
+                notificationChronometer.reset()
+            }
+
+            return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
 
         val entity = rotationTarget.entity as? LivingEntity

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.script.PolyglotScript
@@ -34,9 +35,11 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
 
     private val events = hashMapOf<String, (Any?) -> Unit>()
     private val _values = linkedMapOf<String, Value<*>>()
-    private var _tag: String? = null
-    override val tag: String?
-        get() = _tag
+    override var tag: String? = null
+        set(value) {
+            field = value
+            EventManager.callEvent(RefreshArrayListEvent)
+        }
 
     private var _description: String? = null
     override var description: Supplier<String?> = Supplier { _description ?: "" }
@@ -56,7 +59,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
         }
 
         if (moduleObject.containsKey("tag")) {
-            _tag = moduleObject["tag"] as String
+            tag = moduleObject["tag"] as String
         }
 
         if (moduleObject.containsKey("description")) {
@@ -99,7 +102,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
                     highlight(throwable.javaClass.simpleName),
                     regular("]: "),
                     variable(throwable.message ?: ""),
-                    prefix = false
+                    metadata = MessageMetadata(prefix = false)
                 )
 
             }

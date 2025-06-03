@@ -18,36 +18,32 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.minecraft.item.AxeItem
 import net.minecraft.item.Item
+import net.minecraft.item.MaceItem
 import net.minecraft.item.SwordItem
 
-object KillAuraRequirements : Configurable("Requirements") {
-
-    private val requiresClick by boolean("RequiresClick", false)
-    private val requiresWeapon by boolean("RequiresWeapon", false)
-
-    val requirementsMet: Boolean
-        get() {
-            if (requiresClick && !mc.options.attackKey.isPressedOnAny) {
-                return false
-            }
-
-            if (requiresWeapon && !player.inventory.mainHandStack.item.isWeapon()) {
-                return false
-            }
-
-            return true
-        }
-
-    /**
-     * Check if the item is a weapon.
-     */
-    fun Item.isWeapon() = !isOlderThanOrEqual1_8 && this is AxeItem || this is SwordItem
-
+@Suppress("unused")
+enum class KillAuraRequirements(
+    override val choiceName: String,
+    val meets: () -> Boolean
+) : NamedChoice {
+    CLICK("Click", {
+        mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
+    }),
+    WEAPON("Weapon", {
+        player.inventory.mainHandStack.item.isWeapon()
+    });
 }
+
+/**
+ * Check if the item is a weapon.
+ */
+private fun Item.isWeapon() = this is SwordItem || !isOlderThanOrEqual1_8 && this is AxeItem
+    || this is MaceItem

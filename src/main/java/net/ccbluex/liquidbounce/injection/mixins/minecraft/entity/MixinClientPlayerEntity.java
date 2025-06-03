@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -174,7 +175,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
      */
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     private void hookPushOut(double x, double z, CallbackInfo ci) {
-        if (ModuleNoPush.INSTANCE.isBlocks()) {
+        if (!ModuleNoPush.canPush(NoPushBy.BLOCKS)) {
             ci.cancel();
             return;
         }
@@ -312,7 +313,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 
     @ModifyReturnValue(method = "getMountJumpStrength", at = @At("RETURN"))
     private float hookMountJumpStrength(float original) {
-        if (ModuleEntityControl.INSTANCE.getRunning() && ModuleEntityControl.INSTANCE.getEnforceJumpStrength()) {
+        if (ModuleEntityControl.getEnforceJumpStrength()) {
             return 1f;
         }
 
@@ -381,6 +382,16 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.NETWORK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
+    }
+
+    @ModifyExpressionValue(method = "sendSneakingPacket", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z")
+    )
+    private boolean hookNetworkSneak(boolean original) {
+        var event = new SneakNetworkEvent(new DirectionalInput(input), original);
+        EventManager.INSTANCE.callEvent(event);
+        return event.getSneak();
     }
 
     @WrapWithCondition(method = "closeScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))

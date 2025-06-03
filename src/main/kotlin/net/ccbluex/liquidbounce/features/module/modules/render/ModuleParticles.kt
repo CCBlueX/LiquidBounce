@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.r
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.speed
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom
@@ -51,7 +51,11 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val count by intRange("Count", 2..10, 2..30, "particles")
     val rotate by boolean("RandomParticleRotation", true)
     val color by color("Color", Color4b.RED)
-    private val image by enumChoice("Particle", ParticleImage.STAR)
+
+    private val particleImages by multiEnumChoice("Particle",
+        ParticleImage.STAR,
+        canBeNone = false
+    )
 
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
@@ -68,7 +72,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         val pos = player.eyePos.add(directionVector * player.distanceTo(event.entity).toDouble())
 
         repeat(count.random()) { _ ->
-            particles.add(Particle(pos))
+            particles.add(Particle(pos, particleImages.random()))
         }
     }
 
@@ -80,8 +84,6 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             mc.gameRenderer.lightmapTextureManager.disable()
             RenderSystem.defaultBlendFunc()
 
-            RenderSystem.setShaderTexture(0, image.texture)
-
             particles.removeIf { particle ->
                 val flag = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
                 if (!flag) {
@@ -90,6 +92,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     mc.cameraEntity?.let { camera ->
                         if (canSeePointFrom(camera.eyePos, particle.pos)) {
                             matrixStack.push()
+                            RenderSystem.setShaderTexture(0, particle.particleImage.texture)
                             render(particle, event.partialTicks)
                             matrixStack.pop()
                         }
@@ -131,16 +134,17 @@ private enum class ParticleImage(
 }
 
 @Suppress("MagicNumber", "LongParameterList")
-class Particle private constructor(
+private class Particle private constructor(
     var pos: Vec3d,
     var prevPos: Vec3d,
     var velocity: Vec3d,
     var collisionTime: Long = -1,
     var alpha: Float = 1.0f, /* 0 <= alpha <= 1 */
     val spawnTime: Long = System.currentTimeMillis(),
-    val rotation: Float
+    val rotation: Float,
+    val particleImage: ParticleImage
 ) {
-    constructor(pos: Vec3d) : this(
+    constructor(pos: Vec3d, particleImage: ParticleImage) : this(
         pos = pos,
         prevPos = pos,
         velocity = Vec3d(
@@ -148,12 +152,13 @@ class Particle private constructor(
             (0.01..0.02).random(),
             (-0.01..0.01).random()
         ),
-        rotation = (0f..360f).random()
+        rotation = (0f..360f).random(),
+        particleImage = particleImage
     )
 }
 
-@Suppress("MagicNumber", "NOTHING_TO_INLINE", "UnusedParameter")
-inline fun Particle.update(delta: Double) {
+@Suppress("MagicNumber", "UnusedParameter")
+private fun Particle.update(delta: Double) {
     val particleSpeed = speed.toDouble()
     prevPos = pos
 
@@ -192,8 +197,8 @@ inline fun Particle.update(delta: Double) {
     }
 }
 
-@Suppress("MagicNumber", "NOTHING_TO_INLINE", "UnusedParameter")
-inline fun WorldRenderEnvironment.render(particle: Particle, partialTicks: Float) {
+@Suppress("MagicNumber", "UnusedParameter")
+private fun WorldRenderEnvironment.render(particle: Particle, partialTicks: Float) {
     with(mc.gameRenderer.camera.pos) {
         matrixStack.translate(-this.x, -this.y, -this.z)
     }

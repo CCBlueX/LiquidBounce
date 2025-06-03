@@ -30,10 +30,11 @@ import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -77,16 +78,13 @@ class PolyglotScript(
 
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(variable(devtoolURL).styled {
-                                    it.withUnderline(true)
-                                        .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, devtoolURL))
-                                        .withHoverEvent(
-                                            HoverEvent(
-                                                HoverEvent.Action.SHOW_TEXT,
-                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                            )
-                                        )
-                                })
+                                .append(variable(devtoolURL)
+                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
+                                        HoverEvent.Action.SHOW_TEXT,
+                                        regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                    ))
+                                    .underline(true)
+                                )
                         )
                     }
 
