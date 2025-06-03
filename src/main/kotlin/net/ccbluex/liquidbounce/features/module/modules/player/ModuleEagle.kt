@@ -47,11 +47,7 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
         fun shouldSneak(event: MovementInputEvent) =
-            if (!enabled || event.sneak) {
-                true
-            } else {
-                player.pitch in pitch && conditions.all { it.meetsCondition(event) }
-            }
+            enabled && player.pitch in pitch && conditions.all { it.meetsCondition(event) }
 
         @Suppress("unused")
         private enum class Conditions(
@@ -90,11 +86,10 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.SAFETY_FEATURE
     ) { event ->
-        if (event.sneak) return@handler
+        val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
+            player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())
 
-        val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event)
-
-        event.sneak = shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())
+        event.sneak = event.sneak && !Conditional.shouldSneak(event) || shouldBeActive
     }
 
 }
