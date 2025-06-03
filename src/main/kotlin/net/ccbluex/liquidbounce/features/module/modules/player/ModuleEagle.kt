@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
@@ -39,8 +40,11 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
 ) {
 
     private val edgeDistance by floatRange("EdgeDistance", 0.4f..0.6f, 0.01f..1.3f)
+        .onChanged {
+            currentEdgeDistance = it.random()
+        }
 
-    private var currentEdgeDistance = edgeDistance.random()
+    private var currentEdgeDistance: Float = edgeDistance.random()
     private var wasSneaking = false
 
     private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
@@ -93,6 +97,8 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
+        debugParameter("EdgeDistance") { currentEdgeDistance }
+
         val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
             player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
 
