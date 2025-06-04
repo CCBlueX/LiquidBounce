@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -38,6 +39,7 @@ import net.minecraft.client.session.ProfileKeys
 import net.minecraft.client.session.Session
 import java.net.Proxy
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("TooManyFunctions")
 object AccountManager : Configurable("Accounts"), EventListener {
@@ -46,6 +48,9 @@ object AccountManager : Configurable("Accounts"), EventListener {
 
     private var initialSession: SessionData? = null
 
+    private val logging = AtomicBoolean(false)
+
+    @Suppress("unused")
     private val sessionHandler = handler<SessionEvent> {
         if (initialSession == null) {
             initialSession = SessionData(mc.session, mc.sessionService, mc.profileKeys)
@@ -56,15 +61,22 @@ object AccountManager : Configurable("Accounts"), EventListener {
         ConfigSystem.root(this)
     }
 
-    fun loginAccount(id: Int) = runCatching {
-        val account = accounts.getOrNull(id) ?: error("Account not found!")
-        loginDirectAccount(account)
-    }.onFailure {
-        logger.error("Failed to login into account", it)
-        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
-    }.getOrThrow()
+    fun loginAccount(id: Int) {
+        if (!logging.compareAndSet(false, true)) {
+            EventManager.callEvent(AccountManagerLoginResultEvent(error = "Logging in already started!"))
+            return
+        }
 
-    fun loginDirectAccount(account: MinecraftAccount) = runCatching {
+        val account = accounts.getOrNull(id) ?: run {
+            EventManager.callEvent(AccountManagerLoginResultEvent(error = "Account not found!"))
+            return
+        }
+        loginDirectAccount(account)
+        logging.set(false)
+    }
+
+    fun loginDirectAccount(account: MinecraftAccount) = try {
+        logger.info("Start logging in with username '${account.profile?.username}'")
         val (compatSession, service) = account.login()
         val session = Session(
             compatSession.username, compatSession.uuid, compatSession.token,
@@ -73,15 +85,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
             Session.AccountType.byName(compatSession.type)
         )
 
-        var profileKeys = ProfileKeys.MISSING
-        runCatching {
+        val profileKeys = runCatching {
             // In this case the environment doesn't matter, as it is only used for the profile key
             val environment = YggdrasilEnvironment.PROD.environment
             val userAuthenticationService = YggdrasilUserApiService(session.accessToken, Proxy.NO_PROXY, environment)
-            profileKeys = ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
+            ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
         }.onFailure {
             logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
-        }
+        }.getOrDefault(ProfileKeys.MISSING)
 
         mc.session = session
         mc.sessionService = service.createMinecraftSessionService()
@@ -89,10 +100,10 @@ object AccountManager : Configurable("Accounts"), EventListener {
 
         EventManager.callEvent(SessionEvent(session))
         EventManager.callEvent(AccountManagerLoginResultEvent(username = account.profile?.username))
-    }.onFailure {
-        logger.error("Failed to login into account", it)
-        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
-    }.getOrThrow()
+    } catch (e: Exception) {
+        logger.error("Failed to login into account", e)
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = e.message ?: "Unknown error"))
+    }
 
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
@@ -325,7 +336,9 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun removeAccount(id: Int): MinecraftAccount {
-        return accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+        val account = accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+        EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
+        return account;
     }
 
     fun newSessionAccount(token: String) {

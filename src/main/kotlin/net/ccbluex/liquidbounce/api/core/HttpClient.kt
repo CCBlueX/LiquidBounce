@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Util
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -51,25 +52,15 @@ object HttpClient {
     /**
      * Client default [OkHttpClient]
      */
+    @get:JvmStatic
     val client: OkHttpClient = OkHttpClient.Builder()
+        .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
         .connectTimeout(3, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
         .build()
-
-    /**
-     * New [OkHttpClient.Builder] from [client],
-     * with default settings and shared connection pool / dispatcher / cache
-     */
-    @JvmStatic
-    fun newBuilder(): OkHttpClient.Builder = client.newBuilder()
-        .connectTimeout(3, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .followRedirects(true)
-        .followSslRedirects(true)
 
     suspend fun request(
         url: String,
@@ -98,7 +89,7 @@ object HttpClient {
 }
 
 enum class HttpMethod {
-    GET, POST, PUT, DELETE, PATCH
+    GET, POST, PUT, DELETE, PATCH, HEAD
 }
 
 /**

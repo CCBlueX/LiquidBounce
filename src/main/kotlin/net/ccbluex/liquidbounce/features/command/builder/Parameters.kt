@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -81,6 +82,39 @@ fun moduleParameter(
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
         .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin, validator = validator) }
 }
+
+fun valueNameParameter(name: String = "valueName") = ParameterBuilder
+    .begin<String>(name)
+    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+    .autocompletedWith { begin, args ->
+        val moduleName = args[2]
+        val module = ModuleManager.find { module -> module.name.equals(moduleName, true) }
+            ?: return@autocompletedWith emptyList()
+
+        val values = module.getContainedValuesRecursively()
+            .filter { !it.name.equals("Bind", true) }
+            .map { it.name }
+        values.filter { it.startsWith(begin, true) }
+    }
+
+fun valueTypeParameter(name: String = "value") = ParameterBuilder
+    .begin<String>(name)
+    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+    .autocompletedWith { begin, args ->
+        val moduleName = args[2]
+        val module = ModuleManager.find {
+            it.name.equals(moduleName, true)
+        } ?: return@autocompletedWith emptyList()
+
+        val valueName = args[3]
+
+        val value = module.getContainedValuesRecursively().firstOrNull {
+            it.name.equals(valueName, true)
+        } ?: return@autocompletedWith emptyList()
+
+        val options = value.valueType.completer.possible(value)
+        options.filter { it.startsWith(begin, true) }
+    }
 
 fun configurableParameter(
     name: String = "configurable",

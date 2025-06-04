@@ -65,6 +65,7 @@ object ScriptContextProvider {
             putMember("ReflectionUtil", ScriptReflectionUtil())
             putMember("ParameterValidator", ScriptParameterValidator(bindings))
             putMember("UnsafeThread", ScriptUnsafeThread)
+            putMember("Primitives", ScriptPrimitives)
 
             // Global variables
             putMember("localStorage", localStorage)

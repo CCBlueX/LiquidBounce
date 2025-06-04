@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -61,26 +62,15 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        var networkSneaking = false
-
         @Suppress("unused")
-        val networkTick = handler<PlayerNetworkMovementTickEvent> {
+        private val sneakNetworkHandler = handler<SneakNetworkEvent> { event ->
             if (player.moving && notDuringMove) {
-                disable()
                 return@handler
             }
 
-            if (!networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
-            }
+            event.sneak = true
         }
 
-        override fun disable() {
-            if (networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                networkSneaking = false
-            }
-        }
     }
 
     private object Switch : Choice("Switch") {

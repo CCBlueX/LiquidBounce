@@ -180,7 +180,7 @@ public abstract class MixinPlayerListHud {
 
     @ModifyReturnValue(method = "getPlayerName", at = @At("RETURN"))
     private Text modifyPlayerName(Text original, PlayerListEntry entry) {
-        if (ModuleAntiStaff.UsernameCheck.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
             return original.copy().append(Text.literal(" - (Staff)").withColor(Colors.LIGHT_RED));
         }
 

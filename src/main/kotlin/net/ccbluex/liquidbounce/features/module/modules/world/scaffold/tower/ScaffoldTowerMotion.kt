@@ -18,32 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.minecraft.stat.Stats
 import kotlin.math.truncate
 
-object ScaffoldTowerMotion : Choice("Motion") {
+object ScaffoldTowerMotion : ScaffoldTower("Motion") {
 
     private val motion by float("Motion", 0.42f, 0.0f..1.0f)
     private val triggerHeight by float("TriggerHeight", 0.78f, 0.76f..1.0f)
     private val slow by float("Slow", 1.0f, 0.0f..3.0f)
 
-    val placeOffOnNoInput by boolean("PlaceOffsetOnNoInput", false)
-
     /**
      * The position where the player jumped off
      */
     private var jumpOffPosition = Double.NaN
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = towerMode
 
     @Suppress("unused")
     private val jumpHandler = handler<PlayerJumpEvent> {

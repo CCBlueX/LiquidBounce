@@ -124,6 +124,7 @@ configurations {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven { url "https://maven.ccbluex.net/releases" }
     maven { url = "https://maven.fabricmc.net/" }
     maven {
         name = "Jitpack"
@@ -181,21 +182,21 @@ dependencies {
 
     // JCEF Support
     includeModDependency "com.github.CCBlueX:mcef:${project.mcef_version}"
-    includeDependency "com.github.CCBlueX:netty-httpserver:2.1.1"
+    includeDependency "net.ccbluex:netty-httpserver:2.2.1"
 
     // Discord RPC Support
     includeDependency "com.github.CCBlueX:DiscordIPC:4.0.0"
 
     // ScriptAPI
     includeDependency "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
-    includeDependency "org.graalvm.polyglot:polyglot:24.0.2"
-    includeDependency "org.graalvm.polyglot:js-community:24.0.2"
-    includeDependency "org.graalvm.polyglot:tools-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:python-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:wasm-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:java-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:ruby-community:24.0.2"
-//    includeDependency "org.graalvm.polyglot:llvm-native-community:24.0.2"
+    includeDependency "org.graalvm.polyglot:polyglot:$polyglot_version"
+    includeDependency "org.graalvm.polyglot:js-community:$polyglot_version"
+    includeDependency "org.graalvm.polyglot:tools-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:python-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:wasm-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:java-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:ruby-community:$polyglot_version"
+//    includeDependency "org.graalvm.polyglot:llvm-native-community:$polyglot_version"
 
     // Machine Learning
     includeDependency "ai.djl:api:${djl_version}"
@@ -204,7 +205,7 @@ dependencies {
 //    runtimeOnly "ai.djl.tensorflow:tensorflow-engine:${djl_version}"
 
     // HTTP library
-    includeDependency "com.squareup.okhttp3:okhttp:5.0.0-alpha.14"
+    includeDependency "com.squareup.okhttp3:okhttp:5.0.0-alpha.16"
 
     // SOCKS5 Proxy Support
     includeDependency "io.netty:netty-handler-proxy:4.1.97.Final"
@@ -216,7 +217,7 @@ dependencies {
     includeDependency "org.ahocorasick:ahocorasick:0.6.3"
 
     // Test libraries
-    testImplementation "org.junit.jupiter:junit-jupiter:5.12.2"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.13.0"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     // Fix nullable annotations
