@@ -40,7 +40,6 @@ data class ClientAccount(
     var cosmetics: Set<Cosmetic>? = null
 ) {
     private suspend fun takeSession(): OAuthSession = session?.takeIf { !it.accessToken.isExpired() } ?: run {
-        renew()
         session ?: error("No session")
     }
 
