@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.minecraft.item.AxeItem
 import net.minecraft.item.Item
 import net.minecraft.item.MaceItem
@@ -34,10 +35,13 @@ enum class KillAuraRequirements(
     val meets: () -> Boolean
 ) : NamedChoice {
     CLICK("Click", {
-        mc.options.attackKey.isPressedOnAny
+        mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
     }),
     WEAPON("Weapon", {
         player.inventory.mainHandStack.item.isWeapon()
+    }),
+    VANILLA_NAME("VanillaName", {
+        player.inventory.mainHandStack.customName == null
     });
 }
 

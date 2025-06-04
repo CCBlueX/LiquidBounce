@@ -142,11 +142,12 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
 
     /**
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
+     * Returns true when we passed the time of [ticks] without breaking the loop.
      */
     suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier = BooleanSupplier { false }): Boolean {
         // Don't wait if ticks is 0
         if (ticks == 0) {
-            return true
+            return !breakLoop.asBoolean
         }
 
         wait { if (breakLoop.asBoolean) 0 else ticks }
