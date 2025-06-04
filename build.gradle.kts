@@ -183,9 +183,9 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
+    includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
 
-    // SOCKS5 Proxy Support
+    // SOCKS5 & HTTP Proxy Support
     includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
 
     // Update Checker
@@ -195,7 +195,7 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // Test libraries
-    testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fix nullable annotations
