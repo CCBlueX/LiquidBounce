@@ -97,14 +97,6 @@ class ScriptAsyncUtil(
     }
 
     /**
-     * Example: `await seconds(1)`
-     *
-     * @return `Promise<number>`
-     */
-    @ScriptApiRequired
-    fun seconds(n: Int): Value = ticks(n * 20)
-
-    /**
      * Example: `const duration = await until(() => mc.player.isOnGround())`
      *
      * @return `Promise<number>`
