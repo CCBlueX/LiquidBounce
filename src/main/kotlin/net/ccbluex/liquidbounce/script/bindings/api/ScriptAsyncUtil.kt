@@ -95,7 +95,7 @@ class ScriptAsyncUtil(
      */
     @ScriptApiRequired
     fun ticks(n: Int): Value {
-        if (n == 0) {
+        if (n <= 0) {
             return defaultPromise
         }
 
@@ -143,7 +143,7 @@ class ScriptAsyncUtil(
         ticks: Int,
         breakLoop: BooleanSupplier
     ): Value {
-        if (ticks == 0) {
+        if (ticks <= 0) {
             return defaultPromise
         }
 
