@@ -30,8 +30,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.minecraft.util.Util
 import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyExecutable
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Future
+import java.util.concurrent.ThreadFactory
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Supplier
@@ -48,9 +53,8 @@ class ScriptAsyncUtil(
 
     companion object TickScheduler : EventListener {
 
-        /** Client HTTP requests */
-        private val scriptJobHolder = SupervisorJob()
-        private val scriptIoScope = CoroutineScope(Dispatchers.IO + scriptJobHolder)
+        /** Client async tasks */
+        private val scriptFutures = mutableListOf<Future<*>>()
 
         private val currentTickTasks = arrayListOf<BooleanSupplier>()
         private val nextTickTasks = arrayListOf<BooleanSupplier>()
@@ -70,7 +74,10 @@ class ScriptAsyncUtil(
             mc.execute {
                 currentTickTasks.clear()
                 nextTickTasks.clear()
-                scriptJobHolder.cancelChildren()
+                scriptFutures.forEach {
+                    it.cancel(true)
+                }
+                scriptFutures.clear()
             }
         }
     }
@@ -155,24 +162,25 @@ class ScriptAsyncUtil(
     @ScriptApiRequired
     fun request(
         block: Consumer<okhttp3.Request.Builder>
-    ): Value = asyncTask {
+    ): Value = launch(Util.getDownloadWorkerExecutor().service) {
         val request = okhttp3.Request.Builder().apply(block::accept).build()
         HttpClient.client.newCall(request).execute()
     }
 
     /**
-     * Starts an async task on [Dispatchers.IO], returns a `Promise`.
+     * Starts an async task on [executor], returns a `Promise`.
      * JS `Promise` result will be resolved or rejected on Render thread.
      * You can use utils from [java.util.concurrent] to control your tasks.
      *
      * @return `Promise<T>`
      */
     @ScriptApiRequired
-    fun <T> asyncTask(
-        block: Supplier<T>
+    fun <T> launch(
+        executor: ExecutorService,
+        block: Supplier<T>,
     ): Value = jsPromiseConstructor.newInstance(
         ProxyExecutable { (onResolve, onReject) ->
-            scriptIoScope.launch {
+            scriptFutures += executor.submit {
                 val result = runCatching { block.get() }
                 // Resume on Render thread
                 mc.execute {
@@ -183,6 +191,18 @@ class ScriptAsyncUtil(
             }
         }
     )
+
+    /**
+     * Starts an async task on [Util.getMainWorkerExecutor()], returns a `Promise`.
+     * JS `Promise` result will be resolved or rejected on Render thread.
+     * You can use utils from [java.util.concurrent] to control your tasks.
+     *
+     * @return `Promise<T>`
+     */
+    @ScriptApiRequired
+    fun <T> launch(
+        block: Supplier<T>,
+    ): Value = launch(Util.getMainWorkerExecutor().service, block)
 
 }
 
