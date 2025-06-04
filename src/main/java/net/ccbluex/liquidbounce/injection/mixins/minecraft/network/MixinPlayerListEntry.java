@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
@@ -69,6 +70,11 @@ public abstract class MixinPlayerListEntry {
 
         liquid_bounce$fetchCapeTexture();
         return original;
+    }
+
+    @ModifyExpressionValue(method = "texturesSupplier", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;uuidEquals(Ljava/util/UUID;)Z"))
+    private static boolean liquid_bounce$allow_custom_skin(boolean b) {
+        return b || ModuleSkinChanger.INSTANCE.getRunning();
     }
 
     @Unique
