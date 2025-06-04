@@ -19,8 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.util.Identifier;
@@ -30,7 +33,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerListEntry.class)
 public abstract class MixinPlayerListEntry {
@@ -44,22 +47,35 @@ public abstract class MixinPlayerListEntry {
     @Unique
     private Identifier capeTexture = null;
 
-    @Inject(method = "getSkinTextures", at = @At("RETURN"), cancellable = true)
-    private void injectCapeCosmetic(CallbackInfoReturnable<SkinTextures> callbackInfo) {
-        if (capeTexture != null) {
-            var textures = callbackInfo.getReturnValue();
-            callbackInfo.setReturnValue(new SkinTextures(textures.texture(), textures.textureUrl(), capeTexture,
-                    textures.elytraTexture(), textures.model(), textures.secure()));
-            return;
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void liquid_bounce$init(GameProfile profile, boolean secureChatEnforced, CallbackInfo ci) {
+        if (ModuleSkinChanger.INSTANCE.getRunning() && MinecraftClient.getInstance().getGameProfile() == this.profile) {
+            ModuleSkinChanger.INSTANCE.getSkinTextures().get();
         }
 
         liquid_bounce$fetchCapeTexture();
     }
 
+    @ModifyReturnValue(method = "getSkinTextures", at = @At("RETURN"))
+    private SkinTextures liquid_bounce$skin(SkinTextures original) {
+        if (ModuleSkinChanger.INSTANCE.getRunning() && MinecraftClient.getInstance().getGameProfile().equals(this.profile)) {
+            original = ModuleSkinChanger.INSTANCE.getSkinTextures().get();
+        }
+
+        if (capeTexture != null) {
+            return new SkinTextures(original.texture(), original.textureUrl(), capeTexture,
+                    original.elytraTexture(), original.model(), original.secure());
+        }
+
+        liquid_bounce$fetchCapeTexture();
+        return original;
+    }
+
     @Unique
     private void liquid_bounce$fetchCapeTexture() {
-        if (capeTextureLoading)
+        if (capeTextureLoading) {
             return;
+        }
 
         capeTextureLoading = true;
         CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile, id -> capeTexture = id);

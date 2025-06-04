@@ -383,6 +383,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleZoom,
             ModuleItemChams,
             ModuleCrystalView,
+            ModuleSkinChanger,
 
             // World
             ModuleAutoBuild,
