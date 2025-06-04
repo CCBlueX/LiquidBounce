@@ -35,24 +35,17 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         .apply(::tagBy)
     private const val DEBOUNCE_TIME = 5
 
-    var currentUsername = username
+    var currentUsername: String? = null
         private set
-    var skinTextures: Supplier<SkinTextures>
+    var skinTextures: Supplier<SkinTextures>? = null
         private set
-
-    init {
-        this.skinTextures = textureSupplier(currentUsername)
-    }
 
     /**
-     * Waits until [username] is not being changed for more than 10 ticks. If that is the case,
+     * Waits until [username] is not being changed for more than [DEBOUNCE_TIME] ticks. If that is the case,
      * we can finally replace our skin textures' loader.
-     *
-     * This is a bit better than using [onChanged] as we reduce the amount of loading during
-     * typing.
      */
     @Suppress("unused")
-    private val debounceHandler = tickHandler {
+    private val skinLoaderHandler = tickHandler {
         val dUsername = username
 
         // No changes on the username
@@ -77,9 +70,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             ?: generateOfflinePlayerUuid(username)
         val profile = mc.sessionService.fetchProfile(uuid, false)?.profile
             ?: GameProfile(uuid, username)
-        logger.info("Custom Skin Texture for $username with UUID $uuid")
 
-        // todo: fix not showing skin textures after they were loaded
         return PlayerListEntry.texturesSupplier(profile)
     }
 

@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
@@ -33,8 +34,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerListEntry.class)
 public abstract class MixinPlayerListEntry {
@@ -48,19 +47,18 @@ public abstract class MixinPlayerListEntry {
     @Unique
     private Identifier capeTexture = null;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void liquid_bounce$init(GameProfile profile, boolean secureChatEnforced, CallbackInfo ci) {
-        if (ModuleSkinChanger.INSTANCE.getRunning() && MinecraftClient.getInstance().getGameProfile() == this.profile) {
-            ModuleSkinChanger.INSTANCE.getSkinTextures().get();
-        }
-
-        liquid_bounce$fetchCapeTexture();
-    }
-
     @ModifyReturnValue(method = "getSkinTextures", at = @At("RETURN"))
     private SkinTextures liquid_bounce$skin(SkinTextures original) {
-        if (ModuleSkinChanger.INSTANCE.getRunning() && MinecraftClient.getInstance().getGameProfile().equals(this.profile)) {
-            original = ModuleSkinChanger.INSTANCE.getSkinTextures().get();
+        if (HideAppearance.INSTANCE.isDestructed()) {
+            return original;
+        }
+
+        if (ModuleSkinChanger.INSTANCE.getRunning() &&
+                MinecraftClient.getInstance().getGameProfile().equals(this.profile)) {
+            var customSkinTextures = ModuleSkinChanger.INSTANCE.getSkinTextures();
+            if (customSkinTextures != null) {
+                original = customSkinTextures.get();
+            }
         }
 
         if (capeTexture != null) {
