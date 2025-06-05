@@ -188,6 +188,11 @@ dependencies {
     // SOCKS5 & HTTP Proxy Support
     includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
 
+    // Ktor
+    val ktor_version = "3.1.3"
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-serialization-gson-jvm:$ktor_version")
+
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
 
