@@ -1,3 +1,4 @@
+@file:Suppress("detekt:ALL")
 package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonArray
@@ -17,11 +18,7 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.request.receiveStream
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
-import io.ktor.server.response.respondBytesWriter
-import io.ktor.server.response.respondOutputStream
 import io.ktor.server.response.respondSource
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
@@ -36,7 +33,6 @@ import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.collections.ConcurrentSet
-import io.ktor.utils.io.asByteWriteChannel
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
@@ -44,8 +40,6 @@ import kotlinx.coroutines.future.await
 import kotlinx.io.asByteChannel
 import kotlinx.io.asOutputStream
 import kotlinx.io.asSource
-import kotlinx.io.transferFrom
-import kotlinx.io.write
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -73,11 +67,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpFileStream
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpInternalServerError
-import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readImageAsBase64
 import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.client.gui.screen.TitleScreen
@@ -93,7 +82,6 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import net.minecraft.util.path.SymlinkValidationException
-import org.apache.tika.Tika
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URI
@@ -586,7 +574,29 @@ fun Route.registryController() {
 }
 
 fun Route.serverListController() {
-    TODO()
+    route("/servers") {
+        get {
+
+        }
+        put("/add") {
+
+        }
+        delete("/remove") {
+
+        }
+        put("/edit") {
+
+        }
+        post("/swap") {
+
+        }
+        post("/order") {
+
+        }
+        post("/connect") {
+
+        }
+    }
 }
 
 fun Route.textureController() {

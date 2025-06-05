@@ -29,6 +29,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "1.9.10"
+    id("io.ktor.plugin") version "3.1.3"
 }
 
 val archives_base_name: String by project
@@ -61,6 +62,11 @@ val includeModDependency: Configuration by configurations.creating
  */
 fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-serialization-core")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-io-bytestring")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-io-core")
 
     exclude(group = "com.google.code.gson", module = "gson")
     exclude(group = "net.java.dev.jna", module = "jna")
@@ -83,7 +89,10 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "io.netty", module = "netty-handler")
     exclude(group = "io.netty", module = "netty-resolver")
     exclude(group = "io.netty", module = "netty-transport")
+    exclude(group = "io.netty", module = "netty-transport-classes-epoll")
+    exclude(group = "io.netty", module = "netty-transport-native-epoll")
     exclude(group = "io.netty", module = "netty-transport-native-unix-common")
+    // Minecraft doesn't contain kqueue lib up to 1.21.4
 }
 
 includeDependency.excludeProvidedLibs()
@@ -186,17 +195,16 @@ dependencies {
     includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
+    includeDependency("io.netty:netty-handler-proxy:4.1.119.Final")
 
     // Ktor
-    val ktor_version = "3.1.3"
-    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
-    implementation("io.ktor:ktor-serialization-gson-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-websockets:$ktor_version")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
-    implementation("io.ktor:ktor-server-cors:$ktor_version")
-//    implementation("io.ktor:ktor-server-host-common:$ktor_version")
-//    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    includeDependency("io.ktor:ktor-server-netty-jvm")
+    includeDependency("io.ktor:ktor-serialization-gson-jvm")
+    includeDependency("io.ktor:ktor-server-websockets")
+    includeDependency("io.ktor:ktor-server-content-negotiation")
+    includeDependency("io.ktor:ktor-server-cors")
+//    implementation("io.ktor:ktor-server-host-common")
+//    implementation("io.ktor:ktor-server-status-pages")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
@@ -213,11 +221,7 @@ dependencies {
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
-                isTransitive = false
-            }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
-
+            val apiDependency = dependencies.api(it.requested.toString())!!
             dependencies.include(apiDependency)
         }
     }
