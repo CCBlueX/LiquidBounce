@@ -1,8 +1,10 @@
 package net.ccbluex.liquidbounce.integration.interop
 
+import com.google.gson.JsonObject
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.gson.GsonConverter
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
@@ -10,9 +12,13 @@ import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.receive
+import io.ktor.server.request.receiveNullable
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
@@ -24,9 +30,18 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.minecraft.util.Util
+import java.net.URI
+import java.text.SimpleDateFormat
+import java.util.Properties
 import kotlin.time.Duration.Companion.seconds
 
 private val wsSessions = ConcurrentSet<WebSocketSession>()
@@ -97,7 +112,23 @@ val interopServer = embeddedServer(Netty, port = 22493) {
 
         // REST
         route("/api/v1/client") {
-            // TODO
+            clientController()
+            themeController()
+            localStorageController()
+            screenController()
+            moduleController()
+            componentController()
+            accountController()
+            proxyController()
+            browserController()
+            protocolController()
+            spooferController()
+            inputController()
+            playerController()
+            registryController()
+            serverListController()
+            textureController()
+            worldController()
         }
     }
 }
@@ -130,7 +161,75 @@ fun Route.wsEventController() {
 }
 
 fun Route.clientController() {
+    get("/info") {
+        call.respond(JsonObject().apply {
+            addProperty("gameVersion", mc.gameVersion)
+            addProperty("clientVersion", LiquidBounce.clientVersion)
+            addProperty("clientName", LiquidBounce.CLIENT_NAME)
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("fps", mc.currentFps)
+            addProperty("gameDir", mc.runDirectory.path)
+            addProperty("inGame", inGame)
+            addProperty("viaFabricPlus", usesViaFabricPlus)
+            addProperty("hasProtocolHack", usesViaFabricPlus)
+        })
+    }
+    get("/update") {
+        call.respond(JsonObject().apply {
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("commit", LiquidBounce.clientCommit)
 
+            val updateInfo = update ?: return@apply
+            add("update", JsonObject().apply {
+                addProperty("buildId", updateInfo.buildId)
+                addProperty("commitId", updateInfo.commitId.substring(0, 7))
+                addProperty("branch", updateInfo.branch)
+                addProperty("clientVersion", updateInfo.lbVersion)
+                addProperty("minecraftVersion", updateInfo.mcVersion)
+                addProperty("release", updateInfo.release)
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(updateInfo.date)
+                addProperty("date", SimpleDateFormat().format(dateFormat))
+                addProperty("message", updateInfo.message)
+
+                addProperty("url", updateInfo.url)
+            })
+        })
+    }
+    post("/exit") {
+        mc.scheduleStop()
+        call.respond(HttpStatusCode.NoContent)
+    }
+    get("/window") {
+        call.respond(JsonObject().apply {
+            addProperty("width", mc.window.width)
+            addProperty("height", mc.window.height)
+            addProperty("scaledWidth", mc.window.scaledWidth)
+            addProperty("scaledHeight", mc.window.scaledHeight)
+            addProperty("scaleFactor", mc.window.scaleFactor)
+            addProperty("guiScale", mc.options.guiScale.value)
+        })
+    }
+    val POSSIBLE_URL_TARGETS: Map<String, URI> = with(Properties()) {
+        LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/client_urls.properties").use {
+            load(it)
+        }
+
+        stringPropertyNames().associateWith { URI(getProperty(it)) }
+    }
+    post("/browse") {
+        class RequestBody(val target: String)
+        val target = call.receiveNullable<RequestBody>()?.target ?: run {
+            call.respond(HttpStatusCode.BadRequest, "No target specified")
+            return@post
+        }
+        val url = POSSIBLE_URL_TARGETS[target] ?: run {
+            call.respond(HttpStatusCode.BadRequest, "Unknown target")
+            return@post
+        }
+        Util.getOperatingSystem().open(url)
+        call.respond(HttpStatusCode.NoContent)
+    }
 }
 
 fun Route.themeController() {
