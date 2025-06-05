@@ -14,12 +14,13 @@ import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.request.receive
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receiveNullable
-import io.ktor.server.request.receiveOrNull
+import io.ktor.server.request.receiveStream
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingCall
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -36,10 +37,16 @@ import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
@@ -47,12 +54,11 @@ import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalSt
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
-import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
 import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.util.Util
@@ -135,7 +141,7 @@ val interopServer = embeddedServer(Netty, port = 22493) {
             localStorageController()
             screenController()
             moduleController()
-            componentController()
+            sessionController()
             accountController()
             proxyController()
             browserController()
@@ -397,11 +403,117 @@ fun Route.screenController() {
 }
 
 fun Route.moduleController() {
+    fun ClientModule.toJsonObject() = JsonObject().apply {
+        addProperty("name", name)
+        addProperty("category", category.readableName)
+        add("keyBind", interopGson.toJsonTree(bind))
+        addProperty("enabled", enabled)
+        addProperty("description", description.get())
+        addProperty("tag", tag)
+        addProperty("hidden", hidden)
+        add("aliases", interopGson.toJsonTree(aliases))
+    }
 
+    suspend fun RoutingContext.handleModuleName(name: String?): ClientModule? {
+        if (name == null) {
+            call.respond(HttpStatusCode.BadRequest, "No module name")
+            return@handleModuleName null
+        }
+        val module = ModuleManager[name] ?: run {
+            call.respond(HttpStatusCode.NotFound, "Module '$name' not found")
+            return@handleModuleName null
+        }
+        return module
+    }
+
+    get("/module/{name}") {
+        val module = handleModuleName(call.parameters["name"]) ?: return@get
+        call.respond(module.toJsonObject())
+    }
+    route("/modules") {
+        get {
+            call.respond(ModuleManager.map { it.toJsonObject() })
+        }
+        route("/toggle") {
+            handle {
+                class RequestBody(val name: String)
+                val module = handleModuleName(call.receiveNullable<RequestBody>()?.name) ?: return@handle
+
+                val supposedNew = when (call.request.httpMethod) {
+                    HttpMethod.Put -> true
+                    HttpMethod.Delete -> false
+                    HttpMethod.Post -> !module.enabled
+                    else -> {
+                        call.respond(HttpStatusCode.MethodNotAllowed)
+                        return@handle
+                    }
+                }
+
+                if (module.enabled == supposedNew) {
+                    call.respond(HttpStatusCode.Forbidden, "${module.name} already ${if (supposedNew) "enabled" else "disabled"}")
+                    return@handle
+                }
+
+                RenderSystem.recordRenderCall {
+                    runCatching {
+                        module.enabled = supposedNew
+
+                        ConfigSystem.storeConfigurable(modulesConfigurable)
+                    }.onFailure {
+                        logger.error("Failed to toggle module ${module.name}", it)
+                    }
+                }
+
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+        get("/settings") {
+            val module = handleModuleName(call.queryParameters["name"]) ?: return@get
+            call.respond(ConfigSystem.serializeConfigurable(module, gson = interopGson))
+        }
+        put("/settings") {
+            val module = handleModuleName(call.queryParameters["name"]) ?: return@put
+
+            ConfigSystem.deserializeConfigurable(module, call.receiveStream().reader())
+            ConfigSystem.storeConfigurable(modulesConfigurable)
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        post("/panic") {
+            RenderSystem.recordRenderCall {
+                AutoConfig.withLoading {
+                    runCatching {
+                        for (module in ModuleManager) {
+                            if (module.category == Category.RENDER || module.category == Category.CLIENT) {
+                                continue
+                            }
+
+                            module.enabled = false
+                        }
+
+                        ConfigSystem.storeConfigurable(modulesConfigurable)
+                    }.onFailure {
+                        logger.error("Failed to panic disable modules", it)
+                    }
+                }
+            }
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
 }
 
-fun Route.componentController() {
-
+fun Route.sessionController() {
+    get("/session") {
+        val session = mc.session ?: call.respond(HttpStatusCode.NotFound, "No session")
+        call.respond(session)
+    }
+    get("/location") {
+        val locationInfo = IpInfoApi.current ?: run {
+            call.respond(HttpStatusCode.NotFound, "Unknown location")
+            return@get
+        }
+        call.respond(locationInfo)
+    }
 }
 
 fun Route.accountController() {
