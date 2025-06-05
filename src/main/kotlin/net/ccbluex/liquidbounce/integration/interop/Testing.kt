@@ -35,6 +35,7 @@ import io.ktor.util.collections.ConcurrentSet
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -42,6 +43,7 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -59,9 +61,17 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.util.readImageAsBase64
 import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.client.gui.screen.world.EditWorldScreen
+import net.minecraft.client.gui.screen.world.SelectWorldScreen
+import net.minecraft.client.gui.screen.world.SymlinkWarningScreen
+import net.minecraft.client.toast.SystemToast
 import net.minecraft.util.Util
+import net.minecraft.util.path.SymlinkValidationException
+import java.io.IOException
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Properties
@@ -557,5 +567,119 @@ fun Route.textureController() {
 }
 
 fun Route.worldController() {
-    TODO()
+    route("/worlds") {
+        class LevelRequest(val name: String)
+        get {
+            try {
+                val levelList = mc.levelStorage.levelList
+                if (levelList.isEmpty) {
+                    call.respond(emptyList<Nothing>())
+                    return@get
+                }
+
+                val summaries = mc.levelStorage.loadSummaries(levelList).await()
+
+                val worlds = summaries.mapIndexed { index, summary ->
+                    JsonObject().apply {
+                        addProperty("id", index)
+                        addProperty("name", summary.name)
+                        addProperty("displayName", summary.displayName)
+                        addProperty("lastPlayed", summary.lastPlayed)
+                        addProperty("gameMode", summary.levelInfo.gameMode.getName())
+                        addProperty("difficulty", summary.levelInfo.difficulty.getName())
+                        addProperty("icon", runCatching { readImageAsBase64(summary.iconPath) }.onFailure {
+                            //logger.error("Failed to read icon for world ${summary.name}", it)
+                        }.getOrNull())
+                        addProperty("version", summary.versionInfo.versionName)
+                        addProperty("hardcore", summary.levelInfo.isHardcore)
+                        addProperty("commandsAllowed", summary.levelInfo.areCommandsAllowed())
+                        addProperty("locked", summary.isLocked)
+                        addProperty("requiresConversion", summary.requiresConversion())
+                        addProperty("isVersionAvailable", summary.isVersionAvailable)
+                        addProperty("shouldPromptBackup", summary.shouldPromptBackup())
+                        addProperty("wouldBeDowngraded", summary.wouldBeDowngraded())
+                    }
+                }
+
+                call.respond(worlds)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, "Failed to get worlds due to ${e.message}")
+            }
+        }
+        post("/join") {
+            val request = call.receiveNullable<LevelRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No world name")
+                return@post
+            }
+
+            RenderSystem.recordRenderCall {
+                runCatching {
+                    mc.createIntegratedServerLoader().start(request.name) {
+                        mc.setScreen(SelectWorldScreen(TitleScreen()))
+                    }
+                }.onFailure {
+                    logger.error("Failed to join world ${request.name}", it)
+                }
+            }
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        post("/edit") {
+            val request = call.receiveNullable<LevelRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No world name")
+                return@post
+            }
+
+            RenderSystem.recordRenderCall {
+                val session = runCatching {
+                    mc.levelStorage.createSession(request.name)
+                }.onFailure { exception ->
+                    when (exception) {
+                        is IOException -> {
+                            SystemToast.addWorldAccessFailureToast(mc, request.name)
+                            logger.error("Failed to access level ${request.name}", exception)
+                        }
+                        is SymlinkValidationException -> {
+                            logger.warn(exception.message)
+                            mc.setScreen(SymlinkWarningScreen.world { mc.setScreen(SelectWorldScreen(TitleScreen())) })
+                        }
+                        else -> {
+                            logger.error("Failed to access level ${request.name}", exception)
+                        }
+                    }
+                }.getOrNull() ?: return@recordRenderCall
+
+                runCatching {
+                    EditWorldScreen.create(mc, session) { _ ->
+                        session.tryClose()
+                        mc.setScreen(SelectWorldScreen(TitleScreen()))
+                    }
+                }.onFailure { exception ->
+                    session.tryClose()
+                    SystemToast.addWorldAccessFailureToast(mc, request.name)
+                    logger.error("Failed to load world data ${request.name}", exception)
+                }.onSuccess { screen ->
+                    mc.setScreen(screen)
+                }
+            }
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        post("/delete") {
+            val request = call.receiveNullable<LevelRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No world name")
+                return@post
+            }
+
+            runCatching {
+                mc.levelStorage.createSessionWithoutSymlinkCheck(request.name).use { session ->
+                    session.deleteSessionLock()
+                }
+                call.respond(HttpStatusCode.NoContent)
+            }.onFailure {
+                logger.error("Failed to delete world ${request.name}", it)
+                call.respond(HttpStatusCode.InternalServerError, it.message ?: "")
+            }
+        }
+    }
 }
