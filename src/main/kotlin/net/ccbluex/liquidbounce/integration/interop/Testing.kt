@@ -38,7 +38,7 @@ suspend fun broadcast(text: String) {
     }
 }
 
-val interopServer = embeddedServer(Netty, port = 0) {
+val interopServer = embeddedServer(Netty, port = 22493) {
     install(WebSockets) {
         // TODO: make it usable
         pingPeriod = 15.seconds
@@ -52,14 +52,24 @@ val interopServer = embeddedServer(Netty, port = 0) {
     }
 
     install(CORS) {
-        // TODO: complete this
-        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Options)
+
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.ContentLength)
         allowHeader(HttpHeaders.Authorization)
-        allowHeader("MyCustomHeader")
-        anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
+        allowHeader(HttpHeaders.Accept)
+        allowHeader(HttpHeaders.Upgrade)
+        allowHeader("X-Requested-With")
+
+        allowOrigins {
+            it == "localhost" || it == "127.0.0.1"
+            // InetAddress.getByName(it).isLoopbackAddress
+        }
     }
 
 //    install(StatusPages) {
