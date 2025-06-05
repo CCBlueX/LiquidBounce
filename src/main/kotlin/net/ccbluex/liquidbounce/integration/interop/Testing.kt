@@ -16,6 +16,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.httpMethod
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.request.receiveStream
 import io.ktor.server.response.respond
@@ -62,8 +63,11 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ACCEPT
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ACCEPTED_ITEM_TAGS
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.constructMap
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getByAddress
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.servers
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
@@ -73,6 +77,7 @@ import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -92,6 +97,7 @@ import net.minecraft.client.network.ServerInfo.ResourcePackPolicy
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.toast.SystemToast
 import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.client.util.InputUtil
 import net.minecraft.item.BlockItem
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
@@ -156,6 +162,13 @@ val interopServer = embeddedServer(Netty, port = 22493) {
             // InetAddress.getByName(it).isLoopbackAddress
         }
     }
+
+    // TODO: ContentTransformationException -> BadRequest
+    // Exceptions
+    // - JSON body parse failed
+    // - missing query param
+    // - default Throwable
+
 
 //    install(StatusPages) {
 //        exception<FileNotFoundException> { call, _ ->
@@ -583,11 +596,57 @@ fun Route.spooferController() {
 }
 
 fun Route.inputController() {
-    TODO()
+    get("/input") {
+        val key = call.queryParameters["key"] ?: run {
+            call.respond(HttpStatusCode.BadRequest, "No key")
+            return@get
+        }
+        val input = InputUtil.fromTranslationKey(key)
+        call.respond(JsonObject().apply {
+            addProperty("translationKey", input.translationKey)
+            addProperty("localized", input.localizedText.convertToString())
+        })
+    }
+    get("/keybinds") {
+        call.respond(
+            mc.options.allKeys.map { key ->
+                JsonObject().apply {
+                    addProperty("bindName", key.translationKey)
+                    add("key", JsonObject().apply {
+                        addProperty("translationKey", key.boundKeyTranslationKey)
+                        addProperty("localized", key.boundKeyLocalizedText?.convertToString())
+                    })
+                }
+            }
+        )
+    }
+    get("/typing") {
+        call.respond(json { "typing" to isTyping })
+    }
+    post("/typing") {
+        class TypingRequest(val typing: Boolean)
+
+        val typingRequest = call.receive<TypingRequest>()
+        isTyping = typingRequest.typing
+
+        call.respond(HttpStatusCode.NoContent)
+    }
 }
 
 fun Route.playerController() {
-    TODO()
+    route("/player") {
+        get {
+            call.respond(PlayerData.fromPlayer(player))
+        }
+        get("/inventory") {
+            call.respond(PlayerInventoryData.fromPlayer(player))
+        }
+    }
+    get("/crosshair") {
+        mc.crosshairTarget?.let {
+            call.respond(it)
+        } ?: call.respond(HttpStatusCode.NoContent)
+    }
 }
 
 fun Route.registryController() {
