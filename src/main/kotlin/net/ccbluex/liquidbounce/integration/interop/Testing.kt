@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
 import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.features.module.Category
@@ -57,30 +58,47 @@ import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ACCEPTED_BLOCK_TAGS
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ACCEPTED_ITEM_TAGS
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.constructMap
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getByAddress
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.servers
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas.getItemImage
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readImageAsBase64
 import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.gui.screen.world.EditWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.gui.screen.world.SymlinkWarningScreen
+import net.minecraft.client.network.ServerAddress
+import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.network.ServerInfo.ResourcePackPolicy
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.toast.SystemToast
 import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.item.BlockItem
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.path.SymlinkValidationException
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -89,6 +107,9 @@ import java.text.SimpleDateFormat
 import java.util.Properties
 import java.util.UUID
 import javax.imageio.ImageIO
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.iterator
 import kotlin.collections.set
 import kotlin.jvm.optionals.getOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -570,31 +591,214 @@ fun Route.playerController() {
 }
 
 fun Route.registryController() {
-    TODO()
+    get("/registories") {
+        call.respond(JsonObject().apply {
+            val world = mc.world ?: run {
+                call.respond(HttpStatusCode.TemporaryRedirect, "No world")
+                return@get
+            }
+
+            val parentMap = hashMapOf<Identifier, Identifier>()
+
+            Registries.BLOCK.forEach {
+                val pickStack = it.getPickStack(world, BlockPos.ORIGIN, it.defaultState, false)
+                val id = Registries.BLOCK.getId(it)
+
+                when (val item = pickStack.item) {
+                    is BlockItem -> {
+                        if (item.block != it) {
+                            parentMap[id] = Registries.BLOCK.getId(item.block)
+                        }
+                    }
+                    else -> {
+                        if (!pickStack.isNothing()) {
+                            logger.warn("Invalid pick stack for $id: $pickStack")
+                        }
+                    }
+                }
+            }
+
+            add("blocks", JsonArray().apply {
+                Registries.BLOCK.forEach { block ->
+                    val jsonObject = JsonObject().apply {
+                        addProperty("identifier", Registries.BLOCK.getId(block).toString())
+                        addProperty("name", block.name.convertToString())
+                    }
+                    add(jsonObject)
+                }
+            })
+            add("items", JsonArray().apply {
+                Registries.ITEM.forEach { item ->
+                    val jsonObject = JsonObject().apply {
+                        addProperty("identifier", Registries.ITEM.getId(item).toString())
+                        addProperty("name", item.name.convertToString())
+                    }
+                    add(jsonObject)
+                }
+            })
+            add("itemGroups", JsonObject().apply {
+                for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
+                    add(
+                        k.toString(),
+                        JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", v.toString())
+                        }
+                    )
+                }
+            })
+            add("blockGroups", JsonObject().apply {
+                val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
+
+                Registries.BLOCK.forEach { block ->
+                    val id = Registries.BLOCK.getId(block)
+
+                    val obj = when (id) {
+                        in parentMap -> JsonObject().apply {
+                            addProperty("relation", "parent")
+                            addProperty("relative", parentMap[id]!!.toString())
+                        }
+
+                        in constructedMap -> JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", constructedMap[id]!!.toString())
+                        }
+
+                        else -> return@forEach
+                    }
+
+                    add(id.toString(), obj)
+                }
+            })
+        })
+    }
 }
 
 fun Route.serverListController() {
     route("/servers") {
         get {
+            try {
+                serverList.loadFile()
+                pingThemAll()
 
+                val servers = JsonArray()
+                serverList.servers.forEachIndexed { id, serverInfo ->
+                    val json = interopGson.toJsonTree(serverInfo)
+
+                    if (!json.isJsonObject) {
+                        logger.warn("Failed to convert serverInfo to json")
+                        return@forEachIndexed
+                    }
+
+                    val jsonObject = json.asJsonObject
+                    jsonObject.addProperty("id", id)
+                    servers.add(jsonObject)
+                }
+
+                call.respond(servers)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, "Failed to get servers due to ${e.message}")
+            }
         }
         put("/add") {
+            class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
+            val serverAddRequest = call.receiveNullable<ServerAddRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid request body")
+                return@put
+            }
 
+            if (!ServerAddress.isValid(serverAddRequest.address)) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid address")
+                return@put
+            }
+
+            val serverInfo = ServerInfo(serverAddRequest.name, serverAddRequest.address, ServerInfo.ServerType.OTHER)
+            serverAddRequest.resourcePackPolicy?.let {
+                serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+            }
+
+            serverList.add(serverInfo, false)
+            serverList.saveFile()
+
+            call.respond(HttpStatusCode.NoContent)
         }
         delete("/remove") {
+            class ServerRemoveRequest(val id: Int)
+            val serverRemoveRequest = call.receiveNullable<ServerRemoveRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No id")
+                return@delete
+            }
+            val serverInfo = serverList.get(serverRemoveRequest.id)
 
+            serverList.remove(serverInfo)
+            serverList.saveFile()
+
+            call.respond(HttpStatusCode.NoContent)
         }
         put("/edit") {
+            class ServerEditRequest(
+                val id: Int,
+                val name: String,
+                val address: String,
+                val resourcePackPolicy: String? = null
+            )
+            val serverEditRequest = call.receiveNullable<ServerEditRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid request body")
+                return@put
+            }
+            val serverInfo = serverList.get(serverEditRequest.id)
 
+            serverInfo.name = serverEditRequest.name
+            serverInfo.address = serverEditRequest.address
+            serverEditRequest.resourcePackPolicy?.let {
+                serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+            }
+            serverList.saveFile()
+
+            call.respond(HttpStatusCode.NoContent)
         }
         post("/swap") {
+            class ServerSwapRequest(val from: Int, val to: Int)
+            val serverSwapRequest = call.receiveNullable<ServerSwapRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid request body")
+                return@post
+            }
 
+            serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
+            serverList.saveFile()
+
+            call.respond(HttpStatusCode.NoContent)
         }
         post("/order") {
+            class ServerOrderRequest(val order: List<Int>)
+            val serverOrderRequest = call.receiveNullable<ServerOrderRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid request body")
+                return@post
+            }
 
+            serverOrderRequest.order.map { serverList.get(it) }
+                .forEachIndexed { index, serverInfo ->
+                    serverList.set(index, serverInfo)
+                }
+            serverList.saveFile()
+
+            call.respond(HttpStatusCode.NoContent)
         }
         post("/connect") {
+            class ServerConnectRequest(val address: String)
+            val serverConnectRequest = call.receiveNullable<ServerConnectRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No address")
+                return@post
+            }
+            val serverInfo = serverList.getByAddress(serverConnectRequest.address)
+                ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
 
+            val serverAddress = ServerAddress.parse(serverInfo.address)
+
+            RenderSystem.recordRenderCall {
+                ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
+            }
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

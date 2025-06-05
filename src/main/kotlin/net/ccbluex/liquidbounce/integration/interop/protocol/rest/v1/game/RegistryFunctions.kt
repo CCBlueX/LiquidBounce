@@ -42,7 +42,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import kotlin.jvm.optionals.getOrNull
 
-private val ACCEPTED_ITEM_TAGS =
+// TODO: private
+internal val ACCEPTED_ITEM_TAGS =
     arrayOf(
         ItemTags.WOOL,
         ItemTags.PLANKS,
@@ -92,7 +93,8 @@ private val ACCEPTED_ITEM_TAGS =
         ItemTags.SHOVELS,
     )
 
-private val ACCEPTED_BLOCK_TAGS =
+// TODO: private
+val ACCEPTED_BLOCK_TAGS =
     arrayOf(
         BlockTags.WOOL,
         BlockTags.PLANKS,
@@ -142,7 +144,8 @@ private val ACCEPTED_BLOCK_TAGS =
         BlockTags.SNOW,
     )
 
-private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
+// TODO: private
+internal fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
     val map = hashMapOf<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
