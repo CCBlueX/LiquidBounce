@@ -19,6 +19,10 @@ import io.ktor.server.request.receiveNullable
 import io.ktor.server.request.receiveStream
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondBytesWriter
+import io.ktor.server.response.respondOutputStream
+import io.ktor.server.response.respondSource
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
@@ -32,10 +36,16 @@ import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.collections.ConcurrentSet
+import io.ktor.utils.io.asByteWriteChannel
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.future.await
+import kotlinx.io.asByteChannel
+import kotlinx.io.asOutputStream
+import kotlinx.io.asSource
+import kotlinx.io.transferFrom
+import kotlinx.io.write
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -56,11 +66,17 @@ import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalSt
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas.getItemImage
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.netty.http.util.httpBadRequest
+import net.ccbluex.netty.http.util.httpFileStream
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpInternalServerError
 import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readImageAsBase64
 import net.minecraft.client.gui.screen.SplashOverlay
@@ -68,14 +84,25 @@ import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.world.EditWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.gui.screen.world.SymlinkWarningScreen
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.toast.SystemToast
+import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import net.minecraft.util.path.SymlinkValidationException
+import org.apache.tika.Tika
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Properties
+import java.util.UUID
+import javax.imageio.ImageIO
 import kotlin.collections.set
+import kotlin.jvm.optionals.getOrNull
 import kotlin.time.Duration.Companion.seconds
 
 private val wsSessions = ConcurrentSet<WebSocketSession>()
@@ -563,7 +590,89 @@ fun Route.serverListController() {
 }
 
 fun Route.textureController() {
-    TODO()
+    suspend fun RoutingContext.handleId(id: String?): Identifier? {
+        val identifier = call.queryParameters["id"] ?: run {
+            call.respond(HttpStatusCode.BadRequest, "No identifier")
+            return@handleId null
+        }
+
+        return try {
+            Identifier.of(identifier)
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.NotFound, "Invalid identifier")
+            null
+        }
+    }
+
+    route("/resource") {
+        get {
+            val identifier = handleId(call.queryParameters["id"]) ?: return@get
+            val resource = try {
+                mc.resourceManager.getResourceOrThrow(identifier)
+            } catch (e: FileNotFoundException) {
+                call.respond(HttpStatusCode.NotFound, "File not found")
+                return@get
+            }
+
+            call.respondSource(resource.inputStream.asSource(), contentType = ContentType.Application.OctetStream)
+        }
+        get("/itemTexture") {
+            if (!ItemImageAtlas.isAtlasAvailable) {
+                call.respond(HttpStatusCode.InternalServerError, "Item atlas not available yet")
+                return@get
+            }
+
+            val identifier = handleId(call.queryParameters["id"]) ?: return@get
+
+            val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(identifier)
+
+            val of = RegistryKey.of(RegistryKeys.ITEM, alternativeIdentifier)
+
+            val image = Registries.ITEM.get(of)?.let(ItemImageAtlas::getItemImage) ?: run {
+                call.respond(HttpStatusCode.NotFound, "Item image not found")
+                return@get
+            }
+
+            val buffer = kotlinx.io.Buffer()
+
+            ImageIO.write(image, "PNG", buffer.asOutputStream())
+            call.respondSource(buffer, contentType = ContentType.Image.PNG, contentLength = buffer.size)
+        }
+        get("/skin") {
+            val uuid = try {
+                call.queryParameters["uuid"]?.let(UUID::fromString) ?: run {
+                    call.respond(HttpStatusCode.BadRequest, "No UUID")
+                    return@get
+                }
+            } catch (e: IllegalArgumentException) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid UUID parameter")
+                return@get
+            }
+
+            val skinTextures = world.players.find { it.uuid == uuid }?.skinTextures
+                ?: DefaultSkinHelper.getSkinTextures(uuid)
+            val texture = mc.textureManager.getTexture(skinTextures.texture)
+
+            if (texture is NativeImageBackedTexture) {
+                val buffer = kotlinx.io.Buffer()
+
+                texture.image?.write(buffer.asByteChannel()) ?: run {
+                    call.respond(HttpStatusCode.InternalServerError, "Texture is not cached yet")
+                    return@get
+                }
+
+                call.respondSource(buffer, contentType = ContentType.Image.PNG, contentLength = buffer.size)
+            } else {
+                val resource = mc.resourceManager.getResource(skinTextures.texture)
+                    .getOrNull() ?: run {
+                        call.respond(HttpStatusCode.InternalServerError, "Texture not found")
+                        return@get
+                    }
+
+                call.respondSource(resource.inputStream.asSource(), contentType = ContentType.Image.PNG)
+            }
+        }
+    }
 }
 
 fun Route.worldController() {
