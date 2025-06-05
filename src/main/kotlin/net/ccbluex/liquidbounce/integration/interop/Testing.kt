@@ -11,6 +11,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
@@ -21,7 +22,6 @@ import io.ktor.server.websocket.webSocket
 import io.ktor.util.collections.ConcurrentSet
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
-import kotlinx.coroutines.channels.consume
 import kotlinx.coroutines.channels.consumeEach
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -87,28 +87,13 @@ val interopServer = embeddedServer(Netty, port = 22493) {
 
     routing {
         // Root
-        get("/") {
-            call.respond(json {
-                "name" to LiquidBounce.CLIENT_NAME
-                "version" to LiquidBounce.clientVersion
-                "author" to LiquidBounce.CLIENT_AUTHOR
-            })
-        }
+        clientMetadata()
 
         // Theme
-        staticFiles("/", ThemeManager.themesFolder)
+        themeFileTree()
 
         // Event broadcasting
-        webSocket("/") {
-            wsSessions += this
-            try {
-                incoming.consumeEach {}
-            } catch (e: Exception) {
-                // TODO: logging?
-            } finally {
-                wsSessions -= this
-            }
-        }
+        wsEventController()
 
         // REST
         route("/api/v1/client") {
@@ -116,3 +101,78 @@ val interopServer = embeddedServer(Netty, port = 22493) {
         }
     }
 }
+
+fun Route.clientMetadata() {
+    get {
+        call.respond(json {
+            "name" to LiquidBounce.CLIENT_NAME
+            "version" to LiquidBounce.clientVersion
+            "author" to LiquidBounce.CLIENT_AUTHOR
+        })
+    }
+}
+
+fun Route.themeFileTree() {
+    staticFiles("/", ThemeManager.themesFolder)
+}
+
+fun Route.wsEventController() {
+    webSocket {
+        wsSessions += this
+        try {
+            incoming.consumeEach {}
+        } catch (e: Exception) {
+            // TODO: logging?
+        } finally {
+            wsSessions -= this
+        }
+    }
+}
+
+fun Route.clientController() {
+
+}
+
+fun Route.themeController() {
+
+}
+
+fun Route.localStorageController() {
+
+}
+
+fun Route.screenController() {
+
+}
+
+fun Route.moduleController() {
+
+}
+
+fun Route.componentController() {
+
+}
+
+fun Route.accountController() {
+
+}
+
+fun Route.proxyController() {}
+
+fun Route.browserController() {}
+
+fun Route.protocolController() {}
+
+fun Route.spooferController() {}
+
+fun Route.inputController() {}
+
+fun Route.playerController() {}
+
+fun Route.registryController() {}
+
+fun Route.serverListController() {}
+
+fun Route.textureController() {}
+
+fun Route.worldController() {}
