@@ -79,10 +79,14 @@ import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.protocolVersions
+import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -591,19 +595,174 @@ fun Route.sessionController() {
 }
 
 fun Route.accountController() {
-    TODO()
+    route("/accounts") {
+        get {
+
+        }
+        route("/new") {
+            route("/microsoft") {
+                post {
+
+                }
+                post("/clipboard") {
+
+                }
+            }
+            post("/cracked") {
+
+            }
+            post("/session") {
+
+            }
+            route("/altening") {
+                post {
+
+                }
+                post("/generate") {
+
+                }
+            }
+        }
+        post("/swap") {
+
+        }
+        post("/order") {
+
+        }
+    }
+
+    route("/account") {
+        delete {
+
+        }
+        route("/login") {
+            post {
+
+            }
+            post("/cracked") {
+
+            }
+            post("/session") {
+
+            }
+        }
+        post("/restore") {
+
+        }
+        put("/favorite") {
+
+        }
+        delete("/favorite") {
+
+        }
+        post("/random-name") {
+
+        }
+    }
 }
 
 fun Route.proxyController() {
-    TODO()
+    route("/proxy") {
+        get {
+
+        }
+        post {
+
+        }
+        delete {
+
+        }
+    }
+    route("/proxies") {
+        get {
+
+        }
+        post("/add") {
+
+        }
+        post("/clipboard") {
+
+        }
+        post("/edit") {
+
+        }
+        post("/check") {
+
+        }
+        delete("/remove") {
+
+        }
+        put("/favorite") {
+
+        }
+        delete("/favorite") {
+
+        }
+    }
 }
 
 fun Route.browserController() {
-    TODO()
+    route("/browser") {
+        get {
+
+        }
+        post("/navigate") {
+
+        }
+        post("/close") {
+
+        }
+        post("/reload") {
+
+        }
+        post("/forceReload") {
+
+        }
+        post("/forward") {
+
+        }
+        post("/back") {
+
+        }
+        post("/closeTab") {
+
+        }
+    }
 }
 
 fun Route.protocolController() {
-    TODO()
+    route("/protocols") {
+        get {
+            call.respond(protocolVersions.map { protocol ->
+                JsonObject().apply {
+                    addProperty("name", protocol.name)
+                    addProperty("version", protocol.version)
+                }
+            })
+        }
+
+        route("/protocol") {
+            get {
+                call.respond(JsonObject().apply {
+                    addProperty("name", protocolVersion.name)
+                    addProperty("version", protocolVersion.version)
+                })
+            }
+            put {
+                class ProtocolRequest(val version: Int)
+                val protocolRequest = call.receive<ProtocolRequest>()
+
+                selectProtocolVersion(protocolRequest.version)
+
+                call.respond(HttpStatusCode.NoContent)
+            }
+            delete {
+                selectProtocolVersion(defaultProtocolVersion.version)
+
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+    }
 }
 
 fun Route.spooferController() {
