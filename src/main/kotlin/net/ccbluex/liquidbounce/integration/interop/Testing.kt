@@ -15,13 +15,16 @@ import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.contentCharset
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.request.receiveStream
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondSource
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -55,6 +58,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
+import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
@@ -72,6 +76,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.server
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -121,6 +126,9 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.time.Duration.Companion.seconds
 
 private val wsSessions = ConcurrentSet<WebSocketSession>()
+
+suspend fun RoutingCall.receiveReader() =
+    receiveStream().reader(request.contentCharset() ?: Charsets.UTF_8)
 
 suspend fun broadcast(text: String) {
     wsSessions.forEach { session ->
@@ -235,8 +243,6 @@ fun Route.wsEventController() {
         wsSessions += this
         try {
             incoming.consumeEach {}
-        } catch (e: Exception) {
-            // TODO: logging?
         } finally {
             wsSessions -= this
         }
@@ -327,11 +333,20 @@ fun Route.themeController() {
         ConfigSystem.storeConfigurable(ThemeManager)
         call.respond(HttpStatusCode.NoContent)
     }
-    get("/fonts") { // TODO: Unused?
-
+    get("/fonts") {
+        call.respond(FontManager.fontFaces.map { it.name })
     }
     get("/fonts/{name}") { // TODO: Unused?
-
+        val name = call.parameters["name"] ?: ""
+        val font = FontManager.fontFace(name) ?: run {
+            call.respond(HttpStatusCode.NotFound, "No font named $name")
+            return@get
+        }
+        if (font.file != null) {
+            call.respondFile(font.file)
+        } else {
+            call.respond(HttpStatusCode.NoContent)
+        }
     }
     get("/components") {
         call.respond(accessibleInteropGson.toJsonTree(components + customComponents))
@@ -533,7 +548,7 @@ fun Route.moduleController() {
         put("/settings") {
             val module = handleModuleName(call.queryParameters["name"]) ?: return@put
 
-            ConfigSystem.deserializeConfigurable(module, call.receiveStream().reader())
+            ConfigSystem.deserializeConfigurable(module, call.receiveReader())
             ConfigSystem.storeConfigurable(modulesConfigurable)
 
             call.respond(HttpStatusCode.NoContent)
@@ -592,7 +607,16 @@ fun Route.protocolController() {
 }
 
 fun Route.spooferController() {
-    TODO()
+    route("/spoofer") {
+        get {
+            call.respond(ConfigSystem.serializeConfigurable(SpooferManager, gson = interopGson))
+        }
+        put {
+            ConfigSystem.deserializeConfigurable(SpooferManager, call.receiveReader())
+            ConfigSystem.storeConfigurable(SpooferManager)
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
 }
 
 fun Route.inputController() {
