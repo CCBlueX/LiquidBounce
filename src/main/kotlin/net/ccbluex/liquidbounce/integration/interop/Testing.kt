@@ -31,9 +31,13 @@ import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.channels.consumeEach
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.integration.theme.component.components
+import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -233,7 +237,26 @@ fun Route.clientController() {
 }
 
 fun Route.themeController() {
+    get("/theme") {
+        call.respond(JsonObject().apply {
+            addProperty("activeTheme", ThemeManager.activeTheme.name)
+            addProperty("shaderEnabled", ThemeManager.shaderEnabled)
+        })
+    }
+    post("/shader") {
+        ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
+        ConfigSystem.storeConfigurable(ThemeManager)
+        call.respond(HttpStatusCode.NoContent)
+    }
+    get("/fonts") { // TODO: Unused?
 
+    }
+    get("/fonts/{name}") { // TODO: Unused?
+
+    }
+    get("/components") {
+        call.respond(accessibleInteropGson.toJsonTree(components + customComponents))
+    }
 }
 
 fun Route.localStorageController() {
