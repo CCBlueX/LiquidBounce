@@ -517,25 +517,45 @@ fun Route.sessionController() {
 }
 
 fun Route.accountController() {
-
+    TODO()
 }
 
-fun Route.proxyController() {}
+fun Route.proxyController() {
+    TODO()
+}
 
-fun Route.browserController() {}
+fun Route.browserController() {
+    TODO()
+}
 
-fun Route.protocolController() {}
+fun Route.protocolController() {
+    TODO()
+}
 
-fun Route.spooferController() {}
+fun Route.spooferController() {
+    TODO()
+}
 
-fun Route.inputController() {}
+fun Route.inputController() {
+    TODO()
+}
 
-fun Route.playerController() {}
+fun Route.playerController() {
+    TODO()
+}
 
-fun Route.registryController() {}
+fun Route.registryController() {
+    TODO()
+}
 
-fun Route.serverListController() {}
+fun Route.serverListController() {
+    TODO()
+}
 
-fun Route.textureController() {}
+fun Route.textureController() {
+    TODO()
+}
 
-fun Route.worldController() {}
+fun Route.worldController() {
+    TODO()
+}
