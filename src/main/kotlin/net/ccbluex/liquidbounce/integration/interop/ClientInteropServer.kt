@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
@@ -79,6 +80,11 @@ object ClientInteropServer {
 
         // Start the HTTP server
         thread(name = "netty-websocket", block = ::startServer)
+
+        withScope {
+            interopServer.start(wait = false)
+            logger.info("Started Ktor server on port ${interopServer.engine.resolvedConnectors().first().port}")
+        }
     }
 
     private var attempt = 0

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
+import net.ccbluex.liquidbounce.integration.interop.broadcast
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.reflect.KClass
 
@@ -79,6 +80,8 @@ class SocketEventListener : EventListener {
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@withScope
+
+        broadcast(json)
 
         httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
             logger.error("WebSocket event broadcast failed", t)

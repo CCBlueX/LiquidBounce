@@ -18,11 +18,25 @@ import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
+import io.ktor.util.collections.ConcurrentSet
+import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
+import kotlinx.coroutines.channels.consume
+import kotlinx.coroutines.channels.consumeEach
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import kotlin.time.Duration.Companion.seconds
+
+private val wsSessions = ConcurrentSet<WebSocketSession>()
+
+suspend fun broadcast(text: String) {
+    wsSessions.forEach { session ->
+        // TODO: reuse?
+        session.send(Frame.Text(text))
+    }
+}
 
 val interopServer = embeddedServer(Netty, port = 0) {
     install(WebSockets) {
@@ -76,7 +90,14 @@ val interopServer = embeddedServer(Netty, port = 0) {
 
         // Event broadcasting
         webSocket("/") {
-            // TODO
+            wsSessions += this
+            try {
+                incoming.consumeEach {}
+            } catch (e: Exception) {
+                // TODO: logging?
+            } finally {
+                wsSessions -= this
+            }
         }
 
         // REST
