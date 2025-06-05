@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.integration.interop
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -14,11 +15,14 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
+import io.ktor.server.request.receiveOrNull
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingCall
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
@@ -35,6 +39,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
+import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
@@ -46,6 +51,7 @@ import net.minecraft.util.Util
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Properties
+import kotlin.collections.set
 import kotlin.time.Duration.Companion.seconds
 
 private val wsSessions = ConcurrentSet<WebSocketSession>()
@@ -260,7 +266,68 @@ fun Route.themeController() {
 }
 
 fun Route.localStorageController() {
+    route("/localStorage") {
+        get("/all") {
+            call.respond(JsonObject().apply {
+                val jsonArray = JsonArray()
 
+                PersistentLocalStorage.forEach { (key, value) ->
+                    jsonArray.add(JsonObject().apply {
+                        addProperty("key", key)
+                        addProperty("value", value)
+                    })
+                }
+
+                add("items", jsonArray)
+            })
+        }
+        put("/all") {
+            data class Item(val key: String, val value: String)
+            data class StoragePutRequest(val items: List<Item>)
+
+            val body = call.receiveNullable<StoragePutRequest>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid request")
+                return@put
+            }
+
+            PersistentLocalStorage.clear()
+            body.items.forEach { item ->
+                PersistentLocalStorage[item.key] = item.value
+            }
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        get {
+            val key = call.queryParameters["key"] ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No key")
+                return@get
+            }
+            val value = PersistentLocalStorage[key] ?: run {
+                call.respond(HttpStatusCode.NotFound, "No value for key $key")
+                return@get
+            }
+            call.respond(json { "value" to value })
+        }
+        put {
+            class RequestBody(val key: String, val value: String)
+            val body = call.receiveNullable<RequestBody>() ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No key or value")
+                return@put
+            }
+
+            PersistentLocalStorage[body.key] = body.value
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        delete {
+            val key = call.queryParameters["key"] ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No key")
+                return@delete
+            }
+            PersistentLocalStorage.remove(key)
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
 }
 
 fun Route.screenController() {
