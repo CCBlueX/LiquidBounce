@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -39,6 +40,9 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.json
+import net.ccbluex.liquidbounce.integration.IntegrationListener
+import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
+import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
@@ -47,6 +51,10 @@ import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
+import net.minecraft.client.gui.screen.SplashOverlay
+import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.util.Util
 import java.net.URI
 import java.text.SimpleDateFormat
@@ -331,7 +339,61 @@ fun Route.localStorageController() {
 }
 
 fun Route.screenController() {
+    get("/virtualScreen") {
+        call.respond(JsonObject().apply {
+            addProperty("name", IntegrationListener.momentaryVirtualScreen?.type?.routeName)
+            addProperty("showingSplash", mc.overlay is SplashOverlay)
+        })
+    }
+    post("/virtualScreen") { // TODO: unused?
 
+    }
+    route("/screen") {
+        get {
+            val mcScreen = mc.currentScreen ?: run {
+                call.respond(HttpStatusCode.TemporaryRedirect, "No screen")
+                return@get
+            }
+            val name = VirtualScreenType.recognize(mcScreen)?.routeName ?: mcScreen.javaClass.name
+            call.respond(json { "name" to name })
+        }
+        get("/size") {
+            call.respond(JsonObject().apply {
+                addProperty("width", mc.window.scaledWidth)
+                addProperty("height", mc.window.scaledHeight)
+            })
+        }
+        put {
+            class RequestBody(val name: String)
+            val screenName = call.receiveNullable<RequestBody>()?.name ?: run {
+                call.respond(HttpStatusCode.BadRequest, "No screen name")
+                return@put
+            }
+
+            VirtualScreenType.byName(screenName)?.open() ?: run {
+                call.respond(HttpStatusCode.NotFound, "Screen name $screenName not found")
+                return@put
+            }
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+        delete {
+            val screen = mc.currentScreen ?: run {
+                call.respond(HttpStatusCode.TemporaryRedirect, "No screen")
+                return@delete
+            }
+            if (screen is VirtualDisplayScreen && screen.parentScreen != null) {
+                RenderSystem.recordRenderCall {
+                    mc.setScreen(screen.parentScreen)
+                }
+            } else {
+                RenderSystem.recordRenderCall {
+                    mc.setScreen(if (inGame) null else TitleScreen())
+                }
+            }
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
 }
 
 fun Route.moduleController() {
