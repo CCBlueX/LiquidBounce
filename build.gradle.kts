@@ -192,6 +192,11 @@ dependencies {
     val ktor_version = "3.1.3"
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("io.ktor:ktor-serialization-gson-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-server-cors:$ktor_version")
+//    implementation("io.ktor:ktor-server-host-common:$ktor_version")
+//    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
