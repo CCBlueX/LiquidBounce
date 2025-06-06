@@ -261,6 +261,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleNameProtect,
             ModuleNotifier,
             ModuleSpammer,
+            ModuleFastChat,
             ModuleAutoAccount,
             ModuleTeams,
             ModuleElytraSwap,

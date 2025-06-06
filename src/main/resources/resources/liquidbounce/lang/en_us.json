@@ -519,6 +519,7 @@
   "liquidbounce.module.fakeLag.description": "Holds back packets so as to prevent you from being hit by an enemy.",
   "liquidbounce.module.aspect.description": "Adjust the horizontal stretching.",
   "liquidbounce.module.fastBreak.description": "Allows you to break blocks faster.",
+  "liquidbounce.module.fastChat.description": "Use keybindings to send preset messages.",
   "liquidbounce.module.fastPlace.description": "Allows you to place blocks faster.",
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
   "liquidbounce.module.fly.description": "Allows you to fly in survival mode.",

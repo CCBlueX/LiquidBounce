@@ -520,6 +520,7 @@
   "liquidbounce.module.fakeLag.description": "延迟数据包以防止你被敌人攻击。",
   "liquidbounce.module.aspect.description": "调整水平拉伸。",
   "liquidbounce.module.fastBreak.description": "加速破坏方块。",
+  "liquidbounce.module.fastChat.description": "使用快捷键发送预设消息。",
   "liquidbounce.module.fastPlace.description": "加速放置方块。",
   "liquidbounce.module.fastUse.description": "加速使用物品，如食物和药水。",
   "liquidbounce.module.fly.description": "允许你在无飞行能力的情况下(如生存模式中)飞行。",
