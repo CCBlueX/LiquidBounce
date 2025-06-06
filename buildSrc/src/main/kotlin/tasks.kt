@@ -27,6 +27,12 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.io.InputStream
+import java.net.URI
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.security.MessageDigest
+import java.util.Arrays
 
 abstract class CompareJsonKeysTask : DefaultTask() {
 
@@ -48,10 +54,6 @@ abstract class CompareJsonKeysTask : DefaultTask() {
     @get:Input
     abstract val consoleOutputCount: Property<Int>
 
-    init {
-        consoleOutputCount.convention(Int.MAX_VALUE)
-    }
-
     @TaskAction
     fun run() {
         val baselineFile = baselineFile.orNull?.asFile
@@ -65,7 +67,7 @@ abstract class CompareJsonKeysTask : DefaultTask() {
 
         val baseline = baselineFile.readJsonObject()
 
-        val outputCount = consoleOutputCount.get().coerceAtLeast(1)
+        val outputCount = consoleOutputCount.getOrElse(Int.MAX_VALUE).coerceAtLeast(1)
 
         for (file in files.files) {
             if (file == baselineFile) {
@@ -87,6 +89,61 @@ abstract class CompareJsonKeysTask : DefaultTask() {
                 logger.warn("${file.name} is missing the following keys (${missingKeys.size}): $output")
             }
         }
+    }
+
+}
+
+abstract class DownloadFileTask : DefaultTask() {
+    @get:Input
+    abstract val from: Property<URI>
+
+    @get:InputFile
+    abstract val to: RegularFileProperty
+
+    @get:Input
+    abstract val overwrite: Property<Boolean>
+
+    @TaskAction
+    fun run() {
+        val file = to.orNull?.asFile
+
+        if (file == null) {
+            throw GradleException("Target file is not defined")
+        }
+
+        if (file.isFile && !overwrite.getOrElse(false)) {
+            throw GradleException("Target file $file already exists")
+        }
+
+        val uri = from.orNull ?: throw GradleException("URI is not defined")
+
+        httpClient.sendAsync(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofInputStream())
+            .thenApply { response ->
+                if (response.isSuccessful) {
+                    val dest = temporaryDir.resolve(System.currentTimeMillis().toString(36))
+                    dest.outputStream().use { response.body().copyTo(it) }
+                    if (file.isFile && Arrays.equals(file.sha256(), dest.sha256())) {
+                        logger.info("SHA256 verified: ${file.absolutePath} - ${uri}")
+                        dest.delete()
+                        return@thenApply
+                    }
+                    file.delete()
+                    dest.renameTo(file)
+                } else {
+                    throw GradleException("Failed to download from $uri (HTTP ${response.statusCode()})")
+                }
+            }.get()
+    }
+
+    private fun File.sha256() = this.inputStream().use {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(8192)
+        while (true) {
+            val read = it.read(buffer)
+            if (read == -1) break
+            digest.update(buffer, 0, read)
+        }
+        digest.digest()
     }
 
 }

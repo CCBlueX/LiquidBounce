@@ -20,6 +20,7 @@
 import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 plugins {
@@ -54,44 +55,39 @@ val includeDependency: Configuration by configurations.creating
 /** Includes mod in the JAR file */
 val includeModDependency: Configuration by configurations.creating
 
+val gameJson = file("config/game.json")
+
 /**
  * Provided by:
  * - Minecraft
  * - Mod dependencies
  */
+@Suppress("UNCHECKED_CAST")
 fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-
-    exclude(group = "com.google.code.gson", module = "gson")
-    exclude(group = "net.java.dev.jna", module = "jna")
-    exclude(group = "commons-codec", module = "commons-codec")
-    exclude(group = "commons-io", module = "commons-io")
-    exclude(group = "org.apache.commons", module = "commons-compress")
-    exclude(group = "org.apache.commons", module = "commons-lang3")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
-    exclude(group = "org.slf4j", module = "slf4j-api")
-    exclude(group = "com.mojang", module = "authlib")
 
     // Note: from Netty HTTP Server, not all components are used
     exclude(group = "io.netty", module = "netty-all")
 
-    exclude(group = "io.netty", module = "netty-buffer")
-    exclude(group = "io.netty", module = "netty-codec")
-    exclude(group = "io.netty", module = "netty-common")
-    exclude(group = "io.netty", module = "netty-handler")
-    exclude(group = "io.netty", module = "netty-resolver")
-    exclude(group = "io.netty", module = "netty-transport")
-    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
+    // Read game libraries
+    val root = JsonSlurper().parse(gameJson) as Map<String, Any?>
+    val libraries = root["libraries"] as List<Map<String, Any?>>
+    libraries.map {
+        project.dependencies.create(it["name"] as String)
+    }.forEach {
+        exclude(group = it.group, module = it.name)
+    }
 }
 
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
-configurations.include.get().extendsFrom(includeModDependency)
-configurations.modApi.get().extendsFrom(includeModDependency)
-configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
+configurations.include.configure {
+    extendsFrom(includeModDependency)
+}
+configurations.modApi.configure {
+    extendsFrom(includeModDependency)
+}
 
 repositories {
     mavenCentral()
@@ -203,10 +199,11 @@ dependencies {
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
-                isTransitive = false
-            }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
+            // https://docs.gradle.org/current/kotlin-dsl/gradle/org.gradle.api.artifacts.component/-component-selector/index.html
+            val requested = it.requested as? ModuleComponentSelector
+                ?: error("Incorrect usage of includeDependency! Actual type is ${it.requested.javaClass.simpleName}, Only modules can be applied")
+
+            val apiDependency = dependencies.api(requested.displayName)!!
 
             dependencies.include(apiDependency)
         }
@@ -358,6 +355,16 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
     baselineFile.set(languageFolder.resolve(baselineFileName))
     files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
     consoleOutputCount.set(5)
+}
+
+tasks.register<DownloadFileTask>("downloadGameJson") {
+    group = "build"
+    description = "Download the JSON file of game to check existing libraries."
+
+    // [Site](https://mcasset.cloud/)
+    from.set(uri("https://assets.mcasset.cloud/$minecraft_version/$minecraft_version.json"))
+    to.set(gameJson)
+    overwrite.set(true)
 }
 
 java {

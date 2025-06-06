@@ -17,7 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 import groovy.json.JsonSlurper
+import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -26,12 +29,12 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
-private val httpClient = HttpClient.newBuilder()
+internal val httpClient = HttpClient.newBuilder()
     .connectTimeout(Duration.ofSeconds(5))
     .executor(Executors.newVirtualThreadPerTaskExecutor())
     .build()
 
-private inline val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
+internal inline val HttpResponse<*>.isSuccessful get() = statusCode() in 200..299
 
 /**
  * [API Docs](https://docs.github.com/zh/rest/collaborators/collaborators?apiVersion=2022-11-28)
