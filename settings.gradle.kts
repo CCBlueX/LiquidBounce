@@ -20,15 +20,19 @@
 pluginManagement {
     repositories {
         maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
         }
         gradlePluginPortal()
+        mavenCentral()
     }
 
     plugins {
-        id 'fabric-loom' version loom_version
-        id 'org.jetbrains.kotlin.jvm' version kotlin_version
+        val loom_version: String by settings
+        val kotlin_version: String by settings
+        id("fabric-loom") version loom_version
+        kotlin("jvm") version kotlin_version
     }
-
 }
+
+rootProject.name = "LiquidBounce"

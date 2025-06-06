@@ -35,6 +35,7 @@
     "minecraft.client.MixinWorld",
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
+    "minecraft.client.option.MixinServerListAccessor",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
     "minecraft.entity.MixinAbstractHorseEntity",
     "minecraft.entity.MixinArmorFeatureRenderer",

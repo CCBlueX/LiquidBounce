@@ -49,6 +49,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
+import java.util.EnumSet
 
 /**
  * Debug Command to collect information about the client
@@ -163,7 +164,7 @@ object CommandDebug : CommandFactory {
             }
         })
 
-        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, Enum::class.javaObjectType))
+        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, EnumSet::class.javaObjectType))
     }
 
     /**

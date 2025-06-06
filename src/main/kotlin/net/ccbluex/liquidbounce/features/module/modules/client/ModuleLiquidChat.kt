@@ -116,6 +116,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         super.disable()
     }
 
+    @Suppress("unused")
+    val shutdownHandler = handler<ClientShutdownEvent> {
+        chatClient.disconnect()
+    }
+
+    @Suppress("unused")
     val repeatable = tickHandler {
         if (!chatClient.connected) {
             chatClient.connectAsync()

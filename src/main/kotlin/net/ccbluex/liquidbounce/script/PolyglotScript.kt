@@ -20,12 +20,14 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupContext
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
@@ -59,7 +61,7 @@ class PolyglotScript(
         .currentWorkingDirectory(file.parentFile.toPath())
         .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
-        .allowCreateThread(true) // Disable thread creation
+        .allowCreateThread(true) // Enable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
         .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
@@ -118,7 +120,7 @@ class PolyglotScript(
             // Global instances
             val bindings = getBindings(language)
 
-            ScriptContextProvider.setupContext(bindings)
+            this.setupContext(language, bindings)
 
             // Global functions
             bindings.putMember("registerScript", RegisterScript())
@@ -290,6 +292,8 @@ class PolyglotScript(
         registeredCommands.forEach(CommandManager::removeCommand)
 
         registeredChoices.forEach { it.parent.choices.remove(it) }
+
+        EventManager.callEvent(RefreshArrayListEvent)
 
         scriptEnabled = false
     }
