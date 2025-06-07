@@ -130,6 +130,7 @@
 
     {#if expanded}
         <div class="quick-switcher" transition:fade|global={{ duration: 200, easing: quintOut }}>
+            <!-- svelte-ignore a11y_autofocus -->
             <input type="text" autofocus class="account-search" placeholder="Search..." bind:value={searchQuery}>
 
             {#if accounts.length > 0}
