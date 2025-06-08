@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableTextAccessor
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -163,8 +164,10 @@ data class MessageMetadata(
 )
 
 fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+    val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
+
     if (mc.player == null) {
-        logger.info("(Chat) ${text.convertToString()}")
+        logger.info("(Chat) ${realText.convertToString()}")
         return
     }
 
@@ -174,16 +177,15 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
         chatHud.removeMessage(metadata.id)
     }
 
-    chatHud.addMessage(text, metadata.id, metadata.count)
+    chatHud.addMessage(realText, metadata.id, metadata.count)
 }
 
 /**
  * Adds a new chat message.
  */
 fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val literalText = if (metadata.prefix) clientPrefix.copy() else Text.literal("")
-    texts.forEach { literalText.append(it) }
-    chat(literalText, metadata)
+    val text = MixinMutableTextAccessor.create(PlainTextContent.EMPTY, texts.asList(), Style.EMPTY)
+    chat(text, metadata)
 }
 
 fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata(id = "M${module.name}#info"))
