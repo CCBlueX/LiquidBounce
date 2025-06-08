@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
+import net.minecraft.util.Util
+import java.io.File
 
 // Chat formatting
 private val clientPrefix = Text.empty()
@@ -45,6 +47,11 @@ fun regular(text: String): MutableText = text.asText().formatted(Formatting.GRAY
 fun variable(text: MutableText): MutableText = text.formatted(Formatting.GOLD)
 
 fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOLD)
+
+fun clickablePath(file: File): MutableText =
+    variable(file.absolutePath)
+        .onClick { Util.getOperatingSystem().open(file) }
+        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, "Open".asText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
 
@@ -184,7 +191,9 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
  * Adds a new chat message.
  */
 fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val text = MixinMutableTextAccessor.create(PlainTextContent.EMPTY, texts.asList(), Style.EMPTY)
+    val text: Text = MixinMutableTextAccessor.create(
+        PlainTextContent.EMPTY, texts.asList(), Style.EMPTY
+    )
     chat(text, metadata)
 }
 

@@ -12,6 +12,9 @@ import java.util.List;
 @Mixin(MutableText.class)
 public interface MixinMutableTextAccessor {
 
+    /**
+     * @param siblings should be mutable list, unless you are sure it will not be modified!
+     */
     @Invoker("<init>")
     static MutableText create(TextContent content, List<Text> siblings, Style style) {
         throw new AssertionError();

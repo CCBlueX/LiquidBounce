@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -153,7 +154,7 @@ object CommandModels : CommandFactory {
             .begin("browse")
             .handler { command, _ ->
                 Util.getOperatingSystem().open(modelsFolder)
-                chat(regular("Location: "), variable(modelsFolder.absolutePath))
+                chat(regular("Location: "), clickablePath(modelsFolder))
             }
             .build()
     }
