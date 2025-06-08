@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.listAllDirectory
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import kotlin.time.measureTime
 
@@ -46,9 +47,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      * Available models from the models folder
      */
     private val availableModels: List<String>
-        get() = modelsFolder
-            .listFiles { file -> file.isDirectory }
-            ?.map { file -> file.nameWithoutExtension } ?: emptyList()
+        get() = modelsFolder.listAllDirectory().map { file -> file.nameWithoutExtension }
 
     private val allModels: Array<String>
         get() = baseModels + availableModels

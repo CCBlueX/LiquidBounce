@@ -27,10 +27,10 @@ import net.minecraft.client.world.ClientWorld
 
 
 val Window.dimensions
-    get() = Pair(width, height)
+    get() = intArrayOf(width, height)
 
 val Window.scaledDimension
-    get() = Pair(scaledWidth, scaledHeight)
+    get() = intArrayOf(scaledWidth, scaledHeight)
 
 val mc: MinecraftClient
     inline get() = MinecraftClient.getInstance()!!

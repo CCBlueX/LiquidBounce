@@ -2,8 +2,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.io.asTexture
+import net.ccbluex.liquidbounce.utils.io.readNativeImage
 import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import java.io.InputStream
 
@@ -23,9 +24,9 @@ inline fun String.registerAsDynamicImageFromClientResources(): Identifier =
     }
 
 inline fun Identifier.registerDynamicImage(image: InputStream) {
-    this.registerDynamicImage(NativeImage.read(image))
+    this.registerDynamicImage(image.readNativeImage())
 }
 
 inline fun Identifier.registerDynamicImage(image: NativeImage) {
-    mc.textureManager.registerTexture(this, NativeImageBackedTexture(image))
+    mc.textureManager.registerTexture(this, image.asTexture())
 }

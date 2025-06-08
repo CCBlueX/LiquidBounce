@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -39,16 +39,19 @@ import net.ccbluex.liquidbounce.integration.theme.component.ComponentType
 import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.asTexture
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.io.listAllDirectory
+import net.ccbluex.liquidbounce.utils.io.readNativeImage
+import net.ccbluex.liquidbounce.utils.io.readUtf8
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.ccbluex.liquidbounce.utils.io.takeIfExists
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.io.File
@@ -56,7 +59,7 @@ import java.io.File
 object ThemeManager : Configurable("theme") {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    internal val defaultTheme = Theme.defaults()
+    internal val defaultTheme by AsyncLazy(Theme::defaults)
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
@@ -184,7 +187,7 @@ object ThemeManager : Configurable("theme") {
         activeTheme = Theme(name)
     }
 
-    fun themes() = themesFolder.listFiles()?.filter { it.isDirectory }?.mapNotNull { it.name } ?: emptyList()
+    fun themes() = themesFolder.listAllDirectory().map { it.name }
 
     data class Route(val theme: Theme, val url: String)
 
@@ -238,16 +241,15 @@ class Theme(val name: String) : Closeable {
         return false
     }
 
-    private fun readShaderBackground() = backgroundShader.takeIf { it.exists() }?.readText()
-    private fun readBackgroundImage() = backgroundImage.takeIf { it.exists() }
-        ?.inputStream()?.use { NativeImage.read(it) }
+    private fun readShaderBackground() = backgroundShader.takeIfExists()?.readUtf8()
+    private fun readBackgroundImage() = backgroundImage.takeIfExists()?.inputStream()?.readNativeImage()
 
     fun loadBackgroundImage(): Boolean {
         if (loadedBackgroundImage != null) {
             return true
         }
 
-        val image = NativeImageBackedTexture(readBackgroundImage() ?: return false)
+        val image = readBackgroundImage()?.asTexture() ?: return false
         loadedBackgroundImage = Identifier.of("liquidbounce", "theme-bg-${name.lowercase()}")
         mc.textureManager.registerTexture(loadedBackgroundImage, image)
         logger.info("Loaded background image for theme $name")

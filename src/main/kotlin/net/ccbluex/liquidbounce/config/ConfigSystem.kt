@@ -197,7 +197,7 @@ object ConfigSystem {
      */
     private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = fileGson) {
         gson.newJsonWriter(writer).use {
-            gson.toJson(configurable, Configurable::class.javaObjectType, it)
+            gson.toJson(configurable, Configurable::class.java, it)
         }
     }
 
@@ -205,7 +205,7 @@ object ConfigSystem {
      * Serialize a configurable to a writer
      */
     fun serializeConfigurable(configurable: Configurable, gson: Gson = fileGson) =
-        gson.toJsonTree(configurable, Configurable::class.javaObjectType)
+        gson.toJsonTree(configurable, Configurable::class.java)
 
     /**
      * Deserialize a configurable from a reader

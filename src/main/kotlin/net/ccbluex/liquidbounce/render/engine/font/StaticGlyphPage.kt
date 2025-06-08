@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.render.engine.font
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.asTexture
 import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
 import java.awt.Point
@@ -82,7 +83,7 @@ class StaticGlyphPage(
                 .toSet()
 
             val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(nativeImage)
+            val texture = nativeImage.asTexture()
 
             texture.bindTexture()
             texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true)

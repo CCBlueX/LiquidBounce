@@ -92,7 +92,7 @@ data class TrainingData(
         const val DISTANCE = "i"
 
         private fun parse(file: File): List<TrainingData> = when {
-            file.isDirectory -> file.listFiles().flatMap(::parse)
+            file.isDirectory -> file.listFiles()?.flatMap(::parse) ?: emptyList()
             file.extension == "json" -> decode<List<TrainingData>>(file.inputStream())
             else -> emptyList()
         }

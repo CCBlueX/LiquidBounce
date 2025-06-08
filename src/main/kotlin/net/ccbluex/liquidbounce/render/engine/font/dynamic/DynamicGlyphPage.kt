@@ -1,15 +1,15 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import net.ccbluex.liquidbounce.render.engine.font.*
+import net.ccbluex.liquidbounce.utils.io.asTexture
 import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
 
 class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = NativeImageBackedTexture(image.toNativeImage())
+    override val texture = image.toNativeImage().asTexture()
     val glyphMap = HashMap<Pair<Int, Char>, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     val dirty = ArrayList<GlyphRenderInfo>()
 

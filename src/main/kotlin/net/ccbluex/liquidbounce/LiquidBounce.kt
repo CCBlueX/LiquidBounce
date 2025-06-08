@@ -78,6 +78,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.io.listAllDirectory
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -305,9 +306,8 @@ object LiquidBounce : EventListener {
                 }
             },
             scope.async {
-                ThemeManager.themesFolder.listFiles()
-                    ?.filter { file -> file.isDirectory }
-                    ?.forEach { file ->
+                ThemeManager.themesFolder.listAllDirectory()
+                    .forEach { file ->
                         runCatching {
                             val assetsFolder = File(file, "assets")
                             if (!assetsFolder.exists()) {

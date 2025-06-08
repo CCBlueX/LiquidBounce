@@ -23,6 +23,8 @@ import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.utils.io.asTexture
+import net.ccbluex.liquidbounce.utils.io.readNativeImage
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
@@ -105,9 +107,7 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
-            NativeImageBackedTexture(NativeImage.read(stream))
-        } as T
+        NativeImageBackedTexture::class.java -> body.byteStream().readNativeImage().asTexture() as T
         else -> decode<T>(body.charStream())
     }
 }

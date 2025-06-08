@@ -16,25 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.io
 
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
+import okio.buffer
+import okio.source
+import java.io.File
 import java.io.InputStream
 
-/**
- * Find resource
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resource(path: String): InputStream {
-    class Empty
-    return Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
-}
+inline fun InputStream.readNativeImage(
+    format: NativeImage.Format? = NativeImage.Format.RGBA,
+): NativeImage = NativeImage.read(format, this)
 
-/**
- * Converts resource to string
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resourceToString(path: String) = resource(path).readUtf8()
+inline fun NativeImage?.asTexture(): NativeImageBackedTexture = NativeImageBackedTexture(this)
+
+inline fun File.takeIfExists() = this.takeIf { it.exists() }
+
+fun File.listAllDirectory() = this.listFiles()?.filter { it.isDirectory } ?: emptyList()
+
+fun File.listAllFile() = this.listFiles()?.filter { it.isFile } ?: emptyList()
+
+fun File.readUtf8(): String = inputStream().readUtf8()
+
+fun InputStream.readUtf8(): String = use { source().buffer().readUtf8() }

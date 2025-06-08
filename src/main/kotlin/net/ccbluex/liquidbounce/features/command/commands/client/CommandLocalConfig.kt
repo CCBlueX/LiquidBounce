@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.io.listAllFile
 import net.minecraft.util.Util
 
 /**
@@ -111,9 +112,14 @@ object CommandLocalConfig : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            chat("§cSettings:")
-            for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
-                chat(regular(files.name))
+            val files = ConfigSystem.userConfigsFolder.listAllFile()
+            if (files.isNotEmpty()) {
+                chat("§cSettings:")
+                for (file in files) {
+                    chat(regular(file.name))
+                }
+            } else {
+                chat("§cNo settings!")
             }
         }
         .build()
