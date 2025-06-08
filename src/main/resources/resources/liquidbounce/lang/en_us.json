@@ -510,7 +510,7 @@
   "liquidbounce.module.antiCheatDetect.description": "Detects the AntiCheat of the server and notifies you.",
   "liquidbounce.module.antiCheatDetect.messages.detected": "Detected %s AntiCheat.",
   "liquidbounce.module.eagle.description": "Automatically sneaks at the edge of a block",
-  "liquidbounce.module.easypearl.description": "Throws pearl to where you looking at.",
+  "liquidbounce.module.easyPearl.description": "Throws pearl to where you looking at.",
   "liquidbounce.module.easyPearl.messages.noInReachWarning": "You are aiming more than the ender pearl can reach, and this has helped you cancel the throw",
   "liquidbounce.module.elytraRecast.description": "Recasts elytra while holding jump key.",
   "liquidbounce.module.elytraFly.description": "Makes controlling an elytra easier.",
