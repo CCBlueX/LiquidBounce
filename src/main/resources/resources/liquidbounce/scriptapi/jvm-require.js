@@ -1,6 +1,6 @@
 // jvm-require.js
 /**
- * NOTE FOR DEBUGGERS:
+ * NOTE FOR WHO ARE USING DEBUGGER:
  *
  * If you're debugging with GraalJS and expected to pause at the first line of YOUR code
  * but instead paused here - this is normal! This script runs first to set up Jvm integration.
@@ -33,33 +33,10 @@
                     [modulePath.substring(modulePath.lastIndexOf("/") + 1)]: Java.type(javaTypePath)
                 }
             } catch (e) {
-                // Enhanced error reporting with more context
-                // Enhanced error reporting with more context
-                const errorMessage = `Failed to load Java type '${javaTypePath}' from module path '${modulePath}'`;
-                const suggestions = [];
-
-                if (javaTypePath.includes("..") || javaTypePath.startsWith(".") || javaTypePath.endsWith(".")) {
-                    suggestions.push("Check for invalid dots in class path");
-                }
-
-
-                const originalPath = modulePath.substring(prefix.length);
-                if (originalPath.toLowerCase() !== originalPath && originalPath.includes("/")) {
-                    suggestions.push("Ensure proper package/class name casing");
-                }
-
-                if (!javaTypePath.includes(".")) {
-                    suggestions.push("Missing package name? Try 'java.lang." + javaTypePath + "'");
-                }
-
-
-                const fullError = suggestions.length > 0
-                    ? `${errorMessage}. Suggestions: ${suggestions.join("; ")}. Original error: ${e.message}`
-                    : `${errorMessage}. Original error: ${e.message}`;
-
-                Client.displayChatMessage(fullError);
-                Client.displayChatMessage("Java exception details:", e);
-                throw new Error(fullError);
+                const errorMsg = `Cannot load Java type with require(${modulePath}): ${javaTypePath}`;
+                Client.displayChatMessage(errorMsg);
+                Client.displayChatMessage(`${e}`)
+                throw new Error(errorMsg);
             }
         }
 
