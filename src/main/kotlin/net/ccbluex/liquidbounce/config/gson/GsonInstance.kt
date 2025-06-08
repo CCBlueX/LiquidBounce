@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.*
 import net.ccbluex.liquidbounce.config.gson.serializer.*
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.*
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
-import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclusionStrategy
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -91,9 +91,9 @@ enum class GsonInstance(
  * A GSON instance which is used for local files.
  */
 val fileGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.FILE_SERIALIZER)
+    .registerTypeHierarchyAdapter(Configurable::class.java, ConfigurableSerializer.FILE_SERIALIZER)
     .create()
 
 /**
@@ -101,18 +101,18 @@ val fileGson: Gson = GsonBuilder()
  */
 val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.PUBLIC_SERIALIZER)
+    .registerTypeHierarchyAdapter(Configurable::class.java, ConfigurableSerializer.PUBLIC_SERIALIZER)
     .create()
 
 /**
  * This GSON instance is used for interop communication.
  */
 internal val interopGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(Configurable::class.java, ConfigurableSerializer.INTEROP_SERIALIZER)
     .create()
 
 /**
@@ -120,10 +120,10 @@ internal val interopGson: Gson = GsonBuilder()
  * and often comes with an easier syntax to use in other programming languages like JavaScript.
  */
 internal val accessibleInteropGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
-    .registerTypeHierarchyAdapter(Component::class.javaObjectType, ReadOnlyComponentSerializer)
+    .registerTypeHierarchyAdapter(Configurable::class.java, ConfigurableSerializer.INTEROP_SERIALIZER)
+    .registerTypeHierarchyAdapter(Component::class.java, ReadOnlyComponentSerializer)
     .create()
 
 /**
@@ -136,25 +136,25 @@ internal val accessibleInteropGson: Gson = GsonBuilder()
  * @see GsonBuilder.registerTypeAdapter
  */
 internal fun GsonBuilder.registerCommonTypeAdapters() =
-    registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
-        .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
-        .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
-        .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
-        .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
-        .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockAdapter)
-        .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
-        .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
-        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
-        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
-        .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
-        .registerTypeHierarchyAdapter(Text::class.javaObjectType, TextSerializer)
-        .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
-        .registerTypeAdapter(Session::class.javaObjectType, SessionSerializer)
-        .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
-        .registerTypeAdapter(GameMode::class.javaObjectType, GameModeSerializer)
-        .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
-        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierSerializer)
-        .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
-        .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
+    registerTypeHierarchyAdapter(ClosedRange::class.java, RangeAdapter)
+        .registerTypeHierarchyAdapter(IntRange::class.java, IntRangeAdapter)
+        .registerTypeHierarchyAdapter(Item::class.java, ItemAdapter)
+        .registerTypeHierarchyAdapter(Color4b::class.java, ColorAdapter)
+        .registerTypeHierarchyAdapter(Vec3d::class.java, Vec3dAdapter)
+        .registerTypeHierarchyAdapter(Vec3i::class.java, Vec3iAdapter)
+        .registerTypeHierarchyAdapter(Vec2f::class.java, Vec2fAdapter)
+        .registerTypeHierarchyAdapter(Block::class.java, BlockAdapter)
+        .registerTypeHierarchyAdapter(InputUtil.Key::class.java, InputUtilAdapter)
+        .registerTypeHierarchyAdapter(InputBind::class.java, InputBindAdapter)
+        .registerTypeAdapter(ChoiceConfigurable::class.java, ChoiceConfigurableSerializer)
+        .registerTypeHierarchyAdapter(NamedChoice::class.java, EnumChoiceSerializer)
+        .registerTypeHierarchyAdapter(MinecraftAccount::class.java, MinecraftAccountAdapter)
+        .registerTypeHierarchyAdapter(Text::class.java, TextSerializer)
+        .registerTypeHierarchyAdapter(Screen::class.java, ScreenSerializer)
+        .registerTypeAdapter(Session::class.java, SessionSerializer)
+        .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer)
+        .registerTypeAdapter(GameMode::class.java, GameModeSerializer)
+        .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer)
+        .registerTypeAdapter(Identifier::class.java, IdentifierSerializer)
+        .registerTypeAdapter(StatusEffectInstance::class.java, StatusEffectInstanceSerializer)
+        .registerTypeHierarchyAdapter(Supplier::class.java, SupplierSerializer)
