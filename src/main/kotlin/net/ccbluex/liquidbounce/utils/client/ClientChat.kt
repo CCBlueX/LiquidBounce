@@ -162,15 +162,9 @@ data class MessageMetadata(
     val count: Int = 1
 )
 
-/**
- * Adds a new chat message.
- */
-fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val literalText = if (metadata.prefix) clientPrefix.copy() else Text.literal("")
-    texts.forEach { literalText.append(it) }
-
+fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
     if (mc.player == null) {
-        logger.info("(Chat) ${literalText.convertToString()}")
+        logger.info("(Chat) ${text.convertToString()}")
         return
     }
 
@@ -180,7 +174,16 @@ fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata)
         chatHud.removeMessage(metadata.id)
     }
 
-    chatHud.addMessage(literalText, metadata.id, metadata.count)
+    chatHud.addMessage(text, metadata.id, metadata.count)
+}
+
+/**
+ * Adds a new chat message.
+ */
+fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+    val literalText = if (metadata.prefix) clientPrefix.copy() else Text.literal("")
+    texts.forEach { literalText.append(it) }
+    chat(literalText, metadata)
 }
 
 fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata(id = "M${module.name}#info"))

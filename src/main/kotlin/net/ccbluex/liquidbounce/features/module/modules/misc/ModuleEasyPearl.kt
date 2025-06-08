@@ -154,7 +154,7 @@ object ModuleEasyPearl :
                 val transparentColor = baseColor.with(a = 0)
                 val outlineColor = color.with(a = 200)
 
-                withPositionRelativeToCamera(pos.toBlockPos().toVec3d()) {
+                withPositionRelativeToCamera(blockPos.toVec3d()) {
                     if (state.renderType != BlockRenderType.MODEL && state.isAir) {
                         withColor(baseColor) {
                             drawSideBox(FULL_BOX, Direction.DOWN)
