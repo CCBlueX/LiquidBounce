@@ -35,7 +35,7 @@ import net.minecraft.util.Util
 import java.io.File
 
 // Chat formatting
-private val clientPrefix = Text.empty()
+private val clientPrefix: Text = Text.empty()
     .formatted(Formatting.RESET, Formatting.GRAY)
     .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
