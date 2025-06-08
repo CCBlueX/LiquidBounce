@@ -392,6 +392,7 @@
   "liquidbounce.unsupportedDeepLearning": "❌ The deep learning engine has not been initialized. Your system might not be supported.",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "The deep learning engine is required by Minarai, therefore falling back to %s angle smoothing.",
 
+  "liquidbounce.commandManager.commandExecuting": "Command \"%s\" is already executing, please wait...",
   "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s: %s",

@@ -94,8 +94,12 @@ object CommandExecutor : EventListener {
 
             override fun invoke(command: Command, args: Array<Any>) {
                 if (running) {
-                    // TODO: translation
-                    chat(markAsError("This command is already running, please wait..."), command)
+                    chat(
+                        markAsError(
+                            translation("liquidbounce.commandManager.commandExecuting", command.name)
+                        ),
+                        command
+                    )
                     return
                 }
 

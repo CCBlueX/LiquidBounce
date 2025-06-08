@@ -391,6 +391,7 @@
   "liquidbounce.unsupportedDeepLearning": "❌ 深度学习引擎尚未初始化。您的系统可能不受支持。",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai 需要深度学习引擎，因此会回退到 %s 角度平滑。",
 
+  "liquidbounce.commandManager.commandExecuting": "已经在执行命令 \"%s\"，请稍候…",
   "liquidbounce.commandManager.commandNotExecutable": "无法执行命令 \"%s\"。",
   "liquidbounce.commandManager.commandTakesNoParameters": "命令没有包含任何参数。",
   "liquidbounce.commandManager.exceptionOccurred": "无法执行命令。%s",
