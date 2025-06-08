@@ -22,10 +22,12 @@ import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -58,6 +60,7 @@ import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.convertToString(), cause)
@@ -104,9 +107,29 @@ object CommandExecutor : EventListener {
                 }
 
                 running = true
+                // Handler job
                 commandCoroutineScope.launch {
                     handler.invoke(command, args)
                 }.invokeOnCompletion { running = false }
+
+                // Progress message job
+                commandCoroutineScope.launch {
+                    val startAt = System.currentTimeMillis()
+                    var n = 0
+                    val chars = charArrayOf('|', '/', '-', '\\')
+                    while (running) {
+                        val duration = (System.currentTimeMillis() - startAt) / 1000
+                        val data = MessageMetadata(id = "CommandManager#progress", remove = true)
+                        val char = chars[n % chars.size]
+                        chat(
+                            "<$char> Executing command '${command.name}' (${duration}s)".asText(),
+                            metadata = data
+                        )
+                        n++
+                        delay(0.25.seconds)
+                    }
+                    mc.inGameHud.chatHud.removeMessage("CommandManager#progress")
+                }
             }
         })
     }
@@ -126,7 +149,7 @@ object CommandExecutor : EventListener {
      * Render thread scope
      */
     private val commandCoroutineScope = CoroutineScope(
-        mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler
+        mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
     )
 
     private fun handleExceptions(e: Throwable) {
