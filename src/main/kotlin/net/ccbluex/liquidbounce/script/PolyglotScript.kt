@@ -31,14 +31,7 @@ import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupC
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.underline
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.minecraft.text.ClickEvent
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -84,12 +77,15 @@ class PolyglotScript(
 
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(variable(devtoolURL)
-                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                    ))
-                                    .underline(true)
+                                .append(
+                                    variable(devtoolURL)
+                                        .copyable(
+                                            copyContent = devtoolURL, hover = HoverEvent(
+                                                HoverEvent.Action.SHOW_TEXT,
+                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                            )
+                                        )
+                                        .underline(true)
                                 )
                         )
                     }
@@ -127,7 +123,11 @@ class PolyglotScript(
         }
         .apply {
             if (language == "js") {
-                eval("js", resourceToString("/resources/liquidbounce/scriptapi/jvm-require.js"))
+                val jvmRequireUrl = this::class.java.getResource("/resources/liquidbounce/scriptapi/jvm-require.js")
+                    ?: throw IllegalStateException("jvm-require.js resource not found")
+
+                val jvmRequireSource = Source.newBuilder("js", jvmRequireUrl).build()
+                eval(jvmRequireSource)
             }
         }
 
