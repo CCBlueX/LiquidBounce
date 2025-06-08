@@ -68,15 +68,18 @@ object CommandDebug : CommandFactory {
         .suspendHandler { _, _ ->
             chat("§7Collecting debug information...")
 
-            val autoConfig = okio.Buffer().use {
-                serializeAutoConfig(it.outputStream().writer())
-                it.readUtf8()
-            }
-            val autoConfigPaste = uploadToPaste(autoConfig)
-            val debugJson = createDebugJson(autoConfigPaste)
+            val buffer = okio.Buffer()
 
-            val content = gson.toJson(debugJson)
+            serializeAutoConfig(buffer.outputStream().writer())
+            val autoConfig = buffer.readUtf8()
+            val autoConfigPaste = uploadToPaste(autoConfig)
+            buffer.clear()
+
+            val debugJson = createDebugJson(autoConfigPaste)
+            gson.toJson(debugJson, buffer.outputStream().writer())
+            val content = buffer.readUtf8()
             val paste = uploadToPaste(content)
+            buffer.clear()
 
             chat(
                 Text.literal("Debug information has been uploaded to: ").styled { style ->
