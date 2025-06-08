@@ -121,7 +121,9 @@ object CommandExecutor : EventListener {
     /**
      * Render thread scope
      */
-    private val commandCoroutineScope = CoroutineScope(mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler)
+    private val commandCoroutineScope = CoroutineScope(
+        mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler
+    )
 
     private fun handleExceptions(e: Throwable) {
         when (e) {
