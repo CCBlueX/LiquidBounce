@@ -296,6 +296,10 @@
   "liquidbounce.command.script.subcommand.unload.result.notFound": "名为 %s 的脚本不存在。",
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "名为 %s 的脚本没有被加载。",
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "已卸载名为 %s 的脚本。",
+  "liquidbounce.command.script.subcommand.debug.result.unloaded": "已卸载名为 %s 的脚本。",
+  "liquidbounce.command.script.subcommand.debug.result.alreadyLoaded": "已加载名为 %s 的脚本(调试)。",
+  "liquidbounce.command.script.subcommand.debug.result.failedToLoad": "无法加载名为 %s 的脚本(调试)。",
+  "liquidbounce.command.script.subcommand.debug.result.loaded": "已加载名为 %s 的脚本(调试)。",
   "liquidbounce.command.skull.description": "获得指定玩家的头颅。",
   "liquidbounce.command.skull.parameter.name.description": "玩家名字。",
   "liquidbounce.command.skull.result.mustBeCreative": "需要创造模式！",
@@ -365,7 +369,6 @@
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotFound": "未找到模块\"%s\"。",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotPresent": "模块\"%s\"未被添加。",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleRemoved": "已移除模块\"%s\"。",
-
   "liquidbounce.command.models.subcommand.create.result.modelExists": "❌ 模型%s已存在。",
   "liquidbounce.command.models.subcommand.create.result.trainingStart": "⚡ 开始训练模型%s…",
   "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ 已加载%s个样本，用时%s。",
@@ -374,7 +377,6 @@
   "liquidbounce.command.models.subcommand.create.result.trainingEnd": "✔ 模型%s训练完成并成功保存，用时%s。",
   "liquidbounce.command.models.subcommand.create.result.trainingFailed": "❌ 训练失败，错误信息：%s",
   "liquidbounce.command.models.subcommand.create.result.invalidName": "❌ 模型名称无效。模型名称必须为字母数字且不包含空格。",
-
   "liquidbounce.command.models.subcommand.improve.result.modelNotFound": "❌ 未找到模型%s。",
   "liquidbounce.command.models.subcommand.improve.result.trainingStart": "⚡ 开始训练模型%s…",
   "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ 未找到该型号的模型 %s.",
@@ -382,15 +384,11 @@
   "liquidbounce.command.models.subcommand.improve.result.preparedData": "✔ 已在%s内准备好数据集。",
   "liquidbounce.command.models.subcommand.improve.result.trainingEnd": "✔ 模型%s训练完成并成功保存，用时%s。",
   "liquidbounce.command.models.subcommand.improve.result.trainingFailed": "❌ 训练失败，错误信息：%s",
-
   "liquidbounce.command.models.subcommand.reload.result.modelsReloaded": "✔ 模型已重新加载。",
-
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ 未找到模型%s。",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ 模型%s已删除。",
-
   "liquidbounce.unsupportedDeepLearning": "❌ 深度学习引擎尚未初始化。您的系统可能不受支持。",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai 需要深度学习引擎，因此会回退到 %s 角度平滑。",
-
   "liquidbounce.commandManager.commandNotExecutable": "无法执行命令 \"%s\"。",
   "liquidbounce.commandManager.commandTakesNoParameters": "命令没有包含任何参数。",
   "liquidbounce.commandManager.exceptionOccurred": "无法执行命令。%s",

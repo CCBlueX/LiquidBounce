@@ -295,6 +295,10 @@
   "liquidbounce.command.script.subcommand.unload.result.notFound": "Script named %s does not exist.",
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "Script named %s is not loaded.",
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.script.subcommand.debug.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.script.subcommand.debug.result.alreadyLoaded": "Script named %s is already loaded with debug option enabled.",
+  "liquidbounce.command.script.subcommand.debug.result.failedToLoad": "Failed to load script with debug option enabled due to '%s'.",
+  "liquidbounce.command.script.subcommand.debug.result.loaded": "Script named %s has been loaded with debug option enabled.",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
   "liquidbounce.command.skull.parameter.name.description": "Name of the player.",
   "liquidbounce.command.skull.result.mustBeCreative": "Creative mode required!",
@@ -366,7 +370,6 @@
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotPresent": "Module \"%s\" is not present.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleRemoved": "Module \"%s\" has been removed.",
-
   "liquidbounce.command.models.subcommand.create.result.modelExists": "❌ Model %s already exists.",
   "liquidbounce.command.models.subcommand.create.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ Loaded %s samples in %s.",
@@ -375,7 +378,6 @@
   "liquidbounce.command.models.subcommand.create.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.create.result.trainingFailed": "❌ Training failed with error: %s",
   "liquidbounce.command.models.subcommand.create.result.invalidName": "❌ Invalid model name. Model name must be alphanumeric and contain no spaces.",
-
   "liquidbounce.command.models.subcommand.improve.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.improve.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ No samples found for model %s.",
@@ -383,15 +385,11 @@
   "liquidbounce.command.models.subcommand.improve.result.preparedData": "✔ Prepared dataset in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingFailed": "❌ Training failed with error: %s",
-
   "liquidbounce.command.models.subcommand.reload.result.modelsReloaded": "✔ Models reloaded.",
-
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ Model %s deleted.",
-
   "liquidbounce.unsupportedDeepLearning": "❌ The deep learning engine has not been initialized. Your system might not be supported.",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "The deep learning engine is required by Minarai, therefore falling back to %s angle smoothing.",
-
   "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s: %s",
