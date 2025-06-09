@@ -296,7 +296,7 @@
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "Script named %s is not loaded.",
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "Script named %s has been unloaded.",
   "liquidbounce.command.script.subcommand.debug.result.unloaded": "Script named %s has been unloaded.",
-  "liquidbounce.command.script.subcommand.debug.result.alreadyLoaded": "Script named %s is already loaded with debug option enabled.",
+  "liquidbounce.command.script.subcommand.debug.result.alreadyLoaded": "Script named %s is already loaded",
   "liquidbounce.command.script.subcommand.debug.result.failedToLoad": "Failed to load script with debug option enabled due to '%s'.",
   "liquidbounce.command.script.subcommand.debug.result.loaded": "Script named %s has been loaded with debug option enabled.",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
