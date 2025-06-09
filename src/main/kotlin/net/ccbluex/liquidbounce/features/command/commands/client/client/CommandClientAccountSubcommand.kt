@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.util.Util
 
 object CommandClientAccountSubcommand {
     fun accountCommand() = CommandBuilder.begin("account")
@@ -85,7 +85,7 @@ object CommandClientAccountSubcommand {
             }
 
             chat(regular("Starting OAuth authorization process..."))
-            val account = startAuth { Util.getOperatingSystem().open(it) }
+            val account = startAuth { browseUrl(it) }
             ClientAccountManager.clientAccount = account
             ConfigSystem.storeConfigurable(ClientAccountManager)
             chat(regular("Successfully authorized client."))
