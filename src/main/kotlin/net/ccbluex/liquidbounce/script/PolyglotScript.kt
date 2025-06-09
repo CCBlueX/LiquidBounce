@@ -124,7 +124,7 @@ class PolyglotScript(
         .apply {
             if (language == "js") {
                 val jvmRequireUrl = this::class.java.getResource("/resources/liquidbounce/scriptapi/jvm-require.js")
-                    ?: throw IllegalStateException("jvm-require.js resource not found")
+                    ?: error("jvm-require.js resource not found")
 
                 val jvmRequireSource = Source.newBuilder("js", jvmRequireUrl).build()
                 eval(jvmRequireSource)
