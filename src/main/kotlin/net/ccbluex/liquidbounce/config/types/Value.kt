@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
@@ -324,6 +326,15 @@ open class Value<T : Any>(
         requireNotNull(deserializer) { "Cannot deserialize values of type ${this.valueType} yet." }
 
         set(deserializer.deserializeThrowing(string) as T)
+    }
+
+    /**
+     * Converts the Value into a [StateFlow] for flow operations
+     */
+    fun asFlow(): StateFlow<T> {
+        val flow = MutableStateFlow(this.get())
+        this.onChanged { flow.value = it }
+        return flow
     }
 
 }
