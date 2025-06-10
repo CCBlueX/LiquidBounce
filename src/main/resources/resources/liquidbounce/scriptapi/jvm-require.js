@@ -40,7 +40,7 @@
             }
         }
 
-        // For non-Java modules, use the original require
+        // For non-Java modules, use the original require 
         return originalRequire(modulePath);
     };
 })();
