@@ -137,6 +137,15 @@ fun Response.toFile(file: File) = use { response ->
     file.sink().use(response.body.source()::readAll)
 }
 
+fun FormBody.Builder.addOptional(name: String, value: String?) =
+    if (value != null) add(name, value) else this
+
+fun FormBody.Builder.addEncodedOptional(name: String, value: String?) =
+    if (value != null) addEncoded(name, value) else this
+
+fun MultipartBody.Builder.addFormDataPartOptional(name: String, value: String?) =
+    if (value != null) addFormDataPart(name, value) else this
+
 fun JsonElement.toRequestBody(): RequestBody {
     return GsonInstance.ACCESSIBLE_INTEROP.gson.toJson(this)
         .toRequestBody(HttpClient.JSON_MEDIA_TYPE)

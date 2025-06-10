@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.api.thirdparty
 
 import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.addEncodedOptional
+import net.ccbluex.liquidbounce.api.core.addFormDataPartOptional
 import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -27,18 +29,14 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import org.apache.tika.Tika
 import java.io.File
 
-class LibreTranslateApi(baseUrl: String = "https://libretranslate.com") : BaseApi(baseUrl) {
+private val tika by lazy(::Tika)
 
-    private val tika by lazy(::Tika)
+const val LIBRE_TRANSLATE_BASE_URL = "https://libretranslate.com"
 
-    private fun FormBody.Builder.addOptional(name: String, value: String?) =
-        if (value != null) add(name, value) else this
-
-    private fun FormBody.Builder.addEncodedOptional(name: String, value: String?) =
-        if (value != null) addEncoded(name, value) else this
-
-    fun MultipartBody.Builder.addFormDataPartOptional(name: String, value: String?) =
-        if (value != null) addFormDataPart(name, value) else this
+/**
+ * [API Docs (Swagger)](https://libretranslate.com/docs/)
+ */
+class LibreTranslateApi(baseUrl: String = LIBRE_TRANSLATE_BASE_URL) : BaseApi(baseUrl) {
 
     suspend fun detect(
         text: String,
@@ -127,7 +125,7 @@ class LibreTranslateApi(baseUrl: String = "https://libretranslate.com") : BaseAp
     data class Language(
         val code: String,
         val name: String,
-        val targets: List<String>
+        val targets: Set<String>
     )
 
     data class TranslationResponse(
@@ -145,7 +143,7 @@ class LibreTranslateApi(baseUrl: String = "https://libretranslate.com") : BaseAp
         val keyRequired: Boolean,
         val language: LanguageSettings,
         val suggestions: Boolean,
-        val supportedFilesFormat: List<String>
+        val supportedFilesFormat: Set<String>
     )
 
     data class LanguageSettings(
