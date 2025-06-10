@@ -42,21 +42,27 @@ object ModuleLibreTranslate : ClientModule(
     aliases = arrayOf("Translate", "Translator")
 ) {
 
-    // TODO: debounce for onChanged
-
-    private var apiBaseUrl by text("ApiBaseUrl", default = LIBRE_TRANSLATE_BASE_URL)
+    private val apiBaseUrl by text("ApiBaseUrl", default = LIBRE_TRANSLATE_BASE_URL)
         .doNotIncludeAlways()
         .also { value ->
             withScope {
-                value.asFlow().debounce(1.seconds).collect {
-                    val client = LibreTranslateApi(it.trimEnd('/'))
+                value.asFlow().debounce(1.seconds).collect { url ->
+                    val client = LibreTranslateApi(url.trimEnd('/'))
                     try {
                         val languages = client.languages()
-                        logger.info(languages.toString())
                         this@ModuleLibreTranslate.client = client
-                        // TODO: success notification
+                        notification(
+                            title = "API loaded",
+                            message = "${languages.size} languages available on base URL $url",
+                            NotificationEvent.Severity.SUCCESS
+                        )
                     } catch (e: Exception) {
-                        // TODO: error notification
+                        notification(
+                            title = "Invalid API",
+                            message = "Failed to fetch languages from base URL $url!",
+                            NotificationEvent.Severity.ERROR
+                        )
+                        logger.error("Failed to fetch languages", e)
                     }
                 }
             }
@@ -68,7 +74,7 @@ object ModuleLibreTranslate : ClientModule(
 
     private val nullableApiKey get() = apiKey.takeIf { it.isNotEmpty() }
 
-    private var targetLanguage: String by text("TargetLanguage", default = "")
+    private val targetLanguage: String by text("TargetLanguage", default = "")
         .doNotIncludeAlways()
         .onChange(String::trim)
         .also { value ->
@@ -78,7 +84,6 @@ object ModuleLibreTranslate : ClientModule(
                     val languages = client.languages()
                     val language = languages.find { it.code == lang }
                     if (language == null) {
-                        targetLanguage = ""
                         notification("Invalid Language", "Language '$lang' is invalid.", NotificationEvent.Severity.ERROR)
                     } else {
                         notification(
