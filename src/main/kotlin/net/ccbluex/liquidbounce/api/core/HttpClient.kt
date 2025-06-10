@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.utils.io.asTexture
 import net.ccbluex.liquidbounce.utils.io.readNativeImage
-import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
 import okhttp3.*
