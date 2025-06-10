@@ -25,13 +25,14 @@ jobs:
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
 
-      - name: Setup and build
-        uses: gradle/gradle-build-action@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
         env:
-          CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          arguments: genSources build -x test -x detekt
+        run: ./gradlew genSources build -x test -x detekt
+        timeout-minutes: 20
 
       - name: Upload artifact
         run: |
@@ -87,12 +88,14 @@ jobs:
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
 
-      - name: Setup and build
-        uses: gradle/gradle-build-action@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
         env:
-          CI: true
-        with:
-          arguments: genSources build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew genSources
+        timeout-minutes: 20
 
       # Make sure we always run this upload task,
       # because the previous step may fail if there are findings.
