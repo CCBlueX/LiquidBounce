@@ -20,7 +20,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import net.ccbluex.liquidbounce.api.core.withScope
@@ -33,6 +32,12 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import kotlin.time.Duration.Companion.seconds
+
+enum class Translatable(override val choiceName: String) : NamedChoice {
+    CHAT_MESSAGE("ChatMessage"),
+    SUBTITLE("Subtitle"),
+    LIQUID_CHAT_MESSAGE("LiquidChatMessage"),
+}
 
 object ModuleLibreTranslate : ClientModule(
     "LibreTranslate",
@@ -99,15 +104,28 @@ object ModuleLibreTranslate : ClientModule(
 
     fun LibreTranslateApi.Language.readableString() = "'$name'($code)"
 
-    private var showSourceLanguage by boolean("ShowSourceLanguage", default = true).doNotIncludeAlways()
-
     private val autoTranslate by multiEnumChoice("AutoTranslate", default = Translatable.entries)
-    private enum class Translatable(override val choiceName: String) : NamedChoice {
-        CHAT_MESSAGES("ChatMessages"),
-        SUBTITLES("Subtitles"),
-        LIQUID_CHAT_MESSAGES("LiquidChatMessages"),
-    }
 
+    suspend fun translate(text: String, type: Translatable): LibreTranslateApi.TranslationResponse? {
+        if (!enabled || type !in autoTranslate || text.isBlank()) {
+            return null
+        }
+
+        val client = client ?: return null
+
+        val result = client.translate(
+            text,
+            sourceLanguage = "auto",
+            targetLanguage,
+            apiKey = nullableApiKey,
+        )
+
+        if (result.detectedLanguage!!.language == targetLanguage) {
+            return null
+        }
+
+        return result.takeIf { it.translatedText != text }
+    }
 
     @Volatile
     private var client: LibreTranslateApi? = null

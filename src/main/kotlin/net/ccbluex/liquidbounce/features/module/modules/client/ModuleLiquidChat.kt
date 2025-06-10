@@ -43,7 +43,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     private var jwtToken by text("JwtToken", "")
 
     private val chatClient = ChatClient()
-    private val prefix = Text.empty()
+    private val prefix: Text = Text.empty()
         .formatted(Formatting.RESET).formatted(Formatting.GRAY)
         .append(Text.literal(this.name).withColor(Formatting.BLUE))
         .formatted(Formatting.BOLD)
@@ -151,6 +151,11 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
                     .append(event.message.asText().formatted(Formatting.GRAY))
             )
         }
+
+//        withScope {
+//            "$->$: "
+//            val it = ModuleLibreTranslate.translate(event.message, Translatable.LIQUID_CHAT_MESSAGE)
+//        }
     }
 
     @Suppress("unused")

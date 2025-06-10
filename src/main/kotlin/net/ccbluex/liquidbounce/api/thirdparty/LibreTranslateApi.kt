@@ -129,7 +129,9 @@ class LibreTranslateApi(baseUrl: String = LIBRE_TRANSLATE_BASE_URL) : BaseApi(ba
     )
 
     data class TranslationResponse(
-        val translatedText: String
+        val translatedText: String,
+        val alternatives: List<String>?,
+        val detectedLanguage: DetectionResult?
     )
 
     data class FileTranslationResponse(
