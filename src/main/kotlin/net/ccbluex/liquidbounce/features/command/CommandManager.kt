@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -59,6 +60,7 @@ import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
@@ -89,49 +91,49 @@ object CommandExecutor : EventListener {
             }
         }
     } else {
-        this.handler(object : CommandHandler {
-            /**
-             * All invocations are from the render thread, so plain boolean is enough
-             */
-            private var running: Boolean = false
+        val running = AtomicBoolean(false)
+        this.handler { command, args ->
+            if (!running.compareAndSet(false, true)) {
+                chat(
+                    markAsError(
+                        translation("liquidbounce.commandManager.commandExecuting", command.name)
+                    ),
+                    command
+                )
+                return@handler
+            }
 
-            override fun invoke(command: Command, args: Array<Any>) {
-                if (running) {
+            // Progress message job
+            val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
+            val progressJob = commandCoroutineScope.launch {
+                val startAt = System.currentTimeMillis()
+                var n = 0
+                val chars = charArrayOf('|', '/', '-', '\\')
+                while (isActive) {
+                    val duration = (System.currentTimeMillis() - startAt) / 1000
+                    val char = chars[n % chars.size]
                     chat(
-                        markAsError(
-                            translation("liquidbounce.commandManager.commandExecuting", command.name)
-                        ),
-                        command
+                        regular("<$char> Executing command "),
+                        variable(command.name),
+                        regular(" ("),
+                        variable(duration.toString()),
+                        regular("s)"),
+                        metadata = progressMessageMetadata
                     )
-                    return
-                }
-
-                running = true
-                // Handler job
-                commandCoroutineScope.launch {
-                    handler.invoke(command, args)
-                }.invokeOnCompletion { running = false }
-
-                // Progress message job
-                commandCoroutineScope.launch {
-                    val startAt = System.currentTimeMillis()
-                    var n = 0
-                    val chars = charArrayOf('|', '/', '-', '\\')
-                    while (running) {
-                        val duration = (System.currentTimeMillis() - startAt) / 1000
-                        val data = MessageMetadata(id = "CommandManager#progress", remove = true)
-                        val char = chars[n % chars.size]
-                        chat(
-                            "<$char> Executing command '${command.name}' (${duration}s)".asText(),
-                            metadata = data
-                        )
-                        n++
-                        delay(0.25.seconds)
-                    }
-                    mc.inGameHud.chatHud.removeMessage("CommandManager#progress")
+                    n++
+                    delay(0.25.seconds)
                 }
             }
-        })
+
+            // Handler job
+            commandCoroutineScope.launch {
+                handler.invoke(command, args)
+            }.invokeOnCompletion {
+                running.set(false)
+                progressJob.cancel()
+                mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+            }
+        }
     }
 
     /**
