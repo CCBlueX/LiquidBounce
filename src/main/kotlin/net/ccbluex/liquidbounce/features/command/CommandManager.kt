@@ -110,6 +110,7 @@ object CommandExecutor : EventListener {
                 var n = 0
                 val chars = charArrayOf('|', '/', '-', '\\')
                 while (isActive) {
+                    delay(0.25.seconds)
                     val duration = (System.currentTimeMillis() - startAt) / 1000
                     val char = chars[n % chars.size]
                     chat(
@@ -121,7 +122,6 @@ object CommandExecutor : EventListener {
                         metadata = progressMessageMetadata
                     )
                     n++
-                    delay(0.25.seconds)
                 }
             }
 
