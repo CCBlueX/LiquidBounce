@@ -36,8 +36,8 @@ import java.io.File
 object CommandScript : CommandFactory {
 
     private val listFilesInScriptFolder = AutoCompletionProvider { prefix: String, _ ->
-        ScriptManager.root.listFiles().filter { it.name.startsWith(prefix) }
-            .map { it.name }
+        ScriptManager.root.listFiles()?.filter { it.name.startsWith(prefix) }
+            ?.map { it.name } ?: emptyList()
     }
 
     override fun createCommand(): Command {
