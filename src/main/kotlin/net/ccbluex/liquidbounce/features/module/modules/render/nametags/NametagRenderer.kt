@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormat
@@ -94,8 +93,8 @@ class NametagRenderer {
             NametagEnchantmentRenderer.drawEntityEnchantments(
                 env,
                 nametag.entity,
-                pos.x.toFloat(),
-                pos.y.toFloat(),
+                pos.x,
+                pos.y,
                 fontBuffers
             )
         }
@@ -121,7 +120,7 @@ class NametagRenderer {
         dc.matrices.translate(0.0F, 0.0F, 100.0F)
 
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
-        
+
         itemsToRender.forEachIndexed { index, itemStack ->
             itemStack ?: return@forEachIndexed
 

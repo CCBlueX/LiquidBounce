@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
+import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.minecraft.client.render.VertexFormats
@@ -34,37 +35,29 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
-import kotlin.math.ceil
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Renders item enchantments in nametags
  */
 object NametagEnchantmentRenderer {
 
-    //region Constants
     // Display settings
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
     private const val Y_OFFSET = -40f
-    
+
     // Layout dimensions
     private const val LINE_HEIGHT = 14f
     private const val COLUMN_SPACING = 20f
     private const val PADDING = 3f
     private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
     private const val VERTICAL_SPACING = 4f
-    
+
     // Colors
     private const val GROUP_BORDER_COLOR = 0xFFFF0000.toInt()
     private val BG_COLOR_NORMAL = Color4b(0, 0, 0, 180)
     private val BG_COLOR_CURSE = Color4b(100, 0, 0, 180)
-    //endregion
 
-    //region Data structures
-    private data class Rect(val x1: Float, val y1: Float, val x2: Float, val y2: Float)
-    
     /**
      * Class for storing enchantment cell information
      */
@@ -73,7 +66,7 @@ object NametagEnchantmentRenderer {
         val textWidth: Float,
         val isCurse: Boolean
     )
-    
+
     private val ENCHANTMENT_DATA = listOf(
         // Armor enchantments
         Enchantments.PROTECTION to "Pro",
@@ -88,7 +81,7 @@ object NametagEnchantmentRenderer {
         Enchantments.FROST_WALKER to "Fro",
         Enchantments.SOUL_SPEED to "Sou",
         Enchantments.SWIFT_SNEAK to "SwS",
-        
+
         // Weapon enchantments
         Enchantments.SHARPNESS to "Sha",
         Enchantments.SMITE to "Smi",
@@ -97,56 +90,54 @@ object NametagEnchantmentRenderer {
         Enchantments.FIRE_ASPECT to "Fir",
         Enchantments.LOOTING to "Loo",
         Enchantments.SWEEPING_EDGE to "Swe",
-        
+
         // Tool enchantments
         Enchantments.EFFICIENCY to "Eff",
         Enchantments.SILK_TOUCH to "Sil",
         Enchantments.UNBREAKING to "Unb",
         Enchantments.FORTUNE to "For",
         Enchantments.MENDING to "Men",
-        
+
         // Bow enchantments
         Enchantments.POWER to "Pow",
         Enchantments.PUNCH to "Pun",
         Enchantments.FLAME to "Fla",
         Enchantments.INFINITY to "Inf",
-        
+
         // Fishing rod enchantments
         Enchantments.LUCK_OF_THE_SEA to "Luc",
         Enchantments.LURE to "Lur",
-        
+
         // Trident enchantments
         Enchantments.LOYALTY to "Loy",
         Enchantments.IMPALING to "Imp",
         Enchantments.RIPTIDE to "Rip",
         Enchantments.CHANNELING to "Cha",
-        
+
         // Crossbow enchantments
         Enchantments.MULTISHOT to "Mul",
         Enchantments.QUICK_CHARGE to "QCh",
         Enchantments.PIERCING to "Pie",
-        
+
         // Curse enchantments
         Enchantments.BINDING_CURSE to "Cur",
         Enchantments.VANISHING_CURSE to "Van"
     )
-    //endregion
 
-    //region Public API
     /**
      * Renders item enchantments in nametag
      */
     fun drawEnchantments(
-        env: RenderEnvironment, 
-        itemStack: ItemStack, 
-        x: Float, 
-        y: Float, 
+        env: RenderEnvironment,
+        itemStack: ItemStack,
+        x: Float,
+        y: Float,
         fontRenderer: FontRendererBuffers
     ) {
-        itemStack.takeIf { 
-            !it.isEmpty && 
-            NametagShowOptions.ENCHANTMENTS.isShowing() && 
-            it.getEnchantmentCount() > 0 
+        itemStack.takeIf {
+            !it.isEmpty &&
+            NametagShowOptions.ENCHANTMENTS.isShowing() &&
+            it.getEnchantmentCount() > 0
         }?.let {
             processItemEnchantments(it)
                 .takeIf { cells -> cells.isNotEmpty() }
@@ -170,30 +161,28 @@ object NametagEnchantmentRenderer {
         fontRenderer: FontRendererBuffers
     ) {
         if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
-        
+
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
-        
+
         // Enable blending
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
-        
-        val columnData = itemsWithEnchantments.mapNotNull { item -> 
+
+        val columnData = itemsWithEnchantments.mapNotNull { item ->
             val cells = processItemEnchantments(item)
             if (cells.isEmpty()) return@mapNotNull null
-            
+
             val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
             val columnWidth = maxWidth * FIXED_SCALE + PADDING * 2
             cells to columnWidth
         }
-        
+
         if (columnData.isNotEmpty()) {
             drawEnchantmentColumns(env, x, y, fontRenderer, columnData)
         }
     }
-    //endregion
 
-    //region Data processing methods
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantments = ENCHANTMENT_DATA
             .mapNotNull { (enchantment, name) ->
@@ -201,26 +190,26 @@ object NametagEnchantmentRenderer {
                     name to level
                 }
             }
-            
+
         if (enchantments.isEmpty()) return emptyList()
-        
+
         val sortedEnchantments = enchantments.sortedByDescending { it.second }
         val hasMoreEnchantments = sortedEnchantments.size > MAX_ENCHANTMENTS_PER_ITEM
-        
+
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
             .map { (name, level) -> createCell(name, level) }
-        
+
         if (!hasMoreEnchantments || cells.isEmpty()) {
             return cells
         }
-        
+
         return cells.toMutableList().apply {
             removeAt(lastIndex)
             add(createCell(null, 0, true))
         }
     }
-    
+
     private fun getEntityItemsWithEnchantments(entity: LivingEntity) = mutableListOf(
         entity.mainHandStack,
         entity.offHandStack,
@@ -229,7 +218,7 @@ object NametagEnchantmentRenderer {
         entity.getEquippedStack(EquipmentSlot.LEGS),
         entity.getEquippedStack(EquipmentSlot.FEET)
     ).filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
-    
+
     /**
      * Creates a cell for display (enchantment or ellipsis)
      */
@@ -246,18 +235,16 @@ object NametagEnchantmentRenderer {
             }
             "${textColor}$name $level"
         }
-        
+
         val processedText = ModuleNametags.fontRenderer.process(text)
         val textWidth = ModuleNametags.fontRenderer.getStringWidth(processedText, false)
         return EnchantCell(
-            processedText, 
-            textWidth, 
+            processedText,
+            textWidth,
             !isEllipsis && (name == "Cur" || name == "Van")
         )
     }
-    //endregion
 
-    //region Rendering methods
     private fun renderEnchantmentColumn(
         env: RenderEnvironment,
         cells: List<EnchantCell>,
@@ -267,11 +254,11 @@ object NametagEnchantmentRenderer {
     ) {
         val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
         val cellWidth = maxWidth * FIXED_SCALE + PADDING * 2
-        
+
         cells.forEachIndexed { index, cell ->
             val cellX = x - cellWidth / 2
             val cellY = y + Y_OFFSET + index * (CELL_HEIGHT + VERTICAL_SPACING)
-            
+
             val rect = Rect(
                 cellX,
                 cellY,
@@ -279,12 +266,12 @@ object NametagEnchantmentRenderer {
                 cellY + CELL_HEIGHT
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
-            
+
             drawCellBackground(env, rect, bgColor)
-            
+
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
-            
+
             ModuleNametags.fontRenderer.draw(
                 cell.processedText,
                 textX,
@@ -294,10 +281,10 @@ object NametagEnchantmentRenderer {
                 scale = FIXED_SCALE
             )
         }
-        
+
         ModuleNametags.fontRenderer.commit(env, fontRenderer)
     }
-    
+
     private fun drawCellBackground(
         env: RenderEnvironment,
         rect: Rect,
@@ -315,7 +302,7 @@ object NametagEnchantmentRenderer {
             vertex(matrix, rect.x2, rect.y1, 0.0f).color(argb)
         }
     }
-    
+
     /**
      * Renders enchantment columns
      */
@@ -330,20 +317,20 @@ object NametagEnchantmentRenderer {
         val spacingWidth = (columnData.size - 1) * COLUMN_SPACING
         val totalWidth = columnsWidth + spacingWidth
         val halfTotalWidth = totalWidth / 2
-        
-        val maxColumnHeight = columnData.maxOfOrNull { (cells, _) -> 
-            cells.size * (CELL_HEIGHT + VERTICAL_SPACING) - VERTICAL_SPACING 
+
+        val maxColumnHeight = columnData.maxOfOrNull { (cells, _) ->
+            cells.size * (CELL_HEIGHT + VERTICAL_SPACING) - VERTICAL_SPACING
         } ?: 0f
-        
+
         val groupRect = Rect(
             x - halfTotalWidth - PADDING,
             y + Y_OFFSET - PADDING,
             x + halfTotalWidth + PADDING,
             y + Y_OFFSET + maxColumnHeight + PADDING
         )
-        
+
         drawGroupBorder(env, groupRect)
-        
+
         var columnX = x - halfTotalWidth
         columnData.forEach { (cells, columnWidth) ->
             val columnCenterX = columnX + columnWidth / 2
@@ -351,7 +338,7 @@ object NametagEnchantmentRenderer {
             columnX += columnWidth + COLUMN_SPACING
         }
     }
-    
+
     private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
         env.drawCustomMesh(
             DrawMode.DEBUG_LINES,
@@ -359,19 +346,18 @@ object NametagEnchantmentRenderer {
             ShaderProgramKeys.POSITION_COLOR
         ) { matrix ->
             val color = Color4b(GROUP_BORDER_COLOR, true).toARGB()
-            
+
             vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
             vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-            
+
             vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
             vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-            
+
             vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
             vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-            
+
             vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
             vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
         }
     }
-    //endregion
 }
