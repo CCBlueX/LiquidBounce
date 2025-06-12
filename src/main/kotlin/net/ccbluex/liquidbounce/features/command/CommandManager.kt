@@ -221,11 +221,10 @@ object CommandExecutor : EventListener {
             CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
         } catch (e: Throwable) {
             handleExceptions(e)
+        } finally {
+            it.cancelEvent()
         }
-
-        it.cancelEvent()
     }
-
 }
 
 private val commands = mutableListOf<Command>()
