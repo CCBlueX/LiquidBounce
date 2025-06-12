@@ -189,3 +189,5 @@ accessible field net/minecraft/client/render/RenderPhase LEQUAL_DEPTH_TEST Lnet/
 
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V
+
+accessible method net/minecraft/client/network/PlayerListEntry texturesSupplier (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;

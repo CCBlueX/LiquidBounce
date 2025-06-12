@@ -33,7 +33,7 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     companion object {
         val STRING_VALIDATOR: ParameterVerificator<String> = ParameterVerificator { sourceText ->
-            ParameterValidationResult.Ok(sourceText)
+            ParameterValidationResult.ok(sourceText)
         }
         val MODULE_VALIDATOR: ParameterVerificator<ClientModule> = ParameterVerificator { sourceText ->
             val mod = ModuleManager.find { it.name.equals(sourceText, true) }
@@ -66,12 +66,8 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         }
         val BOOLEAN_VALIDATOR: ParameterVerificator<Boolean> = ParameterVerificator { sourceText ->
             when (sourceText.lowercase()) {
-                "yes" -> ParameterValidationResult.ok(true)
-                "no" -> ParameterValidationResult.ok(false)
-                "true" -> ParameterValidationResult.ok(true)
-                "false" -> ParameterValidationResult.ok(false)
-                "on" -> ParameterValidationResult.ok(true)
-                "off" -> ParameterValidationResult.ok(false)
+                "yes", "on", "true" -> ParameterValidationResult.ok(true)
+                "no", "off", "false" -> ParameterValidationResult.ok(false)
                 else -> ParameterValidationResult.error("'$sourceText' is not a valid boolean")
             }
         }
@@ -79,16 +75,12 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         fun <T: Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
     }
 
-    fun verifiedBy(verifier: ParameterVerificator<T>): ParameterBuilder<T> {
+    fun verifiedBy(verifier: ParameterVerificator<T>): ParameterBuilder<T> = apply {
         this.verifier = verifier
-
-        return this
     }
 
-    fun optional(): ParameterBuilder<T> {
+    fun optional(): ParameterBuilder<T> = apply {
         this.required = false
-
-        return this
     }
 
     /**
@@ -98,30 +90,20 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
      *
      * Only allowed at the end.
      */
-    fun vararg(): ParameterBuilder<T> {
+    fun vararg(): ParameterBuilder<T> = apply {
         this.vararg = true
-
-        return this
     }
 
-    fun required(): ParameterBuilder<T> {
+    fun required(): ParameterBuilder<T> = apply {
         this.required = true
-
-        return this
     }
 
-    fun autocompletedWith(autocompletionHandler: AutoCompletionProvider): ParameterBuilder<T> {
+    fun autocompletedWith(autocompletionHandler: AutoCompletionProvider) = apply {
         this.autocompletionHandler = autocompletionHandler
-
-        return this
     }
 
-    fun useMinecraftAutoCompletion(): ParameterBuilder<T> {
-        autocompletionHandler = AutoCompletionProvider { begin, _ ->
-            mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
-        }
-
-        return this
+    fun useMinecraftAutoCompletion() = autocompletedWith { begin, _ ->
+        mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
 
     fun build(): Parameter<T> {

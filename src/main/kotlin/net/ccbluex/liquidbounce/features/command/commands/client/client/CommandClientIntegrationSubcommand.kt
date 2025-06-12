@@ -115,8 +115,6 @@ object CommandClientIntegrationSubcommand {
                 )
             }
 
-            chat(
-                variable("Hint: You can also access the integration from another device.")
-                    .styled { it.withItalic(true) })
+            chat(variable("Hint: You can also access the integration from another device.").italic(true))
         }.build()
 }

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 
 object CommandClientAppearanceSubcommand {
-    fun appereanceCommand() = CommandBuilder.begin("appearance")
+    fun appearanceCommand() = CommandBuilder.begin("appearance")
         .hub()
         .subcommand(hideSubcommand())
         .subcommand(showSubcommand())

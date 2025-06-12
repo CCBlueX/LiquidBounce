@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -140,34 +140,31 @@ object CommandConfig : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val name = args[0] as String
             val moduleNames = args.getOrNull(1) as String?
             val modules = ModuleManager.parseModulesFromParameter(moduleNames)
 
-            // Load the config in a separate thread to prevent the client from freezing
-            withScope {
-                runCatching {
-                    if (name.startsWith("http")) {
-                        // Load the config from the specified URL
-                        HttpClient.request(name, HttpMethod.GET).parse<Reader>()
-                    } else {
-                        // Get online config from API
-                        ClientApi.requestSettingsScript(name)
-                    }
-                }.onSuccess { sourceReader ->
-                    AutoConfig.withLoading {
-                        runCatching {
-                            AutoConfig.loadAutoConfig(sourceReader, modules)
-                        }.onFailure {
-                            chat(markAsError(command.result("failedToLoad", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("loaded", variable(name))))
-                        }
-                    }
-                }.onFailure { exception ->
-                    chat(markAsError(command.result("failedToLoad", variable(name))))
+            runCatching {
+                if (name.startsWith("http")) {
+                    // Load the config from the specified URL
+                    HttpClient.request(name, HttpMethod.GET).parse<Reader>()
+                } else {
+                    // Get online config from API
+                    ClientApi.requestSettingsScript(name)
                 }
+            }.onSuccess { sourceReader ->
+                AutoConfig.withLoading {
+                    runCatching {
+                        AutoConfig.loadAutoConfig(sourceReader, modules)
+                    }.onFailure {
+                        chat(markAsError(command.result("failedToLoad", variable(name))))
+                    }.onSuccess {
+                        chat(regular(command.result("loaded", variable(name))))
+                    }
+                }
+            }.onFailure { exception ->
+                chat(markAsError(command.result("failedToLoad", variable(name))))
             }
         }
         .build()

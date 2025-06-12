@@ -41,7 +41,7 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  *
  * Note: After writing to the outline framebuffer [markDirty] must be called.
  */
-@Nameable("worldRender")
+@Nameable("drawOutlines")
 class DrawOutlinesEvent(
     val matrixStack: MatrixStack,
     val camera: Camera,
