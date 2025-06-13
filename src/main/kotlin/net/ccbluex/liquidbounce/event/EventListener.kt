@@ -59,6 +59,7 @@ interface EventListener {
      */
     fun unregister() {
         EventManager.unregisterEventHandler(this)
+        removeEventListenerScope()
 
         for (child in children()) {
             child.unregister()

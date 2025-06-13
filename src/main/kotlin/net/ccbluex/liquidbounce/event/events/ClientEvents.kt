@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.event.events
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
@@ -130,12 +131,12 @@ class ClientChatStateChange(val state: State) : Event() {
 @Nameable("clientChatMessage")
 @WebSocketEvent
 class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
-    enum class ChatGroup {
+    enum class ChatGroup(override val choiceName: String) : NamedChoice {
         @SerializedName("public")
-        PUBLIC_CHAT,
+        PUBLIC_CHAT("PublicChat"),
 
         @SerializedName("private")
-        PRIVATE_CHAT
+        PRIVATE_CHAT("PrivateChat"),
     }
 }
 
