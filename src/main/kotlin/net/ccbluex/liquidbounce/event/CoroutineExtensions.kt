@@ -19,23 +19,21 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.coroutines.resume
 
 private val RenderThreadDispatcher = mc.asCoroutineDispatcher()
 
@@ -54,8 +52,13 @@ val EventListener.eventListenerScope: CoroutineScope
         CoroutineScope(
             RenderThreadDispatcher // Render thread
                 + SupervisorJob() // Prevent exception canceling
-                + EventListenerRunningContinuationInterceptor(it) // Auto cancel
+                + EventListenerRunningContinuationInterceptor(it) // Auto cancel jobs
                 + CoroutineName(it.toString()) // Name
+                + CoroutineExceptionHandler { ctx, throwable -> // logging
+                    if (throwable !is CancellationException) {
+                        logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                    }
+                }
         )
     }
 
@@ -112,6 +115,7 @@ private class EventListenerRunningContinuationInterceptor(
             if (!eventListener.running) {
                 val job = context[Job]
                 job?.cancel(EventListenerNotListeningException(eventListener))
+                // The scope won't be removed
                 return
             }
             continuation.resumeWith(result)
