@@ -68,10 +68,11 @@ object Parameters {
             }
         }
         .autocompletedWith { begin, _ ->
-            val indexOfComma = begin.lastIndexOf(',')
-            val prefix = begin.substring(0, indexOfComma)
+            val splitAt = begin.lastIndexOf(',') + 1
+            val prefix = begin.substring(0, splitAt)
+            val modulePrefix = begin.substring(splitAt)
             ModuleManager.filter {
-                it.name.startsWith(begin.substring(startIndex = indexOfComma + 1), true) && predicate(it)
+                it.name.startsWith(modulePrefix, true) && predicate(it)
             }.map {
                 prefix + it.name
             }

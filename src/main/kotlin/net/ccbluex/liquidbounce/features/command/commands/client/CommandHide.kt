@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -105,18 +106,19 @@ object CommandHide : CommandFactory {
     private fun unhideSubommand() = CommandBuilder
         .begin("unhide")
         .parameter(
-            moduleParameter(validator = ClientModule::hidden)
+            Parameters.modules { it.hidden }
                 .required()
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val module = ModuleManager.find { it.name.equals(name, true) }
-                ?: throw CommandException(command.result("moduleNotFound", name))
+            val modules = args[0] as Set<ClientModule>
+            modules.forEach { it.hidden = false }
 
-            module.hidden = false
             chat(
-                regular(command.result("moduleUnhidden", variable(module.name))),
+                command.result(
+                    "moduleUnhidden",
+                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                ),
                 metadata = MessageMetadata(id = "CHide#info")
             )
         }
@@ -125,18 +127,19 @@ object CommandHide : CommandFactory {
     private fun hideSubcommand() = CommandBuilder
         .begin("hide")
         .parameter(
-            moduleParameter { mod -> !mod.hidden }
+            Parameters.modules { !it.hidden }
                 .required()
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val module = ModuleManager.find { it.name.equals(name, true) }
-                ?: throw CommandException(command.result("moduleNotFound"))
+            val modules = args[0] as Set<ClientModule>
+            modules.forEach { it.hidden = true }
 
-            module.hidden = true
             chat(
-                command.result("moduleHidden", variable(module.name)),
+                command.result(
+                    "moduleHidden",
+                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                ),
                 metadata = MessageMetadata(id = "CHide#info")
             )
         }
