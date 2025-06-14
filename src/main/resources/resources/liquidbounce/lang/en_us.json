@@ -309,7 +309,6 @@
   "liquidbounce.command.toggle.parameter.name.description": "Name of the module.",
   "liquidbounce.command.toggle.result.disabled": "disabled",
   "liquidbounce.command.toggle.result.enabled": "enabled",
-  "liquidbounce.command.toggle.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.toggle.result.moduleToggled": "%s has been %s.",
   "liquidbounce.command.username.description": "Copies your username to the clipboard.",
   "liquidbounce.command.username.result.username": "Username: %s",
