@@ -54,7 +54,7 @@ object Parameters {
         }
 
     inline fun modules(
-        name: String = "modules", // TODO: replace i18n names
+        name: String = "modules",
         crossinline predicate: (ClientModule) -> Boolean = { true }
     ) = ParameterBuilder.begin<Set<ClientModule>>(name)
         .verifiedBy { sourceText ->
