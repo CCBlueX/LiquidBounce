@@ -239,9 +239,4 @@ open class ClientModule(
 
     fun message(key: String, vararg args: Any) = translation("$baseKey.messages.$key", args = args)
 
-    companion object {
-        @JvmField
-        val NAME_ORDER = compareBy(String.CASE_INSENSITIVE_ORDER, ClientModule::name)
-    }
-
 }

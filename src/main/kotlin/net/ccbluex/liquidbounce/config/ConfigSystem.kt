@@ -118,7 +118,7 @@ object ConfigSystem {
     /**
      * Create a ZIP file of root configurable files
      */
-    fun backup(fileName: String, configurables: List<Configurable> = this.configurables) {
+    fun backup(fileName: String, configurables: Collection<Configurable> = this.configurables) {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(!zipFile.exists()) { "Backup file already exists" }
 
@@ -310,11 +310,6 @@ object ConfigSystem {
         }.onFailure {
             logger.error("Unable to deserialize value ${value.name}", it)
         }
-    }
-
-    fun parseConfigurablesFromParameter(name: String?): List<Configurable> {
-        if (name == null) return emptyList()
-        return name.split(",").mapNotNull { getConfigurableByName(it) }
     }
 
     fun getConfigurableByName(name: String): Configurable? {

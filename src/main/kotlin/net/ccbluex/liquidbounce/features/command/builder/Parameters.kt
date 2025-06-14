@@ -23,6 +23,8 @@ package net.ccbluex.liquidbounce.features.command.builder
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -39,53 +41,73 @@ fun <T : Any> ParameterBuilder<T>.useMinecraftAutoCompletion() = autocompletedWi
 
 object Parameters {
 
-    inline fun module(
-        name: String = "module",
-        crossinline predicate: (ClientModule) -> Boolean = { true }
-    ) = ParameterBuilder.begin<ClientModule>(name)
+    private fun <V : Value<*>> value(
+        paramName: String,
+        typeName: String,
+        all: Iterable<V>,
+        predicate: (V) -> Boolean,
+    ) = ParameterBuilder.begin<V>(paramName)
         .verifiedBy { sourceText ->
-            val module = ModuleManager[sourceText]?.takeIf(predicate)
-            if (module == null) {
-                ParameterValidationResult.error("Module $sourceText not found")
+            val value = all.firstOrNull { v -> v.name.equals(sourceText, true) && predicate(v) }
+
+            if (value == null) {
+                ParameterValidationResult.error("'$sourceText' is not a valid $typeName")
             } else {
-                ParameterValidationResult.ok(module)
+                ParameterValidationResult.ok(value)
             }
         }
         .autocompletedWith { begin, _ ->
-            ModuleManager.filter {
+            all.filter {
                 it.name.startsWith(begin, true) && predicate(it)
             }.map {
                 it.name
             }
         }
 
-    inline fun modules(
-        name: String = "modules",
-        crossinline predicate: (ClientModule) -> Boolean = { true }
-    ) = ParameterBuilder.begin<Set<ClientModule>>(name)
+    private fun <V : Value<*>> values(
+        paramName: String,
+        typeName: String,
+        all: Iterable<V>,
+        predicate: (V) -> Boolean,
+    ) = ParameterBuilder.begin<Set<V>>(paramName)
         .verifiedBy { sourceText ->
-            val modules = sourceText.split(',').mapNotNullTo(sortedSetOf(ClientModule.NAME_ORDER)) {
-                ModuleManager[it]?.takeIf(predicate)
+            val values = sourceText.split(',').mapNotNullTo(sortedSetOf(VALUE_NAME_ORDER)) {
+                all.firstOrNull { v -> v.name.equals(it, true) && predicate(v) }
             }
-            if (modules.isEmpty()) {
-                ParameterValidationResult.error("$sourceText contains no valid module")
+            if (values.isEmpty()) {
+                ParameterValidationResult.error("'$sourceText' contains no valid $typeName")
             } else {
-                ParameterValidationResult.ok(modules)
+                ParameterValidationResult.ok(values)
             }
         }
         .autocompletedWith { begin, _ ->
             val splitAt = begin.lastIndexOf(',') + 1
             val prefix = begin.substring(0, splitAt)
             val modulePrefix = begin.substring(splitAt)
-            ModuleManager.filter {
+            all.filter {
                 it.name.startsWith(modulePrefix, true) && predicate(it)
             }.map {
                 prefix + it.name
             }
         }
 
+    fun module(
+        name: String = "module",
+        predicate: (ClientModule) -> Boolean = { true }
+    ) = value<ClientModule>(paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate)
+
+    fun modules(
+        name: String = "modules",
+        predicate: (ClientModule) -> Boolean = { true }
+    ) = values<ClientModule>(paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate)
+
+    fun configurables(
+        name: String = "configurables",
+        predicate: (Configurable) -> Boolean = { true }
+    ) = values<Configurable>(paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate)
+
     inline fun <reified T> enumChoices(
-        name: String = "enum"
+        name: String = "enums"
     ) where T : Enum<T>, T : NamedChoice = ParameterBuilder.begin<Set<T>>(name)
         .verifiedBy { sourceText ->
             val values = enumValues<T>()
@@ -193,28 +215,6 @@ fun valueTypeParameter(name: String = "value") = ParameterBuilder
         val options = value.valueType.completer.possible(value)
         options.filter { it.startsWith(begin, true) }
     }
-
-fun configurableParameter(
-    name: String = "configurable",
-    validator: (Configurable) -> Boolean = { true }
-): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { begin, _ ->
-            val parts = begin.split(",")
-            val matchingPrefix = parts.last()
-            val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
-            ConfigSystem.configurables.filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-                .map { configurable ->
-                    if (parts.size == 1) {
-                        configurable.name.lowercase()
-                    } else {
-                        resultPrefix + configurable.name.lowercase()
-                    }
-                }
-        }
-}
 
 fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
     return ParameterBuilder
