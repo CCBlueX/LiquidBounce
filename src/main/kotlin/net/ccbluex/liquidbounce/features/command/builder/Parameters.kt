@@ -90,17 +90,23 @@ object Parameters {
     fun module(
         name: String = "module",
         predicate: (ClientModule) -> Boolean = { true }
-    ) = value<ClientModule>(paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate)
+    ) = value<ClientModule>(
+        paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate
+    )
 
     fun modules(
         name: String = "modules",
         predicate: (ClientModule) -> Boolean = { true }
-    ) = values<ClientModule>(paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate)
+    ) = values<ClientModule>(
+        paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate
+    )
 
     fun configurables(
         name: String = "configurables",
         predicate: (Configurable) -> Boolean = { true }
-    ) = values<Configurable>(paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate)
+    ) = values<Configurable>(
+        paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate
+    )
 
     inline fun <reified T> enumChoices(
         name: String = "enums"
@@ -171,7 +177,7 @@ object Parameters {
         }
 
     fun page(
-        name: String = "page", // TODO: min, max, wrapped page query
+        name: String = "page",
     ) = ParameterBuilder.begin<Int>(name)
         .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
 
