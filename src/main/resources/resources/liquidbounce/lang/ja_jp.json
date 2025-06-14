@@ -134,7 +134,7 @@
 	"liquidbounce.command.hide.subcommand.list.parameter.page.description": "表示するページ",
 	"liquidbounce.command.hide.subcommand.list.result.hidden": "非表示",
 	"liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "隠しモジュールはありません。",
-	"liquidbounce.command.hide.subcommand.list.result.page": "ページ",
+    "liquidbounce.command.hide.subcommand.list.result.page": "ページ: %s",
 	"liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "入力したページ番号は利用可能なページ数を超えています。最大で %d ページにする必要があります。",
 	"liquidbounce.command.hide.subcommand.unhide.description": "モジュールを再表示します。",
 	"liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "モジュールの名前。",

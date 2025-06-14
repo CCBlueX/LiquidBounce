@@ -86,7 +86,7 @@
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Não tem modulos escondidos.",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "O numero se paginas colocado é muito alto, pode ser no maximo %d",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Escondido",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Pagina",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Pagina: %s",
   "liquidbounce.command.hide.subcommand.clear.description": "Faz todos os modulos viziveis.",
   "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Todos os modulos estão viziveis agora.",
   "liquidbounce.command.panic.description": "Desliga todos os modulos.",

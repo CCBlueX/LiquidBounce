@@ -164,7 +164,7 @@
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Seite zum Anzeigen",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Versteckt",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Es gibt keine versteckten Module.",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Seite",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Seite: %s",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Die von dir eingegebene Seitenzahl übersteigt die Anzahl der verfügbaren Seiten, sie darf höchstens %s betragen",
   "liquidbounce.command.hide.subcommand.unhide.description": "Blendet ein Modul ein.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Name des Moduls.",

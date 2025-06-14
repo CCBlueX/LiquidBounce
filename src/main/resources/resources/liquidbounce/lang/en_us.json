@@ -176,7 +176,7 @@
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Page to show",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Hidden",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "There are no hidden modules.",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Page",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Page: %s",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %s",
   "liquidbounce.command.hide.subcommand.unhide.description": "Unhides a module.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Name of the module.",

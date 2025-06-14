@@ -176,7 +176,7 @@
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "要显示的页数。",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "隐藏",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "没有隐藏的模块。",
-  "liquidbounce.command.hide.subcommand.list.result.page": "页数",
+  "liquidbounce.command.hide.subcommand.list.result.page": "页数: %s",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "你输入的页数过大，一共有 %d 页。",
   "liquidbounce.command.hide.subcommand.unhide.description": "显示一个模块。",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "模块名字。",

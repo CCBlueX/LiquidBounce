@@ -155,7 +155,7 @@
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Страница для показа",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Скрыт",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Нет скрытых модулей.",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Страница",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Страница: %s",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Введённый номер страницы превышает максимальное кол-во доступных страниц, максимальное кол-во страниц %d.",
   "liquidbounce.command.hide.subcommand.unhide.description": "Показывает модуль.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Имя модуля.",

@@ -166,7 +166,7 @@
     "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Pagina om te tonen.",
     "liquidbounce.command.hide.subcommand.list.result.hidden": "Verborgen",
     "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Er zijn geen verborgen modules.",
-    "liquidbounce.command.hide.subcommand.list.result.page": "Pagina",
+    "liquidbounce.command.hide.subcommand.list.result.page": "Pagina: %s",
     "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Het opgegeven paginanummer is groter dan %s",
     "liquidbounce.command.hide.subcommand.unhide.description": "Maakt een verborgen module weer zichtbaar.",
     "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Naam van de module.",

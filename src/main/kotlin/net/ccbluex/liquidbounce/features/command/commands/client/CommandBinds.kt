@@ -90,7 +90,7 @@ object CommandBinds : CommandFactory {
 
             // Print out bindings
             chat(
-                command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) },
+                command.result("bindings").bold(true).formatted(Formatting.RED),
                 metadata = data
             )
             chat(

@@ -166,7 +166,7 @@
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Gösterilecek sayfa",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Gizli",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Gizli modül yok.",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Sayfa",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Sayfa: %s",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Girdiğiniz sayfa numarası mevcut sayfa sayısını aşıyor, en fazla %s olabilir",
   "liquidbounce.command.hide.subcommand.unhide.description": "Bir modülü görünür yapar.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Modülün adı.",
@@ -664,5 +664,5 @@
   "liquidbounce.module.betterTab.description": "Sekme listesine çeşitli iyileştirmeler yapar.",
   "liquidbounce.module.autoPearl.description": "Bir düşmanın inci yoluna nişan alır ve inci atar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
-  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker.",
+  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker."
 }

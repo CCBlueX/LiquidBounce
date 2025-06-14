@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -42,7 +43,7 @@ object CommandHide : CommandFactory {
             .begin("hide")
             .hub()
             .subcommand(hideSubcommand())
-            .subcommand(unhideSubommand())
+            .subcommand(unhideSubcommand())
             .subcommand(listSubcommand())
             .subcommand(clearSubcommand())
             .build()
@@ -86,23 +87,39 @@ object CommandHide : CommandFactory {
                 throw CommandException(command.result("pageNumberTooLarge", maxPage))
             }
 
-            // Print out bindings
-            val bindingsOut = StringBuilder()
-            bindingsOut.append("§c§l${command.result("hidden")}\n")
-            bindingsOut.append("§7> ${command.result("page")}: §8$page / $maxPage\n")
+            mc.inGameHud.chatHud.removeMessage("Hide#global")
+            val data = MessageMetadata(id = "Hide#global", remove = false)
+
+            // Print out hidings
+            chat(
+                command.result("hidden").bold(true).formatted(Formatting.RED),
+                metadata = data
+            )
+
+            chat(
+                regular(command.result("page", variable("$page / $maxPage"))),
+                metadata = data
+            )
 
             val iterPage = 8 * page
             for (module in hiddenModules.subList(iterPage - 8, iterPage.coerceAtMost(hiddenModules.size))) {
-                bindingsOut.append("§6> §7${module.name} (§8§l${command.result("hidden")}§7)\n")
+                chat(
+                    "> ".asText()
+                        .styled { it.withColor(Formatting.GOLD) }
+                        .append(module.name + " (")
+                        .styled { it.withColor(Formatting.GRAY) }
+                        .append(
+                            command.result("hidden").formatted(Formatting.DARK_GRAY).bold(true)
+                        )
+                        .append(")")
+                        .styled { it.withColor(Formatting.GRAY) },
+                    metadata = data
+                )
             }
-            chat(
-                bindingsOut.toString().asText(),
-                metadata = MessageMetadata(id = "CHide#info")
-            )
         }
         .build()
 
-    private fun unhideSubommand() = CommandBuilder
+    private fun unhideSubcommand() = CommandBuilder
         .begin("unhide")
         .parameter(
             moduleParameter(validator = ClientModule::hidden)

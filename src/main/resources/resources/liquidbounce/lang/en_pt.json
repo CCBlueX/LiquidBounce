@@ -77,7 +77,7 @@
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Thewe awe nywo hidden mwoduwes two be shwown ＼(＾▽＾)／",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Teh page nyumbew u hawe entewed exceeds teh maximum nyumbew of availabwal pages UwU it may at mwost be %d (⌒ω⌒)",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Hidden",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Page",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Page: %s",
   "liquidbounce.command.hide.subcommand.clear.description": "Makes ewewwy mwoduwal visibwal",
   "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Successfuwwy unhidden aww mwoduwes (* ^ ω ^)",
   "liquidbounce.command.panic.description": "Tuwns off aww mwoduwes",

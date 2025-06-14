@@ -140,7 +140,7 @@
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Немає прихованих модулів.",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Введений Вами номер сторінки перевищує максимальне число доступних сторінок, максимальна кількість %d.",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Сховано",
-  "liquidbounce.command.hide.subcommand.list.result.page": "Сторінка",
+  "liquidbounce.command.hide.subcommand.list.result.page": "Сторінка: %s",
   "liquidbounce.command.hide.subcommand.clear.description": "Робить всі модулі знову видимими.",
   "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Всі модулі успішно показані.",
   "liquidbounce.command.panic.description": "Вимикає всі модулі.",
