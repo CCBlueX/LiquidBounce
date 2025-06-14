@@ -121,20 +121,13 @@ object Parameters {
             }
         }
         .autocompletedWith { begin, _ ->
-            val parts = begin.split(",")
-            val matchingPrefix = parts.last().trim()
-            val resultPrefix = if (parts.size > 1) parts.subList(0, parts.size - 1).joinToString(",") + "," else ""
-
-            val suggestions = enumValues<T>()
-                .map { it.choiceName }
-                .filter { it.startsWith(matchingPrefix, ignoreCase = true) }
-
-            suggestions.map {
-                if (resultPrefix.isNotEmpty()) {
-                    resultPrefix + it
-                } else {
-                    it
-                }
+            val splitAt = begin.lastIndexOf(',') + 1
+            val prefix = begin.substring(0, splitAt)
+            val modulePrefix = begin.substring(splitAt)
+            enumValues<T>().filter {
+                it.choiceName.startsWith(modulePrefix, true)
+            }.map {
+                prefix + it.choiceName
             }
         }
 }
