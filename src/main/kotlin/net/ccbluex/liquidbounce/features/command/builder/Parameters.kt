@@ -23,11 +23,60 @@ package net.ccbluex.liquidbounce.features.command.builder
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
+import kotlin.collections.filter
+
+object Parameters {
+
+    inline fun module(
+        name: String = "module",
+        crossinline predicate: (ClientModule) -> Boolean = { true }
+    ) = ParameterBuilder.begin<ClientModule>(name)
+        .verifiedBy { sourceText ->
+            val module = ModuleManager[sourceText]?.takeIf(predicate)
+            if (module == null) {
+                ParameterValidationResult.error("Module $sourceText not found")
+            } else {
+                ParameterValidationResult.ok(module)
+            }
+        }
+        .autocompletedWith { begin, _ ->
+            ModuleManager.filter {
+                it.name.startsWith(begin, true) && predicate(it)
+            }.map {
+                it.name
+            }
+        }
+
+    inline fun modules(
+        name: String = "modules", // TODO: replace i18n names
+        crossinline predicate: (ClientModule) -> Boolean = { true }
+    ) = ParameterBuilder.begin<Set<ClientModule>>(name)
+        .verifiedBy { sourceText ->
+            val modules = sourceText.split(',').mapNotNullTo(sortedSetOf(ClientModule.NAME_ORDER)) {
+                ModuleManager[it]?.takeIf(predicate)
+            }
+            if (modules.isEmpty()) {
+                ParameterValidationResult.error("$sourceText contains no valid module")
+            } else {
+                ParameterValidationResult.ok(modules)
+            }
+        }
+        .autocompletedWith { begin, _ ->
+            val indexOfComma = begin.lastIndexOf(',')
+            val prefix = begin.substring(0, indexOfComma)
+            ModuleManager.filter {
+                it.name.startsWith(begin.substring(startIndex = indexOfComma + 1), true) && predicate(it)
+            }.map {
+                prefix + it.name
+            }
+        }
+}
 
 fun blockParameter(name: String = "block"): ParameterBuilder<String> {
     return ParameterBuilder

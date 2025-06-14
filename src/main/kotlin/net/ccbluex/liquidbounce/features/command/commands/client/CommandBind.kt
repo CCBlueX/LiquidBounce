@@ -19,12 +19,11 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
@@ -40,7 +39,7 @@ object CommandBind : CommandFactory {
         return CommandBuilder
             .begin("bind")
             .parameter(
-                moduleParameter()
+                Parameters.module()
                     .required()
                     .build()
             ).parameter(
@@ -52,11 +51,8 @@ object CommandBind : CommandFactory {
                     .build()
             )
             .handler { command, args ->
-                val name = args[0] as String
+                val module = args[0] as ClientModule
                 val keyName = args[1] as String
-
-                val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException(command.result("moduleNotFound", name))
 
                 if (keyName.equals("none", true)) {
                     module.bind.unbind()

@@ -11,7 +11,7 @@ class ScriptParameterValidator(val bindings: Value) {
 
     private fun map(param: String, validator: ParameterVerificator<*>): Value {
         val v = when (val result = validator.verifyAndParse(param)) {
-            is ParameterValidationResult.Ok -> mapOf("accept" to true, "value" to result.mappedResult!!)
+            is ParameterValidationResult.Ok -> mapOf("accept" to true, "value" to result.mappedResult)
             is ParameterValidationResult.Error -> mapOf("accept" to false, "error" to result.errorMessage)
         }
 

@@ -12,7 +12,6 @@
   "liquidbounce.command.binds.subcommand.add.parameter.key.description": "Key to which the module should be bound.",
   "liquidbounce.command.binds.subcommand.add.parameter.name.description": "Name of the module.",
   "liquidbounce.command.binds.subcommand.add.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
-  "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.binds.subcommand.add.result.unknownKey": "Unknown key.",
   "liquidbounce.command.binds.subcommand.clear.description": "Clears all binds.",
   "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "Cleared all binds.",
