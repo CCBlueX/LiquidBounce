@@ -442,25 +442,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         modules.clear()
     }
 
-    inline fun autoComplete(begin: String, validator: (ClientModule) -> Boolean = { true }): List<String> {
-        val parts = begin.split(",")
-        val matchingPrefix = parts.last()
-        val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
-        return filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-            .map {
-                if (parts.size == 1) {
-                    it.name
-                } else {
-                    resultPrefix + it.name
-                }
-            }
-    }
-
-    fun parseModulesFromParameter(name: String?): List<ClientModule> {
-        if (name == null) return emptyList()
-        return name.split(",").mapNotNull { getModuleByName(it) }
-    }
-
     /**
      * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
      */
