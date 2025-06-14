@@ -23,8 +23,9 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.utils.client.*
@@ -154,20 +155,20 @@ object CommandAutoDisable : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            moduleParameter()
+            Parameters.modules()
                 .required()
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val module = ModuleManager.find { it.name.equals(name, true) }
-                ?: throw CommandException(command.result("moduleNotFound", name))
+            val modules = args[0] as Set<ClientModule>
 
-            if (!ModuleAutoDisable.listOfModules.add(module)) {
-                throw CommandException(command.result("moduleIsPresent", name))
+            modules.forEach { module ->
+                if (!ModuleAutoDisable.listOfModules.add(module)) {
+                    throw CommandException(command.result("moduleIsPresent", module.name))
+                }
+
+                chat(regular(command.result("moduleAdded", variable(module.name))), command)
             }
-
-            chat(regular(command.result("moduleAdded", variable(module.name))), command)
         }
         .build()
 

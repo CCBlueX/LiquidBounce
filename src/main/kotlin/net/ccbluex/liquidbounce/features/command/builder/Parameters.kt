@@ -123,16 +123,6 @@ fun pageParameter(name: String = "page"): ParameterBuilder<Int> {
         .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
 }
 
-fun moduleParameter(
-    name: String = "module",
-    validator: (ClientModule) -> Boolean = { true }
-): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin, validator = validator) }
-}
-
 fun valueNameParameter(name: String = "valueName") = ParameterBuilder
     .begin<String>(name)
     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)

@@ -103,7 +103,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         reader: Reader,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         JsonParser.parseReader(publicGson.newJsonReader(reader))?.let { jsonElement ->
             loadAutoConfig(jsonElement.asJsonObject, modules)
@@ -119,7 +119,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
         chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
@@ -304,7 +304,7 @@ object AutoConfig {
      */
     private fun deserializeModuleConfigurable(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         // Deserialize full module configurable
         if (modules.isEmpty()) {
