@@ -22,8 +22,6 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.Parameters
-import net.ccbluex.liquidbounce.features.command.builder.valueNameParameter
-import net.ccbluex.liquidbounce.features.command.builder.valueTypeParameter
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -55,12 +53,12 @@ object CommandValue : CommandFactory {
                 .build()
         )
         .parameter(
-            valueNameParameter()
+            Parameters.valueName()
                 .required()
                 .build()
         )
         .parameter(
-            valueTypeParameter()
+            Parameters.valueType()
                 .required()
                 .build()
         )
@@ -96,7 +94,7 @@ object CommandValue : CommandFactory {
                 .build()
         )
         .parameter(
-            valueNameParameter()
+            Parameters.valueName()
                 .required()
                 .build()
         )

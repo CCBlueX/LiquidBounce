@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.gui.screen.ChatScreen
@@ -44,7 +44,7 @@ object CommandHelp : CommandFactory {
         return CommandBuilder
             .begin("help")
             .parameter(
-                pageParameter()
+                Parameters.page()
                     .optional()
                     .build()
             )

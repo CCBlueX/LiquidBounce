@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.Parameters
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -66,7 +65,7 @@ object CommandBinds : CommandFactory {
     private fun listSubcommand() = CommandBuilder
         .begin("list")
         .parameter(
-            pageParameter()
+            Parameters.page()
                 .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                 .optional()
                 .build()

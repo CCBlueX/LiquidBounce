@@ -23,8 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.blockParameter
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.registry.Registries
@@ -79,7 +78,7 @@ object CommandXRay : CommandFactory {
     private fun listSubcommand() = CommandBuilder
         .begin("list")
         .parameter(
-            pageParameter()
+            Parameters.page()
                 .optional()
                 .build()
         )
@@ -141,7 +140,7 @@ object CommandXRay : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            blockParameter()
+            Parameters.block()
                 .required()
                 .build()
         )
@@ -168,7 +167,7 @@ object CommandXRay : CommandFactory {
     private fun andSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            blockParameter()
+            Parameters.block()
                 .required()
                 .build()
         )

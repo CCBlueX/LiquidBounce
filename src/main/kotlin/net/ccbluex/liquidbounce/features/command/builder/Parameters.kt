@@ -35,10 +35,6 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
 import kotlin.text.startsWith
 
-fun <T : Any> ParameterBuilder<T>.useMinecraftAutoCompletion() = autocompletedWith { begin, _ ->
-    mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
-}
-
 object Parameters {
 
     private fun <V : Value<*>> value(
@@ -130,11 +126,20 @@ object Parameters {
                 prefix + it.choiceName
             }
         }
-}
 
-fun blockParameter(name: String = "block"): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
+    fun enchantment(
+        name: String = "enchantment",
+    ) = ParameterBuilder.begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, _ ->
+            world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map {
+                it.idAsString
+            }.filter { it.startsWith(begin, ignoreCase = true) }
+        }
+
+    fun block(
+        name: String = "block",
+    ) = ParameterBuilder.begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
         .autocompletedWith { _, _ ->
             Registries.BLOCK.map {
@@ -143,11 +148,10 @@ fun blockParameter(name: String = "block"): ParameterBuilder<String> {
                     .replace('.', ':')
             }
         }
-}
 
-fun itemParameter(name: String = "item"): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
+    fun item(
+        name: String = "item",
+    ) = ParameterBuilder.begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
         .autocompletedWith { _, _ ->
             Registries.ITEM.map {
@@ -157,62 +161,52 @@ fun itemParameter(name: String = "item"): ParameterBuilder<String> {
                     .replace('.', ':')
             }
         }
-}
 
-fun enchantmentParameter(name: String = "enchantment"): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
+    fun playerName(
+        name: String = "playerName",
+    ) = ParameterBuilder.begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { _, _ ->
-            world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map {
-                it.idAsString
-            }
+        .autocompletedWith { begin, _ ->
+            mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
+        }
+
+    fun page(
+        name: String = "page", // TODO: min, max, wrapped page query
+    ) = ParameterBuilder.begin<Int>(name)
+        .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+
+    fun valueName(
+        name: String = "valueName",
+    ) = ParameterBuilder.begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, args ->
+            val moduleName = args[2]
+            val module = ModuleManager.find { module -> module.name.equals(moduleName, true) }
+                ?: return@autocompletedWith emptyList()
+
+            module.getContainedValuesRecursively()
+                .filter { !it.name.equals("Bind", true) }
+                .map { it.name }
+                .filter { it.startsWith(begin, true) }
+        }
+
+    fun valueType(
+        name: String = "value",
+    ) = ParameterBuilder.begin<String>(name)
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith { begin, args ->
+            val moduleName = args[2]
+            val module = ModuleManager.find {
+                it.name.equals(moduleName, true)
+            } ?: return@autocompletedWith emptyList()
+
+            val valueName = args[3]
+
+            val value = module.getContainedValuesRecursively().firstOrNull {
+                it.name.equals(valueName, true)
+            } ?: return@autocompletedWith emptyList()
+
+            val options = value.valueType.completer.possible(value)
+            options.filter { it.startsWith(begin, true) }
         }
 }
-
-fun pageParameter(name: String = "page"): ParameterBuilder<Int> {
-    return ParameterBuilder
-        .begin<Int>(name)
-        .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
-}
-
-fun valueNameParameter(name: String = "valueName") = ParameterBuilder
-    .begin<String>(name)
-    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-    .autocompletedWith { begin, args ->
-        val moduleName = args[2]
-        val module = ModuleManager.find { module -> module.name.equals(moduleName, true) }
-            ?: return@autocompletedWith emptyList()
-
-        val values = module.getContainedValuesRecursively()
-            .filter { !it.name.equals("Bind", true) }
-            .map { it.name }
-        values.filter { it.startsWith(begin, true) }
-    }
-
-fun valueTypeParameter(name: String = "value") = ParameterBuilder
-    .begin<String>(name)
-    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-    .autocompletedWith { begin, args ->
-        val moduleName = args[2]
-        val module = ModuleManager.find {
-            it.name.equals(moduleName, true)
-        } ?: return@autocompletedWith emptyList()
-
-        val valueName = args[3]
-
-        val value = module.getContainedValuesRecursively().firstOrNull {
-            it.name.equals(valueName, true)
-        } ?: return@autocompletedWith emptyList()
-
-        val options = value.valueType.completer.possible(value)
-        options.filter { it.startsWith(begin, true) }
-    }
-
-fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
-    return ParameterBuilder
-        .begin<String>(name)
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .useMinecraftAutoCompletion()
-}
-
