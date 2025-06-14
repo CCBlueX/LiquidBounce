@@ -312,20 +312,6 @@ object ConfigSystem {
         }
     }
 
-    inline fun autoComplete(begin: String, validator: (Configurable) -> Boolean = { true }): List<String> {
-        val parts = begin.split(",")
-        val matchingPrefix = parts.last()
-        val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
-        return configurables.filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-            .map { configurable ->
-                if (parts.size == 1) {
-                    configurable.name.lowercase()
-                } else {
-                    resultPrefix + configurable.name.lowercase()
-                }
-            }
-    }
-
     fun parseConfigurablesFromParameter(name: String?): List<Configurable> {
         if (name == null) return emptyList()
         return name.split(",").mapNotNull { getConfigurableByName(it) }

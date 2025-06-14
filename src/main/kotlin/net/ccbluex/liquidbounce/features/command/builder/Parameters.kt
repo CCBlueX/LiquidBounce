@@ -26,10 +26,16 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
-import kotlin.collections.filter
+import kotlin.text.startsWith
+
+fun <T : Any> ParameterBuilder<T>.useMinecraftAutoCompletion() = autocompletedWith { begin, _ ->
+    mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
+}
 
 object Parameters {
 
@@ -75,6 +81,38 @@ object Parameters {
                 it.name.startsWith(modulePrefix, true) && predicate(it)
             }.map {
                 prefix + it.name
+            }
+        }
+
+    inline fun <reified T> enumChoices(
+        name: String = "enum"
+    ) where T : Enum<T>, T : NamedChoice = ParameterBuilder.begin<Set<T>>(name)
+        .verifiedBy { sourceText ->
+            val values = enumValues<T>()
+            val choices = sourceText.split(',').mapNotNullTo(emptyEnumSet<T>()) {
+                values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
+            }
+            if (choices.isEmpty()) {
+                ParameterValidationResult.error("$sourceText contains no valid choice")
+            } else {
+                ParameterValidationResult.ok(choices)
+            }
+        }
+        .autocompletedWith { begin, _ ->
+            val parts = begin.split(",")
+            val matchingPrefix = parts.last().trim()
+            val resultPrefix = if (parts.size > 1) parts.subList(0, parts.size - 1).joinToString(",") + "," else ""
+
+            val suggestions = enumValues<T>()
+                .map { it.choiceName }
+                .filter { it.startsWith(matchingPrefix, ignoreCase = true) }
+
+            suggestions.map {
+                if (resultPrefix.isNotEmpty()) {
+                    resultPrefix + it
+                } else {
+                    it
+                }
             }
         }
 }
@@ -163,7 +201,19 @@ fun configurableParameter(
     return ParameterBuilder
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { begin, _ -> ConfigSystem.autoComplete(begin, validator = validator) }
+        .autocompletedWith { begin, _ ->
+            val parts = begin.split(",")
+            val matchingPrefix = parts.last()
+            val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
+            ConfigSystem.configurables.filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
+                .map { configurable ->
+                    if (parts.size == 1) {
+                        configurable.name.lowercase()
+                    } else {
+                        resultPrefix + configurable.name.lowercase()
+                    }
+                }
+        }
 }
 
 fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
@@ -173,37 +223,3 @@ fun playerParameter(name: String = "playerName"): ParameterBuilder<String> {
         .useMinecraftAutoCompletion()
 }
 
-inline fun <reified T> enumsParameter(
-    name: String = "enum"
-): ParameterBuilder<String> where T : Enum<*>, T : NamedChoice {
-    return ParameterBuilder
-        .begin<String>(name)
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { begin, _ ->
-            val parts = begin.split(",")
-            val matchingPrefix = parts.last().trim()
-            val resultPrefix = if (parts.size > 1) parts.subList(0, parts.size - 1).joinToString(",") + "," else ""
-
-            val suggestions = T::class.java.enumConstants
-                .toList()
-                .map { (it as NamedChoice).choiceName }
-                .filter { it.startsWith(matchingPrefix, ignoreCase = true) }
-
-            suggestions.map {
-                if (resultPrefix.isNotEmpty()) {
-                    resultPrefix + it
-                } else {
-                    it
-                }
-            }
-        }
-}
-
-inline fun <reified T> parseEnumsFromParameter(
-    name: String?,
-): List<T> where T : Enum<T>, T : NamedChoice {
-    if (name == null) return emptyList()
-    return name.split(",").mapNotNull { enumName ->
-        enumValues<T>().firstOrNull { it.choiceName.equals(enumName.trim(), ignoreCase = true) }
-    }
-}

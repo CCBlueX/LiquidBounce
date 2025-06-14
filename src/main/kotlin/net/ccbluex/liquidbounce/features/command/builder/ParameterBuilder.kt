@@ -102,10 +102,6 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         this.autocompletionHandler = autocompletionHandler
     }
 
-    fun useMinecraftAutoCompletion() = autocompletedWith { begin, _ ->
-        mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
-    }
-
     fun build(): Parameter<T> {
         return Parameter(
             this.name,
