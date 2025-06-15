@@ -71,7 +71,7 @@ inline fun <reified T : Event> EventListener.suspendHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     priority: Short = 0,
     crossinline handler: suspend CoroutineScope.(T) -> Unit
-): EventHook<T> = handler<T>(priority) { event ->
+) = handler<T>(priority) { event ->
     eventListenerScope.launch(context) {
         handler(event)
     }
