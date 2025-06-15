@@ -55,22 +55,21 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
     }
 
     private val circles = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
-    private val particles = mutableListOf<Particle>()
+    private val particles = ArrayList<Particle>()
 
     init {
         tree(JumpParticles)
     }
 
     val repeatable = tickHandler {
-        val iterator = circles.iterator()
-        while (iterator.hasNext()) {
-            val pair = iterator.next()
+        circles.removeIf { pair ->
             val newValue = pair.valueLong() + 1L
             if (newValue >= lifetime) {
-                iterator.remove()
-                continue
+                true
+            } else {
+                pair.value(newValue)
+                false
             }
-            pair.value(newValue)
         }
     }
 
@@ -115,8 +114,13 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
                 RenderSystem.defaultBlendFunc()
 
                 particles.removeIf { particle ->
-                    val remove = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
-                    if (!remove) {
+                    val currentTime = System.currentTimeMillis()
+                    val ageSeconds = (currentTime - particle.spawnTime) / 1000f
+                    val expired = ageSeconds > JumpParticles.particleLifetime
+                    val outOfRange = player.pos.distanceTo(particle.pos) > 30
+                    val transparent = particle.alpha <= 0
+
+                    if (!(expired || outOfRange || transparent)) {
                         particle.update(event.partialTicks.toDouble())
                         mc.cameraEntity?.let { camera ->
                             if (canSeePointFrom(camera.eyePos, particle.pos)) {
@@ -127,7 +131,8 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
                             }
                         }
                     }
-                    remove
+
+                    expired || outOfRange || transparent
                 }
 
                 RenderSystem.depthMask(true)
