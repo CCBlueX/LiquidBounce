@@ -370,6 +370,7 @@
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotPresent": "Module \"%s\" is not present.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleRemoved": "Module \"%s\" has been removed.",
+
   "liquidbounce.command.models.subcommand.create.result.modelExists": "❌ Model %s already exists.",
   "liquidbounce.command.models.subcommand.create.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ Loaded %s samples in %s.",
@@ -378,6 +379,7 @@
   "liquidbounce.command.models.subcommand.create.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.create.result.trainingFailed": "❌ Training failed with error: %s",
   "liquidbounce.command.models.subcommand.create.result.invalidName": "❌ Invalid model name. Model name must be alphanumeric and contain no spaces.",
+
   "liquidbounce.command.models.subcommand.improve.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.improve.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ No samples found for model %s.",
@@ -385,11 +387,16 @@
   "liquidbounce.command.models.subcommand.improve.result.preparedData": "✔ Prepared dataset in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingFailed": "❌ Training failed with error: %s",
+
   "liquidbounce.command.models.subcommand.reload.result.modelsReloaded": "✔ Models reloaded.",
+
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ Model %s deleted.",
+
   "liquidbounce.unsupportedDeepLearning": "❌ The deep learning engine has not been initialized. Your system might not be supported.",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "The deep learning engine is required by Minarai, therefore falling back to %s angle smoothing.",
+
+  "liquidbounce.commandManager.commandExecuting": "Command \"%s\" is already executing, please wait...",
   "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s: %s",
@@ -508,6 +515,8 @@
   "liquidbounce.module.antiCheatDetect.description": "Detects the AntiCheat of the server and notifies you.",
   "liquidbounce.module.antiCheatDetect.messages.detected": "Detected %s AntiCheat.",
   "liquidbounce.module.eagle.description": "Automatically sneaks at the edge of a block",
+  "liquidbounce.module.easyPearl.description": "Throws pearl to where you looking at.",
+  "liquidbounce.module.easyPearl.messages.noInReachWarning": "You are aiming more than the ender pearl can reach, and this has helped you cancel the throw",
   "liquidbounce.module.elytraRecast.description": "Recasts elytra while holding jump key.",
   "liquidbounce.module.elytraFly.description": "Makes controlling an elytra easier.",
   "liquidbounce.module.elytraTarget.description": "Following the target on elytra.",

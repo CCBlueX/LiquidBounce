@@ -69,12 +69,20 @@ object AutoConfig {
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
-    val configs by AsyncLazy {
-        runCatching {
-            ClientApi.requestSettingsList()
-        }.onFailure { exception ->
-            logger.error("Failed to load auto configs", exception)
-        }.getOrNull()
+    var configs: Array<AutoSettings>? = null
+        private set
+
+    /**
+     * Reloads auto settings list.
+     *
+     * @return successfully reloaded or not
+     */
+    suspend fun reloadConfigs(): Boolean = try {
+        configs = ClientApi.requestSettingsList()
+        true
+    } catch (e: Exception) {
+        logger.error("Failed to load auto configs", e)
+        false
     }
 
     inline fun withLoading(block: () -> Unit) {

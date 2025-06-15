@@ -76,8 +76,14 @@ class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 @Nameable("playerSneakMultiplier")
 class PlayerSneakMultiplier(var multiplier: Double) : Event()
 
+/**
+ * Warning: UseHotbarSlotOrOffHand won't stimulate this event
+ */
+@Nameable("playerInteractItem")
+class PlayerInteractItemEvent : CancellableEvent()
+
 @Nameable("playerInteractedItem")
-class PlayerInteractedItem(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
+class PlayerInteractedItemEvent(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
 
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()

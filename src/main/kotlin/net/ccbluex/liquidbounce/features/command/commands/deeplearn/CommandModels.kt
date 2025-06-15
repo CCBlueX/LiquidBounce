@@ -20,6 +20,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
@@ -27,6 +29,7 @@ import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
 import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -34,12 +37,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.util.Util
-import kotlin.concurrent.thread
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
@@ -67,7 +70,7 @@ object CommandModels : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .suspendHandler { command, args ->
                 val name = args[0] as String
 
                 // Check if model exists
@@ -81,7 +84,7 @@ object CommandModels : CommandFactory {
                 }
 
                 chat(command.result("trainingStart", name))
-                thread {
+                withContext(Dispatchers.Default) {
                     trainModel(command, name)
                 }
             }
@@ -97,13 +100,13 @@ object CommandModels : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .suspendHandler { command, args ->
                 val name = args[0] as String
                 val model = models.choices.find { model -> model.name.equals(name, true) } ?:
                     throw CommandException(command.result("modelNotFound", name))
 
                 chat(command.result("trainingStart", name))
-                thread {
+                withContext(Dispatchers.Default) {
                     trainModel(command, name, model)
                 }
             }
@@ -151,7 +154,7 @@ object CommandModels : CommandFactory {
             .begin("browse")
             .handler { command, _ ->
                 Util.getOperatingSystem().open(modelsFolder)
-                chat(regular("Location: "), variable(modelsFolder.absolutePath))
+                chat(regular("Location: "), clickablePath(modelsFolder))
             }
             .build()
     }

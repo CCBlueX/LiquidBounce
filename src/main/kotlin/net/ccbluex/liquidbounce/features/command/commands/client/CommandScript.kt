@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.script.DebugProtocol
 import net.ccbluex.liquidbounce.script.ScriptDebugOptions
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
@@ -72,7 +73,7 @@ object CommandScript : CommandFactory {
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
         Util.getOperatingSystem().open(ScriptManager.root)
-        chat(regular(command.result("browse", variable(ScriptManager.root.absolutePath))))
+        chat(regular(command.result("browse", clickablePath(ScriptManager.root))))
     }.build()
 
     private fun listSubcommand() = CommandBuilder.begin("list").handler { command, _ ->
