@@ -115,20 +115,19 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         val result = TranslatorApi.google(text = event.message)
         if (result.isValid) {
             chat(
-                "".asText()
-                    .append(regular("("))
-                    .append(variable(result.fromLanguage))
-                    .append(regular("->"))
-                    .append(variable(result.toLanguage))
-                    .append(regular(") "))
-                    .append(regular(result.translation).copyable(copyContent = result.translation)),
+                regular("("),
+                variable(result.fromLanguage),
+                regular("->"),
+                variable(result.toLanguage),
+                regular(") "),
+                regular(result.translation).copyable(copyContent = result.translation),
                 metadata = MessageMetadata(prefix = false)
             )
         }
     }
 
     private fun openChat(text: String) {
-        mc.send { mc.setScreen(ChatScreen(text)) }
+        mc.execute { mc.setScreen(ChatScreen(text)) }
     }
 
     fun modifyMessage(content: String): String {
