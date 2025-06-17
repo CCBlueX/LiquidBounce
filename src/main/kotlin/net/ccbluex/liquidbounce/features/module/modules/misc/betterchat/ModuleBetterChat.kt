@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.client.gui.screen.ChatScreen
+import net.ccbluex.liquidbounce.utils.client.openChat
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -100,9 +100,9 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         val options = mc.options
         val prefix = CommandManager.Options.prefix[0]
         when (it.keyCode) {
-            options.chatKey.boundKey.code -> openChat("")
-            options.commandKey.boundKey.code -> openChat("/")
-            prefix.code -> openChat(prefix.toString())
+            options.chatKey.boundKey.code -> mc.openChat("")
+            options.commandKey.boundKey.code -> mc.openChat("/")
+            prefix.code -> mc.openChat(prefix.toString())
         }
     }
 
@@ -124,10 +124,6 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
                 metadata = MessageMetadata(prefix = false)
             )
         }
-    }
-
-    private fun openChat(text: String) {
-        mc.execute { mc.setScreen(ChatScreen(text)) }
     }
 
     fun modifyMessage(content: String): String {
