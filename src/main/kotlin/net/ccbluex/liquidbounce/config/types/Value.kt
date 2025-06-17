@@ -329,7 +329,7 @@ open class Value<T : Any>(
 }
 
 /**
- * Order by name (ignoreCase)
+ * Order by name of [Value] (ignoreCase)
  */
 val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
