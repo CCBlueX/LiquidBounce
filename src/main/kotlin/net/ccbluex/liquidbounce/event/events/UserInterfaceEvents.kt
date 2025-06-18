@@ -20,11 +20,13 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.minecraft.text.Text
 
 @Nameable("fps")
 @WebSocketEvent
@@ -47,4 +49,22 @@ class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event() {
     companion object {
         fun fromPlayerInventory(inventory: PlayerInventoryData) = ClientPlayerInventoryEvent(inventory)
     }
+}
+
+sealed class TitleEvent : CancellableEvent() {
+    @Nameable("title")
+    @WebSocketEvent
+    class Title(var text: Text?) : TitleEvent()
+
+    @Nameable("subtitle")
+    @WebSocketEvent
+    class Subtitle(var text: Text?) : TitleEvent()
+
+    @Nameable("titleFade")
+    @WebSocketEvent
+    class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()
+
+    @Nameable("clearTitle")
+    @WebSocketEvent
+    class Clear(var reset: Boolean) : TitleEvent()
 }
