@@ -127,7 +127,8 @@
     "truffle.MixinHostClassDesc",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
-    "truffle.MixinTruffleLanguage"
+    "truffle.MixinTruffleLanguage",
+    "truffle.MixinCommonJSRequireBuiltin"
   ],
   "server": [],
   "injectors": {

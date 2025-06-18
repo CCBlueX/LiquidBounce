@@ -125,16 +125,6 @@ class PolyglotScript(
             // Global functions
             bindings.putMember("registerScript", RegisterScript())
         }
-        .apply {
-            if (language == "js") {
-                val jvmRequireUrl = this::class.java.getResource("/resources/liquidbounce/scriptapi/jvm-require.js")
-                    ?: error("jvm-require.js resource not found")
-
-                val jvmRequireSource = Source.newBuilder("js", jvmRequireUrl).build()
-                eval(jvmRequireSource)
-            }
-        }
-
     private val scriptText: String = file.readText()
 
     // Script information
