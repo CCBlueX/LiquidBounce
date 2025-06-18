@@ -51,9 +51,9 @@ object ModuleBetterTitle : ClientModule(
         val result = TranslatorApi.google(text = string)
         if (result.isValid) {
             chat(
-                highlight(type.choiceName)
-                    .append(" ")
-                    .append(result.toResultText())
+                highlight(type.choiceName),
+                regular(": "),
+                result.toResultText(),
             )
         }
     }
