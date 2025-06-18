@@ -33,13 +33,9 @@ object ModuleBetterTitle : ClientModule(
     "BetterTitle", Category.RENDER, aliases = arrayOf("BetterSubtitle")
 ) {
 
-    private enum class Type(override val choiceName: String) : NamedChoice {
-        TITLE("Title"), SUBTITLE("Subtitle")
-    }
+    private val autoTranslate by multiEnumChoice("AutoTranslate", TitleType.entries)
 
-    private val autoTranslate by multiEnumChoice("AutoTranslate", Type.entries)
-
-    private inline fun <reified E : TitleEvent.TextContent> translatorHandler(type: Type) = suspendHandler<E> {
+    private inline fun <reified E : TitleEvent.TextContent> translatorHandler(type: TitleType) = suspendHandler<E> {
         if (type !in autoTranslate) {
             return@suspendHandler
         }
@@ -57,9 +53,13 @@ object ModuleBetterTitle : ClientModule(
     }
 
     @Suppress("unused")
-    private val titleHandler = translatorHandler<TitleEvent.Title>(Type.TITLE)
+    private val titleHandler = translatorHandler<TitleEvent.Title>(TitleType.TITLE)
 
     @Suppress("unused")
-    private val subtitleHandler = translatorHandler<TitleEvent.Subtitle>(Type.SUBTITLE)
+    private val subtitleHandler = translatorHandler<TitleEvent.Subtitle>(TitleType.SUBTITLE)
+
+    private enum class TitleType(override val choiceName: String) : NamedChoice {
+        TITLE("Title"), SUBTITLE("Subtitle")
+    }
 
 }
