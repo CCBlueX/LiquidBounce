@@ -51,10 +51,8 @@ private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, Coroutin
 val EventListener.eventListenerScope: CoroutineScope
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
-            EventListenerRunningContinuationInterceptor(
-                original = RenderThreadDispatcher, // Render thread
-                eventListener = it // Auto cancel on not listening
-            )
+          // Render thread + Auto cancel on not listening
+           it.createCoroutineInterceptor(RenderThreadDispatcher),
             + SupervisorJob() // Prevent exception canceling
             + CoroutineExceptionHandler { ctx, throwable -> // logging
                 if (throwable !is CancellationException) {
@@ -74,11 +72,25 @@ inline fun <reified T : Event> EventListener.suspendHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     priority: Short = 0,
     crossinline handler: suspend CoroutineScope.(T) -> Unit
-) = handler<T>(priority) { event ->
-    eventListenerScope.launch(context) {
-        handler(event)
+) = run {
+    val context = context[CoroutineInterceptor]?.let { context + createCoroutineInterceptor(it) } ?: context
+    handler<T>(priority) { event ->
+        eventListenerScope.launch(context) {
+            handler(event)
+        }
     }
 }
+
+/**
+ * Wrap the [original] interceptor and make it auto detect
+ * the listener's running state at suspension
+ * to determine whether to resume the continuation.
+ */
+fun EventListener.createCoroutineInterceptor(original: CoroutineInterceptor? = null): CoroutineInterceptor =
+    if (original is EventListenerRunningContinuationInterceptor)
+        original
+    else
+         EventListenerRunningContinuationInterceptor(original, this)
 
 /**
  * Remove cached scope and cancel it.
