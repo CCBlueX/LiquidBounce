@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.client
 
 import net.ccbluex.liquidbounce.api.thirdparty.TranslatorApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -164,15 +163,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
         val result = TranslatorApi.google(text = event.message)
         if (result.isValid) {
-            writeChat(
-                prefix()
-                    .append(regular("("))
-                    .append(variable(result.fromLanguage))
-                    .append(regular("->"))
-                    .append(variable(result.toLanguage))
-                    .append(regular(") "))
-                    .append(regular(result.translation).copyable(copyContent = result.translation))
-            )
+            writeChat(prefix().append(result.toResultText()))
         }
     }
 
