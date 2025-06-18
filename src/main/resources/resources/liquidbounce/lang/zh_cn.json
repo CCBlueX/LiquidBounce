@@ -739,6 +739,7 @@
   "liquidbounce.module.itemChams.description": "在你的手持物品上添加视觉效果。",
   "liquidbounce.module.crystalView.description": "调整末影水晶的模型。",
   "liquidbounce.module.betterTab.description": "对标签列表进行了多项改进。",
+  "liquidbounce.module.betterTitle.description": "对游戏字幕的改进。",
   "liquidbounce.module.autoPearl.description": "跟随敌人珍珠的轨迹瞄准并投掷珍珠。",
   "liquidbounce.module.replenish.description": "自动用物品栏中的物品填充快捷栏，使物品数量保持设定的阈值。",
   "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。",
