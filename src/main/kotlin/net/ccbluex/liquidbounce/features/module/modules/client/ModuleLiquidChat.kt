@@ -171,7 +171,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
                     .append(regular("->"))
                     .append(variable(result.toLanguage))
                     .append(regular(") "))
-                    .append(regular(result.translation).copyable(copyContent = event.message))
+                    .append(regular(result.translation).copyable(copyContent = result.translation))
             )
         }
     }
