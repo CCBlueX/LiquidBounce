@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
@@ -50,15 +51,17 @@ private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, Coroutin
 val EventListener.eventListenerScope: CoroutineScope // get() = CoroutineScope(RenderThreadDispatcher)
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
-            RenderThreadDispatcher // Render thread
-                + SupervisorJob() // Prevent exception canceling
-                + CoroutineExceptionHandler { ctx, throwable -> // logging
-                    if (throwable !is CancellationException) {
-                        logger.error("Exception occurred in CoroutineScope of $it", throwable)
-                    }
+            EventListenerRunningContinuationInterceptor(
+                original = RenderThreadDispatcher, // Render thread
+                eventListener = it // Auto cancel on not listening
+            )
+            + SupervisorJob() // Prevent exception canceling
+            + CoroutineExceptionHandler { ctx, throwable -> // logging
+                if (throwable !is CancellationException) {
+                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
                 }
-                + CoroutineName(it.toString()) // Name
-                + EventListenerRunningContinuationInterceptor(RenderThreadDispatcher, it)
+            }
+            + CoroutineName(it.toString()) // Name
         )
     }
 
@@ -106,9 +109,7 @@ class EventListenerNotListeningException(val eventListener: EventListener) : Can
 private class EventListenerRunningContinuationInterceptor(
     private val original: ContinuationInterceptor?,
     private val eventListener: EventListener,
-) : ContinuationInterceptor {
-
-    override val key: CoroutineContext.Key<*> = ContinuationInterceptor
+) : AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
 
     override fun <T> interceptContinuation(
         continuation: Continuation<T>
