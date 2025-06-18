@@ -116,11 +116,13 @@ private class EventListenerRunningContinuationInterceptor(
         override val context: CoroutineContext = continuation.context
 
         override fun resumeWith(result: Result<T>) {
+            // if the event listener is no longer active, abort the result
             if (!eventListener.running) {
                 context[Job]?.cancel(EventListenerNotListeningException(eventListener))
                 // The scope won't be removed
                 return
             }
+            // Process with original interceptor
             val delegate = original?.interceptContinuation(continuation) ?: continuation
             delegate.resumeWith(result)
         }

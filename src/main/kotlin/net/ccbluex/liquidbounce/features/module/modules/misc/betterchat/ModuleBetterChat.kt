@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.openChat
+import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -108,7 +109,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
             return@suspendHandler
         }
 
-        val result = TranslatorApi.google(text = event.message)
+        val result = TranslatorApi.google(text = event.message.stripMinecraftColorCodes())
         if (result.isValid) {
             chat(
                 result.toResultText(),
