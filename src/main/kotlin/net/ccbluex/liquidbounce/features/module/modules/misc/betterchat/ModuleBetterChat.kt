@@ -30,9 +30,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.openChat
 import net.minecraft.client.gui.screen.DeathScreen
 
@@ -114,12 +111,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         val result = TranslatorApi.google(text = event.message)
         if (result.isValid) {
             chat(
-                regular("("),
-                variable(result.fromLanguage),
-                regular("->"),
-                variable(result.toLanguage),
-                regular(") "),
-                regular(result.translation).copyable(copyContent = result.translation),
+                result.toResultText(),
                 metadata = MessageMetadata(prefix = false)
             )
         }

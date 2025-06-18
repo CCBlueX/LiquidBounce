@@ -20,12 +20,16 @@ package net.ccbluex.liquidbounce.api.thirdparty
 
 import com.google.gson.JsonArray
 import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.text.MutableText
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 object TranslatorApi {
@@ -37,6 +41,14 @@ object TranslatorApi {
         val toLanguage: String,
     ) {
         val isValid = origin != translation && fromLanguage != toLanguage
+
+        fun toResultText(): MutableText = "".asText()
+            .append(regular("("))
+            .append(variable(fromLanguage))
+            .append(regular("->"))
+            .append(variable(toLanguage))
+            .append(regular(") "))
+            .append(regular(translation).copyable(copyContent = translation))
     }
 
     private val googleApiUrl = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
