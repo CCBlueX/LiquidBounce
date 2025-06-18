@@ -254,6 +254,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleBookBot,
             ModuleAntiBot,
             ModuleBetterTab,
+            ModuleBetterTitle,
             ModuleBetterChat,
             ModuleElytraTarget,
             ModuleMiddleClickAction,
