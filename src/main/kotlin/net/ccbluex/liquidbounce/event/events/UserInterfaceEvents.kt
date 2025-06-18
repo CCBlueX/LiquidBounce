@@ -52,13 +52,17 @@ class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event() {
 }
 
 sealed class TitleEvent : CancellableEvent() {
+    sealed class TextContent : TitleEvent() {
+        abstract var text: Text?
+    }
+
     @Nameable("title")
     @WebSocketEvent
-    class Title(var text: Text?) : TitleEvent()
+    class Title(override var text: Text?) : TextContent()
 
     @Nameable("subtitle")
     @WebSocketEvent
-    class Subtitle(var text: Text?) : TitleEvent()
+    class Subtitle(override var text: Text?) : TextContent()
 
     @Nameable("titleFade")
     @WebSocketEvent
