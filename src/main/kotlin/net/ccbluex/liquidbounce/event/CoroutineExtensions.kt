@@ -48,7 +48,7 @@ private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, Coroutin
  *
  * All tasks will check [EventListener.running] on suspend.
  */
-val EventListener.eventListenerScope: CoroutineScope // get() = CoroutineScope(RenderThreadDispatcher)
+val EventListener.eventListenerScope: CoroutineScope
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
             EventListenerRunningContinuationInterceptor(
