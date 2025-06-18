@@ -47,18 +47,18 @@ private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, Coroutin
  *
  * All tasks will check [EventListener.running] on suspend.
  */
-val EventListener.eventListenerScope: CoroutineScope
+val EventListener.eventListenerScope: CoroutineScope // get() = CoroutineScope(RenderThreadDispatcher)
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
             RenderThreadDispatcher // Render thread
                 + SupervisorJob() // Prevent exception canceling
-                + EventListenerRunningContinuationInterceptor(it) // Auto cancel jobs
-                + CoroutineName(it.toString()) // Name
                 + CoroutineExceptionHandler { ctx, throwable -> // logging
                     if (throwable !is CancellationException) {
                         logger.error("Exception occurred in CoroutineScope of $it", throwable)
                     }
                 }
+                + CoroutineName(it.toString()) // Name
+                + EventListenerRunningContinuationInterceptor(RenderThreadDispatcher, it)
         )
     }
 
@@ -98,9 +98,13 @@ class EventListenerNotListeningException(val eventListener: EventListener) : Can
  *
  * This means the cancellation will not be **immediate** like [Thread.interrupt].
  *
+ * @param original The original [ContinuationInterceptor] such as a [kotlinx.coroutines.CoroutineDispatcher],
+ * because one [CoroutineContext] can only contain one value for a same key.
+ *
  * @author MukjepScarlet
  */
 private class EventListenerRunningContinuationInterceptor(
+    private val original: ContinuationInterceptor?,
     private val eventListener: EventListener,
 ) : ContinuationInterceptor {
 
@@ -113,12 +117,12 @@ private class EventListenerRunningContinuationInterceptor(
 
         override fun resumeWith(result: Result<T>) {
             if (!eventListener.running) {
-                val job = context[Job]
-                job?.cancel(EventListenerNotListeningException(eventListener))
+                context[Job]?.cancel(EventListenerNotListeningException(eventListener))
                 // The scope won't be removed
                 return
             }
-            continuation.resumeWith(result)
+            val delegate = original?.interceptContinuation(continuation) ?: continuation
+            delegate.resumeWith(result)
         }
     }
 }
