@@ -124,19 +124,25 @@ private class EventListenerRunningContinuationInterceptor(
 
     override fun <T> interceptContinuation(
         continuation: Continuation<T>
-    ): Continuation<T> = object : Continuation<T> {
-        override val context get() = continuation.context
+    ): Continuation<T> {
+        // Process with original interceptor
+        val delegate = original?.interceptContinuation(continuation) ?: continuation
 
-        override fun resumeWith(result: Result<T>) {
-            // if the event listener is no longer active, abort the result
-            if (!eventListener.running) {
-                context[Job]?.cancel(EventListenerNotListeningException(eventListener))
-                // The scope won't be removed
-                return
+        return object : Continuation<T> {
+            override val context get() = continuation.context
+
+            override fun resumeWith(result: Result<T>) {
+                // if the event listener is no longer active, abort the result
+                val result = if (!eventListener.running) {
+                    val exception = EventListenerNotListeningException(eventListener)
+                    context[Job]?.cancel(exception)
+                    // The scope won't be removed
+                    Result.failure(exception)
+                } else {
+                    result
+                }
+                delegate.resumeWith(result)
             }
-            // Process with original interceptor
-            val delegate = original?.interceptContinuation(continuation) ?: continuation
-            delegate.resumeWith(result)
         }
     }
 }
