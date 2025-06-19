@@ -51,15 +51,13 @@ private val eventListenerScopeHolder = ConcurrentHashMap<EventListener, Coroutin
 val EventListener.eventListenerScope: CoroutineScope
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
-            // Render thread + Auto cancel on not listening
-            it.continuationInterceptor(RenderThreadDispatcher)
-            + SupervisorJob() // Prevent exception canceling
+            SupervisorJob() // Prevent exception canceling
             + CoroutineExceptionHandler { ctx, throwable -> // logging
-                if (throwable !is CancellationException) {
-                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
-                }
+                logger.error("Exception occurred in CoroutineScope of $it", throwable)
             }
             + CoroutineName(it.toString()) // Name
+            // Render thread + Auto cancel on not listening
+            + it.continuationInterceptor(RenderThreadDispatcher)
         )
     }
 
@@ -73,6 +71,7 @@ inline fun <reified T : Event> EventListener.suspendHandler(
     priority: Short = 0,
     crossinline handler: suspend CoroutineScope.(T) -> Unit
 ): EventHook<T> {
+    // Support auto-cancel
     val context = context[ContinuationInterceptor]?.let { context + continuationInterceptor(it) } ?: context
     return handler<T>(priority) { event ->
         eventListenerScope.launch(context) {
@@ -133,13 +132,10 @@ private class EventListenerRunningContinuationInterceptor(
 
             override fun resumeWith(result: Result<T>) {
                 // if the event listener is no longer active, abort the result
-                val result = if (!eventListener.running) {
-                    val exception = EventListenerNotListeningException(eventListener)
-                    context[Job]?.cancel(exception)
-                    // The scope won't be removed
-                    Result.failure(exception)
-                } else {
+                val result = if (eventListener.running) {
                     result
+                } else {
+                    Result.failure(EventListenerNotListeningException(eventListener))
                 }
                 delegate.resumeWith(result)
             }
