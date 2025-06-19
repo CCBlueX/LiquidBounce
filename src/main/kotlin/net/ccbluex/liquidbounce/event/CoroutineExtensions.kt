@@ -102,7 +102,8 @@ fun EventListener.removeEventListenerScope() {
 /**
  * Occurs when the running [Job] is canceled because [EventListener.running] is false
  */
-class EventListenerNotListeningException(val eventListener: EventListener) : CancellationException()
+class EventListenerNotListeningException(val eventListener: EventListener) :
+    CancellationException("EventListener $eventListener is not running")
 
 /**
  * Check [EventListener.running] on suspend.
@@ -124,7 +125,7 @@ private class EventListenerRunningContinuationInterceptor(
     override fun <T> interceptContinuation(
         continuation: Continuation<T>
     ): Continuation<T> = object : Continuation<T> {
-        override val context: CoroutineContext = continuation.context
+        override val context get() = continuation.context
 
         override fun resumeWith(result: Result<T>) {
             // if the event listener is no longer active, abort the result
