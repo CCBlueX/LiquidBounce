@@ -121,10 +121,6 @@ fun getVFPVersionOrNull(): ProtocolVersion? {
 fun getVFPVersionOrDefault(): ProtocolVersion =
     getVFPVersionOrNull() ?: ProtocolVersion.getProtocol(defaultProtocolVersion.version)
 
-inline fun vfpProtocol(predicate: (target: ProtocolVersion) -> Boolean): Boolean {
-    return predicate(getVFPVersionOrDefault())
-}
-
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
@@ -148,22 +144,22 @@ val protocolVersions: Array<ClientProtocolVersion>
     }
 
 val isEqual1_8: Boolean
-    get() = vfpProtocol { it.compareTo(ProtocolVersion.v1_8) == 0 }
+    get() = getVFPVersionOrDefault().compareTo(ProtocolVersion.v1_8) == 0
 
 val isOlderThanOrEqual1_8: Boolean
-    get() = vfpProtocol { it >= ProtocolVersion.v1_8 }
+    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_8
 
 val isOlderThanOrEqual1_9: Boolean
-    get() = vfpProtocol { it >= ProtocolVersion.v1_9 }
+    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_9
 
 val isOlderThanOrEquals1_7_10: Boolean
-    get() = vfpProtocol { it >= ProtocolVersion.v1_7_6 }
+    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_7_6
 
 val isNewerThanOrEquals1_16: Boolean
-    get() = vfpProtocol { it >= ProtocolVersion.v1_16 }
+    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_16
 
 val isOlderThanOrEqual1_11_1: Boolean
-    get() = vfpProtocol { it >= ProtocolVersion.v1_11_1 }
+    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_11_1
 
 fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
