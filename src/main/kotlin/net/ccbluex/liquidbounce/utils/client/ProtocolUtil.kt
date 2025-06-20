@@ -102,12 +102,21 @@ val usesViaFabricPlus = runCatching {
 
 data class ClientProtocolVersion(val name: String, val version: Int)
 
-inline fun vfpProtocol(predicate: (target: ProtocolVersion) -> Boolean) =
-    if (usesViaFabricPlus) {
-        predicate(ViaFabricPlus.getImpl().targetVersion)
+/**
+ * Get the current [ProtocolVersion] of [ViaFabricPlus].
+ * If it's not loaded, null will be returned.
+ */
+fun getVFPVersionOrNull(): ProtocolVersion? {
+    return if (usesViaFabricPlus) {
+        ViaFabricPlus.getImpl().targetVersion
     } else {
-        false
+        null
     }
+}
+
+inline fun vfpProtocol(predicate: (target: ProtocolVersion) -> Boolean): Boolean {
+    return predicate(getVFPVersionOrNull() ?: return false)
+}
 
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
