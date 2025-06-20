@@ -114,15 +114,24 @@ fun getVFPVersionOrNull(): ProtocolVersion? {
     }
 }
 
+/**
+ * Get the current [ProtocolVersion] of [ViaFabricPlus].
+ * If it's not loaded, the current game version as [ProtocolVersion] will be returned.
+ */
+fun getVFPVersionOrDefault(): ProtocolVersion =
+    getVFPVersionOrNull() ?: ProtocolVersion.getProtocol(defaultProtocolVersion.version)
+
 inline fun vfpProtocol(predicate: (target: ProtocolVersion) -> Boolean): Boolean {
-    return predicate(getVFPVersionOrNull() ?: return false)
+    return predicate(getVFPVersionOrDefault())
 }
 
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
-    SharedConstants.getGameVersion().protocolVersion)
+val defaultProtocolVersion = ClientProtocolVersion(
+    SharedConstants.getGameVersion().name,
+    SharedConstants.getGameVersion().protocolVersion
+)
 
 val protocolVersion: ClientProtocolVersion
     get() = if (usesViaFabricPlus) {
