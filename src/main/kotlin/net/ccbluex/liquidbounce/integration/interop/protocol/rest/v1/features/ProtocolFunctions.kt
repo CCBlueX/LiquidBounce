@@ -21,6 +21,8 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
@@ -33,11 +35,21 @@ import net.ccbluex.netty.http.util.httpOk
 
 // GET /api/v1/protocols
 @Suppress("UNUSED_PARAMETER")
-fun getProtocols(requestObject: RequestObject) = httpOk(interopGson.toJsonTree(protocolVersions))
+fun getProtocols(requestObject: RequestObject) = httpOk(JsonArray().apply {
+    for (protocol in protocolVersions) {
+        add(JsonObject().apply {
+            addProperty("name", protocol.name)
+            addProperty("version", protocol.version)
+        })
+    }
+})
 
 // GET /api/v1/protocols/protocol
 @Suppress("UNUSED_PARAMETER")
-fun getProtocol(requestObject: RequestObject) = httpOk(interopGson.toJsonTree(protocolVersion))
+fun getProtocol(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    addProperty("name", protocolVersion.name)
+    addProperty("version", protocolVersion.version)
+})
 
 // PUT /api/v1/protocols/protocol
 fun putProtocol(requestObject: RequestObject): FullHttpResponse {
