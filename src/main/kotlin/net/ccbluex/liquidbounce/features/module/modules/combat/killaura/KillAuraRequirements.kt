@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.AxeItem
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
 import net.minecraft.item.SwordItem
 
@@ -38,7 +40,7 @@ enum class KillAuraRequirements(
         mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
     }),
     WEAPON("Weapon", {
-        player.inventory.mainHandStack.item.isWeapon()
+        player.inventory.mainHandStack.isWeapon()
     }),
     VANILLA_NAME("VanillaName", {
         player.inventory.mainHandStack.customName == null
@@ -47,7 +49,6 @@ enum class KillAuraRequirements(
 
 /**
  * Check if the item is a weapon.
- * todo: condition adjustment
  */
-private fun Item.isWeapon() = this is SwordItem || !isOlderThanOrEqual1_8 && this is AxeItem
-    || this is MaceItem
+private fun ItemStack.isWeapon() = item is SwordItem || isOlderThanOrEqual1_8 && item is AxeItem
+    || item is MaceItem || getEnchantment(Enchantments.KNOCKBACK) > 0 || getEnchantment(Enchantments.SHARPNESS) > 0
