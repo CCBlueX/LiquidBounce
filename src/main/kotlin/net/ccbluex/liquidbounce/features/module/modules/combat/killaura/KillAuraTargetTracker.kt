@@ -44,6 +44,7 @@ object KillAuraTargetTracker : TargetTracker() {
      * Check if the entity is holding a shield and if the shield would block the attack.
      */
     private fun validateShield(entity: LivingEntity): Boolean {
+        // TODO: maybe <=1.8 ?
         if (ignoreShield || entity !is PlayerEntity || isOlderThanOrEqual1_8) {
             return true
         }

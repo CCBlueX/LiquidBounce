@@ -55,6 +55,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
         }
 
         // If we are already on the old combat protocol, we don't need to do anything
+        // TODO: >=1.8 === old protocol????
         if (isOlderThanOrEqual1_8) {
             return@sequenceHandler
         }

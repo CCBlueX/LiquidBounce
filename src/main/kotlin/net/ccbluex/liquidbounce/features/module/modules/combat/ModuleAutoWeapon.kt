@@ -103,6 +103,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
      * Check if the attack will break the shield
      */
     fun willBreakShield(): Boolean {
+        // TODO: <= 1.8?
         if (!this.running || isOlderThanOrEqual1_8) {
             return false
         }
@@ -166,6 +167,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
+        // TODO: check here
         val blockedByShield = enforceShield || !isOlderThanOrEqual1_8 &&
             target?.blockedByShield(world.damageSources.playerAttack(player)) == true
 

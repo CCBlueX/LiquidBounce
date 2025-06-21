@@ -152,9 +152,6 @@ val isOlderThanOrEqual1_8: Boolean
 val isOlderThanOrEqual1_9: Boolean
     get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_9
 
-val isOlderThanOrEquals1_7_10: Boolean
-    get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_7_6
-
 val isNewerThanOrEquals1_16: Boolean
     get() = getVFPVersionOrDefault() >= ProtocolVersion.v1_16
 

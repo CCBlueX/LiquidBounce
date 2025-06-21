@@ -198,6 +198,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
 
     with(player) {
         // Swing before attacking (on 1.8)
+        // TODO: =1.8 === >=1.8 ?
         if (isOlderThanOrEqual1_8) {
             swing.swing(Hand.MAIN_HAND)
         }
@@ -242,6 +243,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
         resetLastAttackedTicks()
 
         // Swing after attacking (on 1.9+)
+        // TODO: >=1.9 === !>=1.8 === < 1.8 ?
         if (!isOlderThanOrEqual1_8) {
             swing.swing(Hand.MAIN_HAND)
         }
