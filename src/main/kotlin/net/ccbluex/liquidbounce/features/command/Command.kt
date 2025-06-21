@@ -27,7 +27,9 @@ import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
 import java.util.*
 
-typealias CommandHandler = (Command, Array<Any>) -> Unit
+fun interface CommandHandler {
+    operator fun invoke(command: Command, args: Array<Any>)
+}
 
 @Suppress("LongParameterList")
 class Command(

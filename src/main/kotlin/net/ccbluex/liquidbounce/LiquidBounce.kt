@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -282,7 +282,7 @@ object LiquidBounce : EventListener {
             },
             scope.async {
                 // Load configs
-                configs
+                AutoConfig.reloadConfigs()
             },
             scope.async {
                 // IPC configuration

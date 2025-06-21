@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
@@ -37,7 +38,7 @@ object CommandClientThemeSubcommand {
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
         Util.getOperatingSystem().open(ThemeManager.themesFolder)
-        chat(regular("Location: "), variable(ThemeManager.themesFolder.absolutePath))
+        chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
     }.build()
 
     private fun setSubcommand() = CommandBuilder.begin("set")
