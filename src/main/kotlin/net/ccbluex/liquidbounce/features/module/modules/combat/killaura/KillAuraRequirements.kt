@@ -47,6 +47,7 @@ enum class KillAuraRequirements(
 
 /**
  * Check if the item is a weapon.
+ * todo: condition adjustment
  */
 private fun Item.isWeapon() = this is SwordItem || !isOlderThanOrEqual1_8 && this is AxeItem
     || this is MaceItem
