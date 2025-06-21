@@ -267,6 +267,7 @@ object InventoryManager : EventListener {
         if (screen is InventoryScreen || screen is GenericContainerScreen) {
             // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
             // the easy way and just listen for the screen event.
+            // TODO: needs check
             if (screen is InventoryScreen && isOlderThanOrEqual1_11_1) {
                 isInventoryOpenServerSide = true
             }
