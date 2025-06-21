@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_9
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
@@ -50,5 +50,5 @@ enum class KillAuraRequirements(
 /**
  * Check if the item is a weapon.
  */
-private fun ItemStack.isWeapon() = item is SwordItem || isOlderThanOrEqual1_8 && item is AxeItem
+private fun ItemStack.isWeapon() = item is SwordItem || isOlderThanOrEqual1_9 && item is AxeItem
     || item is MaceItem || getEnchantment(Enchantments.KNOCKBACK) > 0 || getEnchantment(Enchantments.SHARPNESS) > 0
