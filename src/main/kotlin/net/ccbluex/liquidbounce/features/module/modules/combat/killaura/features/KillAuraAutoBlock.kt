@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -301,7 +300,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
         if (entity != null) {
             // 1.7 players do not send INTERACT_AT
-            if (!isOlderThanOrEquals1_7_10) {
+            if (isOlderThanOrEqual1_8) {
                 interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
             }
 
