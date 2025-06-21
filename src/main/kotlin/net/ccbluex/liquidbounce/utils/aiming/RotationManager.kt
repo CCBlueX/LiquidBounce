@@ -51,7 +51,6 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * A rotation manager
  */
 object RotationManager : EventListener {
-
     /**
      * Our final target rotation. This rotation is only used to define our current rotation.
      */
@@ -68,11 +67,12 @@ object RotationManager : EventListener {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = if (value == null) {
-                null
-            } else {
-                field ?: mc.player?.rotation ?: Rotation.ZERO
-            }
+            previousRotation =
+                if (value == null) {
+                    null
+                } else {
+                    field ?: mc.player?.rotation ?: Rotation.ZERO
+                }
 
             field = value
         }
@@ -103,14 +103,24 @@ object RotationManager : EventListener {
         configurable: RotationsConfigurable,
         priority: Priority,
         provider: ClientModule,
-        whenReached: RestrictedSingleUseAction? = null
+        whenReached: RestrictedSingleUseAction? = null,
     ) {
-        setRotationTarget(configurable.toRotationTarget(
-            rotation, considerInventory = considerInventory, whenReached = whenReached
-        ), priority, provider)
+        setRotationTarget(
+            configurable.toRotationTarget(
+                rotation,
+                considerInventory = considerInventory,
+                whenReached = whenReached,
+            ),
+            priority,
+            provider,
+        )
     }
 
-    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) {
+    fun setRotationTarget(
+        plan: RotationTarget,
+        priority: Priority,
+        provider: ClientModule,
+    ) {
         if (!allowedToUpdate()) {
             return
         }
@@ -120,8 +130,8 @@ object RotationManager : EventListener {
                 if (plan.movementCorrection == MovementCorrection.CHANGE_LOOK) 1 else plan.ticksUntilReset,
                 priority.priority,
                 provider,
-                plan
-            )
+                plan,
+            ),
         )
     }
 
@@ -146,7 +156,7 @@ object RotationManager : EventListener {
      * Update current rotation to a new rotation step
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
-    fun update() {
+    private fun update() {
         val activeRotationTarget = this.activeRotationTarget ?: return
         val playerRotation = player.rotation
 
@@ -155,15 +165,21 @@ object RotationManager : EventListener {
         // Prevents any rotation changes when inventory is opened
         if (isRotatingAllowed(activeRotationTarget)) {
             val fromRotation = currentRotation ?: playerRotation
-            val rotation = activeRotationTarget.towards(fromRotation, rotationTarget == null)
-                // After generating the next rotation, we need to normalize it
-                .normalize()
+            val rotation =
+                activeRotationTarget
+                    .towards(fromRotation, rotationTarget == null)
+                    // After generating the next rotation, we need to normalize it
+                    .normalize()
 
             val diff = rotation.angleTo(playerRotation)
 
-            if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
-                    || activeRotationTarget.processors.isEmpty()
-                    || diff <= activeRotationTarget.resetThreshold)) {
+            if (rotationTarget == null &&
+                (
+                    activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK ||
+                        activeRotationTarget.processors.isEmpty() ||
+                        diff <= activeRotationTarget.resetThreshold
+                )
+            ) {
                 currentRotation?.let { currentRotation ->
                     player.yaw = player.withFixedYaw(currentRotation)
                     player.renderYaw = player.yaw
@@ -204,25 +220,28 @@ object RotationManager : EventListener {
     }
 
     @Suppress("unused")
-    private val velocityHandler = handler<PlayerVelocityStrafe>(priority = MODEL_STATE) { event ->
-        if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
-            val rotation = currentRotation ?: return@handler
+    private val velocityHandler =
+        handler<PlayerVelocityStrafe>(priority = MODEL_STATE) { event ->
+            if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
+                val rotation = currentRotation ?: return@handler
 
-            event.velocity = Entity.movementInputToVelocity(
-                event.movementInput,
-                event.speed,
-                rotation.yaw
-            )
+                event.velocity =
+                    Entity.movementInputToVelocity(
+                        event.movementInput,
+                        event.speed,
+                        rotation.yaw,
+                    )
+            }
         }
-    }
 
     @Suppress("unused")
-    private val gameTickHandler = handler<GameTickEvent>(
-        priority = FIRST_PRIORITY
-    ) { event ->
-        EventManager.callEvent(RotationUpdateEvent)
-        update()
-    }
+    private val gameTickHandler =
+        handler<GameTickEvent>(
+            priority = FIRST_PRIORITY,
+        ) { event ->
+            EventManager.callEvent(RotationUpdateEvent)
+            update()
+        }
 
     /**
      * Track rotation changes
@@ -232,32 +251,33 @@ object RotationManager : EventListener {
      * and the player.lastYaw and player.lastPitch are not updated.
      */
     @Suppress("unused")
-    val packetHandler = handler<PacketEvent>(
-        priority = EventPriorityConvention.READ_FINAL_STATE
-    ) { event ->
-        val rotation = when (val packet = event.packet) {
-            is PlayerMoveC2SPacket -> {
-                // If we are not changing the look, we don't need to update the rotation
-                if (!packet.changeLook) {
-                    return@handler
+    val packetHandler =
+        handler<PacketEvent>(
+            priority = EventPriorityConvention.READ_FINAL_STATE,
+        ) { event ->
+            val rotation =
+                when (val packet = event.packet) {
+                    is PlayerMoveC2SPacket -> {
+                        // If we are not changing the look, we don't need to update the rotation
+                        if (!packet.changeLook) {
+                            return@handler
+                        }
+
+                        // We trust that we have sent a normalized rotation, if not, ... why?
+                        Rotation(packet.yaw, packet.pitch, isNormalized = true)
+                    }
+                    is PlayerPositionLookS2CPacket -> Rotation(packet.change.yaw, packet.change.pitch, isNormalized = true)
+                    is PlayerInteractItemC2SPacket -> Rotation(packet.yaw, packet.pitch, isNormalized = true)
+                    else -> return@handler
                 }
 
-                // We trust that we have sent a normalized rotation, if not, ... why?
-                Rotation(packet.yaw, packet.pitch, isNormalized = true)
+            // This normally applies to Modules like Blink, BadWifi, etc.
+            if (!event.isCancelled) {
+                actualServerRotation = rotation
             }
-            is PlayerPositionLookS2CPacket -> Rotation(packet.change.yaw, packet.change.pitch, isNormalized = true)
-            is PlayerInteractItemC2SPacket -> Rotation(packet.yaw, packet.pitch, isNormalized = true)
-            else -> return@handler
+            theoreticalServerRotation = rotation
         }
-
-        // This normally applies to Modules like Blink, BadWifi, etc.
-        if (!event.isCancelled) {
-            actualServerRotation = rotation
-        }
-        theoreticalServerRotation = rotation
-    }
 
     override val running: Boolean
         get() = inGame
-
 }
