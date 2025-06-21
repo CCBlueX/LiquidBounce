@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -36,14 +37,40 @@ import java.util.function.Predicate
 object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
     private val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
     private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
+    private val startDelay by int("StartDelay", 0, 0..1000, "ms")
+    private var keyPressStartTime: Long = 0
+
+
+    override fun disable() {
+        keyPressStartTime = 0
+        super.disable()
+    }
+
+    @Suppress("unused")
+    private val keybindHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.useKey) {
+            if (event.isPressed && keyPressStartTime == 0L) {
+                keyPressStartTime = System.currentTimeMillis()
+            } else if (!event.isPressed) {
+                keyPressStartTime = 0
+            }
+        }
+    }
 
     @Suppress("unused")
     private val useCooldownHandler = handler<UseCooldownEvent> { event ->
         val mainHandItem = player.mainHandStack.item
         val offHandItem = player.offHandStack.item
+
         if (applyTo.any {
-            it.condition.test(mainHandItem) || it.condition.test(offHandItem)
-        }) {
+                it.condition.test(mainHandItem) || it.condition.test(offHandItem)
+            }) {
+            if (startDelay > 0) {
+                val timeSinceKeyPress = System.currentTimeMillis() - keyPressStartTime
+                if (timeSinceKeyPress < startDelay) {
+                    return@handler
+                }
+            }
             event.cooldown = cooldown
         }
     }
