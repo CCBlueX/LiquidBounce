@@ -159,7 +159,9 @@ val ItemStack.attackDamage: Double
          * see https://bugs.mojang.com/browse/MC-196250
          *
          * We now use the following formula to calculate the damage:
-         * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
+         * https://minecraft.wiki/w/Sharpness
+         * >= 1.9 -> 0.5 * level + 0.5
+         * else -> 1.25 * level
          */
         return entityBaseDamage + baseDamage + getSharpnessDamage()
     }
@@ -167,7 +169,8 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = if (level == 0) 0.0 else 0.5 * level + 0.5
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) =
+    if (isOlderThanOrEqual1_9) (if (level == 0) 0.0 else 0.5 * level + 0.5) else level * 1.25
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
