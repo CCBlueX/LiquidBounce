@@ -146,7 +146,7 @@ object RotationManager : EventListener {
      * Update current rotation to a new rotation step
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
-    fun update() {
+    private fun update() {
         val activeRotationTarget = this.activeRotationTarget ?: return
         val playerRotation = player.rotation
 
