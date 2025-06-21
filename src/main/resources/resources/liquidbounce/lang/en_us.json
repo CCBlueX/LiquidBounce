@@ -708,6 +708,7 @@
   "liquidbounce.module.chams.description": "Renders player's through walls.",
   "liquidbounce.module.bungeeSpoofer.description": "Allows you to connect to bungee-cord protected sub-server by faking the BungeeCord handshake.",
   "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience.",
+  "liquidbounce.module.translation.description": "Setting up an auto translator for a client.",
   "liquidbounce.module.bedPlates.description": "Allows you to see what blocks are around the bed",
   "liquidbounce.module.targetStrafe.description": "Automatically strafes around enemies targeted by KillAura.",
   "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",

@@ -25,10 +25,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
@@ -415,6 +412,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoConfig,
             ModuleRichPresence,
             ModuleTargets,
+            ModuleTranslation,
             ModuleLiquidChat
         )
 

@@ -15,65 +15,51 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.api.thirdparty
+
+package net.ccbluex.liquidbounce.api.thirdparty.translator.providers
 
 import com.google.gson.JsonArray
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorChoice
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
-import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.MutableText
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-object TranslatorApi {
+private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
 
-    data class TranslationResult(
-        val origin: String,
-        val translation: String,
-        val fromLanguage: String,
-        val toLanguage: String,
-    ) {
-        val isValid = origin != translation && fromLanguage != toLanguage
-
-        fun toResultText(): MutableText = "".asText()
-            .append(regular("("))
-            .append(variable(fromLanguage))
-            .append(regular("->"))
-            .append(variable(toLanguage))
-            .append(regular(") "))
-            .append(regular(translation).copyable(copyContent = translation))
-    }
-
-    private val googleApiUrl = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
-
+/**
+ * @author MukjepScarlet
+ */
+class GoogleTranslateApi(
+    override val parent: ChoiceConfigurable<*>
+) : TranslatorChoice("Google") {
     /**
      * [Reference](https://github.com/ssut/py-googletrans/issues/268)
      * Updated at 2025/06/11
      */
-    suspend fun google(
-        sourceLanguage: String = "auto",
-        targetLanguage: String = CommandAutoTranslate.languageCode,
-        text: String,
+    override suspend fun translateInternal(
+        sourceLanguage: TranslateLanguage,
+        targetLanguage: TranslateLanguage,
+        text: String
     ): TranslationResult {
-        require(sourceLanguage.isNotBlank() && targetLanguage.isNotBlank()) { "Language cannot be blank" }
-        require(text.isNotBlank()) { "Text cannot be blank" }
-
-        // POST with Form body or GET with URL query params
-        val url = googleApiUrl.newBuilder()
-            .addQueryParameter("sl", sourceLanguage)
-            .addQueryParameter("tl", targetLanguage)
+        val url = GOOGLE_API_URL.newBuilder()
+            .addQueryParameter("sl", sourceLanguage.literal)
+            .addQueryParameter("tl", targetLanguage.literal)
             .addQueryParameter("q", text)
-            .build().toString()
+            .build()
+            .toString()
+
         val response = HttpClient.request(
             url,
-            method = HttpMethod.GET,
+            method = HttpMethod.GET
         )
 
         // 1. sl = "auto"
@@ -86,25 +72,24 @@ object TranslatorApi {
 
         // sl empty -> HTTP 400
         // tl empty | text empty -> result empty
-        return if (sourceLanguage == "auto") {
+        return if (sourceLanguage is TranslateLanguage.Auto) {
             val arr = response.parse<JsonArray>().array(0)!!
             val result = arr.string(0)!!
             val detectedLanguage = arr.string(1)!!
-            TranslationResult(
+            TranslationResult.Success(
                 origin = text,
                 translation = result,
-                fromLanguage = detectedLanguage,
+                fromLanguage = TranslateLanguage.of(detectedLanguage),
                 toLanguage = targetLanguage,
             )
         } else {
             val result = response.parse<JsonArray>().string(0)!!
-            TranslationResult(
+            TranslationResult.Success(
                 origin = text,
                 translation = result,
                 fromLanguage = sourceLanguage,
-                toLanguage = targetLanguage,
+                toLanguage = targetLanguage
             )
         }
     }
-
 }

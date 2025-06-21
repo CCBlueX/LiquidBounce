@@ -18,37 +18,47 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.thirdparty.TranslatorApi
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.highlight
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
+import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.client.gui.hud.InGameHud
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 
 object ModuleBetterTitle : ClientModule(
     "BetterTitle", Category.RENDER, aliases = arrayOf("BetterSubtitle")
 ) {
+    init {
+        tree(AutoTranslate)
+    }
+}
 
-    private val autoTranslate by multiEnumChoice("AutoTranslate", TitleType.entries)
+private object AutoTranslate : ToggleableConfigurable(ModuleBetterTitle, "AutoTranslate", false) {
+    private val components by multiEnumChoice("Components", TitleType.entries)
+    private val showIn by multiEnumChoice("ShowIn", ShowIn.CHAT)
 
-    private inline fun <reified E : TitleEvent.TextContent> translatorHandler(type: TitleType) = suspendHandler<E> {
-        if (type !in autoTranslate) {
+    private inline fun <reified E : TitleEvent.TextContent> translatorHandler(
+        type: TitleType
+    ) = suspendHandler<E> { event ->
+        if (type !in components) {
             return@suspendHandler
         }
 
-        val string = it.text?.string?.stripMinecraftColorCodes()?.takeUnless(String::isBlank) ?: return@suspendHandler
+        val string = event.text
+            ?.string
+            ?.stripMinecraftColorCodes()
+            ?.takeUnless(String::isBlank)
+            ?: return@suspendHandler
 
-        val result = TranslatorApi.google(text = string)
-        if (result.isValid) {
-            chat(
-                highlight(type.choiceName),
-                regular(": "),
-                result.toResultText(),
-            )
+        val result = ModuleTranslation.translate(text = string)
+        if (result.isValid && result is TranslationResult.Success) {
+            showIn.forEach { it.show(type, event, result) }
         }
     }
 
@@ -56,10 +66,46 @@ object ModuleBetterTitle : ClientModule(
     private val titleHandler = translatorHandler<TitleEvent.Title>(TitleType.TITLE)
 
     @Suppress("unused")
-    private val subtitleHandler = translatorHandler<TitleEvent.Subtitle>(TitleType.SUBTITLE)
+    private val subtitleHandler =
+        translatorHandler<TitleEvent.Subtitle>(TitleType.SUBTITLE)
+}
 
-    private enum class TitleType(override val choiceName: String) : NamedChoice {
-        TITLE("Title"), SUBTITLE("Subtitle")
-    }
+@Suppress("unused")
+private enum class ShowIn(
+    override val choiceName: String,
+    val show: (TitleType, TitleEvent.TextContent, TranslationResult.Success) -> Unit
+) : NamedChoice {
+    CHAT("Chat", { type, _, result ->
+        chat(
+            highlight(type.choiceName),
+            regular(": "),
+            result.toResultText(),
+        )
+    }),
+    MESSAGE("Message", { type, event, result ->
+        result.translation
+            .asText()
+            .formatted(Formatting.WHITE)
+        .let {
+            event.text = it
+            type.setText(it)
+        }
+    })
+}
 
+
+private enum class TitleType(
+    override val choiceName: String,
+    /**
+     * Doesn't use [InGameHud.setTitle] and [InGameHud.setSubtitle] because
+     * this will cause reset of the stayIn timer
+     */
+    val setText: (Text) -> Unit
+) : NamedChoice {
+    TITLE("Title", {
+        mc.inGameHud.title = it
+    }),
+    SUBTITLE("Subtitle", {
+        mc.inGameHud.subtitle = it
+    })
 }

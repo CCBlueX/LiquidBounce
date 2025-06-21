@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
-import net.ccbluex.liquidbounce.api.thirdparty.TranslatorApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.openChat
@@ -109,7 +109,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
             return@suspendHandler
         }
 
-        val result = TranslatorApi.google(text = event.message.stripMinecraftColorCodes())
+        val result = ModuleTranslation.translate(text = event.message.stripMinecraftColorCodes())
         if (result.isValid) {
             chat(
                 result.toResultText(),

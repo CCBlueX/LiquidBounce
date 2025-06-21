@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import net.ccbluex.liquidbounce.api.thirdparty.TranslatorApi
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -161,7 +160,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
             return@suspendHandler
         }
 
-        val result = TranslatorApi.google(text = event.message)
+        val result = ModuleTranslation.translate(text = event.message)
         if (result.isValid) {
             writeChat(prefix().append(result.toResultText()))
         }
