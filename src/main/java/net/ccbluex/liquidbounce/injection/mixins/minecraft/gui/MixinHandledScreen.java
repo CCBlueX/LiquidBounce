@@ -1,9 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import kotlin.Unit;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.utils.client.Chronometer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
