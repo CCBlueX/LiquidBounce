@@ -22,7 +22,7 @@ object ModuleItemScroller : ClientModule("ItemScroller", Category.MISC) {
 
     @JvmStatic
     @Suppress("MagicNumber")
-    val delay by int("Delay", 20, 0..500, suffix = "ms")
+    val delay by intRange("Delay", 2..3, 0..20, suffix = "ticks")
 }
 
 @Suppress("UNUSED")

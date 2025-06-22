@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import kotlin.Unit;
+import kotlin.random.Random;
+import kotlin.random.RandomKt;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.utils.client.Chronometer;
@@ -26,9 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(HandledScreen.class)
 public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinScreen {
-
-    @Shadow
-    private @Nullable Slot touchHoveredSlot;
 
     @Shadow
     @Final
@@ -108,12 +107,12 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
     private boolean matchingItemScrollerMoveConditions(int mouseX, int mouseY) {
         var handle = this.client.getWindow().getHandle();
 
-        return ((InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT)
-                || InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT))
+        return (InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT)
+                        || InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT))
                 && getSlotAt(mouseX, mouseY) != null
-                && !this.handler.getCursorStack().isEmpty()
                 && ModuleItemScroller.INSTANCE.getRunning()
                 && GLFW.glfwGetMouseButton(handle, GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
-                && chronometer.hasAtLeastElapsed(ModuleItemScroller.getDelay()));
+                && chronometer.hasAtLeastElapsed(RandomKt.nextInt(Random.Default, ModuleItemScroller.getDelay()) * 50L);
     }
+
 }
