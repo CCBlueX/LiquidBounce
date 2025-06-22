@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import java.awt.Color
 
 object ColorUtils {

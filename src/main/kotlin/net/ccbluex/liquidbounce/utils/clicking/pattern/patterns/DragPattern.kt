@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 /**
  * Drag clicking is a method that is used to bypass the CPS limit of 20.
@@ -35,7 +33,7 @@ import kotlin.random.nextInt
  * This is very hard to implement as I am not able to do this method myself,
  * so I will simply guess how it works.
  */
-class DragPattern : ClickPattern {
+object DragPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
@@ -50,7 +48,7 @@ class DragPattern : ClickPattern {
          * After this travel time we need to move the finger back to the top and cannot click.
          * This is more consistent usually.
          */
-        val travelTime = Random.Default.nextInt(17..18)
+        val travelTime = Clicker.RNG.nextInt(17, 19)
 
         // Fit the clicks into the travel time of the
         while (clickArray.sum() < clicks) {

@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,15 +34,17 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(targetSelector.maxRange)
     }
-    private val requiresSpace by boolean("RequiresSpace", false)
+
+    private val requirements by multiEnumChoice<Requirements>("Requirements")
+
+    private val requirementsMet
+        get() = requirements.all { it.meets() }
 
     object MotionMode : Choice("Motion") {
-
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
-        private val requiresSpeed by boolean("RequiresSpeed", false)
         private val hypixel by boolean("Hypixel", false)
 
         init {
@@ -125,13 +128,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                 return@handler
             }
 
-            // If the player is not pressing the jump key and requires space, we exit early
-            if (requiresSpace && !mc.options.jumpKey.isPressed) {
-                return@handler
-            }
-
-            // If speed isn't enabled and requiresSpeed is, we exit early
-            if (requiresSpeed && !ModuleSpeed.running) {
+            if (!requirementsMet) {
                 return@handler
             }
 
@@ -236,4 +233,19 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
 
     }
 
+    @Suppress("unused")
+    private enum class Requirements(
+        override val choiceName: String,
+        val meets: () -> Boolean
+    ) : NamedChoice {
+        SPACE("Space", {
+            mc.options.jumpKey.isPressed
+        }),
+        SPEED("Speed", {
+            ModuleSpeed.running
+        }),
+        GROUND("Ground", {
+           player.isOnGround
+        });
+    }
 }

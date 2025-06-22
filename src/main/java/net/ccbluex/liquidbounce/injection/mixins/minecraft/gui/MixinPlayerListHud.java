@@ -119,7 +119,8 @@ public abstract class MixinPlayerListHud {
         }
 
         int playerCount = collectPlayerEntries().size();
-        int columns = MathHelper.ceil((double) playerCount / ModuleBetterTab.Limits.INSTANCE.getHeight());
+        int height = Math.max(1, ModuleBetterTab.Limits.INSTANCE.getHeight());
+        int columns = Math.max(1, MathHelper.ceil((double) playerCount / height));
         int rows = MathHelper.ceil((double) playerCount / columns);
         o.set(rows);
         p.set(columns);
@@ -179,7 +180,7 @@ public abstract class MixinPlayerListHud {
 
     @ModifyReturnValue(method = "getPlayerName", at = @At("RETURN"))
     private Text modifyPlayerName(Text original, PlayerListEntry entry) {
-        if (ModuleAntiStaff.UsernameCheck.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
             return original.copy().append(Text.literal(" - (Staff)").withColor(Colors.LIGHT_RED));
         }
 

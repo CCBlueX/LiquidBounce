@@ -23,6 +23,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.minecraft.util.Hand
 
 /**
  * Manages things like [Scaffold]'s silent mode. Not thread safe, please only use this on the main-thread of minecraft
@@ -41,7 +44,16 @@ object SilentHotbar : EventListener {
     val clientsideSlot: Int
         get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.selectedSlot ?: 0
 
-    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
+    /**
+     * If [slot] is not [OffHandSlot], select it silently for duration of [ticksUntilReset].
+     */
+    fun selectSlotSilently(requester: Any?, slot: HotbarItemSlot, ticksUntilReset: Int) {
+        if (slot !is OffHandSlot) {
+            selectSlotSilently(requester, slot.hotbarSlot, ticksUntilReset)
+        }
+    }
+
+    fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int) {
         val event = EventManager.callEvent(SelectHotbarSlotSilentlyEvent(requester, slot))
         if (event.isCancelled) {
             return

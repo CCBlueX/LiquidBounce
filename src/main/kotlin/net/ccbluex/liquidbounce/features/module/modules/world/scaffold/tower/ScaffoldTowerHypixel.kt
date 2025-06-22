@@ -18,22 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.minecraft.util.math.BlockPos
 
-object ScaffoldTowerHypixel : Choice("Hypixel") {
+object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
-    override val parent: ChoiceConfigurable<Choice>
-        get() = towerMode
-
-    val repeatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (!mc.options.jumpKey.isPressed || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             return@tickHandler
         }
@@ -58,6 +56,29 @@ object ScaffoldTowerHypixel : Choice("Hypixel") {
             }
             2 -> player.velocity.y = 1 - (player.y % 1.0)
         }
+    }
+
+    override fun getTargetedPosition(blockPos: BlockPos): BlockPos {
+        if (!player.moving) {
+            // Find the block closest to the player
+            val blocks = arrayOf(
+                blockPos.add(0, 0, 1),
+                blockPos.add(0, 0, -1),
+                blockPos.add(1, 0, 0),
+                blockPos.add(-1, 0, 0)
+            )
+
+            val blockOffset = blocks.minByOrNull { blockPos ->
+                blockPos.getCenterDistanceSquared()
+            }?.add(0, -1, 0) ?: blockPos
+
+            // Check if block next to the player is solid
+            if (!blockOffset.getState()!!.isSolidBlock(world, blockOffset)) {
+                return blockOffset
+            }
+        }
+
+        return super.getTargetedPosition(blockPos)
     }
 
 

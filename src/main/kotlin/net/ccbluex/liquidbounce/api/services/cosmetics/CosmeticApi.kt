@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.api.services.cosmetics
 
-import net.ccbluex.liquidbounce.api.core.API_V3_ENDPOINT
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import java.util.*
 
-object CosmeticApi : BaseApi(API_V3_ENDPOINT) {
+object CosmeticApi : BaseApi(config.apiEndpointV3) {
 
     suspend fun getCarriers() =
         get<Set<String>>("/cosmetics/carriers")

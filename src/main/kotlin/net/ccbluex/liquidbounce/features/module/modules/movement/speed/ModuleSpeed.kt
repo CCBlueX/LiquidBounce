@@ -38,10 +38,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.gri
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043FastFall
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
@@ -78,8 +79,8 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedHypixelBHop(configurable),
         SpeedHypixelLowHop(configurable),
 
-        SpeedSpartan524(configurable),
-        SpeedSpartan524GroundTimer(configurable),
+        SpeedSpartanV4043(configurable),
+        SpeedSpartanV4043FastFall(configurable),
 
         SpeedSentinelDamage(configurable),
 
@@ -91,6 +92,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedNCP(configurable),
 
         SpeedIntave14(configurable),
+        SpeedIntave14Fast(configurable),
 
         SpeedHylexLowHop(configurable),
         SpeedHylexGround(configurable),

@@ -35,10 +35,11 @@ import net.minecraft.network.packet.Packet
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.apache.commons.lang3.StringUtils
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.max
 
 /**
@@ -77,8 +78,8 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val text = Text.empty().styled { it.withFormatting(Formatting.WHITE) }
-        if (origin == TransferOrigin.RECEIVE) {
+        val text = Text.empty().formatted(Formatting.WHITE)
+        if (origin == TransferOrigin.INCOMING) {
             text.append(message("receive"))
         } else {
             text.append(message("send"))
@@ -95,47 +96,44 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         text.append(packetName)
 
         if (canceled) {
-            text.append(" (".asText().styled { it.withFormatting(Formatting.RED) })
-            text.append(message("canceled").styled { it.withFormatting(Formatting.RED) })
-            text.append(")".asText().styled { it.withFormatting(Formatting.RED) })
+            text.append(" (".asText().formatted(Formatting.RED))
+            text.append(message("canceled").formatted(Formatting.RED))
+            text.append(")".asText().formatted(Formatting.RED))
         }
 
-        appendFields(text, clazz, packet)
+        text.appendFields(clazz, packet)
 
         chat(text, metadata = MessageMetadata(prefix = false))
     }
 
     private fun getPacketName(clazz: Class<out Packet<*>>): String {
+        fun getClassName(clazz: Class<*>): CharSequence {
+            val remapClassName = EnvironmentRemapper.remapClass(clazz)
+            val lastDotIndex = remapClassName.lastIndexOf('.')
+            val lastDollarIndex = remapClassName.lastIndexOf('$')
+            return remapClassName.subSequence(max(lastDotIndex, lastDollarIndex) + 1, remapClassName.length)
+        }
+
         return classNames.computeIfAbsent(clazz) {
-            val classNames = mutableListOf<String>()
+            val classNames = ArrayDeque<CharSequence>()
             classNames.add(getClassName(clazz))
 
-            var superclass = clazz.superclass
-            while (superclass != null && superclass != Any::class.java) {
-                classNames.add(getClassName(superclass))
+            var superclass: Class<*>? = clazz.superclass
+            while (superclass.isNotRoot()) {
+                classNames.addFirst(getClassName(superclass))
                 superclass = superclass.superclass
             }
 
-            classNames.reversed().joinToString(".")
+            classNames.joinToString(".")
         }
     }
 
-    private fun getClassName(clazz: Class<*>): String {
-        val remapClassName = EnvironmentRemapper.remapClass(clazz)
-        val lastDotIndex = remapClassName.lastIndexOf('.')
-        val lastDollarIndex = remapClassName.lastIndexOf('$')
-        return StringUtils.substring(remapClassName, max(lastDotIndex, lastDollarIndex) + 1)
-    }
-
-    @Suppress("SwallowedException")
-    private fun appendFields(text: MutableText, clazz: Class<out Packet<*>>, packet: Packet<*>) {
-        text.append(":\n")
-
+    private fun MutableText.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
         var start = true
 
         var currentClass: Class<*>? = clazz
 
-        while (currentClass != null) {
+        while (currentClass.isNotRoot()) {
             currentClass.declaredFields.forEach { field ->
                 if (Modifier.isStatic(field.modifiers)) {
                     return@forEach
@@ -144,10 +142,11 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                 field.isAccessible = true
 
                 if (start) {
+                    append(":")
                     start = false
-                } else {
-                    text.append("\n")
                 }
+
+                append("\n")
 
                 val name = fieldNames.computeIfAbsent(field) {
                     EnvironmentRemapper.remapField(currentClass!!.name, field.name)
@@ -155,16 +154,24 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
                 val value = try {
                     field.get(packet)?.toString()
-                } catch (e: IllegalAccessException) {
+                } catch (@Suppress("SwallowedException") _: IllegalAccessException) {
                     "null"
                 }
 
-                text.append("-$name: ".asText().styled { it.withFormatting(Formatting.GRAY) })
-                text.append("$value".asText().styled { it.withFormatting(Formatting.GRAY) })
+                append("-$name: ".asText().formatted(Formatting.GRAY))
+                append("$value".asText().formatted(Formatting.GRAY))
             }
 
             currentClass = currentClass.superclass
         }
+    }
+
+    @OptIn(ExperimentalContracts::class)
+    fun Class<*>?.isNotRoot(): Boolean {
+        contract {
+            returns(true) implies (this@isNotRoot != null)
+        }
+        return !(this == null || this === java.lang.Record::class.java || this.superclass == null)
     }
 
     override val running: Boolean
@@ -175,7 +182,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         override val choiceName: String,
         val origin: TransferOrigin,
     ) : NamedChoice {
-        CLIENT("Client", TransferOrigin.RECEIVE),
-        SERVER("Server", TransferOrigin.SEND)
+        CLIENT("Client", TransferOrigin.INCOMING),
+        SERVER("Server", TransferOrigin.OUTGOING)
     }
 }

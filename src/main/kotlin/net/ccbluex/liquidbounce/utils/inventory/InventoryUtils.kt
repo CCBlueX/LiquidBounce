@@ -164,19 +164,17 @@ fun useHotbarSlotOrOffhand(
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
 ) = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch)
-    else -> interactItem(Hand.MAIN_HAND, yaw, pitch) {
-        SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, ticksUntilReset)
+    else -> {
+        SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
+        interactItem(Hand.MAIN_HAND, yaw, pitch)
     }
 }
 
-inline fun interactItem(
+fun interactItem(
     hand: Hand,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
-    preInteraction: () -> Unit = { }
 ) {
-    preInteraction()
-
     interaction.interactItem(player, hand, yaw, pitch).takeIf { it.isAccepted }?.let {
         if (it.shouldSwingHand()) {
             player.swingHand(hand)

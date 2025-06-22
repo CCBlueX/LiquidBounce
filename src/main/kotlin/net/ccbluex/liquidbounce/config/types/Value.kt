@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
-import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -31,6 +29,9 @@ import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.script.asDoubleArray
+import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -42,6 +43,7 @@ import net.minecraft.client.util.InputUtil
 import java.util.*
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
+import org.graalvm.polyglot.Value as PolyglotValue
 
 typealias ValueListener<T> = (T) -> T
 
@@ -145,14 +147,19 @@ open class Value<T : Any>(
         set(t)
     }
 
+    @JvmName("getTagValue")
+    fun getTagValue(): Any = when (this) {
+        is MultiChooseListValue<*> -> "${get().size}/${choices.size}"
+        else -> getValue()
+    }
+
     @ScriptApiRequired
     @JvmName("getValue")
     fun getValue(): Any = when (this) {
         is ChoiceConfigurable<*> -> activeChoice.name
-        is MultiChooseListValue<*> -> "${get().size}/${choices.size}"
         else -> when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
-            is IntRange -> arrayOf(v.first, v.last)
+            is IntRange -> intArrayOf(v.first, v.last)
             is NamedChoice -> v.choiceName
             else -> v
         }
@@ -161,7 +168,7 @@ open class Value<T : Any>(
     @ScriptApiRequired
     @JvmName("setValue")
     @Suppress("UNCHECKED_CAST")
-    fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
+    fun setValue(t: PolyglotValue) = runCatching {
         if (this is ChooseListValue<*>) {
             setByString(t.asString())
             return@runCatching
@@ -170,7 +177,7 @@ open class Value<T : Any>(
         set(
             when (inner) {
                 is ClosedFloatingPointRange<*> -> {
-                    val a = t.`as`(Array<Double>::class.java)
+                    val a = t.asDoubleArray()
                     require(a.size == 2)
                     (a.first().toFloat()..a.last().toFloat()) as T
                 }
@@ -180,16 +187,17 @@ open class Value<T : Any>(
                 }
 
                 is IntRange -> {
-                    val a = t.`as`(Array<Int>::class.java)
+                    val a = t.asIntArray()
                     require(a.size == 2)
                     (a.first()..a.last()) as T
                 }
 
-                is Float -> t.`as`(Double::class.java).toFloat() as T
-                is Int -> t.`as`(Int::class.java) as T
-                is String -> t.`as`(String::class.java) as T
-                is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
-                is Boolean -> t.`as`(Boolean::class.java) as T
+                is Float -> t.asDouble().toFloat() as T
+                is Int -> t.asInt() as T
+                is String -> t.asString() as T
+                is MutableList<*> -> t.asArray<String>().toMutableList() as T
+                is LinkedHashSet<*> -> t.asArray<String>().toMutableSet() as T
+                is Boolean -> t.asBoolean() as T
                 else -> error("Unsupported value type $inner")
             }
         )
@@ -267,25 +275,26 @@ open class Value<T : Any>(
     /**
      * Deserialize value from JSON
      */
+    @Suppress("UNCHECKED_CAST")
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.inner
 
         set(
             when (currValue) {
                 is List<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    element.asJsonArray.mapTo(
                         mutableListOf()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
 
                 is HashSet<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    element.asJsonArray.mapTo(
                         HashSet()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
 
                 is Set<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    element.asJsonArray.mapTo(
                         TreeSet()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
@@ -308,6 +317,7 @@ open class Value<T : Any>(
             })
     }
 
+    @Suppress("UNCHECKED_CAST")
     open fun setByString(string: String) {
         val deserializer = this.valueType.deserializer
 
@@ -330,6 +340,7 @@ class RangedValue<T : Any>(
     valueType: ValueType
 ) : Value<T>(name, aliases, defaultValue, valueType) {
 
+    @Suppress("UNCHECKED_CAST")
     override fun setByString(string: String) {
         if (this.inner is ClosedRange<*>) {
             val split = string.split("..")
@@ -370,82 +381,6 @@ class BindValue(
     override fun setByString(string: String) {
         get().bind(string)
     }
-}
-
-class MultiChooseListValue<T>(
-    name: String,
-    value: EnumSet<T>,
-    @Exclude val choices: EnumSet<T>,
-
-    /**
-     * Can deselect all values or enable at least one
-     */
-    @Exclude val canBeNone: Boolean = true,
-) : Value<EnumSet<T>>(
-    name,
-    defaultValue = value,
-    valueType = ValueType.MULTI_CHOOSE,
-    listType = ListValueType.Enums
-) where T : Enum<T>, T : NamedChoice {
-    init {
-        if (!canBeNone) {
-            require(!choices.isEmpty()) {
-                "There are no values provided, " +
-                    "but at least one must be selected. (required because by canBeNone = false)"
-            }
-
-            require(!value.isEmpty()) {
-                "There are no default values enabled, " +
-                    "but at least one must be selected. (required because by canBeNone = false)"
-            }
-        }
-    }
-
-    override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val active = get()
-        active.clear()
-
-        when (element) {
-            is JsonArray -> element.forEach { active.tryToEnable(it.asString) }
-            is JsonPrimitive -> active.tryToEnable(element.asString)
-        }
-
-        if (!canBeNone && active.isEmpty()) {
-            active.addAll(choices)
-        }
-
-        set(active)
-    }
-
-    private fun EnumSet<T>.tryToEnable(name: String) {
-        val choiceWithName = choices.firstOrNull { it.choiceName == name }
-
-        if (choiceWithName != null) {
-            add(choiceWithName)
-        }
-    }
-
-    fun toggle(value: T): Boolean {
-        val current = get()
-
-        val isActive = value in current
-
-        if (isActive) {
-            if (!canBeNone && current.size <= 1) {
-                return true
-            }
-
-            current.remove(value)
-        } else {
-            current.add(value)
-        }
-
-        set(current)
-
-        return !isActive
-    }
-
-    operator fun contains(choice: T) = get().contains(choice)
 }
 
 class ChooseListValue<T : NamedChoice>(

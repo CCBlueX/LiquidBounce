@@ -18,20 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 
-object ScaffoldTowerPulldown : Choice("Pulldown") {
+object ScaffoldTowerPulldown : ScaffoldTower("Pulldown") {
 
     private val triggerMotion by float("Trigger", 0.1f, 0.0f..0.2f, "Y/v")
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = towerMode
 
     @Suppress("unused")
     private val jumpHandler = sequenceHandler<PlayerJumpEvent>(priority = READ_FINAL_STATE) { event ->

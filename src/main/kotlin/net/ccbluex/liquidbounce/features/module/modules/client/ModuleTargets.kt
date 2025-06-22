@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.Targets
+import java.util.*
 
 object ModuleTargets : ClientModule(
     name = "Targets",
@@ -49,7 +50,7 @@ object ModuleTargets : ClientModule(
         Targets.FRIENDS
     )
 
-    inline val combat get() = combatConfigurable.get()
+    inline val combat: EnumSet<Targets> get() = combatConfigurable.get() as EnumSet
 
-    inline val visual get() = visualConfigurable.get()
+    inline val visual: EnumSet<Targets> get() = visualConfigurable.get() as EnumSet
 }

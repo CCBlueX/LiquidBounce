@@ -62,7 +62,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
             player.isOnGround
         }),
         NOT_IN_WATER("NotInWater", { _ ->
-            player.isInsideWaterOrBubbleColumn
+            !player.isInsideWaterOrBubbleColumn
         }),
     }
 

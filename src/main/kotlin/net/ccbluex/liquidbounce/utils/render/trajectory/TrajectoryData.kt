@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity

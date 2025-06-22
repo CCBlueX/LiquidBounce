@@ -24,7 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.ccbluex.liquidbounce.render.engine.Color4b;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;

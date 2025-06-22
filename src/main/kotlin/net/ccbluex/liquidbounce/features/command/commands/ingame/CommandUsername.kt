@@ -22,12 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
+import net.ccbluex.liquidbounce.utils.client.*
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -43,14 +38,11 @@ object CommandUsername : CommandFactory, MinecraftShortcuts {
             .requiresIngame()
             .handler { command, _ ->
                 val username = player.name.string
-                val formattedUsername = bypassNameProtection(variable(username))
-                val formattedUsernameWithEvents = formattedUsername.styled {
-                    it
-                        .withItalic(true)
-                        .withUnderline(true)
-                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, regular("Copy username")))
-                        .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, username))
-                }
+                val formattedUsernameWithEvents = variable(username)
+                    .bypassNameProtection()
+                    .copyable(copyContent = username)
+                    .italic(true)
+                    .underline(true)
 
                 chat(regular(command.result("username", formattedUsernameWithEvents)), command)
                 GLFW.glfwSetClipboardString(mc.window.handle, username)

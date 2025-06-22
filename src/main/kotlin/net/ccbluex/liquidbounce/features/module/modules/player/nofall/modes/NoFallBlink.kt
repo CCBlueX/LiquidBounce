@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -138,7 +138,7 @@ internal object NoFallBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && blinkFall) {
+        if (event.origin == TransferOrigin.OUTGOING && blinkFall) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

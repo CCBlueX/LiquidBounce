@@ -24,19 +24,19 @@ import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 /**
  * Keeps at least one-tick interval between each click.
  */
-class EfficientPattern : ClickPattern {
+object EfficientPattern : ClickPattern {
 
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
         clicker: Clicker<*>
     ) {
-        var clicks = cps.random()
+        val clicks = cps.random()
 
         // Efficient will introduce wide gaps when the CPS is lower than half of the cycle length,
         // so we will use StabilizedPattern instead.
         if (clicks < 10) {
-            return StabilizedPattern().fill(clickArray, cps, clicker)
+            return StabilizedPattern.fill(clickArray, cps, clicker)
         }
 
         for (i in 0 until clicks) {

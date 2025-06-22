@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.integration.browser.supports
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
@@ -29,7 +28,9 @@ import net.ccbluex.liquidbounce.integration.browser.supports.tab.TabPosition
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
@@ -58,6 +59,7 @@ class JcefBrowser : IBrowser, EventListener {
     private val cacheFolder = mcefFolder.resolve("cache")
     private val tabs = mutableListOf<JcefTab>()
 
+    @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
         // Clean up old cache directories
         cleanup()
@@ -76,22 +78,7 @@ class JcefBrowser : IBrowser, EventListener {
 
             // Check if system is compatible with MCEF (JCEF)
             if (!resourceManager.isSystemCompatible) {
-                ErrorHandler.fatal("""
-                    LiquidBounce Nextgen could not start because your system is not compatible.
-
-                    What you need:
-                    - A 64-bit computer
-                    - Windows 10 or newer, macOS 10.15 or newer, or a Linux system
-
-                    What to do:
-                    - Please update your operating system to a newer version.
-
-                    Information:
-                    OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
-                    Java: ${System.getProperty("java.version")}
-                    Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
-                """.trimIndent())
-                return
+                throw JcefIsntCompatible
             }
 
             HashValidator.validateFolder(resourceManager.commitDirectory)
@@ -103,7 +90,13 @@ class JcefBrowser : IBrowser, EventListener {
                     runCatching {
                         resourceManager.downloadJcef()
                         RenderSystem.recordRenderCall(whenAvailable)
-                    }.onFailure(ErrorHandler::fatal)
+                    }.onFailure {
+                        ErrorHandler.fatal(
+                            error = it,
+                            quickFix = QuickFix.DOWNLOAD_JCEF_FAILED,
+                            additionalMessage = "Downloading jcef"
+                        )
+                    }
                 }
             } else {
                 whenAvailable()

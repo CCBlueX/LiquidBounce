@@ -27,11 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspOutlineMode;
-import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.render.shader.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler;
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -84,7 +84,7 @@ public abstract class MixinWorldRenderer {
             //noinspection unused
             var instance = OutlineShader.INSTANCE;
         } catch (Exception e) {
-            ErrorHandler.INSTANCE.fatal(e, "Failed to load outline shader");
+            ErrorHandler.fatal(e, null, true, "Failed to load outline shader");
 
             // This will make Minecraft unable to continue loading
             throw e;

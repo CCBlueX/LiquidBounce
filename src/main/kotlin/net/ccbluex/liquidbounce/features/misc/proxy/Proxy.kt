@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
+import io.netty.handler.proxy.HttpProxyHandler
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import java.net.InetSocketAddress
@@ -29,26 +30,42 @@ data class Proxy(
     val host: String,
     val port: Int,
     val credentials: Credentials?,
+    val type: Type?,
     var forwardAuthentication: Boolean = false,
     var ipInfo: IpInfoApi.IpData? = null,
     var favorite: Boolean = false
 ) {
 
+    enum class Type {
+        HTTP,
+        SOCKS5,
+    }
+
     val address
         get() = InetSocketAddress(host, port)
 
-    fun handler() = if (credentials != null) {
-        Socks5ProxyHandler(address, credentials.username, credentials.password)
-    } else {
-        Socks5ProxyHandler(address)
+    fun handler() = when (type ?: Type.SOCKS5) {
+        Type.HTTP -> if (credentials == null) {
+            HttpProxyHandler(address)
+        } else {
+            HttpProxyHandler(address, credentials.username, credentials.password)
+        }
+        Type.SOCKS5 -> if (credentials == null) {
+            Socks5ProxyHandler(address)
+        } else {
+            Socks5ProxyHandler(address, credentials.username, credentials.password)
+        }
     }
 
-    data class Credentials(val username: String, val password: String) {
-        companion object {
-            fun credentials(username: String, password: String) = if (username.isNotBlank() && password.isNotBlank()) {
-                Credentials(username, password)
-            } else {
+    class Credentials(val username: String, val password: String)
+
+    companion object {
+        @JvmStatic
+        fun credentials(username: String, password: String): Credentials? {
+            return if (username.isBlank() || password.isBlank()) {
                 null
+            } else {
+                Credentials(username, password)
             }
         }
     }

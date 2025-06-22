@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.services.auth
 
-import net.ccbluex.liquidbounce.api.core.AUTH_BASE_URL
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_BASE_URL
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.models.auth.TokenResponse

@@ -18,19 +18,22 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import com.google.gson.JsonElement
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.gson.GsonInstance
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Util
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSource
-import okio.buffer
 import okio.sink
 import java.io.File
 import java.io.InputStream
+import java.io.Reader
 import java.util.concurrent.TimeUnit
 
 val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -49,25 +52,15 @@ object HttpClient {
     /**
      * Client default [OkHttpClient]
      */
+    @get:JvmStatic
     val client: OkHttpClient = OkHttpClient.Builder()
+        .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
         .connectTimeout(3, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
         .build()
-
-    /**
-     * New [OkHttpClient.Builder] from [client],
-     * with default settings and shared connection pool / dispatcher / cache
-     */
-    @JvmStatic
-    fun newBuilder(): OkHttpClient.Builder = client.newBuilder()
-        .connectTimeout(3, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .followRedirects(true)
-        .followSslRedirects(true)
 
     suspend fun request(
         url: String,
@@ -96,30 +89,61 @@ object HttpClient {
 }
 
 enum class HttpMethod {
-    GET, POST, PUT, DELETE, PATCH
+    GET, POST, PUT, DELETE, PATCH, HEAD
 }
 
+/**
+ * Parse body from [Response].
+ *
+ * If [T] is one of following types, it should be closed after using:
+ * [InputStream] / [BufferedSource] / [Reader]
+ */
 inline fun <reified T> Response.parse(): T {
-    return use {
-        when (T::class.java) {
-            String::class.java -> body.string() as T
-            Unit::class.java -> Unit as T
-            InputStream::class.java -> body.byteStream() as T
-            BufferedSource::class.java -> body.source() as T
-            NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
-                NativeImageBackedTexture(NativeImage.read(stream)) as T
-            }
-            else -> decode<T>(body.charStream())
-        }
+    return when (T::class.java) {
+        String::class.java -> body.string() as T
+        Unit::class.java -> close() as T
+        InputStream::class.java -> body.byteStream() as T
+        BufferedSource::class.java -> body.source() as T
+        Reader::class.java -> body.charStream() as T
+        NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
+            NativeImageBackedTexture(NativeImage.read(stream))
+        } as T
+        else -> decode<T>(body.charStream())
     }
 }
 
+/**
+ * Read all UTF-8 lines from [BufferedSource] as an [Iterator].
+ *
+ * When there are no more lines to read, the source is closed automatically.
+ */
+fun BufferedSource.utf8Lines(): Iterator<String> =
+    object : AbstractIterator<String>() {
+        override fun computeNext() {
+            val nextLine = readUtf8Line()
+            if (nextLine != null) {
+                setNext(nextLine)
+            } else {
+                close()
+                done()
+            }
+        }
+    }
+
+/**
+ * Save response body to file.
+ */
 fun Response.toFile(file: File) = use { response ->
-    file.sink().buffer().use(response.body.source()::readAll)
+    file.sink().use(response.body.source()::readAll)
+}
+
+fun JsonElement.toRequestBody(): RequestBody {
+    return GsonInstance.ACCESSIBLE_INTEROP.gson.toJson(this)
+        .toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 }
 
 fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 fun String.asForm() = toRequestBody(HttpClient.FORM_MEDIA_TYPE)
 
-class HttpException(val method: HttpMethod, val url: String, val code: Int, message: String)
-    : Exception("${method.name} $url failed with code $code: $message")
+class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
+    : Exception("${method.name} $url failed with code $code: $content")

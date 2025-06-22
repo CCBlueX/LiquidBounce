@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
+import it.unimi.dsi.fastutil.chars.CharSets
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
@@ -34,8 +35,6 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
-fun text(): MutableText = Text.literal("")
-
 fun String.asText(): MutableText = Text.literal(this)
 
 fun Text.asNbt(world: World? = null): NbtString =
@@ -43,10 +42,13 @@ fun Text.asNbt(world: World? = null): NbtString =
         Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
     )
 
-fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
+fun Text.convertToString(): String = buildString {
+    append(string)
+    siblings.forEach { append(it.convertToString()) }
+}
 
 fun OrderedText.toText(): Text {
-    val textSnippets = mutableListOf<Pair<String, Style>>()
+    val text = Text.empty()
 
     var currentStyle = Style.EMPTY
     val currentText = StringBuilder()
@@ -54,7 +56,7 @@ fun OrderedText.toText(): Text {
     this.accept { index, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
-                textSnippets.add(currentText.toString() to currentStyle)
+                text.append(currentText.toString().asText().setStyle(currentStyle))
             }
 
             currentStyle = style
@@ -62,25 +64,13 @@ fun OrderedText.toText(): Text {
             currentText.clear()
         }
 
-        currentText.append(codePoint.toChar())
+        currentText.appendCodePoint(codePoint)
 
         return@accept true
     }
 
     if (currentText.isNotEmpty()) {
-        textSnippets.add(currentText.toString() to currentStyle)
-    }
-
-    if (textSnippets.isEmpty()) {
-        return Text.empty()
-    }
-
-    val text = MutableText.of(PlainTextContent.of(textSnippets[0].first)).setStyle(textSnippets[0].second)
-
-    for (i in 1 until textSnippets.size) {
-        val (snippet, style) = textSnippets[i]
-
-        text.append(MutableText.of(PlainTextContent.of(snippet)).setStyle(style))
+        text.append(currentText.toString().asText().setStyle(currentStyle))
     }
 
     return text
@@ -91,7 +81,7 @@ fun Text.processContent(): Text {
 
     if (content is TranslatableTextContent) {
         return MutableText.of(content.toPlainContent())
-            .styled { style }
+            .setStyle(style)
             .apply {
                 for (child in siblings) {
                     append(child.processContent())
@@ -114,7 +104,9 @@ fun TranslatableTextContent.toPlainContent(): TextContent {
     return PlainTextContent.of(stringBuilder.toString())
 }
 
-private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray())
+private val COLOR_CODE_CHARS = CharSets.unmodifiable(
+    CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray())
+)
 
 /**
  * Translate alt color codes to minecraft color codes
@@ -192,26 +184,25 @@ fun Int.formatAsTime(): String {
 }
 
 fun Long.formatAsCapacity(): String {
-    val bytes = this.toDouble()
-    val kilobytes = bytes / 1024
-    val megabytes = kilobytes / 1024
-    val gigabytes = megabytes / 1024
-    val terabytes = gigabytes / 1024
-
-    return when {
-        terabytes >= 1 -> "%.2f TB".format(terabytes)
-        gigabytes >= 1 -> "%.2f GB".format(gigabytes)
-        megabytes >= 1 -> "%.2f MB".format(megabytes)
-        kilobytes >= 1 -> "%.2f KB".format(kilobytes)
-        else -> "%.2f B".format(bytes)
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    var size = this.toDouble()
+    var unitIndex = 0
+    while (size >= 1024 && unitIndex < units.lastIndex) {
+        size /= 1024
+        unitIndex++
+    }
+    return if (unitIndex == 0) {
+        "$this ${units[unitIndex]}"
+    } else {
+        "%.2f ${units[unitIndex]}".format(size)
     }
 }
 
-fun hideSensitiveAddress(address: String): String {
+fun String.hideSensitiveAddress(): String {
     // Hide possibly sensitive information from LiquidProxy
     return when {
-        address.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
-        address.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
-        else -> address
+        this.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
+        this.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
+        else -> this
     }
 }

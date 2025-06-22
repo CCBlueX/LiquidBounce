@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Allows to queue packets and flush them later on demand.
  *
  * Fires [QueuePacketEvent] to determine whether a packet should be queued or not. They can be
- * from origin [TransferOrigin.RECEIVE] or [TransferOrigin.SEND], but will be handled separately.
+ * from origin [TransferOrigin.INCOMING] or [TransferOrigin.OUTGOING], but will be handled separately.
  */
 object PacketQueueManager : EventListener {
 
@@ -75,8 +75,8 @@ object PacketQueueManager : EventListener {
             return@handler
         }
 
-        if (fireEvent(null, TransferOrigin.SEND) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.SEND }
+        if (fireEvent(null, TransferOrigin.OUTGOING) == Action.FLUSH) {
+            flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
         }
     }
 
@@ -87,8 +87,8 @@ object PacketQueueManager : EventListener {
             return@handler
         }
 
-        if (fireEvent(null, TransferOrigin.RECEIVE) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.RECEIVE }
+        if (fireEvent(null, TransferOrigin.INCOMING) == Action.FLUSH) {
+            flush { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
         }
     }
 
@@ -246,8 +246,8 @@ object PacketQueueManager : EventListener {
 
     private fun flushSnapshot(snapshot: PacketSnapshot) {
         when (snapshot.origin) {
-            TransferOrigin.SEND -> sendPacketSilently(snapshot.packet)
-            TransferOrigin.RECEIVE -> handlePacket(snapshot.packet)
+            TransferOrigin.OUTGOING -> sendPacketSilently(snapshot.packet)
+            TransferOrigin.INCOMING -> handlePacket(snapshot.packet)
         }
     }
 

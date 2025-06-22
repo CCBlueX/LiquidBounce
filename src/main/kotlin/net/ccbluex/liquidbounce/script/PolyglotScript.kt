@@ -20,20 +20,23 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupContext
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -56,7 +59,7 @@ class PolyglotScript(
         .currentWorkingDirectory(file.parentFile.toPath())
         .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
-        .allowCreateThread(true) // Disable thread creation
+        .allowCreateThread(true) // Enable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
         .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
@@ -77,16 +80,13 @@ class PolyglotScript(
 
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(variable(devtoolURL).styled {
-                                    it.withUnderline(true)
-                                        .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, devtoolURL))
-                                        .withHoverEvent(
-                                            HoverEvent(
-                                                HoverEvent.Action.SHOW_TEXT,
-                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                            )
-                                        )
-                                })
+                                .append(variable(devtoolURL)
+                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
+                                        HoverEvent.Action.SHOW_TEXT,
+                                        regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                    ))
+                                    .underline(true)
+                                )
                         )
                     }
 
@@ -111,7 +111,7 @@ class PolyglotScript(
             // Global instances
             val bindings = getBindings(language)
 
-            ScriptContextProvider.setupContext(bindings)
+            this.setupContext(language, bindings)
 
             // Global functions
             bindings.putMember("registerScript", RegisterScript())
@@ -272,6 +272,8 @@ class PolyglotScript(
         registeredCommands.forEach(CommandManager::removeCommand)
 
         registeredChoices.forEach { it.parent.choices.remove(it) }
+
+        EventManager.callEvent(RefreshArrayListEvent)
 
         scriptEnabled = false
     }
