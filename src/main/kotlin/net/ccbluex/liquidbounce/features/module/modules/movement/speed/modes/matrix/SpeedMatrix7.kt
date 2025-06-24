@@ -6,7 +6,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
-/*
+/**
+ * @author XeContrast
  * bypassing matrix version > 7
  * testing in 6/23/25 at loyisa
  *
