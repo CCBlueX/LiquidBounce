@@ -38,6 +38,8 @@ object ItemStackSerializer : JsonSerializer<ItemStack> {
             it.enchantments.enchantmentEntries
                 .takeIf { set -> set.isNotEmpty() }
                 ?.let { entries ->
+                    // TODO: this property is deprecated. Please remove it in 0.32.0
+                    addProperty("hasEnchantment", true)
                     add("enchantments", JsonObject().apply {
                         for ((key, level) in entries) {
                             addProperty(key.idAsString, level)
