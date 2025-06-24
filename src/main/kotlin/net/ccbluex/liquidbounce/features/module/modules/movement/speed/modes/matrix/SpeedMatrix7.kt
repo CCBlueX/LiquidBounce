@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
 /*
@@ -21,7 +20,7 @@ class SpeedMatrix7(override val parent : ChoiceConfigurable<*>) : SpeedBHopBase(
                 player.velocity.y = 0.419652
                 player.velocity = player.velocity.withStrafe()
             } else {
-                if (player.sqrtSpeed < 0.19f) {
+                if (player.velocity.x * player.velocity.x + player.velocity.z * player.velocity.z < 0.04) {
                     player.velocity = player.velocity.withStrafe()
                 }
             }
