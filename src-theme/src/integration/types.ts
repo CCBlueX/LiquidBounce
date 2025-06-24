@@ -239,6 +239,7 @@ export interface ItemStack {
     maxDamage: number;
     displayName: TextComponent | string;
     hasEnchantment: boolean;
+    enchantments?: Record<string, number>;
 }
 
 export interface PrintableKey {
