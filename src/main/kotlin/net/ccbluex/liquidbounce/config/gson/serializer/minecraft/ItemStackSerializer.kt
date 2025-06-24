@@ -35,7 +35,17 @@ object ItemStackSerializer : JsonSerializer<ItemStack> {
             addProperty("damage", it.damage)
             addProperty("maxDamage", it.maxDamage)
             addProperty("empty", it.isEmpty)
-            addProperty("hasEnchantment", !it.enchantments.isEmpty)
+            val enchantments = it.enchantments
+            addProperty("hasEnchantment", !enchantments.isEmpty)
+            if (!enchantments.isEmpty) {
+                add("enchantments", JsonObject().apply {
+                    enchantments.enchantmentEntries.forEach { entry ->
+                        val enchantment = entry.key
+                        val level = entry.intValue
+                        addProperty(enchantment.idAsString, level)
+                    }
+                })
+            }
         }
     }
 
