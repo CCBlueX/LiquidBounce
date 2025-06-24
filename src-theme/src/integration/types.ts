@@ -238,7 +238,6 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
-    hasEnchantment: boolean;
     enchantments?: Record<string, number>;
 }
 
