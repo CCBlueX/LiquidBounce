@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.minecraft.network.packet.Packet
 import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.lang.reflect.Field
 import java.lang.reflect.GenericArrayType
@@ -86,7 +87,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val text = "".asText()
+        val text = Text.empty()
         if (origin == TransferOrigin.INCOMING) {
             text.append(message("receive").formatted(Formatting.BLUE).bold(true))
         } else {
@@ -127,15 +128,15 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         }
 
         return classNames.computeIfAbsent(clazz) {
-            val classNames = ArrayDeque<CharSequence>()
+            val classNames = mutableListOf<CharSequence>()
             classNames.add(getClassName(clazz))
 
             var superclass: Class<*>? = clazz.superclass
             while (superclass.isNotRoot()) {
-                classNames.addFirst(getClassName(superclass))
+                classNames.add(getClassName(superclass))
                 superclass = superclass.superclass
             }
-
+            classNames.reverse()
             classNames.joinToString(".")
         }
     }
@@ -191,7 +192,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         contract {
             returns(true) implies (this@isNotRoot != null)
         }
-        return !(this == null || this === java.lang.Record::class.java || this.superclass == null)
+        return !(this == null || this === Record::class.java || this.superclass == null)
     }
 
     override val running: Boolean
@@ -205,32 +206,32 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         CLIENT("Client", TransferOrigin.INCOMING),
         SERVER("Server", TransferOrigin.OUTGOING)
     }
-}
 
-private fun Field.fullTypeString(): String {
-    fun Type.parse(): String =
-        when (this) {
-            is Class<*> -> this.simpleName
-            is ParameterizedType -> {
-                val rawType = rawType.parse()
-                val args = actualTypeArguments
-                args.joinToString(", ", prefix = "$rawType<", postfix = ">") { it.parse() }
-            }
-            is WildcardType -> {
-                when {
-                    lowerBounds.isNotEmpty() -> "? super ${lowerBounds.first().parse()}"
-                    upperBounds.isNotEmpty() && upperBounds.first() !== Object::class.java ->
-                        upperBounds.joinToString(" & ", prefix = "? extends ") { it.parse() }
-                    else -> "?"
+    private fun Field.fullTypeString(): String {
+        fun Type.parse(): String =
+            when (this) {
+                is Class<*> -> this.simpleName
+                is ParameterizedType -> {
+                    val rawType = rawType.parse()
+                    val args = actualTypeArguments
+                    args.joinToString(", ", prefix = "$rawType<", postfix = ">") { it.parse() }
                 }
+                is WildcardType -> {
+                    when {
+                        lowerBounds.isNotEmpty() -> "? super ${lowerBounds.first().parse()}"
+                        upperBounds.isNotEmpty() && upperBounds.first() !== Object::class.java ->
+                            upperBounds.joinToString(" & ", prefix = "? extends ") { it.parse() }
+                        else -> "?"
+                    }
+                }
+                is TypeVariable<*> -> when {
+                    bounds.size == 1 && bounds[0] === Object::class.java -> name
+                    else -> bounds.joinToString(" & ", prefix = "$name extends ") { it.parse() }
+                }
+                is GenericArrayType -> "${genericComponentType.parse()}[]"
+                else -> this.toString()
             }
-            is TypeVariable<*> -> when {
-                bounds.size == 1 && bounds[0] === Object::class.java -> name
-                else -> bounds.joinToString(" & ", prefix = "$name extends ") { it.parse() }
-            }
-            is GenericArrayType -> "${genericComponentType.parse()}[]"
-            else -> this.toString()
-        }
 
-    return genericType.parse()
+        return genericType.parse()
+    }
 }
