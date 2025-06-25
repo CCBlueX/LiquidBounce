@@ -660,6 +660,7 @@
   "liquidbounce.module.spider.description": "允许你像蜘蛛侠一样爬墙。",
   "liquidbounce.module.offhand.description": "自动管理副手物品，包括水晶、金苹果、药水等。",
   "liquidbounce.module.skinDerp.description": "使你皮肤的不同层次反复开关。",
+  "liquidbounce.module.skinChanger.description": "在客户端隐藏玩家的真实皮肤（对制作视频很有用）。",
   "liquidbounce.module.sleepWalker.description": "允许你在睡觉时走动，并减小你的碰撞箱。",
   "liquidbounce.module.sneak.description": "自动保持潜行状态。",
   "liquidbounce.module.spammer.description": "在聊天框刷屏指定的信息。",

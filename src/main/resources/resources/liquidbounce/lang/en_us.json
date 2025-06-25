@@ -657,6 +657,7 @@
   "liquidbounce.module.spider.description": "Allows you to climb walls like spiderman.",
   "liquidbounce.module.offhand.description": "Manages your offhand.",
   "liquidbounce.module.skinDerp.description": "Makes the different layers of your skin turn on and off.",
+  "liquidbounce.module.skinChanger.description": "Hides the player's real skin client-side (useful for videos).",
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping and decreases the size of your hit box.",
   "liquidbounce.module.sneak.description": "Automatically makes you sneak constantly.",
   "liquidbounce.module.spammer.description": "Spams the chat with specified messages.",
