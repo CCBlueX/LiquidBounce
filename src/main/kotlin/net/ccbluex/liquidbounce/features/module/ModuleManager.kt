@@ -385,6 +385,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleItemChams,
             ModuleCrystalView,
             ModuleSkinChanger,
+            ModuleChinaHat,
 
             // World
             ModuleAutoBuild,
