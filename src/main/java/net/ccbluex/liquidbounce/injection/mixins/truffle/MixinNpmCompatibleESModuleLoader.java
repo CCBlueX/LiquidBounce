@@ -26,6 +26,7 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.js.builtins.commonjs.NpmCompatibleESModuleLoader;
 import com.oracle.truffle.js.runtime.JSRealm;
 import com.oracle.truffle.js.runtime.objects.DefaultESModuleLoader;
+import net.ccbluex.liquidbounce.script.api.ScriptJvmTypeSupport;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,7 +49,7 @@ public abstract class MixinNpmCompatibleESModuleLoader extends DefaultESModuleLo
     @Inject(method = "esmResolve", at = @At("HEAD"), cancellable = true, remap = false)
     private void interceptJvmTypesResolve(String specifier, URI parentURL, TruffleLanguage.Env env, CallbackInfoReturnable<URI> cir) {
         // Check if this is a jvm-types import
-        if (specifier.startsWith("jvm-types/")) {
+        if (specifier.startsWith(ScriptJvmTypeSupport.JVM_TYPES_PREFIX)) {
             // Return special token to trigger CommonJS fallback
             // This matches the TryCommonJS constant in NpmCompatibleESModuleLoader
             cir.setReturnValue(TryCommonJS);

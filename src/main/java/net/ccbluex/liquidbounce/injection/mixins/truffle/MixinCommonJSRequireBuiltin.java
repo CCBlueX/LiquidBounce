@@ -30,6 +30,7 @@ import com.oracle.truffle.js.runtime.Strings;
 import com.oracle.truffle.js.runtime.builtins.JSOrdinary;
 import com.oracle.truffle.js.runtime.objects.JSDynamicObject;
 import com.oracle.truffle.js.runtime.objects.JSObject;
+import net.ccbluex.liquidbounce.script.api.ScriptJvmTypeSupport;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -47,8 +48,8 @@ public abstract class MixinCommonJSRequireBuiltin extends GlobalBuiltins.JSFileL
         String moduleId = moduleIdentifier.toJavaStringUncached();
 
         // Check if this is a jvm-types require
-        if (moduleId.startsWith("jvm-types/")) {
-            String javaTypePath = moduleId.substring("jvm-types/".length()).replace("/", ".");
+        if (moduleId.startsWith(ScriptJvmTypeSupport.JVM_TYPES_PREFIX)) {
+            String javaTypePath = moduleId.substring(ScriptJvmTypeSupport.JVM_TYPES_PREFIX.length()).replace("/", ".");
             try {
                 // Get the class name for the export
                 String className = moduleId.substring(moduleId.lastIndexOf("/") + 1);
