@@ -483,6 +483,7 @@
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-full block blocks.",
   "liquidbounce.module.breadcrumbs.description": "Leaves a trace behind you.",
   "liquidbounce.module.antiVoid.description": "Protects you from falling into the void.",
+  "liquidbounce.module.chinaHat.description": "Draws a cone above players' heads.",
   "liquidbounce.module.cameraClip.description": "Allows you to clip the camera through walls in third person mode.",
   "liquidbounce.module.capeTransfer.description": "Automatically transfers your donator cape to the current account. Donate at liquidbounce.net/donate.",
   "liquidbounce.module.chestStealer.description": "Automatically steals all items from a chest.",
