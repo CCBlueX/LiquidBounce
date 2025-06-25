@@ -7,10 +7,10 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
 /**
- * @author XeContrast
  * bypassing matrix version > 7
  * testing in 6/23/25 at loyisa
  *
+ * @author XeContrast
  */
 class SpeedMatrix7(override val parent : ChoiceConfigurable<*>) : SpeedBHopBase("Matrix7",parent) {
 
