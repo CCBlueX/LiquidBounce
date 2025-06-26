@@ -30,31 +30,45 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER) {
     private val yOffset by float("YOffset", 0f, -1f..1f)
     private val colorMode = choices("ColorMode", Gradient, arrayOf(Static, Gradient, Rainbow))
 
-    object Static : Choice("Static") {
+    private sealed class ColorMode(name: String) : Choice(name) {
         override val parent get() = colorMode
-        val color by color("Color", Color4b(70, 119, 255, 120))
+        abstract fun calcColor(time: Double, segs: Int, i: Int, t: Float): Vector4f
     }
 
-    object Gradient : Choice("Gradient") {
-        override val parent get() = colorMode
+    private object Static : ColorMode("Static") {
+        val color by color("Color", Color4b(70, 119, 255, 120))
+        override fun calcColor(time: Double, segs: Int, i: Int, t: Float): Vector4f =
+            color.toVec4f()
+    }
+
+    private object Gradient : ColorMode("Gradient") {
         val colorStart by color("StartColor", Color4b(0, 0, 255, 0))
         val colorEnd by color("EndColor", Color4b(105, 222, 255, 255))
         val speed by float("RotationSpeed", 1f, 0.1f..10f)
+        override fun calcColor(time: Double, segs: Int, i: Int, t: Float): Vector4f {
+            if (t == 0f) return colorStart.toVec4f()
+            val gradientRotation = time * speed * Math.PI
+            val angle = 2.0 * Math.PI * i / segs + gradientRotation
+            val factor = (sin(angle) * 0.5 + 0.5).toFloat()
+            return lerpColor(colorStart, colorEnd, factor).toVec4f()
+        }
     }
 
-    object Rainbow : Choice("Rainbow") {
-        override val parent get() = colorMode
+    private object Rainbow : ColorMode("Rainbow") {
+        override fun calcColor(time: Double, segs: Int, i: Int, t: Float): Vector4f {
+            val staticAlpha = (Static.color.a / 255f)
+            return rainbow().toVec4f().apply { w = staticAlpha }
+        }
     }
 
-    override fun disable() {}
-
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             drawHats(event.matrixStack, colorMode.activeChoice)
         }
     }
 
-    private fun drawHats(matrixStack: MatrixStack, mode: Choice) {
+    private fun drawHats(matrixStack: MatrixStack, mode: ColorMode) {
         val camera = mc.entityRenderDispatcher.camera ?: return
         val isFirstPerson = mc.options.perspective.isFirstPerson && mc.cameraEntity === player
         val players = if (onlyOwn) listOf(player) else world.players
@@ -85,7 +99,7 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER) {
         buffer: BufferBuilder,
         camera: Camera,
         entity: Entity,
-        mode: Choice
+        mode: ColorMode
     ) {
         val tickDelta = mc.renderTickCounter.getTickDelta(true)
         val px = ((entity.prevX + (entity.x - entity.prevX) * tickDelta) - camera.pos.x).toFloat()
@@ -96,31 +110,15 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER) {
         val r = radius
         val h = height
 
-        val staticAlpha = (Static.color.a / 255f)
         val time = (System.currentTimeMillis() % 360000L) / 1000.0
-        val gradientRotation = if (mode is Gradient) time * mode.speed * Math.PI else 0.0
 
-        val colorFun: (Float, Int) -> Vector4f = when (mode) {
-            is Static -> { _, _ -> mode.color.toVec4f() }
-            is Gradient -> { t, i ->
-                if (t == 0f) mode.colorStart.toVec4f()
-                else {
-                    val angle = 2.0 * Math.PI * i / segs + gradientRotation
-                    val factor = (sin(angle) * 0.5 + 0.5).toFloat()
-                    lerpColor(mode.colorStart, mode.colorEnd, factor).toVec4f()
-                }
-            }
-            is Rainbow -> { _, _ -> rainbow().toVec4f().apply { w = staticAlpha } }
-            else -> { _, _ -> Vector4f(70 / 255f, 119 / 255f, 255 / 255f, 120 / 255f) }
-        }
-
-        val centerCol = colorFun(0f, 0)
+        val centerCol = mode.calcColor(time, segs, 0, 0f)
         buffer.vertex(matrix, px, py + h, pz).color(centerCol.x, centerCol.y, centerCol.z, centerCol.w)
         for (i in 0..segs) {
             val angle = 2.0 * Math.PI * i / segs
             val dx = (cos(angle) * r).toFloat()
             val dz = (sin(angle) * r).toFloat()
-            val col = colorFun(1f, i)
+            val col = mode.calcColor(time, segs, i, 1f)
             buffer.vertex(matrix, px + dx, py, pz + dz).color(col.x, col.y, col.z, col.w)
         }
     }
