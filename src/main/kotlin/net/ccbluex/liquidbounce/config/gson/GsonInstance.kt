@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.*
 import net.ccbluex.liquidbounce.config.gson.serializer.*
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.*
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
-import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclusionStrategy
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -91,7 +91,7 @@ enum class GsonInstance(
  * A GSON instance which is used for local files.
  */
 val fileGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.FILE_SERIALIZER)
     .create()
@@ -101,7 +101,7 @@ val fileGson: Gson = GsonBuilder()
  */
 val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.PUBLIC_SERIALIZER)
     .create()
@@ -110,7 +110,7 @@ val publicGson: Gson = GsonBuilder()
  * This GSON instance is used for interop communication.
  */
 internal val interopGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .create()
@@ -120,7 +120,7 @@ internal val interopGson: Gson = GsonBuilder()
  * and often comes with an easier syntax to use in other programming languages like JavaScript.
  */
 internal val accessibleInteropGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .registerTypeHierarchyAdapter(Component::class.javaObjectType, ReadOnlyComponentSerializer)

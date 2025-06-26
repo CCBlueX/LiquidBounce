@@ -98,7 +98,7 @@ object CommandLocalConfig : CommandFactory {
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
         Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
-        chat(regular(command.result("browse", variable(ConfigSystem.userConfigsFolder.absolutePath))))
+        chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
 
     private fun listSubcommand() = CommandBuilder

@@ -42,7 +42,7 @@ object CommandClient : CommandFactory {
             .subcommand(CommandClientLanguageSubcommand.languageCommand())
             .subcommand(CommandClientThemeSubcommand.themeCommand())
             .subcommand(CommandClientComponentSubcommand.componentCommand())
-            .subcommand(CommandClientAppearanceSubcommand.appereanceCommand())
+            .subcommand(CommandClientAppearanceSubcommand.appearanceCommand())
             .subcommand(CommandClientPrefixSubcommand.prefixCommand())
             .subcommand(CommandClientDestructSubcommand.destructCommand())
             .subcommand(CommandClientAccountSubcommand.accountCommand())

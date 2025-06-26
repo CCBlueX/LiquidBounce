@@ -53,7 +53,10 @@ object TickPacketProcessEvent : Event()
 
 @Nameable("key")
 @WebSocketEvent
-class KeyEvent(val key: InputUtil.Key, val action: Int) : Event()
+class KeyEvent(
+    val key: InputUtil.Key,
+    val action: Int,
+) : Event()
 
 // Input events
 @Nameable("inputHandle")
@@ -63,39 +66,56 @@ object InputHandleEvent : Event()
 class MovementInputEvent(
     var directionalInput: DirectionalInput,
     var jump: Boolean,
-    var sneak: Boolean
+    var sneak: Boolean,
 ) : Event()
 
 @Nameable("sprint")
-class SprintEvent(val directionalInput: DirectionalInput, var sprint: Boolean, val source: Source) : Event() {
+class SprintEvent(
+    val directionalInput: DirectionalInput,
+    var sprint: Boolean,
+    val source: Source,
+) : Event() {
     enum class Source {
         INPUT,
         MOVEMENT_TICK,
-        NETWORK
+        NETWORK,
     }
 }
 
 @Nameable("sneakNetwork")
-class SneakNetworkEvent(val directionalInput: DirectionalInput, var sneak: Boolean) : Event()
+class SneakNetworkEvent(
+    val directionalInput: DirectionalInput,
+    var sneak: Boolean,
+) : Event()
 
 @Nameable("mouseRotation")
-class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
+class MouseRotationEvent(
+    var cursorDeltaX: Double,
+    var cursorDeltaY: Double,
+) : CancellableEvent()
 
 @Nameable("keybindChange")
 @WebSocketEvent
-object KeybindChangeEvent: Event()
+object KeybindChangeEvent : Event()
 
 @Nameable("keybindIsPressed")
-class KeybindIsPressedEvent(val keyBinding: KeyBinding, var isPressed: Boolean) : Event()
+class KeybindIsPressedEvent(
+    val keyBinding: KeyBinding,
+    var isPressed: Boolean,
+) : Event()
 
 @Nameable("useCooldown")
-class UseCooldownEvent(var cooldown: Int) : Event()
+class UseCooldownEvent(
+    var cooldown: Int,
+) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
 @Nameable("autoJump")
-class MinecraftAutoJumpEvent(var autoJump: Boolean) : Event()
+class MinecraftAutoJumpEvent(
+    var autoJump: Boolean,
+) : Event()
 
 /**
  * All events which are related to the minecraft client
@@ -103,14 +123,20 @@ class MinecraftAutoJumpEvent(var autoJump: Boolean) : Event()
 
 @Nameable("session")
 @WebSocketEvent
-class SessionEvent(val session: Session) : Event()
+class SessionEvent(
+    val session: Session,
+) : Event()
 
 @Nameable("screen")
-class ScreenEvent(val screen: Screen?) : CancellableEvent()
+class ScreenEvent(
+    val screen: Screen?,
+) : CancellableEvent()
 
 @Nameable("chatSend")
 @WebSocketEvent
-class ChatSendEvent(val message: String) : CancellableEvent()
+class ChatSendEvent(
+    val message: String,
+) : CancellableEvent()
 
 @Nameable("chatReceive")
 @WebSocketEvent
@@ -118,15 +144,13 @@ class ChatReceiveEvent(
     val message: String,
     val textData: Text,
     val type: ChatType,
-    val applyChatDecoration: (Text) -> Text
+    val applyChatDecoration: (Text) -> Text,
 ) : CancellableEvent() {
-
     enum class ChatType {
         CHAT_MESSAGE,
         DISGUISED_CHAT_MESSAGE,
-        GAME_MESSAGE
+        GAME_MESSAGE,
     }
-
 }
 
 @Nameable("serverConnect")
@@ -134,7 +158,7 @@ class ServerConnectEvent(
     val connectScreen: ConnectScreen,
     val address: ServerAddress,
     val serverInfo: ServerInfo,
-    val cookieStorage: CookieStorage?
+    val cookieStorage: CookieStorage?,
 ) : CancellableEvent()
 
 @Nameable("disconnect")
@@ -143,10 +167,18 @@ object DisconnectEvent : Event()
 
 @Nameable("overlayMessage")
 @WebSocketEvent
-class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()
+class OverlayMessageEvent(
+    val text: Text,
+    val tinted: Boolean,
+) : Event()
 
 @Nameable("perspective")
-class PerspectiveEvent(var perspective: Perspective) : Event()
+class PerspectiveEvent(
+    var perspective: Perspective,
+) : Event()
 
 @Nameable("itemLoreQuery")
-class ItemLoreQueryEvent(val itemStack: ItemStack, val lore: ArrayList<Text>) : Event()
+class ItemLoreQueryEvent(
+    val itemStack: ItemStack,
+    val lore: ArrayList<Text>,
+) : Event()
