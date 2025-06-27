@@ -1,34 +1,34 @@
-package net.ccbluex.liquidbounce.utils.aiming
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠁⠊⠍⠊⠝⠛
 
-import net.minecraft.util.math.Vec3d
-import org.joml.Matrix3f
-import org.junit.jupiter.api.Test
-import kotlin.math.atan2
-import kotlin.math.hypot
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠥⠞⠊⠇.⠍⠁⠞⠓.⠧⠑⠉3⠙
+⠊⠍⠏⠕⠗⠞ ⠕⠗⠛.⠚⠕⠍⠇.⠍⠁⠞⠗⠊⠭3⠋
+⠊⠍⠏⠕⠗⠞ ⠕⠗⠛.⠚⠥⠝⠊⠞.⠚⠥⠏⠊⠞⠑⠗.⠁⠏⠊.⠞⠑⠎⠞
+⠊⠍⠏⠕⠗⠞ ⠅⠕⠞⠇⠊⠝.⠍⠁⠞⠓.⠁⠞⠁⠝2
+⠊⠍⠏⠕⠗⠞ ⠅⠕⠞⠇⠊⠝.⠍⠁⠞⠓.⠓⠽⠏⠕⠞
 
-class PointFindingKtTest {
+⠉⠇⠁⠎⠎ ⠏⠕⠊⠝⠞⠋⠊⠝⠙⠊⠝⠛⠅⠞⠞⠑⠎⠞ {
 
-    @Test
-    fun testPlanePointConstruction() {
-        val normalVec = Vec3d(-1.0, 1.0, -1.0).normalize()
+    @⠞⠑⠎⠞
+    ⠋⠥⠝ ⠞⠑⠎⠞⠏⠇⠁⠝⠑⠏⠕⠊⠝⠞⠉⠕⠝⠎⠞⠗⠥⠉⠞⠊⠕⠝() {
+        ⠧⠁⠇ ⠝⠕⠗⠍⠁⠇⠧⠑⠉ = ⠧⠑⠉3⠙(-1.0, 1.0, -1.0).⠝⠕⠗⠍⠁⠇⠊⠵⠑()
 
-        val hypotenuse = hypot(normalVec.x, normalVec.z)
+        ⠧⠁⠇ ⠓⠽⠏⠕⠞⠑⠝⠥⠎⠑ = ⠓⠽⠏⠕⠞(⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠭, ⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠵)
 
-        val yawAtan = atan2(normalVec.z, normalVec.x).toFloat()
-        val pitchAtan = atan2(normalVec.y, hypotenuse).toFloat()
+        ⠧⠁⠇ ⠽⠁⠺⠁⠞⠁⠝ = ⠁⠞⠁⠝2(⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠵, ⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠭).⠞⠕⠋⠇⠕⠁⠞()
+        ⠧⠁⠇ ⠏⠊⠞⠉⠓⠁⠞⠁⠝ = ⠁⠞⠁⠝2(⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠽, ⠓⠽⠏⠕⠞⠑⠝⠥⠎⠑).⠞⠕⠋⠇⠕⠁⠞()
 
-        val initVec = Vec3d(1.0, 0.0, 0.0)
-        val rotZ = initVec.rotateZ(-pitchAtan)
-        val rotY = rotZ.rotateY(-yawAtan)
+        ⠧⠁⠇ ⠊⠝⠊⠞⠧⠑⠉ = ⠧⠑⠉3⠙(1.0, 0.0, 0.0)
+        ⠧⠁⠇ ⠗⠕⠞⠵ = ⠊⠝⠊⠞⠧⠑⠉.⠗⠕⠞⠁⠞⠑⠵(-⠏⠊⠞⠉⠓⠁⠞⠁⠝)
+        ⠧⠁⠇ ⠗⠕⠞⠽ = ⠗⠕⠞⠵.⠗⠕⠞⠁⠞⠑⠽(-⠽⠁⠺⠁⠞⠁⠝)
 
-        val rotMatrix1 = Matrix3f().rotateZ(-pitchAtan)
-        val rotMatrix2 = Matrix3f().rotateY(yawAtan)
+        ⠧⠁⠇ ⠗⠕⠞⠍⠁⠞⠗⠊⠭1 = ⠍⠁⠞⠗⠊⠭3⠋().⠗⠕⠞⠁⠞⠑⠵(-⠏⠊⠞⠉⠓⠁⠞⠁⠝)
+        ⠧⠁⠇ ⠗⠕⠞⠍⠁⠞⠗⠊⠭2 = ⠍⠁⠞⠗⠊⠭3⠋().⠗⠕⠞⠁⠞⠑⠽(⠽⠁⠺⠁⠞⠁⠝)
 
-        val totalMatrix = rotMatrix1.mul(rotMatrix2)
+        ⠧⠁⠇ ⠞⠕⠞⠁⠇⠍⠁⠞⠗⠊⠭ = ⠗⠕⠞⠍⠁⠞⠗⠊⠭1.⠍⠥⠇(⠗⠕⠞⠍⠁⠞⠗⠊⠭2)
 
-        println(rotY.dotProduct(normalVec))
-        println(rotY)
-        println(normalVec.toVector3f().mul(totalMatrix))
+        ⠏⠗⠊⠝⠞⠇⠝(⠗⠕⠞⠽.⠙⠕⠞⠏⠗⠕⠙⠥⠉⠞(⠝⠕⠗⠍⠁⠇⠧⠑⠉))
+        ⠏⠗⠊⠝⠞⠇⠝(⠗⠕⠞⠽)
+        ⠏⠗⠊⠝⠞⠇⠝(⠝⠕⠗⠍⠁⠇⠧⠑⠉.⠞⠕⠧⠑⠉⠞⠕⠗3⠋().⠍⠥⠇(⠞⠕⠞⠁⠇⠍⠁⠞⠗⠊⠭))
     }
 
 }
