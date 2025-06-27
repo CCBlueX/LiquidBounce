@@ -143,7 +143,7 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
         override fun handleEntityCollision(pos: BlockPos): Boolean {
             if (player.moving) {
                 if (player.isOnGround) player.velocity = player.velocity.withStrafe(0.23)
-                if (player.velocity.y > 0) player.velocity.y -= player.velocity.y * 2
+                if (player.velocity.y > 0) player.velocity.y = -player.velocity.y
             }
             return false
         }
