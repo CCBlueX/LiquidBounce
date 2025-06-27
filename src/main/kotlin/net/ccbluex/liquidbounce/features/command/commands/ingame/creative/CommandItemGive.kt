@@ -1,77 +1,77 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠎.⠊⠝⠛⠁⠍⠑.⠉⠗⠑⠁⠞⠊⠧⠑
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.itemParameter
-import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠊⠞⠑⠍⠏⠁⠗⠁⠍⠑⠞⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.*
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠊⠞⠑⠍.⠉⠗⠑⠁⠞⠑⠊⠞⠑⠍
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠝⠑⠞⠺⠕⠗⠅.⠏⠁⠉⠅⠑⠞.⠉2⠎.⠏⠇⠁⠽.⠉⠗⠑⠁⠞⠊⠧⠑⠊⠝⠧⠑⠝⠞⠕⠗⠽⠁⠉⠞⠊⠕⠝⠉2⠎⠏⠁⠉⠅⠑⠞
 
 /**
- * ItemGive Command
+ * ⠊⠞⠑⠍⠛⠊⠧⠑ ⠉⠕⠍⠍⠁⠝⠙
  *
- * Allows you to give items to the player.
+ * ⠁⠇⠇⠕⠺⠎ ⠽⠕⠥ ⠞⠕ ⠛⠊⠧⠑ ⠊⠞⠑⠍⠎ ⠞⠕ ⠞⠓⠑ ⠏⠇⠁⠽⠑⠗.
  */
-object CommandItemGive : CommandFactory {
+⠕⠃⠚⠑⠉⠞ ⠉⠕⠍⠍⠁⠝⠙⠊⠞⠑⠍⠛⠊⠧⠑ : ⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽ {
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("give")
-            .requiresIngame()
-            .parameter(itemParameter().required().build())
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("amount")
-                    .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
-                    .optional()
-                    .build()
+    ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠉⠗⠑⠁⠞⠑⠉⠕⠍⠍⠁⠝⠙(): ⠉⠕⠍⠍⠁⠝⠙ {
+        ⠗⠑⠞⠥⠗⠝ ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+            .⠃⠑⠛⠊⠝("⠛⠊⠧⠑")
+            .⠗⠑⠟⠥⠊⠗⠑⠎⠊⠝⠛⠁⠍⠑()
+            .⠏⠁⠗⠁⠍⠑⠞⠑⠗(⠊⠞⠑⠍⠏⠁⠗⠁⠍⠑⠞⠑⠗().⠗⠑⠟⠥⠊⠗⠑⠙().⠃⠥⠊⠇⠙())
+            .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+                ⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+                    .⠃⠑⠛⠊⠝<⠊⠝⠞>("⠁⠍⠕⠥⠝⠞")
+                    .⠧⠑⠗⠊⠋⠊⠑⠙⠃⠽(⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠏⠕⠎⠊⠞⠊⠧⠑_⠊⠝⠞⠑⠛⠑⠗_⠧⠁⠇⠊⠙⠁⠞⠕⠗)
+                    .⠕⠏⠞⠊⠕⠝⠁⠇()
+                    .⠃⠥⠊⠇⠙()
             )
-            .handler { command, args ->
-                if (!interaction.hasCreativeInventory()) {
-                    throw CommandException(command.result("mustBeCreative"))
+            .⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, ⠁⠗⠛⠎ ->
+                ⠊⠋ (!⠊⠝⠞⠑⠗⠁⠉⠞⠊⠕⠝.⠓⠁⠎⠉⠗⠑⠁⠞⠊⠧⠑⠊⠝⠧⠑⠝⠞⠕⠗⠽()) {
+                    ⠞⠓⠗⠕⠺ ⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠍⠥⠎⠞⠃⠑⠉⠗⠑⠁⠞⠊⠧⠑"))
                 }
 
-                val item = args[0] as String
-                val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
+                ⠧⠁⠇ ⠊⠞⠑⠍ = ⠁⠗⠛⠎[0] ⠁⠎ ⠎⠞⠗⠊⠝⠛
+                ⠧⠁⠇ ⠁⠍⠕⠥⠝⠞ = ⠁⠗⠛⠎.⠛⠑⠞⠕⠗⠑⠇⠎⠑(1, ⠙⠑⠋⠁⠥⠇⠞⠧⠁⠇⠥⠑ = { 1 }) ⠁⠎ ⠊⠝⠞ // ⠙⠑⠋⠁⠥⠇⠞ ⠕⠝⠑
 
-                val itemStack = createItem(item, amount.coerceIn(1..64))
-                val emptySlot = player.inventory.emptySlot
+                ⠧⠁⠇ ⠊⠞⠑⠍⠎⠞⠁⠉⠅ = ⠉⠗⠑⠁⠞⠑⠊⠞⠑⠍(⠊⠞⠑⠍, ⠁⠍⠕⠥⠝⠞.⠉⠕⠑⠗⠉⠑⠊⠝(1..64))
+                ⠧⠁⠇ ⠑⠍⠏⠞⠽⠎⠇⠕⠞ = ⠏⠇⠁⠽⠑⠗.⠊⠝⠧⠑⠝⠞⠕⠗⠽.⠑⠍⠏⠞⠽⠎⠇⠕⠞
 
-                if (emptySlot == -1) {
-                    throw CommandException(command.result("noEmptySlot"))
+                ⠊⠋ (⠑⠍⠏⠞⠽⠎⠇⠕⠞ == -1) {
+                    ⠞⠓⠗⠕⠺ ⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠝⠕⠑⠍⠏⠞⠽⠎⠇⠕⠞"))
                 }
 
-                player.inventory.setStack(emptySlot, itemStack)
-                network.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot,
-                    itemStack))
-                chat(
-                    regular(command.result("itemGiven", itemStack.toHoverableText(),
-                        variable(itemStack.count.toString()))),
-                    command
+                ⠏⠇⠁⠽⠑⠗.⠊⠝⠧⠑⠝⠞⠕⠗⠽.⠎⠑⠞⠎⠞⠁⠉⠅(⠑⠍⠏⠞⠽⠎⠇⠕⠞, ⠊⠞⠑⠍⠎⠞⠁⠉⠅)
+                ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠗⠑⠁⠞⠊⠧⠑⠊⠝⠧⠑⠝⠞⠕⠗⠽⠁⠉⠞⠊⠕⠝⠉2⠎⠏⠁⠉⠅⠑⠞(⠊⠋ (⠑⠍⠏⠞⠽⠎⠇⠕⠞ < 9) ⠑⠍⠏⠞⠽⠎⠇⠕⠞ + 36 ⠑⠇⠎⠑ ⠑⠍⠏⠞⠽⠎⠇⠕⠞,
+                    ⠊⠞⠑⠍⠎⠞⠁⠉⠅))
+                ⠉⠓⠁⠞(
+                    ⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠊⠞⠑⠍⠛⠊⠧⠑⠝", ⠊⠞⠑⠍⠎⠞⠁⠉⠅.⠞⠕⠓⠕⠧⠑⠗⠁⠃⠇⠑⠞⠑⠭⠞(),
+                        ⠧⠁⠗⠊⠁⠃⠇⠑(⠊⠞⠑⠍⠎⠞⠁⠉⠅.⠉⠕⠥⠝⠞.⠞⠕⠎⠞⠗⠊⠝⠛()))),
+                    ⠉⠕⠍⠍⠁⠝⠙
                 )
             }
-            .build()
+            .⠃⠥⠊⠇⠙()
     }
 
 }

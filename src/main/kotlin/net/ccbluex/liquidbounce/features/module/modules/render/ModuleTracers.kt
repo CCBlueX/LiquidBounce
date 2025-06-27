@@ -1,117 +1,117 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠗⠑⠝⠙⠑⠗
 
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.MathHelper
-import java.awt.Color
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠺⠕⠗⠇⠙⠗⠑⠝⠙⠑⠗⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠊⠎⠉.⠋⠗⠊⠑⠝⠙⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠁⠞⠑⠛⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.*
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠉⠕⠇⠕⠗4⠃
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠧⠑⠉3
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠕⠍⠃⠁⠞.⠑⠝⠞⠊⠞⠽⠞⠁⠛⠛⠊⠝⠛⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠕⠍⠃⠁⠞.⠎⠓⠕⠥⠇⠙⠃⠑⠎⠓⠕⠺⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠑⠝⠞⠊⠞⠽.⠊⠝⠞⠑⠗⠏⠕⠇⠁⠞⠑⠉⠥⠗⠗⠑⠝⠞⠏⠕⠎⠊⠞⠊⠕⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠍⠁⠞⠓.⠞⠕⠧⠑⠉3
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠑⠝⠞⠊⠞⠽.⠑⠝⠞⠊⠞⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠑⠝⠞⠊⠞⠽.⠇⠊⠧⠊⠝⠛⠑⠝⠞⠊⠞⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠑⠝⠞⠊⠞⠽.⠏⠇⠁⠽⠑⠗.⠏⠇⠁⠽⠑⠗⠑⠝⠞⠊⠞⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠥⠞⠊⠇.⠍⠁⠞⠓.⠍⠁⠞⠓⠓⠑⠇⠏⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠚⠁⠧⠁.⠁⠺⠞.⠉⠕⠇⠕⠗
 
 /**
- * Tracers module
+ * ⠞⠗⠁⠉⠑⠗⠎ ⠍⠕⠙⠥⠇⠑
  *
- * Draws a line to every entity a certain radius.
+ * ⠙⠗⠁⠺⠎ ⠁ ⠇⠊⠝⠑ ⠞⠕ ⠑⠧⠑⠗⠽ ⠑⠝⠞⠊⠞⠽ ⠁ ⠉⠑⠗⠞⠁⠊⠝ ⠗⠁⠙⠊⠥⠎.
  */
 
-object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
+⠕⠃⠚⠑⠉⠞ ⠍⠕⠙⠥⠇⠑⠞⠗⠁⠉⠑⠗⠎ : ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑("⠞⠗⠁⠉⠑⠗⠎", ⠉⠁⠞⠑⠛⠕⠗⠽.⠗⠑⠝⠙⠑⠗) {
 
-    private val modes = choices("ColorMode", 0) {
-        arrayOf(
-            DistanceColor,
-            GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
-            GenericRainbowColorMode(it)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠍⠕⠙⠑⠎ = ⠉⠓⠕⠊⠉⠑⠎("⠉⠕⠇⠕⠗⠍⠕⠙⠑", 0) {
+        ⠁⠗⠗⠁⠽⠕⠋(
+            ⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗,
+            ⠛⠑⠝⠑⠗⠊⠉⠎⠞⠁⠞⠊⠉⠉⠕⠇⠕⠗⠍⠕⠙⠑(⠊⠞, ⠉⠕⠇⠕⠗4⠃(0, 160, 255, 255)),
+            ⠛⠑⠝⠑⠗⠊⠉⠗⠁⠊⠝⠃⠕⠺⠉⠕⠇⠕⠗⠍⠕⠙⠑(⠊⠞)
         )
     }
 
-    private object DistanceColor : GenericColorMode<LivingEntity>("Distance") {
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
+    ⠏⠗⠊⠧⠁⠞⠑ ⠕⠃⠚⠑⠉⠞ ⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗ : ⠛⠑⠝⠑⠗⠊⠉⠉⠕⠇⠕⠗⠍⠕⠙⠑<⠇⠊⠧⠊⠝⠛⠑⠝⠞⠊⠞⠽>("⠙⠊⠎⠞⠁⠝⠉⠑") {
+        ⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠏⠁⠗⠑⠝⠞: ⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑<*>
+            ⠛⠑⠞() = ⠍⠕⠙⠑⠎
 
-        val useViewDistance by boolean("UseViewDistance", true)
-        val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
+        ⠧⠁⠇ ⠥⠎⠑⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑ ⠃⠽ ⠃⠕⠕⠇⠑⠁⠝("⠥⠎⠑⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑", ⠞⠗⠥⠑)
+        ⠧⠁⠇ ⠉⠥⠎⠞⠕⠍⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑ ⠃⠽ ⠋⠇⠕⠁⠞("⠉⠥⠎⠞⠕⠍⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑", 128.0⠋, 1.0⠋..512.0⠋)
 
-        override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
+        ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠛⠑⠞⠉⠕⠇⠕⠗(⠏⠁⠗⠁⠍: ⠇⠊⠧⠊⠝⠛⠑⠝⠞⠊⠞⠽): ⠉⠕⠇⠕⠗4⠃ = ⠞⠓⠗⠕⠺ ⠝⠕⠞⠊⠍⠏⠇⠑⠍⠑⠝⠞⠑⠙⠑⠗⠗⠕⠗()
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    ⠧⠁⠇ ⠗⠑⠝⠙⠑⠗⠓⠁⠝⠙⠇⠑⠗ = ⠓⠁⠝⠙⠇⠑⠗<⠺⠕⠗⠇⠙⠗⠑⠝⠙⠑⠗⠑⠧⠑⠝⠞> { ⠑⠧⠑⠝⠞ ->
+        ⠧⠁⠇ ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅ = ⠑⠧⠑⠝⠞.⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅
 
-        val useDistanceColor = DistanceColor.isSelected
+        ⠧⠁⠇ ⠥⠎⠑⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗ = ⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗.⠊⠎⠎⠑⠇⠑⠉⠞⠑⠙
 
-        val viewDistance = 16.0F * MathHelper.SQUARE_ROOT_OF_TWO *
-            (if (DistanceColor.useViewDistance) {
-                mc.options.viewDistance.value.toFloat()
-            } else {
-                DistanceColor.customViewDistance
+        ⠧⠁⠇ ⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑ = 16.0⠋ * ⠍⠁⠞⠓⠓⠑⠇⠏⠑⠗.⠎⠟⠥⠁⠗⠑_⠗⠕⠕⠞_⠕⠋_⠞⠺⠕ *
+            (⠊⠋ (⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗.⠥⠎⠑⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑) {
+                ⠍⠉.⠕⠏⠞⠊⠕⠝⠎.⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑.⠧⠁⠇⠥⠑.⠞⠕⠋⠇⠕⠁⠞()
+            } ⠑⠇⠎⠑ {
+                ⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗.⠉⠥⠎⠞⠕⠍⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑
             })
-        val filteredEntities = world.entities.filter(this::shouldRenderTrace)
-        val camera = mc.gameRenderer.camera
+        ⠧⠁⠇ ⠋⠊⠇⠞⠑⠗⠑⠙⠑⠝⠞⠊⠞⠊⠑⠎ = ⠺⠕⠗⠇⠙.⠑⠝⠞⠊⠞⠊⠑⠎.⠋⠊⠇⠞⠑⠗(⠞⠓⠊⠎::⠎⠓⠕⠥⠇⠙⠗⠑⠝⠙⠑⠗⠞⠗⠁⠉⠑)
+        ⠧⠁⠇ ⠉⠁⠍⠑⠗⠁ = ⠍⠉.⠛⠁⠍⠑⠗⠑⠝⠙⠑⠗⠑⠗.⠉⠁⠍⠑⠗⠁
 
-        if (filteredEntities.isEmpty()) {
-            return@handler
+        ⠊⠋ (⠋⠊⠇⠞⠑⠗⠑⠙⠑⠝⠞⠊⠞⠊⠑⠎.⠊⠎⠑⠍⠏⠞⠽()) {
+            ⠗⠑⠞⠥⠗⠝@⠓⠁⠝⠙⠇⠑⠗
         }
 
-        renderEnvironmentForWorld(matrixStack) {
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+        ⠗⠑⠝⠙⠑⠗⠑⠝⠧⠊⠗⠕⠝⠍⠑⠝⠞⠋⠕⠗⠺⠕⠗⠇⠙(⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅) {
+            ⠧⠁⠇ ⠑⠽⠑⠧⠑⠉⠞⠕⠗ = ⠧⠑⠉3(0.0, 0.0, 1.0)
+                .⠗⠕⠞⠁⠞⠑⠏⠊⠞⠉⠓((-⠍⠁⠞⠓.⠞⠕⠗⠁⠙⠊⠁⠝⠎(⠉⠁⠍⠑⠗⠁.⠏⠊⠞⠉⠓.⠞⠕⠙⠕⠥⠃⠇⠑())).⠞⠕⠋⠇⠕⠁⠞())
+                .⠗⠕⠞⠁⠞⠑⠽⠁⠺((-⠍⠁⠞⠓.⠞⠕⠗⠁⠙⠊⠁⠝⠎(⠉⠁⠍⠑⠗⠁.⠽⠁⠺.⠞⠕⠙⠕⠥⠃⠇⠑())).⠞⠕⠋⠇⠕⠁⠞())
 
-            longLines {
-                for (entity in filteredEntities) {
-                    if (entity !is LivingEntity) {
-                        continue
+            ⠇⠕⠝⠛⠇⠊⠝⠑⠎ {
+                ⠋⠕⠗ (⠑⠝⠞⠊⠞⠽ ⠊⠝ ⠋⠊⠇⠞⠑⠗⠑⠙⠑⠝⠞⠊⠞⠊⠑⠎) {
+                    ⠊⠋ (⠑⠝⠞⠊⠞⠽ !⠊⠎ ⠇⠊⠧⠊⠝⠛⠑⠝⠞⠊⠞⠽) {
+                        ⠉⠕⠝⠞⠊⠝⠥⠑
                     }
 
-                    val dist = player.distanceTo(entity) * 2.0F
+                    ⠧⠁⠇ ⠙⠊⠎⠞ = ⠏⠇⠁⠽⠑⠗.⠙⠊⠎⠞⠁⠝⠉⠑⠞⠕(⠑⠝⠞⠊⠞⠽) * 2.0⠋
 
-                    val color = if (useDistanceColor) {
-                        Color4b(
-                            Color.getHSBColor(
-                                (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
-                                1.0f,
-                                1.0f
+                    ⠧⠁⠇ ⠉⠕⠇⠕⠗ = ⠊⠋ (⠥⠎⠑⠙⠊⠎⠞⠁⠝⠉⠑⠉⠕⠇⠕⠗) {
+                        ⠉⠕⠇⠕⠗4⠃(
+                            ⠉⠕⠇⠕⠗.⠛⠑⠞⠓⠎⠃⠉⠕⠇⠕⠗(
+                                (⠙⠊⠎⠞.⠉⠕⠑⠗⠉⠑⠁⠞⠍⠕⠎⠞(⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑) / ⠧⠊⠑⠺⠙⠊⠎⠞⠁⠝⠉⠑) * (120.0⠋ / 360.0⠋),
+                                1.0⠋,
+                                1.0⠋
                             )
                         )
-                    } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
-                        Color4b.BLUE
-                    } else {
-                        EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
+                    } ⠑⠇⠎⠑ ⠊⠋ (⠑⠝⠞⠊⠞⠽ ⠊⠎ ⠏⠇⠁⠽⠑⠗⠑⠝⠞⠊⠞⠽ && ⠋⠗⠊⠑⠝⠙⠍⠁⠝⠁⠛⠑⠗.⠊⠎⠋⠗⠊⠑⠝⠙(⠑⠝⠞⠊⠞⠽.⠛⠁⠍⠑⠏⠗⠕⠋⠊⠇⠑.⠝⠁⠍⠑)) {
+                        ⠉⠕⠇⠕⠗4⠃.⠃⠇⠥⠑
+                    } ⠑⠇⠎⠑ {
+                        ⠑⠝⠞⠊⠞⠽⠞⠁⠛⠛⠊⠝⠛⠍⠁⠝⠁⠛⠑⠗.⠛⠑⠞⠞⠁⠛(⠑⠝⠞⠊⠞⠽).⠉⠕⠇⠕⠗ ?: ⠍⠕⠙⠑⠎.⠁⠉⠞⠊⠧⠑⠉⠓⠕⠊⠉⠑.⠛⠑⠞⠉⠕⠇⠕⠗(⠑⠝⠞⠊⠞⠽)
                     }
 
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
+                    ⠧⠁⠇ ⠏⠕⠎ = ⠗⠑⠇⠁⠞⠊⠧⠑⠞⠕⠉⠁⠍⠑⠗⠁(⠑⠝⠞⠊⠞⠽.⠊⠝⠞⠑⠗⠏⠕⠇⠁⠞⠑⠉⠥⠗⠗⠑⠝⠞⠏⠕⠎⠊⠞⠊⠕⠝(⠑⠧⠑⠝⠞.⠏⠁⠗⠞⠊⠁⠇⠞⠊⠉⠅⠎)).⠞⠕⠧⠑⠉3()
 
-                    withColor(color) {
-                        drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                    ⠺⠊⠞⠓⠉⠕⠇⠕⠗(⠉⠕⠇⠕⠗) {
+                        ⠙⠗⠁⠺⠇⠊⠝⠑⠎(⠑⠽⠑⠧⠑⠉⠞⠕⠗, ⠏⠕⠎, ⠏⠕⠎, ⠏⠕⠎ + ⠧⠑⠉3(0⠋, ⠑⠝⠞⠊⠞⠽.⠓⠑⠊⠛⠓⠞, 0⠋))
                     }
                 }
             }
@@ -119,6 +119,6 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
     }
 
-    @JvmStatic
-    fun shouldRenderTrace(entity: Entity) = entity.shouldBeShown()
+    @⠚⠧⠍⠎⠞⠁⠞⠊⠉
+    ⠋⠥⠝ ⠎⠓⠕⠥⠇⠙⠗⠑⠝⠙⠑⠗⠞⠗⠁⠉⠑(⠑⠝⠞⠊⠞⠽: ⠑⠝⠞⠊⠞⠽) = ⠑⠝⠞⠊⠞⠽.⠎⠓⠕⠥⠇⠙⠃⠑⠎⠓⠕⠺⠝()
 }

@@ -1,207 +1,207 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.render
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗
 
-import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.util.Util
-import net.minecraft.util.Util.OperatingSystem.*
-import java.awt.Font
-import java.awt.image.BufferedImage
-import java.io.File
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠋⠕⠝⠞.⠋⠕⠝⠞⠛⠇⠽⠏⠓⠏⠁⠛⠑⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠋⠕⠝⠞.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠇⠕⠛⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠥⠞⠊⠇.⠥⠞⠊⠇
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠥⠞⠊⠇.⠥⠞⠊⠇.⠕⠏⠑⠗⠁⠞⠊⠝⠛⠎⠽⠎⠞⠑⠍.*
+⠊⠍⠏⠕⠗⠞ ⠚⠁⠧⠁.⠁⠺⠞.⠋⠕⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠚⠁⠧⠁.⠁⠺⠞.⠊⠍⠁⠛⠑.⠃⠥⠋⠋⠑⠗⠑⠙⠊⠍⠁⠛⠑
+⠊⠍⠏⠕⠗⠞ ⠚⠁⠧⠁.⠊⠕.⠋⠊⠇⠑
 
-object FontManager {
+⠕⠃⠚⠑⠉⠞ ⠋⠕⠝⠞⠍⠁⠝⠁⠛⠑⠗ {
 
     /**
-     * As fallback, we can use a common font that is available on all systems.
+     * ⠁⠎ ⠋⠁⠇⠇⠃⠁⠉⠅, ⠺⠑ ⠉⠁⠝ ⠥⠎⠑ ⠁ ⠉⠕⠍⠍⠕⠝ ⠋⠕⠝⠞ ⠞⠓⠁⠞ ⠊⠎ ⠁⠧⠁⠊⠇⠁⠃⠇⠑ ⠕⠝ ⠁⠇⠇ ⠎⠽⠎⠞⠑⠍⠎.
      */
-    private val COMMON_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Segoe UI")
-            OSX -> systemFont("Helvetica")
-            LINUX -> systemFont("DejaVu Sans")
-            else -> systemFont("Arial")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠉⠕⠍⠍⠕⠝_⠋⠕⠝⠞ = ⠗⠥⠝⠉⠁⠞⠉⠓⠊⠝⠛ {
+        ⠺⠓⠑⠝ (⠥⠞⠊⠇.⠛⠑⠞⠕⠏⠑⠗⠁⠞⠊⠝⠛⠎⠽⠎⠞⠑⠍()) {
+            ⠺⠊⠝⠙⠕⠺⠎ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠎⠑⠛⠕⠑ ⠥⠊")
+            ⠕⠎⠭ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠓⠑⠇⠧⠑⠞⠊⠉⠁")
+            ⠇⠊⠝⠥⠭ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠙⠑⠚⠁⠧⠥ ⠎⠁⠝⠎")
+            ⠑⠇⠎⠑ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠁⠗⠊⠁⠇")
         }
-    }.onFailure { throwable ->
-        logger.error("Failed to load common font.", throwable)
-    }.getOrNull() ?: systemFont("Arial")
+    }.⠕⠝⠋⠁⠊⠇⠥⠗⠑ { ⠞⠓⠗⠕⠺⠁⠃⠇⠑ ->
+        ⠇⠕⠛⠛⠑⠗.⠑⠗⠗⠕⠗("⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠉⠕⠍⠍⠕⠝ ⠋⠕⠝⠞.", ⠞⠓⠗⠕⠺⠁⠃⠇⠑)
+    }.⠛⠑⠞⠕⠗⠝⠥⠇⠇() ?: ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠁⠗⠊⠁⠇")
 
     /**
-     * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
+     * ⠙⠑⠋⠁⠥⠇⠞ ⠋⠕⠝⠞ ⠋⠕⠗ ⠙⠊⠎⠏⠇⠁⠽⠊⠝⠛ ⠉⠚⠅ (⠉⠓⠊⠝⠑⠎⠑, ⠚⠁⠏⠁⠝⠑⠎⠑, ⠅⠕⠗⠑⠁⠝) ⠉⠓⠁⠗⠁⠉⠞⠑⠗⠎.
      */
-    private val CJK_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Microsoft YaHei")
-            OSX -> systemFont("PingFang SC")
-            LINUX -> systemFont("Noto Sans CJK")
-            else -> null // No default CJK font available
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠉⠚⠅_⠋⠕⠝⠞ = ⠗⠥⠝⠉⠁⠞⠉⠓⠊⠝⠛ {
+        ⠺⠓⠑⠝ (⠥⠞⠊⠇.⠛⠑⠞⠕⠏⠑⠗⠁⠞⠊⠝⠛⠎⠽⠎⠞⠑⠍()) {
+            ⠺⠊⠝⠙⠕⠺⠎ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠍⠊⠉⠗⠕⠎⠕⠋⠞ ⠽⠁⠓⠑⠊")
+            ⠕⠎⠭ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠏⠊⠝⠛⠋⠁⠝⠛ ⠎⠉")
+            ⠇⠊⠝⠥⠭ -> ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞("⠝⠕⠞⠕ ⠎⠁⠝⠎ ⠉⠚⠅")
+            ⠑⠇⠎⠑ -> ⠝⠥⠇⠇ // ⠝⠕ ⠙⠑⠋⠁⠥⠇⠞ ⠉⠚⠅ ⠋⠕⠝⠞ ⠁⠧⠁⠊⠇⠁⠃⠇⠑
         }
-    }.onFailure { throwable ->
-        logger.error("Failed to load CJK font.", throwable)
-    }.getOrNull()
+    }.⠕⠝⠋⠁⠊⠇⠥⠗⠑ { ⠞⠓⠗⠕⠺⠁⠃⠇⠑ ->
+        ⠇⠕⠛⠛⠑⠗.⠑⠗⠗⠕⠗("⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠉⠚⠅ ⠋⠕⠝⠞.", ⠞⠓⠗⠕⠺⠁⠃⠇⠑)
+    }.⠛⠑⠞⠕⠗⠝⠥⠇⠇()
 
     /**
-     * All font faces that are known to the font manager.
+     * ⠁⠇⠇ ⠋⠕⠝⠞ ⠋⠁⠉⠑⠎ ⠞⠓⠁⠞ ⠁⠗⠑ ⠅⠝⠕⠺⠝ ⠞⠕ ⠞⠓⠑ ⠋⠕⠝⠞ ⠍⠁⠝⠁⠛⠑⠗.
      */
-    internal val fontFaces = mutableSetOf(
-        COMMON_FONT
+    ⠊⠝⠞⠑⠗⠝⠁⠇ ⠧⠁⠇ ⠋⠕⠝⠞⠋⠁⠉⠑⠎ = ⠍⠥⠞⠁⠃⠇⠑⠎⠑⠞⠕⠋(
+        ⠉⠕⠍⠍⠕⠝_⠋⠕⠝⠞
     )
 
     /**
-     * The active font renderer that all text rendering will be based on.
+     * ⠞⠓⠑ ⠁⠉⠞⠊⠧⠑ ⠋⠕⠝⠞ ⠗⠑⠝⠙⠑⠗⠑⠗ ⠞⠓⠁⠞ ⠁⠇⠇ ⠞⠑⠭⠞ ⠗⠑⠝⠙⠑⠗⠊⠝⠛ ⠺⠊⠇⠇ ⠃⠑ ⠃⠁⠎⠑⠙ ⠕⠝.
      *
-     * TODO: Because PR #3884 is not merged yet, we have to define the active font renderer manually.
-     *    This will be removed once the PR is merged, because after the PR is merged, the font renderer
-     *    can be selected through the module settings instead.
+     * ⠞⠕⠙⠕: ⠃⠑⠉⠁⠥⠎⠑ ⠏⠗ #3884 ⠊⠎ ⠝⠕⠞ ⠍⠑⠗⠛⠑⠙ ⠽⠑⠞, ⠺⠑ ⠓⠁⠧⠑ ⠞⠕ ⠙⠑⠋⠊⠝⠑ ⠞⠓⠑ ⠁⠉⠞⠊⠧⠑ ⠋⠕⠝⠞ ⠗⠑⠝⠙⠑⠗⠑⠗ ⠍⠁⠝⠥⠁⠇⠇⠽.
+     *    ⠞⠓⠊⠎ ⠺⠊⠇⠇ ⠃⠑ ⠗⠑⠍⠕⠧⠑⠙ ⠕⠝⠉⠑ ⠞⠓⠑ ⠏⠗ ⠊⠎ ⠍⠑⠗⠛⠑⠙, ⠃⠑⠉⠁⠥⠎⠑ ⠁⠋⠞⠑⠗ ⠞⠓⠑ ⠏⠗ ⠊⠎ ⠍⠑⠗⠛⠑⠙, ⠞⠓⠑ ⠋⠕⠝⠞ ⠗⠑⠝⠙⠑⠗⠑⠗
+     *    ⠉⠁⠝ ⠃⠑ ⠎⠑⠇⠑⠉⠞⠑⠙ ⠞⠓⠗⠕⠥⠛⠓ ⠞⠓⠑ ⠍⠕⠙⠥⠇⠑ ⠎⠑⠞⠞⠊⠝⠛⠎ ⠊⠝⠎⠞⠑⠁⠙.
      */
-    val FONT_RENDERER
-        get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
+    ⠧⠁⠇ ⠋⠕⠝⠞_⠗⠑⠝⠙⠑⠗⠑⠗
+        ⠛⠑⠞() = (⠋⠕⠝⠞⠋⠁⠉⠑("⠊⠝⠞⠑⠗ ⠗⠑⠛⠥⠇⠁⠗") ?: ⠉⠕⠍⠍⠕⠝_⠋⠕⠝⠞).⠗⠑⠝⠙⠑⠗⠑⠗
 
     /**
-     * Since our font renderer does not support dynamic font size changes,
-     * we will use 43 as the default font size.
+     * ⠎⠊⠝⠉⠑ ⠕⠥⠗ ⠋⠕⠝⠞ ⠗⠑⠝⠙⠑⠗⠑⠗ ⠙⠕⠑⠎ ⠝⠕⠞ ⠎⠥⠏⠏⠕⠗⠞ ⠙⠽⠝⠁⠍⠊⠉ ⠋⠕⠝⠞ ⠎⠊⠵⠑ ⠉⠓⠁⠝⠛⠑⠎,
+     * ⠺⠑ ⠺⠊⠇⠇ ⠥⠎⠑ 43 ⠁⠎ ⠞⠓⠑ ⠙⠑⠋⠁⠥⠇⠞ ⠋⠕⠝⠞ ⠎⠊⠵⠑.
      */
-    const val DEFAULT_FONT_SIZE: Float = 43f
+    ⠉⠕⠝⠎⠞ ⠧⠁⠇ ⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑: ⠋⠇⠕⠁⠞ = 43⠋
 
     /**
-     * The glyph manager that is responsible for managing the glyph pages.
+     * ⠞⠓⠑ ⠛⠇⠽⠏⠓ ⠍⠁⠝⠁⠛⠑⠗ ⠞⠓⠁⠞ ⠊⠎ ⠗⠑⠎⠏⠕⠝⠎⠊⠃⠇⠑ ⠋⠕⠗ ⠍⠁⠝⠁⠛⠊⠝⠛ ⠞⠓⠑ ⠛⠇⠽⠏⠓ ⠏⠁⠛⠑⠎.
      */
-    var glyphManager: FontGlyphPageManager? = null
-        private set
-        get() = field ?: error("Glyph manager was not initialized yet!")
+    ⠧⠁⠗ ⠛⠇⠽⠏⠓⠍⠁⠝⠁⠛⠑⠗: ⠋⠕⠝⠞⠛⠇⠽⠏⠓⠏⠁⠛⠑⠍⠁⠝⠁⠛⠑⠗? = ⠝⠥⠇⠇
+        ⠏⠗⠊⠧⠁⠞⠑ ⠎⠑⠞
+        ⠛⠑⠞() = ⠋⠊⠑⠇⠙ ?: ⠑⠗⠗⠕⠗("⠛⠇⠽⠏⠓ ⠍⠁⠝⠁⠛⠑⠗ ⠺⠁⠎ ⠝⠕⠞ ⠊⠝⠊⠞⠊⠁⠇⠊⠵⠑⠙ ⠽⠑⠞!")
 
     /**
-     * Returns the font by the given name.
+     * ⠗⠑⠞⠥⠗⠝⠎ ⠞⠓⠑ ⠋⠕⠝⠞ ⠃⠽ ⠞⠓⠑ ⠛⠊⠧⠑⠝ ⠝⠁⠍⠑.
      */
-    internal fun fontFace(name: String) = fontFaces.associateBy { fontFace -> fontFace.name }[name]
+    ⠊⠝⠞⠑⠗⠝⠁⠇ ⠋⠥⠝ ⠋⠕⠝⠞⠋⠁⠉⠑(⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛) = ⠋⠕⠝⠞⠋⠁⠉⠑⠎.⠁⠎⠎⠕⠉⠊⠁⠞⠑⠃⠽ { ⠋⠕⠝⠞⠋⠁⠉⠑ -> ⠋⠕⠝⠞⠋⠁⠉⠑.⠝⠁⠍⠑ }[⠝⠁⠍⠑]
 
-    internal fun createGlyphManager() {
-        glyphManager = FontGlyphPageManager(
-            baseFonts = fontFaces,
-            additionalFonts = setOf(CJK_FONT).filterNotNull().toSet()
+    ⠊⠝⠞⠑⠗⠝⠁⠇ ⠋⠥⠝ ⠉⠗⠑⠁⠞⠑⠛⠇⠽⠏⠓⠍⠁⠝⠁⠛⠑⠗() {
+        ⠛⠇⠽⠏⠓⠍⠁⠝⠁⠛⠑⠗ = ⠋⠕⠝⠞⠛⠇⠽⠏⠓⠏⠁⠛⠑⠍⠁⠝⠁⠛⠑⠗(
+            ⠃⠁⠎⠑⠋⠕⠝⠞⠎ = ⠋⠕⠝⠞⠋⠁⠉⠑⠎,
+            ⠁⠙⠙⠊⠞⠊⠕⠝⠁⠇⠋⠕⠝⠞⠎ = ⠎⠑⠞⠕⠋(⠉⠚⠅_⠋⠕⠝⠞).⠋⠊⠇⠞⠑⠗⠝⠕⠞⠝⠥⠇⠇().⠞⠕⠎⠑⠞()
         )
     }
 
-    internal fun queueFolder(path: File) {
-        try {
-            path.listFiles { file -> file.extension == "ttf" }
-                ?.forEach(::queueFile)
-        } catch (e: Exception) {
-            throw IllegalStateException("Failed to load font from folder $path", e)
+    ⠊⠝⠞⠑⠗⠝⠁⠇ ⠋⠥⠝ ⠟⠥⠑⠥⠑⠋⠕⠇⠙⠑⠗(⠏⠁⠞⠓: ⠋⠊⠇⠑) {
+        ⠞⠗⠽ {
+            ⠏⠁⠞⠓.⠇⠊⠎⠞⠋⠊⠇⠑⠎ { ⠋⠊⠇⠑ -> ⠋⠊⠇⠑.⠑⠭⠞⠑⠝⠎⠊⠕⠝ == "⠞⠞⠋" }
+                ?.⠋⠕⠗⠑⠁⠉⠓(::⠟⠥⠑⠥⠑⠋⠊⠇⠑)
+        } ⠉⠁⠞⠉⠓ (⠑: ⠑⠭⠉⠑⠏⠞⠊⠕⠝) {
+            ⠞⠓⠗⠕⠺ ⠊⠇⠇⠑⠛⠁⠇⠎⠞⠁⠞⠑⠑⠭⠉⠑⠏⠞⠊⠕⠝("⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠋⠕⠝⠞ ⠋⠗⠕⠍ ⠋⠕⠇⠙⠑⠗ $⠏⠁⠞⠓", ⠑)
         }
     }
 
-    internal fun queueFile(file: File) {
-        try {
-            if (!file.exists()) {
-                logger.warn("Font file ${file.absolutePath} does not exist.")
-                return
+    ⠊⠝⠞⠑⠗⠝⠁⠇ ⠋⠥⠝ ⠟⠥⠑⠥⠑⠋⠊⠇⠑(⠋⠊⠇⠑: ⠋⠊⠇⠑) {
+        ⠞⠗⠽ {
+            ⠊⠋ (!⠋⠊⠇⠑.⠑⠭⠊⠎⠞⠎()) {
+                ⠇⠕⠛⠛⠑⠗.⠺⠁⠗⠝("⠋⠕⠝⠞ ⠋⠊⠇⠑ ${⠋⠊⠇⠑.⠁⠃⠎⠕⠇⠥⠞⠑⠏⠁⠞⠓} ⠙⠕⠑⠎ ⠝⠕⠞ ⠑⠭⠊⠎⠞.")
+                ⠗⠑⠞⠥⠗⠝
             }
 
-            if (file.extension != "ttf") {
-                logger.warn("Font file ${file.absolutePath} is not a TrueType font.")
-                return
+            ⠊⠋ (⠋⠊⠇⠑.⠑⠭⠞⠑⠝⠎⠊⠕⠝ != "⠞⠞⠋") {
+                ⠇⠕⠛⠛⠑⠗.⠺⠁⠗⠝("⠋⠕⠝⠞ ⠋⠊⠇⠑ ${⠋⠊⠇⠑.⠁⠃⠎⠕⠇⠥⠞⠑⠏⠁⠞⠓} ⠊⠎ ⠝⠕⠞ ⠁ ⠞⠗⠥⠑⠞⠽⠏⠑ ⠋⠕⠝⠞.")
+                ⠗⠑⠞⠥⠗⠝
             }
 
-            if (fontFaces.any { it.file == file }) {
-                logger.warn("Font file ${file.absolutePath} is already loaded.")
-                return
+            ⠊⠋ (⠋⠕⠝⠞⠋⠁⠉⠑⠎.⠁⠝⠽ { ⠊⠞.⠋⠊⠇⠑ == ⠋⠊⠇⠑ }) {
+                ⠇⠕⠛⠛⠑⠗.⠺⠁⠗⠝("⠋⠕⠝⠞ ⠋⠊⠇⠑ ${⠋⠊⠇⠑.⠁⠃⠎⠕⠇⠥⠞⠑⠏⠁⠞⠓} ⠊⠎ ⠁⠇⠗⠑⠁⠙⠽ ⠇⠕⠁⠙⠑⠙.")
+                ⠗⠑⠞⠥⠗⠝
             }
 
-            val font = Font
-                .createFont(Font.TRUETYPE_FONT, file)
-                .deriveFont(DEFAULT_FONT_SIZE)
+            ⠧⠁⠇ ⠋⠕⠝⠞ = ⠋⠕⠝⠞
+                .⠉⠗⠑⠁⠞⠑⠋⠕⠝⠞(⠋⠕⠝⠞.⠞⠗⠥⠑⠞⠽⠏⠑_⠋⠕⠝⠞, ⠋⠊⠇⠑)
+                .⠙⠑⠗⠊⠧⠑⠋⠕⠝⠞(⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑)
 
-            // Name will consist of the font name and family. This makes it possible
-            // to select the different styles of the font.
-            val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
-            // In this case, we have only one style available, which is the plain style.
-            fontFace.fillStyle(font, 0)
-            fontFaces += fontFace
-        } catch (e: Exception) {
-            logger.warn("Failed to load font from file ${file.absolutePath}", e)
+            // ⠝⠁⠍⠑ ⠺⠊⠇⠇ ⠉⠕⠝⠎⠊⠎⠞ ⠕⠋ ⠞⠓⠑ ⠋⠕⠝⠞ ⠝⠁⠍⠑ ⠁⠝⠙ ⠋⠁⠍⠊⠇⠽. ⠞⠓⠊⠎ ⠍⠁⠅⠑⠎ ⠊⠞ ⠏⠕⠎⠎⠊⠃⠇⠑
+            // ⠞⠕ ⠎⠑⠇⠑⠉⠞ ⠞⠓⠑ ⠙⠊⠋⠋⠑⠗⠑⠝⠞ ⠎⠞⠽⠇⠑⠎ ⠕⠋ ⠞⠓⠑ ⠋⠕⠝⠞.
+            ⠧⠁⠇ ⠋⠕⠝⠞⠋⠁⠉⠑ = ⠋⠕⠝⠞⠋⠁⠉⠑(⠋⠕⠝⠞.⠝⠁⠍⠑, ⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑, ⠋⠊⠇⠑)
+            // ⠊⠝ ⠞⠓⠊⠎ ⠉⠁⠎⠑, ⠺⠑ ⠓⠁⠧⠑ ⠕⠝⠇⠽ ⠕⠝⠑ ⠎⠞⠽⠇⠑ ⠁⠧⠁⠊⠇⠁⠃⠇⠑, ⠺⠓⠊⠉⠓ ⠊⠎ ⠞⠓⠑ ⠏⠇⠁⠊⠝ ⠎⠞⠽⠇⠑.
+            ⠋⠕⠝⠞⠋⠁⠉⠑.⠋⠊⠇⠇⠎⠞⠽⠇⠑(⠋⠕⠝⠞, 0)
+            ⠋⠕⠝⠞⠋⠁⠉⠑⠎ += ⠋⠕⠝⠞⠋⠁⠉⠑
+        } ⠉⠁⠞⠉⠓ (⠑: ⠑⠭⠉⠑⠏⠞⠊⠕⠝) {
+            ⠇⠕⠛⠛⠑⠗.⠺⠁⠗⠝("⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠋⠕⠝⠞ ⠋⠗⠕⠍ ⠋⠊⠇⠑ ${⠋⠊⠇⠑.⠁⠃⠎⠕⠇⠥⠞⠑⠏⠁⠞⠓}", ⠑)
         }
     }
 
-    private fun systemFont(name: String): FontFace {
-        val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠎⠽⠎⠞⠑⠍⠋⠕⠝⠞(⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛): ⠋⠕⠝⠞⠋⠁⠉⠑ {
+        ⠧⠁⠇ ⠋⠕⠝⠞⠋⠁⠉⠑ = ⠋⠕⠝⠞⠋⠁⠉⠑(⠝⠁⠍⠑, ⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑)
 
-        arrayOf(
-            Font.BOLD,
-            Font.BOLD,
-            Font.ITALIC,
-            Font.BOLD or Font.ITALIC
-        ).map { style ->
-            Font(name, style, DEFAULT_FONT_SIZE.toInt())
-                .deriveFont(DEFAULT_FONT_SIZE)
-        }.forEachIndexed { index, font ->
-            fontFace.fillStyle(font, index)
+        ⠁⠗⠗⠁⠽⠕⠋(
+            ⠋⠕⠝⠞.⠃⠕⠇⠙,
+            ⠋⠕⠝⠞.⠃⠕⠇⠙,
+            ⠋⠕⠝⠞.⠊⠞⠁⠇⠊⠉,
+            ⠋⠕⠝⠞.⠃⠕⠇⠙ ⠕⠗ ⠋⠕⠝⠞.⠊⠞⠁⠇⠊⠉
+        ).⠍⠁⠏ { ⠎⠞⠽⠇⠑ ->
+            ⠋⠕⠝⠞(⠝⠁⠍⠑, ⠎⠞⠽⠇⠑, ⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑.⠞⠕⠊⠝⠞())
+                .⠙⠑⠗⠊⠧⠑⠋⠕⠝⠞(⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑)
+        }.⠋⠕⠗⠑⠁⠉⠓⠊⠝⠙⠑⠭⠑⠙ { ⠊⠝⠙⠑⠭, ⠋⠕⠝⠞ ->
+            ⠋⠕⠝⠞⠋⠁⠉⠑.⠋⠊⠇⠇⠎⠞⠽⠇⠑(⠋⠕⠝⠞, ⠊⠝⠙⠑⠭)
         }
 
-        return fontFace
+        ⠗⠑⠞⠥⠗⠝ ⠋⠕⠝⠞⠋⠁⠉⠑
     }
 
-    data class FontFace(
-        val name: String,
-        val size: Float,
+    ⠙⠁⠞⠁ ⠉⠇⠁⠎⠎ ⠋⠕⠝⠞⠋⠁⠉⠑(
+        ⠧⠁⠇ ⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛,
+        ⠧⠁⠇ ⠎⠊⠵⠑: ⠋⠇⠕⠁⠞,
         /**
-         * The file of the font. If the font is a system font, this will be null.
+         * ⠞⠓⠑ ⠋⠊⠇⠑ ⠕⠋ ⠞⠓⠑ ⠋⠕⠝⠞. ⠊⠋ ⠞⠓⠑ ⠋⠕⠝⠞ ⠊⠎ ⠁ ⠎⠽⠎⠞⠑⠍ ⠋⠕⠝⠞, ⠞⠓⠊⠎ ⠺⠊⠇⠇ ⠃⠑ ⠝⠥⠇⠇.
          */
-        val file: File? = null,
-        @Suppress("ArrayInDataClass")
+        ⠧⠁⠇ ⠋⠊⠇⠑: ⠋⠊⠇⠑? = ⠝⠥⠇⠇,
+        @⠎⠥⠏⠏⠗⠑⠎⠎("⠁⠗⠗⠁⠽⠊⠝⠙⠁⠞⠁⠉⠇⠁⠎⠎")
         /**
-         * Style of the font. If an element is null, fall back to `[0]`
+         * ⠎⠞⠽⠇⠑ ⠕⠋ ⠞⠓⠑ ⠋⠕⠝⠞. ⠊⠋ ⠁⠝ ⠑⠇⠑⠍⠑⠝⠞ ⠊⠎ ⠝⠥⠇⠇, ⠋⠁⠇⠇ ⠃⠁⠉⠅ ⠞⠕ `[0]`
          *
-         * [Font.PLAIN] -> 0 (Must not be null)
+         * [⠋⠕⠝⠞.⠏⠇⠁⠊⠝] -> 0 (⠍⠥⠎⠞ ⠝⠕⠞ ⠃⠑ ⠝⠥⠇⠇)
          *
-         * [Font.BOLD] -> 1 (Can be null)
+         * [⠋⠕⠝⠞.⠃⠕⠇⠙] -> 1 (⠉⠁⠝ ⠃⠑ ⠝⠥⠇⠇)
          *
-         * [Font.ITALIC] -> 2 (Can be null)
+         * [⠋⠕⠝⠞.⠊⠞⠁⠇⠊⠉] -> 2 (⠉⠁⠝ ⠃⠑ ⠝⠥⠇⠇)
          *
-         * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
+         * [⠋⠕⠝⠞.⠃⠕⠇⠙] | [⠋⠕⠝⠞.⠊⠞⠁⠇⠊⠉] -> 3 (⠉⠁⠝ ⠃⠑ ⠝⠥⠇⠇)
          */
-        val styles: Array<FontId?> = arrayOfNulls(4)
+        ⠧⠁⠇ ⠎⠞⠽⠇⠑⠎: ⠁⠗⠗⠁⠽<⠋⠕⠝⠞⠊⠙?> = ⠁⠗⠗⠁⠽⠕⠋⠝⠥⠇⠇⠎(4)
     ) {
 
-        val renderer: FontRenderer by lazy {
-            FontRenderer(this, glyphManager!!)
+        ⠧⠁⠇ ⠗⠑⠝⠙⠑⠗⠑⠗: ⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗ ⠃⠽ ⠇⠁⠵⠽ {
+            ⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗(⠞⠓⠊⠎, ⠛⠇⠽⠏⠓⠍⠁⠝⠁⠛⠑⠗!!)
         }
 
         /**
-         * Fills the font style at the given index.
+         * ⠋⠊⠇⠇⠎ ⠞⠓⠑ ⠋⠕⠝⠞ ⠎⠞⠽⠇⠑ ⠁⠞ ⠞⠓⠑ ⠛⠊⠧⠑⠝ ⠊⠝⠙⠑⠭.
          */
-        fun fillStyle(font: Font, index: Int) {
-            val metrics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
-                setFont(font)
-            }.fontMetrics
+        ⠋⠥⠝ ⠋⠊⠇⠇⠎⠞⠽⠇⠑(⠋⠕⠝⠞: ⠋⠕⠝⠞, ⠊⠝⠙⠑⠭: ⠊⠝⠞) {
+            ⠧⠁⠇ ⠍⠑⠞⠗⠊⠉⠎ = ⠃⠥⠋⠋⠑⠗⠑⠙⠊⠍⠁⠛⠑(1, 1, ⠃⠥⠋⠋⠑⠗⠑⠙⠊⠍⠁⠛⠑.⠞⠽⠏⠑_⠊⠝⠞_⠁⠗⠛⠃).⠉⠗⠑⠁⠞⠑⠛⠗⠁⠏⠓⠊⠉⠎().⠁⠏⠏⠇⠽ {
+                ⠎⠑⠞⠋⠕⠝⠞(⠋⠕⠝⠞)
+            }.⠋⠕⠝⠞⠍⠑⠞⠗⠊⠉⠎
 
-            styles[index] = FontId(index, font, metrics.height.toFloat(), metrics.ascent.toFloat())
+            ⠎⠞⠽⠇⠑⠎[⠊⠝⠙⠑⠭] = ⠋⠕⠝⠞⠊⠙(⠊⠝⠙⠑⠭, ⠋⠕⠝⠞, ⠍⠑⠞⠗⠊⠉⠎.⠓⠑⠊⠛⠓⠞.⠞⠕⠋⠇⠕⠁⠞(), ⠍⠑⠞⠗⠊⠉⠎.⠁⠎⠉⠑⠝⠞.⠞⠕⠋⠇⠕⠁⠞())
         }
 
     }
 
-    class FontId(
-        val style: Int,
-        val awtFont: Font,
-        val height: Float,
-        val ascent: Float
+    ⠉⠇⠁⠎⠎ ⠋⠕⠝⠞⠊⠙(
+        ⠧⠁⠇ ⠎⠞⠽⠇⠑: ⠊⠝⠞,
+        ⠧⠁⠇ ⠁⠺⠞⠋⠕⠝⠞: ⠋⠕⠝⠞,
+        ⠧⠁⠇ ⠓⠑⠊⠛⠓⠞: ⠋⠇⠕⠁⠞,
+        ⠧⠁⠇ ⠁⠎⠉⠑⠝⠞: ⠋⠇⠕⠁⠞
     )
 
 }

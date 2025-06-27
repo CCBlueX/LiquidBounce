@@ -1,40 +1,40 @@
-package net.ccbluex.liquidbounce.render.engine.font.processor
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠋⠕⠝⠞.⠏⠗⠕⠉⠑⠎⠎⠕⠗
 
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import kotlin.random.Random
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠉⠕⠇⠕⠗4⠃
+⠊⠍⠏⠕⠗⠞ ⠅⠕⠞⠇⠊⠝.⠗⠁⠝⠙⠕⠍.⠗⠁⠝⠙⠕⠍
 
 /**
- * @param obfuscationSeed The seed for the obfuscation. If null, obfusscated characters will be replaced with `_`
+ * @⠏⠁⠗⠁⠍ ⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝⠎⠑⠑⠙ ⠞⠓⠑ ⠎⠑⠑⠙ ⠋⠕⠗ ⠞⠓⠑ ⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝. ⠊⠋ ⠝⠥⠇⠇, ⠕⠃⠋⠥⠎⠎⠉⠁⠞⠑⠙ ⠉⠓⠁⠗⠁⠉⠞⠑⠗⠎ ⠺⠊⠇⠇ ⠃⠑ ⠗⠑⠏⠇⠁⠉⠑⠙ ⠺⠊⠞⠓ `_`
  */
-abstract class TextProcessor(obfuscationSeed: Long?) {
-    private val obfuscationRng = obfuscationSeed?.let { Random(it) }
+⠁⠃⠎⠞⠗⠁⠉⠞ ⠉⠇⠁⠎⠎ ⠞⠑⠭⠞⠏⠗⠕⠉⠑⠎⠎⠕⠗(⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝⠎⠑⠑⠙: ⠇⠕⠝⠛?) {
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝⠗⠝⠛ = ⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝⠎⠑⠑⠙?.⠇⠑⠞ { ⠗⠁⠝⠙⠕⠍(⠊⠞) }
 
-    abstract fun process(): ProcessedText
+    ⠁⠃⠎⠞⠗⠁⠉⠞ ⠋⠥⠝ ⠏⠗⠕⠉⠑⠎⠎(): ⠏⠗⠕⠉⠑⠎⠎⠑⠙⠞⠑⠭⠞
 
-    protected fun generateObfuscatedChar(): Char {
-        return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
+    ⠏⠗⠕⠞⠑⠉⠞⠑⠙ ⠋⠥⠝ ⠛⠑⠝⠑⠗⠁⠞⠑⠕⠃⠋⠥⠎⠉⠁⠞⠑⠙⠉⠓⠁⠗(): ⠉⠓⠁⠗ {
+        ⠗⠑⠞⠥⠗⠝ ⠕⠃⠋⠥⠎⠉⠁⠞⠊⠕⠝⠗⠝⠛?.⠇⠑⠞ { ⠗⠁⠝⠙⠕⠍_⠉⠓⠁⠗⠎.⠗⠁⠝⠙⠕⠍(⠊⠞) } ?: '_'
     }
 
-    companion object {
+    ⠉⠕⠍⠏⠁⠝⠊⠕⠝ ⠕⠃⠚⠑⠉⠞ {
         /**
-         * Contains the chars for the `§k` formatting
+         * ⠉⠕⠝⠞⠁⠊⠝⠎ ⠞⠓⠑ ⠉⠓⠁⠗⠎ ⠋⠕⠗ ⠞⠓⠑ `§⠅` ⠋⠕⠗⠍⠁⠞⠞⠊⠝⠛
          */
-        val RANDOM_CHARS = "1234567890abcdefghijklmnopqrstuvwxyz~!@#\$%^&*()-=_+{}[]".toCharArray()
+        ⠧⠁⠇ ⠗⠁⠝⠙⠕⠍_⠉⠓⠁⠗⠎ = "1234567890⠁⠃⠉⠙⠑⠋⠛⠓⠊⠚⠅⠇⠍⠝⠕⠏⠟⠗⠎⠞⠥⠧⠺⠭⠽⠵~!@#\$%^&*()-=_+{}[]".⠞⠕⠉⠓⠁⠗⠁⠗⠗⠁⠽()
 
-        @JvmStatic
-        val hexColors: Array<Color4b> = Array(16) { i ->
-            val baseColor = (i shr 3 and 1) * 85
-            val red = (i shr 2 and 1) * 170 + baseColor + if (i == 6) 85 else 0
-            val green = (i shr 1 and 1) * 170 + baseColor
-            val blue = (i and 1) * 170 + baseColor
+        @⠚⠧⠍⠎⠞⠁⠞⠊⠉
+        ⠧⠁⠇ ⠓⠑⠭⠉⠕⠇⠕⠗⠎: ⠁⠗⠗⠁⠽<⠉⠕⠇⠕⠗4⠃> = ⠁⠗⠗⠁⠽(16) { ⠊ ->
+            ⠧⠁⠇ ⠃⠁⠎⠑⠉⠕⠇⠕⠗ = (⠊ ⠎⠓⠗ 3 ⠁⠝⠙ 1) * 85
+            ⠧⠁⠇ ⠗⠑⠙ = (⠊ ⠎⠓⠗ 2 ⠁⠝⠙ 1) * 170 + ⠃⠁⠎⠑⠉⠕⠇⠕⠗ + ⠊⠋ (⠊ == 6) 85 ⠑⠇⠎⠑ 0
+            ⠧⠁⠇ ⠛⠗⠑⠑⠝ = (⠊ ⠎⠓⠗ 1 ⠁⠝⠙ 1) * 170 + ⠃⠁⠎⠑⠉⠕⠇⠕⠗
+            ⠧⠁⠇ ⠃⠇⠥⠑ = (⠊ ⠁⠝⠙ 1) * 170 + ⠃⠁⠎⠑⠉⠕⠇⠕⠗
 
-            Color4b(red, green, blue, 255)
+            ⠉⠕⠇⠕⠗4⠃(⠗⠑⠙, ⠛⠗⠑⠑⠝, ⠃⠇⠥⠑, 255)
         }
     }
-    data class ProcessedTextCharacter(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)
-    data class ProcessedText(
-        val chars: List<ProcessedTextCharacter>,
-        val underlines: List<IntRange>,
-        val strikeThroughs: List<IntRange>
+    ⠙⠁⠞⠁ ⠉⠇⠁⠎⠎ ⠏⠗⠕⠉⠑⠎⠎⠑⠙⠞⠑⠭⠞⠉⠓⠁⠗⠁⠉⠞⠑⠗(⠧⠁⠇ ⠉⠓⠁⠗: ⠉⠓⠁⠗, ⠧⠁⠇ ⠋⠕⠝⠞: ⠊⠝⠞, ⠧⠁⠇ ⠕⠃⠋⠥⠎⠉⠁⠞⠑⠙: ⠃⠕⠕⠇⠑⠁⠝, ⠧⠁⠇ ⠉⠕⠇⠕⠗: ⠉⠕⠇⠕⠗4⠃)
+    ⠙⠁⠞⠁ ⠉⠇⠁⠎⠎ ⠏⠗⠕⠉⠑⠎⠎⠑⠙⠞⠑⠭⠞(
+        ⠧⠁⠇ ⠉⠓⠁⠗⠎: ⠇⠊⠎⠞<⠏⠗⠕⠉⠑⠎⠎⠑⠙⠞⠑⠭⠞⠉⠓⠁⠗⠁⠉⠞⠑⠗>,
+        ⠧⠁⠇ ⠥⠝⠙⠑⠗⠇⠊⠝⠑⠎: ⠇⠊⠎⠞<⠊⠝⠞⠗⠁⠝⠛⠑>,
+        ⠧⠁⠇ ⠎⠞⠗⠊⠅⠑⠞⠓⠗⠕⠥⠛⠓⠎: ⠇⠊⠎⠞<⠊⠝⠞⠗⠁⠝⠛⠑>
     )
 }

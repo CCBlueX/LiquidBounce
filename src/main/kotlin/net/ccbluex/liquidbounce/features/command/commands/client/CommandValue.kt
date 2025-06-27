@@ -1,152 +1,152 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠎.⠉⠇⠊⠑⠝⠞
 
-import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.valueNameParameter
-import net.ccbluex.liquidbounce.features.command.builder.valueTypeParameter
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠧⠁⠇⠥⠑⠝⠁⠍⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠧⠁⠇⠥⠑⠞⠽⠏⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠗⠑⠝⠙⠑⠗.⠍⠕⠙⠥⠇⠑⠉⠇⠊⠉⠅⠛⠥⠊
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠍⠑⠎⠎⠁⠛⠑⠍⠑⠞⠁⠙⠁⠞⠁
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠉⠓⠁⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠗⠑⠛⠥⠇⠁⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠧⠁⠗⠊⠁⠃⠇⠑
 
 /**
- * Value Command
+ * ⠧⠁⠇⠥⠑ ⠉⠕⠍⠍⠁⠝⠙
  *
- * Allows you to change values of a specific module.
+ * ⠁⠇⠇⠕⠺⠎ ⠽⠕⠥ ⠞⠕ ⠉⠓⠁⠝⠛⠑ ⠧⠁⠇⠥⠑⠎ ⠕⠋ ⠁ ⠎⠏⠑⠉⠊⠋⠊⠉ ⠍⠕⠙⠥⠇⠑.
  */
-@Suppress("SwallowedException")
-object CommandValue : CommandFactory {
+@⠎⠥⠏⠏⠗⠑⠎⠎("⠎⠺⠁⠇⠇⠕⠺⠑⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝")
+⠕⠃⠚⠑⠉⠞ ⠉⠕⠍⠍⠁⠝⠙⠧⠁⠇⠥⠑ : ⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽ {
 
-    override fun createCommand() = CommandBuilder
-        .begin("value")
-        .hub()
-        .subcommand(setSubCommand())
-        .subcommand(resetSubCommand())
-        .subcommand(resetAllSubCommand())
-        .build()
+    ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠉⠗⠑⠁⠞⠑⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠧⠁⠇⠥⠑")
+        .⠓⠥⠃()
+        .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠎⠑⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+        .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠗⠑⠎⠑⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+        .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠗⠑⠎⠑⠞⠁⠇⠇⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+        .⠃⠥⠊⠇⠙()
 
-    private fun setSubCommand() = CommandBuilder
-        .begin("set")
-        .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                .required()
-                .build()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠎⠑⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠎⠑⠞")
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+                .⠃⠑⠛⠊⠝<⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑>("⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑")
+                .⠧⠑⠗⠊⠋⠊⠑⠙⠃⠽(⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠍⠕⠙⠥⠇⠑_⠧⠁⠇⠊⠙⠁⠞⠕⠗)
+                .⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠙⠺⠊⠞⠓ { ⠃⠑⠛⠊⠝, _ -> ⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗.⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑(⠃⠑⠛⠊⠝) }
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .parameter(
-            valueNameParameter()
-                .required()
-                .build()
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠧⠁⠇⠥⠑⠝⠁⠍⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗()
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .parameter(
-            valueTypeParameter()
-                .required()
-                .build()
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠧⠁⠇⠥⠑⠞⠽⠏⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗()
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .handler { command, args ->
-            val module = args[0] as ClientModule
-            val valueName = args[1] as String
-            val valueString = args[2] as String
+        .⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, ⠁⠗⠛⠎ ->
+            ⠧⠁⠇ ⠍⠕⠙⠥⠇⠑ = ⠁⠗⠛⠎[0] ⠁⠎ ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+            ⠧⠁⠇ ⠧⠁⠇⠥⠑⠝⠁⠍⠑ = ⠁⠗⠛⠎[1] ⠁⠎ ⠎⠞⠗⠊⠝⠛
+            ⠧⠁⠇ ⠧⠁⠇⠥⠑⠎⠞⠗⠊⠝⠛ = ⠁⠗⠛⠎[2] ⠁⠎ ⠎⠞⠗⠊⠝⠛
 
-            val value = module.getContainedValuesRecursively()
-                .filter { !it.name.equals("Bind", true) }
-                .firstOrNull { it.name.equals(valueName, true) }
-                ?: throw CommandException(command.result("valueNotFound", valueName))
+            ⠧⠁⠇ ⠧⠁⠇⠥⠑ = ⠍⠕⠙⠥⠇⠑.⠛⠑⠞⠉⠕⠝⠞⠁⠊⠝⠑⠙⠧⠁⠇⠥⠑⠎⠗⠑⠉⠥⠗⠎⠊⠧⠑⠇⠽()
+                .⠋⠊⠇⠞⠑⠗ { !⠊⠞.⠝⠁⠍⠑.⠑⠟⠥⠁⠇⠎("⠃⠊⠝⠙", ⠞⠗⠥⠑) }
+                .⠋⠊⠗⠎⠞⠕⠗⠝⠥⠇⠇ { ⠊⠞.⠝⠁⠍⠑.⠑⠟⠥⠁⠇⠎(⠧⠁⠇⠥⠑⠝⠁⠍⠑, ⠞⠗⠥⠑) }
+                ?: ⠞⠓⠗⠕⠺ ⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠧⠁⠇⠥⠑⠝⠕⠞⠋⠕⠥⠝⠙", ⠧⠁⠇⠥⠑⠝⠁⠍⠑))
 
-            try {
-                value.setByString(valueString)
-                ModuleClickGui.reloadView()
-            } catch (e: Exception) {
-                throw CommandException(command.result("valueError", valueName, e.message ?: ""))
+            ⠞⠗⠽ {
+                ⠧⠁⠇⠥⠑.⠎⠑⠞⠃⠽⠎⠞⠗⠊⠝⠛(⠧⠁⠇⠥⠑⠎⠞⠗⠊⠝⠛)
+                ⠍⠕⠙⠥⠇⠑⠉⠇⠊⠉⠅⠛⠥⠊.⠗⠑⠇⠕⠁⠙⠧⠊⠑⠺()
+            } ⠉⠁⠞⠉⠓ (⠑: ⠑⠭⠉⠑⠏⠞⠊⠕⠝) {
+                ⠞⠓⠗⠕⠺ ⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠧⠁⠇⠥⠑⠑⠗⠗⠕⠗", ⠧⠁⠇⠥⠑⠝⠁⠍⠑, ⠑.⠍⠑⠎⠎⠁⠛⠑ ?: ""))
             }
 
-            chat(
-                regular(command.result("success", variable(valueName), variable(module.name))),
-                metadata = MessageMetadata(id = "CValue#success${module.name}")
+            ⠉⠓⠁⠞(
+                ⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠎⠥⠉⠉⠑⠎⠎", ⠧⠁⠗⠊⠁⠃⠇⠑(⠧⠁⠇⠥⠑⠝⠁⠍⠑), ⠧⠁⠗⠊⠁⠃⠇⠑(⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑))),
+                ⠍⠑⠞⠁⠙⠁⠞⠁ = ⠍⠑⠎⠎⠁⠛⠑⠍⠑⠞⠁⠙⠁⠞⠁(⠊⠙ = "⠉⠧⠁⠇⠥⠑#⠎⠥⠉⠉⠑⠎⠎${⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑}")
             )
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
-    private fun resetSubCommand() = CommandBuilder
-        .begin("reset")
-        .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                .required()
-                .build()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠗⠑⠎⠑⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠗⠑⠎⠑⠞")
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+                .⠃⠑⠛⠊⠝<⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑>("⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑")
+                .⠧⠑⠗⠊⠋⠊⠑⠙⠃⠽(⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠍⠕⠙⠥⠇⠑_⠧⠁⠇⠊⠙⠁⠞⠕⠗)
+                .⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠙⠺⠊⠞⠓ { ⠃⠑⠛⠊⠝, _ -> ⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗.⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑(⠃⠑⠛⠊⠝) }
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .parameter(
-            valueNameParameter()
-                .required()
-                .build()
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠧⠁⠇⠥⠑⠝⠁⠍⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗()
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .handler { command, args ->
-            val module = args[0] as ClientModule
-            val valueName = args[1] as String
+        .⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, ⠁⠗⠛⠎ ->
+            ⠧⠁⠇ ⠍⠕⠙⠥⠇⠑ = ⠁⠗⠛⠎[0] ⠁⠎ ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+            ⠧⠁⠇ ⠧⠁⠇⠥⠑⠝⠁⠍⠑ = ⠁⠗⠛⠎[1] ⠁⠎ ⠎⠞⠗⠊⠝⠛
 
-            val value = module.getContainedValuesRecursively()
-                .filter { !it.name.equals("Bind", true) }
-                .firstOrNull { it.name.equals(valueName, true) }
-                ?: throw CommandException(command.result("valueNotFound", valueName))
+            ⠧⠁⠇ ⠧⠁⠇⠥⠑ = ⠍⠕⠙⠥⠇⠑.⠛⠑⠞⠉⠕⠝⠞⠁⠊⠝⠑⠙⠧⠁⠇⠥⠑⠎⠗⠑⠉⠥⠗⠎⠊⠧⠑⠇⠽()
+                .⠋⠊⠇⠞⠑⠗ { !⠊⠞.⠝⠁⠍⠑.⠑⠟⠥⠁⠇⠎("⠃⠊⠝⠙", ⠞⠗⠥⠑) }
+                .⠋⠊⠗⠎⠞⠕⠗⠝⠥⠇⠇ { ⠊⠞.⠝⠁⠍⠑.⠑⠟⠥⠁⠇⠎(⠧⠁⠇⠥⠑⠝⠁⠍⠑, ⠞⠗⠥⠑) }
+                ?: ⠞⠓⠗⠕⠺ ⠉⠕⠍⠍⠁⠝⠙⠑⠭⠉⠑⠏⠞⠊⠕⠝(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠧⠁⠇⠥⠑⠝⠕⠞⠋⠕⠥⠝⠙", ⠧⠁⠇⠥⠑⠝⠁⠍⠑))
 
-            value.restore()
-            ModuleClickGui.reloadView()
-            chat(
-                regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
-                metadata = MessageMetadata(id = "CValue#reset${module.name}")
+            ⠧⠁⠇⠥⠑.⠗⠑⠎⠞⠕⠗⠑()
+            ⠍⠕⠙⠥⠇⠑⠉⠇⠊⠉⠅⠛⠥⠊.⠗⠑⠇⠕⠁⠙⠧⠊⠑⠺()
+            ⠉⠓⠁⠞(
+                ⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠗⠑⠎⠑⠞⠎⠥⠉⠉⠑⠎⠎", ⠧⠁⠗⠊⠁⠃⠇⠑(⠧⠁⠇⠥⠑⠝⠁⠍⠑), ⠧⠁⠗⠊⠁⠃⠇⠑(⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑))),
+                ⠍⠑⠞⠁⠙⠁⠞⠁ = ⠍⠑⠎⠎⠁⠛⠑⠍⠑⠞⠁⠙⠁⠞⠁(⠊⠙ = "⠉⠧⠁⠇⠥⠑#⠗⠑⠎⠑⠞${⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑}")
             )
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
-    private fun resetAllSubCommand() = CommandBuilder
-        .begin("reset-all")
-        .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
-                .required()
-                .build()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠗⠑⠎⠑⠞⠁⠇⠇⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠗⠑⠎⠑⠞-⠁⠇⠇")
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+                .⠃⠑⠛⠊⠝<⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑>("⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑")
+                .⠧⠑⠗⠊⠋⠊⠑⠙⠃⠽(⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠍⠕⠙⠥⠇⠑_⠧⠁⠇⠊⠙⠁⠞⠕⠗)
+                .⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠙⠺⠊⠞⠓ { ⠃⠑⠛⠊⠝, _ -> ⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗.⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑(⠃⠑⠛⠊⠝) }
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .handler { command, args ->
-            val module = args[0] as ClientModule
+        .⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, ⠁⠗⠛⠎ ->
+            ⠧⠁⠇ ⠍⠕⠙⠥⠇⠑ = ⠁⠗⠛⠎[0] ⠁⠎ ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
 
-            module.getContainedValuesRecursively()
-                .filter { !it.name.equals("Bind", true) }
-                .forEach { it.restore() }
-            ModuleClickGui.reloadView()
-            chat(
-                regular(command.result("resetAllSuccess", variable(module.name))),
-                metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
+            ⠍⠕⠙⠥⠇⠑.⠛⠑⠞⠉⠕⠝⠞⠁⠊⠝⠑⠙⠧⠁⠇⠥⠑⠎⠗⠑⠉⠥⠗⠎⠊⠧⠑⠇⠽()
+                .⠋⠊⠇⠞⠑⠗ { !⠊⠞.⠝⠁⠍⠑.⠑⠟⠥⠁⠇⠎("⠃⠊⠝⠙", ⠞⠗⠥⠑) }
+                .⠋⠕⠗⠑⠁⠉⠓ { ⠊⠞.⠗⠑⠎⠞⠕⠗⠑() }
+            ⠍⠕⠙⠥⠇⠑⠉⠇⠊⠉⠅⠛⠥⠊.⠗⠑⠇⠕⠁⠙⠧⠊⠑⠺()
+            ⠉⠓⠁⠞(
+                ⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠗⠑⠎⠑⠞⠁⠇⠇⠎⠥⠉⠉⠑⠎⠎", ⠧⠁⠗⠊⠁⠃⠇⠑(⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑))),
+                ⠍⠑⠞⠁⠙⠁⠞⠁ = ⠍⠑⠎⠎⠁⠛⠑⠍⠑⠞⠁⠙⠁⠞⠁(⠊⠙ = "⠉⠧⠁⠇⠥⠑#⠗⠑⠎⠑⠞⠁⠇⠇${⠍⠕⠙⠥⠇⠑.⠝⠁⠍⠑}")
             )
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
 }

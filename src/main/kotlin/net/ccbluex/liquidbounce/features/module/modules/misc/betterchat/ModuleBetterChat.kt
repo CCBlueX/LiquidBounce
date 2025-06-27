@@ -1,155 +1,155 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠊⠎⠉.⠃⠑⠞⠞⠑⠗⠉⠓⠁⠞
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.gui.screen.DeathScreen
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠝⠁⠍⠑⠙⠉⠓⠕⠊⠉⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠞⠕⠛⠛⠇⠑⠁⠃⠇⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠅⠑⠽⠃⠕⠁⠗⠙⠅⠑⠽⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠁⠞⠑⠛⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠉⠇⠊⠑⠝⠞.⠛⠥⠊.⠎⠉⠗⠑⠑⠝.⠉⠓⠁⠞⠎⠉⠗⠑⠑⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠉⠇⠊⠑⠝⠞.⠛⠥⠊.⠎⠉⠗⠑⠑⠝.⠙⠑⠁⠞⠓⠎⠉⠗⠑⠑⠝
 
 /**
- * BetterChat Module
+ * ⠃⠑⠞⠞⠑⠗⠉⠓⠁⠞ ⠍⠕⠙⠥⠇⠑
  *
- * Quality of life improvements to the in-game chat.
+ * ⠟⠥⠁⠇⠊⠞⠽ ⠕⠋ ⠇⠊⠋⠑ ⠊⠍⠏⠗⠕⠧⠑⠍⠑⠝⠞⠎ ⠞⠕ ⠞⠓⠑ ⠊⠝-⠛⠁⠍⠑ ⠉⠓⠁⠞.
  */
-object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = arrayOf("AntiSpam")) {
-    private val features by multiEnumChoice("Features",
-        Features.INFINITE,
-        Features.ANTI_CLEAR,
-        Features.KEEP_AFTER_DEATH
+⠕⠃⠚⠑⠉⠞ ⠍⠕⠙⠥⠇⠑⠃⠑⠞⠞⠑⠗⠉⠓⠁⠞ : ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑("⠃⠑⠞⠞⠑⠗⠉⠓⠁⠞", ⠉⠁⠞⠑⠛⠕⠗⠽.⠗⠑⠝⠙⠑⠗, ⠁⠇⠊⠁⠎⠑⠎ = ⠁⠗⠗⠁⠽⠕⠋("⠁⠝⠞⠊⠎⠏⠁⠍")) {
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠋⠑⠁⠞⠥⠗⠑⠎ ⠃⠽ ⠍⠥⠇⠞⠊⠑⠝⠥⠍⠉⠓⠕⠊⠉⠑("⠋⠑⠁⠞⠥⠗⠑⠎",
+        ⠋⠑⠁⠞⠥⠗⠑⠎.⠊⠝⠋⠊⠝⠊⠞⠑,
+        ⠋⠑⠁⠞⠥⠗⠑⠎.⠁⠝⠞⠊_⠉⠇⠑⠁⠗,
+        ⠋⠑⠁⠞⠥⠗⠑⠎.⠅⠑⠑⠏_⠁⠋⠞⠑⠗_⠙⠑⠁⠞⠓
     )
 
-    val infiniteLength get() = Features.INFINITE in features
-    val antiClear get() = Features.ANTI_CLEAR in features
+    ⠧⠁⠇ ⠊⠝⠋⠊⠝⠊⠞⠑⠇⠑⠝⠛⠞⠓ ⠛⠑⠞() = ⠋⠑⠁⠞⠥⠗⠑⠎.⠊⠝⠋⠊⠝⠊⠞⠑ ⠊⠝ ⠋⠑⠁⠞⠥⠗⠑⠎
+    ⠧⠁⠇ ⠁⠝⠞⠊⠉⠇⠑⠁⠗ ⠛⠑⠞() = ⠋⠑⠁⠞⠥⠗⠑⠎.⠁⠝⠞⠊_⠉⠇⠑⠁⠗ ⠊⠝ ⠋⠑⠁⠞⠥⠗⠑⠎
 
     /**
-     * Allows you to transform your message text to unicode.
+     * ⠁⠇⠇⠕⠺⠎ ⠽⠕⠥ ⠞⠕ ⠞⠗⠁⠝⠎⠋⠕⠗⠍ ⠽⠕⠥⠗ ⠍⠑⠎⠎⠁⠛⠑ ⠞⠑⠭⠞ ⠞⠕ ⠥⠝⠊⠉⠕⠙⠑.
      */
-    private val forceUnicodeChat get() = Features.FORCE_UNICODE_CHAT in features
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠋⠕⠗⠉⠑⠥⠝⠊⠉⠕⠙⠑⠉⠓⠁⠞ ⠛⠑⠞() = ⠋⠑⠁⠞⠥⠗⠑⠎.⠋⠕⠗⠉⠑_⠥⠝⠊⠉⠕⠙⠑_⠉⠓⠁⠞ ⠊⠝ ⠋⠑⠁⠞⠥⠗⠑⠎
 
     /**
-     * Allows you to use the chat on the death screen.
+     * ⠁⠇⠇⠕⠺⠎ ⠽⠕⠥ ⠞⠕ ⠥⠎⠑ ⠞⠓⠑ ⠉⠓⠁⠞ ⠕⠝ ⠞⠓⠑ ⠙⠑⠁⠞⠓ ⠎⠉⠗⠑⠑⠝.
      */
-    private val keepAfterDeath get() = Features.KEEP_AFTER_DEATH in features
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠅⠑⠑⠏⠁⠋⠞⠑⠗⠙⠑⠁⠞⠓ ⠛⠑⠞() = ⠋⠑⠁⠞⠥⠗⠑⠎.⠅⠑⠑⠏_⠁⠋⠞⠑⠗_⠙⠑⠁⠞⠓ ⠊⠝ ⠋⠑⠁⠞⠥⠗⠑⠎
 
-    private object AppendPrefix : MessageModifier("AppendPrefix", false) {
-        val prefix by text("Prefix", "> ")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠕⠃⠚⠑⠉⠞ ⠁⠏⠏⠑⠝⠙⠏⠗⠑⠋⠊⠭ : ⠍⠑⠎⠎⠁⠛⠑⠍⠕⠙⠊⠋⠊⠑⠗("⠁⠏⠏⠑⠝⠙⠏⠗⠑⠋⠊⠭", ⠋⠁⠇⠎⠑) {
+        ⠧⠁⠇ ⠏⠗⠑⠋⠊⠭ ⠃⠽ ⠞⠑⠭⠞("⠏⠗⠑⠋⠊⠭", "> ")
 
-        override fun getMessage(content: String) = prefix + content
+        ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠛⠑⠞⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛) = ⠏⠗⠑⠋⠊⠭ + ⠉⠕⠝⠞⠑⠝⠞
     }
 
-    private object AppendSuffix : MessageModifier("AppendSuffix", false) {
-        val suffix by text("Suffix", " | \uD835\uDE7B\uD835\uDE92\uD835\uDE9A\uD835\uDE9E" +
-            "\uD835\uDE92\uD835\uDE8D\uD835\uDE71\uD835\uDE98\uD835\uDE9E\uD835\uDE97\uD835\uDE8C\uD835\uDE8E")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠕⠃⠚⠑⠉⠞ ⠁⠏⠏⠑⠝⠙⠎⠥⠋⠋⠊⠭ : ⠍⠑⠎⠎⠁⠛⠑⠍⠕⠙⠊⠋⠊⠑⠗("⠁⠏⠏⠑⠝⠙⠎⠥⠋⠋⠊⠭", ⠋⠁⠇⠎⠑) {
+        ⠧⠁⠇ ⠎⠥⠋⠋⠊⠭ ⠃⠽ ⠞⠑⠭⠞("⠎⠥⠋⠋⠊⠭", " | \⠥⠙835\⠥⠙⠑7⠃\⠥⠙835\⠥⠙⠑92\⠥⠙835\⠥⠙⠑9⠁\⠥⠙835\⠥⠙⠑9⠑" +
+            "\⠥⠙835\⠥⠙⠑92\⠥⠙835\⠥⠙⠑8⠙\⠥⠙835\⠥⠙⠑71\⠥⠙835\⠥⠙⠑98\⠥⠙835\⠥⠙⠑9⠑\⠥⠙835\⠥⠙⠑97\⠥⠙835\⠥⠙⠑8⠉\⠥⠙835\⠥⠙⠑8⠑")
 
-        override fun getMessage(content: String) = content + suffix
+        ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠛⠑⠞⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛) = ⠉⠕⠝⠞⠑⠝⠞ + ⠎⠥⠋⠋⠊⠭
     }
 
-    init {
-        tree(AppendPrefix)
-        tree(AppendSuffix)
+    ⠊⠝⠊⠞ {
+        ⠞⠗⠑⠑(⠁⠏⠏⠑⠝⠙⠏⠗⠑⠋⠊⠭)
+        ⠞⠗⠑⠑(⠁⠏⠏⠑⠝⠙⠎⠥⠋⠋⠊⠭)
     }
 
-    init {
-        treeAll(
-            AntiSpam,
-            Copy
+    ⠊⠝⠊⠞ {
+        ⠞⠗⠑⠑⠁⠇⠇(
+            ⠁⠝⠞⠊⠎⠏⠁⠍,
+            ⠉⠕⠏⠽
         )
     }
 
 
-    object Copy : ToggleableConfigurable(this, "Copy", true) {
-        val notification by boolean("Notificate", true)
-        val highlight by boolean("Highlight", true)
+    ⠕⠃⠚⠑⠉⠞ ⠉⠕⠏⠽ : ⠞⠕⠛⠛⠇⠑⠁⠃⠇⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑(⠞⠓⠊⠎, "⠉⠕⠏⠽", ⠞⠗⠥⠑) {
+        ⠧⠁⠇ ⠝⠕⠞⠊⠋⠊⠉⠁⠞⠊⠕⠝ ⠃⠽ ⠃⠕⠕⠇⠑⠁⠝("⠝⠕⠞⠊⠋⠊⠉⠁⠞⠑", ⠞⠗⠥⠑)
+        ⠧⠁⠇ ⠓⠊⠛⠓⠇⠊⠛⠓⠞ ⠃⠽ ⠃⠕⠕⠇⠑⠁⠝("⠓⠊⠛⠓⠇⠊⠛⠓⠞", ⠞⠗⠥⠑)
     }
 
-    var antiChatClearPaused = false
+    ⠧⠁⠗ ⠁⠝⠞⠊⠉⠓⠁⠞⠉⠇⠑⠁⠗⠏⠁⠥⠎⠑⠙ = ⠋⠁⠇⠎⠑
 
-    @Suppress("unused")
-    val keyboardKeyHandler = handler<KeyboardKeyEvent> {
-        if (keepAfterDeath && mc.currentScreen !is DeathScreen) {
-            return@handler
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠧⠁⠇ ⠅⠑⠽⠃⠕⠁⠗⠙⠅⠑⠽⠓⠁⠝⠙⠇⠑⠗ = ⠓⠁⠝⠙⠇⠑⠗<⠅⠑⠽⠃⠕⠁⠗⠙⠅⠑⠽⠑⠧⠑⠝⠞> {
+        ⠊⠋ (⠅⠑⠑⠏⠁⠋⠞⠑⠗⠙⠑⠁⠞⠓ && ⠍⠉.⠉⠥⠗⠗⠑⠝⠞⠎⠉⠗⠑⠑⠝ !⠊⠎ ⠙⠑⠁⠞⠓⠎⠉⠗⠑⠑⠝) {
+            ⠗⠑⠞⠥⠗⠝@⠓⠁⠝⠙⠇⠑⠗
         }
 
-        val options = mc.options
-        val prefix = CommandManager.Options.prefix[0]
-        when (it.keyCode) {
-            options.chatKey.boundKey.code -> openChat("")
-            options.commandKey.boundKey.code -> openChat("/")
-            prefix.code -> openChat(prefix.toString())
+        ⠧⠁⠇ ⠕⠏⠞⠊⠕⠝⠎ = ⠍⠉.⠕⠏⠞⠊⠕⠝⠎
+        ⠧⠁⠇ ⠏⠗⠑⠋⠊⠭ = ⠉⠕⠍⠍⠁⠝⠙⠍⠁⠝⠁⠛⠑⠗.⠕⠏⠞⠊⠕⠝⠎.⠏⠗⠑⠋⠊⠭[0]
+        ⠺⠓⠑⠝ (⠊⠞.⠅⠑⠽⠉⠕⠙⠑) {
+            ⠕⠏⠞⠊⠕⠝⠎.⠉⠓⠁⠞⠅⠑⠽.⠃⠕⠥⠝⠙⠅⠑⠽.⠉⠕⠙⠑ -> ⠕⠏⠑⠝⠉⠓⠁⠞("")
+            ⠕⠏⠞⠊⠕⠝⠎.⠉⠕⠍⠍⠁⠝⠙⠅⠑⠽.⠃⠕⠥⠝⠙⠅⠑⠽.⠉⠕⠙⠑ -> ⠕⠏⠑⠝⠉⠓⠁⠞("/")
+            ⠏⠗⠑⠋⠊⠭.⠉⠕⠙⠑ -> ⠕⠏⠑⠝⠉⠓⠁⠞(⠏⠗⠑⠋⠊⠭.⠞⠕⠎⠞⠗⠊⠝⠛())
         }
     }
 
-    private fun openChat(text: String) {
-        mc.send { mc.setScreen(ChatScreen(text)) }
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠕⠏⠑⠝⠉⠓⠁⠞(⠞⠑⠭⠞: ⠎⠞⠗⠊⠝⠛) {
+        ⠍⠉.⠎⠑⠝⠙ { ⠍⠉.⠎⠑⠞⠎⠉⠗⠑⠑⠝(⠉⠓⠁⠞⠎⠉⠗⠑⠑⠝(⠞⠑⠭⠞)) }
     }
 
-    fun modifyMessage(content: String): String {
-        if (!running) {
-            return content
+    ⠋⠥⠝ ⠍⠕⠙⠊⠋⠽⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛): ⠎⠞⠗⠊⠝⠛ {
+        ⠊⠋ (!⠗⠥⠝⠝⠊⠝⠛) {
+            ⠗⠑⠞⠥⠗⠝ ⠉⠕⠝⠞⠑⠝⠞
         }
 
-        val result = if (forceUnicodeChat) {
-            applyUnicodeTransformation(content)
-        } else {
-            content
+        ⠧⠁⠇ ⠗⠑⠎⠥⠇⠞ = ⠊⠋ (⠋⠕⠗⠉⠑⠥⠝⠊⠉⠕⠙⠑⠉⠓⠁⠞) {
+            ⠁⠏⠏⠇⠽⠥⠝⠊⠉⠕⠙⠑⠞⠗⠁⠝⠎⠋⠕⠗⠍⠁⠞⠊⠕⠝(⠉⠕⠝⠞⠑⠝⠞)
+        } ⠑⠇⠎⠑ {
+            ⠉⠕⠝⠞⠑⠝⠞
         }
 
-        return AppendSuffix.modifyMessage(AppendPrefix.modifyMessage(result))
+        ⠗⠑⠞⠥⠗⠝ ⠁⠏⠏⠑⠝⠙⠎⠥⠋⠋⠊⠭.⠍⠕⠙⠊⠋⠽⠍⠑⠎⠎⠁⠛⠑(⠁⠏⠏⠑⠝⠙⠏⠗⠑⠋⠊⠭.⠍⠕⠙⠊⠋⠽⠍⠑⠎⠎⠁⠛⠑(⠗⠑⠎⠥⠇⠞))
     }
 
-    private fun applyUnicodeTransformation(content: String): String {
-        return buildString {
-            for (c in content) {
-                if (c.code in 33..128) {
-                    append(Character.toChars(c.code + 65248))
-                } else {
-                    append(c)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠁⠏⠏⠇⠽⠥⠝⠊⠉⠕⠙⠑⠞⠗⠁⠝⠎⠋⠕⠗⠍⠁⠞⠊⠕⠝(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛): ⠎⠞⠗⠊⠝⠛ {
+        ⠗⠑⠞⠥⠗⠝ ⠃⠥⠊⠇⠙⠎⠞⠗⠊⠝⠛ {
+            ⠋⠕⠗ (⠉ ⠊⠝ ⠉⠕⠝⠞⠑⠝⠞) {
+                ⠊⠋ (⠉.⠉⠕⠙⠑ ⠊⠝ 33..128) {
+                    ⠁⠏⠏⠑⠝⠙(⠉⠓⠁⠗⠁⠉⠞⠑⠗.⠞⠕⠉⠓⠁⠗⠎(⠉.⠉⠕⠙⠑ + 65248))
+                } ⠑⠇⠎⠑ {
+                    ⠁⠏⠏⠑⠝⠙(⠉)
                 }
             }
         }
     }
 
-    private abstract class MessageModifier(
-        name: String,
-        enabled: Boolean
-    ) : ToggleableConfigurable(this, name, enabled) {
-        fun modifyMessage(content: String) =
-            if (!this.enabled) {
-                content
-            } else {
-                getMessage(content)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠁⠃⠎⠞⠗⠁⠉⠞ ⠉⠇⠁⠎⠎ ⠍⠑⠎⠎⠁⠛⠑⠍⠕⠙⠊⠋⠊⠑⠗(
+        ⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛,
+        ⠑⠝⠁⠃⠇⠑⠙: ⠃⠕⠕⠇⠑⠁⠝
+    ) : ⠞⠕⠛⠛⠇⠑⠁⠃⠇⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑(⠞⠓⠊⠎, ⠝⠁⠍⠑, ⠑⠝⠁⠃⠇⠑⠙) {
+        ⠋⠥⠝ ⠍⠕⠙⠊⠋⠽⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛) =
+            ⠊⠋ (!⠞⠓⠊⠎.⠑⠝⠁⠃⠇⠑⠙) {
+                ⠉⠕⠝⠞⠑⠝⠞
+            } ⠑⠇⠎⠑ {
+                ⠛⠑⠞⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞)
             }
 
-        abstract fun getMessage(content: String): String
+        ⠁⠃⠎⠞⠗⠁⠉⠞ ⠋⠥⠝ ⠛⠑⠞⠍⠑⠎⠎⠁⠛⠑(⠉⠕⠝⠞⠑⠝⠞: ⠎⠞⠗⠊⠝⠛): ⠎⠞⠗⠊⠝⠛
     }
 
-    @Suppress("unused")
-    private enum class Features(override val choiceName: String) : NamedChoice {
-        INFINITE("Infinite"),
-        ANTI_CLEAR("AntiClear"),
-        KEEP_AFTER_DEATH("KeepAfterDeath"),
-        FORCE_UNICODE_CHAT("ForceUnicodeChat")
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠑⠝⠥⠍ ⠉⠇⠁⠎⠎ ⠋⠑⠁⠞⠥⠗⠑⠎(⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠉⠓⠕⠊⠉⠑⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛) : ⠝⠁⠍⠑⠙⠉⠓⠕⠊⠉⠑ {
+        ⠊⠝⠋⠊⠝⠊⠞⠑("⠊⠝⠋⠊⠝⠊⠞⠑"),
+        ⠁⠝⠞⠊_⠉⠇⠑⠁⠗("⠁⠝⠞⠊⠉⠇⠑⠁⠗"),
+        ⠅⠑⠑⠏_⠁⠋⠞⠑⠗_⠙⠑⠁⠞⠓("⠅⠑⠑⠏⠁⠋⠞⠑⠗⠙⠑⠁⠞⠓"),
+        ⠋⠕⠗⠉⠑_⠥⠝⠊⠉⠕⠙⠑_⠉⠓⠁⠞("⠋⠕⠗⠉⠑⠥⠝⠊⠉⠕⠙⠑⠉⠓⠁⠞")
     }
 }

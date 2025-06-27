@@ -1,78 +1,78 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  *
  *
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠕⠧⠑⠍⠑⠝⠞.⠎⠏⠑⠑⠙.⠍⠕⠙⠑⠎.⠧⠥⠇⠉⠁⠝
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠏⠁⠉⠅⠑⠞⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠏⠇⠁⠽⠑⠗⠚⠥⠍⠏⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠕⠧⠑⠍⠑⠝⠞.⠎⠏⠑⠑⠙.⠍⠕⠙⠑⠎.⠎⠏⠑⠑⠙⠃⠓⠕⠏⠃⠁⠎⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠑⠝⠞⠊⠞⠽.⠍⠕⠧⠊⠝⠛
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠑⠝⠞⠊⠞⠽.⠺⠊⠞⠓⠎⠞⠗⠁⠋⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠑⠝⠞⠊⠞⠽.⠑⠋⠋⠑⠉⠞.⠎⠞⠁⠞⠥⠎⠑⠋⠋⠑⠉⠞⠎
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠝⠑⠞⠺⠕⠗⠅.⠏⠁⠉⠅⠑⠞.⠉2⠎.⠏⠇⠁⠽.⠏⠇⠁⠽⠑⠗⠍⠕⠧⠑⠉2⠎⠏⠁⠉⠅⠑⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠥⠞⠊⠇.⠎⠓⠁⠏⠑.⠧⠕⠭⠑⠇⠎⠓⠁⠏⠑⠎
 
 /**
- * @anticheat Vulcan
- * @anticheatVersion V2.8.6
- * @testedOn anticheat-test.com, eu.loyisa.cn
- * @note flags on specific blocks such as fences
+ * @⠁⠝⠞⠊⠉⠓⠑⠁⠞ ⠧⠥⠇⠉⠁⠝
+ * @⠁⠝⠞⠊⠉⠓⠑⠁⠞⠧⠑⠗⠎⠊⠕⠝ ⠧2.8.6
+ * @⠞⠑⠎⠞⠑⠙⠕⠝ ⠁⠝⠞⠊⠉⠓⠑⠁⠞-⠞⠑⠎⠞.⠉⠕⠍, ⠑⠥.⠇⠕⠽⠊⠎⠁.⠉⠝
+ * @⠝⠕⠞⠑ ⠋⠇⠁⠛⠎ ⠕⠝ ⠎⠏⠑⠉⠊⠋⠊⠉ ⠃⠇⠕⠉⠅⠎ ⠎⠥⠉⠓ ⠁⠎ ⠋⠑⠝⠉⠑⠎
  */
-class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("VulcanGround286", parent) {
+⠉⠇⠁⠎⠎ ⠎⠏⠑⠑⠙⠧⠥⠇⠉⠁⠝⠛⠗⠕⠥⠝⠙286(⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠏⠁⠗⠑⠝⠞: ⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑<*>) : ⠎⠏⠑⠑⠙⠃⠓⠕⠏⠃⠁⠎⠑("⠧⠥⠇⠉⠁⠝⠛⠗⠕⠥⠝⠙286", ⠏⠁⠗⠑⠝⠞) {
 
-    @Suppress("unused")
-    private val afterJumpHandler = tickHandler {
-        if (player.moving && collidesBottomVertical() && !mc.options.jumpKey.isPressed) {
-            val speedEffect = player.getStatusEffect(StatusEffects.SPEED)
-            val isAffectedBySpeed = speedEffect != null && speedEffect.amplifier > 0
-            val isMovingSideways = player.input.movementSideways != 0f
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠁⠋⠞⠑⠗⠚⠥⠍⠏⠓⠁⠝⠙⠇⠑⠗ = ⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗ {
+        ⠊⠋ (⠏⠇⠁⠽⠑⠗.⠍⠕⠧⠊⠝⠛ && ⠉⠕⠇⠇⠊⠙⠑⠎⠃⠕⠞⠞⠕⠍⠧⠑⠗⠞⠊⠉⠁⠇() && !⠍⠉.⠕⠏⠞⠊⠕⠝⠎.⠚⠥⠍⠏⠅⠑⠽.⠊⠎⠏⠗⠑⠎⠎⠑⠙) {
+            ⠧⠁⠇ ⠎⠏⠑⠑⠙⠑⠋⠋⠑⠉⠞ = ⠏⠇⠁⠽⠑⠗.⠛⠑⠞⠎⠞⠁⠞⠥⠎⠑⠋⠋⠑⠉⠞(⠎⠞⠁⠞⠥⠎⠑⠋⠋⠑⠉⠞⠎.⠎⠏⠑⠑⠙)
+            ⠧⠁⠇ ⠊⠎⠁⠋⠋⠑⠉⠞⠑⠙⠃⠽⠎⠏⠑⠑⠙ = ⠎⠏⠑⠑⠙⠑⠋⠋⠑⠉⠞ != ⠝⠥⠇⠇ && ⠎⠏⠑⠑⠙⠑⠋⠋⠑⠉⠞.⠁⠍⠏⠇⠊⠋⠊⠑⠗ > 0
+            ⠧⠁⠇ ⠊⠎⠍⠕⠧⠊⠝⠛⠎⠊⠙⠑⠺⠁⠽⠎ = ⠏⠇⠁⠽⠑⠗.⠊⠝⠏⠥⠞.⠍⠕⠧⠑⠍⠑⠝⠞⠎⠊⠙⠑⠺⠁⠽⠎ != 0⠋
 
-            val strafe = when {
-                isAffectedBySpeed -> 0.59
-                isMovingSideways -> 0.41
-                else -> 0.42
+            ⠧⠁⠇ ⠎⠞⠗⠁⠋⠑ = ⠺⠓⠑⠝ {
+                ⠊⠎⠁⠋⠋⠑⠉⠞⠑⠙⠃⠽⠎⠏⠑⠑⠙ -> 0.59
+                ⠊⠎⠍⠕⠧⠊⠝⠛⠎⠊⠙⠑⠺⠁⠽⠎ -> 0.41
+                ⠑⠇⠎⠑ -> 0.42
             }
 
-            player.velocity = player.velocity.withStrafe(speed = strafe)
-            player.velocity.y = 0.005
+            ⠏⠇⠁⠽⠑⠗.⠧⠑⠇⠕⠉⠊⠞⠽ = ⠏⠇⠁⠽⠑⠗.⠧⠑⠇⠕⠉⠊⠞⠽.⠺⠊⠞⠓⠎⠞⠗⠁⠋⠑(⠎⠏⠑⠑⠙ = ⠎⠞⠗⠁⠋⠑)
+            ⠏⠇⠁⠽⠑⠗.⠧⠑⠇⠕⠉⠊⠞⠽.⠽ = 0.005
         }
     }
 
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket && collidesBottomVertical() && !mc.options.jumpKey.isPressed) {
-            event.packet.y += 0.005
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠏⠁⠉⠅⠑⠞⠓⠁⠝⠙⠇⠑⠗ = ⠓⠁⠝⠙⠇⠑⠗<⠏⠁⠉⠅⠑⠞⠑⠧⠑⠝⠞> { ⠑⠧⠑⠝⠞ ->
+        ⠊⠋ (⠑⠧⠑⠝⠞.⠏⠁⠉⠅⠑⠞ ⠊⠎ ⠏⠇⠁⠽⠑⠗⠍⠕⠧⠑⠉2⠎⠏⠁⠉⠅⠑⠞ && ⠉⠕⠇⠇⠊⠙⠑⠎⠃⠕⠞⠞⠕⠍⠧⠑⠗⠞⠊⠉⠁⠇() && !⠍⠉.⠕⠏⠞⠊⠕⠝⠎.⠚⠥⠍⠏⠅⠑⠽.⠊⠎⠏⠗⠑⠎⠎⠑⠙) {
+            ⠑⠧⠑⠝⠞.⠏⠁⠉⠅⠑⠞.⠽ += 0.005
         }
     }
 
-    private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠉⠕⠇⠇⠊⠙⠑⠎⠃⠕⠞⠞⠕⠍⠧⠑⠗⠞⠊⠉⠁⠇() =
+        ⠺⠕⠗⠇⠙.⠛⠑⠞⠃⠇⠕⠉⠅⠉⠕⠇⠇⠊⠎⠊⠕⠝⠎(⠏⠇⠁⠽⠑⠗, ⠏⠇⠁⠽⠑⠗.⠃⠕⠥⠝⠙⠊⠝⠛⠃⠕⠭.⠕⠋⠋⠎⠑⠞(0.0, -0.005, 0.0)).⠁⠝⠽ { ⠎⠓⠁⠏⠑ ->
+            ⠎⠓⠁⠏⠑ != ⠧⠕⠭⠑⠇⠎⠓⠁⠏⠑⠎.⠑⠍⠏⠞⠽()
         }
 
-    @Suppress("unused")
-    private val jumpEvent = handler<PlayerJumpEvent> { event ->
-        if (!mc.options.jumpKey.isPressed) {
-            event.cancelEvent()
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠚⠥⠍⠏⠑⠧⠑⠝⠞ = ⠓⠁⠝⠙⠇⠑⠗<⠏⠇⠁⠽⠑⠗⠚⠥⠍⠏⠑⠧⠑⠝⠞> { ⠑⠧⠑⠝⠞ ->
+        ⠊⠋ (!⠍⠉.⠕⠏⠞⠊⠕⠝⠎.⠚⠥⠍⠏⠅⠑⠽.⠊⠎⠏⠗⠑⠎⠎⠑⠙) {
+            ⠑⠧⠑⠝⠞.⠉⠁⠝⠉⠑⠇⠑⠧⠑⠝⠞()
         }
     }
 

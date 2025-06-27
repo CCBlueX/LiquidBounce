@@ -1,41 +1,41 @@
-package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠕⠧⠑⠍⠑⠝⠞.⠝⠕⠎⠇⠕⠺.⠍⠕⠙⠑⠎.⠎⠝⠑⠁⠅⠊⠝⠛
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠝⠁⠍⠑⠙⠉⠓⠕⠊⠉⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎⠞⠁⠞⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠏⠇⠁⠽⠑⠗⠝⠑⠞⠺⠕⠗⠅⠍⠕⠧⠑⠍⠑⠝⠞⠞⠊⠉⠅⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠝⠑⠞⠺⠕⠗⠅.⠏⠁⠉⠅⠑⠞.⠉2⠎.⠏⠇⠁⠽.⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞
 
-internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) : Choice("Switch") {
-    private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
+⠊⠝⠞⠑⠗⠝⠁⠇ ⠉⠇⠁⠎⠎ ⠝⠕⠎⠇⠕⠺⠎⠝⠑⠁⠅⠊⠝⠛⠎⠺⠊⠞⠉⠓(⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠏⠁⠗⠑⠝⠞: ⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑<*>) : ⠉⠓⠕⠊⠉⠑("⠎⠺⠊⠞⠉⠓") {
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑ ⠃⠽ ⠑⠝⠥⠍⠉⠓⠕⠊⠉⠑("⠞⠊⠍⠊⠝⠛", ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑.⠏⠗⠑_⠏⠕⠎⠞)
 
-    @Suppress("unused")
-    private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-        when (timingMode) {
-            TimingMode.PRE_POST -> when (event.state) {
-                EventState.PRE -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠝⠑⠞⠺⠕⠗⠅⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗ = ⠓⠁⠝⠙⠇⠑⠗<⠏⠇⠁⠽⠑⠗⠝⠑⠞⠺⠕⠗⠅⠍⠕⠧⠑⠍⠑⠝⠞⠞⠊⠉⠅⠑⠧⠑⠝⠞> { ⠑⠧⠑⠝⠞ ->
+        ⠺⠓⠑⠝ (⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑) {
+            ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑.⠏⠗⠑_⠏⠕⠎⠞ -> ⠺⠓⠑⠝ (⠑⠧⠑⠝⠞.⠎⠞⠁⠞⠑) {
+                ⠑⠧⠑⠝⠞⠎⠞⠁⠞⠑.⠏⠗⠑ -> {
+                    ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠗⠑⠇⠑⠁⠎⠑_⠎⠓⠊⠋⠞_⠅⠑⠽))
                 }
-                EventState.POST -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                ⠑⠧⠑⠝⠞⠎⠞⠁⠞⠑.⠏⠕⠎⠞ -> {
+                    ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠏⠗⠑⠎⠎_⠎⠓⠊⠋⠞_⠅⠑⠽))
                 }
             }
-            TimingMode.PRE_TICK -> if (event.state == EventState.PRE) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+            ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑.⠏⠗⠑_⠞⠊⠉⠅ -> ⠊⠋ (⠑⠧⠑⠝⠞.⠎⠞⠁⠞⠑ == ⠑⠧⠑⠝⠞⠎⠞⠁⠞⠑.⠏⠗⠑) {
+                ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠗⠑⠇⠑⠁⠎⠑_⠎⠓⠊⠋⠞_⠅⠑⠽))
+                ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠏⠗⠑⠎⠎_⠎⠓⠊⠋⠞_⠅⠑⠽))
             }
-            TimingMode.POST_TICK -> if (event.state == EventState.POST) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+            ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑.⠏⠕⠎⠞_⠞⠊⠉⠅ -> ⠊⠋ (⠑⠧⠑⠝⠞.⠎⠞⠁⠞⠑ == ⠑⠧⠑⠝⠞⠎⠞⠁⠞⠑.⠏⠕⠎⠞) {
+                ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠗⠑⠇⠑⠁⠎⠑_⠎⠓⠊⠋⠞_⠅⠑⠽))
+                ⠝⠑⠞⠺⠕⠗⠅.⠎⠑⠝⠙⠏⠁⠉⠅⠑⠞(⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞(⠍⠉.⠏⠇⠁⠽⠑⠗, ⠉⠇⠊⠑⠝⠞⠉⠕⠍⠍⠁⠝⠙⠉2⠎⠏⠁⠉⠅⠑⠞.⠍⠕⠙⠑.⠏⠗⠑⠎⠎_⠎⠓⠊⠋⠞_⠅⠑⠽))
             }
         }
     }
 
-    private enum class TimingMode(override val choiceName: String) : NamedChoice {
-        PRE_POST("PreAndPost"),
-        PRE_TICK("Pre"),
-        POST_TICK("Post")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠑⠝⠥⠍ ⠉⠇⠁⠎⠎ ⠞⠊⠍⠊⠝⠛⠍⠕⠙⠑(⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠉⠓⠕⠊⠉⠑⠝⠁⠍⠑: ⠎⠞⠗⠊⠝⠛) : ⠝⠁⠍⠑⠙⠉⠓⠕⠊⠉⠑ {
+        ⠏⠗⠑_⠏⠕⠎⠞("⠏⠗⠑⠁⠝⠙⠏⠕⠎⠞"),
+        ⠏⠗⠑_⠞⠊⠉⠅("⠏⠗⠑"),
+        ⠏⠕⠎⠞_⠞⠊⠉⠅("⠏⠕⠎⠞")
     }
 }

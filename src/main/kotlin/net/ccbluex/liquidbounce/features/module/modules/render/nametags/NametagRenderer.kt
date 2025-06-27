@@ -1,144 +1,144 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render.nametags
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠗⠑⠝⠙⠑⠗.⠝⠁⠍⠑⠞⠁⠛⠎
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.VertexFormat
-import net.minecraft.item.ItemStack
-import org.lwjgl.opengl.GL11
+⠊⠍⠏⠕⠗⠞ ⠉⠕⠍.⠍⠕⠚⠁⠝⠛.⠃⠇⠁⠵⠑3⠙.⠎⠽⠎⠞⠑⠍⠎.⠗⠑⠝⠙⠑⠗⠎⠽⠎⠞⠑⠍
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.*
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠋⠕⠝⠞.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗⠃⠥⠋⠋⠑⠗⠎
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠉⠕⠇⠕⠗4⠃
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠧⠑⠉3
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.⠍⠉
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠉⠇⠊⠑⠝⠞.⠛⠥⠊.⠙⠗⠁⠺⠉⠕⠝⠞⠑⠭⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠉⠇⠊⠑⠝⠞.⠗⠑⠝⠙⠑⠗.⠧⠑⠗⠞⠑⠭⠋⠕⠗⠍⠁⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠊⠞⠑⠍.⠊⠞⠑⠍⠎⠞⠁⠉⠅
+⠊⠍⠏⠕⠗⠞ ⠕⠗⠛.⠇⠺⠚⠛⠇.⠕⠏⠑⠝⠛⠇.⠛⠇11
 
-private const val NAMETAG_PADDING: Int = 5
-private const val ITEM_SIZE: Int = 20
-private const val ITEM_SCALE: Float = 1.0F
+⠏⠗⠊⠧⠁⠞⠑ ⠉⠕⠝⠎⠞ ⠧⠁⠇ ⠝⠁⠍⠑⠞⠁⠛_⠏⠁⠙⠙⠊⠝⠛: ⠊⠝⠞ = 5
+⠏⠗⠊⠧⠁⠞⠑ ⠉⠕⠝⠎⠞ ⠧⠁⠇ ⠊⠞⠑⠍_⠎⠊⠵⠑: ⠊⠝⠞ = 20
+⠏⠗⠊⠧⠁⠞⠑ ⠉⠕⠝⠎⠞ ⠧⠁⠇ ⠊⠞⠑⠍_⠎⠉⠁⠇⠑: ⠋⠇⠕⠁⠞ = 1.0⠋
 
-@Suppress("MagicNumber")
-class NametagRenderer {
+@⠎⠥⠏⠏⠗⠑⠎⠎("⠍⠁⠛⠊⠉⠝⠥⠍⠃⠑⠗")
+⠉⠇⠁⠎⠎ ⠝⠁⠍⠑⠞⠁⠛⠗⠑⠝⠙⠑⠗⠑⠗ {
 
-    private val quadBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_A,
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠟⠥⠁⠙⠃⠥⠋⠋⠑⠗⠎ =
+        ⠗⠑⠝⠙⠑⠗⠃⠥⠋⠋⠑⠗⠃⠥⠊⠇⠙⠑⠗(
+            ⠧⠑⠗⠞⠑⠭⠋⠕⠗⠍⠁⠞.⠙⠗⠁⠺⠍⠕⠙⠑.⠟⠥⠁⠙⠎,
+            ⠧⠑⠗⠞⠑⠭⠊⠝⠏⠥⠞⠞⠽⠏⠑.⠏⠕⠎,
+            ⠗⠑⠝⠙⠑⠗⠃⠥⠋⠋⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠞⠑⠎⠎⠑⠇⠁⠞⠕⠗_⠁,
         )
-    private val lineBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.DEBUG_LINES,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_B,
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠇⠊⠝⠑⠃⠥⠋⠋⠑⠗⠎ =
+        ⠗⠑⠝⠙⠑⠗⠃⠥⠋⠋⠑⠗⠃⠥⠊⠇⠙⠑⠗(
+            ⠧⠑⠗⠞⠑⠭⠋⠕⠗⠍⠁⠞.⠙⠗⠁⠺⠍⠕⠙⠑.⠙⠑⠃⠥⠛_⠇⠊⠝⠑⠎,
+            ⠧⠑⠗⠞⠑⠭⠊⠝⠏⠥⠞⠞⠽⠏⠑.⠏⠕⠎,
+            ⠗⠑⠝⠙⠑⠗⠃⠥⠋⠋⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠞⠑⠎⠎⠑⠇⠁⠞⠕⠗_⠃,
         )
 
-    private val fontBuffers = FontRendererBuffers()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠋⠕⠝⠞⠃⠥⠋⠋⠑⠗⠎ = ⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗⠃⠥⠋⠋⠑⠗⠎()
 
-    fun drawNametag(env: RenderEnvironment, nametag: Nametag, pos: Vec3) = with(env) {
-        val fontSize = FontManager.DEFAULT_FONT_SIZE
+    ⠋⠥⠝ ⠙⠗⠁⠺⠝⠁⠍⠑⠞⠁⠛(⠑⠝⠧: ⠗⠑⠝⠙⠑⠗⠑⠝⠧⠊⠗⠕⠝⠍⠑⠝⠞, ⠝⠁⠍⠑⠞⠁⠛: ⠝⠁⠍⠑⠞⠁⠛, ⠏⠕⠎: ⠧⠑⠉3) = ⠺⠊⠞⠓(⠑⠝⠧) {
+        ⠧⠁⠇ ⠋⠕⠝⠞⠎⠊⠵⠑ = ⠋⠕⠝⠞⠍⠁⠝⠁⠛⠑⠗.⠙⠑⠋⠁⠥⠇⠞_⠋⠕⠝⠞_⠎⠊⠵⠑
 
-        val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
+        ⠧⠁⠇ ⠎⠉⠁⠇⠑ = 1⠋ / (⠋⠕⠝⠞⠎⠊⠵⠑ * 0.15⠋) * ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠎⠉⠁⠇⠑
 
-        matrixStack.push()
-        matrixStack.translate(pos.x, pos.y, pos.z)
-        matrixStack.scale(scale, scale, 1f)
+        ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅.⠏⠥⠎⠓()
+        ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅.⠞⠗⠁⠝⠎⠇⠁⠞⠑(⠏⠕⠎.⠭, ⠏⠕⠎.⠽, ⠏⠕⠎.⠵)
+        ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅.⠎⠉⠁⠇⠑(⠎⠉⠁⠇⠑, ⠎⠉⠁⠇⠑, 1⠋)
 
-        val x =
-            ModuleNametags.fontRenderer.draw(
-                ModuleNametags.fontRenderer.process(nametag.text),
-                0f,
-                0f,
-                shadow = true,
-                z = 0.001f,
+        ⠧⠁⠇ ⠭ =
+            ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠙⠗⠁⠺(
+                ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠏⠗⠕⠉⠑⠎⠎(⠝⠁⠍⠑⠞⠁⠛.⠞⠑⠭⠞),
+                0⠋,
+                0⠋,
+                ⠎⠓⠁⠙⠕⠺ = ⠞⠗⠥⠑,
+                ⠵ = 0.001⠋,
             )
 
-        // Make the model view matrix center the text when rendering
-        matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
+        // ⠍⠁⠅⠑ ⠞⠓⠑ ⠍⠕⠙⠑⠇ ⠧⠊⠑⠺ ⠍⠁⠞⠗⠊⠭ ⠉⠑⠝⠞⠑⠗ ⠞⠓⠑ ⠞⠑⠭⠞ ⠺⠓⠑⠝ ⠗⠑⠝⠙⠑⠗⠊⠝⠛
+        ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅.⠞⠗⠁⠝⠎⠇⠁⠞⠑(-⠭ * 0.5⠋, -⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠓⠑⠊⠛⠓⠞ * 0.5⠋, 0⠋)
 
-        ModuleNametags.fontRenderer.commit(env, fontBuffers)
+        ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠉⠕⠍⠍⠊⠞(⠑⠝⠧, ⠋⠕⠝⠞⠃⠥⠋⠋⠑⠗⠎)
 
-        val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
-        val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
+        ⠧⠁⠇ ⠟1 = ⠧⠑⠉3(-0.1⠋ * ⠋⠕⠝⠞⠎⠊⠵⠑, ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠓⠑⠊⠛⠓⠞ * -0.1⠋, 0⠋)
+        ⠧⠁⠇ ⠟2 = ⠧⠑⠉3(⠭ + 0.2⠋ * ⠋⠕⠝⠞⠎⠊⠵⠑, ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠋⠕⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠓⠑⠊⠛⠓⠞ * 1.1⠋, 0⠋)
 
-        quadBuffers.drawQuad(env, q1, q2)
+        ⠟⠥⠁⠙⠃⠥⠋⠋⠑⠗⠎.⠙⠗⠁⠺⠟⠥⠁⠙(⠑⠝⠧, ⠟1, ⠟2)
 
-        if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(env, q1, q2)
+        ⠊⠋ (⠝⠁⠍⠑⠞⠁⠛⠎⠓⠕⠺⠕⠏⠞⠊⠕⠝⠎.⠃⠕⠗⠙⠑⠗.⠊⠎⠎⠓⠕⠺⠊⠝⠛()) {
+            ⠇⠊⠝⠑⠃⠥⠋⠋⠑⠗⠎.⠙⠗⠁⠺⠟⠥⠁⠙⠕⠥⠞⠇⠊⠝⠑⠎(⠑⠝⠧, ⠟1, ⠟2)
         }
 
-        if (NametagShowOptions.ITEMS.isShowing()) {
-            drawItemList(pos, nametag.items)
+        ⠊⠋ (⠝⠁⠍⠑⠞⠁⠛⠎⠓⠕⠺⠕⠏⠞⠊⠕⠝⠎.⠊⠞⠑⠍⠎.⠊⠎⠎⠓⠕⠺⠊⠝⠛()) {
+            ⠙⠗⠁⠺⠊⠞⠑⠍⠇⠊⠎⠞(⠏⠕⠎, ⠝⠁⠍⠑⠞⠁⠛.⠊⠞⠑⠍⠎)
         }
 
-        matrixStack.pop()
+        ⠍⠁⠞⠗⠊⠭⠎⠞⠁⠉⠅.⠏⠕⠏()
     }
 
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack?>) {
-        val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠙⠗⠁⠺⠊⠞⠑⠍⠇⠊⠎⠞(⠏⠕⠎: ⠧⠑⠉3, ⠊⠞⠑⠍⠎⠞⠕⠗⠑⠝⠙⠑⠗: ⠇⠊⠎⠞<⠊⠞⠑⠍⠎⠞⠁⠉⠅?>) {
+        ⠧⠁⠇ ⠙⠉ = ⠙⠗⠁⠺⠉⠕⠝⠞⠑⠭⠞(⠍⠉, ⠍⠉.⠃⠥⠋⠋⠑⠗⠃⠥⠊⠇⠙⠑⠗⠎.⠑⠝⠞⠊⠞⠽⠧⠑⠗⠞⠑⠭⠉⠕⠝⠎⠥⠍⠑⠗⠎)
 
-        dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
-        dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
-        dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
+        ⠙⠉.⠍⠁⠞⠗⠊⠉⠑⠎.⠞⠗⠁⠝⠎⠇⠁⠞⠑(⠏⠕⠎.⠭, ⠏⠕⠎.⠽ - ⠝⠁⠍⠑⠞⠁⠛_⠏⠁⠙⠙⠊⠝⠛, ⠏⠕⠎.⠵)
+        ⠙⠉.⠍⠁⠞⠗⠊⠉⠑⠎.⠎⠉⠁⠇⠑(⠊⠞⠑⠍_⠎⠉⠁⠇⠑ * ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠎⠉⠁⠇⠑, ⠊⠞⠑⠍_⠎⠉⠁⠇⠑ * ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠞⠁⠛⠎.⠎⠉⠁⠇⠑, 1.0⠋)
+        ⠙⠉.⠍⠁⠞⠗⠊⠉⠑⠎.⠞⠗⠁⠝⠎⠇⠁⠞⠑(-⠊⠞⠑⠍⠎⠞⠕⠗⠑⠝⠙⠑⠗.⠎⠊⠵⠑ * ⠊⠞⠑⠍_⠎⠊⠵⠑ / 2.0⠋, -⠊⠞⠑⠍_⠎⠊⠵⠑.⠞⠕⠋⠇⠕⠁⠞(), 0.0⠋)
 
-        dc.fill(
+        ⠙⠉.⠋⠊⠇⠇(
             0,
             0,
-            itemsToRender.size * ITEM_SIZE,
-            ITEM_SIZE,
-            Color4b.BLACK.with(a = 0).toARGB()
+            ⠊⠞⠑⠍⠎⠞⠕⠗⠑⠝⠙⠑⠗.⠎⠊⠵⠑ * ⠊⠞⠑⠍_⠎⠊⠵⠑,
+            ⠊⠞⠑⠍_⠎⠊⠵⠑,
+            ⠉⠕⠇⠕⠗4⠃.⠃⠇⠁⠉⠅.⠺⠊⠞⠓(⠁ = 0).⠞⠕⠁⠗⠛⠃()
         )
 
-        dc.matrices.translate(0.0F, 0.0F, 100.0F)
+        ⠙⠉.⠍⠁⠞⠗⠊⠉⠑⠎.⠞⠗⠁⠝⠎⠇⠁⠞⠑(0.0⠋, 0.0⠋, 100.0⠋)
 
-        val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
-        itemsToRender.forEachIndexed { index, itemStack ->
-            itemStack ?: return@forEachIndexed
+        ⠧⠁⠇ ⠊⠞⠑⠍⠊⠝⠋⠕ = ⠝⠁⠍⠑⠞⠁⠛⠎⠓⠕⠺⠕⠏⠞⠊⠕⠝⠎.⠊⠞⠑⠍_⠊⠝⠋⠕.⠊⠎⠎⠓⠕⠺⠊⠝⠛()
+        ⠊⠞⠑⠍⠎⠞⠕⠗⠑⠝⠙⠑⠗.⠋⠕⠗⠑⠁⠉⠓⠊⠝⠙⠑⠭⠑⠙ { ⠊⠝⠙⠑⠭, ⠊⠞⠑⠍⠎⠞⠁⠉⠅ ->
+            ⠊⠞⠑⠍⠎⠞⠁⠉⠅ ?: ⠗⠑⠞⠥⠗⠝@⠋⠕⠗⠑⠁⠉⠓⠊⠝⠙⠑⠭⠑⠙
 
-            val x = index * ITEM_SIZE
-            dc.drawItem(itemStack, x, 0)
-            if (itemInfo) {
-                dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
+            ⠧⠁⠇ ⠭ = ⠊⠝⠙⠑⠭ * ⠊⠞⠑⠍_⠎⠊⠵⠑
+            ⠙⠉.⠙⠗⠁⠺⠊⠞⠑⠍(⠊⠞⠑⠍⠎⠞⠁⠉⠅, ⠭, 0)
+            ⠊⠋ (⠊⠞⠑⠍⠊⠝⠋⠕) {
+                ⠙⠉.⠙⠗⠁⠺⠎⠞⠁⠉⠅⠕⠧⠑⠗⠇⠁⠽(⠍⠉.⠞⠑⠭⠞⠗⠑⠝⠙⠑⠗⠑⠗, ⠊⠞⠑⠍⠎⠞⠁⠉⠅, ⠭, 0)
             }
         }
     }
 
-    fun commit(env: RenderEnvironment) {
-        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
+    ⠋⠥⠝ ⠉⠕⠍⠍⠊⠞(⠑⠝⠧: ⠗⠑⠝⠙⠑⠗⠑⠝⠧⠊⠗⠕⠝⠍⠑⠝⠞) {
+        ⠛⠇11.⠛⠇⠉⠇⠑⠁⠗(⠛⠇11.⠛⠇_⠙⠑⠏⠞⠓_⠃⠥⠋⠋⠑⠗_⠃⠊⠞)
+        ⠛⠇11.⠛⠇⠑⠝⠁⠃⠇⠑(⠛⠇11.⠛⠇_⠙⠑⠏⠞⠓_⠞⠑⠎⠞)
 
-        RenderSystem.enableBlend()
-        RenderSystem.blendFuncSeparate(
-            GL11.GL_SRC_ALPHA,
-            GL11.GL_ONE_MINUS_SRC_ALPHA,
-            GL11.GL_ONE,
-            GL11.GL_ZERO
+        ⠗⠑⠝⠙⠑⠗⠎⠽⠎⠞⠑⠍.⠑⠝⠁⠃⠇⠑⠃⠇⠑⠝⠙()
+        ⠗⠑⠝⠙⠑⠗⠎⠽⠎⠞⠑⠍.⠃⠇⠑⠝⠙⠋⠥⠝⠉⠎⠑⠏⠁⠗⠁⠞⠑(
+            ⠛⠇11.⠛⠇_⠎⠗⠉_⠁⠇⠏⠓⠁,
+            ⠛⠇11.⠛⠇_⠕⠝⠑_⠍⠊⠝⠥⠎_⠎⠗⠉_⠁⠇⠏⠓⠁,
+            ⠛⠇11.⠛⠇_⠕⠝⠑,
+            ⠛⠇11.⠛⠇_⠵⠑⠗⠕
         )
 
-        env.withColor(Color4b(0, 0, 0, 120)) {
-            quadBuffers.draw()
+        ⠑⠝⠧.⠺⠊⠞⠓⠉⠕⠇⠕⠗(⠉⠕⠇⠕⠗4⠃(0, 0, 0, 120)) {
+            ⠟⠥⠁⠙⠃⠥⠋⠋⠑⠗⠎.⠙⠗⠁⠺()
         }
-        env.withColor(Color4b(0, 0, 0, 255)) {
-            lineBuffers.draw()
+        ⠑⠝⠧.⠺⠊⠞⠓⠉⠕⠇⠕⠗(⠉⠕⠇⠕⠗4⠃(0, 0, 0, 255)) {
+            ⠇⠊⠝⠑⠃⠥⠋⠋⠑⠗⠎.⠙⠗⠁⠺()
         }
-        env.withColor(Color4b.WHITE) {
-            fontBuffers.draw()
+        ⠑⠝⠧.⠺⠊⠞⠓⠉⠕⠇⠕⠗(⠉⠕⠇⠕⠗4⠃.⠺⠓⠊⠞⠑) {
+            ⠋⠕⠝⠞⠃⠥⠋⠋⠑⠗⠎.⠙⠗⠁⠺()
         }
     }
 

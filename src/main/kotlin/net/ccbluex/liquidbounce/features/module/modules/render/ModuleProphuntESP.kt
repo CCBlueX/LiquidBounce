@@ -1,64 +1,64 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠗⠑⠝⠙⠑⠗
 
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.entity.FallingBlockEntity
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠑⠧⠑⠝⠞⠎.⠏⠁⠉⠅⠑⠞⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠁⠞⠑⠛⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠗⠑⠝⠙⠑⠗.⠑⠝⠛⠊⠝⠑.⠞⠽⠏⠑.⠉⠕⠇⠕⠗4⠃
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠗⠑⠝⠙⠑⠗.⠏⠇⠁⠉⠑⠍⠑⠝⠞.⠏⠇⠁⠉⠑⠍⠑⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠑⠝⠞⠊⠞⠽.⠋⠁⠇⠇⠊⠝⠛⠃⠇⠕⠉⠅⠑⠝⠞⠊⠞⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠝⠑⠞⠺⠕⠗⠅.⠏⠁⠉⠅⠑⠞.⠎2⠉.⠏⠇⠁⠽.⠃⠇⠕⠉⠅⠥⠏⠙⠁⠞⠑⠎2⠉⠏⠁⠉⠅⠑⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠝⠑⠞⠺⠕⠗⠅.⠏⠁⠉⠅⠑⠞.⠎2⠉.⠏⠇⠁⠽.⠉⠓⠥⠝⠅⠙⠑⠇⠞⠁⠥⠏⠙⠁⠞⠑⠎2⠉⠏⠁⠉⠅⠑⠞
 
-object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
-    aliases = arrayOf("BlockUpdateDetector", "FallingBlockESP")) {
+⠕⠃⠚⠑⠉⠞ ⠍⠕⠙⠥⠇⠑⠏⠗⠕⠏⠓⠥⠝⠞⠑⠎⠏ : ⠉⠇⠊⠑⠝⠞⠍⠕⠙⠥⠇⠑("⠏⠗⠕⠏⠓⠥⠝⠞⠑⠎⠏", ⠉⠁⠞⠑⠛⠕⠗⠽.⠗⠑⠝⠙⠑⠗,
+    ⠁⠇⠊⠁⠎⠑⠎ = ⠁⠗⠗⠁⠽⠕⠋("⠃⠇⠕⠉⠅⠥⠏⠙⠁⠞⠑⠙⠑⠞⠑⠉⠞⠕⠗", "⠋⠁⠇⠇⠊⠝⠛⠃⠇⠕⠉⠅⠑⠎⠏")) {
 
-    private val renderer = PlacementRenderer("RenderBlockUpdates", true, this,
-        defaultColor = Color4b(255, 179, 72, 90), keep = false
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠗⠑⠝⠙⠑⠗⠑⠗ = ⠏⠇⠁⠉⠑⠍⠑⠝⠞⠗⠑⠝⠙⠑⠗⠑⠗("⠗⠑⠝⠙⠑⠗⠃⠇⠕⠉⠅⠥⠏⠙⠁⠞⠑⠎", ⠞⠗⠥⠑, ⠞⠓⠊⠎,
+        ⠙⠑⠋⠁⠥⠇⠞⠉⠕⠇⠕⠗ = ⠉⠕⠇⠕⠗4⠃(255, 179, 72, 90), ⠅⠑⠑⠏ = ⠋⠁⠇⠎⠑
     )
 
-    init {
-        tree(renderer)
+    ⠊⠝⠊⠞ {
+        ⠞⠗⠑⠑(⠗⠑⠝⠙⠑⠗⠑⠗)
     }
 
-    override fun disable() {
-        renderer.clearSilently()
+    ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠙⠊⠎⠁⠃⠇⠑() {
+        ⠗⠑⠝⠙⠑⠗⠑⠗.⠉⠇⠑⠁⠗⠎⠊⠇⠑⠝⠞⠇⠽()
     }
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        world.entities.filterIsInstance<FallingBlockEntity>().forEach {
-            renderer.addBlock(it.blockPos)
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗ = ⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗ {
+        ⠺⠕⠗⠇⠙.⠑⠝⠞⠊⠞⠊⠑⠎.⠋⠊⠇⠞⠑⠗⠊⠎⠊⠝⠎⠞⠁⠝⠉⠑<⠋⠁⠇⠇⠊⠝⠛⠃⠇⠕⠉⠅⠑⠝⠞⠊⠞⠽>().⠋⠕⠗⠑⠁⠉⠓ {
+            ⠗⠑⠝⠙⠑⠗⠑⠗.⠁⠙⠙⠃⠇⠕⠉⠅(⠊⠞.⠃⠇⠕⠉⠅⠏⠕⠎)
         }
     }
 
-    @Suppress("unused")
-    private val networkHandler = handler<PacketEvent> { event ->
-        when (val packet = event.packet) {
-            is BlockUpdateS2CPacket -> mc.renderTaskQueue.add {
-                renderer.addBlock(packet.pos)
+    @⠎⠥⠏⠏⠗⠑⠎⠎("⠥⠝⠥⠎⠑⠙")
+    ⠏⠗⠊⠧⠁⠞⠑ ⠧⠁⠇ ⠝⠑⠞⠺⠕⠗⠅⠓⠁⠝⠙⠇⠑⠗ = ⠓⠁⠝⠙⠇⠑⠗<⠏⠁⠉⠅⠑⠞⠑⠧⠑⠝⠞> { ⠑⠧⠑⠝⠞ ->
+        ⠺⠓⠑⠝ (⠧⠁⠇ ⠏⠁⠉⠅⠑⠞ = ⠑⠧⠑⠝⠞.⠏⠁⠉⠅⠑⠞) {
+            ⠊⠎ ⠃⠇⠕⠉⠅⠥⠏⠙⠁⠞⠑⠎2⠉⠏⠁⠉⠅⠑⠞ -> ⠍⠉.⠗⠑⠝⠙⠑⠗⠞⠁⠎⠅⠟⠥⠑⠥⠑.⠁⠙⠙ {
+                ⠗⠑⠝⠙⠑⠗⠑⠗.⠁⠙⠙⠃⠇⠕⠉⠅(⠏⠁⠉⠅⠑⠞.⠏⠕⠎)
             }
-            is ChunkDeltaUpdateS2CPacket -> mc.renderTaskQueue.add {
-                packet.visitUpdates { pos, _ -> renderer.addBlock(pos.toImmutable()) }
+            ⠊⠎ ⠉⠓⠥⠝⠅⠙⠑⠇⠞⠁⠥⠏⠙⠁⠞⠑⠎2⠉⠏⠁⠉⠅⠑⠞ -> ⠍⠉.⠗⠑⠝⠙⠑⠗⠞⠁⠎⠅⠟⠥⠑⠥⠑.⠁⠙⠙ {
+                ⠏⠁⠉⠅⠑⠞.⠧⠊⠎⠊⠞⠥⠏⠙⠁⠞⠑⠎ { ⠏⠕⠎, _ -> ⠗⠑⠝⠙⠑⠗⠑⠗.⠁⠙⠙⠃⠇⠕⠉⠅(⠏⠕⠎.⠞⠕⠊⠍⠍⠥⠞⠁⠃⠇⠑()) }
             }
         }
     }

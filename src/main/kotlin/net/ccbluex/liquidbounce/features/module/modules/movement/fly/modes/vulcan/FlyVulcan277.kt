@@ -1,48 +1,48 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  *
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠕⠧⠑⠍⠑⠝⠞.⠋⠇⠽.⠍⠕⠙⠑⠎.⠧⠥⠇⠉⠁⠝
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠞⠽⠏⠑⠎.⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠑⠧⠑⠝⠞.⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠎.⠍⠕⠧⠑⠍⠑⠝⠞.⠋⠇⠽.⠍⠕⠙⠥⠇⠑⠋⠇⠽.⠍⠕⠙⠑⠎
 
 /**
- * @anticheat Vulcan
- * @anticheat Version 2.7.7
- * @testedOn anticheat-test.com
- * @note NA
+ * @⠁⠝⠞⠊⠉⠓⠑⠁⠞ ⠧⠥⠇⠉⠁⠝
+ * @⠁⠝⠞⠊⠉⠓⠑⠁⠞ ⠧⠑⠗⠎⠊⠕⠝ 2.7.7
+ * @⠞⠑⠎⠞⠑⠙⠕⠝ ⠁⠝⠞⠊⠉⠓⠑⠁⠞-⠞⠑⠎⠞.⠉⠕⠍
+ * @⠝⠕⠞⠑ ⠝⠁
  */
-internal object FlyVulcan277 : Choice("Vulcan277") {
+⠊⠝⠞⠑⠗⠝⠁⠇ ⠕⠃⠚⠑⠉⠞ ⠋⠇⠽⠧⠥⠇⠉⠁⠝277 : ⠉⠓⠕⠊⠉⠑("⠧⠥⠇⠉⠁⠝277") {
 
-    override val parent: ChoiceConfigurable<*>
-        get() = modes
+    ⠕⠧⠑⠗⠗⠊⠙⠑ ⠧⠁⠇ ⠏⠁⠗⠑⠝⠞: ⠉⠓⠕⠊⠉⠑⠉⠕⠝⠋⠊⠛⠥⠗⠁⠃⠇⠑<*>
+        ⠛⠑⠞() = ⠍⠕⠙⠑⠎
 
-    val repeatable = tickHandler {
-        if (player.fallDistance > 0.1) {
-            if (player.age % 2 == 0) {
-                player.velocity.y = -0.155
-            } else {
-                player.velocity.y = -0.1
+    ⠧⠁⠇ ⠗⠑⠏⠑⠁⠞⠁⠃⠇⠑ = ⠞⠊⠉⠅⠓⠁⠝⠙⠇⠑⠗ {
+        ⠊⠋ (⠏⠇⠁⠽⠑⠗.⠋⠁⠇⠇⠙⠊⠎⠞⠁⠝⠉⠑ > 0.1) {
+            ⠊⠋ (⠏⠇⠁⠽⠑⠗.⠁⠛⠑ % 2 == 0) {
+                ⠏⠇⠁⠽⠑⠗.⠧⠑⠇⠕⠉⠊⠞⠽.⠽ = -0.155
+            } ⠑⠇⠎⠑ {
+                ⠏⠇⠁⠽⠑⠗.⠧⠑⠇⠕⠉⠊⠞⠽.⠽ = -0.1
             }
         }
     }

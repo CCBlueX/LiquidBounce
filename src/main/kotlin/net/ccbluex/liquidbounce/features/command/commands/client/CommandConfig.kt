@@ -1,176 +1,176 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ * ⠞⠓⠊⠎ ⠋⠊⠇⠑ ⠊⠎ ⠏⠁⠗⠞ ⠕⠋ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ (⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * ⠉⠕⠏⠽⠗⠊⠛⠓⠞ (⠉) 2015 - 2025 ⠉⠉⠃⠇⠥⠑⠭
  *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑: ⠽⠕⠥ ⠉⠁⠝ ⠗⠑⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑ ⠊⠞ ⠁⠝⠙/⠕⠗ ⠍⠕⠙⠊⠋⠽
+ * ⠊⠞ ⠥⠝⠙⠑⠗ ⠞⠓⠑ ⠞⠑⠗⠍⠎ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠁⠎ ⠏⠥⠃⠇⠊⠎⠓⠑⠙ ⠃⠽
+ * ⠞⠓⠑ ⠋⠗⠑⠑ ⠎⠕⠋⠞⠺⠁⠗⠑ ⠋⠕⠥⠝⠙⠁⠞⠊⠕⠝, ⠑⠊⠞⠓⠑⠗ ⠧⠑⠗⠎⠊⠕⠝ 3 ⠕⠋ ⠞⠓⠑ ⠇⠊⠉⠑⠝⠎⠑, ⠕⠗
+ * (⠁⠞ ⠽⠕⠥⠗ ⠕⠏⠞⠊⠕⠝) ⠁⠝⠽ ⠇⠁⠞⠑⠗ ⠧⠑⠗⠎⠊⠕⠝.
  *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑ ⠊⠎ ⠙⠊⠎⠞⠗⠊⠃⠥⠞⠑⠙ ⠊⠝ ⠞⠓⠑ ⠓⠕⠏⠑ ⠞⠓⠁⠞ ⠊⠞ ⠺⠊⠇⠇ ⠃⠑ ⠥⠎⠑⠋⠥⠇,
+ * ⠃⠥⠞ ⠺⠊⠞⠓⠕⠥⠞ ⠁⠝⠽ ⠺⠁⠗⠗⠁⠝⠞⠽; ⠺⠊⠞⠓⠕⠥⠞ ⠑⠧⠑⠝ ⠞⠓⠑ ⠊⠍⠏⠇⠊⠑⠙ ⠺⠁⠗⠗⠁⠝⠞⠽ ⠕⠋
+ * ⠍⠑⠗⠉⠓⠁⠝⠞⠁⠃⠊⠇⠊⠞⠽ ⠕⠗ ⠋⠊⠞⠝⠑⠎⠎ ⠋⠕⠗ ⠁ ⠏⠁⠗⠞⠊⠉⠥⠇⠁⠗ ⠏⠥⠗⠏⠕⠎⠑. ⠎⠑⠑ ⠞⠓⠑
+ * ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑ ⠋⠕⠗ ⠍⠕⠗⠑ ⠙⠑⠞⠁⠊⠇⠎.
  *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ * ⠽⠕⠥ ⠎⠓⠕⠥⠇⠙ ⠓⠁⠧⠑ ⠗⠑⠉⠑⠊⠧⠑⠙ ⠁ ⠉⠕⠏⠽ ⠕⠋ ⠞⠓⠑ ⠛⠝⠥ ⠛⠑⠝⠑⠗⠁⠇ ⠏⠥⠃⠇⠊⠉ ⠇⠊⠉⠑⠝⠎⠑
+ * ⠁⠇⠕⠝⠛ ⠺⠊⠞⠓ ⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑. ⠊⠋ ⠝⠕⠞, ⠎⠑⠑ <⠓⠞⠞⠏⠎://⠺⠺⠺.⠛⠝⠥.⠕⠗⠛/⠇⠊⠉⠑⠝⠎⠑⠎/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
+⠏⠁⠉⠅⠁⠛⠑ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠎.⠉⠇⠊⠑⠝⠞
 
-import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.HttpMethod
-import net.ccbluex.liquidbounce.api.core.parse
-import net.ccbluex.liquidbounce.api.services.client.ClientApi
-import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
-import java.io.Reader
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠁⠏⠊.⠉⠕⠗⠑.⠓⠞⠞⠏⠉⠇⠊⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠁⠏⠊.⠉⠕⠗⠑.⠓⠞⠞⠏⠍⠑⠞⠓⠕⠙
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠁⠏⠊.⠉⠕⠗⠑.⠏⠁⠗⠎⠑
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠁⠏⠊.⠎⠑⠗⠧⠊⠉⠑⠎.⠉⠇⠊⠑⠝⠞.⠉⠇⠊⠑⠝⠞⠁⠏⠊
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠁⠥⠞⠕⠉⠕⠝⠋⠊⠛
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠉⠕⠝⠋⠊⠛.⠁⠥⠞⠕⠉⠕⠝⠋⠊⠛.⠉⠕⠝⠋⠊⠛⠎
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠑⠭⠑⠉⠥⠞⠕⠗.⠎⠥⠎⠏⠑⠝⠙⠓⠁⠝⠙⠇⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠉⠕⠍⠍⠁⠝⠙.⠃⠥⠊⠇⠙⠑⠗.⠍⠕⠙⠥⠇⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠋⠑⠁⠞⠥⠗⠑⠎.⠍⠕⠙⠥⠇⠑.⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠉⠉⠃⠇⠥⠑⠭.⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑.⠥⠞⠊⠇⠎.⠉⠇⠊⠑⠝⠞.*
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠞⠑⠭⠞.⠉⠇⠊⠉⠅⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠞⠑⠭⠞.⠓⠕⠧⠑⠗⠑⠧⠑⠝⠞
+⠊⠍⠏⠕⠗⠞ ⠝⠑⠞.⠍⠊⠝⠑⠉⠗⠁⠋⠞.⠞⠑⠭⠞.⠞⠑⠭⠞
+⠊⠍⠏⠕⠗⠞ ⠚⠁⠧⠁.⠊⠕.⠗⠑⠁⠙⠑⠗
 
 /**
- * Config Command
+ * ⠉⠕⠝⠋⠊⠛ ⠉⠕⠍⠍⠁⠝⠙
  *
- * Provides various subcommands related to the configuration,
- * such as loading configuration from an external source or an API
- * and listing available configurations.
+ * ⠏⠗⠕⠧⠊⠙⠑⠎ ⠧⠁⠗⠊⠕⠥⠎ ⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙⠎ ⠗⠑⠇⠁⠞⠑⠙ ⠞⠕ ⠞⠓⠑ ⠉⠕⠝⠋⠊⠛⠥⠗⠁⠞⠊⠕⠝,
+ * ⠎⠥⠉⠓ ⠁⠎ ⠇⠕⠁⠙⠊⠝⠛ ⠉⠕⠝⠋⠊⠛⠥⠗⠁⠞⠊⠕⠝ ⠋⠗⠕⠍ ⠁⠝ ⠑⠭⠞⠑⠗⠝⠁⠇ ⠎⠕⠥⠗⠉⠑ ⠕⠗ ⠁⠝ ⠁⠏⠊
+ * ⠁⠝⠙ ⠇⠊⠎⠞⠊⠝⠛ ⠁⠧⠁⠊⠇⠁⠃⠇⠑ ⠉⠕⠝⠋⠊⠛⠥⠗⠁⠞⠊⠕⠝⠎.
  */
-object CommandConfig : CommandFactory {
+⠕⠃⠚⠑⠉⠞ ⠉⠕⠍⠍⠁⠝⠙⠉⠕⠝⠋⠊⠛ : ⠉⠕⠍⠍⠁⠝⠙⠋⠁⠉⠞⠕⠗⠽ {
 
-    private const val CONFIGS_URL = "https://github.com/CCBlueX/LiquidCloud/tree/main/LiquidBounce/settings/nextgen"
+    ⠏⠗⠊⠧⠁⠞⠑ ⠉⠕⠝⠎⠞ ⠧⠁⠇ ⠉⠕⠝⠋⠊⠛⠎_⠥⠗⠇ = "⠓⠞⠞⠏⠎://⠛⠊⠞⠓⠥⠃.⠉⠕⠍/⠉⠉⠃⠇⠥⠑⠭/⠇⠊⠟⠥⠊⠙⠉⠇⠕⠥⠙/⠞⠗⠑⠑/⠍⠁⠊⠝/⠇⠊⠟⠥⠊⠙⠃⠕⠥⠝⠉⠑/⠎⠑⠞⠞⠊⠝⠛⠎/⠝⠑⠭⠞⠛⠑⠝"
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("config")
-            .hub()
-            .subcommand(loadSubcommand())
-            .subcommand(listSubcommand())
-            .subcommand(browseSubcommand())
-            .build()
+    ⠕⠧⠑⠗⠗⠊⠙⠑ ⠋⠥⠝ ⠉⠗⠑⠁⠞⠑⠉⠕⠍⠍⠁⠝⠙(): ⠉⠕⠍⠍⠁⠝⠙ {
+        ⠗⠑⠞⠥⠗⠝ ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+            .⠃⠑⠛⠊⠝("⠉⠕⠝⠋⠊⠛")
+            .⠓⠥⠃()
+            .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠇⠕⠁⠙⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+            .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠇⠊⠎⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+            .⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙(⠃⠗⠕⠺⠎⠑⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙())
+            .⠃⠥⠊⠇⠙()
     }
 
-    private fun browseSubcommand() = CommandBuilder
-        .begin("browse")
-        .handler { _, _ ->
-            browseUrl(CONFIGS_URL)
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠃⠗⠕⠺⠎⠑⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠃⠗⠕⠺⠎⠑")
+        .⠓⠁⠝⠙⠇⠑⠗ { _, _ ->
+            ⠃⠗⠕⠺⠎⠑⠥⠗⠇(⠉⠕⠝⠋⠊⠛⠎_⠥⠗⠇)
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
-    private fun listSubcommand() = CommandBuilder
-        .begin("list")
-        .handler { command, _ ->
-            runCatching {
-                chat(regular(command.result("loading")))
-                val widthOfSpace = mc.textRenderer.getWidth(" ")
-                val configs = configs ?: run {
-                    chat(regular("§cFailed to load settings list from API"))
-                    return@handler
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠇⠊⠎⠞⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠇⠊⠎⠞")
+        .⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, _ ->
+            ⠗⠥⠝⠉⠁⠞⠉⠓⠊⠝⠛ {
+                ⠉⠓⠁⠞(⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠇⠕⠁⠙⠊⠝⠛")))
+                ⠧⠁⠇ ⠺⠊⠙⠞⠓⠕⠋⠎⠏⠁⠉⠑ = ⠍⠉.⠞⠑⠭⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠛⠑⠞⠺⠊⠙⠞⠓(" ")
+                ⠧⠁⠇ ⠉⠕⠝⠋⠊⠛⠎ = ⠉⠕⠝⠋⠊⠛⠎ ?: ⠗⠥⠝ {
+                    ⠉⠓⠁⠞(⠗⠑⠛⠥⠇⠁⠗("§⠉⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠎⠑⠞⠞⠊⠝⠛⠎ ⠇⠊⠎⠞ ⠋⠗⠕⠍ ⠁⠏⠊"))
+                    ⠗⠑⠞⠥⠗⠝@⠓⠁⠝⠙⠇⠑⠗
                 }
-                val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
+                ⠧⠁⠇ ⠺⠊⠙⠞⠓ = ⠉⠕⠝⠋⠊⠛⠎.⠍⠁⠭⠕⠋ { ⠍⠉.⠞⠑⠭⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠛⠑⠞⠺⠊⠙⠞⠓(⠊⠞.⠎⠑⠞⠞⠊⠝⠛⠊⠙) }
 
-                // In the case of the chat, we want to show the newest config at the bottom for visibility
-                configs.sortedBy { it.javaDate }.forEach {
-                    val settingName = it.settingId // there is also .name, but we use it for GUI instead
+                // ⠊⠝ ⠞⠓⠑ ⠉⠁⠎⠑ ⠕⠋ ⠞⠓⠑ ⠉⠓⠁⠞, ⠺⠑ ⠺⠁⠝⠞ ⠞⠕ ⠎⠓⠕⠺ ⠞⠓⠑ ⠝⠑⠺⠑⠎⠞ ⠉⠕⠝⠋⠊⠛ ⠁⠞ ⠞⠓⠑ ⠃⠕⠞⠞⠕⠍ ⠋⠕⠗ ⠧⠊⠎⠊⠃⠊⠇⠊⠞⠽
+                ⠉⠕⠝⠋⠊⠛⠎.⠎⠕⠗⠞⠑⠙⠃⠽ { ⠊⠞.⠚⠁⠧⠁⠙⠁⠞⠑ }.⠋⠕⠗⠑⠁⠉⠓ {
+                    ⠧⠁⠇ ⠎⠑⠞⠞⠊⠝⠛⠝⠁⠍⠑ = ⠊⠞.⠎⠑⠞⠞⠊⠝⠛⠊⠙ // ⠞⠓⠑⠗⠑ ⠊⠎ ⠁⠇⠎⠕ .⠝⠁⠍⠑, ⠃⠥⠞ ⠺⠑ ⠥⠎⠑ ⠊⠞ ⠋⠕⠗ ⠛⠥⠊ ⠊⠝⠎⠞⠑⠁⠙
 
-                    // Append spaces to the setting name to align the date and status
-                    // Compensate for the length of the setting name
-                    val spaces = " ".repeat(
-                        (width - mc.textRenderer.getWidth(settingName))
-                            / widthOfSpace
+                    // ⠁⠏⠏⠑⠝⠙ ⠎⠏⠁⠉⠑⠎ ⠞⠕ ⠞⠓⠑ ⠎⠑⠞⠞⠊⠝⠛ ⠝⠁⠍⠑ ⠞⠕ ⠁⠇⠊⠛⠝ ⠞⠓⠑ ⠙⠁⠞⠑ ⠁⠝⠙ ⠎⠞⠁⠞⠥⠎
+                    // ⠉⠕⠍⠏⠑⠝⠎⠁⠞⠑ ⠋⠕⠗ ⠞⠓⠑ ⠇⠑⠝⠛⠞⠓ ⠕⠋ ⠞⠓⠑ ⠎⠑⠞⠞⠊⠝⠛ ⠝⠁⠍⠑
+                    ⠧⠁⠇ ⠎⠏⠁⠉⠑⠎ = " ".⠗⠑⠏⠑⠁⠞(
+                        (⠺⠊⠙⠞⠓ - ⠍⠉.⠞⠑⠭⠞⠗⠑⠝⠙⠑⠗⠑⠗.⠛⠑⠞⠺⠊⠙⠞⠓(⠎⠑⠞⠞⠊⠝⠛⠝⠁⠍⠑))
+                            / ⠺⠊⠙⠞⠓⠕⠋⠎⠏⠁⠉⠑
                     )
 
-                    chat(
-                        variable(settingName)
-                            .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
-                                    ".config load $settingName"
+                    ⠉⠓⠁⠞(
+                        ⠧⠁⠗⠊⠁⠃⠇⠑(⠎⠑⠞⠞⠊⠝⠛⠝⠁⠍⠑)
+                            .⠕⠝⠉⠇⠊⠉⠅(
+                                ⠉⠇⠊⠉⠅⠑⠧⠑⠝⠞(
+                                    ⠉⠇⠊⠉⠅⠑⠧⠑⠝⠞.⠁⠉⠞⠊⠕⠝.⠎⠥⠛⠛⠑⠎⠞_⠉⠕⠍⠍⠁⠝⠙,
+                                    ".⠉⠕⠝⠋⠊⠛ ⠇⠕⠁⠙ $⠎⠑⠞⠞⠊⠝⠛⠝⠁⠍⠑"
                                 )
                             )
-                            .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of("§7Click to load $settingName")
+                            .⠕⠝⠓⠕⠧⠑⠗(
+                                ⠓⠕⠧⠑⠗⠑⠧⠑⠝⠞(
+                                    ⠓⠕⠧⠑⠗⠑⠧⠑⠝⠞.⠁⠉⠞⠊⠕⠝.⠎⠓⠕⠺_⠞⠑⠭⠞,
+                                    ⠞⠑⠭⠞.⠕⠋("§7⠉⠇⠊⠉⠅ ⠞⠕ ⠇⠕⠁⠙ $⠎⠑⠞⠞⠊⠝⠛⠝⠁⠍⠑")
                                 )
                             ),
-                        regular(spaces),
-                        regular(" | "),
-                        variable(it.dateFormatted),
-                        regular(" | "),
-                        Text.literal(it.statusType.displayName)
-                            .formatted(it.statusType.formatting)
-                            .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of(it.statusDateFormatted)
+                        ⠗⠑⠛⠥⠇⠁⠗(⠎⠏⠁⠉⠑⠎),
+                        ⠗⠑⠛⠥⠇⠁⠗(" | "),
+                        ⠧⠁⠗⠊⠁⠃⠇⠑(⠊⠞.⠙⠁⠞⠑⠋⠕⠗⠍⠁⠞⠞⠑⠙),
+                        ⠗⠑⠛⠥⠇⠁⠗(" | "),
+                        ⠞⠑⠭⠞.⠇⠊⠞⠑⠗⠁⠇(⠊⠞.⠎⠞⠁⠞⠥⠎⠞⠽⠏⠑.⠙⠊⠎⠏⠇⠁⠽⠝⠁⠍⠑)
+                            .⠋⠕⠗⠍⠁⠞⠞⠑⠙(⠊⠞.⠎⠞⠁⠞⠥⠎⠞⠽⠏⠑.⠋⠕⠗⠍⠁⠞⠞⠊⠝⠛)
+                            .⠕⠝⠓⠕⠧⠑⠗(
+                                ⠓⠕⠧⠑⠗⠑⠧⠑⠝⠞(
+                                    ⠓⠕⠧⠑⠗⠑⠧⠑⠝⠞.⠁⠉⠞⠊⠕⠝.⠎⠓⠕⠺_⠞⠑⠭⠞,
+                                    ⠞⠑⠭⠞.⠕⠋(⠊⠞.⠎⠞⠁⠞⠥⠎⠙⠁⠞⠑⠋⠕⠗⠍⠁⠞⠞⠑⠙)
                                 )
                             )
                         ,
-                        regular(" | ${it.serverAddress ?: "Global"}"),
-                        metadata = MessageMetadata(prefix = false)
+                        ⠗⠑⠛⠥⠇⠁⠗(" | ${⠊⠞.⠎⠑⠗⠧⠑⠗⠁⠙⠙⠗⠑⠎⠎ ?: "⠛⠇⠕⠃⠁⠇"}"),
+                        ⠍⠑⠞⠁⠙⠁⠞⠁ = ⠍⠑⠎⠎⠁⠛⠑⠍⠑⠞⠁⠙⠁⠞⠁(⠏⠗⠑⠋⠊⠭ = ⠋⠁⠇⠎⠑)
                     )
                 }
-            }.onFailure {
-                chat(regular("§cFailed to load settings list from API"))
+            }.⠕⠝⠋⠁⠊⠇⠥⠗⠑ {
+                ⠉⠓⠁⠞(⠗⠑⠛⠥⠇⠁⠗("§⠉⠋⠁⠊⠇⠑⠙ ⠞⠕ ⠇⠕⠁⠙ ⠎⠑⠞⠞⠊⠝⠛⠎ ⠇⠊⠎⠞ ⠋⠗⠕⠍ ⠁⠏⠊"))
             }
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
-    private fun loadSubcommand() = CommandBuilder
-        .begin("load")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autocompleteConfigs(begin) }
-                .required()
-                .build()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠇⠕⠁⠙⠎⠥⠃⠉⠕⠍⠍⠁⠝⠙() = ⠉⠕⠍⠍⠁⠝⠙⠃⠥⠊⠇⠙⠑⠗
+        .⠃⠑⠛⠊⠝("⠇⠕⠁⠙")
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗
+                .⠃⠑⠛⠊⠝<⠎⠞⠗⠊⠝⠛>("⠝⠁⠍⠑")
+                .⠧⠑⠗⠊⠋⠊⠑⠙⠃⠽(⠏⠁⠗⠁⠍⠑⠞⠑⠗⠃⠥⠊⠇⠙⠑⠗.⠎⠞⠗⠊⠝⠛_⠧⠁⠇⠊⠙⠁⠞⠕⠗)
+                .⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠙⠺⠊⠞⠓ { ⠃⠑⠛⠊⠝, _ -> ⠞⠓⠊⠎.⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠉⠕⠝⠋⠊⠛⠎(⠃⠑⠛⠊⠝) }
+                .⠗⠑⠟⠥⠊⠗⠑⠙()
+                .⠃⠥⠊⠇⠙()
         )
-        .parameter(
-            moduleParameter()
-                .optional()
-                .build()
+        .⠏⠁⠗⠁⠍⠑⠞⠑⠗(
+            ⠍⠕⠙⠥⠇⠑⠏⠁⠗⠁⠍⠑⠞⠑⠗()
+                .⠕⠏⠞⠊⠕⠝⠁⠇()
+                .⠃⠥⠊⠇⠙()
         )
-        .suspendHandler { command, args ->
-            val name = args[0] as String
-            val moduleNames = args.getOrNull(1) as String?
-            val modules = ModuleManager.parseModulesFromParameter(moduleNames)
+        .⠎⠥⠎⠏⠑⠝⠙⠓⠁⠝⠙⠇⠑⠗ { ⠉⠕⠍⠍⠁⠝⠙, ⠁⠗⠛⠎ ->
+            ⠧⠁⠇ ⠝⠁⠍⠑ = ⠁⠗⠛⠎[0] ⠁⠎ ⠎⠞⠗⠊⠝⠛
+            ⠧⠁⠇ ⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠎ = ⠁⠗⠛⠎.⠛⠑⠞⠕⠗⠝⠥⠇⠇(1) ⠁⠎ ⠎⠞⠗⠊⠝⠛?
+            ⠧⠁⠇ ⠍⠕⠙⠥⠇⠑⠎ = ⠍⠕⠙⠥⠇⠑⠍⠁⠝⠁⠛⠑⠗.⠏⠁⠗⠎⠑⠍⠕⠙⠥⠇⠑⠎⠋⠗⠕⠍⠏⠁⠗⠁⠍⠑⠞⠑⠗(⠍⠕⠙⠥⠇⠑⠝⠁⠍⠑⠎)
 
-            runCatching {
-                if (name.startsWith("http")) {
-                    // Load the config from the specified URL
-                    HttpClient.request(name, HttpMethod.GET).parse<Reader>()
-                } else {
-                    // Get online config from API
-                    ClientApi.requestSettingsScript(name)
+            ⠗⠥⠝⠉⠁⠞⠉⠓⠊⠝⠛ {
+                ⠊⠋ (⠝⠁⠍⠑.⠎⠞⠁⠗⠞⠎⠺⠊⠞⠓("⠓⠞⠞⠏")) {
+                    // ⠇⠕⠁⠙ ⠞⠓⠑ ⠉⠕⠝⠋⠊⠛ ⠋⠗⠕⠍ ⠞⠓⠑ ⠎⠏⠑⠉⠊⠋⠊⠑⠙ ⠥⠗⠇
+                    ⠓⠞⠞⠏⠉⠇⠊⠑⠝⠞.⠗⠑⠟⠥⠑⠎⠞(⠝⠁⠍⠑, ⠓⠞⠞⠏⠍⠑⠞⠓⠕⠙.⠛⠑⠞).⠏⠁⠗⠎⠑<⠗⠑⠁⠙⠑⠗>()
+                } ⠑⠇⠎⠑ {
+                    // ⠛⠑⠞ ⠕⠝⠇⠊⠝⠑ ⠉⠕⠝⠋⠊⠛ ⠋⠗⠕⠍ ⠁⠏⠊
+                    ⠉⠇⠊⠑⠝⠞⠁⠏⠊.⠗⠑⠟⠥⠑⠎⠞⠎⠑⠞⠞⠊⠝⠛⠎⠎⠉⠗⠊⠏⠞(⠝⠁⠍⠑)
                 }
-            }.onSuccess { sourceReader ->
-                AutoConfig.withLoading {
-                    runCatching {
-                        AutoConfig.loadAutoConfig(sourceReader, modules)
-                    }.onFailure {
-                        chat(markAsError(command.result("failedToLoad", variable(name))))
-                    }.onSuccess {
-                        chat(regular(command.result("loaded", variable(name))))
+            }.⠕⠝⠎⠥⠉⠉⠑⠎⠎ { ⠎⠕⠥⠗⠉⠑⠗⠑⠁⠙⠑⠗ ->
+                ⠁⠥⠞⠕⠉⠕⠝⠋⠊⠛.⠺⠊⠞⠓⠇⠕⠁⠙⠊⠝⠛ {
+                    ⠗⠥⠝⠉⠁⠞⠉⠓⠊⠝⠛ {
+                        ⠁⠥⠞⠕⠉⠕⠝⠋⠊⠛.⠇⠕⠁⠙⠁⠥⠞⠕⠉⠕⠝⠋⠊⠛(⠎⠕⠥⠗⠉⠑⠗⠑⠁⠙⠑⠗, ⠍⠕⠙⠥⠇⠑⠎)
+                    }.⠕⠝⠋⠁⠊⠇⠥⠗⠑ {
+                        ⠉⠓⠁⠞(⠍⠁⠗⠅⠁⠎⠑⠗⠗⠕⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠋⠁⠊⠇⠑⠙⠞⠕⠇⠕⠁⠙", ⠧⠁⠗⠊⠁⠃⠇⠑(⠝⠁⠍⠑))))
+                    }.⠕⠝⠎⠥⠉⠉⠑⠎⠎ {
+                        ⠉⠓⠁⠞(⠗⠑⠛⠥⠇⠁⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠇⠕⠁⠙⠑⠙", ⠧⠁⠗⠊⠁⠃⠇⠑(⠝⠁⠍⠑))))
                     }
                 }
-            }.onFailure { exception ->
-                chat(markAsError(command.result("failedToLoad", variable(name))))
+            }.⠕⠝⠋⠁⠊⠇⠥⠗⠑ { ⠑⠭⠉⠑⠏⠞⠊⠕⠝ ->
+                ⠉⠓⠁⠞(⠍⠁⠗⠅⠁⠎⠑⠗⠗⠕⠗(⠉⠕⠍⠍⠁⠝⠙.⠗⠑⠎⠥⠇⠞("⠋⠁⠊⠇⠑⠙⠞⠕⠇⠕⠁⠙", ⠧⠁⠗⠊⠁⠃⠇⠑(⠝⠁⠍⠑))))
             }
         }
-        .build()
+        .⠃⠥⠊⠇⠙()
 
-    private fun autocompleteConfigs(begin: String): List<String> {
-        return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
+    ⠏⠗⠊⠧⠁⠞⠑ ⠋⠥⠝ ⠁⠥⠞⠕⠉⠕⠍⠏⠇⠑⠞⠑⠉⠕⠝⠋⠊⠛⠎(⠃⠑⠛⠊⠝: ⠎⠞⠗⠊⠝⠛): ⠇⠊⠎⠞<⠎⠞⠗⠊⠝⠛> {
+        ⠗⠑⠞⠥⠗⠝ ⠉⠕⠝⠋⠊⠛⠎?.⠍⠁⠏ { ⠊⠞.⠎⠑⠞⠞⠊⠝⠛⠊⠙ }?.⠋⠊⠇⠞⠑⠗ { ⠊⠞.⠎⠞⠁⠗⠞⠎⠺⠊⠞⠓(⠃⠑⠛⠊⠝, ⠞⠗⠥⠑) } ?: ⠑⠍⠏⠞⠽⠇⠊⠎⠞()
     }
 
 
