@@ -1,78 +1,78 @@
-<script lang="ts">
-    import Header from "./header/Header.svelte";
-    import {fly} from "svelte/transition";
-    import {onMount} from "svelte";
+<⠎⠉⠗⠊⠏⠞ ⠇⠁⠝⠛="⠞⠎">
+    ⠊⠍⠏⠕⠗⠞ ⠓⠑⠁⠙⠑⠗ ⠋⠗⠕⠍ "./⠓⠑⠁⠙⠑⠗/⠓⠑⠁⠙⠑⠗.⠎⠧⠑⠇⠞⠑";
+    ⠊⠍⠏⠕⠗⠞ {⠋⠇⠽} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑/⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝";
+    ⠊⠍⠏⠕⠗⠞ {⠕⠝⠍⠕⠥⠝⠞} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑";
 
-    const transitionDuration = 700; // TODO: suboptimal
+    ⠉⠕⠝⠎⠞ ⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝⠙⠥⠗⠁⠞⠊⠕⠝ = 700; // ⠞⠕⠙⠕: ⠎⠥⠃⠕⠏⠞⠊⠍⠁⠇
 
-    let ready = false;
+    ⠇⠑⠞ ⠗⠑⠁⠙⠽ = ⠋⠁⠇⠎⠑;
 
-    onMount(() => {
-        setTimeout(() => {
-            ready = true;
-        }, transitionDuration);
+    ⠕⠝⠍⠕⠥⠝⠞(() => {
+        ⠎⠑⠞⠞⠊⠍⠑⠕⠥⠞(() => {
+            ⠗⠑⠁⠙⠽ = ⠞⠗⠥⠑;
+        }, ⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝⠙⠥⠗⠁⠞⠊⠕⠝);
     });
-</script>
+</⠎⠉⠗⠊⠏⠞>
 
-<div class="menu">
-    {#if ready}
-        <div transition:fly|global={{duration: 700, y: -100}}>
-            <Header/>
-        </div>
+<⠙⠊⠧ ⠉⠇⠁⠎⠎="⠍⠑⠝⠥">
+    {#⠊⠋ ⠗⠑⠁⠙⠽}
+        <⠙⠊⠧ ⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝:⠋⠇⠽|⠛⠇⠕⠃⠁⠇={{⠙⠥⠗⠁⠞⠊⠕⠝: 700, ⠽: -100}}>
+            <⠓⠑⠁⠙⠑⠗/>
+        </⠙⠊⠧>
 
-        <div class="menu-wrapper">
-            <slot/>
-        </div>
-    {/if}
-</div>
+        <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠍⠑⠝⠥-⠺⠗⠁⠏⠏⠑⠗">
+            <⠎⠇⠕⠞/>
+        </⠙⠊⠧>
+    {/⠊⠋}
+</⠙⠊⠧>
 
-<style lang="scss">
-  .menu {
-    padding: 50px;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+<⠎⠞⠽⠇⠑ ⠇⠁⠝⠛="⠎⠉⠎⠎">
+  .⠍⠑⠝⠥ {
+    ⠏⠁⠙⠙⠊⠝⠛: 50⠏⠭;
+    ⠙⠊⠎⠏⠇⠁⠽: ⠋⠇⠑⠭;
+    ⠋⠇⠑⠭-⠙⠊⠗⠑⠉⠞⠊⠕⠝: ⠉⠕⠇⠥⠍⠝;
+    ⠓⠑⠊⠛⠓⠞: 100⠧⠓;
   }
 
-  .menu-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    will-change: transform;
+  .⠍⠑⠝⠥-⠺⠗⠁⠏⠏⠑⠗ {
+    ⠋⠇⠑⠭: 1;
+    ⠙⠊⠎⠏⠇⠁⠽: ⠋⠇⠑⠭;
+    ⠋⠇⠑⠭-⠙⠊⠗⠑⠉⠞⠊⠕⠝: ⠉⠕⠇⠥⠍⠝;
+    ⠺⠊⠇⠇-⠉⠓⠁⠝⠛⠑: ⠞⠗⠁⠝⠎⠋⠕⠗⠍;
   }
 
-  @media screen and (max-width: 1366px) {
-    .menu {
-      zoom: 0.8;
-      height: 125vh;
+  @⠍⠑⠙⠊⠁ ⠎⠉⠗⠑⠑⠝ ⠁⠝⠙ (⠍⠁⠭-⠺⠊⠙⠞⠓: 1366⠏⠭) {
+    .⠍⠑⠝⠥ {
+      ⠵⠕⠕⠍: 0.8;
+      ⠓⠑⠊⠛⠓⠞: 125⠧⠓;
     }
   }
 
-  @media screen and (max-width: 1200px) {
-    .menu {
-      zoom: 0.5;
-      height: 200vh;
+  @⠍⠑⠙⠊⠁ ⠎⠉⠗⠑⠑⠝ ⠁⠝⠙ (⠍⠁⠭-⠺⠊⠙⠞⠓: 1200⠏⠭) {
+    .⠍⠑⠝⠥ {
+      ⠵⠕⠕⠍: 0.5;
+      ⠓⠑⠊⠛⠓⠞: 200⠧⠓;
     }
   }
 
-  @media screen and (max-height: 1100px) {
-    .menu {
-      zoom: 0.8;
-      height: 125vh;
+  @⠍⠑⠙⠊⠁ ⠎⠉⠗⠑⠑⠝ ⠁⠝⠙ (⠍⠁⠭-⠓⠑⠊⠛⠓⠞: 1100⠏⠭) {
+    .⠍⠑⠝⠥ {
+      ⠵⠕⠕⠍: 0.8;
+      ⠓⠑⠊⠛⠓⠞: 125⠧⠓;
     }
   }
 
-  @media screen and (max-height: 700px) {
-    .menu {
-      zoom: 0.5;
-      height: 200vh;
+  @⠍⠑⠙⠊⠁ ⠎⠉⠗⠑⠑⠝ ⠁⠝⠙ (⠍⠁⠭-⠓⠑⠊⠛⠓⠞: 700⠏⠭) {
+    .⠍⠑⠝⠥ {
+      ⠵⠕⠕⠍: 0.5;
+      ⠓⠑⠊⠛⠓⠞: 200⠧⠓;
     }
   }
 
-  @media screen and (max-height: 540px) {
-    .menu {
-      zoom: 0.4;
-      height: 250vh;
+  @⠍⠑⠙⠊⠁ ⠎⠉⠗⠑⠑⠝ ⠁⠝⠙ (⠍⠁⠭-⠓⠑⠊⠛⠓⠞: 540⠏⠭) {
+    .⠍⠑⠝⠥ {
+      ⠵⠕⠕⠍: 0.4;
+      ⠓⠑⠊⠛⠓⠞: 250⠧⠓;
     }
   }
-</style>
+</⠎⠞⠽⠇⠑>

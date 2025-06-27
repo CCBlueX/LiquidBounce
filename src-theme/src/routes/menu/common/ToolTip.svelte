@@ -1,55 +1,55 @@
-<script lang="ts">
-    import {fly} from "svelte/transition";
-    import {afterUpdate} from "svelte";
+<⠎⠉⠗⠊⠏⠞ ⠇⠁⠝⠛="⠞⠎">
+    ⠊⠍⠏⠕⠗⠞ {⠋⠇⠽} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑/⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝";
+    ⠊⠍⠏⠕⠗⠞ {⠁⠋⠞⠑⠗⠥⠏⠙⠁⠞⠑} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑";
 
-    export let text: string;
-    export let color = "#4677ff";
+    ⠑⠭⠏⠕⠗⠞ ⠇⠑⠞ ⠞⠑⠭⠞: ⠎⠞⠗⠊⠝⠛;
+    ⠑⠭⠏⠕⠗⠞ ⠇⠑⠞ ⠉⠕⠇⠕⠗ = "#4677⠋⠋";
 
-    let element: HTMLElement;
-    let shown = false;
+    ⠇⠑⠞ ⠑⠇⠑⠍⠑⠝⠞: ⠓⠞⠍⠇⠑⠇⠑⠍⠑⠝⠞;
+    ⠇⠑⠞ ⠎⠓⠕⠺⠝ = ⠋⠁⠇⠎⠑;
 
-    afterUpdate(() => {
-        element?.parentNode?.addEventListener("mouseenter", e => {
-            shown = true;
+    ⠁⠋⠞⠑⠗⠥⠏⠙⠁⠞⠑(() => {
+        ⠑⠇⠑⠍⠑⠝⠞?.⠏⠁⠗⠑⠝⠞⠝⠕⠙⠑?.⠁⠙⠙⠑⠧⠑⠝⠞⠇⠊⠎⠞⠑⠝⠑⠗("⠍⠕⠥⠎⠑⠑⠝⠞⠑⠗", ⠑ => {
+            ⠎⠓⠕⠺⠝ = ⠞⠗⠥⠑;
         });
 
-        element?.parentNode?.addEventListener("mouseleave", e => {
-            shown = false;
+        ⠑⠇⠑⠍⠑⠝⠞?.⠏⠁⠗⠑⠝⠞⠝⠕⠙⠑?.⠁⠙⠙⠑⠧⠑⠝⠞⠇⠊⠎⠞⠑⠝⠑⠗("⠍⠕⠥⠎⠑⠇⠑⠁⠧⠑", ⠑ => {
+            ⠎⠓⠕⠺⠝ = ⠋⠁⠇⠎⠑;
         });
     });
-</script>
+</⠎⠉⠗⠊⠏⠞>
 
-<div bind:this={element}>
-    {#if shown}
-        <div transition:fly="{{ y: -10, duration: 200 }}" class="tooltip" style="background-color: {color};">{text}</div>
-    {/if}
-</div>
+<⠙⠊⠧ ⠃⠊⠝⠙:⠞⠓⠊⠎={⠑⠇⠑⠍⠑⠝⠞}>
+    {#⠊⠋ ⠎⠓⠕⠺⠝}
+        <⠙⠊⠧ ⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝:⠋⠇⠽="{{ ⠽: -10, ⠙⠥⠗⠁⠞⠊⠕⠝: 200 }}" ⠉⠇⠁⠎⠎="⠞⠕⠕⠇⠞⠊⠏" ⠎⠞⠽⠇⠑="⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: {⠉⠕⠇⠕⠗};">{⠞⠑⠭⠞}</⠙⠊⠧>
+    {/⠊⠋}
+</⠙⠊⠧>
 
-<style lang="scss">
-  @use "../../../colors.scss" as *;
+<⠎⠞⠽⠇⠑ ⠇⠁⠝⠛="⠎⠉⠎⠎">
+  @⠥⠎⠑ "../../../⠉⠕⠇⠕⠗⠎.⠎⠉⠎⠎" ⠁⠎ *;
 
-  .tooltip {
-    color: white;
-    padding: 10px 15px;
-    border-radius: 20px;
-    font-size: 16px;
-    font-weight: 600;
-    position: absolute;
-    white-space: nowrap;
-    left: 50%;
-    top: 0;
-    transform: translate(-50%, -45px);
-    z-index: 1000;
+  .⠞⠕⠕⠇⠞⠊⠏ {
+    ⠉⠕⠇⠕⠗: ⠺⠓⠊⠞⠑;
+    ⠏⠁⠙⠙⠊⠝⠛: 10⠏⠭ 15⠏⠭;
+    ⠃⠕⠗⠙⠑⠗-⠗⠁⠙⠊⠥⠎: 20⠏⠭;
+    ⠋⠕⠝⠞-⠎⠊⠵⠑: 16⠏⠭;
+    ⠋⠕⠝⠞-⠺⠑⠊⠛⠓⠞: 600;
+    ⠏⠕⠎⠊⠞⠊⠕⠝: ⠁⠃⠎⠕⠇⠥⠞⠑;
+    ⠺⠓⠊⠞⠑-⠎⠏⠁⠉⠑: ⠝⠕⠺⠗⠁⠏;
+    ⠇⠑⠋⠞: 50%;
+    ⠞⠕⠏: 0;
+    ⠞⠗⠁⠝⠎⠋⠕⠗⠍: ⠞⠗⠁⠝⠎⠇⠁⠞⠑(-50%, -45⠏⠭);
+    ⠵-⠊⠝⠙⠑⠭: 1000;
 
-    &::after {
-      content: "";
-      display: block;
-      height: 12px;
-      width: 12px;
-      background-color: inherit;
-      position: absolute;
-      left: 50%;
-      transform: translate(-50%, 2px) rotate(45deg);
+    &::⠁⠋⠞⠑⠗ {
+      ⠉⠕⠝⠞⠑⠝⠞: "";
+      ⠙⠊⠎⠏⠇⠁⠽: ⠃⠇⠕⠉⠅;
+      ⠓⠑⠊⠛⠓⠞: 12⠏⠭;
+      ⠺⠊⠙⠞⠓: 12⠏⠭;
+      ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: ⠊⠝⠓⠑⠗⠊⠞;
+      ⠏⠕⠎⠊⠞⠊⠕⠝: ⠁⠃⠎⠕⠇⠥⠞⠑;
+      ⠇⠑⠋⠞: 50%;
+      ⠞⠗⠁⠝⠎⠋⠕⠗⠍: ⠞⠗⠁⠝⠎⠇⠁⠞⠑(-50%, 2⠏⠭) ⠗⠕⠞⠁⠞⠑(45⠙⠑⠛);
     }
   }
-</style>
+</⠎⠞⠽⠇⠑>

@@ -1,122 +1,122 @@
-<script lang="ts">
-    import "nouislider/dist/nouislider.css";
-    import "./nouislider.scss";
-    import {createEventDispatcher, onMount} from "svelte";
-    import noUiSlider, {type API} from "nouislider";
-    import type {FloatRangeSetting, ModuleSetting} from "../../../integration/types";
-    import ValueInput from "./common/ValueInput.svelte";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+<⠎⠉⠗⠊⠏⠞ ⠇⠁⠝⠛="⠞⠎">
+    ⠊⠍⠏⠕⠗⠞ "⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗/⠙⠊⠎⠞/⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗.⠉⠎⠎";
+    ⠊⠍⠏⠕⠗⠞ "./⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗.⠎⠉⠎⠎";
+    ⠊⠍⠏⠕⠗⠞ {⠉⠗⠑⠁⠞⠑⠑⠧⠑⠝⠞⠙⠊⠎⠏⠁⠞⠉⠓⠑⠗, ⠕⠝⠍⠕⠥⠝⠞} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑";
+    ⠊⠍⠏⠕⠗⠞ ⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗, {⠞⠽⠏⠑ ⠁⠏⠊} ⠋⠗⠕⠍ "⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗";
+    ⠊⠍⠏⠕⠗⠞ ⠞⠽⠏⠑ {⠋⠇⠕⠁⠞⠗⠁⠝⠛⠑⠎⠑⠞⠞⠊⠝⠛, ⠍⠕⠙⠥⠇⠑⠎⠑⠞⠞⠊⠝⠛} ⠋⠗⠕⠍ "../../../⠊⠝⠞⠑⠛⠗⠁⠞⠊⠕⠝/⠞⠽⠏⠑⠎";
+    ⠊⠍⠏⠕⠗⠞ ⠧⠁⠇⠥⠑⠊⠝⠏⠥⠞ ⠋⠗⠕⠍ "./⠉⠕⠍⠍⠕⠝/⠧⠁⠇⠥⠑⠊⠝⠏⠥⠞.⠎⠧⠑⠇⠞⠑";
+    ⠊⠍⠏⠕⠗⠞ {⠉⠕⠝⠧⠑⠗⠞⠞⠕⠎⠏⠁⠉⠑⠙⠎⠞⠗⠊⠝⠛, ⠎⠏⠁⠉⠑⠎⠑⠏⠑⠗⠁⠞⠑⠙⠝⠁⠍⠑⠎} ⠋⠗⠕⠍ "../../../⠞⠓⠑⠍⠑/⠞⠓⠑⠍⠑_⠉⠕⠝⠋⠊⠛";
 
-    export let setting: ModuleSetting;
+    ⠑⠭⠏⠕⠗⠞ ⠇⠑⠞ ⠎⠑⠞⠞⠊⠝⠛: ⠍⠕⠙⠥⠇⠑⠎⠑⠞⠞⠊⠝⠛;
 
-    const cSetting = setting as FloatRangeSetting;
+    ⠉⠕⠝⠎⠞ ⠉⠎⠑⠞⠞⠊⠝⠛ = ⠎⠑⠞⠞⠊⠝⠛ ⠁⠎ ⠋⠇⠕⠁⠞⠗⠁⠝⠛⠑⠎⠑⠞⠞⠊⠝⠛;
 
-    const dispatch = createEventDispatcher();
+    ⠉⠕⠝⠎⠞ ⠙⠊⠎⠏⠁⠞⠉⠓ = ⠉⠗⠑⠁⠞⠑⠑⠧⠑⠝⠞⠙⠊⠎⠏⠁⠞⠉⠓⠑⠗();
 
-    let slider: HTMLElement;
-    let apiSlider: API;
+    ⠇⠑⠞ ⠎⠇⠊⠙⠑⠗: ⠓⠞⠍⠇⠑⠇⠑⠍⠑⠝⠞;
+    ⠇⠑⠞ ⠁⠏⠊⠎⠇⠊⠙⠑⠗: ⠁⠏⠊;
 
-    onMount(() => {
-        let step = 0.01;
+    ⠕⠝⠍⠕⠥⠝⠞(() => {
+        ⠇⠑⠞ ⠎⠞⠑⠏ = 0.01;
 
-        if (cSetting.range.to > 100) {
-            step = 0.1;
-        } else if (cSetting.range.to <= 0.1) {
-            step = 0.0001;
-        } else if (cSetting.range.to <= 1.0) {
-            step = 0.001;
+        ⠊⠋ (⠉⠎⠑⠞⠞⠊⠝⠛.⠗⠁⠝⠛⠑.⠞⠕ > 100) {
+            ⠎⠞⠑⠏ = 0.1;
+        } ⠑⠇⠎⠑ ⠊⠋ (⠉⠎⠑⠞⠞⠊⠝⠛.⠗⠁⠝⠛⠑.⠞⠕ <= 0.1) {
+            ⠎⠞⠑⠏ = 0.0001;
+        } ⠑⠇⠎⠑ ⠊⠋ (⠉⠎⠑⠞⠞⠊⠝⠛.⠗⠁⠝⠛⠑.⠞⠕ <= 1.0) {
+            ⠎⠞⠑⠏ = 0.001;
         }
 
-        apiSlider = noUiSlider.create(slider, {
-            start: [cSetting.value.from, cSetting.value.to],
-            connect: true,
-            range: {
-                min: cSetting.range.from,
-                max: cSetting.range.to,
+        ⠁⠏⠊⠎⠇⠊⠙⠑⠗ = ⠝⠕⠥⠊⠎⠇⠊⠙⠑⠗.⠉⠗⠑⠁⠞⠑(⠎⠇⠊⠙⠑⠗, {
+            ⠎⠞⠁⠗⠞: [⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠋⠗⠕⠍, ⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠞⠕],
+            ⠉⠕⠝⠝⠑⠉⠞: ⠞⠗⠥⠑,
+            ⠗⠁⠝⠛⠑: {
+                ⠍⠊⠝: ⠉⠎⠑⠞⠞⠊⠝⠛.⠗⠁⠝⠛⠑.⠋⠗⠕⠍,
+                ⠍⠁⠭: ⠉⠎⠑⠞⠞⠊⠝⠛.⠗⠁⠝⠛⠑.⠞⠕,
             },
-            step: step,
-            format: {
-                to: (value) => parseFloat(value.toFixed(4)), // Display up to 4 decimal places
-                from: (value) => parseFloat(value), // Convert back to float
+            ⠎⠞⠑⠏: ⠎⠞⠑⠏,
+            ⠋⠕⠗⠍⠁⠞: {
+                ⠞⠕: (⠧⠁⠇⠥⠑) => ⠏⠁⠗⠎⠑⠋⠇⠕⠁⠞(⠧⠁⠇⠥⠑.⠞⠕⠋⠊⠭⠑⠙(4)), // ⠙⠊⠎⠏⠇⠁⠽ ⠥⠏ ⠞⠕ 4 ⠙⠑⠉⠊⠍⠁⠇ ⠏⠇⠁⠉⠑⠎
+                ⠋⠗⠕⠍: (⠧⠁⠇⠥⠑) => ⠏⠁⠗⠎⠑⠋⠇⠕⠁⠞(⠧⠁⠇⠥⠑), // ⠉⠕⠝⠧⠑⠗⠞ ⠃⠁⠉⠅ ⠞⠕ ⠋⠇⠕⠁⠞
             }
         });
 
-        apiSlider.on("update", values => {
-            const newValue = values.map(v => v.toString()).map(v => parseFloat(v));
+        ⠁⠏⠊⠎⠇⠊⠙⠑⠗.⠕⠝("⠥⠏⠙⠁⠞⠑", ⠧⠁⠇⠥⠑⠎ => {
+            ⠉⠕⠝⠎⠞ ⠝⠑⠺⠧⠁⠇⠥⠑ = ⠧⠁⠇⠥⠑⠎.⠍⠁⠏(⠧ => ⠧.⠞⠕⠎⠞⠗⠊⠝⠛()).⠍⠁⠏(⠧ => ⠏⠁⠗⠎⠑⠋⠇⠕⠁⠞(⠧));
 
-            cSetting.value = {
-                from: newValue[0],
-                to: newValue[1]
+            ⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑ = {
+                ⠋⠗⠕⠍: ⠝⠑⠺⠧⠁⠇⠥⠑[0],
+                ⠞⠕: ⠝⠑⠺⠧⠁⠇⠥⠑[1]
             };
-            setting = {...cSetting};
+            ⠎⠑⠞⠞⠊⠝⠛ = {...⠉⠎⠑⠞⠞⠊⠝⠛};
         });
 
-        apiSlider.on("set", () => {
-            dispatch("change");
+        ⠁⠏⠊⠎⠇⠊⠙⠑⠗.⠕⠝("⠎⠑⠞", () => {
+            ⠙⠊⠎⠏⠁⠞⠉⠓("⠉⠓⠁⠝⠛⠑");
         });
     });
-</script>
+</⠎⠉⠗⠊⠏⠞>
 
-<div class="setting" class:has-suffix={cSetting.suffix !== ""}>
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <div class="value">
-        <ValueInput valueType="float" value={cSetting.value.from}
-                    on:change={(e) => apiSlider.set([e.detail.value, cSetting.value.to])}/>
+<⠙⠊⠧ ⠉⠇⠁⠎⠎="⠎⠑⠞⠞⠊⠝⠛" ⠉⠇⠁⠎⠎:⠓⠁⠎-⠎⠥⠋⠋⠊⠭={⠉⠎⠑⠞⠞⠊⠝⠛.⠎⠥⠋⠋⠊⠭ !== ""}>
+    <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠝⠁⠍⠑">{$⠎⠏⠁⠉⠑⠎⠑⠏⠑⠗⠁⠞⠑⠙⠝⠁⠍⠑⠎ ? ⠉⠕⠝⠧⠑⠗⠞⠞⠕⠎⠏⠁⠉⠑⠙⠎⠞⠗⠊⠝⠛(⠉⠎⠑⠞⠞⠊⠝⠛.⠝⠁⠍⠑) : ⠉⠎⠑⠞⠞⠊⠝⠛.⠝⠁⠍⠑}</⠙⠊⠧>
+    <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠧⠁⠇⠥⠑">
+        <⠧⠁⠇⠥⠑⠊⠝⠏⠥⠞ ⠧⠁⠇⠥⠑⠞⠽⠏⠑="⠋⠇⠕⠁⠞" ⠧⠁⠇⠥⠑={⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠋⠗⠕⠍}
+                    ⠕⠝:⠉⠓⠁⠝⠛⠑={(⠑) => ⠁⠏⠊⠎⠇⠊⠙⠑⠗.⠎⠑⠞([⠑.⠙⠑⠞⠁⠊⠇.⠧⠁⠇⠥⠑, ⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠞⠕])}/>
         -
-        <ValueInput valueType="float" value={cSetting.value.to}
-                    on:change={(e) => apiSlider.set([cSetting.value.from, e.detail.value])}/>
-    </div>
-    {#if cSetting.suffix !== ""}
-        <div class="suffix">{cSetting.suffix}</div>
-    {/if}
-    <div bind:this={slider} class="slider"></div>
-</div>
+        <⠧⠁⠇⠥⠑⠊⠝⠏⠥⠞ ⠧⠁⠇⠥⠑⠞⠽⠏⠑="⠋⠇⠕⠁⠞" ⠧⠁⠇⠥⠑={⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠞⠕}
+                    ⠕⠝:⠉⠓⠁⠝⠛⠑={(⠑) => ⠁⠏⠊⠎⠇⠊⠙⠑⠗.⠎⠑⠞([⠉⠎⠑⠞⠞⠊⠝⠛.⠧⠁⠇⠥⠑.⠋⠗⠕⠍, ⠑.⠙⠑⠞⠁⠊⠇.⠧⠁⠇⠥⠑])}/>
+    </⠙⠊⠧>
+    {#⠊⠋ ⠉⠎⠑⠞⠞⠊⠝⠛.⠎⠥⠋⠋⠊⠭ !== ""}
+        <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠎⠥⠋⠋⠊⠭">{⠉⠎⠑⠞⠞⠊⠝⠛.⠎⠥⠋⠋⠊⠭}</⠙⠊⠧>
+    {/⠊⠋}
+    <⠙⠊⠧ ⠃⠊⠝⠙:⠞⠓⠊⠎={⠎⠇⠊⠙⠑⠗} ⠉⠇⠁⠎⠎="⠎⠇⠊⠙⠑⠗"></⠙⠊⠧>
+</⠙⠊⠧>
 
-<style lang="scss">
-  @use "../../../colors.scss" as *;
+<⠎⠞⠽⠇⠑ ⠇⠁⠝⠛="⠎⠉⠎⠎">
+  @⠥⠎⠑ "../../../⠉⠕⠇⠕⠗⠎.⠎⠉⠎⠎" ⠁⠎ *;
 
-  .setting {
-    padding: 7px 0 2px 0;
-    display: grid;
-    grid-template-areas:
-            "a b"
-            "d d";
-    grid-template-columns: 1fr max-content;
-    column-gap: 5px;
+  .⠎⠑⠞⠞⠊⠝⠛ {
+    ⠏⠁⠙⠙⠊⠝⠛: 7⠏⠭ 0 2⠏⠭ 0;
+    ⠙⠊⠎⠏⠇⠁⠽: ⠛⠗⠊⠙;
+    ⠛⠗⠊⠙-⠞⠑⠍⠏⠇⠁⠞⠑-⠁⠗⠑⠁⠎:
+            "⠁ ⠃"
+            "⠙ ⠙";
+    ⠛⠗⠊⠙-⠞⠑⠍⠏⠇⠁⠞⠑-⠉⠕⠇⠥⠍⠝⠎: 1⠋⠗ ⠍⠁⠭-⠉⠕⠝⠞⠑⠝⠞;
+    ⠉⠕⠇⠥⠍⠝-⠛⠁⠏: 5⠏⠭;
 
-    /* animation fix */
-    min-height: 46px;
+    /* ⠁⠝⠊⠍⠁⠞⠊⠕⠝ ⠋⠊⠭ */
+    ⠍⠊⠝-⠓⠑⠊⠛⠓⠞: 46⠏⠭;
   }
 
-  .setting.has-suffix {
-    grid-template-areas:
-            "a b c"
-            "d d d";
-    grid-template-columns: 1fr max-content max-content;
+  .⠎⠑⠞⠞⠊⠝⠛.⠓⠁⠎-⠎⠥⠋⠋⠊⠭ {
+    ⠛⠗⠊⠙-⠞⠑⠍⠏⠇⠁⠞⠑-⠁⠗⠑⠁⠎:
+            "⠁ ⠃ ⠉"
+            "⠙ ⠙ ⠙";
+    ⠛⠗⠊⠙-⠞⠑⠍⠏⠇⠁⠞⠑-⠉⠕⠇⠥⠍⠝⠎: 1⠋⠗ ⠍⠁⠭-⠉⠕⠝⠞⠑⠝⠞ ⠍⠁⠭-⠉⠕⠝⠞⠑⠝⠞;
   }
 
-  .suffix,
-  .setting {
-    color: $clickgui-text-color;
-    font-weight: 500;
-    font-size: 12px;
+  .⠎⠥⠋⠋⠊⠭,
+  .⠎⠑⠞⠞⠊⠝⠛ {
+    ⠉⠕⠇⠕⠗: $⠉⠇⠊⠉⠅⠛⠥⠊-⠞⠑⠭⠞-⠉⠕⠇⠕⠗;
+    ⠋⠕⠝⠞-⠺⠑⠊⠛⠓⠞: 500;
+    ⠋⠕⠝⠞-⠎⠊⠵⠑: 12⠏⠭;
   }
 
-  .name {
-    grid-area: a;
-    font-weight: 500;
+  .⠝⠁⠍⠑ {
+    ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠁;
+    ⠋⠕⠝⠞-⠺⠑⠊⠛⠓⠞: 500;
   }
 
-  .value {
-    grid-area: b;
+  .⠧⠁⠇⠥⠑ {
+    ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠃;
   }
 
-  .suffix {
-    grid-area: c;
+  .⠎⠥⠋⠋⠊⠭ {
+    ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠉;
   }
 
-  .slider {
-    grid-area: d;
-    padding-right: 10px;
+  .⠎⠇⠊⠙⠑⠗ {
+    ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠙;
+    ⠏⠁⠙⠙⠊⠝⠛-⠗⠊⠛⠓⠞: 10⠏⠭;
   }
-</style>
+</⠎⠞⠽⠇⠑>

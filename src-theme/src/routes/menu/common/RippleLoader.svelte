@@ -1,68 +1,68 @@
-<div class="lds-ripple"><div></div><div></div></div>
+<⠙⠊⠧ ⠉⠇⠁⠎⠎="⠇⠙⠎-⠗⠊⠏⠏⠇⠑"><⠙⠊⠧></⠙⠊⠧><⠙⠊⠧></⠙⠊⠧></⠙⠊⠧>
 
-<style lang="scss">
+<⠎⠞⠽⠇⠑ ⠇⠁⠝⠛="⠎⠉⠎⠎">
   /*
-  Taken from https://loading.io/css/
+  ⠞⠁⠅⠑⠝ ⠋⠗⠕⠍ ⠓⠞⠞⠏⠎://⠇⠕⠁⠙⠊⠝⠛.⠊⠕/⠉⠎⠎/
  */
 
-  @use "../../../colors.scss" as *;
+  @⠥⠎⠑ "../../../⠉⠕⠇⠕⠗⠎.⠎⠉⠎⠎" ⠁⠎ *;
  
-  .lds-ripple {
-    color: $accent-color;
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑ {
+    ⠉⠕⠇⠕⠗: $⠁⠉⠉⠑⠝⠞-⠉⠕⠇⠕⠗;
   }
 
-  .lds-ripple,
-  .lds-ripple div {
-    box-sizing: border-box;
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑,
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑ ⠙⠊⠧ {
+    ⠃⠕⠭-⠎⠊⠵⠊⠝⠛: ⠃⠕⠗⠙⠑⠗-⠃⠕⠭;
   }
 
-  .lds-ripple {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑ {
+    ⠙⠊⠎⠏⠇⠁⠽: ⠊⠝⠇⠊⠝⠑-⠃⠇⠕⠉⠅;
+    ⠏⠕⠎⠊⠞⠊⠕⠝: ⠗⠑⠇⠁⠞⠊⠧⠑;
+    ⠺⠊⠙⠞⠓: 80⠏⠭;
+    ⠓⠑⠊⠛⠓⠞: 80⠏⠭;
   }
 
-  .lds-ripple div {
-    position: absolute;
-    border: 4px solid currentColor;
-    opacity: 1;
-    border-radius: 50%;
-    animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑ ⠙⠊⠧ {
+    ⠏⠕⠎⠊⠞⠊⠕⠝: ⠁⠃⠎⠕⠇⠥⠞⠑;
+    ⠃⠕⠗⠙⠑⠗: 4⠏⠭ ⠎⠕⠇⠊⠙ ⠉⠥⠗⠗⠑⠝⠞⠉⠕⠇⠕⠗;
+    ⠕⠏⠁⠉⠊⠞⠽: 1;
+    ⠃⠕⠗⠙⠑⠗-⠗⠁⠙⠊⠥⠎: 50%;
+    ⠁⠝⠊⠍⠁⠞⠊⠕⠝: ⠇⠙⠎-⠗⠊⠏⠏⠇⠑ 1⠎ ⠉⠥⠃⠊⠉-⠃⠑⠵⠊⠑⠗(0, 0.2, 0.8, 1) ⠊⠝⠋⠊⠝⠊⠞⠑;
   }
 
-  .lds-ripple div:nth-child(2) {
-    animation-delay: -0.5s;
+  .⠇⠙⠎-⠗⠊⠏⠏⠇⠑ ⠙⠊⠧:⠝⠞⠓-⠉⠓⠊⠇⠙(2) {
+    ⠁⠝⠊⠍⠁⠞⠊⠕⠝-⠙⠑⠇⠁⠽: -0.5⠎;
   }
 
-  @keyframes lds-ripple {
+  @⠅⠑⠽⠋⠗⠁⠍⠑⠎ ⠇⠙⠎-⠗⠊⠏⠏⠇⠑ {
     0% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
-      opacity: 0;
+      ⠞⠕⠏: 36⠏⠭;
+      ⠇⠑⠋⠞: 36⠏⠭;
+      ⠺⠊⠙⠞⠓: 8⠏⠭;
+      ⠓⠑⠊⠛⠓⠞: 8⠏⠭;
+      ⠕⠏⠁⠉⠊⠞⠽: 0;
     }
     4.9% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
-      opacity: 0;
+      ⠞⠕⠏: 36⠏⠭;
+      ⠇⠑⠋⠞: 36⠏⠭;
+      ⠺⠊⠙⠞⠓: 8⠏⠭;
+      ⠓⠑⠊⠛⠓⠞: 8⠏⠭;
+      ⠕⠏⠁⠉⠊⠞⠽: 0;
     }
     5% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
-      opacity: 1;
+      ⠞⠕⠏: 36⠏⠭;
+      ⠇⠑⠋⠞: 36⠏⠭;
+      ⠺⠊⠙⠞⠓: 8⠏⠭;
+      ⠓⠑⠊⠛⠓⠞: 8⠏⠭;
+      ⠕⠏⠁⠉⠊⠞⠽: 1;
     }
     100% {
-      top: 0;
-      left: 0;
-      width: 80px;
-      height: 80px;
-      opacity: 0;
+      ⠞⠕⠏: 0;
+      ⠇⠑⠋⠞: 0;
+      ⠺⠊⠙⠞⠓: 80⠏⠭;
+      ⠓⠑⠊⠛⠓⠞: 80⠏⠭;
+      ⠕⠏⠁⠉⠊⠞⠽: 0;
     }
   }
-</style>
+</⠎⠞⠽⠇⠑>

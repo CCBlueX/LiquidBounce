@@ -1,29 +1,29 @@
-@use "sass:color";
-@use "../../../colors.scss" as *;
+@⠥⠎⠑ "⠎⠁⠎⠎:⠉⠕⠇⠕⠗";
+@⠥⠎⠑ "../../../⠉⠕⠇⠕⠗⠎.⠎⠉⠎⠎" ⠁⠎ *;
 
-.noUi-handle {
-    background-color: $accent-color;
-    box-shadow: unset;
-    border: none;
-    border-radius: 50%;
-    height: 12px !important;
-    width: 12px !important;
-    transform: translate(-5px, 1px);
+.⠝⠕⠥⠊-⠓⠁⠝⠙⠇⠑ {
+    ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: $⠁⠉⠉⠑⠝⠞-⠉⠕⠇⠕⠗;
+    ⠃⠕⠭-⠎⠓⠁⠙⠕⠺: ⠥⠝⠎⠑⠞;
+    ⠃⠕⠗⠙⠑⠗: ⠝⠕⠝⠑;
+    ⠃⠕⠗⠙⠑⠗-⠗⠁⠙⠊⠥⠎: 50%;
+    ⠓⠑⠊⠛⠓⠞: 12⠏⠭ !⠊⠍⠏⠕⠗⠞⠁⠝⠞;
+    ⠺⠊⠙⠞⠓: 12⠏⠭ !⠊⠍⠏⠕⠗⠞⠁⠝⠞;
+    ⠞⠗⠁⠝⠎⠋⠕⠗⠍: ⠞⠗⠁⠝⠎⠇⠁⠞⠑(-5⠏⠭, 1⠏⠭);
 }
 
-.noUi-handle::after,
-.noUi-handle::before {
-    display: none;
+.⠝⠕⠥⠊-⠓⠁⠝⠙⠇⠑::⠁⠋⠞⠑⠗,
+.⠝⠕⠥⠊-⠓⠁⠝⠙⠇⠑::⠃⠑⠋⠕⠗⠑ {
+    ⠙⠊⠎⠏⠇⠁⠽: ⠝⠕⠝⠑;
 }
 
-.noUi-target {
-    margin: 10px 0;
-    height: 2px;
-    border: none;
-    background-color: color.adjust($clickgui-text-color, $lightness: -80%);
-    box-shadow: unset;
+.⠝⠕⠥⠊-⠞⠁⠗⠛⠑⠞ {
+    ⠍⠁⠗⠛⠊⠝: 10⠏⠭ 0;
+    ⠓⠑⠊⠛⠓⠞: 2⠏⠭;
+    ⠃⠕⠗⠙⠑⠗: ⠝⠕⠝⠑;
+    ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: ⠉⠕⠇⠕⠗.⠁⠙⠚⠥⠎⠞($⠉⠇⠊⠉⠅⠛⠥⠊-⠞⠑⠭⠞-⠉⠕⠇⠕⠗, $⠇⠊⠛⠓⠞⠝⠑⠎⠎: -80%);
+    ⠃⠕⠭-⠎⠓⠁⠙⠕⠺: ⠥⠝⠎⠑⠞;
 }
 
-.noUi-connect {
-    background-color: $accent-color;
+.⠝⠕⠥⠊-⠉⠕⠝⠝⠑⠉⠞ {
+    ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: $⠁⠉⠉⠑⠝⠞-⠉⠕⠇⠕⠗;
 }

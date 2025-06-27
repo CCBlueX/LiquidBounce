@@ -1,144 +1,144 @@
-<script lang="ts">
-    import ArmorStatus from "./ArmorStatus.svelte";
-    import {listen} from "../../../../integration/ws.js";
-    import type {PlayerData} from "../../../../integration/types";
-    import {REST_BASE} from "../../../../integration/host";
-    import {fly} from "svelte/transition";
-    import HealthProgress from "./HealthProgress.svelte";
-    import type {TargetChangeEvent} from "../../../../integration/events";
+<⠎⠉⠗⠊⠏⠞ ⠇⠁⠝⠛="⠞⠎">
+    ⠊⠍⠏⠕⠗⠞ ⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎ ⠋⠗⠕⠍ "./⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎.⠎⠧⠑⠇⠞⠑";
+    ⠊⠍⠏⠕⠗⠞ {⠇⠊⠎⠞⠑⠝} ⠋⠗⠕⠍ "../../../../⠊⠝⠞⠑⠛⠗⠁⠞⠊⠕⠝/⠺⠎.⠚⠎";
+    ⠊⠍⠏⠕⠗⠞ ⠞⠽⠏⠑ {⠏⠇⠁⠽⠑⠗⠙⠁⠞⠁} ⠋⠗⠕⠍ "../../../../⠊⠝⠞⠑⠛⠗⠁⠞⠊⠕⠝/⠞⠽⠏⠑⠎";
+    ⠊⠍⠏⠕⠗⠞ {⠗⠑⠎⠞_⠃⠁⠎⠑} ⠋⠗⠕⠍ "../../../../⠊⠝⠞⠑⠛⠗⠁⠞⠊⠕⠝/⠓⠕⠎⠞";
+    ⠊⠍⠏⠕⠗⠞ {⠋⠇⠽} ⠋⠗⠕⠍ "⠎⠧⠑⠇⠞⠑/⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝";
+    ⠊⠍⠏⠕⠗⠞ ⠓⠑⠁⠇⠞⠓⠏⠗⠕⠛⠗⠑⠎⠎ ⠋⠗⠕⠍ "./⠓⠑⠁⠇⠞⠓⠏⠗⠕⠛⠗⠑⠎⠎.⠎⠧⠑⠇⠞⠑";
+    ⠊⠍⠏⠕⠗⠞ ⠞⠽⠏⠑ {⠞⠁⠗⠛⠑⠞⠉⠓⠁⠝⠛⠑⠑⠧⠑⠝⠞} ⠋⠗⠕⠍ "../../../../⠊⠝⠞⠑⠛⠗⠁⠞⠊⠕⠝/⠑⠧⠑⠝⠞⠎";
 
-    let target: PlayerData | null = null;
-    let visible = true;
+    ⠇⠑⠞ ⠞⠁⠗⠛⠑⠞: ⠏⠇⠁⠽⠑⠗⠙⠁⠞⠁ | ⠝⠥⠇⠇ = ⠝⠥⠇⠇;
+    ⠇⠑⠞ ⠧⠊⠎⠊⠃⠇⠑ = ⠞⠗⠥⠑;
 
-    let hideTimeout: number;
+    ⠇⠑⠞ ⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞: ⠝⠥⠍⠃⠑⠗;
 
-    function startHideTimeout() {
-        hideTimeout = setTimeout(() => {
-            visible = false;
+    ⠋⠥⠝⠉⠞⠊⠕⠝ ⠎⠞⠁⠗⠞⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞() {
+        ⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞ = ⠎⠑⠞⠞⠊⠍⠑⠕⠥⠞(() => {
+            ⠧⠊⠎⠊⠃⠇⠑ = ⠋⠁⠇⠎⠑;
         }, 500);
     }
 
-    listen("targetChange", (data: TargetChangeEvent) => {
-        target = data.target;
-        visible = true;
-        clearTimeout(hideTimeout);
-        startHideTimeout();
+    ⠇⠊⠎⠞⠑⠝("⠞⠁⠗⠛⠑⠞⠉⠓⠁⠝⠛⠑", (⠙⠁⠞⠁: ⠞⠁⠗⠛⠑⠞⠉⠓⠁⠝⠛⠑⠑⠧⠑⠝⠞) => {
+        ⠞⠁⠗⠛⠑⠞ = ⠙⠁⠞⠁.⠞⠁⠗⠛⠑⠞;
+        ⠧⠊⠎⠊⠃⠇⠑ = ⠞⠗⠥⠑;
+        ⠉⠇⠑⠁⠗⠞⠊⠍⠑⠕⠥⠞(⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞);
+        ⠎⠞⠁⠗⠞⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞();
     });
 
-    startHideTimeout();
-</script>
+    ⠎⠞⠁⠗⠞⠓⠊⠙⠑⠞⠊⠍⠑⠕⠥⠞();
+</⠎⠉⠗⠊⠏⠞>
 
-{#if visible && target != null}
-    <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
-        <div class="main-wrapper">
-            <div class="avatar">
-                <img src="{REST_BASE}/api/v1/client/resource/skin?uuid={target.uuid}" alt="avatar" />
-            </div>
+{#⠊⠋ ⠧⠊⠎⠊⠃⠇⠑ && ⠞⠁⠗⠛⠑⠞ != ⠝⠥⠇⠇}
+    <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠞⠁⠗⠛⠑⠞⠓⠥⠙" ⠞⠗⠁⠝⠎⠊⠞⠊⠕⠝:⠋⠇⠽={{ ⠽: -10, ⠙⠥⠗⠁⠞⠊⠕⠝: 200 }}>
+        <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠍⠁⠊⠝-⠺⠗⠁⠏⠏⠑⠗">
+            <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠁⠧⠁⠞⠁⠗">
+                <⠊⠍⠛ ⠎⠗⠉="{⠗⠑⠎⠞_⠃⠁⠎⠑}/⠁⠏⠊/⠧1/⠉⠇⠊⠑⠝⠞/⠗⠑⠎⠕⠥⠗⠉⠑/⠎⠅⠊⠝?⠥⠥⠊⠙={⠞⠁⠗⠛⠑⠞.⠥⠥⠊⠙}" ⠁⠇⠞="⠁⠧⠁⠞⠁⠗" />
+            </⠙⠊⠧>
     
-            <div class="name">{target.username}</div>
-            <div class="health-stats">
-                <div class="stat">
-                    <div class="value">{Math.floor(target.actualHealth + target.absorption)}</div>
-                    <img
-                            class="icon"
-                            src="img/hud/targethud/icon-health.svg"
-                            alt="health"
+            <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠝⠁⠍⠑">{⠞⠁⠗⠛⠑⠞.⠥⠎⠑⠗⠝⠁⠍⠑}</⠙⠊⠧>
+            <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠓⠑⠁⠇⠞⠓-⠎⠞⠁⠞⠎">
+                <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠎⠞⠁⠞">
+                    <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠧⠁⠇⠥⠑">{⠍⠁⠞⠓.⠋⠇⠕⠕⠗(⠞⠁⠗⠛⠑⠞.⠁⠉⠞⠥⠁⠇⠓⠑⠁⠇⠞⠓ + ⠞⠁⠗⠛⠑⠞.⠁⠃⠎⠕⠗⠏⠞⠊⠕⠝)}</⠙⠊⠧>
+                    <⠊⠍⠛
+                            ⠉⠇⠁⠎⠎="⠊⠉⠕⠝"
+                            ⠎⠗⠉="⠊⠍⠛/⠓⠥⠙/⠞⠁⠗⠛⠑⠞⠓⠥⠙/⠊⠉⠕⠝-⠓⠑⠁⠇⠞⠓.⠎⠧⠛"
+                            ⠁⠇⠞="⠓⠑⠁⠇⠞⠓"
                     />
-                </div>
-                <div class="stat">
-                    <div class="value">{Math.floor(target.armor)}</div>
-                    <img
-                            class="icon"
-                            src="img/hud/targethud/icon-armor.svg"
-                            alt="armor"
+                </⠙⠊⠧>
+                <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠎⠞⠁⠞">
+                    <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠧⠁⠇⠥⠑">{⠍⠁⠞⠓.⠋⠇⠕⠕⠗(⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗)}</⠙⠊⠧>
+                    <⠊⠍⠛
+                            ⠉⠇⠁⠎⠎="⠊⠉⠕⠝"
+                            ⠎⠗⠉="⠊⠍⠛/⠓⠥⠙/⠞⠁⠗⠛⠑⠞⠓⠥⠙/⠊⠉⠕⠝-⠁⠗⠍⠕⠗.⠎⠧⠛"
+                            ⠁⠇⠞="⠁⠗⠍⠕⠗"
                     />
-                </div>
-            </div>
-            <div class="armor-stats">
-                {#if target.armorItems[3].count > 0}
-                    <ArmorStatus itemStack={target.armorItems[3]} />
-                {/if}
-                {#if target.armorItems[2].count > 0}
-                    <ArmorStatus itemStack={target.armorItems[2]} />
-                {/if}
-                {#if target.armorItems[1].count > 0}
-                    <ArmorStatus itemStack={target.armorItems[1]} />
-                {/if}
-                {#if target.armorItems[0].count > 0}
-                    <ArmorStatus itemStack={target.armorItems[0]} />
-                {/if}
-            </div>
-        </div>    
+                </⠙⠊⠧>
+            </⠙⠊⠧>
+            <⠙⠊⠧ ⠉⠇⠁⠎⠎="⠁⠗⠍⠕⠗-⠎⠞⠁⠞⠎">
+                {#⠊⠋ ⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[3].⠉⠕⠥⠝⠞ > 0}
+                    <⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎ ⠊⠞⠑⠍⠎⠞⠁⠉⠅={⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[3]} />
+                {/⠊⠋}
+                {#⠊⠋ ⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[2].⠉⠕⠥⠝⠞ > 0}
+                    <⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎ ⠊⠞⠑⠍⠎⠞⠁⠉⠅={⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[2]} />
+                {/⠊⠋}
+                {#⠊⠋ ⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[1].⠉⠕⠥⠝⠞ > 0}
+                    <⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎ ⠊⠞⠑⠍⠎⠞⠁⠉⠅={⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[1]} />
+                {/⠊⠋}
+                {#⠊⠋ ⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[0].⠉⠕⠥⠝⠞ > 0}
+                    <⠁⠗⠍⠕⠗⠎⠞⠁⠞⠥⠎ ⠊⠞⠑⠍⠎⠞⠁⠉⠅={⠞⠁⠗⠛⠑⠞.⠁⠗⠍⠕⠗⠊⠞⠑⠍⠎[0]} />
+                {/⠊⠋}
+            </⠙⠊⠧>
+        </⠙⠊⠧>    
         
-        <HealthProgress maxHealth={target.maxHealth + target.absorption} health={target.actualHealth + target.absorption} />
-    </div>
-{/if}
+        <⠓⠑⠁⠇⠞⠓⠏⠗⠕⠛⠗⠑⠎⠎ ⠍⠁⠭⠓⠑⠁⠇⠞⠓={⠞⠁⠗⠛⠑⠞.⠍⠁⠭⠓⠑⠁⠇⠞⠓ + ⠞⠁⠗⠛⠑⠞.⠁⠃⠎⠕⠗⠏⠞⠊⠕⠝} ⠓⠑⠁⠇⠞⠓={⠞⠁⠗⠛⠑⠞.⠁⠉⠞⠥⠁⠇⠓⠑⠁⠇⠞⠓ + ⠞⠁⠗⠛⠑⠞.⠁⠃⠎⠕⠗⠏⠞⠊⠕⠝} />
+    </⠙⠊⠧>
+{/⠊⠋}
 
-<style lang="scss">
-    @use "../../../../colors.scss" as *;
+<⠎⠞⠽⠇⠑ ⠇⠁⠝⠛="⠎⠉⠎⠎">
+    @⠥⠎⠑ "../../../../⠉⠕⠇⠕⠗⠎.⠎⠉⠎⠎" ⠁⠎ *;
 
-    .targethud {
-        background-color: rgba($targethud-base-color, 0.68);
-        border-radius: 5px;
-        overflow: hidden;
+    .⠞⠁⠗⠛⠑⠞⠓⠥⠙ {
+        ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠉⠕⠇⠕⠗: ⠗⠛⠃⠁($⠞⠁⠗⠛⠑⠞⠓⠥⠙-⠃⠁⠎⠑-⠉⠕⠇⠕⠗, 0.68);
+        ⠃⠕⠗⠙⠑⠗-⠗⠁⠙⠊⠥⠎: 5⠏⠭;
+        ⠕⠧⠑⠗⠋⠇⠕⠺: ⠓⠊⠙⠙⠑⠝;
     }
 
-    .main-wrapper {
-        display: grid;
-        grid-template-areas:
-            "a b d"
-            "a c d";
-        column-gap: 10px;
-        padding: 10px 15px;
+    .⠍⠁⠊⠝-⠺⠗⠁⠏⠏⠑⠗ {
+        ⠙⠊⠎⠏⠇⠁⠽: ⠛⠗⠊⠙;
+        ⠛⠗⠊⠙-⠞⠑⠍⠏⠇⠁⠞⠑-⠁⠗⠑⠁⠎:
+            "⠁ ⠃ ⠙"
+            "⠁ ⠉ ⠙";
+        ⠉⠕⠇⠥⠍⠝-⠛⠁⠏: 10⠏⠭;
+        ⠏⠁⠙⠙⠊⠝⠛: 10⠏⠭ 15⠏⠭;
     }
 
-    .name {
-        grid-area: b;
-        color: $targethud-text-color;
-        font-weight: 500;
-        align-self: flex-end;
+    .⠝⠁⠍⠑ {
+        ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠃;
+        ⠉⠕⠇⠕⠗: $⠞⠁⠗⠛⠑⠞⠓⠥⠙-⠞⠑⠭⠞-⠉⠕⠇⠕⠗;
+        ⠋⠕⠝⠞-⠺⠑⠊⠛⠓⠞: 500;
+        ⠁⠇⠊⠛⠝-⠎⠑⠇⠋: ⠋⠇⠑⠭-⠑⠝⠙;
     }
 
-    .health-stats {
-        grid-area: c;
-        display: flex;
-        column-gap: 10px;
+    .⠓⠑⠁⠇⠞⠓-⠎⠞⠁⠞⠎ {
+        ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠉;
+        ⠙⠊⠎⠏⠇⠁⠽: ⠋⠇⠑⠭;
+        ⠉⠕⠇⠥⠍⠝-⠛⠁⠏: 10⠏⠭;
 
-        .stat {
-            .value {
-                color: $targethud-text-dimmed-color;
-                font-size: 14px;
-                min-width: 18px;
-                display: inline-block;
+        .⠎⠞⠁⠞ {
+            .⠧⠁⠇⠥⠑ {
+                ⠉⠕⠇⠕⠗: $⠞⠁⠗⠛⠑⠞⠓⠥⠙-⠞⠑⠭⠞-⠙⠊⠍⠍⠑⠙-⠉⠕⠇⠕⠗;
+                ⠋⠕⠝⠞-⠎⠊⠵⠑: 14⠏⠭;
+                ⠍⠊⠝-⠺⠊⠙⠞⠓: 18⠏⠭;
+                ⠙⠊⠎⠏⠇⠁⠽: ⠊⠝⠇⠊⠝⠑-⠃⠇⠕⠉⠅;
             }
         }
     }
 
-    .armor-stats {
-        grid-area: d;
-        display: flex;
-        align-items: center;
-        column-gap: 10px;
-        padding-left: 5px;
+    .⠁⠗⠍⠕⠗-⠎⠞⠁⠞⠎ {
+        ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠙;
+        ⠙⠊⠎⠏⠇⠁⠽: ⠋⠇⠑⠭;
+        ⠁⠇⠊⠛⠝-⠊⠞⠑⠍⠎: ⠉⠑⠝⠞⠑⠗;
+        ⠉⠕⠇⠥⠍⠝-⠛⠁⠏: 10⠏⠭;
+        ⠏⠁⠙⠙⠊⠝⠛-⠇⠑⠋⠞: 5⠏⠭;
     }
 
-    .avatar {
-        grid-area: a;
-        height: 50px;
-        width: 50px;
-        position: relative;
-        image-rendering: pixelated;
-        background-image: url("/img/steve.png");
-        background-repeat: no-repeat;
-        background-size: cover;
-        border-radius: 5px;
-        overflow: hidden;
+    .⠁⠧⠁⠞⠁⠗ {
+        ⠛⠗⠊⠙-⠁⠗⠑⠁: ⠁;
+        ⠓⠑⠊⠛⠓⠞: 50⠏⠭;
+        ⠺⠊⠙⠞⠓: 50⠏⠭;
+        ⠏⠕⠎⠊⠞⠊⠕⠝: ⠗⠑⠇⠁⠞⠊⠧⠑;
+        ⠊⠍⠁⠛⠑-⠗⠑⠝⠙⠑⠗⠊⠝⠛: ⠏⠊⠭⠑⠇⠁⠞⠑⠙;
+        ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠊⠍⠁⠛⠑: ⠥⠗⠇("/⠊⠍⠛/⠎⠞⠑⠧⠑.⠏⠝⠛");
+        ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠗⠑⠏⠑⠁⠞: ⠝⠕-⠗⠑⠏⠑⠁⠞;
+        ⠃⠁⠉⠅⠛⠗⠕⠥⠝⠙-⠎⠊⠵⠑: ⠉⠕⠧⠑⠗;
+        ⠃⠕⠗⠙⠑⠗-⠗⠁⠙⠊⠥⠎: 5⠏⠭;
+        ⠕⠧⠑⠗⠋⠇⠕⠺: ⠓⠊⠙⠙⠑⠝;
 
-        img {
-            position: absolute;
-            scale: 6.25;
-            left: 118px;
-            top: 118px;
+        ⠊⠍⠛ {
+            ⠏⠕⠎⠊⠞⠊⠕⠝: ⠁⠃⠎⠕⠇⠥⠞⠑;
+            ⠎⠉⠁⠇⠑: 6.25;
+            ⠇⠑⠋⠞: 118⠏⠭;
+            ⠞⠕⠏: 118⠏⠭;
         }
     }
-</style>
+</⠎⠞⠽⠇⠑>
