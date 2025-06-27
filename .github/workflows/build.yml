@@ -34,6 +34,8 @@ jobs:
           arguments: genSources build -x test -x detekt
 
       - name: Upload artifact
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           function gradleprop {
               grep "^${1}=" gradle.properties | cut -d'=' -f2
@@ -52,7 +54,6 @@ jobs:
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           
-          COMMIT_MESSAGE=$(printf '%s' "${{ github.event.head_commit.message }}" | sed 's/"/\\"/g')
           curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
             -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" \
             -F "gh_id=${{ github.event.head_commit.id }}" \
