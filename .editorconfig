@@ -1,11 +1,11 @@
-root = true
+⠗⠕⠕⠞ = ⠞⠗⠥⠑
 
 [*]
-end_of_line = lf
-charset = utf-8
-insert_final_newline = true
+⠑⠝⠙_⠕⠋_⠇⠊⠝⠑ = ⠇⠋
+⠉⠓⠁⠗⠎⠑⠞ = ⠥⠞⠋-8
+⠊⠝⠎⠑⠗⠞_⠋⠊⠝⠁⠇_⠝⠑⠺⠇⠊⠝⠑ = ⠞⠗⠥⠑
 
-[*.{kt,kts}]
-indent_style = space
-indent_size = 4
-trim_trailing_whitespace = true
+[*.{⠅⠞,⠅⠞⠎}]
+⠊⠝⠙⠑⠝⠞_⠎⠞⠽⠇⠑ = ⠎⠏⠁⠉⠑
+⠊⠝⠙⠑⠝⠞_⠎⠊⠵⠑ = 4
+⠞⠗⠊⠍_⠞⠗⠁⠊⠇⠊⠝⠛_⠺⠓⠊⠞⠑⠎⠏⠁⠉⠑ = ⠞⠗⠥⠑
