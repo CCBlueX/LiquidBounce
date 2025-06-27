@@ -140,9 +140,15 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
      */
 
     object Vulcan : NoWebMode("Vulcan") {
+        override val parent: ChoiceConfigurable<NoWebMode>
+            get() = modes
+
+        private val strength by float("Strength", 0.23f,0.01f..0.8f)
+
         override fun handleEntityCollision(pos: BlockPos): Boolean {
+
             if (player.moving) {
-                if (player.isOnGround) player.velocity = player.velocity.withStrafe(0.23)
+                if (player.isOnGround) player.velocity = player.velocity.withStrafe(strength.toDouble())
                 if (player.velocity.y > 0) player.velocity.y = -player.velocity.y
             }
             return false
