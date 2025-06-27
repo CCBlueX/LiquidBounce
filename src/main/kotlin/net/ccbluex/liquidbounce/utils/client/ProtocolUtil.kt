@@ -90,14 +90,6 @@ val isOlderThanOrEqual1_8: Boolean
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
 
-val isOlderThanOrEqual1_9: Boolean
-    get() = runCatching {
-        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_9
-    }.onFailure {
-        logger.error("Failed to check if the server is using old combat", it)
-    }.getOrDefault(false)
-
 val isOlderThanOrEquals1_7_10: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

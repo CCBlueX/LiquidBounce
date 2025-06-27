@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_9
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -170,16 +170,15 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double {
-    if (isOlderThanOrEqual1_9) {
-        return when (level) {
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
+    if (!isOlderThanOrEqual1_8) {
+        when (level) {
             0 -> 0.0
             else -> 0.5 * level + 0.5
         }
     } else {
-        return level * 1.25
+        level * 1.25
     }
-}
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)

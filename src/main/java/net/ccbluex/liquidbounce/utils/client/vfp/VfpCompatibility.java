@@ -115,18 +115,6 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOlderThanOrEqual1_9() {
-        try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
-
-            // Check if the version is older or equal than 1.9
-            return version.olderThanOrEqualTo(ProtocolVersion.v1_9);
-        } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old sharpness", throwable);
-            return false;
-        }
-    }
-
     public boolean isOlderThanOrEqual1_7_10() {
         try {
             var version = ViaFabricPlus.getImpl().getTargetVersion();
