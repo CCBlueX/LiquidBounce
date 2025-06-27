@@ -1,12 +1,12 @@
-#version 410 core
+#⠧⠑⠗⠎⠊⠕⠝ 410 ⠉⠕⠗⠑
 
-layout (location = 0) in vec4 Position;
-layout (location = 1) in vec2 UV0;
+⠇⠁⠽⠕⠥⠞ (⠇⠕⠉⠁⠞⠊⠕⠝ = 0) ⠊⠝ ⠧⠑⠉4 ⠏⠕⠎⠊⠞⠊⠕⠝;
+⠇⠁⠽⠕⠥⠞ (⠇⠕⠉⠁⠞⠊⠕⠝ = 1) ⠊⠝ ⠧⠑⠉2 ⠥⠧0;
 
-out vec2 fragTexCoord;
+⠕⠥⠞ ⠧⠑⠉2 ⠋⠗⠁⠛⠞⠑⠭⠉⠕⠕⠗⠙;
 
-void main() {
-    vec4 outPos = vec4(Position.xy, 0.0, 1.0);
-    gl_Position = vec4(outPos.xy, 0.2, 1.0);
-    fragTexCoord = UV0;
+⠧⠕⠊⠙ ⠍⠁⠊⠝() {
+    ⠧⠑⠉4 ⠕⠥⠞⠏⠕⠎ = ⠧⠑⠉4(⠏⠕⠎⠊⠞⠊⠕⠝.⠭⠽, 0.0, 1.0);
+    ⠛⠇_⠏⠕⠎⠊⠞⠊⠕⠝ = ⠧⠑⠉4(⠕⠥⠞⠏⠕⠎.⠭⠽, 0.2, 1.0);
+    ⠋⠗⠁⠛⠞⠑⠭⠉⠕⠕⠗⠙ = ⠥⠧0;
 }
