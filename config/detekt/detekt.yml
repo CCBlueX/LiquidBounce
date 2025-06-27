@@ -1,59 +1,59 @@
-build:
-  excludeCorrectable: false
+⠃⠥⠊⠇⠙:
+  ⠑⠭⠉⠇⠥⠙⠑⠉⠕⠗⠗⠑⠉⠞⠁⠃⠇⠑: ⠋⠁⠇⠎⠑
 
-config:
-  validation: true
-  warningsAsErrors: false
-  checkExhaustiveness: false
-  # when writing own rules with new properties, exclude the property path e.g.: 'my_rule_set,.*>.*>[my_property]'
-  excludes: ''
+⠉⠕⠝⠋⠊⠛:
+  ⠧⠁⠇⠊⠙⠁⠞⠊⠕⠝: ⠞⠗⠥⠑
+  ⠺⠁⠗⠝⠊⠝⠛⠎⠁⠎⠑⠗⠗⠕⠗⠎: ⠋⠁⠇⠎⠑
+  ⠉⠓⠑⠉⠅⠑⠭⠓⠁⠥⠎⠞⠊⠧⠑⠝⠑⠎⠎: ⠋⠁⠇⠎⠑
+  # ⠺⠓⠑⠝ ⠺⠗⠊⠞⠊⠝⠛ ⠕⠺⠝ ⠗⠥⠇⠑⠎ ⠺⠊⠞⠓ ⠝⠑⠺ ⠏⠗⠕⠏⠑⠗⠞⠊⠑⠎, ⠑⠭⠉⠇⠥⠙⠑ ⠞⠓⠑ ⠏⠗⠕⠏⠑⠗⠞⠽ ⠏⠁⠞⠓ ⠑.⠛.: '⠍⠽_⠗⠥⠇⠑_⠎⠑⠞,.*>.*>[⠍⠽_⠏⠗⠕⠏⠑⠗⠞⠽]'
+  ⠑⠭⠉⠇⠥⠙⠑⠎: ''
 
-complexity:
-  active: true
-  NamedArguments:
-    active: true
-    threshold: 4
-  ComplexCondition:
-    threshold: 5
-  CyclomaticComplexMethod:
-    active: false
-  CognitiveComplexMethod:
-    active: true
-    threshold: 16
-  StringLiteralDuplication:
-    active: false
+⠉⠕⠍⠏⠇⠑⠭⠊⠞⠽:
+  ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+  ⠝⠁⠍⠑⠙⠁⠗⠛⠥⠍⠑⠝⠞⠎:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠞⠓⠗⠑⠎⠓⠕⠇⠙: 4
+  ⠉⠕⠍⠏⠇⠑⠭⠉⠕⠝⠙⠊⠞⠊⠕⠝:
+    ⠞⠓⠗⠑⠎⠓⠕⠇⠙: 5
+  ⠉⠽⠉⠇⠕⠍⠁⠞⠊⠉⠉⠕⠍⠏⠇⠑⠭⠍⠑⠞⠓⠕⠙:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
+  ⠉⠕⠛⠝⠊⠞⠊⠧⠑⠉⠕⠍⠏⠇⠑⠭⠍⠑⠞⠓⠕⠙:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠞⠓⠗⠑⠎⠓⠕⠇⠙: 16
+  ⠎⠞⠗⠊⠝⠛⠇⠊⠞⠑⠗⠁⠇⠙⠥⠏⠇⠊⠉⠁⠞⠊⠕⠝:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
 
-performance:
-  active: true
-  CouldBeSequence:
-    active: true
-  UnnecessaryPartOfBinaryExpression:
-    active: true
+⠏⠑⠗⠋⠕⠗⠍⠁⠝⠉⠑:
+  ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+  ⠉⠕⠥⠇⠙⠃⠑⠎⠑⠟⠥⠑⠝⠉⠑:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+  ⠥⠝⠝⠑⠉⠑⠎⠎⠁⠗⠽⠏⠁⠗⠞⠕⠋⠃⠊⠝⠁⠗⠽⠑⠭⠏⠗⠑⠎⠎⠊⠕⠝:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
 
-exceptions:
-  TooGenericExceptionCaught:
-    active: false
+⠑⠭⠉⠑⠏⠞⠊⠕⠝⠎:
+  ⠞⠕⠕⠛⠑⠝⠑⠗⠊⠉⠑⠭⠉⠑⠏⠞⠊⠕⠝⠉⠁⠥⠛⠓⠞:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
 
-style:
-  MagicNumber:
-    active: false
-  ReturnCount:
-    active: true
-    excludeGuardClauses: true
-    max: 4
-  LoopWithTooManyJumpStatements:
-    active: true
-    maxJumpCount: 3
-  WildcardImport:
-    active: false
-  ForbiddenComment:
-    active: false
-  UnusedPrivateProperty:
-    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
-  ForbiddenMethodCall:
-    active: true
-    methods: [ 'kotlin.io.print', 'kotlin.io.println' ]
-  BracesOnIfStatements:
-    active: true
-    singleLine: 'never'
-    multiLine: 'always'
+⠎⠞⠽⠇⠑:
+  ⠍⠁⠛⠊⠉⠝⠥⠍⠃⠑⠗:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
+  ⠗⠑⠞⠥⠗⠝⠉⠕⠥⠝⠞:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠑⠭⠉⠇⠥⠙⠑⠛⠥⠁⠗⠙⠉⠇⠁⠥⠎⠑⠎: ⠞⠗⠥⠑
+    ⠍⠁⠭: 4
+  ⠇⠕⠕⠏⠺⠊⠞⠓⠞⠕⠕⠍⠁⠝⠽⠚⠥⠍⠏⠎⠞⠁⠞⠑⠍⠑⠝⠞⠎:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠍⠁⠭⠚⠥⠍⠏⠉⠕⠥⠝⠞: 3
+  ⠺⠊⠇⠙⠉⠁⠗⠙⠊⠍⠏⠕⠗⠞:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
+  ⠋⠕⠗⠃⠊⠙⠙⠑⠝⠉⠕⠍⠍⠑⠝⠞:
+    ⠁⠉⠞⠊⠧⠑: ⠋⠁⠇⠎⠑
+  ⠥⠝⠥⠎⠑⠙⠏⠗⠊⠧⠁⠞⠑⠏⠗⠕⠏⠑⠗⠞⠽:
+    ⠁⠇⠇⠕⠺⠑⠙⠝⠁⠍⠑⠎: '_|⠊⠛⠝⠕⠗⠑⠙|⠑⠭⠏⠑⠉⠞⠑⠙|⠎⠑⠗⠊⠁⠇⠧⠑⠗⠎⠊⠕⠝⠥⠊⠙|.+⠓⠁⠝⠙⠇⠑⠗\⠙*|⠗⠑⠏⠑⠁⠞⠁⠃⠇⠑'
+  ⠋⠕⠗⠃⠊⠙⠙⠑⠝⠍⠑⠞⠓⠕⠙⠉⠁⠇⠇:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠍⠑⠞⠓⠕⠙⠎: [ '⠅⠕⠞⠇⠊⠝.⠊⠕.⠏⠗⠊⠝⠞', '⠅⠕⠞⠇⠊⠝.⠊⠕.⠏⠗⠊⠝⠞⠇⠝' ]
+  ⠃⠗⠁⠉⠑⠎⠕⠝⠊⠋⠎⠞⠁⠞⠑⠍⠑⠝⠞⠎:
+    ⠁⠉⠞⠊⠧⠑: ⠞⠗⠥⠑
+    ⠎⠊⠝⠛⠇⠑⠇⠊⠝⠑: '⠝⠑⠧⠑⠗'
+    ⠍⠥⠇⠞⠊⠇⠊⠝⠑: '⠁⠇⠺⠁⠽⠎'
