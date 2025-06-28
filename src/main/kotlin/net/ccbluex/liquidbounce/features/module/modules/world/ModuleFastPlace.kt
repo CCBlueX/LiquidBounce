@@ -46,10 +46,7 @@ object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
 
         if (applyTo.any {
                 it.condition.test(mainHandItem) || it.condition.test(offHandItem)
-            }) {
-            if (startDelay > 0 && mc.options.useKey.timeSinceLastPress < startDelay) {
-                return@handler
-            }
+            } && (startDelay <= 0 || mc.options.useKey.timeSinceLastPress >= startDelay)) {
             event.cooldown = cooldown
         }
     }
