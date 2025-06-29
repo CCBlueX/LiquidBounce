@@ -146,7 +146,6 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
         private val strength by float("Strength", 0.23f,0.01f..0.8f)
 
         override fun handleEntityCollision(pos: BlockPos): Boolean {
-
             if (player.moving) {
                 if (player.isOnGround) player.velocity = player.velocity.withStrafe(strength.toDouble())
                 if (player.velocity.y > 0) player.velocity.y = -player.velocity.y
