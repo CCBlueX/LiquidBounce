@@ -47,6 +47,7 @@ sealed interface TranslateLanguage {
     class Literal internal constructor(override val literal: String) : TranslateLanguage
 
     companion object {
+        @JvmStatic
         fun of(language: String): TranslateLanguage {
             return when (language.lowercase()) {
                 "auto" -> Auto

@@ -50,7 +50,6 @@ sealed class TranslationResult(
         val ex: Exception,
     ) : TranslationResult(false) {
         override fun toResultText(): MutableText = "".asText()
-            .append(markAsError("Failed to translate: "))
-            .append(markAsError(ex.message!!))
+            .append(markAsError("Failed to translate (${ex.javaClass.simpleName}): ${ex.message}"))
     }
 }

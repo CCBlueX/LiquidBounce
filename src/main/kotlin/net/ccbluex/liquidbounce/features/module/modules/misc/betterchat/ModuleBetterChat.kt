@@ -144,7 +144,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         }
     }
 
-    private abstract class MessageModifier(
+    private sealed class MessageModifier(
         name: String,
         enabled: Boolean
     ) : ToggleableConfigurable(this, name, enabled) {
