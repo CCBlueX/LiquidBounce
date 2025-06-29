@@ -61,10 +61,9 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
             map
         }
 
-        @Suppress("UNCHECKED_CAST")
         Registries.STATUS_EFFECT.streamEntries().map {
             tree(StatusEffectConfigurable(it, specifiedLanguage = language))
-        }.toArray() as Array<StatusEffectConfigurable>
+        }.toList()
     }
 
     override fun disable() {
