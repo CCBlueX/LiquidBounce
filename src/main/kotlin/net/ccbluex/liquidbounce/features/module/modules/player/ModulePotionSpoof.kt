@@ -85,9 +85,9 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
     }
 
     override fun disable() {
-        for (configurable in statusEffectValues) {
-            if (configurable.enabled && player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(configurable.registryEntry)
+        for (spoofedEffect in statusEffectValues) {
+            if (spoofedEffect.enabled && player.getStatusEffect(spoofedEffect.registryEntry)?.duration == 0) {
+                player.removeStatusEffect(spoofedEffect.registryEntry)
             }
         }
     }
