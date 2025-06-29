@@ -38,17 +38,17 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     private class StatusEffectConfigurable(
         val registryEntry: RegistryEntry<StatusEffect>,
-        translationKey: String = "effect.minecraft." + registryEntry.key.get().value.toShortTranslationKey(),
         specifiedLanguage: Map<String, String>,
     ) : ToggleableConfigurable(
         parent = this,
         // Value name (en_us)
-        name = specifiedLanguage.getOrDefault(translationKey, "Unknown"),
+        name = specifiedLanguage.getOrDefault(registryEntry.value().translationKey, "Unknown"),
         enabled = false,
     ) {
         private val level = int("Level", 1, 1..10).onChanged {
             instance = StatusEffectInstance(registryEntry, 0, it - 1)
         }
+
         var instance: StatusEffectInstance = StatusEffectInstance(registryEntry, 0, level.get() - 1)
             private set
     }
