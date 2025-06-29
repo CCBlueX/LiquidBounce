@@ -23,11 +23,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
-import net.minecraft.client.resource.language.I18n
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects.*
+import net.minecraft.registry.Registries
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Language
 
@@ -37,21 +35,6 @@ import net.minecraft.util.Language
  * Allows the player to have potion effects without actually having the potion.
  */
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
-
-    /**
-     * @see net.minecraft.entity.effect.StatusEffects
-     */
-    private val ALL_STATUS_EFFECT = arrayOf(
-        SPEED, SLOWNESS, HASTE, MINING_FATIGUE, STRENGTH,
-        INSTANT_HEALTH, INSTANT_DAMAGE, JUMP_BOOST, NAUSEA,
-        REGENERATION, RESISTANCE, FIRE_RESISTANCE, WATER_BREATHING,
-        INVISIBILITY, BLINDNESS, NIGHT_VISION, HUNGER, WEAKNESS,
-        POISON, WITHER, HEALTH_BOOST, ABSORPTION, SATURATION,
-        GLOWING, LEVITATION, LUCK, UNLUCK, SLOW_FALLING,
-        CONDUIT_POWER, DOLPHINS_GRACE, BAD_OMEN, HERO_OF_THE_VILLAGE,
-        DARKNESS, TRIAL_OMEN, RAID_OMEN, WIND_CHARGED, WEAVING,
-        OOZING, INFESTED
-    )
 
     private class StatusEffectConfigurable(
         val registryEntry: RegistryEntry<StatusEffect>,
@@ -77,9 +60,9 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
             map
         }
 
-        ALL_STATUS_EFFECT.mapArray {
+        Registries.STATUS_EFFECT.streamEntries().map {
             tree(StatusEffectConfigurable(it, specifiedLanguage = language))
-        }
+        }.toList()
     }
 
     override fun disable() {
