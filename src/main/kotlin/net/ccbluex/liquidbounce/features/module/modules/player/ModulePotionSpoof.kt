@@ -62,8 +62,6 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         // Value name (en_us)
         name = specifiedLanguage.getOrDefault(translationKey, "Unknown"),
         enabled = false,
-        // Localized name
-        aliases = if (I18n.hasTranslation(translationKey)) arrayOf(I18n.translate(translationKey)) else emptyArray()
     ) {
         private val level = int("Level", 1, 1..10).onChanged {
             instance = StatusEffectInstance(registryEntry, 0, it - 1)
