@@ -77,8 +77,7 @@ class ScriptReflectionUtil {
 
     @JvmName("getField")
     fun getField(obj: Any, name: String): Any? {
-        val key = Pair(obj::class.java, name)
-        return fieldCache.getOrPut(key) {
+        return fieldCache.computeIfAbsent(Pair(obj::class.java, name)) {
             obj::class.java.fields
                 .find { field ->
                     name == EnvironmentRemapper.remapField(obj::class.java, field.name)
@@ -98,7 +97,7 @@ class ScriptReflectionUtil {
 
     @JvmName("getDeclaredField")
     fun getDeclaredField(clazz: Class<*>, name: String): Any? {
-        return fieldCache.getOrPut(Pair(clazz, name)) {
+        return fieldCache.computeIfAbsent(Pair(clazz, name)) {
             clazz.declaredFields
                 .find { field ->
                     name == EnvironmentRemapper.remapField(clazz, field.name)
@@ -188,7 +187,7 @@ class ScriptReflectionUtil {
         val cacheKey = Triple(clazz, name, argTypes)
 
         // Try to get from cache first
-        return methodCache.getOrPut(cacheKey) {
+        return methodCache.computeIfAbsent(cacheKey) {
             val potentialMatches = methodProvider(clazz).filter { method ->
                 method.parameterTypes.size == args.size &&
                     method.parameterTypes.mapArray { arg -> primitiveTypeMap[arg] ?: arg }

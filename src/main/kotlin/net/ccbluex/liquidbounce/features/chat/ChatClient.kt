@@ -28,9 +28,7 @@ import com.mojang.authlib.exceptions.InvalidCredentialsException
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
@@ -46,6 +44,7 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import java.net.URI
 import java.util.*
 
@@ -120,7 +119,6 @@ class ChatClient {
             null
         }
 
-        val group = NioEventLoopGroup()
         val handler = ChannelHandler(
             this,
             WebSocketClientHandshakerFactory.newHandshaker(
@@ -134,8 +132,7 @@ class ChatClient {
 
         val bootstrap = Bootstrap()
 
-        bootstrap.group(group)
-            .channel(NioSocketChannel::class.java)
+        bootstrap.clientChannelAndGroup(tryToUseEpoll = true)
             .handler(object : ChannelInitializer<SocketChannel>() {
 
                 /**

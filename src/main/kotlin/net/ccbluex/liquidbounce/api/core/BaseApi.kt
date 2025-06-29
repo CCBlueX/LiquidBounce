@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AVATAR_USERNAME_URL
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AVATAR_UUID_URL
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import okhttp3.Headers
 import okhttp3.RequestBody
-import org.apache.commons.lang3.RandomStringUtils
 import java.util.*
 
 fun formatAvatarUrl(uuid: UUID?, username: String): String {
@@ -30,9 +32,6 @@ fun formatAvatarUrl(uuid: UUID?, username: String): String {
         AVATAR_USERNAME_URL.format(username)
     }
 }
-
-
-val SESSION_TOKEN: String = RandomStringUtils.randomAlphanumeric(16)
 
 /**
  * Base API class
@@ -50,9 +49,14 @@ abstract class BaseApi(protected val baseUrl: String) {
         crossinline headers: Headers.Builder.() -> Unit = {},
         body: RequestBody? = null
     ): T = HttpClient.request("$baseUrl$endpoint", method, headers = {
-        add("X-Session-Token", SESSION_TOKEN)
+        add("X-Session-Token", config.sessionToken)
         headers(this)
     }, body = body).parse()
+
+    protected suspend inline fun <reified T> head(
+        endpoint: String,
+        crossinline headers: Headers.Builder.() -> Unit = {}
+    ): T = request(endpoint, HttpMethod.HEAD, headers)
 
     protected suspend inline fun <reified T> get(
         endpoint: String,
