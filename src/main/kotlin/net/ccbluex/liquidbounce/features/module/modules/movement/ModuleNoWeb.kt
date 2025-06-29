@@ -43,7 +43,7 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14)).apply { tagBy(this) }
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14, Vulcan)).apply { tagBy(this) }
 
     val repeatable = tickHandler {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
@@ -128,6 +128,27 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
                         player.velocity = player.velocity.withStrafe(strength = 0.346)
                     }
                 }
+            }
+            return false
+        }
+    }
+
+    /**
+     * Bypassing Vulcan't Anti Cheat's All Version(6/27/2025)
+     *
+     * @author XeContrast
+     */
+
+    object Vulcan : NoWebMode("Vulcan") {
+        override val parent: ChoiceConfigurable<NoWebMode>
+            get() = modes
+
+        private val strength by float("Strength", 0.23f,0.01f..0.8f)
+
+        override fun handleEntityCollision(pos: BlockPos): Boolean {
+            if (player.moving) {
+                if (player.isOnGround) player.velocity = player.velocity.withStrafe(strength.toDouble())
+                if (player.velocity.y > 0) player.velocity.y = -player.velocity.y
             }
             return false
         }
