@@ -52,11 +52,17 @@ object NametagEnchantmentRenderer {
     private const val PADDING = 3f
     private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
     private const val VERTICAL_SPACING = 4f
+    private const val FRAME_MARGIN = 6f
 
     // Colors
     private const val GROUP_BORDER_COLOR = 0xFFFF0000.toInt()
     private val BG_COLOR_NORMAL = Color4b(0, 0, 0, 180)
     private val BG_COLOR_CURSE = Color4b(100, 0, 0, 180)
+
+    private data class EnchantmentInfo(
+        val displayName: String,
+        val isCurse: Boolean = false
+    )
 
     /**
      * Class for storing enchantment cell information
@@ -67,61 +73,69 @@ object NametagEnchantmentRenderer {
         val isCurse: Boolean
     )
 
-    private val ENCHANTMENT_DATA = listOf(
+    /**
+     * Class for storing column data
+     */
+    private data class EnchantColumn(
+        val cells: List<EnchantCell>,
+        val width: Float
+    )
+
+    private val ENCHANTMENT_DATA = arrayOf(
         // Armor enchantments
-        Enchantments.PROTECTION to "Pro",
-        Enchantments.FIRE_PROTECTION to "FPr",
-        Enchantments.FEATHER_FALLING to "FFa",
-        Enchantments.BLAST_PROTECTION to "BPr",
-        Enchantments.PROJECTILE_PROTECTION to "PPr",
-        Enchantments.THORNS to "Tho",
-        Enchantments.RESPIRATION to "Res",
-        Enchantments.DEPTH_STRIDER to "Dep",
-        Enchantments.AQUA_AFFINITY to "Aqu",
-        Enchantments.FROST_WALKER to "Fro",
-        Enchantments.SOUL_SPEED to "Sou",
-        Enchantments.SWIFT_SNEAK to "SwS",
+        Enchantments.PROTECTION to EnchantmentInfo("Pro"),
+        Enchantments.FIRE_PROTECTION to EnchantmentInfo("FPr"),
+        Enchantments.FEATHER_FALLING to EnchantmentInfo("FFa"),
+        Enchantments.BLAST_PROTECTION to EnchantmentInfo("BPr"),
+        Enchantments.PROJECTILE_PROTECTION to EnchantmentInfo("PPr"),
+        Enchantments.THORNS to EnchantmentInfo("Tho"),
+        Enchantments.RESPIRATION to EnchantmentInfo("Res"),
+        Enchantments.DEPTH_STRIDER to EnchantmentInfo("Dep"),
+        Enchantments.AQUA_AFFINITY to EnchantmentInfo("Aqu"),
+        Enchantments.FROST_WALKER to EnchantmentInfo("Fro"),
+        Enchantments.SOUL_SPEED to EnchantmentInfo("Sou"),
+        Enchantments.SWIFT_SNEAK to EnchantmentInfo("SwS"),
 
         // Weapon enchantments
-        Enchantments.SHARPNESS to "Sha",
-        Enchantments.SMITE to "Smi",
-        Enchantments.BANE_OF_ARTHROPODS to "BoA",
-        Enchantments.KNOCKBACK to "Kno",
-        Enchantments.FIRE_ASPECT to "Fir",
-        Enchantments.LOOTING to "Loo",
-        Enchantments.SWEEPING_EDGE to "Swe",
+        Enchantments.SHARPNESS to EnchantmentInfo("Sha"),
+        Enchantments.SMITE to EnchantmentInfo("Smi"),
+        Enchantments.BANE_OF_ARTHROPODS to EnchantmentInfo("BoA"),
+        Enchantments.KNOCKBACK to EnchantmentInfo("Kno"),
+        Enchantments.FIRE_ASPECT to EnchantmentInfo("Fir"),
+        Enchantments.LOOTING to EnchantmentInfo("Loo"),
+        Enchantments.SWEEPING_EDGE to EnchantmentInfo("Swe"),
 
         // Tool enchantments
-        Enchantments.EFFICIENCY to "Eff",
-        Enchantments.SILK_TOUCH to "Sil",
-        Enchantments.UNBREAKING to "Unb",
-        Enchantments.FORTUNE to "For",
-        Enchantments.MENDING to "Men",
+        Enchantments.EFFICIENCY to EnchantmentInfo("Eff"),
+        Enchantments.SILK_TOUCH to EnchantmentInfo("Sil"),
+        Enchantments.UNBREAKING to EnchantmentInfo("Unb"),
+        Enchantments.FORTUNE to EnchantmentInfo("For"),
+        Enchantments.MENDING to EnchantmentInfo("Men"),
 
         // Bow enchantments
-        Enchantments.POWER to "Pow",
-        Enchantments.PUNCH to "Pun",
-        Enchantments.FLAME to "Fla",
-        Enchantments.INFINITY to "Inf",
+        Enchantments.POWER to EnchantmentInfo("Pow"),
+        Enchantments.PUNCH to EnchantmentInfo("Pun"),
+        Enchantments.FLAME to EnchantmentInfo("Fla"),
+        Enchantments.INFINITY to EnchantmentInfo("Inf"),
 
         // Fishing rod enchantments
-        Enchantments.LUCK_OF_THE_SEA to "Luc",
-        Enchantments.LURE to "Lur",
+        Enchantments.LUCK_OF_THE_SEA to EnchantmentInfo("Luc"),
+        Enchantments.LURE to EnchantmentInfo("Lur"),
 
         // Trident enchantments
-        Enchantments.LOYALTY to "Loy",
-        Enchantments.IMPALING to "Imp",
-        Enchantments.RIPTIDE to "Rip",
-        Enchantments.CHANNELING to "Cha",
+        Enchantments.LOYALTY to EnchantmentInfo("Loy"),
+        Enchantments.IMPALING to EnchantmentInfo("Imp"),
+        Enchantments.RIPTIDE to EnchantmentInfo("Rip"),
+        Enchantments.CHANNELING to EnchantmentInfo("Cha"),
 
         // Crossbow enchantments
-        Enchantments.MULTISHOT to "Mul",
-        Enchantments.QUICK_CHARGE to "QCh",
-        Enchantments.PIERCING to "Pie",
+        Enchantments.MULTISHOT to EnchantmentInfo("Mul"),
+        Enchantments.QUICK_CHARGE to EnchantmentInfo("QCh"),
+        Enchantments.PIERCING to EnchantmentInfo("Pie"),
 
         // Curse enchantments
-        Enchantments.BINDING_CURSE to "Cur",
-        Enchantments.VANISHING_CURSE to "Van"
+        Enchantments.BINDING_CURSE to EnchantmentInfo("Cur", isCurse = true),
+        Enchantments.VANISHING_CURSE to EnchantmentInfo("Van", isCurse = true)
     )
 
     /**
@@ -134,20 +148,19 @@ object NametagEnchantmentRenderer {
         y: Float,
         fontRenderer: FontRendererBuffers
     ) {
-        itemStack.takeIf {
-            !it.isEmpty &&
-            NametagShowOptions.ENCHANTMENTS.isShowing() &&
-            it.getEnchantmentCount() > 0
-        }?.let {
-            processItemEnchantments(it)
-                .takeIf { cells -> cells.isNotEmpty() }
-                ?.also { cells ->
-                    // Enable blending
-                    RenderSystem.enableBlend()
-                    RenderSystem.defaultBlendFunc()
-                    renderEnchantmentColumn(env, cells, x, y, fontRenderer)
-                }
+        if (itemStack.isEmpty || !NametagShowOptions.ENCHANTMENTS.isShowing() || itemStack.getEnchantmentCount() <= 0) {
+            return
         }
+
+        val cells = processItemEnchantments(itemStack)
+        if (cells.isEmpty()) {
+            return
+        }
+
+        // Enable blending
+        RenderSystem.enableBlend()
+        RenderSystem.defaultBlendFunc()
+        renderEnchantmentColumn(env, cells, x, y, fontRenderer)
     }
 
     /**
@@ -175,7 +188,7 @@ object NametagEnchantmentRenderer {
 
             val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
             val columnWidth = maxWidth * FIXED_SCALE + PADDING * 2
-            cells to columnWidth
+            EnchantColumn(cells, columnWidth)
         }
 
         if (columnData.isNotEmpty()) {
@@ -185,9 +198,9 @@ object NametagEnchantmentRenderer {
 
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantments = ENCHANTMENT_DATA
-            .mapNotNull { (enchantment, name) ->
+            .mapNotNull { (enchantment, info) ->
                 itemStack.getEnchantment(enchantment).takeIf { it > 0 }?.let { level ->
-                    name to level
+                    info to level
                 }
             }
 
@@ -198,19 +211,18 @@ object NametagEnchantmentRenderer {
 
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
-            .map { (name, level) -> createCell(name, level) }
+            .map { (info, level) -> createCell(info, level) }
 
         if (!hasMoreEnchantments || cells.isEmpty()) {
             return cells
         }
 
-        return cells.toMutableList().apply {
-            removeAt(lastIndex)
-            add(createCell(null, 0, true))
-        }
+        val result = cells.toMutableList()
+        result[result.lastIndex] = createCell(null, 0, true)
+        return result
     }
 
-    private fun getEntityItemsWithEnchantments(entity: LivingEntity) = mutableListOf(
+    private fun getEntityItemsWithEnchantments(entity: LivingEntity) = arrayOf(
         entity.mainHandStack,
         entity.offHandStack,
         entity.getEquippedStack(EquipmentSlot.HEAD),
@@ -222,18 +234,22 @@ object NametagEnchantmentRenderer {
     /**
      * Creates a cell for display (enchantment or ellipsis)
      */
-    private fun createCell(name: String? = null, level: Int = 0, isEllipsis: Boolean = false): EnchantCell {
+    private fun createCell(
+        info: EnchantmentInfo? = null,
+        level: Int = 0,
+        isEllipsis: Boolean = false
+    ): EnchantCell {
         val text = if (isEllipsis) {
             "${Formatting.GRAY}..."
         } else {
             val textColor = when {
-                name == "Cur" || name == "Van" -> Formatting.RED
+                info?.isCurse == true -> Formatting.RED
                 level >= 4 -> Formatting.GOLD
                 level == 3 -> Formatting.YELLOW
                 level == 2 -> Formatting.GREEN
                 else -> Formatting.WHITE
             }
-            "${textColor}$name $level"
+            "${textColor}${info?.displayName} $level"
         }
 
         val processedText = ModuleNametags.fontRenderer.process(text)
@@ -241,7 +257,7 @@ object NametagEnchantmentRenderer {
         return EnchantCell(
             processedText,
             textWidth,
-            !isEllipsis && (name == "Cur" || name == "Van")
+            !isEllipsis && info?.isCurse == true
         )
     }
 
@@ -311,31 +327,31 @@ object NametagEnchantmentRenderer {
         x: Float,
         y: Float,
         fontRenderer: FontRendererBuffers,
-        columnData: List<Pair<List<EnchantCell>, Float>>
+        columnData: List<EnchantColumn>
     ) {
-        val columnsWidth = columnData.sumOf { it.second.toDouble() }.toFloat()
+        val columnsWidth = columnData.sumOf { it.width.toDouble() }.toFloat()
         val spacingWidth = (columnData.size - 1) * COLUMN_SPACING
         val totalWidth = columnsWidth + spacingWidth
         val halfTotalWidth = totalWidth / 2
 
-        val maxColumnHeight = columnData.maxOfOrNull { (cells, _) ->
-            cells.size * (CELL_HEIGHT + VERTICAL_SPACING) - VERTICAL_SPACING
+        val maxColumnHeight = columnData.maxOfOrNull { column ->
+            column.cells.size * (CELL_HEIGHT + VERTICAL_SPACING) - VERTICAL_SPACING
         } ?: 0f
 
         val groupRect = Rect(
-            x - halfTotalWidth - PADDING,
-            y + Y_OFFSET - PADDING,
-            x + halfTotalWidth + PADDING,
-            y + Y_OFFSET + maxColumnHeight + PADDING
+            x - halfTotalWidth - FRAME_MARGIN,
+            y + Y_OFFSET - FRAME_MARGIN,
+            x + halfTotalWidth + FRAME_MARGIN,
+            y + Y_OFFSET + maxColumnHeight + FRAME_MARGIN
         )
 
         drawGroupBorder(env, groupRect)
 
         var columnX = x - halfTotalWidth
-        columnData.forEach { (cells, columnWidth) ->
-            val columnCenterX = columnX + columnWidth / 2
-            renderEnchantmentColumn(env, cells, columnCenterX, y, fontRenderer)
-            columnX += columnWidth + COLUMN_SPACING
+        columnData.forEach { column ->
+            val columnCenterX = columnX + column.width / 2
+            renderEnchantmentColumn(env, column.cells, columnCenterX, y, fontRenderer)
+            columnX += column.width + COLUMN_SPACING
         }
     }
 
