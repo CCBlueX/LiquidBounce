@@ -48,31 +48,68 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     val particleSize by float("Size", 1f, 0.5f..2f)
     val speed by float("Speed", 1f, 0.5f..2f)
+    val lifetime by int("Lifetime", 3000, 1000..10000, "ms")
     private val count by intRange("Count", 2..10, 2..30, "particles")
+    private val worldCount by intRange("Count world particles", 10..100, 10..200, "particles")
     val rotate by boolean("RandomParticleRotation", true)
     val color by color("Color", Color4b.RED)
 
-    private val particleImages by multiEnumChoice("Particle",
+    val enableAttackParticles by boolean("Attack Particles", true)
+    private val particleImages by multiEnumChoice("Attack Particle",
+        ParticleImage.STAR,
+        canBeNone = false
+    )
+
+    val worldParticleRadius by float("World Radius", 3f, 1f..10f, "blocks")
+    val enableWorldParticles by boolean("World Particles", true)
+    private val worldParticleImages by multiEnumChoice("World Particle",
         ParticleImage.STAR,
         canBeNone = false
     )
 
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
+    var timer = 0
+
+    // private val chronometer1 = Chronometer()
+    @Suppress("unused")
+    private val tickEvent = handler<WorldRenderEvent> {
+        val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
+        val pos1 = player.eyePos.add(directionVector * 10.0)
+        ++timer
+        if (timer == 100 && enableWorldParticles) {
+            timer = 0
+            repeat(worldCount.random()) { _ ->
+                val radius = worldParticleRadius.toDouble()
+                val offset = Vec3d(
+                    (-radius..radius).random(),
+                    (-1.0..2.0).random(), // Ограничение по высоте (Y)
+                    (-radius..radius).random()
+                ).normalize().multiply(radius) // Нормализация и масштабирование
+                    
+                val pos1 = player.pos.add(offset)
+                particles.add(Particle(pos1, worldParticleImages.random(), true, lifetime))
+            }
+        }
+        if (!enableWorldParticles) timer = 0
+    }
 
     @Suppress("unused")
     private val attackEvent = handler<AttackEntityEvent> { event ->
         if (!event.entity.shouldBeShown() || !chronometer.hasElapsed(230) || event.isCancelled) {
             return@handler
         }
+        
 
         chronometer.reset()
 
         val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
         val pos = player.eyePos.add(directionVector * player.distanceTo(event.entity).toDouble())
 
-        repeat(count.random()) { _ ->
-            particles.add(Particle(pos, particleImages.random()))
+        if (enableAttackParticles) {
+            repeat(count.random()) { _ ->
+                particles.add(Particle(pos, particleImages.random(), false, lifetime))
+            }
         }
     }
 
@@ -83,9 +120,9 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             RenderSystem.disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
             RenderSystem.defaultBlendFunc()
-
             particles.removeIf { particle ->
-                val flag = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
+                val isExpired = (System.currentTimeMillis() - particle.spawnTime) > particle.lifetime
+                val flag = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30 || isExpired
                 if (!flag) {
                     particle.update(event.partialTicks.toDouble())
 
@@ -124,13 +161,7 @@ private enum class ParticleImage(
      * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
      * Modified: @sqlerrorthing
      */
-    STAR("Star", "particles/star.png".registerAsDynamicImageFromClientResources()),
-
-    /**
-     * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
-     * Modified: @sqlerrorthing
-     */
-    DOLLAR("Dollar", "particles/dollar.png".registerAsDynamicImageFromClientResources())
+    STAR("Star", "particles/star.png".registerAsDynamicImageFromClientResources())
 }
 
 @Suppress("MagicNumber", "LongParameterList")
@@ -142,18 +173,30 @@ private class Particle private constructor(
     var alpha: Float = 1.0f, /* 0 <= alpha <= 1 */
     val spawnTime: Long = System.currentTimeMillis(),
     val rotation: Float,
-    val particleImage: ParticleImage
+    val particleImage: ParticleImage, 
+    val isWorldParticle: Boolean, 
+    val lifetime: Int
 ) {
-    constructor(pos: Vec3d, particleImage: ParticleImage) : this(
+    constructor(pos: Vec3d, particleImage: ParticleImage, isWorldParticle: Boolean, lifetime: Int) : this(
         pos = pos,
         prevPos = pos,
-        velocity = Vec3d(
-            (-0.01..0.01).random(),
-            (0.01..0.02).random(),
-            (-0.01..0.01).random()
-        ),
+        velocity = if (isWorldParticle) {
+            Vec3d(
+                (-0.01..0.01).random(),
+                0.0,
+                (-0.01..0.01).random()
+            )
+        } else {
+            Vec3d(
+                (-0.03..0.03).random(),
+                (0.05..0.1).random(),
+                (-0.03..0.03).random()
+            )
+        },
         rotation = (0f..360f).random(),
-        particleImage = particleImage
+        particleImage = particleImage, 
+        isWorldParticle = isWorldParticle,
+        lifetime = lifetime
     )
 }
 
@@ -167,7 +210,7 @@ private fun Particle.update(delta: Double) {
         alpha = max(0f, 1f - (timeSinceCollision / 3000f))
     }
 
-    velocity = velocity.add(0.0, -0.0001, 0.0)
+    if (!isWorldParticle) velocity = velocity.add(0.0, -0.005, 0.0)
     val nextPos = pos.add((velocity * delta).multiply(particleSpeed, 1.0, particleSpeed))
 
     if (!nextPos.isBlockAir) {
@@ -195,6 +238,9 @@ private fun Particle.update(delta: Double) {
     } else {
         pos = nextPos
     }
+
+    val timeSinceSpawn = System.currentTimeMillis() - spawnTime
+    alpha = max(0f, 1f - (timeSinceSpawn / lifetime.toFloat()))
 }
 
 @Suppress("MagicNumber", "UnusedParameter")
