@@ -27,7 +27,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
@@ -36,7 +39,12 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.lang.reflect.Field
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
+import java.lang.reflect.TypeVariable
+import java.lang.reflect.WildcardType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -53,7 +61,8 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
     private val bound by multiEnumChoice("Bound", PacketBound.SERVER)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val packets by textArray("Packets", mutableListOf())
+    private val packets by textArray("Packets", sortedSetOf())
+    private val showFieldType by boolean("ShowFieldType", true)
 
     private val classNames = ConcurrentHashMap<Class<out Packet<*>>, String>()
     private val fieldNames = ConcurrentHashMap<Field, String>()
@@ -78,11 +87,11 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val text = Text.empty().formatted(Formatting.WHITE)
+        val text = Text.empty()
         if (origin == TransferOrigin.INCOMING) {
-            text.append(message("receive"))
+            text.append(message("receive").formatted(Formatting.BLUE).bold(true))
         } else {
-            text.append(message("send"))
+            text.append(message("send").formatted(Formatting.GRAY).bold(true))
         }
 
         val clazz = packet::class.java
@@ -93,7 +102,11 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        text.append(packetName)
+        text.append(highlight(packetName).copyable(copyContent = packetName))
+
+        if (clazz.isRecord) {
+            text.append(" (Record)".asText().formatted(Formatting.DARK_GRAY))
+        }
 
         if (canceled) {
             text.append(" (".asText().formatted(Formatting.RED))
@@ -115,15 +128,15 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         }
 
         return classNames.computeIfAbsent(clazz) {
-            val classNames = ArrayDeque<CharSequence>()
+            val classNames = mutableListOf<CharSequence>()
             classNames.add(getClassName(clazz))
 
             var superclass: Class<*>? = clazz.superclass
             while (superclass.isNotRoot()) {
-                classNames.addFirst(getClassName(superclass))
+                classNames.add(getClassName(superclass))
                 superclass = superclass.superclass
             }
-
+            classNames.reverse()
             classNames.joinToString(".")
         }
     }
@@ -158,8 +171,16 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                     "null"
                 }
 
-                append("-$name: ".asText().formatted(Formatting.GRAY))
-                append("$value".asText().formatted(Formatting.GRAY))
+                append("- ".asText().formatted(Formatting.GRAY))
+                append(name.asText().formatted(Formatting.AQUA).copyable(copyContent = name))
+                if (showFieldType) {
+                    append(": ".asText().formatted(Formatting.GRAY))
+                    val type = field.fullTypeString()
+                    append(type.asText().formatted(Formatting.YELLOW).copyable(copyContent = type))
+                }
+                append(" = ".asText().formatted(Formatting.GRAY))
+                val valueString = value.toString()
+                append(valueString.asText().formatted(Formatting.WHITE).copyable(copyContent = valueString))
             }
 
             currentClass = currentClass.superclass
@@ -171,7 +192,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         contract {
             returns(true) implies (this@isNotRoot != null)
         }
-        return !(this == null || this === java.lang.Record::class.java || this.superclass == null)
+        return !(this == null || this === Record::class.java || this.superclass == null)
     }
 
     override val running: Boolean
@@ -184,5 +205,33 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
     ) : NamedChoice {
         CLIENT("Client", TransferOrigin.INCOMING),
         SERVER("Server", TransferOrigin.OUTGOING)
+    }
+
+    private fun Field.fullTypeString(): String {
+        fun Type.parse(): String =
+            when (this) {
+                is Class<*> -> this.simpleName
+                is ParameterizedType -> {
+                    val rawType = rawType.parse()
+                    val args = actualTypeArguments
+                    args.joinToString(", ", prefix = "$rawType<", postfix = ">") { it.parse() }
+                }
+                is WildcardType -> {
+                    when {
+                        lowerBounds.isNotEmpty() -> "? super ${lowerBounds.first().parse()}"
+                        upperBounds.isNotEmpty() && upperBounds.first() !== Object::class.java ->
+                            upperBounds.joinToString(" & ", prefix = "? extends ") { it.parse() }
+                        else -> "?"
+                    }
+                }
+                is TypeVariable<*> -> when {
+                    bounds.size == 1 && bounds[0] === Object::class.java -> name
+                    else -> bounds.joinToString(" & ", prefix = "$name extends ") { it.parse() }
+                }
+                is GenericArrayType -> "${genericComponentType.parse()}[]"
+                else -> this.toString()
+            }
+
+        return genericType.parse()
     }
 }
