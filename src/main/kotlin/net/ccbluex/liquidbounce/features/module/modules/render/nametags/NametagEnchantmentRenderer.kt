@@ -30,23 +30,81 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.gl.ShaderProgramKeys
+import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
+import net.minecraft.client.resource.language.I18n
+import net.minecraft.registry.RegistryKey
+import java.util.LinkedHashMap
 
-/**
- * Renders item enchantments in nametags
- */
+private object EnchantmentDisplayHelper {
+    private val enchantmentAbbreviationCache = 
+        object : LinkedHashMap<RegistryKey<Enchantment>, String>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<RegistryKey<Enchantment>, String>): Boolean {
+                return size > 100
+            }
+        }
+    
+    private val knownCurses = setOf(
+        Enchantments.BINDING_CURSE,
+        Enchantments.VANISHING_CURSE
+    )
+    
+    fun getEnchantmentInfo(enchantment: RegistryKey<Enchantment>): EnchantmentInfo {
+        return EnchantmentInfo(
+            displayName = getAbbreviation(enchantment),
+            isCurse = isCurse(enchantment)
+        )
+    }
+    
+    
+    private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
+        return enchantmentAbbreviationCache.getOrPut(enchantment) {
+            val enchantmentId = enchantment.value.path
+            val translationKey = "enchantment.minecraft.$enchantmentId"
+            val name = I18n.translate(translationKey)
+            
+            if (" " in name) {
+                val words = name.split(" ").filter { it.isNotEmpty() }
+                val abbreviation = words.joinToString("") { it.substring(0, 1) }
+                
+                if (abbreviation.length < 3) {
+                    val firstWord = words.first()
+                    if (firstWord.length >= 3) {
+                        firstWord.take(3)
+                    } else {
+                        val remainingChars = 3 - abbreviation.length
+                        abbreviation + words.getOrNull(1)?.take(remainingChars).orEmpty()
+                    }
+                } else {
+                    abbreviation
+                }
+            } else {
+                name.take(3)
+            }
+        }
+    }
+    
+    private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean {
+        return enchantment in knownCurses
+    }
+}
+
+private data class EnchantmentInfo(
+    val displayName: String,
+    val isCurse: Boolean = false
+)
+
 object NametagEnchantmentRenderer {
-
-    // Display settings
+    // Constants for display settings
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
     private const val Y_OFFSET = -40f
 
-    // Layout dimensions
+    // Constants for sizes and margins
     private const val LINE_HEIGHT = 14f
     private const val COLUMN_SPACING = 20f
     private const val PADDING = 3f
@@ -54,93 +112,80 @@ object NametagEnchantmentRenderer {
     private const val VERTICAL_SPACING = 4f
     private const val FRAME_MARGIN = 6f
 
-    // Colors
+    // Constants for colors
     private const val GROUP_BORDER_COLOR = 0xFFFF0000.toInt()
     private val BG_COLOR_NORMAL = Color4b(0, 0, 0, 180)
     private val BG_COLOR_CURSE = Color4b(100, 0, 0, 180)
-
-    private data class EnchantmentInfo(
-        val displayName: String,
-        val isCurse: Boolean = false
+    
+    private val supportedEnchantments = listOf(
+        // Protection enchantments
+        Enchantments.PROTECTION,
+        Enchantments.FIRE_PROTECTION,
+        Enchantments.FEATHER_FALLING,
+        Enchantments.BLAST_PROTECTION,
+        Enchantments.PROJECTILE_PROTECTION,
+        Enchantments.THORNS,
+        Enchantments.RESPIRATION,
+        Enchantments.DEPTH_STRIDER,
+        Enchantments.AQUA_AFFINITY,
+        Enchantments.FROST_WALKER,
+        Enchantments.SOUL_SPEED,
+        Enchantments.SWIFT_SNEAK,
+        
+        // Combat enchantments
+        Enchantments.SHARPNESS,
+        Enchantments.SMITE,
+        Enchantments.BANE_OF_ARTHROPODS,
+        Enchantments.KNOCKBACK,
+        Enchantments.FIRE_ASPECT,
+        Enchantments.LOOTING,
+        Enchantments.SWEEPING_EDGE,
+        
+        // Tool enchantments
+        Enchantments.EFFICIENCY,
+        Enchantments.SILK_TOUCH,
+        Enchantments.UNBREAKING,
+        Enchantments.FORTUNE,
+        Enchantments.MENDING,
+        
+        // Bow enchantments
+        Enchantments.POWER,
+        Enchantments.PUNCH,
+        Enchantments.FLAME,
+        Enchantments.INFINITY,
+        
+        // Fishing rod enchantments
+        Enchantments.LUCK_OF_THE_SEA,
+        Enchantments.LURE,
+        
+        // Trident enchantments
+        Enchantments.LOYALTY,
+        Enchantments.IMPALING,
+        Enchantments.RIPTIDE,
+        Enchantments.CHANNELING,
+        
+        // Crossbow enchantments
+        Enchantments.MULTISHOT,
+        Enchantments.QUICK_CHARGE,
+        Enchantments.PIERCING,
+        
+        // Curses
+        Enchantments.BINDING_CURSE,
+        Enchantments.VANISHING_CURSE
     )
 
-    /**
-     * Class for storing enchantment cell information
-     */
     private data class EnchantCell(
         val processedText: ProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
-
-    /**
-     * Class for storing column data
-     */
+    
     private data class EnchantColumn(
         val cells: List<EnchantCell>,
         val width: Float
     )
 
-    private val ENCHANTMENT_DATA = arrayOf(
-        // Armor enchantments
-        Enchantments.PROTECTION to EnchantmentInfo("Pro"),
-        Enchantments.FIRE_PROTECTION to EnchantmentInfo("FPr"),
-        Enchantments.FEATHER_FALLING to EnchantmentInfo("FFa"),
-        Enchantments.BLAST_PROTECTION to EnchantmentInfo("BPr"),
-        Enchantments.PROJECTILE_PROTECTION to EnchantmentInfo("PPr"),
-        Enchantments.THORNS to EnchantmentInfo("Tho"),
-        Enchantments.RESPIRATION to EnchantmentInfo("Res"),
-        Enchantments.DEPTH_STRIDER to EnchantmentInfo("Dep"),
-        Enchantments.AQUA_AFFINITY to EnchantmentInfo("Aqu"),
-        Enchantments.FROST_WALKER to EnchantmentInfo("Fro"),
-        Enchantments.SOUL_SPEED to EnchantmentInfo("Sou"),
-        Enchantments.SWIFT_SNEAK to EnchantmentInfo("SwS"),
 
-        // Weapon enchantments
-        Enchantments.SHARPNESS to EnchantmentInfo("Sha"),
-        Enchantments.SMITE to EnchantmentInfo("Smi"),
-        Enchantments.BANE_OF_ARTHROPODS to EnchantmentInfo("BoA"),
-        Enchantments.KNOCKBACK to EnchantmentInfo("Kno"),
-        Enchantments.FIRE_ASPECT to EnchantmentInfo("Fir"),
-        Enchantments.LOOTING to EnchantmentInfo("Loo"),
-        Enchantments.SWEEPING_EDGE to EnchantmentInfo("Swe"),
-
-        // Tool enchantments
-        Enchantments.EFFICIENCY to EnchantmentInfo("Eff"),
-        Enchantments.SILK_TOUCH to EnchantmentInfo("Sil"),
-        Enchantments.UNBREAKING to EnchantmentInfo("Unb"),
-        Enchantments.FORTUNE to EnchantmentInfo("For"),
-        Enchantments.MENDING to EnchantmentInfo("Men"),
-
-        // Bow enchantments
-        Enchantments.POWER to EnchantmentInfo("Pow"),
-        Enchantments.PUNCH to EnchantmentInfo("Pun"),
-        Enchantments.FLAME to EnchantmentInfo("Fla"),
-        Enchantments.INFINITY to EnchantmentInfo("Inf"),
-
-        // Fishing rod enchantments
-        Enchantments.LUCK_OF_THE_SEA to EnchantmentInfo("Luc"),
-        Enchantments.LURE to EnchantmentInfo("Lur"),
-
-        // Trident enchantments
-        Enchantments.LOYALTY to EnchantmentInfo("Loy"),
-        Enchantments.IMPALING to EnchantmentInfo("Imp"),
-        Enchantments.RIPTIDE to EnchantmentInfo("Rip"),
-        Enchantments.CHANNELING to EnchantmentInfo("Cha"),
-
-        // Crossbow enchantments
-        Enchantments.MULTISHOT to EnchantmentInfo("Mul"),
-        Enchantments.QUICK_CHARGE to EnchantmentInfo("QCh"),
-        Enchantments.PIERCING to EnchantmentInfo("Pie"),
-
-        // Curse enchantments
-        Enchantments.BINDING_CURSE to EnchantmentInfo("Cur", isCurse = true),
-        Enchantments.VANISHING_CURSE to EnchantmentInfo("Van", isCurse = true)
-    )
-
-    /**
-     * Renders item enchantments in nametag
-     */
     fun drawEnchantments(
         env: RenderEnvironment,
         itemStack: ItemStack,
@@ -157,15 +202,11 @@ object NametagEnchantmentRenderer {
             return
         }
 
-        // Enable blending
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
         renderEnchantmentColumn(env, cells, x, y, fontRenderer)
     }
 
-    /**
-     * Renders enchantments for all entity equipment items
-     */
     fun drawEntityEnchantments(
         env: RenderEnvironment,
         entity: LivingEntity,
@@ -178,7 +219,6 @@ object NametagEnchantmentRenderer {
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 
-        // Enable blending
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
 
@@ -196,33 +236,35 @@ object NametagEnchantmentRenderer {
         }
     }
 
+
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
-        val enchantments = ENCHANTMENT_DATA
-            .mapNotNull { (enchantment, info) ->
-                itemStack.getEnchantment(enchantment).takeIf { it > 0 }?.let { level ->
-                    info to level
-                }
+        val enchantmentList = mutableListOf<Pair<EnchantmentInfo, Int>>()
+        
+        for (enchantmentKey in supportedEnchantments) {
+            val level = itemStack.getEnchantment(enchantmentKey)
+            if (level > 0) {
+                enchantmentList.add(EnchantmentDisplayHelper.getEnchantmentInfo(enchantmentKey) to level)
             }
+        }
 
-        if (enchantments.isEmpty()) return emptyList()
+        if (enchantmentList.isEmpty()) return emptyList()
 
-        val sortedEnchantments = enchantments.sortedByDescending { it.second }
+        val sortedEnchantments = enchantmentList.sortedByDescending { it.second }
         val hasMoreEnchantments = sortedEnchantments.size > MAX_ENCHANTMENTS_PER_ITEM
-
+        
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
             .map { (info, level) -> createCell(info, level) }
+            .toMutableList()
 
-        if (!hasMoreEnchantments || cells.isEmpty()) {
-            return cells
+        if (hasMoreEnchantments && cells.isNotEmpty()) {
+            cells[cells.lastIndex] = createCell(null, 0, true)
         }
 
-        val result = cells.toMutableList()
-        result[result.lastIndex] = createCell(null, 0, true)
-        return result
+        return cells
     }
 
-    private fun getEntityItemsWithEnchantments(entity: LivingEntity) = arrayOf(
+    private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(
         entity.mainHandStack,
         entity.offHandStack,
         entity.getEquippedStack(EquipmentSlot.HEAD),
@@ -231,9 +273,6 @@ object NametagEnchantmentRenderer {
         entity.getEquippedStack(EquipmentSlot.FEET)
     ).filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
 
-    /**
-     * Creates a cell for display (enchantment or ellipsis)
-     */
     private fun createCell(
         info: EnchantmentInfo? = null,
         level: Int = 0,
@@ -260,6 +299,7 @@ object NametagEnchantmentRenderer {
             !isEllipsis && info?.isCurse == true
         )
     }
+
 
     private fun renderEnchantmentColumn(
         env: RenderEnvironment,
@@ -319,9 +359,6 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    /**
-     * Renders enchantment columns
-     */
     private fun drawEnchantmentColumns(
         env: RenderEnvironment,
         x: Float,
