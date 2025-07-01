@@ -32,7 +32,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 object BrowserManager : Configurable("browser") {
 
     private val DEFAULT_BROWSER_TYPE = BrowserType.JCEF
-    private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE)
+    private val browserType by enumChoice("Type", DEFAULT_BROWSER_TYPE)
+
+    val accelerated by boolean("Accelerated", true)
 
     /**
      * A browser exception. Used to indicate that something went wrong while using the browser.

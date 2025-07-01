@@ -19,9 +19,11 @@
 package net.ccbluex.liquidbounce.integration.browser.supports.tab
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.integration.browser.BrowserManager
 import net.ccbluex.liquidbounce.integration.browser.supports.JcefBrowser
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
+import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.util.Identifier
 
@@ -50,7 +52,10 @@ class JcefTab(
         true,
         position.width.coerceAtLeast(1),
         position.height.coerceAtLeast(1),
-        frameRate
+        MCEFBrowserSettings(
+            frameRate,
+            BrowserManager.accelerated
+        )
     ).apply {
         // Force zoom level to 1.0 to prevent users from adjusting the zoom level
         // this was possible in earlier versions of MCEF
