@@ -28,21 +28,14 @@ import org.joml.Matrix4f
 
 class CustomShaderProgram(val shader: Shader) : ShaderProgram(shader.program) {
 
-    init {
-        // keep this?
-        set(emptyList<ShaderProgramDefinition.Uniform>(), emptyList<ShaderProgramDefinition.Sampler>())
-    }
-
     override fun initializeUniforms(
         drawMode: VertexFormat.DrawMode,
         viewMatrix: Matrix4f,
         projectionMatrix: Matrix4f,
         window: Window
     ) {
-        super.initializeUniforms(drawMode, viewMatrix, projectionMatrix, window)
-
-//        currentProjectionMatrix = projectionMatrix
-//        currentModelViewMatrix = viewMatrix
+        currentProjectionMatrix = projectionMatrix
+        currentModelViewMatrix = viewMatrix
     }
 
     override fun bind() {

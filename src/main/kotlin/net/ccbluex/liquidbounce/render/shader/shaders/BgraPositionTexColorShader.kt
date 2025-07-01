@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.render.shader.ProjMatUniform
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.GL20
 
 object BgraPositionTexColorShader : Shader(
@@ -36,4 +37,9 @@ object BgraPositionTexColorShader : Shader(
             GL20.glUniform4f(pointer, 1.0f, 1.0f, 1.0f, 1.0f)
         }
     )
-)
+) {
+    override fun bindAttributes(program: Int) {
+        VertexFormats.POSITION_TEXTURE_COLOR.bindAttributes(this.program)
+        super.bindAttributes(program)
+    }
+}
