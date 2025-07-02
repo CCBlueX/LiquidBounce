@@ -21,8 +21,7 @@ package net.ccbluex.liquidbounce.integration.browser
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.browser.Browser
-import net.ccbluex.liquidbounce.integration.browser.tab.InputAware
+import net.ccbluex.liquidbounce.integration.browser.tab.InputHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import org.lwjgl.glfw.GLFW
 
@@ -37,7 +36,7 @@ class BrowserInput(val browser: () -> Browser?) : EventListener {
     @Suppress("unused")
     val mouseButtonHandler = handler<MouseButtonEvent> {
         for (tab in tabs) {
-            if (tab !is InputAware || !tab.takesInput()) {
+            if (tab !is InputHandler || !tab.takesInput()) {
                 continue
             }
 
@@ -54,7 +53,7 @@ class BrowserInput(val browser: () -> Browser?) : EventListener {
     @Suppress("unused")
     val mouseScrollHandler = handler<MouseScrollEvent> {
         for (tab in tabs) {
-            if (tab !is InputAware || !tab.takesInput()) {
+            if (tab !is InputHandler || !tab.takesInput()) {
                 continue
             }
 
@@ -70,7 +69,7 @@ class BrowserInput(val browser: () -> Browser?) : EventListener {
         val mouseY = event.y * factorV
 
         for (tab in tabs) {
-            if (tab !is InputAware || !tab.takesInput()) {
+            if (tab !is InputHandler || !tab.takesInput()) {
                 continue
             }
 
@@ -89,7 +88,7 @@ class BrowserInput(val browser: () -> Browser?) : EventListener {
         val modifiers = it.mods
 
         for (tab in tabs) {
-            if (tab !is InputAware || !tab.takesInput()) {
+            if (tab !is InputHandler || !tab.takesInput()) {
                 continue
             }
 
@@ -104,7 +103,7 @@ class BrowserInput(val browser: () -> Browser?) : EventListener {
     @Suppress("unused")
     val keyboardCharHandler = handler<KeyboardCharEvent> { ev ->
         for (tab in tabs) {
-            if (tab !is InputAware || !tab.takesInput()) {
+            if (tab !is InputHandler || !tab.takesInput()) {
                 continue
             }
 

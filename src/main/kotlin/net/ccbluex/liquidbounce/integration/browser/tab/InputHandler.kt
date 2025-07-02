@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.browser.tab
 
-interface InputAware {
+interface InputHandler {
 
     val takesInput: () -> Boolean
 

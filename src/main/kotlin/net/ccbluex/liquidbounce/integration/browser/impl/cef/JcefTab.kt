@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.browser.impl.cef
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
 import net.ccbluex.liquidbounce.integration.browser.BrowserTexture
-import net.ccbluex.liquidbounce.integration.browser.tab.InputAware
+import net.ccbluex.liquidbounce.integration.browser.tab.InputHandler
 import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
 import net.ccbluex.liquidbounce.mcef.MCEF
@@ -37,7 +37,7 @@ class JcefTab(
     position: TabPosition,
     frameRate: Int = 60,
     override val takesInput: () -> Boolean
-) : Tab, InputAware, MinecraftShortcuts {
+) : Tab, InputHandler, MinecraftShortcuts {
 
     override var position: TabPosition = position
         set(value) {
