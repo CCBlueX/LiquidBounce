@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
@@ -54,7 +54,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     override val running
         get() = this.enabled && !isDestructed
 
-    private var browserTab: ITab? = null
+    private var browserTab: Tab? = null
 
     override val baseKey: String
         get() = "liquidbounce.module.hud"
@@ -117,7 +117,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         close()
     }
 
-    private fun open(): ITab {
+    private fun open(): Tab {
         if (browserTab != null) {
             return browserTab!!
         }

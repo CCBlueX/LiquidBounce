@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.integration.browser
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.browser.supports.IBrowser
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.InputAware
+import net.ccbluex.liquidbounce.integration.browser.Browser
+import net.ccbluex.liquidbounce.integration.browser.tab.InputAware
 import net.ccbluex.liquidbounce.utils.client.mc
 import org.lwjgl.glfw.GLFW
 
-class BrowserInput(val browser: () -> IBrowser?) : EventListener {
+class BrowserInput(val browser: () -> Browser?) : EventListener {
 
     private val tabs
         get() = browser()?.getTabs() ?: emptyList()

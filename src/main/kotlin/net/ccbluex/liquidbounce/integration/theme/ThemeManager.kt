@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -31,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay
@@ -99,28 +98,28 @@ object ThemeManager : Configurable("theme") {
     }
 
     /**
-     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * Open [Tab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
      * This tab will be locked to 60 FPS since it is not input aware.
      */
-    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
+    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Tab =
         BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, frameRate = 60)
             ?: error("Browser is not initialized")
 
     /**
-     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * Open [Tab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
      * This tab will be locked to the highest refresh rate since it is input aware.
      */
     fun openInputAwareImmediate(
         virtualScreenType: VirtualScreenType? = null,
         markAsStatic: Boolean = false,
         takesInput: () -> Boolean = takesInputHandler
-    ): ITab = BrowserManager.browser?.createInputAwareTab(
+    ): Tab = BrowserManager.browser?.createInputAwareTab(
         route(virtualScreenType, markAsStatic).url,
         frameRate = refreshRate,
         takesInput = takesInput
     ) ?: error("Browser is not initialized")
 
-    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
+    fun updateImmediate(tab: Tab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
         tab?.loadUrl(route(virtualScreenType, markAsStatic).url)
 
     fun route(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Route {

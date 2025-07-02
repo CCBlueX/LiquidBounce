@@ -16,19 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.shader.shaders
+package net.ccbluex.liquidbounce.integration.browser.tab
 
-import net.ccbluex.liquidbounce.render.shader.Shader
-import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.minecraft.client.render.VertexFormats
+interface InputAware {
 
-object BgraPositionTexColorShader : Shader(
-    resourceToString("/resources/liquidbounce/shaders/position_tex_color.vert"),
-    resourceToString("/resources/liquidbounce/shaders/bgra_position_tex_color.frag"),
-    emptyArray()
-) {
-    override fun bindAttributes(program: Int) {
-        VertexFormats.POSITION_TEXTURE_COLOR.bindAttributes(program)
-        super.bindAttributes(program)
-    }
+    val takesInput: () -> Boolean
+
+    fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int)
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int)
+
+    fun mouseMoved(mouseX: Double, mouseY: Double)
+
+    fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double)
+
+    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int)
+
+    fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int)
+
+    fun charTyped(char: Char, modifiers: Int)
+
 }

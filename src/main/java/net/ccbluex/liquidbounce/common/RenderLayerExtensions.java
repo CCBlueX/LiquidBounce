@@ -92,6 +92,24 @@ public class RenderLayerExtensions {
                     ));
 
     /**
+     * Render Layer for BGRA textures.
+     */
+    private static final Function<Identifier, RenderLayer> BGRA_TEXTURE_LAYER = Util.memoize(
+            textureId ->
+                    RenderLayer.of(
+                            "bgra_texture_layer",
+                            VertexFormats.POSITION_TEXTURE_COLOR,
+                            VertexFormat.DrawMode.QUADS,
+                            786432,
+                            RenderLayer.MultiPhaseParameters.builder()
+                                    .texture(new Texture(textureId, TriState.FALSE, false))
+                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
+                                    .transparency(JCEF_COMPATIBLE_BLEND)
+                                    .depthTest(RenderPhase.LEQUAL_DEPTH_TEST)
+                                    .build(false)
+                    ));
+
+    /**
      * Render Layer for BGRA textures that also need blur effect.
      */
     private static final Function<Identifier, RenderLayer> BGRA_BLURRED_TEXTURE_LAYER = Util.memoize(
@@ -118,7 +136,12 @@ public class RenderLayerExtensions {
         return BLURRED_TEXTURE_LAYER.apply(textureId);
     }
 
+    public static RenderLayer getBgraTextureLayer(Identifier textureId) {
+        return BGRA_TEXTURE_LAYER.apply(textureId);
+    }
+
     public static RenderLayer getBgraBlurredTextureLayer(Identifier textureId) {
         return BGRA_BLURRED_TEXTURE_LAYER.apply(textureId);
     }
+
 }

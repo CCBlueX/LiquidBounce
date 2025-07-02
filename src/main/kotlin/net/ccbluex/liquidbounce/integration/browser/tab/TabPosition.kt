@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.integration.browser.tab
 
 import net.ccbluex.liquidbounce.utils.client.mc
 

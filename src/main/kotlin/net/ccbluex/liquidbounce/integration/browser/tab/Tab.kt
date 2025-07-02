@@ -16,24 +16,31 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.integration.browser.tab
 
-interface InputAware {
+import net.ccbluex.liquidbounce.integration.browser.BrowserTexture
 
-    val takesInput: () -> Boolean
+interface Tab {
 
-    fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int)
+    var position: TabPosition
+    var visible: Boolean
+    var drawn: Boolean
+    var preferOnTop: Boolean
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int)
+    fun forceReload()
+    fun reload()
+    fun goForward()
+    fun goBack()
+    fun loadUrl(url: String)
+    fun getUrl(): String
+    fun closeTab()
+    fun getTexture(): BrowserTexture?
+    fun resize(width: Int, height: Int)
 
-    fun mouseMoved(mouseX: Double, mouseY: Double)
+    fun preferOnTop(): Tab {
+        preferOnTop = true
+        return this
+    }
 
-    fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double)
-
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int)
-
-    fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int)
-
-    fun charTyped(char: Char, modifiers: Int)
 
 }

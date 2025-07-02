@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asText
@@ -91,7 +91,7 @@ object ModuleClickGui :
         }
     }
 
-    private var clickGuiTab: ITab? = null
+    private var clickGuiTab: Tab? = null
     private const val WORLD_CHANGE_SECONDS_UNTIL_RELOAD = 5
 
     init {

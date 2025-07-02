@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.browser.tab.Tab
+import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-var browserTabs = mutableListOf<ITab>()
+var browserTabs = mutableListOf<Tab>()
 
 class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
 
@@ -38,7 +38,7 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
     var selectedIndex = 0
     private var recentUrl = url
 
-    val browserTab: ITab?
+    val browserTab: Tab?
         get() = browserTabs.getOrNull(selectedIndex)
 
     override fun init() {

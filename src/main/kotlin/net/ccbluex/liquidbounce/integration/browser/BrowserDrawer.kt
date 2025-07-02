@@ -22,16 +22,16 @@ import net.ccbluex.liquidbounce.common.RenderLayerExtensions
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.browser.supports.IBrowser
+import net.ccbluex.liquidbounce.integration.browser.Browser
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.util.Identifier
 
 /**
- * Draws any kind of [IBrowser] to the Minecraft screen.
+ * Draws any kind of [Browser] to the Minecraft screen.
  */
-class BrowserDrawer(val browser: () -> IBrowser?) : EventListener {
+class BrowserDrawer(val browser: () -> Browser?) : EventListener {
 
     private val tabs
         get() = browser()?.getTabs() ?: emptyList()
@@ -70,7 +70,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : EventListener {
             val w = tab.position.width.toFloat() / scaleFactor
             val h = tab.position.height.toFloat() / scaleFactor
 
-            renderTexture(event.context, tab.getTexture() ?: return@handler, x, y, w, h)
+            renderTexture(event.context, tab.getTexture() ?: continue, x, y, w, h)
             tab.drawn = true
         }
     }
@@ -107,7 +107,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : EventListener {
             val w = tab.position.width.toFloat() / scaleFactor
             val h = tab.position.height.toFloat() / scaleFactor
 
-            renderTexture(event.context, tab.getTexture() ?: return@handler, x, y, w, h)
+            renderTexture(event.context, tab.getTexture() ?: continue, x, y, w, h)
             tab.drawn = true
         }
     }
@@ -115,14 +115,21 @@ class BrowserDrawer(val browser: () -> IBrowser?) : EventListener {
     @Suppress("LongParameterList")
     private fun renderTexture(
         context: DrawContext,
-        texture: Identifier,
+        texture: BrowserTexture,
         x: Float,
         y: Float,
         width: Float,
         height: Float
     ) {
+        val layer = if (texture.bgra) {
+            RenderLayerExtensions::getBgraBlurredTextureLayer
+        } else {
+            RenderLayerExtensions::getBlurredTextureLayer
+        }
+
         context.drawTexture(
-            RenderLayerExtensions::getBgraBlurredTextureLayer, texture, x.toInt(), y.toInt(), 0f, 0f, width.toInt(),
+            layer, texture.identifier, x.toInt(), y.toInt(),
+            0f, 0f, width.toInt(),
             height.toInt(), width.toInt(), height.toInt()
         )
     }

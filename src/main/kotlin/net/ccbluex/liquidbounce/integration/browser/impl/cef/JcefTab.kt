@@ -1,26 +1,11 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.integration.browser.impl.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.supports.JcefBrowser
+import net.ccbluex.liquidbounce.integration.browser.BrowserTexture
+import net.ccbluex.liquidbounce.integration.browser.tab.InputAware
+import net.ccbluex.liquidbounce.integration.browser.tab.Tab
+import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
@@ -34,7 +19,7 @@ class JcefTab(
     position: TabPosition,
     frameRate: Int = 60,
     override val takesInput: () -> Boolean
-) : ITab, InputAware, MinecraftShortcuts {
+) : Tab, InputAware, MinecraftShortcuts {
 
     override var position: TabPosition = position
         set(value) {
@@ -93,7 +78,7 @@ class JcefTab(
         mcefBrowser.loadURL(url)
     }
 
-    override fun getUrl() = mcefBrowser.getURL()
+    override fun getUrl(): String = mcefBrowser.getURL()
 
     override fun closeTab() {
         jcefBrowser.removeTab(this)
@@ -101,7 +86,19 @@ class JcefTab(
         mc.textureManager.destroyTexture(texture)
     }
 
-    override fun getTexture(): Identifier? = texture.takeUnless { mcefBrowser.renderer.isUnpainted }
+    override fun getTexture(): BrowserTexture? {
+        if (mcefBrowser.renderer.isUnpainted) {
+            return null
+        }
+
+        return BrowserTexture(
+            mcefBrowser.renderer.textureID,
+            texture,
+            position.height,
+            position.width,
+            mcefBrowser.renderer.isBGRA
+        )
+    }
 
     override fun resize(width: Int, height: Int) {
         if (!position.fullScreen) {

@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.integration.browser.supports.IBrowser
-import net.ccbluex.liquidbounce.integration.browser.supports.JcefBrowser
+import net.ccbluex.liquidbounce.integration.browser.Browser
+import net.ccbluex.liquidbounce.integration.browser.impl.cef.JcefBrowser
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -44,7 +44,7 @@ object BrowserManager : Configurable("browser") {
     /**
      * The current browser instance.
      */
-    var browser: IBrowser? = null
+    var browser: Browser? = null
         private set
 
     @Suppress("unused")
@@ -97,7 +97,7 @@ object BrowserManager : Configurable("browser") {
 
 }
 
-enum class BrowserType(override val choiceName: String, val getBrowser: () -> IBrowser) : NamedChoice {
+enum class BrowserType(override val choiceName: String, val getBrowser: () -> Browser) : NamedChoice {
     JCEF("jcef", ::JcefBrowser),
     ULTRALIGHT("ultralight", {
         throw BrowserManager.BrowserException("Ultralight is not supported yet.")

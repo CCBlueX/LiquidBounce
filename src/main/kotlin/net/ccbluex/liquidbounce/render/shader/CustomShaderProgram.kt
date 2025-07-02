@@ -22,24 +22,23 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.gl.ShaderProgramDefinition
 import net.minecraft.client.render.RenderPhase
-import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.util.Window
-import org.joml.Matrix4f
 
 class CustomShaderProgram(val shader: Shader) : ShaderProgram(shader.program) {
 
-    override fun initializeUniforms(
-        drawMode: VertexFormat.DrawMode,
-        viewMatrix: Matrix4f,
-        projectionMatrix: Matrix4f,
-        window: Window
-    ) {
-        currentProjectionMatrix = projectionMatrix
-        currentModelViewMatrix = viewMatrix
-    }
-
-    override fun bind() {
-        shader.use()
+    init {
+        this.set(mutableListOf<ShaderProgramDefinition.Uniform>(
+            ShaderProgramDefinition.Uniform("ModelViewMat", "matrix4x4", 16, listOf(
+                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+            )),
+            ShaderProgramDefinition.Uniform("ProjMat", "matrix4x4", 16, listOf(
+                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+            )),
+            ShaderProgramDefinition.Uniform("ColorModulator", "float", 4, listOf(
+                1.0f, 1.0f, 1.0f, 1.0f
+            ))
+        ), mutableListOf(
+            ShaderProgramDefinition.Sampler("Sampler0")
+        ))
     }
 
 }
@@ -51,4 +50,5 @@ class CustomShaderProgramPhase(val shader: Shader) : RenderPhase.ShaderProgram()
     override fun startDrawing() {
         RenderSystem.setShader(shaderProgram)
     }
+
 }
