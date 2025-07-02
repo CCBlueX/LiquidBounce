@@ -23,29 +23,23 @@ import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.gl.ShaderProgramDefinition
 import net.minecraft.client.render.RenderPhase
 
-class CustomShaderProgram(val shader: Shader) : ShaderProgram(shader.program) {
-
+class CustomShaderProgram(
+    val shader: Shader,
+    uniforms: MutableList<ShaderProgramDefinition.Uniform> = mutableListOf(),
+    samplers: MutableList<ShaderProgramDefinition.Sampler> = mutableListOf()
+) : ShaderProgram(shader.program) {
     init {
-        this.set(mutableListOf<ShaderProgramDefinition.Uniform>(
-            ShaderProgramDefinition.Uniform("ModelViewMat", "matrix4x4", 16, listOf(
-                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-            )),
-            ShaderProgramDefinition.Uniform("ProjMat", "matrix4x4", 16, listOf(
-                1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-            )),
-            ShaderProgramDefinition.Uniform("ColorModulator", "float", 4, listOf(
-                1.0f, 1.0f, 1.0f, 1.0f
-            ))
-        ), mutableListOf(
-            ShaderProgramDefinition.Sampler("Sampler0")
-        ))
+        this.set(uniforms, samplers)
     }
-
 }
 
-class CustomShaderProgramPhase(val shader: Shader) : RenderPhase.ShaderProgram() {
+class CustomShaderProgramPhase(
+    val shader: Shader,
+    uniforms: MutableList<ShaderProgramDefinition.Uniform> = mutableListOf(),
+    samplers: MutableList<ShaderProgramDefinition.Sampler> = mutableListOf()
+) : RenderPhase.ShaderProgram() {
 
-    private val shaderProgram = CustomShaderProgram(shader)
+    private val shaderProgram = CustomShaderProgram(shader, uniforms, samplers)
 
     override fun startDrawing() {
         RenderSystem.setShader(shaderProgram)

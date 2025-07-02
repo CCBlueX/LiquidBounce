@@ -52,7 +52,11 @@ public class RenderLayerExtensions {
         RenderSystem.disableBlend();
     });
 
-    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(BgraPositionTexColorShader.INSTANCE);
+    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
+            BgraPositionTexColorShader.INSTANCE,
+            BgraPositionTexColorShader.INSTANCE.getUniforms(),
+            BgraPositionTexColorShader.INSTANCE.getSamples()
+    );
 
     /**
      * Render Layer for smoother textures using bilinear filtering.

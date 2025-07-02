@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.render.shader.shaders
 
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.minecraft.client.gl.ShaderProgramDefinition
 import net.minecraft.client.render.VertexFormats
 
 object BgraPositionTexColorShader : Shader(
@@ -27,6 +28,23 @@ object BgraPositionTexColorShader : Shader(
     resourceToString("/resources/liquidbounce/shaders/bgra_position_tex_color.frag"),
     emptyArray()
 ) {
+
+    val uniforms = mutableListOf(
+        ShaderProgramDefinition.Uniform("ModelViewMat", "matrix4x4", 16, listOf(
+            1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+        )),
+        ShaderProgramDefinition.Uniform("ProjMat", "matrix4x4", 16, listOf(
+            1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+        )),
+        ShaderProgramDefinition.Uniform("ColorModulator", "float", 4, listOf(
+            1.0f, 1.0f, 1.0f, 1.0f
+        ))
+    )
+
+    val samples = mutableListOf(
+        ShaderProgramDefinition.Sampler("Sampler0")
+    )
+
     override fun bindAttributes(program: Int) {
         VertexFormats.POSITION_TEXTURE_COLOR.bindAttributes(program)
         super.bindAttributes(program)
