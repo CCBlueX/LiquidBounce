@@ -96,12 +96,13 @@ private object EnchantmentDisplayHelper {
         if (name.length <= 3) {
             return name
         }
-        
-        return if (" " in name) {
-            val words = name.split(" ").filter { it.isNotEmpty() }
+
+        val words = name.split(" ").filter { it.isNotEmpty() }
+
+        return if (word.length >= 2) {
             processMultiWordName(words)
         } else {
-            getSingleWordAbbreviation(name)
+            getSingleWordAbbreviation(words.getOrNull(0) ?: "")
         }
     }
     
