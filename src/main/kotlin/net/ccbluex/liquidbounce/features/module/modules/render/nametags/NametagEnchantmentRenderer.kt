@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.Proce
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
+import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.gl.ShaderProgramKeys
@@ -38,15 +39,11 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
-import java.util.LinkedHashMap
+import net.minecraft.registry.RegistryKeys
+import net.ccbluex.liquidbounce.utils.client.mc
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = 
-        object : LinkedHashMap<RegistryKey<Enchantment>, String>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: Map.Entry<RegistryKey<Enchantment>, String>): Boolean {
-                return size > 100
-            }
-        }
+    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
     
     private val knownCurses = setOf(
         Enchantments.BINDING_CURSE,
@@ -60,37 +57,62 @@ private object EnchantmentDisplayHelper {
         )
     }
     
+    private fun getEnchantmentName(enchantment: RegistryKey<Enchantment>): String {
+        val idPath = enchantment.value.toString().substringAfter(':')
+        val translationKey = "enchantment.minecraft.$idPath"
+        return I18n.translate(translationKey)
+    }
     
-    private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
-        return enchantmentAbbreviationCache.getOrPut(enchantment) {
-            val enchantmentId = enchantment.value.path
-            val translationKey = "enchantment.minecraft.$enchantmentId"
-            val name = I18n.translate(translationKey)
-            
-            if (" " in name) {
-                val words = name.split(" ").filter { it.isNotEmpty() }
-                val abbreviation = words.joinToString("") { it.substring(0, 1) }
-                
-                if (abbreviation.length < 3) {
-                    val firstWord = words.first()
-                    if (firstWord.length >= 3) {
-                        firstWord.take(3)
-                    } else {
-                        val remainingChars = 3 - abbreviation.length
-                        abbreviation + words.getOrNull(1)?.take(remainingChars).orEmpty()
-                    }
-                } else {
-                    abbreviation
-                }
-            } else {
-                name.take(3)
-            }
+    private fun getSingleWordAbbreviation(word: String): String = word.take(3)
+    
+    private fun getInitialsAbbreviation(words: List<String>): String = 
+        words.joinToString("") { it.first().toString() }
+    
+    private fun getCompoundAbbreviation(words: List<String>): String {
+        val firstWord = words[0]
+        
+        if (firstWord.length >= 3) {
+            return firstWord.take(3)
+        }
+        
+        val remainingChars = 3 - firstWord.length
+        return firstWord + words.getOrNull(1)?.take(remainingChars).orEmpty()
+    }
+    
+    private fun processMultiWordName(words: List<String>): String {
+        if (words.size == 1) {
+            return getSingleWordAbbreviation(words[0])
+        }
+        
+        val initials = getInitialsAbbreviation(words)
+        if (initials.length >= 3) {
+            return initials
+        }
+        
+        return getCompoundAbbreviation(words)
+    }
+    
+    private fun processName(name: String): String {
+        if (name.length <= 3) {
+            return name
+        }
+        
+        return if (" " in name) {
+            val words = name.split(" ").filter { it.isNotEmpty() }
+            processMultiWordName(words)
+        } else {
+            getSingleWordAbbreviation(name)
         }
     }
     
-    private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean {
-        return enchantment in knownCurses
+    private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
+        return enchantmentAbbreviationCache.getOrPut(enchantment) {
+            val name = getEnchantmentName(enchantment)
+            processName(name)
+        }
     }
+    
+    private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
 }
 
 private data class EnchantmentInfo(
@@ -99,92 +121,32 @@ private data class EnchantmentInfo(
 )
 
 object NametagEnchantmentRenderer {
-    // Constants for display settings
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
     private const val Y_OFFSET = -40f
-
-    // Constants for sizes and margins
     private const val LINE_HEIGHT = 14f
     private const val COLUMN_SPACING = 20f
     private const val PADDING = 3f
     private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
     private const val VERTICAL_SPACING = 4f
     private const val FRAME_MARGIN = 6f
+    private val BG_COLOR_NORMAL = Color4b.BLACK.with(a = 180)
+    private val BG_COLOR_CURSE = Color4b.RED.darker().with(a = 180)
 
-    // Constants for colors
-    private const val GROUP_BORDER_COLOR = 0xFFFF0000.toInt()
-    private val BG_COLOR_NORMAL = Color4b(0, 0, 0, 180)
-    private val BG_COLOR_CURSE = Color4b(100, 0, 0, 180)
-    
-    private val supportedEnchantments = listOf(
-        // Protection enchantments
-        Enchantments.PROTECTION,
-        Enchantments.FIRE_PROTECTION,
-        Enchantments.FEATHER_FALLING,
-        Enchantments.BLAST_PROTECTION,
-        Enchantments.PROJECTILE_PROTECTION,
-        Enchantments.THORNS,
-        Enchantments.RESPIRATION,
-        Enchantments.DEPTH_STRIDER,
-        Enchantments.AQUA_AFFINITY,
-        Enchantments.FROST_WALKER,
-        Enchantments.SOUL_SPEED,
-        Enchantments.SWIFT_SNEAK,
-        
-        // Combat enchantments
-        Enchantments.SHARPNESS,
-        Enchantments.SMITE,
-        Enchantments.BANE_OF_ARTHROPODS,
-        Enchantments.KNOCKBACK,
-        Enchantments.FIRE_ASPECT,
-        Enchantments.LOOTING,
-        Enchantments.SWEEPING_EDGE,
-        
-        // Tool enchantments
-        Enchantments.EFFICIENCY,
-        Enchantments.SILK_TOUCH,
-        Enchantments.UNBREAKING,
-        Enchantments.FORTUNE,
-        Enchantments.MENDING,
-        
-        // Bow enchantments
-        Enchantments.POWER,
-        Enchantments.PUNCH,
-        Enchantments.FLAME,
-        Enchantments.INFINITY,
-        
-        // Fishing rod enchantments
-        Enchantments.LUCK_OF_THE_SEA,
-        Enchantments.LURE,
-        
-        // Trident enchantments
-        Enchantments.LOYALTY,
-        Enchantments.IMPALING,
-        Enchantments.RIPTIDE,
-        Enchantments.CHANNELING,
-        
-        // Crossbow enchantments
-        Enchantments.MULTISHOT,
-        Enchantments.QUICK_CHARGE,
-        Enchantments.PIERCING,
-        
-        // Curses
-        Enchantments.BINDING_CURSE,
-        Enchantments.VANISHING_CURSE
-    )
+    private val supportedEnchantments by lazy {
+        mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
+    }
 
     private data class EnchantCell(
         val processedText: ProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
-    
+
     private data class EnchantColumn(
         val cells: List<EnchantCell>,
         val width: Float
     )
-
 
     fun drawEnchantments(
         env: RenderEnvironment,
@@ -236,7 +198,6 @@ object NametagEnchantmentRenderer {
         }
     }
 
-
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantmentList = mutableListOf<Pair<EnchantmentInfo, Int>>()
         
@@ -251,7 +212,7 @@ object NametagEnchantmentRenderer {
 
         val sortedEnchantments = enchantmentList.sortedByDescending { it.second }
         val hasMoreEnchantments = sortedEnchantments.size > MAX_ENCHANTMENTS_PER_ITEM
-        
+
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
             .map { (info, level) -> createCell(info, level) }
@@ -299,7 +260,6 @@ object NametagEnchantmentRenderer {
             !isEllipsis && info?.isCurse == true
         )
     }
-
 
     private fun renderEnchantmentColumn(
         env: RenderEnvironment,
@@ -398,7 +358,7 @@ object NametagEnchantmentRenderer {
             VertexFormats.POSITION_COLOR,
             ShaderProgramKeys.POSITION_COLOR
         ) { matrix ->
-            val color = Color4b(GROUP_BORDER_COLOR, true).toARGB()
+            val color = Color4b.RED.toARGB()
 
             vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
             vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
