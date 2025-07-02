@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.integration.browser.impl.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -78,7 +96,7 @@ class JcefTab(
         mcefBrowser.loadURL(url)
     }
 
-    override fun getUrl(): String = mcefBrowser.getURL()
+    override fun getUrl(): String = mcefBrowser.url
 
     override fun closeTab() {
         jcefBrowser.removeTab(this)
@@ -136,9 +154,9 @@ class JcefTab(
         mcefBrowser.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
-    override fun charTyped(codePoint: Char, modifiers: Int) {
+    override fun charTyped(char: Char, modifiers: Int) {
         mcefBrowser.setFocus(true)
-        mcefBrowser.sendKeyTyped(codePoint, modifiers)
+        mcefBrowser.sendKeyTyped(char, modifiers)
     }
 
 }
