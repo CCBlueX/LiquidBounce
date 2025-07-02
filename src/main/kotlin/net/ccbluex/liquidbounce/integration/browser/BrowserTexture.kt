@@ -30,4 +30,10 @@ import net.minecraft.util.Identifier
  * @param height The height of the texture.
  * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
  */
-data class BrowserTexture(val textureId: Int, val identifier: Identifier, val width: Int, val height: Int, val bgra: Boolean)
+data class BrowserTexture(
+    val textureId: Int,
+    val identifier: Identifier,
+    val width: Int,
+    val height: Int,
+    val bgra: Boolean
+)
