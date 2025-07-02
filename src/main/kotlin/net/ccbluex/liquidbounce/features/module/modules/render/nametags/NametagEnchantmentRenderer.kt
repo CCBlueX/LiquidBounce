@@ -96,7 +96,7 @@ private object EnchantmentDisplayHelper {
 
         val words = name.split(" ").filter { it.isNotEmpty() }
 
-        return if (word.length >= 2) {
+        return if (words.size >= 2) {
             processMultiWordName(words)
         } else {
             getSingleWordAbbreviation(words.getOrNull(0) ?: "")
