@@ -80,16 +80,13 @@ private object EnchantmentDisplayHelper {
     }
     
     private fun processMultiWordName(words: List<String>): String {
-        if (words.size == 1) {
-            return getSingleWordAbbreviation(words[0])
-        }
-        
         val initials = getInitialsAbbreviation(words)
-        if (initials.length >= 3) {
-            return initials
-        }
         
-        return getCompoundAbbreviation(words)
+        return if (initials.length >= 3) {
+            initials
+        } else {
+            getCompoundAbbreviation(words)
+        }
     }
     
     private fun processName(name: String): String {
