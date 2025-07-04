@@ -183,7 +183,7 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
+    includeDependency("com.squareup.okhttp3:okhttp:5.0.0")
 
     // SOCKS5 & HTTP Proxy Support
     includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
