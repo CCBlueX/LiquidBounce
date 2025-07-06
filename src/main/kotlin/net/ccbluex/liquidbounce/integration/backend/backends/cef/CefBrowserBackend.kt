@@ -16,14 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.backend.impl.cef
+package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor

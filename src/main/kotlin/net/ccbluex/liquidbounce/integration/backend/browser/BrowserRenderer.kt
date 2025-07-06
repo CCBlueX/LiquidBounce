@@ -10,8 +10,10 @@ import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
+import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowser
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.minecraft.client.gui.DrawContext
 import java.lang.AutoCloseable
 
@@ -25,7 +27,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     private var rendered = false
 
     @Suppress("unused")
-    private val gameRenderHandler = handler<GameRenderEvent> {
+    private val gameRenderHandler = handler<GameRenderEvent>(priority = MODEL_STATE) {
         rendered = false
     }
 

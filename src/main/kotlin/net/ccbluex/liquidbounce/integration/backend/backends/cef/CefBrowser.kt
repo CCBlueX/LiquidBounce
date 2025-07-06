@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.backend.impl.cef
+package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.util.Identifier
 
@@ -51,12 +51,13 @@ class CefBrowser(
 
             val quality = GlobalBrowserSettings.quality
             val (scaledWidth, scaledHeight) = value.getScaledDimensions(quality)
+            val zoomLevel = value.getZoomLevel(quality)
 
             // TODO: CEF is suffering from a bug where resizing the browser,
             //   does not call [wasResized] and thus does not update the renderer.
             //   See: https://github.com/chromiumembedded/cef/issues/3826
             mcefBrowser.resize(scaledWidth, scaledHeight)
-            mcefBrowser.zoomLevel = value.getZoomLevel(quality)
+            mcefBrowser.zoomLevel = zoomLevel
         }
     override var visible = true
 
@@ -79,9 +80,9 @@ class CefBrowser(
                 settings.currentFps,
                 settings.accelerated?.get() == true
             )
-        )
-
-        mcefBrowser.zoomLevel = viewport.getZoomLevel(quality)
+        ).apply {
+            zoomLevel = viewport.getZoomLevel(quality)
+        }
     }
 
     private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
