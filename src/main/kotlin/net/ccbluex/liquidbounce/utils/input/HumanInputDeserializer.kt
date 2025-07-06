@@ -26,7 +26,9 @@ import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.awt.Color
+import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.Path
 import kotlin.jvm.optionals.getOrNull
 
 object HumanInputDeserializer {
@@ -77,6 +79,8 @@ object HumanInputDeserializer {
     }
 
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
+
+    val pathDeserializer: StringDeserializer<Path> = StringDeserializer(::Path)
 
     private fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)

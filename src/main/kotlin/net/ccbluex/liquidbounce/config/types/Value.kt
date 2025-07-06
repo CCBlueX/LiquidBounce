@@ -432,7 +432,7 @@ enum class ValueType(
     BLOCK(HumanInputDeserializer.blockDeserializer), BLOCKS(HumanInputDeserializer.blockListDeserializer),
     ITEM(HumanInputDeserializer.itemDeserializer), ITEMS(HumanInputDeserializer.itemListDeserializer),
     KEY(HumanInputDeserializer.keyDeserializer),
-    PATH,
+    PATH(HumanInputDeserializer.pathDeserializer),
     BIND,
     VECTOR_I,
     VECTOR_D,
