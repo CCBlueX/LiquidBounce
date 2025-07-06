@@ -152,7 +152,7 @@ object ThemeManager : Configurable("theme") {
         )
     }
 
-    fun initialiseBackground() {
+    fun initializeBackground() {
         // Load background image of active theme and fallback to default theme if not available
         if (!activeTheme.loadBackgroundImage()) {
             defaultTheme.loadBackgroundImage()
