@@ -35,8 +35,22 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     }
 
     @Suppress("unused")
-    private val screenRenderHandler = handler<ScreenRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-        if (!browser.visible || browser.rendered) {
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(browser.priority) { event ->
+        if (this.shouldReload) {
+            browser.forceReload()
+            this.shouldReload = false
+        }
+
+        if (!browser.visible || rendered || browser.priority > 0 && mc.currentScreen != null) {
+            return@handler
+        }
+
+        render(event.context)
+    }
+
+    @Suppress("unused")
+    private val screenRenderHandler = handler<ScreenRenderEvent>(browser.priority) { event ->
+        if (!browser.visible || rendered) {
             return@handler
         }
 
@@ -48,20 +62,6 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     @Suppress("unused")
     private val resourceReloadHandler = handler<ResourceReloadEvent> {
         shouldReload = true
-    }
-
-    @Suppress("unused")
-    private val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-        if (this.shouldReload) {
-            browser.forceReload()
-            this.shouldReload = false
-        }
-
-        if (!browser.visible || browser.rendered || browser.renderOnTop && mc.currentScreen != null) {
-            return@handler
-        }
-
-        render(event.context)
     }
 
     /**

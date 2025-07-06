@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.impl.cef.JcefBrowserBackend
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -34,9 +34,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = JcefBrowserBackend()
-
-    lateinit var settings: BrowserSettings
-        private set
 
     init {
         PersistentLocalStorage
@@ -61,9 +58,9 @@ object BrowserBackendManager : EventListener {
         RenderSystem.assertOnRenderThread()
 
         browserBackend.start()
-        settings = BrowserSettings()
 
-        EventManager.callEvent(BrowserReadyEvent(browserBackend))
+        GlobalBrowserSettings
+        EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")
     }
 
@@ -76,6 +73,19 @@ object BrowserBackendManager : EventListener {
         logger.error("Failed to shutdown browser.", it)
     }.onSuccess {
         logger.info("Successfully shutdown browser.")
+    }
+
+    /**
+     * Causes an update of every browser by re-setting their viewport.
+     */
+    fun forceUpdate() = RenderSystem.recordRenderCall {
+        for (browser in browserBackend.browsers) {
+            try {
+                browser.viewport = browser.viewport
+            } catch (e: Exception) {
+                logger.error("Failed to update tab of '${browser.url}'", e)
+            }
+        }
     }
 
     @Suppress("unused")

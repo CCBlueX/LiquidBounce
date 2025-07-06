@@ -65,7 +65,7 @@ class JcefBrowserBackend : BrowserBackend, EventListener {
 
     override val isInitialized: Boolean
         get() = MCEF.INSTANCE.isInitialized
-    override var browsers = mutableListOf<JcefBrowser>()
+    override var browsers = mutableListOf<CefBrowser>()
     override var isAccelerationSupported: Boolean = false
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
@@ -183,16 +183,17 @@ class JcefBrowserBackend : BrowserBackend, EventListener {
         url: String,
         position: BrowserViewport,
         settings: BrowserSettings,
+        priority: Short,
         inputAcceptor: InputAcceptor?
-    ) = JcefBrowser(this, url, position, settings, inputAcceptor)
+    ) = CefBrowser(this, url, position, settings, priority, inputAcceptor)
         .apply(::addBrowser)
 
-    private fun addBrowser(tab: JcefBrowser) {
-        browsers.sortedInsert(tab, JcefBrowser::renderOnTop)
+    private fun addBrowser(browser: CefBrowser) {
+        browsers.sortedInsert(browser, CefBrowser::priority)
     }
 
-    internal fun removeBrowser(tab: JcefBrowser) {
-        browsers.remove(tab)
+    internal fun removeBrowser(browser: CefBrowser) {
+        browsers.remove(browser)
     }
 
     /**

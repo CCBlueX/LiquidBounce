@@ -24,21 +24,24 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserRenderer
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.backend.input.InputHandler
 import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.util.Identifier
 
 @Suppress("TooManyFunctions")
-class JcefBrowser(
+class CefBrowser(
     private val backend: JcefBrowserBackend,
     url: String,
     viewport: BrowserViewport,
     val settings: BrowserSettings,
+    override var priority: Short = 0,
     inputAcceptor: InputAcceptor? = null
 ) : Browser, InputHandler, MinecraftShortcuts {
 
@@ -46,7 +49,7 @@ class JcefBrowser(
         set(value) {
             field = value
 
-            val quality = settings.quality
+            val quality = GlobalBrowserSettings.quality
             val (scaledWidth, scaledHeight) = value.getScaledDimensions(quality)
 
             mcefBrowser.resize(scaledWidth, scaledHeight)
@@ -54,16 +57,7 @@ class JcefBrowser(
         }
     override var visible = true
 
-    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
-        url,
-        true,
-        viewport.getScaledDimensions(settings.quality).first,
-        viewport.getScaledDimensions(settings.quality).second,
-        MCEFBrowserSettings(
-            settings.currentFps,
-            settings.accelerated?.get() == true
-        )
-    )
+    private val mcefBrowser: MCEFBrowser
 
     private val renderer = BrowserRenderer(this)
     private val inputListener: InputListener? = inputAcceptor?.let { inputChecker ->
@@ -71,13 +65,23 @@ class JcefBrowser(
     }
 
     init {
-        mcefBrowser.zoomLevel = viewport.getZoomLevel(settings.quality)
+        val quality = GlobalBrowserSettings.quality
+        val (width, height) = viewport.getScaledDimensions(quality)
+        mcefBrowser = MCEF.INSTANCE.createBrowser(
+            url,
+            true,
+            width,
+            height,
+            MCEFBrowserSettings(
+                settings.currentFps,
+                settings.accelerated?.get() == true
+            )
+        )
+
+        mcefBrowser.zoomLevel = viewport.getZoomLevel(quality)
     }
 
     private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
-
-    override var rendered = false
-    override var renderOnTop = false
 
     override var url: String
         get() = mcefBrowser.url
@@ -140,23 +144,23 @@ class JcefBrowser(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
         mcefBrowser.sendMousePress(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
         mcefBrowser.sendMouseRelease(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
         mcefBrowser.sendMouseMove(scaledX, scaledY)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
         mcefBrowser.sendMouseWheel(scaledX, scaledY, delta)
     }
 

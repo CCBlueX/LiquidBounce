@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
@@ -59,6 +61,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         get() = "liquidbounce.module.hud"
 
     private val blur by boolean("Blur", true)
+
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
         EventManager.callEvent(SpaceSeperatedNamesChangeEvent(state))
@@ -69,6 +72,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     val isBlurEffectActive
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
+
+    var browserSettings: BrowserSettings? = null
 
     init {
         tree(Configurable("In-built", value = components as MutableList<Value<*>>))
@@ -100,7 +105,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        tree(BrowserBackendManager.settings)
+        tree(GlobalBrowserSettings)
+        browserSettings = tree(BrowserSettings(60, ::reopen))
     }
 
     @Suppress("unused")
@@ -126,8 +132,12 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             return browserBrowser!!
         }
 
-        return ThemeManager.openImmediate(VirtualScreenType.HUD, true).also { tab ->
-            browserBrowser = tab
+        return ThemeManager.openImmediate(
+            VirtualScreenType.HUD,
+            true,
+            browserSettings!!
+        ).also { browser ->
+            browserBrowser = browser
         }
     }
 

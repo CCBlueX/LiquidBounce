@@ -5,21 +5,37 @@ import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.browserBackend
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
 
-/**
- * Settings for the browser renderer.
- */
+object GlobalBrowserSettings : Configurable("GlobalRenderer") {
+
+    /**
+     * Quality setting that controls the rendering resolution.
+     * 1.0 = full resolution, 0.5 = half-resolution (better performance), etc.
+     *
+     * Unfortunately, this is a global setting that applies to all browsers,
+     * as CEF is not letting us set a custom zoom level per browser.
+     */
+    val quality by float("Quality", 1f, 0.5f..1f).onChanged {
+        BrowserBackendManager.forceUpdate()
+    }
+
+}
+
 class BrowserSettings(
-    fpsLimit: Int = 0
+    fpsLimit: Int = 0,
+    update: () -> Unit
 ) : Configurable("Renderer") {
 
     /**
      * The maximum frames per second the browser renderer should run at.
      */
-    val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS")
+    val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS").onChanged {
+        RenderSystem.recordRenderCall {
+            update()
+        }
+    }
 
     val currentFps: Int
         get() {
@@ -33,30 +49,12 @@ class BrowserSettings(
     var accelerated: Value<Boolean>? = null
         private set
 
-    /**
-     * Quality setting that controls the rendering resolution.
-     * 1.0 = full resolution, 0.5 = half-resolution (better performance), etc.
-     */
-    val quality by float("Quality", 1f, 0.5f..1f)
-
     init {
         if (browserBackend.isAccelerationSupported) {
-            accelerated = boolean("Accelerated", true)
-        }
-
-        for (value in this.inner) {
-            value.onChanged {
-                update()
-            }
-        }
-    }
-
-    private fun update() = RenderSystem.recordRenderCall {
-        for (browser in browserBackend.browsers) {
-            try {
-                browser.viewport = browser.viewport
-            } catch (e: Exception) {
-                logger.error("Failed to update tab of '${browser.url}'", e)
+            accelerated = boolean("Accelerated", true).onChanged {
+                RenderSystem.recordRenderCall {
+                    update()
+                }
             }
         }
     }

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
@@ -86,7 +87,7 @@ object ThemeManager : Configurable("theme") {
             ComponentOverlay.insertDefaultComponents()
 
             // Update integration browser
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
         }
@@ -103,9 +104,13 @@ object ThemeManager : Configurable("theme") {
      */
     fun openImmediate(
         virtualScreenType: VirtualScreenType? = null,
-        markAsStatic: Boolean = false
+        markAsStatic: Boolean = false,
+        settings: BrowserSettings
     ): Browser =
-        BrowserBackendManager.browserBackend.createBrowser(route(virtualScreenType, markAsStatic).url)
+        BrowserBackendManager.browserBackend.createBrowser(
+            route(virtualScreenType, markAsStatic).url,
+            settings = settings
+        )
 
     /**
      * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
@@ -114,9 +119,13 @@ object ThemeManager : Configurable("theme") {
     fun openInputAwareImmediate(
         virtualScreenType: VirtualScreenType? = null,
         markAsStatic: Boolean = false,
+        settings: BrowserSettings,
+        priority: Short = 10,
         inputAcceptor: InputAcceptor = takesInputHandler
     ): Browser = BrowserBackendManager.browserBackend.createBrowser(
         route(virtualScreenType, markAsStatic).url,
+        settings = settings,
+        priority = priority,
         inputAcceptor = inputAcceptor
     )
 

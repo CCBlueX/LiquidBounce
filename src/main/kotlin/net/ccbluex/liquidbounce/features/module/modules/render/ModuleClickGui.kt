@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.glfw.GLFW
 
@@ -119,9 +121,14 @@ object ModuleClickGui :
             return
         }
 
-        clickGuiBrowser = ThemeManager.openInputAwareImmediate(VirtualScreenType.CLICK_GUI, true) {
+        clickGuiBrowser = ThemeManager.openInputAwareImmediate(
+            VirtualScreenType.CLICK_GUI,
+            true,
+            priority = 20,
+            settings = IntegrationListener.browserSettings
+        ) {
             mc.currentScreen is ClickScreen
-        }.preferOnTop()
+        }
     }
 
     private fun close() {
@@ -145,7 +152,8 @@ object ModuleClickGui :
     }
 
     @Suppress("unused")
-    private val browserReadyHandler = handler<BrowserReadyEvent> {
+    private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {
+        tree(IntegrationListener.browserSettings!!)
         open()
     }
 

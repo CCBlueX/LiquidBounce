@@ -176,7 +176,7 @@ class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event
 class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event()
 
 @Nameable("browserReady")
-class BrowserReadyEvent(val browserBackend: BrowserBackend) : Event()
+object BrowserReadyEvent : Event()
 
 @Nameable("virtualScreen")
 @WebSocketEvent

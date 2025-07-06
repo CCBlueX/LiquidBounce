@@ -27,8 +27,7 @@ interface Browser : AutoCloseable {
 
     var viewport: BrowserViewport
     var visible: Boolean
-    var rendered: Boolean
-    var renderOnTop: Boolean
+    var priority: Short
 
     /**
      * Current URL of the browser
@@ -65,11 +64,4 @@ interface Browser : AutoCloseable {
      */
     fun update(width: Int = viewport.width, height: Int = viewport.height)
 
-    /**
-     * Sets this browser to render on top
-     */
-    fun preferOnTop(): Browser {
-        renderOnTop = true
-        return this
-    }
 }

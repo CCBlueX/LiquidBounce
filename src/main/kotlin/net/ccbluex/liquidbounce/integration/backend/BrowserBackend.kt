@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -36,7 +37,8 @@ interface BrowserBackend {
     fun createBrowser(
         url: String,
         position: BrowserViewport = BrowserViewport.Companion.FULLSCREEN,
-        settings: BrowserSettings = BrowserBackendManager.settings,
+        settings: BrowserSettings = IntegrationListener.browserSettings,
+        priority: Short = 0,
         inputAcceptor: InputAcceptor? = null
     ): Browser
 

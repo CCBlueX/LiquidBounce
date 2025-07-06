@@ -96,7 +96,7 @@ object HideAppearance : EventListener {
         if (isHidingNow) {
             IntegrationListener.restoreOriginalScreen()
         } else {
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
         }
 
         mc.updateWindowTitle()

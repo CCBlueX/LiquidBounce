@@ -49,10 +49,9 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
         )
 
         if (browserBrowsers.isEmpty()) {
-            val browser = BrowserBackendManager.browserBackend ?: return
+            val browser = BrowserBackendManager.browserBackend
 
-            browser.createBrowser(url, viewport) { mc.currentScreen == this }
-                .preferOnTop()
+            browser.createBrowser(url, viewport, priority = 20) { mc.currentScreen == this }
                 .also { browserBrowsers.add(it) }
             return
         }
