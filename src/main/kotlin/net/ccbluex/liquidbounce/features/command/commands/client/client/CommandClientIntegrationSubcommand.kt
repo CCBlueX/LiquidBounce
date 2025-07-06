@@ -49,7 +49,7 @@ object CommandClientIntegrationSubcommand {
                 .build()
         ).handler { _, args ->
             chat(regular("Overrides client JCEF browser..."))
-            clientJcef.loadUrl(args[0] as String)
+            clientJcef.url = args[0] as String
         }.build()
 
     private fun menuSubcommand() = CommandBuilder.begin("menu")

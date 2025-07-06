@@ -16,16 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.impl.cef
+package net.ccbluex.liquidbounce.integration.backend.impl.cef
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.integration.browser.Browser
-import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
-import net.ccbluex.liquidbounce.integration.browser.BrowserType
-import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
@@ -56,7 +57,7 @@ private const val CACHE_CLEANUP_THRESHOLD = 1000 * 60 * 60 * 24 * 7 // 7 days
  * @author 1zuna <marco@ccbluex.net>
  */
 @Suppress("TooManyFunctions")
-class JcefBrowser : Browser, EventListener {
+class JcefBrowserBackend : BrowserBackend, EventListener {
 
     private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
     private val librariesFolder = mcefFolder.resolve("libraries")
@@ -64,8 +65,7 @@ class JcefBrowser : Browser, EventListener {
 
     override val isInitialized: Boolean
         get() = MCEF.INSTANCE.isInitialized
-    override val type: BrowserType = BrowserType.JCEF
-    override var tabs = mutableListOf<JcefTab>()
+    override var browsers = mutableListOf<JcefBrowser>()
     override var isAccelerationSupported: Boolean = false
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
@@ -179,22 +179,20 @@ class JcefBrowser : Browser, EventListener {
         }
     }
 
-    override fun createTab(url: String, position: TabPosition, settings: BrowserRendererSettings) =
-        JcefTab(this, url, position, settings) { false }.apply(::addTab)
-
-    override fun createInputAwareTab(
+    override fun createBrowser(
         url: String,
-        position: TabPosition,
-        settings: BrowserRendererSettings,
-        takesInput: () -> Boolean
-    ) = JcefTab(this, url, position, settings, takesInput = takesInput).apply(::addTab)
+        position: BrowserViewport,
+        settings: BrowserSettings,
+        inputAcceptor: InputAcceptor?
+    ) = JcefBrowser(this, url, position, settings, inputAcceptor)
+        .apply(::addBrowser)
 
-    private fun addTab(tab: JcefTab) {
-        tabs.sortedInsert(tab, JcefTab::preferOnTop)
+    private fun addBrowser(tab: JcefBrowser) {
+        browsers.sortedInsert(tab, JcefBrowser::renderOnTop)
     }
 
-    internal fun removeTab(tab: JcefTab) {
-        tabs.remove(tab)
+    internal fun removeBrowser(tab: JcefBrowser) {
+        browsers.remove(tab)
     }
 
     /**

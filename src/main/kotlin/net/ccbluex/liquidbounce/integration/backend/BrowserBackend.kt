@@ -1,19 +1,20 @@
-package net.ccbluex.liquidbounce.integration.browser
+package net.ccbluex.liquidbounce.integration.backend
 
-import net.ccbluex.liquidbounce.integration.browser.tab.Tab
-import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 
 /**
  * The browser interface which is used to create tabs and manage the browser backend.
  * Due to different possible browser backends, this interface is used to abstract the browser backend.
  */
-interface Browser {
+interface BrowserBackend {
 
     val isInitialized: Boolean
     var isAccelerationSupported: Boolean
-    val tabs: List<Tab>
-    val type: BrowserType
+    val browsers: List<Browser>
 
     fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit)
 
@@ -32,17 +33,11 @@ interface Browser {
      */
     fun update()
 
-    fun createTab(
+    fun createBrowser(
         url: String,
-        position: TabPosition = TabPosition.Companion.FULLSCREEN,
-        settings: BrowserRendererSettings= BrowserManager.settings
-    ): Tab
-
-    fun createInputAwareTab(
-        url: String,
-        position: TabPosition = TabPosition.Companion.FULLSCREEN,
-        settings: BrowserRendererSettings = BrowserManager.settings,
-        takesInput: () -> Boolean
-    ): Tab
+        position: BrowserViewport = BrowserViewport.Companion.FULLSCREEN,
+        settings: BrowserSettings = BrowserBackendManager.settings,
+        inputAcceptor: InputAcceptor? = null
+    ): Browser
 
 }

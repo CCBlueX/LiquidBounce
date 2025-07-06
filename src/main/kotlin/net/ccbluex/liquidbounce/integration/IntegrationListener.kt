@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -142,7 +142,7 @@ object IntegrationListener : EventListener {
     }
 
     fun updateIntegrationBrowser() {
-        if (!browserIsReady || BrowserManager.browser?.isInitialized != true) {
+        if (!browserIsReady || BrowserBackendManager.browserBackend?.isInitialized != true) {
             return
         }
 

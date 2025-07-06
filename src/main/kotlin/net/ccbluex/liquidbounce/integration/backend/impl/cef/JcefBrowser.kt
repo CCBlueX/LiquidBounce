@@ -16,67 +16,92 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.impl.cef
+package net.ccbluex.liquidbounce.integration.backend.impl.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
-import net.ccbluex.liquidbounce.integration.browser.BrowserTexture
-import net.ccbluex.liquidbounce.integration.browser.tab.InputHandler
-import net.ccbluex.liquidbounce.integration.browser.tab.Tab
-import net.ccbluex.liquidbounce.integration.browser.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserRenderer
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
+import net.ccbluex.liquidbounce.integration.backend.input.InputHandler
+import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.util.Identifier
-import kotlin.math.ln
 
 @Suppress("TooManyFunctions")
-class JcefTab(
-    private val jcefBrowser: JcefBrowser,
+class JcefBrowser(
+    private val backend: JcefBrowserBackend,
     url: String,
-    position: TabPosition,
-    val settings: BrowserRendererSettings,
-    override val takesInput: () -> Boolean
-) : Tab, InputHandler, MinecraftShortcuts {
+    viewport: BrowserViewport,
+    val settings: BrowserSettings,
+    inputAcceptor: InputAcceptor? = null
+) : Browser, InputHandler, MinecraftShortcuts {
 
-    override var position: TabPosition = position
+    override var viewport: BrowserViewport = viewport
         set(value) {
             field = value
 
-            val quality = settings.quality.get()
-            val scaledWidth = value.getScaledWidth(quality)
-            val scaledHeight = value.getScaledHeight(quality)
+            val quality = settings.quality
+            val (scaledWidth, scaledHeight) = value.getScaledDimensions(quality)
 
             mcefBrowser.resize(scaledWidth, scaledHeight)
-
-            val targetZoom = ln(quality.toDouble()) / ln(1.2)
-            if (mcefBrowser.zoomLevel != targetZoom) {
-                mcefBrowser.zoomLevel = targetZoom
-            }
+            mcefBrowser.zoomLevel = value.getZoomLevel(quality)
         }
     override var visible = true
 
     private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
         url,
         true,
-        position.getScaledWidth(settings.quality.get()),
-        position.getScaledHeight(settings.quality.get()),
+        viewport.getScaledDimensions(settings.quality).first,
+        viewport.getScaledDimensions(settings.quality).second,
         MCEFBrowserSettings(
             settings.currentFps,
             settings.accelerated?.get() == true
         )
-    ).apply {
-        zoomLevel = ln(settings.quality.get().toDouble()) / ln(1.2)
+    )
+
+    private val renderer = BrowserRenderer(this)
+    private val inputListener: InputListener? = inputAcceptor?.let { inputChecker ->
+        InputListener(this, this, inputAcceptor)
     }
 
-    private val texture = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
+    init {
+        mcefBrowser.zoomLevel = viewport.getZoomLevel(settings.quality)
+    }
 
-    override var drawn = false
-    override var preferOnTop = false
+    private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
+
+    override var rendered = false
+    override var renderOnTop = false
+
+    override var url: String
+        get() = mcefBrowser.url
+        set(value) {
+            mcefBrowser.loadURL(value)
+        }
+
+    override val texture: BrowserTexture?
+        get() {
+            if (mcefBrowser.renderer.isUnpainted) {
+                return null
+            }
+
+            return BrowserTexture(
+                mcefBrowser.renderer.textureID,
+                textureId,
+                viewport.height,
+                viewport.width,
+                mcefBrowser.renderer.isBGRA
+            )
+        }
 
     init {
-        mc.textureManager.registerTexture(texture, object : AbstractTexture() {
+        mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
             override fun getGlId() = mcefBrowser.renderer.textureID
         })
     }
@@ -97,67 +122,41 @@ class JcefTab(
         mcefBrowser.goBack()
     }
 
-    override fun loadUrl(url: String) {
-        mcefBrowser.loadURL(url)
-    }
-
-    override fun getUrl(): String = mcefBrowser.url
-
-    override fun closeTab() {
-        jcefBrowser.removeTab(this)
+    override fun close() {
+        renderer.close()
+        inputListener?.close()
+        backend.removeBrowser(this)
         mcefBrowser.close()
-        mc.textureManager.destroyTexture(texture)
+        mc.textureManager.destroyTexture(textureId)
     }
 
-    override fun getTexture(): BrowserTexture? {
-        if (mcefBrowser.renderer.isUnpainted) {
-            return null
-        }
-
-        return BrowserTexture(
-            mcefBrowser.renderer.textureID,
-            texture,
-            position.height,
-            position.width,
-            mcefBrowser.renderer.isBGRA
-        )
-    }
-
-    override fun resize(width: Int, height: Int) {
-        if (!position.fullScreen) {
+    override fun update(width: Int, height: Int) {
+        if (!viewport.fullScreen) {
             return
         }
 
-        position = position.copy(width = width, height = height)
+        viewport = viewport.copy(width = width, height = height)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        val quality = settings.quality.get()
-        val scaledX = (mouseX * quality).toInt()
-        val scaledY = (mouseY * quality).toInt()
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
         mcefBrowser.sendMousePress(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        val quality = settings.quality.get()
-        val scaledX = (mouseX * quality).toInt()
-        val scaledY = (mouseY * quality).toInt()
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
         mcefBrowser.sendMouseRelease(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        val quality = settings.quality.get()
-        val scaledX = (mouseX * quality).toInt()
-        val scaledY = (mouseY * quality).toInt()
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
         mcefBrowser.sendMouseMove(scaledX, scaledY)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        val quality = settings.quality.get()
-        val scaledX = (mouseX * quality).toInt()
-        val scaledY = (mouseY * quality).toInt()
+        val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, settings.quality)
         mcefBrowser.sendMouseWheel(scaledX, scaledY, delta)
     }
 

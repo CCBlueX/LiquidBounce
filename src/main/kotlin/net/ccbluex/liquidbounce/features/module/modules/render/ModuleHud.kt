@@ -30,9 +30,8 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
-import net.ccbluex.liquidbounce.integration.browser.tab.Tab
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
@@ -53,11 +52,11 @@ import net.minecraft.client.gui.screen.DownloadingTerrainScreen
 
 object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
 
-    private var browserTab: Tab? = null
+    override val running = true
 
+    private var browserBrowser: Browser? = null
     override val baseKey: String
         get() = "liquidbounce.module.hud"
-    override val running = true
 
     private val blur by boolean("Blur", true)
     @Suppress("unused")
@@ -90,8 +89,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     override fun disable() {
         // Closes tab entirely
-        browserTab?.closeTab()
-        browserTab = null
+        browserBrowser?.close()
+        browserBrowser = null
 
         // Minimap
         RenderedEntities.unsubscribe(this)
@@ -101,7 +100,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        tree(BrowserManager.settings)
+        tree(BrowserBackendManager.settings)
     }
 
     @Suppress("unused")
@@ -122,19 +121,19 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         close()
     }
 
-    private fun open(): Tab {
-        if (browserTab != null) {
-            return browserTab!!
+    private fun open(): Browser {
+        if (browserBrowser != null) {
+            return browserBrowser!!
         }
 
         return ThemeManager.openImmediate(VirtualScreenType.HUD, true).also { tab ->
-            browserTab = tab
+            browserBrowser = tab
         }
     }
 
     private fun close() {
-        browserTab?.closeTab()
-        browserTab = null
+        browserBrowser?.close()
+        browserBrowser = null
     }
 
     fun reopen() {

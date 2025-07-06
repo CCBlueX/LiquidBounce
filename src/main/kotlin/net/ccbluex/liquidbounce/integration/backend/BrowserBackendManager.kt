@@ -16,40 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser
+package net.ccbluex.liquidbounce.integration.backend
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.integration.browser.impl.cef.JcefBrowser
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.impl.cef.JcefBrowserBackend
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
-object BrowserManager {
+object BrowserBackendManager : EventListener {
 
-    private val BROWSER_TYPE = BrowserType.JCEF
+    val browserBackend: BrowserBackend = JcefBrowserBackend()
 
-    /**
-     * A browser exception. Used to indicate that something went wrong while using the browser.
-     */
-    class BrowserException(message: String) : Exception(message)
-
-    /**
-     * The current browser instance.
-     */
-    var browser: Browser? = null
+    lateinit var settings: BrowserSettings
         private set
-
-    lateinit var settings: BrowserRendererSettings
-        private set
-
-    @Suppress("unused")
-    val browserDrawer = BrowserDrawer { browser }
-
-    @Suppress("unused")
-    private val browserInput = BrowserInput { browser }
 
     init {
         PersistentLocalStorage
@@ -60,42 +47,44 @@ object BrowserManager {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        val browser = BROWSER_TYPE.browser().apply { browser = this }
-        browser.makeDependenciesAvailable(taskManager, ::startBrowser)
+        browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }
 
     /**
      * Initializes the browser.
      */
-    fun startBrowser() {
+    fun start() {
         // Ensure that the browser is available
-        val browser = browser ?: throw BrowserException("Browser is not available.")
         logger.info("Initializing browser...")
 
         // Ensure that the browser is started on the render thread
         RenderSystem.assertOnRenderThread()
 
-        browser.start()
-        settings = BrowserRendererSettings()
+        browserBackend.start()
+        settings = BrowserSettings()
 
-        EventManager.callEvent(BrowserReadyEvent(browser))
+        EventManager.callEvent(BrowserReadyEvent(browserBackend))
         logger.info("Successfully initialized browser.")
     }
 
     /**
      * Shuts down the browser.
      */
-    fun stopBrowser() = runCatching {
-        browser?.stop()
-        browser = null
+    fun stop() = runCatching {
+        browserBackend.stop()
     }.onFailure {
         logger.error("Failed to shutdown browser.", it)
     }.onSuccess {
         logger.info("Successfully shutdown browser.")
     }
 
-}
+    @Suppress("unused")
+    private val gameRenderHandler = handler<GameRenderEvent>(priority = FIRST_PRIORITY) {
+        if (!browserBackend.isInitialized) {
+            return@handler
+        }
 
-enum class BrowserType(override val choiceName: String, val browser: () -> Browser) : NamedChoice {
-    JCEF("jcef", ::JcefBrowser)
+        browserBackend.update()
+    }
+
 }

@@ -28,13 +28,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
-import net.ccbluex.liquidbounce.integration.browser.tab.Tab
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.glfw.GLFW
 
@@ -59,9 +58,9 @@ object ModuleClickGui :
     private val cache by boolean("Cache", true).onChanged { cache ->
         RenderSystem.recordRenderCall {
             if (cache) {
-                createView()
+                open()
             } else {
-                closeView()
+                close()
             }
 
             if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
@@ -92,7 +91,7 @@ object ModuleClickGui :
         }
     }
 
-    private var clickGuiTab: Tab? = null
+    private var clickGuiBrowser: Browser? = null
     private const val WORLD_CHANGE_SECONDS_UNTIL_RELOAD = 5
 
     init {
@@ -106,7 +105,7 @@ object ModuleClickGui :
         }
 
         mc.setScreen(
-            if (clickGuiTab == null) {
+            if (clickGuiBrowser == null) {
                 VirtualDisplayScreen(VirtualScreenType.CLICK_GUI)
             } else {
                 ClickScreen()
@@ -115,61 +114,44 @@ object ModuleClickGui :
         super.enable()
     }
 
-    /**
-     * Creates the ClickGUI view
-     */
-    private fun createView() {
-        if (clickGuiTab != null) {
+    private fun open() {
+        if (clickGuiBrowser != null) {
             return
         }
 
-        clickGuiTab = ThemeManager.openInputAwareImmediate(VirtualScreenType.CLICK_GUI, true) {
+        clickGuiBrowser = ThemeManager.openInputAwareImmediate(VirtualScreenType.CLICK_GUI, true) {
             mc.currentScreen is ClickScreen
         }.preferOnTop()
     }
 
-    /**
-     * Closes the ClickGUI view
-     */
-    private fun closeView() {
-        clickGuiTab?.closeTab()
-        clickGuiTab = null
+    private fun close() {
+        clickGuiBrowser?.close()
+        clickGuiBrowser = null
     }
 
-    /**
-     * Restarts the ClickGUI view
-     */
-    fun restartView() {
-        closeView()
-        createView()
-    }
+    fun reload(restart: Boolean = false) {
+        if (restart) {
+            close()
+            open()
+            return
+        }
 
-    /**
-     * Synchronizes the ClickGUI with the module values until there is a better solution
-     * for updating setting changes
-     */
-    fun reloadView() {
-        clickGuiTab?.reload()
+        clickGuiBrowser?.reload()
     }
 
     @Suppress("unused")
-    private val gameRenderHandler = handler<GameRenderEvent>(
-        priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING,
-    ) {
-        // A hack to prevent the clickgui from being drawn
-        if (mc.currentScreen !is ClickScreen) {
-            clickGuiTab?.drawn = true
-        }
+    private val gameRenderHandler = handler<GameRenderEvent>(priority = OBJECTION_AGAINST_EVERYTHING) {
+        clickGuiBrowser?.visible = mc.currentScreen is ClickScreen
     }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> {
-        createView()
+        open()
     }
 
     @Suppress("unused")
     private val worldChangeHandler = sequenceHandler<WorldChangeEvent>(
-        priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING,
+        priority = OBJECTION_AGAINST_EVERYTHING
     ) { event ->
         if (event.world == null) {
             return@sequenceHandler
@@ -177,19 +159,19 @@ object ModuleClickGui :
 
         waitSeconds(WORLD_CHANGE_SECONDS_UNTIL_RELOAD)
         if (mc.currentScreen !is ClickScreen) {
-            reloadView()
+            reload()
         }
     }
 
     @Suppress("unused")
     private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
         if (mc.currentScreen !is ClickScreen) {
-            reloadView()
+            reload()
         }
     }
 
     /**
-     * An empty screen that acts as hint when to draw the clickgui
+     * An empty screen that acts as a hint when to draw the clickgui
      */
     class ClickScreen : Screen("ClickGUI".asText()) {
 
