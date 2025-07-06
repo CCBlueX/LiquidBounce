@@ -52,6 +52,9 @@ class CefBrowser(
             val quality = GlobalBrowserSettings.quality
             val (scaledWidth, scaledHeight) = value.getScaledDimensions(quality)
 
+            // TODO: CEF is suffering from a bug where resizing the browser,
+            //   does not call [wasResized] and thus does not update the renderer.
+            //   See: https://github.com/chromiumembedded/cef/issues/3826
             mcefBrowser.resize(scaledWidth, scaledHeight)
             mcefBrowser.zoomLevel = value.getZoomLevel(quality)
         }
