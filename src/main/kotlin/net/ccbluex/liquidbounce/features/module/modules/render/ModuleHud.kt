@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
@@ -54,12 +54,13 @@ import net.minecraft.client.gui.screen.DownloadingTerrainScreen
 
 object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
 
+    // The module is always running, even if the HUD is not visible.
     override val running = true
-
-    private var browserBrowser: Browser? = null
     override val baseKey: String
         get() = "liquidbounce.module.hud"
-
+    private var browserBrowser: Browser? = null
+    private val visible: Boolean
+        get() = !isDestructed && !isHidingNow && inGame
     private val blur by boolean("Blur", true)
 
     @Suppress("unused")
@@ -85,11 +86,13 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             chat(markAsError(message("hidingAppearance")))
         }
 
-        open()
-
         // Minimap
         RenderedEntities.subscribe(this)
         ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+
+        if (visible) {
+            open()
+        }
     }
 
     override fun disable() {
@@ -112,7 +115,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
-        if (!running || isHidingNow || !inGame) {
+        if (!enabled || !visible) {
             close()
             return@handler
         }
@@ -148,7 +151,9 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     fun reopen() {
         close()
-        open()
+        if (enabled && visible) {
+            open()
+        }
     }
 
 }
