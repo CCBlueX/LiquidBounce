@@ -129,7 +129,11 @@ object ThemeManager : Configurable("theme") {
         inputAcceptor = inputAcceptor
     )
 
-    fun updateImmediate(browser: Browser?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false)  {
+    fun updateImmediate(
+        browser: Browser?,
+        virtualScreenType: VirtualScreenType? = null,
+        markAsStatic: Boolean = false
+    ) {
         browser?.url = route(virtualScreenType, markAsStatic).url
     }
 
