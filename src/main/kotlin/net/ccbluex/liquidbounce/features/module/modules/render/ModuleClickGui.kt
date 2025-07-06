@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
 import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager

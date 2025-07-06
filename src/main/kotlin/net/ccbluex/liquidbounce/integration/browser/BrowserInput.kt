@@ -28,7 +28,7 @@ import org.lwjgl.glfw.GLFW
 class BrowserInput(val browser: () -> Browser?) : EventListener {
 
     private val tabs
-        get() = browser()?.getTabs() ?: emptyList()
+        get() = browser()?.tabs ?: emptyList()
 
     private var mouseX: Double = 0.0
     private var mouseY: Double = 0.0

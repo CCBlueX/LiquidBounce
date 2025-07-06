@@ -142,7 +142,7 @@ object IntegrationListener : EventListener {
     }
 
     fun updateIntegrationBrowser() {
-        if (!browserIsReady || BrowserManager.browser?.isInitialized() != true) {
+        if (!browserIsReady || BrowserManager.browser?.isInitialized != true) {
             return
         }
 

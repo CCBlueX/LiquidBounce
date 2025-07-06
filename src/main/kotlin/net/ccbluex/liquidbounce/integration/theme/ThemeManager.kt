@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.ccbluex.liquidbounce.utils.math.Vec2i
-import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderLayer
@@ -101,8 +100,11 @@ object ThemeManager : Configurable("theme") {
      * Open [Tab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
      * This tab will be locked to 60 FPS since it is not input aware.
      */
-    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Tab =
-        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, frameRate = 60)
+    fun openImmediate(
+        virtualScreenType: VirtualScreenType? = null,
+        markAsStatic: Boolean = false
+    ): Tab =
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url)
             ?: error("Browser is not initialized")
 
     /**
@@ -115,7 +117,6 @@ object ThemeManager : Configurable("theme") {
         takesInput: () -> Boolean = takesInputHandler
     ): Tab = BrowserManager.browser?.createInputAwareTab(
         route(virtualScreenType, markAsStatic).url,
-        frameRate = refreshRate,
         takesInput = takesInput
     ) ?: error("Browser is not initialized")
 

@@ -21,15 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
 import net.ccbluex.liquidbounce.integration.browser.tab.Tab
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
@@ -51,13 +53,11 @@ import net.minecraft.client.gui.screen.DownloadingTerrainScreen
 
 object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
 
-    override val running
-        get() = this.enabled && !isDestructed
-
     private var browserTab: Tab? = null
 
     override val baseKey: String
         get() = "liquidbounce.module.hud"
+    override val running = true
 
     private val blur by boolean("Blur", true)
     @Suppress("unused")
@@ -100,6 +100,11 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     @Suppress("unused")
+    private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
+        tree(BrowserManager.settings)
+    }
+
+    @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
         if (!running || isHidingNow || !inGame) {
@@ -122,7 +127,9 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             return browserTab!!
         }
 
-        return ThemeManager.openImmediate(VirtualScreenType.HUD, true).also { browserTab = it }
+        return ThemeManager.openImmediate(VirtualScreenType.HUD, true).also { tab ->
+            browserTab = tab
+        }
     }
 
     private fun close() {

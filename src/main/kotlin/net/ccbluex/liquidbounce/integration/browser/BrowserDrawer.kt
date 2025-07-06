@@ -22,11 +22,9 @@ import net.ccbluex.liquidbounce.common.RenderLayerExtensions
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.browser.Browser
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.util.Identifier
 
 /**
  * Draws any kind of [Browser] to the Minecraft screen.
@@ -34,16 +32,16 @@ import net.minecraft.util.Identifier
 class BrowserDrawer(val browser: () -> Browser?) : EventListener {
 
     private val tabs
-        get() = browser()?.getTabs() ?: emptyList()
+        get() = browser()?.tabs ?: emptyList()
 
     @Suppress("unused")
     private val gameRenderHandler = handler<GameRenderEvent> {
         val browser = browser() ?: return@handler
-        if (!browser.isInitialized()) {
+        if (!browser.isInitialized) {
             return@handler
         }
 
-        browser.drawGlobally()
+        browser.update()
 
         for (tab in tabs) {
             tab.drawn = false

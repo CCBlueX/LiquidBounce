@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.integration.browser.impl.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.browser.BrowserRendererSettings
 import net.ccbluex.liquidbounce.integration.browser.BrowserTexture
 import net.ccbluex.liquidbounce.integration.browser.tab.InputHandler
 import net.ccbluex.liquidbounce.integration.browser.tab.Tab
@@ -29,13 +29,14 @@ import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.util.Identifier
+import kotlin.math.ln
 
 @Suppress("TooManyFunctions")
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
     position: TabPosition,
-    frameRate: Int = 60,
+    val settings: BrowserRendererSettings,
     override val takesInput: () -> Boolean
 ) : Tab, InputHandler, MinecraftShortcuts {
 
@@ -43,26 +44,30 @@ class JcefTab(
         set(value) {
             field = value
 
-            mcefBrowser.resize(
-                value.width.coerceAtLeast(1),
-                value.height.coerceAtLeast(1)
-            )
+            val quality = settings.quality.get()
+            val scaledWidth = value.getScaledWidth(quality)
+            val scaledHeight = value.getScaledHeight(quality)
+
+            mcefBrowser.resize(scaledWidth, scaledHeight)
+
+            val targetZoom = ln(quality.toDouble()) / ln(1.2)
+            if (mcefBrowser.zoomLevel != targetZoom) {
+                mcefBrowser.zoomLevel = targetZoom
+            }
         }
     override var visible = true
 
     private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
         url,
         true,
-        position.width.coerceAtLeast(1),
-        position.height.coerceAtLeast(1),
+        position.getScaledWidth(settings.quality.get()),
+        position.getScaledHeight(settings.quality.get()),
         MCEFBrowserSettings(
-            frameRate,
-            BrowserManager.accelerated
+            settings.currentFps,
+            settings.accelerated?.get() == true
         )
     ).apply {
-        // Force zoom level to 1.0 to prevent users from adjusting the zoom level
-        // this was possible in earlier versions of MCEF
-        zoomLevel = 1.0
+        zoomLevel = ln(settings.quality.get().toDouble()) / ln(1.2)
     }
 
     private val texture = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
@@ -128,20 +133,32 @@ class JcefTab(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        mcefBrowser.sendMousePress(mouseX.toInt(), mouseY.toInt(), mouseButton)
+        val quality = settings.quality.get()
+        val scaledX = (mouseX * quality).toInt()
+        val scaledY = (mouseY * quality).toInt()
+        mcefBrowser.sendMousePress(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
-        mcefBrowser.sendMouseRelease(mouseX.toInt(), mouseY.toInt(), mouseButton)
+        val quality = settings.quality.get()
+        val scaledX = (mouseX * quality).toInt()
+        val scaledY = (mouseY * quality).toInt()
+        mcefBrowser.sendMouseRelease(scaledX, scaledY, mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
-        mcefBrowser.sendMouseMove(mouseX.toInt(), mouseY.toInt())
+        val quality = settings.quality.get()
+        val scaledX = (mouseX * quality).toInt()
+        val scaledY = (mouseY * quality).toInt()
+        mcefBrowser.sendMouseMove(scaledX, scaledY)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        mcefBrowser.sendMouseWheel(mouseX.toInt(), mouseY.toInt(), delta)
+        val quality = settings.quality.get()
+        val scaledX = (mouseX * quality).toInt()
+        val scaledY = (mouseY * quality).toInt()
+        mcefBrowser.sendMouseWheel(scaledX, scaledY, delta)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {

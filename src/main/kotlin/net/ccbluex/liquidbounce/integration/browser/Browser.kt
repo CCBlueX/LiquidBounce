@@ -10,23 +10,39 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
  */
 interface Browser {
 
+    val isInitialized: Boolean
+    var isAccelerationSupported: Boolean
+    val tabs: List<Tab>
+    val type: BrowserType
+
     fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit)
 
-    fun startBrowser()
+    /**
+     * Starts the browser backend and initializes it.
+     */
+    fun start()
 
-    fun stopBrowser()
+    /**
+     * Stops the browser backend and cleans up resources.
+     */
+    fun stop()
 
-    fun isInitialized(): Boolean
+    /**
+     * Usually does a global render update of the browser.
+     */
+    fun update()
 
-    fun createTab(url: String, position: TabPosition = TabPosition.Companion.FULLSCREEN, frameRate: Int): Tab
+    fun createTab(
+        url: String,
+        position: TabPosition = TabPosition.Companion.FULLSCREEN,
+        settings: BrowserRendererSettings= BrowserManager.settings
+    ): Tab
 
-    fun createInputAwareTab(url: String, position: TabPosition = TabPosition.Companion.FULLSCREEN, frameRate: Int,
-                            takesInput: () -> Boolean): Tab
-
-    fun getTabs(): List<Tab>
-
-    fun getBrowserType(): BrowserType
-
-    fun drawGlobally()
+    fun createInputAwareTab(
+        url: String,
+        position: TabPosition = TabPosition.Companion.FULLSCREEN,
+        settings: BrowserRendererSettings = BrowserManager.settings,
+        takesInput: () -> Boolean
+    ): Tab
 
 }

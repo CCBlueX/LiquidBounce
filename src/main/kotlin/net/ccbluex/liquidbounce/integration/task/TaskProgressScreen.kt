@@ -160,7 +160,7 @@ class TaskProgressScreen(
     }
 
     override fun tick() {
-        if (taskManager.isCompleted && BrowserManager.browser?.isInitialized() == true) {
+        if (taskManager.isCompleted && BrowserManager.browser?.isInitialized == true) {
             mc.setScreen(TitleScreen())
         }
     }

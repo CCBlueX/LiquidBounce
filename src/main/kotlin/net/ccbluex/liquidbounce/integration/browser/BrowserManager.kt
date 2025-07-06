@@ -19,22 +19,17 @@
 package net.ccbluex.liquidbounce.integration.browser
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.integration.browser.Browser
 import net.ccbluex.liquidbounce.integration.browser.impl.cef.JcefBrowser
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.logger
 
-object BrowserManager : Configurable("browser") {
+object BrowserManager {
 
-    private val DEFAULT_BROWSER_TYPE = BrowserType.JCEF
-    private val browserType by enumChoice("Type", DEFAULT_BROWSER_TYPE)
-
-    val accelerated by boolean("Accelerated", true)
+    private val BROWSER_TYPE = BrowserType.JCEF
 
     /**
      * A browser exception. Used to indicate that something went wrong while using the browser.
@@ -45,6 +40,9 @@ object BrowserManager : Configurable("browser") {
      * The current browser instance.
      */
     var browser: Browser? = null
+        private set
+
+    lateinit var settings: BrowserRendererSettings
         private set
 
     @Suppress("unused")
@@ -62,8 +60,7 @@ object BrowserManager : Configurable("browser") {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        val browser = browserType.getBrowser().apply { browser = this }
-
+        val browser = BROWSER_TYPE.browser().apply { browser = this }
         browser.makeDependenciesAvailable(taskManager, ::startBrowser)
     }
 
@@ -78,7 +75,9 @@ object BrowserManager : Configurable("browser") {
         // Ensure that the browser is started on the render thread
         RenderSystem.assertOnRenderThread()
 
-        browser.startBrowser()
+        browser.start()
+        settings = BrowserRendererSettings()
+
         EventManager.callEvent(BrowserReadyEvent(browser))
         logger.info("Successfully initialized browser.")
     }
@@ -87,7 +86,7 @@ object BrowserManager : Configurable("browser") {
      * Shuts down the browser.
      */
     fun stopBrowser() = runCatching {
-        browser?.stopBrowser()
+        browser?.stop()
         browser = null
     }.onFailure {
         logger.error("Failed to shutdown browser.", it)
@@ -97,9 +96,6 @@ object BrowserManager : Configurable("browser") {
 
 }
 
-enum class BrowserType(override val choiceName: String, val getBrowser: () -> Browser) : NamedChoice {
-    JCEF("jcef", ::JcefBrowser),
-    ULTRALIGHT("ultralight", {
-        throw BrowserManager.BrowserException("Ultralight is not supported yet.")
-    })
+enum class BrowserType(override val choiceName: String, val browser: () -> Browser) : NamedChoice {
+    JCEF("jcef", ::JcefBrowser)
 }
