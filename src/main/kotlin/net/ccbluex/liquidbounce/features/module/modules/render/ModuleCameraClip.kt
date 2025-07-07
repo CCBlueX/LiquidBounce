@@ -53,6 +53,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
 
     private object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
         private val rememberScrolled by boolean("RememberScrolled", false)
+        private val requireFreeLock by boolean("RequireFreeLock", false)
         private val sensitivity by float("Sensitivity", 0.3f, 0.1f..2f)
         private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
 
@@ -64,6 +65,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
 
         private val canPerformScroll get() =
             (modifierKey == InputUtil.UNKNOWN_KEY || InputUtil.isKeyPressed(mc.window.handle, modifierKey.code))
+                && (!requireFreeLock || ModuleFreeLook.running)
                 && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
 
         @Suppress("unused")
