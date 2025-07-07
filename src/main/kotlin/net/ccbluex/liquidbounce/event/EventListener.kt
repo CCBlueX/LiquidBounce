@@ -128,7 +128,7 @@ fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
 /**
  * Returns computed [ReadOnlyProperty] based on the [accumulator] of specific event.
  */
-inline fun <reified E : Event, V> EventListener.computedWith(
+inline fun <reified E : Event, V> EventListener.computedOn(
     initialValue: V,
     priority: Short = 0,
     crossinline accumulator: (event: E, prev: V) -> V,

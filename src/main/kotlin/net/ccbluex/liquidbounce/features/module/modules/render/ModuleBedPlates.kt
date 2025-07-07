@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
-import net.ccbluex.liquidbounce.event.computedWith
+import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,11 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
-import net.ccbluex.liquidbounce.utils.kotlin.getValue
-import net.ccbluex.liquidbounce.utils.kotlin.removeRange
+import net.ccbluex.liquidbounce.utils.kotlin.*
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
@@ -85,7 +81,9 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         Blocks.BLACK_STAINED_GLASS,
     )
 
-    private val bedStatesWithSquaredDistance by computedWith<GameTickEvent, MutableList<DoubleObjectPair<BedState>>>(mutableListOf()) { _, list ->
+    private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<DoubleObjectPair<BedState>>>(
+        initialValue = mutableListOf()
+    ) { _, list ->
         val playerPos = player.blockPos
         val maxDistanceSquared = maxDistance.sq()
         list.clear()
@@ -166,7 +164,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                             val defaultState = it.block.defaultState
                             val color =
                                 if (highlightUnbreakable && defaultState.isToolRequired
-                                    && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null) {
+                                    && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
+                                ) {
                                     Color4b.RED
                                 } else {
                                     Color4b.WHITE
@@ -208,7 +207,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         val count: Int,
         val layer: Int,
     ) : Comparable<SurroundingBlock> {
-        override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(this, other,
+        override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
+            this, other,
             { it.layer }, { -it.count }, { -it.block.hardness }, { it.block.translationKey })
     }
 
