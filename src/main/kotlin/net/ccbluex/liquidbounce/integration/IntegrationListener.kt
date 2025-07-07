@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
@@ -150,6 +151,10 @@ object IntegrationListener : EventListener {
         if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
             return
         }
+
+        // Reload ClickGUI if it is open
+        logger.info("Restart ClickGUI...")
+        ModuleClickGui.reload(true)
 
         logger.info("Restarting integration browser ${browser.javaClass.simpleName} to ${ThemeManager.route()}")
         browser.close()
