@@ -18,20 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip.cameraDistance
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.util.InputUtil
 import org.lwjgl.glfw.GLFW
-
-private val BASE_DISTANCE_RANGE = 1f..48f
-private const val DEFAULT_DISTANCE = 4f
 
 /**
  * CameraClip module
@@ -40,31 +38,35 @@ private const val DEFAULT_DISTANCE = 4f
  *
  * @author 1zun4, sqlerrorthing
  */
-object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER), CameraDistance {
-    internal val distanceMode = choices(
-        "Distance",
-        FixedCameraDistance,
-        arrayOf(FixedCameraDistance, ScrollAdjustCameraDistance)
-    )
+object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
+    internal val cameraDistance = float("CameraDistance", 4f, 1f..48f)
 
-    override val distance: Float
-        get() = distanceMode.activeChoice.distance
+    init {
+        tree(ScrollAdjust)
+    }
+
+    val distance: Float
+        get() = if (ScrollAdjust.running) {
+            ScrollAdjust.scrolledDistance
+        } else {
+            cameraDistance.get()
+        }
 }
 
-internal object ScrollAdjustCameraDistance : CameraDistanceChoice("ScrollAdjust") {
-    private var baseDistance by float("BaseDistance", DEFAULT_DISTANCE, BASE_DISTANCE_RANGE)
+internal object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
     private val rememberScrolled by boolean("RememberScrolled", false)
     private val sensitivity by float("Sensitivity", 0.3f, 0.1f..3f)
     private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
 
-    private var scrolledDistance = DEFAULT_DISTANCE
-        set(value) {
-            field = value.coerceIn(BASE_DISTANCE_RANGE)
+    internal var scrolledDistance = cameraDistance.get()
+        private set(value) {
+            @Suppress("UNCHECKED_CAST")
+            field = value.coerceIn(cameraDistance.range as ClosedFloatingPointRange<Float>)
         }
 
     private val canPerformScroll get() =
         (modifierKey == InputUtil.UNKNOWN_KEY || InputUtil.isKeyPressed(mc.window.handle, modifierKey.code))
-        && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
+            && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
 
     @Suppress("unused")
     private val resetHandler = handler<PerspectiveEvent>(
@@ -92,29 +94,14 @@ internal object ScrollAdjustCameraDistance : CameraDistanceChoice("ScrollAdjust"
     }
 
     fun reset() {
-        if (rememberScrolled && scrolledDistance != baseDistance) {
-            baseDistance = scrolledDistance
+        if (rememberScrolled && scrolledDistance != cameraDistance.get()) {
+            cameraDistance.set(scrolledDistance)
         } else {
-            scrolledDistance = baseDistance
+            scrolledDistance = cameraDistance.get()
         }
     }
 
     override fun enable() {
         reset()
     }
-
-    override val distance get() = scrolledDistance
-}
-
-internal object FixedCameraDistance : CameraDistanceChoice("Fixed") {
-    override val distance by float("CameraDistance", DEFAULT_DISTANCE, BASE_DISTANCE_RANGE)
-}
-
-internal sealed class CameraDistanceChoice(name: String) : Choice(name), CameraDistance {
-    override val parent
-        get() = ModuleCameraClip.distanceMode
-}
-
-internal sealed interface CameraDistance {
-    val distance: Float
 }
