@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip.cameraDistance
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.util.InputUtil
@@ -51,57 +50,57 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
         } else {
             cameraDistance.get()
         }
-}
 
-internal object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
-    private val rememberScrolled by boolean("RememberScrolled", false)
-    private val sensitivity by float("Sensitivity", 0.3f, 0.1f..2f)
-    private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
+    private object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
+        private val rememberScrolled by boolean("RememberScrolled", false)
+        private val sensitivity by float("Sensitivity", 0.3f, 0.1f..2f)
+        private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
 
-    internal var scrolledDistance = cameraDistance.get()
-        private set(value) {
-            @Suppress("UNCHECKED_CAST")
-            field = value.coerceIn(cameraDistance.range as ClosedFloatingPointRange<Float>)
+        var scrolledDistance = cameraDistance.get()
+            private set(value) {
+                @Suppress("UNCHECKED_CAST")
+                field = value.coerceIn(cameraDistance.range as ClosedFloatingPointRange<Float>)
+            }
+
+        private val canPerformScroll get() =
+            (modifierKey == InputUtil.UNKNOWN_KEY || InputUtil.isKeyPressed(mc.window.handle, modifierKey.code))
+                && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
+
+        @Suppress("unused")
+        private val resetHandler = handler<PerspectiveEvent>(
+            priority = EventPriorityConvention.READ_FINAL_STATE
+        ) {
+            if (it.perspective == Perspective.FIRST_PERSON) {
+                reset()
+            }
         }
 
-    private val canPerformScroll get() =
-        (modifierKey == InputUtil.UNKNOWN_KEY || InputUtil.isKeyPressed(mc.window.handle, modifierKey.code))
-            && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
+        @Suppress("unused")
+        private val scrollHandler = handler<MouseScrollEvent> {
+            if (!canPerformScroll) {
+                return@handler
+            }
 
-    @Suppress("unused")
-    private val resetHandler = handler<PerspectiveEvent>(
-        priority = EventPriorityConvention.READ_FINAL_STATE
-    ) {
-        if (it.perspective == Perspective.FIRST_PERSON) {
+            scrolledDistance = scrolledDistance + (sensitivity * it.vertical).toFloat()
+        }
+
+        @Suppress("unused")
+        private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
+            if (canPerformScroll) {
+                it.cancelEvent()
+            }
+        }
+
+        fun reset() {
+            if (rememberScrolled && scrolledDistance != cameraDistance.get()) {
+                cameraDistance.set(scrolledDistance)
+            } else {
+                scrolledDistance = cameraDistance.get()
+            }
+        }
+
+        override fun enable() {
             reset()
         }
-    }
-
-    @Suppress("unused")
-    private val scrollHandler = handler<MouseScrollEvent> {
-        if (!canPerformScroll) {
-            return@handler
-        }
-
-        scrolledDistance = scrolledDistance + (sensitivity * it.vertical).toFloat()
-    }
-
-    @Suppress("unused")
-    private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
-        if (canPerformScroll) {
-            it.cancelEvent()
-        }
-    }
-
-    fun reset() {
-        if (rememberScrolled && scrolledDistance != cameraDistance.get()) {
-            cameraDistance.set(scrolledDistance)
-        } else {
-            scrolledDistance = cameraDistance.get()
-        }
-    }
-
-    override fun enable() {
-        reset()
     }
 }
