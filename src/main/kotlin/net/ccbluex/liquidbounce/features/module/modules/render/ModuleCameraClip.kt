@@ -55,7 +55,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
 
 internal object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
     private val rememberScrolled by boolean("RememberScrolled", false)
-    private val sensitivity by float("Sensitivity", 0.3f, 0.1f..3f)
+    private val sensitivity by float("Sensitivity", 0.3f, 0.1f..2f)
     private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
 
     internal var scrolledDistance = cameraDistance.get()
