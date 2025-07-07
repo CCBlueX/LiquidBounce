@@ -37,7 +37,7 @@ import net.minecraft.util.Identifier
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
-    private val backend: JcefBrowserBackend,
+    private val backend: CefBrowserBackend,
     url: String,
     viewport: BrowserViewport,
     val settings: BrowserSettings,

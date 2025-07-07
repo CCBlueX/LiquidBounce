@@ -53,10 +53,10 @@ private const val CACHE_CLEANUP_THRESHOLD = 1000 * 60 * 60 * 24 * 7 // 7 days
  * @see <a href="https://github.com/CCBlueX/java-cef/">JCEF</a>
  * @see <a href="https://github.com/CCBlueX/mcef/">MCEF</a>
  *
- * @author 1zuna <marco@ccbluex.net>
+ * @author Izuna <izuna.seikatsu@ccbluex.net>
  */
 @Suppress("TooManyFunctions")
-class JcefBrowserBackend : BrowserBackend, EventListener {
+class CefBrowserBackend : BrowserBackend, EventListener {
 
     private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
     private val librariesFolder = mcefFolder.resolve("libraries")
@@ -212,16 +212,17 @@ class JcefBrowserBackend : BrowserBackend, EventListener {
             logger.info("GPU Vendor: $vendor")
             logger.info("GPU Renderer: $renderer")
 
-            // Check if the GPU is NVIDIA as
-            // we could not get this feature to work reliably on AMD or Intel GPUs.
-            // On AMD it is very unstable and causes crashes.
+            // Check if the GPU is NVIDIA or AMD as
+            // we could not get this feature to work reliably on Intel GPUs.
             // On Intel GPU (Intel ARC), it does not work as well and is reported:
             // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
-            val isNvidia = vendor.lowercase().contains("nvidia") ||
-                          renderer.lowercase().contains("geforce") ||
-                          renderer.lowercase().contains("quadro")
-            if (!isNvidia) {
-                logger.warn("GPU acceleration only supported on NVIDIA GPUs")
+            val isSupportedGpu = vendor.lowercase().contains("nvidia") ||
+                                 renderer.lowercase().contains("geforce") ||
+                                 renderer.lowercase().contains("quadro") ||
+                                 vendor.lowercase().contains("amd") ||
+                                 renderer.lowercase().contains("radeon")
+            if (!isSupportedGpu) {
+                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
                 logger.info("Falling back to software rendering for browser")
                 return false
             }
