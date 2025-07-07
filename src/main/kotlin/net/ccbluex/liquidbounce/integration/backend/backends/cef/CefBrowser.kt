@@ -53,14 +53,26 @@ class CefBrowser(
             val (scaledWidth, scaledHeight) = value.getScaledDimensions(quality)
             val zoomLevel = value.getZoomLevel(quality)
 
+            val viewRect = mcefBrowser.getViewRect(null)
+            // Check if the browser dimensions have changed
+            if (viewRect.width == scaledWidth && viewRect.height == scaledHeight) {
+                return
+            }
+
             // TODO: CEF is suffering from a bug where resizing the browser,
             //   does not call [wasResized] and thus does not update the renderer.
             //   See: https://github.com/chromiumembedded/cef/issues/3826
             mcefBrowser.resize(scaledWidth, scaledHeight)
             mcefBrowser.zoomLevel = zoomLevel
+
+            // To ensure the texture is updated, we clear the renderer. This call invalidates the
+            // current UI.
+            mcefBrowser.clear()
+
+            logger.info("Browser $this viewport updated: $value," +
+                " scaled to $scaledWidth x $scaledHeight at zoom level $zoomLevel")
         }
     override var visible = true
-
     private val mcefBrowser: MCEFBrowser
 
     private val renderer = BrowserRenderer(this)
@@ -82,6 +94,13 @@ class CefBrowser(
             )
         ).apply {
             zoomLevel = viewport.getZoomLevel(quality)
+
+            addOnPaintListener {
+                comparePaintWithViewpoint(it.width, it.height)
+            }
+            addOnAcceleratedPaintListener {
+                comparePaintWithViewpoint(it.width, it.height)
+            }
         }
     }
 
@@ -146,6 +165,12 @@ class CefBrowser(
         viewport = viewport.copy(width = width, height = height)
     }
 
+    override fun invalidate() {
+        mcefBrowser.clear()
+    }
+
+    override fun toString() = "CefBrowser(url='$url', viewport=$viewport, visible=$visible, priority=$priority)"
+
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
         val (scaledX, scaledY) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
@@ -181,6 +206,16 @@ class CefBrowser(
     override fun charTyped(char: Char, modifiers: Int) {
         mcefBrowser.setFocus(true)
         mcefBrowser.sendKeyTyped(char, modifiers)
+    }
+
+    private fun comparePaintWithViewpoint(width: Int, height: Int) {
+        val (scaledWidth, scaledHeight) = viewport.getScaledDimensions(GlobalBrowserSettings.quality)
+
+        if (scaledWidth != width || scaledHeight != height) {
+            logger.warn("Browser $this viewport size mismatch: " +
+                "expected $scaledWidth x $scaledHeight, but got $width x $height. ")
+            invalidate()
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.events.FrameBufferResizeEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
@@ -14,6 +15,7 @@ import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowser
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.DrawContext
 import java.lang.AutoCloseable
 
@@ -34,6 +36,11 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     @Suppress("unused")
     private val windowResizeHandler = handler<FrameBufferResizeEvent> { event ->
         browser.update(event.width, event.height)
+    }
+
+    @Suppress("unused")
+    private val screenHandler = handler<ScreenEvent>(priority = READ_FINAL_STATE) {
+        browser.invalidate()
     }
 
     @Suppress("unused")

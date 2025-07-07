@@ -64,4 +64,14 @@ interface Browser : AutoCloseable {
      */
     fun update(width: Int = viewport.width, height: Int = viewport.height)
 
+    /**
+     * Invalidates the browser texture, forcing a redraw
+     */
+    fun invalidate()
+
+    /**
+     * String representation of the Browser Instance
+     */
+    override fun toString(): String
+
 }
