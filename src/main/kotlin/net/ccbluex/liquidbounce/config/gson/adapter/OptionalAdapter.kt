@@ -8,7 +8,6 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.util.*
 
 class OptionalAdapter<E>(private val adapter: TypeAdapter<E>) : TypeAdapter<Optional<E>?>() {
@@ -34,14 +33,17 @@ class OptionalAdapter<E>(private val adapter: TypeAdapter<E>) : TypeAdapter<Opti
     companion object {
         @Suppress("UNCHECKED_CAST")
         val FACTORY: TypeAdapterFactory = object : TypeAdapterFactory {
-            override fun <T> create(gson: Gson, type: TypeToken<T?>): TypeAdapter<T>? {
-                val rawType = type.getRawType() as Class<T?>?
+            override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
+                val rawType = type.getRawType() as Class<T>?
                 if (rawType != Optional::class.java) {
                     return null
                 }
-                val parameterizedType = type.type as ParameterizedType
-                val actualType: Type = parameterizedType.actualTypeArguments[0]
-                val adapter: TypeAdapter<T> = gson.getAdapter(TypeToken.get(actualType)) as TypeAdapter<T>
+
+                val parameterizedType = type.type as? ParameterizedType
+                    ?: return null
+
+                val actualType = parameterizedType.actualTypeArguments[0]
+                val adapter = gson.getAdapter(TypeToken.get(actualType))
                 return OptionalAdapter(adapter) as TypeAdapter<T>?
             }
         }
