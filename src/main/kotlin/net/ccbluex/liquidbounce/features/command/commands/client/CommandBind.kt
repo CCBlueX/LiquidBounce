@@ -60,7 +60,7 @@ object CommandBind : CommandFactory {
 
                 if (keyName.equals("none", true)) {
                     module.bind.unbind()
-                    ModuleClickGui.reloadView()
+                    ModuleClickGui.reload()
                     chat(
                         regular(command.result("moduleUnbound", variable(module.name))),
                         metadata = MessageMetadata(id = "Bind#${module.name}")
@@ -70,7 +70,7 @@ object CommandBind : CommandFactory {
 
                 runCatching {
                     module.bind.bind(keyName)
-                    ModuleClickGui.reloadView()
+                    ModuleClickGui.reload()
                 }.onSuccess {
                     chat(
                         regular(command.result("moduleBound", variable(module.name), variable(module.bind.keyName))),

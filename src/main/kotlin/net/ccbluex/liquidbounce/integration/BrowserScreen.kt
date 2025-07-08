@@ -22,15 +22,14 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.refreshRate
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-var browserTabs = mutableListOf<ITab>()
+var browserBrowsers = mutableListOf<Browser>()
 
 class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
 
@@ -38,33 +37,32 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
     var selectedIndex = 0
     private var recentUrl = url
 
-    val browserTab: ITab?
-        get() = browserTabs.getOrNull(selectedIndex)
+    val browserBrowser: Browser?
+        get() = browserBrowsers.getOrNull(selectedIndex)
 
     override fun init() {
-        val position = TabPosition(
+        val viewport = BrowserViewport(
             20,
             20,
             ((width - 20) * mc.window.scaleFactor).toInt(),
             ((height - 50) * mc.window.scaleFactor).toInt()
         )
 
-        if (browserTabs.isEmpty()) {
-            val browser = BrowserManager.browser ?: return
+        if (browserBrowsers.isEmpty()) {
+            val browser = BrowserBackendManager.browserBackend
 
-            browser.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
-                .preferOnTop()
-                .also { browserTabs.add(it) }
+            browser.createBrowser(url, viewport, priority = 20) { mc.currentScreen == this }
+                .also { browserBrowsers.add(it) }
             return
         }
 
         // Update the position of all tabs
-        browserTabs.forEach { it.position = position }
+        browserBrowsers.forEach { browser -> browser.viewport = viewport }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        browserTab?.let { tab ->
-            val currentUrl = tab.getUrl()
+        browserBrowser?.let { browser ->
+            val currentUrl = browser.url
 
             if (recentUrl != currentUrl) {
                 EventManager.callEvent(BrowserUrlChangeEvent(selectedIndex, currentUrl))
@@ -79,8 +77,8 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
 
     override fun close() {
         // Close all tabs
-        browserTabs.removeIf {
-            it.closeTab()
+        browserBrowsers.removeIf {
+            it.close()
             true
         }
 

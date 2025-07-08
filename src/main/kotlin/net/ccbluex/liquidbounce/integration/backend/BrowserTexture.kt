@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,32 +15,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.integration.backend
 
 import net.minecraft.util.Identifier
 
-interface ITab {
-
-    var position: TabPosition
-    var visible: Boolean
-    var drawn: Boolean
-    var preferOnTop: Boolean
-
-    fun forceReload()
-    fun reload()
-    fun goForward()
-    fun goBack()
-    fun loadUrl(url: String)
-    fun getUrl(): String
-    fun closeTab()
-    fun getTexture(): Identifier?
-    fun resize(width: Int, height: Int)
-
-    fun preferOnTop(): ITab {
-        preferOnTop = true
-        return this
-    }
-
-
-}
+/**
+ * Represents a texture used by the browser.
+ *
+ * @param textureId The OpenGL texture ID.
+ * @param identifier The identifier of the texture, used for rendering.
+ * @param width The width of the texture.
+ * @param height The height of the texture.
+ * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
+ */
+data class BrowserTexture(
+    val textureId: Int,
+    val identifier: Identifier,
+    val width: Int,
+    val height: Int,
+    val bgra: Boolean
+)
