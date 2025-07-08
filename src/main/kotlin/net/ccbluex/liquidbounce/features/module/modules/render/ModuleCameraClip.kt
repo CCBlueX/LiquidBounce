@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.util.InputUtil
@@ -64,7 +65,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
             }
 
         private val canPerformScroll get() =
-            (modifierKey == InputUtil.UNKNOWN_KEY || InputUtil.isKeyPressed(mc.window.handle, modifierKey.code))
+            (modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed)
                 && (!requireFreeLook || ModuleFreeLook.running)
                 && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
 
