@@ -2,7 +2,7 @@
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
     import {createEventDispatcher, onMount, tick} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {openFileDialog} from "../../../integration/rest";
+    import {openFileDialog, openInExplorer} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
@@ -41,7 +41,9 @@
     }
 
     async function browseFile() {
-
+        if (cSetting.value) {
+            await openInExplorer(cSetting.value)
+        }
     }
 
     let pathEl: HTMLSpanElement;

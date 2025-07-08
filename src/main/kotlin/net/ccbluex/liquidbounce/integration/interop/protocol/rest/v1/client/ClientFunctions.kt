@@ -35,6 +35,8 @@ import net.minecraft.util.Util
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
+import java.awt.Desktop
+import java.io.File
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
@@ -102,6 +104,60 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
     val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
 
     Util.getOperatingSystem().open(url)
+    return httpOk(JsonObject())
+}
+
+// POST /api/v1/client/openInExplorer
+@Suppress("SpreadOperator")
+fun postOpenInExplorer(requestObject: RequestObject): FullHttpResponse {
+    val jsonObj = requestObject.asJson<JsonObject>()
+    val file = jsonObj["file"]?.asString
+        ?.let {
+            File(it)
+        }
+        ?: return httpBadRequest("File is not specified")
+
+    if (!file.exists()) {
+        return httpBadRequest("File does not exist")
+    }
+
+    runCatching {
+        val os = System.getProperty("os.name").lowercase()
+
+        when {
+            os.contains("win") -> {
+                val command = if (file.isDirectory()) {
+                    arrayOf("explorer.exe", file.absolutePath)
+                } else {
+                    arrayOf("explorer.exe", "/select,", file.absolutePath)
+                }
+
+                ProcessBuilder(*command).start()
+            }
+
+            os.contains("mac") -> {
+                val command = if (file.isDirectory()) {
+                    arrayOf("open", file.absolutePath)
+                } else {
+                    arrayOf("open", "-R", file.absolutePath)
+                }
+
+                ProcessBuilder(*command).start()
+            }
+
+            os.contains("nix") || os.contains("nux") || os.contains("aix") -> {
+                val command = arrayOf("xdg-open", file.parentFile.absolutePath ?: file.absolutePath)
+                ProcessBuilder(*command).start()
+            }
+
+            else -> {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(file.parentFile ?: file)
+                }
+            }
+        }
+    }
+
     return httpOk(JsonObject())
 }
 

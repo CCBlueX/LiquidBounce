@@ -6,6 +6,7 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    File,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
@@ -144,6 +145,16 @@ export async function openFileDialog(body: FileSelectDialog): Promise<FileSelect
     });
 
     return await response.json();
+}
+
+export async function openInExplorer(file: File) {
+    await fetch(`${API_BASE}/client/openInExplorer`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({file})
+    })
 }
 
 export async function getPlayerInventory(): Promise<PlayerInventory> {
