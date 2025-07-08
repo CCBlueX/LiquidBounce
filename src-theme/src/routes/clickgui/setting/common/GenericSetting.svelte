@@ -13,12 +13,12 @@
     import TextSetting from "../TextSetting.svelte";
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
-    import {onMount} from "svelte";
     import TextArraySetting from "../TextArraySetting.svelte";
     import BindSetting from "../BindSetting.svelte";
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";
+    import FileSetting from "../FileSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -30,6 +30,8 @@
         <BooleanSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOICE"}
         <ChoiceSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "FILE"}
+        <FileSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOOSE"}
         <ChooseSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "MULTI_CHOOSE"}

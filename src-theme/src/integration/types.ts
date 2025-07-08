@@ -30,7 +30,17 @@ export type ModuleSetting =
     | TextArraySetting
     | BindSetting
     | VectorSetting
-    | KeySetting;
+    | KeySetting
+    | FileSetting;
+
+export type File = string;
+
+export interface FileSetting {
+    valueType: string;
+    name: string;
+    dialogMode: "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+    value: File | undefined;
+}
 
 export interface BlocksSetting {
     valueType: string;
