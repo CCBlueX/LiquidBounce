@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot.random
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -21,6 +22,7 @@ import net.minecraft.text.RawFilteredPair
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.util.*
+import java.util.stream.IntStream
 
 /**
  * Maximum number of lines that can fit on a single page in the Minecraft book.
@@ -54,7 +56,11 @@ private const val MAX_LINE_WIDTH: Float = 114f
 object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    private val generationMode = choices("Mode", GenerationMode.Random, arrayOf(GenerationMode.Random)).apply {
+    internal val generationMode = choices(
+        "Mode",
+        GenerationMode.Random,
+        arrayOf(GenerationMode.Random, GenerationMode.File)
+    ).apply {
         tagBy(this)
     }
 
@@ -142,38 +148,6 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         bookBuilder.writeBook()
 
         bookCount++
-    }
-
-    private sealed class GenerationMode(
-        name: String,
-    ) : Choice(name) {
-        override val parent: ChoiceConfigurable<*> = ModuleBookBot.generationMode
-
-        val pages by int("Pages", 50, 0..100)
-
-        abstract fun generate(): PrimitiveIterator.OfInt
-
-
-        object Random : GenerationMode("Random") {
-            private val asciiOnly by boolean("AsciiOnly", false)
-
-            private val allowSpace by boolean("AllowSpace", true)
-
-            /**
-             * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
-             * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
-             * @author arlomcwalter (on Meteor Client)
-             */
-            override fun generate(): PrimitiveIterator.OfInt {
-                val origin = if (asciiOnly) 0x21 else 0x0800
-                val bound = if (asciiOnly) 0x7E else 0x10FFFF
-
-                return random
-                    .ints(origin, bound)
-                    .filter { allowSpace || !Character.isWhitespace(it) }
-                    .iterator()
-            }
-        }
     }
 
     private fun StringBuilder.appendLineBreak(lineIndex: Int) {
@@ -272,6 +246,77 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
                     if (Sign.enabled) Optional.of(title) else Optional.empty()
                 )
             )
+        }
+    }
+}
+
+internal sealed class GenerationMode(
+    name: String,
+) : Choice(name) {
+    override val parent: ChoiceConfigurable<*> = ModuleBookBot.generationMode
+
+    val pages by int("Pages", 50, 0..100)
+
+    abstract fun generate(): PrimitiveIterator.OfInt
+
+    object Random : GenerationMode("Random") {
+        private val asciiOnly by boolean("AsciiOnly", false)
+        private val allowSpace by boolean("AllowSpace", true)
+
+        /**
+         * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
+         * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
+         * @author arlomcwalter (on Meteor Client)
+         */
+        override fun generate(): PrimitiveIterator.OfInt {
+            val origin = if (asciiOnly) 0x21 else 0x0800
+            val bound = if (asciiOnly) 0x7E else 0x10FFFF
+
+            return random
+                .ints(origin, bound)
+                .filter { allowSpace || !Character.isWhitespace(it) }
+                .iterator()
+        }
+    }
+
+    object File : GenerationMode("File") {
+        private val cyclic by boolean("Cyclic", true)
+        private val source by file("Source")
+
+        /**
+         * @author sqlerrorthing
+         */
+        override fun generate(): PrimitiveIterator.OfInt {
+            val file = source.orElse(null)?.takeIf {
+                it.exists() && it.isFile && it.canRead()
+            } ?: return IntStream.empty().iterator()
+
+            return runCatching {
+                val content = file.readText()
+                if (content.isEmpty()) {
+                    return IntStream.empty().iterator()
+                }
+
+                val codePoints = content.codePoints().toArray()
+
+                if (cyclic) {
+                    object : PrimitiveIterator.OfInt {
+                        private var index = 0
+                        override fun hasNext() = true
+                        override fun nextInt(): Int {
+                            val value = codePoints[index]
+                            index = (index + 1) % codePoints.size
+                            return value
+                        }
+
+                        override fun remove() {
+                            throw UnsupportedOperationException()
+                        }
+                    }
+                } else {
+                    IntStream.of(*codePoints).iterator()
+                }
+            }.getOrDefault(IntStream.empty().iterator()) as PrimitiveIterator.OfInt
         }
     }
 }

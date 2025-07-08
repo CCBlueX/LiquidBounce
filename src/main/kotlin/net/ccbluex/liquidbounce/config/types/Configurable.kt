@@ -256,7 +256,7 @@ open class Configurable(
 
     fun file(
         name: String,
-        default: File?,
+        default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null
     ) =
