@@ -7,7 +7,6 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBookBot.random
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -22,6 +21,7 @@ import net.minecraft.text.RawFilteredPair
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.util.*
+import java.util.function.IntSupplier
 import java.util.stream.IntStream
 
 /**
@@ -78,12 +78,8 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private var bookCount = 0
 
-    internal var random: Random = Random()
-        private set
-
     override fun enable() {
         bookCount = 0
-        random = Random()
         chronometer.reset()
     }
 
@@ -142,7 +138,11 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         }
 
         val bookBuilder = BookBuilder()
-        bookBuilder.buildBookContent(generationMode.activeChoice.generate()) {
+        val generator = generationMode.activeChoice.generate()
+            .filter { it.toChar() != '\r' }
+            .iterator()
+
+        bookBuilder.buildBookContent(generator) {
             mc.textRenderer.textHandler.widthRetriever.getWidth(it, Style.EMPTY)
         }
         bookBuilder.writeBook()
@@ -255,9 +255,11 @@ internal sealed class GenerationMode(
 ) : Choice(name) {
     override val parent: ChoiceConfigurable<*> = ModuleBookBot.generationMode
 
+    internal val random = Random()
+
     val pages by int("Pages", 50, 0..100)
 
-    abstract fun generate(): PrimitiveIterator.OfInt
+    abstract fun generate(): IntStream
 
     object Random : GenerationMode("Random") {
         private val asciiOnly by boolean("AsciiOnly", false)
@@ -268,14 +270,13 @@ internal sealed class GenerationMode(
          * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
          * @author arlomcwalter (on Meteor Client)
          */
-        override fun generate(): PrimitiveIterator.OfInt {
+        override fun generate(): IntStream {
             val origin = if (asciiOnly) 0x21 else 0x0800
             val bound = if (asciiOnly) 0x7E else 0x10FFFF
 
             return random
                 .ints(origin, bound)
                 .filter { allowSpace || !Character.isWhitespace(it) }
-                .iterator()
         }
     }
 
@@ -286,37 +287,34 @@ internal sealed class GenerationMode(
         /**
          * @author sqlerrorthing
          */
-        override fun generate(): PrimitiveIterator.OfInt {
+        override fun generate(): IntStream {
             val file = source.orElse(null)?.takeIf {
                 it.exists() && it.isFile && it.canRead()
-            } ?: return IntStream.empty().iterator()
+            } ?: return IntStream.empty()
 
             return runCatching {
                 val content = file.readText()
                 if (content.isEmpty()) {
-                    return IntStream.empty().iterator()
+                    return IntStream.empty()
                 }
 
                 val codePoints = content.codePoints().toArray()
 
                 if (cyclic) {
-                    object : PrimitiveIterator.OfInt {
+                    val supplier = object : IntSupplier {
                         private var index = 0
-                        override fun hasNext() = true
-                        override fun nextInt(): Int {
+                        override fun getAsInt(): Int {
                             val value = codePoints[index]
                             index = (index + 1) % codePoints.size
                             return value
                         }
-
-                        override fun remove() {
-                            throw UnsupportedOperationException()
-                        }
                     }
+
+                    IntStream.generate(supplier)
                 } else {
-                    IntStream.of(*codePoints).iterator()
+                    IntStream.of(*codePoints)
                 }
-            }.getOrDefault(IntStream.empty().iterator()) as PrimitiveIterator.OfInt
+            }.getOrDefault(IntStream.empty()) as IntStream
         }
     }
 }
