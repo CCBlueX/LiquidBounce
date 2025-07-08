@@ -36,6 +36,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.BrowserScreen;
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -57,6 +59,7 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
@@ -209,6 +212,20 @@ public abstract class MixinMinecraftClient {
             }
         } else {
             titleBuilder.append(SharedConstants.getGameVersion().getName());
+        }
+
+        // For debugging purposes, will be removed until we have a stable release
+        if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS) {
+            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
+                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
+                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+
+                if (accelerated != null && accelerated.get()) {
+                    titleBuilder.append(" | Enabled GPU Acceleration (F12)");
+                } else {
+                    titleBuilder.append(" | Disabled GPU Acceleration (F12)");
+                }
+            }
         }
 
         ClientPlayNetworkHandler clientPlayNetworkHandler = this.getNetworkHandler();

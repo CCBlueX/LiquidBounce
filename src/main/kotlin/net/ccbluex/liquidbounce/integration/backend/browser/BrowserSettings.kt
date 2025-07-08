@@ -3,8 +3,10 @@ package net.ccbluex.liquidbounce.integration.backend.browser
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.browserBackend
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
 
@@ -19,6 +21,23 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
      */
     val quality by float("Quality", 1f, 0.5f..1f).onChanged {
         BrowserBackendManager.forceUpdate()
+    }
+
+    /**
+     * Uses GPU acceleration for rendering the browser.
+     */
+    var accelerated: Value<Boolean>? = null
+        private set
+
+    init {
+        if (browserBackend.isAccelerationSupported) {
+            accelerated = boolean("Accelerated", true).onChanged {
+                RenderSystem.recordRenderCall {
+                    IntegrationListener.restart()
+                    mc.updateWindowTitle()
+                }
+            }
+        }
     }
 
 }
@@ -42,21 +61,5 @@ class BrowserSettings(
             val fpsValue = fps.get()
             return if (fpsValue <= 0) refreshRate else fpsValue
         }
-
-    /**
-     * Uses hardware acceleration for rendering the browser.
-     */
-    var accelerated: Value<Boolean>? = null
-        private set
-
-    init {
-        if (browserBackend.isAccelerationSupported) {
-            accelerated = boolean("Accelerated", true).onChanged {
-                RenderSystem.recordRenderCall {
-                    update()
-                }
-            }
-        }
-    }
 
 }

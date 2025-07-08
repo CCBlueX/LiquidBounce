@@ -25,13 +25,16 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -152,13 +155,24 @@ object IntegrationListener : EventListener {
             return
         }
 
-        // Reload ClickGUI if it is open
-        logger.info("Restart ClickGUI...")
-        ModuleClickGui.reload(true)
+        try {
+            browser.close()
+            browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+        } catch (e: Exception) {
+            logger.error("Failed to restart browser backend for screen integration.", e)
+        }
 
-        logger.info("Restarting integration browser ${browser.javaClass.simpleName} to ${ThemeManager.route()}")
-        browser.close()
-        browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+        try {
+            ModuleClickGui.reload(true)
+        } catch (e: Exception) {
+            logger.error("Failed to restart ClickGUI browser integration.", e)
+        }
+
+        try {
+            ModuleHud.reopen()
+        } catch (e: Exception) {
+            logger.error("Failed to restart HUD browser integration.", e)
+        }
     }
 
     fun update() {
@@ -204,8 +218,30 @@ object IntegrationListener : EventListener {
      * and go back to the main menu.
      */
     @Suppress("unused")
-    val worldChangeEvent = handler<WorldChangeEvent> {
+    private val worldChangeEvent = handler<WorldChangeEvent> {
         update()
+    }
+
+    @Suppress("unused")
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        val keyCode = event.keyCode
+        val modifier = event.mods
+
+        if (inGame) {
+            return@handler
+        }
+
+        // F12 to toggle GPU acceleration
+        if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
+            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+                logger.warn("GPU acceleration is not supported by the current browser backend.")
+                return@handler
+            }
+
+            val accelerated = GlobalBrowserSettings.accelerated ?: return@handler
+            accelerated.set(!accelerated.get())
+            logger.info("GPU acceleration is now ${if (accelerated.get()) "enabled" else "disabled"}.")
+        }
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {

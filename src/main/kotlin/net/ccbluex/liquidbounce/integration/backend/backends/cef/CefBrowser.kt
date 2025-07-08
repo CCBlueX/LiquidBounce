@@ -90,7 +90,7 @@ class CefBrowser(
             height,
             MCEFBrowserSettings(
                 settings.currentFps,
-                settings.accelerated?.get() == true
+                GlobalBrowserSettings.accelerated?.get() == true
             )
         ).apply {
             zoomLevel = viewport.getZoomLevel(quality)
