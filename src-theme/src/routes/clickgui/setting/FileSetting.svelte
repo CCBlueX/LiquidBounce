@@ -46,6 +46,7 @@
 
     let pathEl: HTMLSpanElement;
     let fullText = '';
+    let isTruncated = false;
 
     $: fullText = cSetting.value ?? 'Not set';
 
@@ -58,6 +59,7 @@
 
         const containerWidth = element.clientWidth;
         if (ctx.measureText(text).width <= containerWidth) {
+            isTruncated = false;
             return text;
         }
 
@@ -76,6 +78,7 @@
             }
         }
 
+        isTruncated = true;
         return trimmed;
     }
 
@@ -104,7 +107,7 @@
     <div class="name">{spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
 
     <div class="value">
-        <span class="path muted" onclick={selectFile} bind:this={pathEl}>
+        <span class="path muted" onclick={selectFile} bind:this={pathEl} class:truncated={isTruncated}>
           {fullText}
         </span>
         <div class="buttons">
@@ -147,6 +150,10 @@
     cursor: pointer;
 
     font-family: monospace;
+  }
+
+  .path.truncated {
+    text-align: right;
   }
 
   .buttons {
