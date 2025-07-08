@@ -84,7 +84,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
                 return@handler
             }
 
-            scrolledDistance = scrolledDistance + (sensitivity * it.vertical).toFloat()
+            scrolledDistance += (sensitivity * it.vertical).toFloat()
         }
 
         @Suppress("unused")
