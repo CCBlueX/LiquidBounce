@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -32,7 +31,7 @@ import net.minecraft.item.Item
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.glfw.GLFW
-import java.nio.file.Path
+import java.io.File
 import java.util.*
 import kotlin.enums.EnumEntries
 
@@ -255,8 +254,13 @@ open class Configurable(
     fun <C : MutableCollection<Item>> items(name: String, default: C) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
-    fun path(name: String, default: Path) =
-        value(name, default, ValueType.PATH)
+    fun file(
+        name: String,
+        default: File?,
+        dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
+        supportedExtensions: Set<String>? = null
+    ) =
+        FileConfigurable(name, default, dialogMode, supportedExtensions)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
