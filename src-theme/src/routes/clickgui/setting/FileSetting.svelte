@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onMount, tick} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {openFileDialog} from "../../../integration/rest";
 
@@ -16,7 +16,16 @@
         dispatch("change");
     }
 
+    function removeSelected() {
+        cSetting.value = undefined;
+        handleChange()
+    }
+
     async function selectFile() {
+        if (selecting) {
+            return
+        }
+
         selecting = true;
 
         let file = await openFileDialog({
@@ -34,6 +43,59 @@
     async function browseFile() {
 
     }
+
+    let pathEl: HTMLSpanElement;
+    let fullText = '';
+
+    $: fullText = cSetting.value ?? 'Not set';
+
+    function trimStartDynamic(element: HTMLElement, text: string) {
+        const style = window.getComputedStyle(element);
+        const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!!;
+        ctx.font = font;
+
+        const containerWidth = element.clientWidth;
+        if (ctx.measureText(text).width <= containerWidth) {
+            return text;
+        }
+
+        let left = 0;
+        let right = text.length;
+        let trimmed = text;
+
+        while (left < right) {
+            const mid = Math.floor((left + right) / 2);
+            const testText = '...' + text.slice(mid);
+            if (ctx.measureText(testText).width > containerWidth) {
+                left = mid + 1;
+            } else {
+                trimmed = testText;
+                right = mid;
+            }
+        }
+
+        return trimmed;
+    }
+
+    async function updateTrimmedText() {
+        await tick();
+        if (!pathEl) return;
+
+        pathEl.textContent = trimStartDynamic(pathEl, fullText);
+    }
+
+    onMount(() => {
+        updateTrimmedText();
+
+        window.addEventListener('resize', updateTrimmedText);
+        return () => window.removeEventListener('resize', updateTrimmedText);
+    });
+
+    $: if (fullText) {
+        updateTrimmedText();
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -42,11 +104,11 @@
     <div class="name">{spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
 
     <div class="value">
-        <span class="path" class:muted={cSetting.value === undefined}>
-          {cSetting.value ?? 'Not set'}
+        <span class="path muted" onclick={selectFile} bind:this={pathEl}>
+          {fullText}
         </span>
         <div class="buttons">
-            <div class="button" onclick={selectFile} class:disabled={selecting}>Select</div>
+            <div class="button" onclick={removeSelected} class:disabled={cSetting.value === undefined}>Remove</div>
             <div class="button" onclick={browseFile} class:disabled={cSetting.value === undefined}>Browse</div>
         </div>
     </div>
@@ -59,8 +121,8 @@
     padding: 7px 0 2px 0;
     display: grid;
     grid-template-areas:
-    "a c"
-    "d c";
+    "name buttons"
+    "path path";
     grid-template-columns: 1fr max-content;
     column-gap: 5px;
 
@@ -68,7 +130,7 @@
   }
 
   .name {
-    grid-area: a;
+    grid-area: name;
   }
 
   .value {
@@ -76,28 +138,32 @@
   }
 
   .path {
-    grid-area: d;
+    grid-area: path;
     justify-self: start;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    cursor: pointer;
+
+    font-family: monospace;
   }
 
   .buttons {
-    grid-area: c;
-    justify-self: end;
+    grid-area: buttons;
     display: flex;
-    place-self: center;
+    place-self: start;
+    flex-direction: row;
     gap: 5px;
   }
 
   .button {
     background-color: $accent-color;
-    padding: 3px 5px;
     cursor: pointer;
     display: flex;
     align-items: center;
     align-content: center;
-    border-radius: 3px;
+    justify-content: center;
   }
 
   .disabled {
@@ -113,7 +179,7 @@
   }
 
   .name {
-    grid-area: a;
+    grid-area: name;
     font-weight: 500;
   }
 
