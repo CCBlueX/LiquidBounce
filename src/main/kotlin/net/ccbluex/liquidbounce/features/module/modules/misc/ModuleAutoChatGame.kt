@@ -176,7 +176,9 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         waitTicks(delay / 50)
 
         // Send answer
-        network.sendChatMessage(answerTemplate.format(answer))
+        answerTemplate.format(answer).run {
+            if (startsWith("/")) network.sendCommand(drop(1)) else network.sendChatMessage(this)
+        }
     }
 
 }
