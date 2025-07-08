@@ -265,6 +265,7 @@ internal sealed class GenerationMode(
         private val asciiOnly by boolean("AsciiOnly", false)
         private val allowSpace by boolean("AllowSpace", true)
 
+        @Suppress("MaxLineLength")
         /**
          * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
          * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
@@ -312,7 +313,7 @@ internal sealed class GenerationMode(
 
                     IntStream.generate(supplier)
                 } else {
-                    IntStream.of(*codePoints)
+                    Arrays.stream(codePoints)
                 }
             }.getOrDefault(IntStream.empty()) as IntStream
         }
