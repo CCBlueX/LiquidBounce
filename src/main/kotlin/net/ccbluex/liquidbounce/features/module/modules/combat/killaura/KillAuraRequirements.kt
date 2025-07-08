@@ -42,6 +42,9 @@ enum class KillAuraRequirements(
     }),
     VANILLA_NAME("VanillaName", {
         player.inventory.mainHandStack.customName == null
+    }),
+    NOT_MINING("NotMining", {
+        mc.interactionManager?.isBreakingBlock == false
     });
 }
 
