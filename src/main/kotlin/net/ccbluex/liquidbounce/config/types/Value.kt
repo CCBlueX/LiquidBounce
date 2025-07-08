@@ -298,7 +298,6 @@ open class Value<T : Any>(
                         TreeSet()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
-
                 else -> {
                     var clazz: Class<*>? = currValue.javaClass
                     var r: T? = null

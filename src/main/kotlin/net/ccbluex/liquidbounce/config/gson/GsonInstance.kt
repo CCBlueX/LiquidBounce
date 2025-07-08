@@ -138,7 +138,6 @@ internal val accessibleInteropGson: Gson = GsonBuilder()
  */
 internal fun GsonBuilder.registerCommonTypeAdapters() =
     registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
-        .registerTypeAdapterFactory(OptionalAdapter.FACTORY)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
         .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
@@ -161,3 +160,4 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierSerializer)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
+        .registerTypeAdapterFactory(OptionalAdapter.FACTORY)

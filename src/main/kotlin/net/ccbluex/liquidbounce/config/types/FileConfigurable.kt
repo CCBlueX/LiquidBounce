@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.config.types
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.*
 import java.io.File
 import java.util.*
@@ -22,7 +24,12 @@ class FileConfigurable(
     name,
     defaultValue = Optional.ofNullable(default),
     valueType = ValueType.FILE
-)
+) {
+    override fun deserializeFrom(gson: Gson, element: JsonElement) {
+        val file: File? = gson.fromJson(element, File::class.java)
+        set(Optional.ofNullable(file))
+    }
+}
 
 /**
  * Defines the mode of the file dialog used in a [FileConfigurable].
