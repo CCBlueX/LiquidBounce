@@ -38,13 +38,13 @@ import org.lwjgl.glfw.GLFW
  * @author 1zun4, sqlerrorthing
  */
 object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
-    internal val cameraDistance = float("CameraDistance", 4f, 1f..48f)
+    private val cameraDistance = float("CameraDistance", 4f, 1f..48f)
 
     init {
         tree(ScrollAdjust)
     }
 
-    val distance: Float
+    val distance
         get() = if (ScrollAdjust.running) {
             ScrollAdjust.scrolledDistance
         } else {
