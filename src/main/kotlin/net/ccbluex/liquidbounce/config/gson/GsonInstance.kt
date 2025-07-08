@@ -50,6 +50,7 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.io.File
 import java.util.function.Supplier
 
 /**
@@ -140,6 +141,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
     registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeAdapterFactory(OptionalTypeAdapterFactory)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
+        .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
