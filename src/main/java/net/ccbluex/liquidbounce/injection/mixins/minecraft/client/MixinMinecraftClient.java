@@ -221,9 +221,14 @@ public abstract class MixinMinecraftClient {
                 var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
                 if (accelerated != null && accelerated.get()) {
-                    titleBuilder.append(" | Enabled GPU Acceleration (F12)");
+                    titleBuilder.append(" | Enabled GPU Acceleration");
                 } else {
-                    titleBuilder.append(" | Disabled GPU Acceleration (F12)");
+                    titleBuilder.append(" | Disabled GPU Acceleration");
+                }
+
+                // Hotkey only works when not in-game
+                if (this.world == null && this.player == null) {
+                    titleBuilder.append(" (F12)");
                 }
             }
         }
