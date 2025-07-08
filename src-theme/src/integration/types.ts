@@ -35,10 +35,23 @@ export type ModuleSetting =
 
 export type File = string;
 
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+}
+
+export interface FileSelectResult {
+    cancelled: boolean;
+    file: File | undefined;
+}
+
 export interface FileSetting {
     valueType: string;
     name: string;
-    dialogMode: "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
     value: File | undefined;
 }
 

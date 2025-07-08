@@ -6,6 +6,8 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
@@ -130,6 +132,18 @@ export async function getPlayerData(): Promise<PlayerData> {
     const data: PlayerData = await response.json();
 
     return data;
+}
+
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
 }
 
 export async function getPlayerInventory(): Promise<PlayerInventory> {

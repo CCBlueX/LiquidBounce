@@ -253,7 +253,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 internal sealed class GenerationMode(
     name: String,
 ) : Choice(name) {
-    override val parent: ChoiceConfigurable<*> = ModuleBookBot.generationMode
+    override val parent: ChoiceConfigurable<*> get() = ModuleBookBot.generationMode
 
     internal val random = Random()
 

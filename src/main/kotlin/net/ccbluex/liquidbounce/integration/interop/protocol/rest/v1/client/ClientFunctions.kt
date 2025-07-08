@@ -23,13 +23,18 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
+import org.lwjgl.PointerBuffer
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
@@ -98,6 +103,55 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 
     Util.getOperatingSystem().open(url)
     return httpOk(JsonObject())
+}
+
+// POST /api/v1/client/fileDialog
+fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
+    val jsonObj = requestObject.asJson<JsonObject>()
+    val mode = FileDialogMode.entries.find { it.name == jsonObj["mode"]?.asString }
+        ?: return httpBadRequest("No dialog mode provided")
+
+    val filterPatterns = jsonObj["supportedExtensions"]
+        ?.asJsonArray
+        ?.map { it.toString() }
+        ?.toTypedArray()
+
+    val files = MemoryStack.stackPush().use { stack ->
+        val filterPatterns: PointerBuffer? = filterPatterns?.let {
+            val patternList = it.map { ext -> "*.$ext" }
+            val buffer = stack.mallocPointer(patternList.size)
+            patternList.forEach { pattern ->
+                buffer.put(stack.ASCII(pattern))
+            }
+            buffer.flip()
+        }
+
+        when (mode) {
+            FileDialogMode.OPEN_FILE -> TinyFileDialogs.tinyfd_openFileDialog(
+                mode.title,
+                null,
+                filterPatterns,
+                null,
+                false
+            )
+            FileDialogMode.SAVE_FILE -> TinyFileDialogs.tinyfd_saveFileDialog(
+                mode.title,
+                null,
+                filterPatterns,
+                null
+            )
+            FileDialogMode.OPEN_DIRECTORY -> TinyFileDialogs.tinyfd_selectFolderDialog(mode.title, null)
+        }
+    }
+
+    return httpOk(JsonObject().apply {
+        files?.let {
+            val file = it.split("|")[0]
+            addProperty("file", file)
+        }
+
+        addProperty("cancelled", files == null)
+    })
 }
 
 private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {

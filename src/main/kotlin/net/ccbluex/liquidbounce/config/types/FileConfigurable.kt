@@ -33,8 +33,8 @@ class FileConfigurable(
  * - [SAVE_FILE]: Opens a dialog to choose a file path for saving.
  * - [OPEN_DIRECTORY]: Opens a dialog to select an existing directory. File extension filters are ignored in this mode.
  */
-enum class FileDialogMode {
-    OPEN_FILE,
-    SAVE_FILE,
-    OPEN_DIRECTORY
+enum class FileDialogMode(val title: String) {
+    OPEN_FILE("Open File"),
+    SAVE_FILE("Save File As"),
+    OPEN_DIRECTORY("Select Folder")
 }
