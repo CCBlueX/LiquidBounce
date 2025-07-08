@@ -219,12 +219,11 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
             // Disable support for NVIDIA until we can get the dirty rects
             // rendering to work properly.
-            // vendor.lowercase().contains("nvidia") ||
-            //                                 renderer.lowercase().contains("geforce") ||
-            //                                 renderer.lowercase().contains("quadro") ||
+            // vendor.contains("nvidia", true) || renderer.contains("geforce", true) ||
+            // renderer.contains("quadro", true)
 
-            val isSupportedGpu = vendor.lowercase().contains("amd") ||
-                                 renderer.lowercase().contains("radeon")
+            val isSupportedGpu = vendor.contains("amd", true) ||
+                                 renderer.contains("radeon", true)
             if (!isSupportedGpu) {
                 logger.warn("GPU acceleration only supported on AMD GPUs")
 //                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
