@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
@@ -194,7 +193,7 @@ object CommandModels : CommandFactory {
             model.save()
 
             models.setByString(model.name)
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
         }
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))

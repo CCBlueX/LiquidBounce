@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
@@ -63,7 +62,7 @@ object AutoConfig {
 
             // After completion of loading, sync ClickGUI
             if (!value) {
-                ModuleClickGui.reloadView()
+                ModuleClickGui.reload()
             }
         }
 

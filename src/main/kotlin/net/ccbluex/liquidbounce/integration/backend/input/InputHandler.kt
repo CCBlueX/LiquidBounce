@@ -16,24 +16,45 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.integration.backend.input
 
-interface InputAware {
+/**
+ * Interface for browsers that can handle input events
+ */
+interface InputHandler {
 
-    val takesInput: () -> Boolean
-
+    /**
+     * Handles mouse click events
+     */
     fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int)
 
+    /**
+     * Handles mouse release events
+     */
     fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int)
 
+    /**
+     * Handles mouse movement events
+     */
     fun mouseMoved(mouseX: Double, mouseY: Double)
 
+    /**
+     * Handles mouse scroll events
+     */
     fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double)
 
+    /**
+     * Handles key press events
+     */
     fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int)
 
+    /**
+     * Handles key release events
+     */
     fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int)
 
+    /**
+     * Handles character typed events
+     */
     fun charTyped(char: Char, modifiers: Int)
-
 }

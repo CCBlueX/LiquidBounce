@@ -139,7 +139,7 @@ object CommandBinds : CommandFactory {
                 )
             }
 
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
         }
         .build()
 
@@ -167,7 +167,7 @@ object CommandBinds : CommandFactory {
             }
 
             module.bind.bind(bindKey)
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
             chat(
                 regular(
                     command.result(
