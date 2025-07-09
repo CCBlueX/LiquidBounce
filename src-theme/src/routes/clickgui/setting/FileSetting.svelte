@@ -48,9 +48,9 @@
     }
 
     let pathEl: HTMLSpanElement;
-    let fullText = '';
+    let fullPathText = '';
 
-    $: fullText = cSetting.value ?? 'Nothing';
+    $: fullPathText = cSetting.value ?? 'Nothing';
 
     let inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -88,7 +88,7 @@
             dragDetected = true;
         }
 
-        pathEl.scrollLeft = scrollStartX - dx;
+        pathEl.scrollLeft = scrollStartX - dx * 2.5;
         e.preventDefault();
     }
 
@@ -161,8 +161,30 @@
         };
     });
 
-    $: if (fullText) {
+    $: if (fullPathText) {
         adjustScrollAlignment();
+    }
+
+    $: pathParts = splitPath(fullPathText);
+
+    function splitPath(path: string): { text: string, muted: boolean }[] {
+        const parts: { text: string, muted: boolean }[] = [];
+
+        for (let i = 0; i < path.length; i++) {
+            const char = path[i];
+            if (char === '/' || char === '\\') {
+                parts.push({ text: char, muted: true });
+            } else {
+                let j = i;
+                while (j < path.length && path[j] !== '/' && path[j] !== '\\') {
+                    j++;
+                }
+                parts.push({ text: path.slice(i, j), muted: false });
+                i = j - 1;
+            }
+        }
+
+        return parts;
     }
 </script>
 
@@ -180,7 +202,9 @@
                   bind:this={pathEl}
                   class:scrolling="{isDragging}"
             >
-              {fullText}
+                {#each pathParts as part}
+                    <span class:muted-part={part.muted}>{part.text}</span>
+                {/each}
             </span>
         </div>
         <div class="buttons">
@@ -236,13 +260,11 @@
 
   .path {
     display: inline-block;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     white-space: nowrap;
     width: 100%;
     font-family: monospace;
     user-select: none;
-    scroll-behavior: smooth;
 
     &::-webkit-scrollbar {
       display: none;
@@ -253,7 +275,12 @@
     cursor: pointer;
 
     &.scrolling {
+      scroll-behavior: auto;
       cursor: grabbing;
+    }
+
+    & > .muted-part {
+      opacity: .7;
     }
   }
 

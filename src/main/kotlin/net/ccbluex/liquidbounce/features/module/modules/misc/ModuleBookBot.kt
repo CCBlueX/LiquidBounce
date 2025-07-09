@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -285,7 +286,7 @@ internal sealed class GenerationMode(
 
     object File : GenerationMode("File") {
         private val cyclic by boolean("Cyclic", true)
-        private val source by file("Source")
+        private val source by file("Source", dialogMode = FileDialogMode.OPEN_DIRECTORY)
 
         /**
          * @author sqlerrorthing
