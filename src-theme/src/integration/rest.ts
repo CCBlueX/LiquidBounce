@@ -147,16 +147,6 @@ export async function openFileDialog(body: FileSelectDialog): Promise<FileSelect
     return await response.json();
 }
 
-export async function openInExplorer(file: File) {
-    await fetch(`${API_BASE}/client/openInExplorer`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({file})
-    })
-}
-
 export async function getPlayerInventory(): Promise<PlayerInventory> {
     const response = await fetch(`${API_BASE}/client/player/inventory`);
     const data: PlayerInventory = await response.json();
@@ -208,6 +198,16 @@ export async function browse(target: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({target})
+    });
+}
+
+export async function browseFile(file: string) {
+    await fetch(`${API_BASE}/client/browseFile`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({file})
     });
 }
 

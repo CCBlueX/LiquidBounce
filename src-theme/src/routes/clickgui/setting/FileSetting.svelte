@@ -2,29 +2,29 @@
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
     import {createEventDispatcher, onMount, tick} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {openFileDialog, openInExplorer} from "../../../integration/rest";
+    import {browseFile, openFileDialog} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as FileSetting;
-    let selecting = false
+    let selecting = false;
 
     const dispatch = createEventDispatcher();
 
     function handleChange() {
-        setting = { ...cSetting };
+        setting = {...cSetting};
         dispatch("change");
     }
 
     function removeSelected() {
         cSetting.value = undefined;
-        handleChange()
+        handleChange();
     }
 
     async function selectFile() {
-        console.log("lol")
+        console.log("lol");
         if (selecting) {
-            return
+            return;
         }
 
         selecting = true;
@@ -37,13 +37,13 @@
         selecting = false;
         if (!file.cancelled) {
             cSetting.value = file.file;
-            handleChange()
+            handleChange();
         }
     }
 
-    async function browseFile() {
+    async function osBrowseFile() {
         if (cSetting.value) {
-            await openInExplorer(cSetting.value)
+            await browseFile(cSetting.value);
         }
     }
 
@@ -100,7 +100,7 @@
         handleScrollActivity();
 
         if (!dragDetected) {
-            browseFile()
+            osBrowseFile();
         }
     }
 

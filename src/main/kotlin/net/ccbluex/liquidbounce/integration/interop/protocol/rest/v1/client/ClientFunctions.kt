@@ -30,12 +30,13 @@ import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpNotFound
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
-import java.awt.Desktop
 import java.io.File
 import java.net.URI
 import java.text.SimpleDateFormat
@@ -104,76 +105,29 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
     val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
 
     Util.getOperatingSystem().open(url)
-    return httpOk(JsonObject())
+    return httpNoContent()
 }
 
-// POST /api/v1/client/openInExplorer
-@Suppress("SpreadOperator")
-fun postOpenInExplorer(requestObject: RequestObject): FullHttpResponse {
+// POST /api/v1/client/browseFile
+fun postBrowseFile(requestObject: RequestObject): FullHttpResponse {
     val jsonObj = requestObject.asJson<JsonObject>()
-    val file = jsonObj["file"]?.asString
-        ?.let {
-            File(it)
-        }
-        ?: return httpBadRequest("File is not specified")
+    val f = jsonObj["file"]?.asString ?: return httpForbidden("No file specified")
 
-    if (!file.exists()) {
-        return httpBadRequest("File does not exist")
-    }
+    val file = File(f).takeIf(File::exists) ?: return httpNotFound(f, "File not exists")
 
-    runCatching {
-        val os = System.getProperty("os.name").lowercase()
-
-        when {
-            os.contains("win") -> {
-                val command = if (file.isDirectory()) {
-                    arrayOf("explorer.exe", file.absolutePath)
-                } else {
-                    arrayOf("explorer.exe", "/select,", file.absolutePath)
-                }
-
-                ProcessBuilder(*command).start()
-            }
-
-            os.contains("mac") -> {
-                val command = if (file.isDirectory()) {
-                    arrayOf("open", file.absolutePath)
-                } else {
-                    arrayOf("open", "-R", file.absolutePath)
-                }
-
-                ProcessBuilder(*command).start()
-            }
-
-            os.contains("nix") || os.contains("nux") || os.contains("aix") -> {
-                val command = arrayOf("xdg-open", file.parentFile.absolutePath ?: file.absolutePath)
-                ProcessBuilder(*command).start()
-            }
-
-            else -> {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(file.parentFile ?: file)
-                }
-            }
-        }
-    }
-
-    return httpOk(JsonObject())
+    Util.getOperatingSystem().open(file)
+    return httpNoContent()
 }
 
 // POST /api/v1/client/fileDialog
 fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
-    val jsonObj = requestObject.asJson<JsonObject>()
-    val mode = FileDialogMode.entries.find { it.name == jsonObj["mode"]?.asString }
-        ?: return httpBadRequest("No dialog mode provided")
-
-    val filterPatterns = jsonObj["supportedExtensions"]
-        ?.asJsonArray
-        ?.map { it.toString() }
-        ?.toTypedArray()
+    data class RequestBody(val mode: FileDialogMode, val supportedExtensions: List<String>? = null)
+    val (mode, supportedExtensions) = runCatching {
+        requestObject.asJson<RequestBody>()
+    }.getOrNull() ?: return httpBadRequest("No dialog mode provided")
 
     val files = MemoryStack.stackPush().use { stack ->
-        val filterPatterns: PointerBuffer? = filterPatterns?.let {
+        val filterPatterns: PointerBuffer? = supportedExtensions?.let {
             val patternList = it.map { ext -> "*.$ext" }
             val buffer = stack.mallocPointer(patternList.size)
             patternList.forEach { pattern ->
@@ -202,7 +156,7 @@ fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
 
     return httpOk(JsonObject().apply {
         files?.let {
-            val file = it.split("|")[0]
+            val file = it.substringBefore('|')
             addProperty("file", file)
         }
 
