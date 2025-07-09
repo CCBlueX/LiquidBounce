@@ -286,7 +286,7 @@ internal sealed class GenerationMode(
 
     object File : GenerationMode("File") {
         private val cyclic by boolean("Cyclic", true)
-        private val source by file("Source", dialogMode = FileDialogMode.OPEN_DIRECTORY)
+        private val source by file("Source")
 
         /**
          * @author sqlerrorthing
