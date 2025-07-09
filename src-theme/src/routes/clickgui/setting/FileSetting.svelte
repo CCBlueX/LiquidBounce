@@ -208,8 +208,12 @@
             </span>
         </div>
         <div class="buttons">
-            <button class="button" onclick={removeSelected} disabled={cSetting.value === undefined}>Remove</button>
-            <button class="button" onclick={selectFile}>Select</button>
+            <button class="button" onclick={removeSelected} disabled={cSetting.value === undefined}>
+                <img src="img/menu/icon-remove-file.svg" alt="remove-file">
+            </button>
+            <button class="button" onclick={selectFile}>
+                Select
+            </button>
         </div>
     </div>
 </div>
@@ -294,7 +298,7 @@
 
   .button {
     border: none;
-    background-color: $accent-color;
+    background-color: transparent;
     color: $clickgui-text-color;
     cursor: pointer;
     display: flex;
@@ -305,6 +309,11 @@
     &:disabled {
       opacity: 0.7;
       pointer-events: none;
+    }
+
+    & > img {
+      width: 16px;
+      height: 16px;
     }
   }
 
