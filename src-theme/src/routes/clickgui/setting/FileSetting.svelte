@@ -243,10 +243,6 @@
     }
   }
 
-  .path.truncated {
-    text-align: right;
-  }
-
   .buttons {
     grid-area: buttons;
     display: flex;
