@@ -160,4 +160,4 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierSerializer)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
-        .registerTypeAdapterFactory(OptionalAdapter.FACTORY)
+        .registerTypeAdapterFactory(OptionalAdapter)

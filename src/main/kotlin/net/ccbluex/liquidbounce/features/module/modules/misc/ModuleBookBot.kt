@@ -21,7 +21,6 @@ import net.minecraft.text.RawFilteredPair
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.util.*
-import java.util.function.IntSupplier
 import java.util.stream.IntStream
 
 /**
@@ -290,28 +289,20 @@ internal sealed class GenerationMode(
          */
         override fun generate(): IntStream {
             val file = source.orElse(null)?.takeIf {
-                it.exists() && it.isFile && it.canRead()
+                it.exists() && it.isFile && it.canRead() && it.length() != 0L
             } ?: return IntStream.empty()
 
             return runCatching {
                 val content = file.readText()
-                if (content.isEmpty()) {
-                    return IntStream.empty()
-                }
-
                 val codePoints = content.codePoints().toArray()
 
                 if (cyclic) {
-                    val supplier = object : IntSupplier {
-                        private var index = 0
-                        override fun getAsInt(): Int {
-                            val value = codePoints[index]
-                            index = (index + 1) % codePoints.size
-                            return value
-                        }
+                    var index = 0
+                    IntStream.generate {
+                        val value = codePoints[index]
+                        index = (index + 1) % codePoints.size
+                        value
                     }
-
-                    IntStream.generate(supplier)
                 } else {
                     Arrays.stream(codePoints)
                 }
