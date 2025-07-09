@@ -22,6 +22,7 @@
     }
 
     async function selectFile() {
+        console.log("lol")
         if (selecting) {
             return
         }
@@ -55,7 +56,9 @@
 
     let isDragging = false;
     let dragStartX = 0;
+    let dragStartY = 0;
     let scrollStartX = 0;
+    let dragDetected = false;
 
     let canScroll = false;
     let leftHidden = false;
@@ -65,7 +68,9 @@
         if (!pathEl || !canScroll) return;
 
         isDragging = true;
+        dragDetected = false;
         dragStartX = e.clientX;
+        dragStartY = e.clientY;
         scrollStartX = pathEl.scrollLeft;
         pathEl.setPointerCapture(e.pointerId);
 
@@ -77,6 +82,12 @@
         if (!isDragging || !pathEl || !canScroll) return;
 
         const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+
+        if (!dragDetected && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+            dragDetected = true;
+        }
+
         pathEl.scrollLeft = scrollStartX - dx;
         e.preventDefault();
     }
@@ -87,6 +98,10 @@
         isDragging = false;
         pathEl.releasePointerCapture(e.pointerId);
         handleScrollActivity();
+
+        if (!dragDetected) {
+            browseFile()
+        }
     }
 
     function updateScrollShadows() {
@@ -162,7 +177,6 @@
              class:right-shadow="{rightHidden}"
         >
             <span class="path muted"
-                  onclick={selectFile}
                   bind:this={pathEl}
                   class:scrolling="{isDragging}"
             >
@@ -171,7 +185,7 @@
         </div>
         <div class="buttons">
             <div class="button" onclick={removeSelected} class:disabled={cSetting.value === undefined}>Remove</div>
-            <div class="button" onclick={browseFile} class:disabled={cSetting.value === undefined}>Browse</div>
+            <div class="button" onclick={selectFile}>Select</div>
         </div>
     </div>
 </div>
