@@ -293,7 +293,6 @@
     display: flex;
     place-self: start;
     flex-direction: row;
-    gap: 5px;
   }
 
   .button {
