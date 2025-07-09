@@ -48,58 +48,106 @@
 
     let pathEl: HTMLSpanElement;
     let fullText = '';
-    let isTruncated = false;
 
-    $: fullText = cSetting.value ?? 'Not set';
+    $: fullText = cSetting.value ?? 'Nothing';
 
-    function trimStartDynamic(element: HTMLElement, text: string) {
-        const style = window.getComputedStyle(element);
-        const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!!;
-        ctx.font = font;
+    let inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
 
-        const containerWidth = element.clientWidth;
-        if (ctx.measureText(text).width <= containerWidth) {
-            isTruncated = false;
-            return text;
-        }
+    let isDragging = false;
+    let dragStartX = 0;
+    let scrollStartX = 0;
 
-        let left = 0;
-        let right = text.length;
-        let trimmed = text;
+    let canScroll = false;
+    let leftHidden = false;
+    let rightHidden = false;
 
-        while (left < right) {
-            const mid = Math.floor((left + right) / 2);
-            const testText = '...' + text.slice(mid);
-            if (ctx.measureText(testText).width > containerWidth) {
-                left = mid + 1;
-            } else {
-                trimmed = testText;
-                right = mid;
-            }
-        }
+    function handlePointerDown(e: PointerEvent) {
+        if (!pathEl || !canScroll) return;
 
-        isTruncated = true;
-        return trimmed;
+        isDragging = true;
+        dragStartX = e.clientX;
+        scrollStartX = pathEl.scrollLeft;
+        pathEl.setPointerCapture(e.pointerId);
+
+        if (inactivityTimeout) clearTimeout(inactivityTimeout);
+        e.preventDefault();
     }
 
-    async function updateTrimmedText() {
+    function handlePointerMove(e: PointerEvent) {
+        if (!isDragging || !pathEl || !canScroll) return;
+
+        const dx = e.clientX - dragStartX;
+        pathEl.scrollLeft = scrollStartX - dx;
+        e.preventDefault();
+    }
+
+    function handlePointerUp(e: PointerEvent) {
+        if (!isDragging || !pathEl || !canScroll) return;
+
+        isDragging = false;
+        pathEl.releasePointerCapture(e.pointerId);
+        handleScrollActivity();
+    }
+
+    function updateScrollShadows() {
+        if (!pathEl) return;
+
+        const scrollLeft = pathEl.scrollLeft;
+        const maxScrollLeft = pathEl.scrollWidth - pathEl.clientWidth;
+
+        leftHidden = scrollLeft > 0;
+        rightHidden = scrollLeft < maxScrollLeft;
+    }
+
+    function handleScrollActivity() {
+        if (inactivityTimeout) clearTimeout(inactivityTimeout);
+
+        inactivityTimeout = setTimeout(() => {
+            adjustScrollAlignment();
+        }, 2000);
+    }
+
+    function handleScroll() {
+        handleScrollActivity();
+        updateScrollShadows();
+    }
+
+    async function adjustScrollAlignment() {
         await tick();
         if (!pathEl) return;
 
-        pathEl.textContent = trimStartDynamic(pathEl, fullText);
+        const el = pathEl;
+        const fits = el.scrollWidth <= el.clientWidth;
+        canScroll = el.scrollWidth > el.clientWidth;
+
+        el.scrollTo({
+            left: fits ? 0 : el.scrollWidth,
+            behavior: 'smooth'
+        });
+
+        updateScrollShadows();
     }
 
     onMount(() => {
-        updateTrimmedText();
+        adjustScrollAlignment();
 
-        window.addEventListener('resize', updateTrimmedText);
-        return () => window.removeEventListener('resize', updateTrimmedText);
+        pathEl?.addEventListener('pointerdown', handlePointerDown);
+        pathEl?.addEventListener('pointermove', handlePointerMove);
+        pathEl?.addEventListener('pointerup', handlePointerUp);
+        pathEl?.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', adjustScrollAlignment);
+
+        return () => {
+            pathEl?.removeEventListener('pointerdown', handlePointerDown);
+            pathEl?.removeEventListener('pointermove', handlePointerMove);
+            pathEl?.removeEventListener('pointerup', handlePointerUp);
+            pathEl?.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', adjustScrollAlignment);
+        };
     });
 
     $: if (fullText) {
-        updateTrimmedText();
+        adjustScrollAlignment();
     }
 </script>
 
@@ -109,9 +157,18 @@
     <div class="name">{spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
 
     <div class="value">
-        <span class="path muted" onclick={selectFile} bind:this={pathEl} class:truncated={isTruncated}>
-          {fullText}
-        </span>
+        <div class="path-wrapper"
+             class:left-shadow="{leftHidden}"
+             class:right-shadow="{rightHidden}"
+        >
+            <span class="path muted"
+                  onclick={selectFile}
+                  bind:this={pathEl}
+                  class:scrolling="{isDragging}"
+            >
+              {fullText}
+            </span>
+        </div>
         <div class="buttons">
             <div class="button" onclick={removeSelected} class:disabled={cSetting.value === undefined}>Remove</div>
             <div class="button" onclick={browseFile} class:disabled={cSetting.value === undefined}>Browse</div>
@@ -142,16 +199,48 @@
     display: contents;
   }
 
-  .path {
+  .path-wrapper {
+    position: relative;
     grid-area: path;
-    justify-self: start;
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+    white-space: nowrap;
+    -webkit-mask-image: none;
+    mask-image: none;
+
+    &.left-shadow {
+      mask-image: linear-gradient(to right, transparent 0%, black 20%, black 100%);
+    }
+
+    &.right-shadow {
+      mask-image: linear-gradient(to left, transparent 0%, black 20%, black 100%);
+    }
+
+    &.left-shadow.right-shadow {
+      mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+    }
+  }
+
+  .path {
+    display: inline-block;
+    overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
     width: 100%;
+    font-family: monospace;
+    user-select: none;
+    scroll-behavior: smooth;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    scrollbar-width: none;
+
     cursor: pointer;
 
-    font-family: monospace;
+    &.scrolling {
+      cursor: grabbing;
+    }
   }
 
   .path.truncated {
