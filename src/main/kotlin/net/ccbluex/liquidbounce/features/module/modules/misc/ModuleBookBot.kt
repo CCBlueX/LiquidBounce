@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
@@ -20,6 +21,8 @@ import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket
 import net.minecraft.text.RawFilteredPair
 import net.minecraft.text.Style
 import net.minecraft.text.Text
+import okio.buffer
+import okio.source
 import java.util.*
 import java.util.stream.IntStream
 
@@ -292,21 +295,24 @@ internal sealed class GenerationMode(
                 it.exists() && it.isFile && it.canRead() && it.length() != 0L
             } ?: return IntStream.empty()
 
-            return runCatching {
-                val content = file.readText()
-                val codePoints = content.codePoints().toArray()
-
-                if (cyclic) {
-                    var index = 0
-                    IntStream.generate {
-                        val value = codePoints[index]
-                        index = (index + 1) % codePoints.size
-                        value
-                    }
-                } else {
-                    Arrays.stream(codePoints)
+            // UTF-8 averaged 3 bytes -> 1 code point
+            val codePoints = IntArrayList(file.length().toInt() / 3)
+            file.source().buffer().use {
+                while (!it.exhausted()) {
+                    codePoints.add(it.readUtf8CodePoint())
                 }
-            }.getOrDefault(IntStream.empty()) as IntStream
+            }
+
+            return if (cyclic) {
+                var index = 0
+                IntStream.generate {
+                    val value = codePoints.getInt(index)
+                    index = (index + 1) % codePoints.size
+                    value
+                }
+            } else {
+                codePoints.intStream()
+            }
         }
     }
 }
