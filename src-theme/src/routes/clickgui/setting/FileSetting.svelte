@@ -184,8 +184,8 @@
             </span>
         </div>
         <div class="buttons">
-            <div class="button" onclick={removeSelected} class:disabled={cSetting.value === undefined}>Remove</div>
-            <div class="button" onclick={selectFile}>Select</div>
+            <button class="button" onclick={removeSelected} disabled={cSetting.value === undefined}>Remove</button>
+            <button class="button" onclick={selectFile}>Select</button>
         </div>
     </div>
 </div>
@@ -266,17 +266,19 @@
   }
 
   .button {
+    border: none;
     background-color: $accent-color;
+    color: $clickgui-text-color;
     cursor: pointer;
     display: flex;
     align-items: center;
     align-content: center;
     justify-content: center;
-  }
 
-  .disabled {
-    opacity: 0.7;
-    pointer-events: none;
+    &:disabled {
+      opacity: 0.7;
+      pointer-events: none;
+    }
   }
 
   .value,
