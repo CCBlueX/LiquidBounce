@@ -16,10 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.integration.backend.input
 
-package net.ccbluex.liquidbounce.config.gson.adapter
-
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-
-object ItemAdapter : IdentifierAsStringAdapter<Item>(Registries.ITEM)
+/**
+ * Functional interface to determine if a browser should accept input
+ */
+fun interface InputAcceptor {
+    /**
+     * Returns true if the browser should accept input events
+     */
+    fun acceptsInput(): Boolean
+}

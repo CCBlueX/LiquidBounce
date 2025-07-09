@@ -133,7 +133,7 @@ object CommandBinds : CommandFactory {
             }
 
             module.bind.unbind()
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
             chat(
                 regular(command.result("bindRemoved", variable(module.name))),
                 metadata = MessageMetadata(id = "Binds#${module.name}")
@@ -167,7 +167,7 @@ object CommandBinds : CommandFactory {
             }
 
             module.bind.bind(bindKey)
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
             chat(
                 regular(
                     command.result(

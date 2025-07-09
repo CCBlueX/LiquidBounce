@@ -186,6 +186,7 @@ accessible field net/minecraft/client/render/RenderPhase POSITION_TEXTURE_COLOR_
 accessible field net/minecraft/client/render/RenderPhase TRANSLUCENT_TRANSPARENCY Lnet/minecraft/client/render/RenderPhase$Transparency;
 accessible field net/minecraft/client/render/RenderPhase ALWAYS_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
 accessible field net/minecraft/client/render/RenderPhase LEQUAL_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
+accessible method net/minecraft/client/gl/ShaderProgram <init> (I)V
 
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
-import net.ccbluex.liquidbounce.integration.browser.supports.IBrowser
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.theme.component.Component
@@ -176,7 +176,7 @@ class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event
 class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event()
 
 @Nameable("browserReady")
-class BrowserReadyEvent(val browser: IBrowser) : Event()
+object BrowserReadyEvent : Event()
 
 @Nameable("virtualScreen")
 @WebSocketEvent

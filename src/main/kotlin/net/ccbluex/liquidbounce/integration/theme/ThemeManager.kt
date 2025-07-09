@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -30,8 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay
@@ -43,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.ccbluex.liquidbounce.utils.math.Vec2i
-import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderLayer
@@ -87,41 +87,55 @@ object ThemeManager : Configurable("theme") {
             ComponentOverlay.insertDefaultComponents()
 
             // Update integration browser
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
             ModuleHud.reopen()
-            ModuleClickGui.restartView()
+            ModuleClickGui.reload(true)
         }
 
-    private val takesInputHandler: () -> Boolean = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
+    private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
     init {
         ConfigSystem.root(this)
     }
 
     /**
-     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
      * This tab will be locked to 60 FPS since it is not input aware.
      */
-    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, frameRate = 60)
-            ?: error("Browser is not initialized")
+    fun openImmediate(
+        virtualScreenType: VirtualScreenType? = null,
+        markAsStatic: Boolean = false,
+        settings: BrowserSettings
+    ): Browser =
+        BrowserBackendManager.browserBackend.createBrowser(
+            route(virtualScreenType, markAsStatic).url,
+            settings = settings
+        )
 
     /**
-     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
      * This tab will be locked to the highest refresh rate since it is input aware.
      */
     fun openInputAwareImmediate(
         virtualScreenType: VirtualScreenType? = null,
         markAsStatic: Boolean = false,
-        takesInput: () -> Boolean = takesInputHandler
-    ): ITab = BrowserManager.browser?.createInputAwareTab(
+        settings: BrowserSettings,
+        priority: Short = 10,
+        inputAcceptor: InputAcceptor = takesInputHandler
+    ): Browser = BrowserBackendManager.browserBackend.createBrowser(
         route(virtualScreenType, markAsStatic).url,
-        frameRate = refreshRate,
-        takesInput = takesInput
-    ) ?: error("Browser is not initialized")
+        settings = settings,
+        priority = priority,
+        inputAcceptor = inputAcceptor
+    )
 
-    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
-        tab?.loadUrl(route(virtualScreenType, markAsStatic).url)
+    fun updateImmediate(
+        browser: Browser?,
+        virtualScreenType: VirtualScreenType? = null,
+        markAsStatic: Boolean = false
+    ) {
+        browser?.url = route(virtualScreenType, markAsStatic).url
+    }
 
     fun route(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Route {
         val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType.routeName)) {
@@ -138,7 +152,7 @@ object ThemeManager : Configurable("theme") {
         )
     }
 
-    fun initialiseBackground() {
+    fun initializeBackground() {
         // Load background image of active theme and fallback to default theme if not available
         if (!activeTheme.loadBackgroundImage()) {
             defaultTheme.loadBackgroundImage()

@@ -16,15 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.supports
+package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.integration.browser.BrowserType
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.JcefTab
-import net.ccbluex.liquidbounce.integration.browser.supports.tab.TabPosition
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
@@ -35,6 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
+import net.minecraft.util.Util
+import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL11
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -49,15 +53,19 @@ private const val CACHE_CLEANUP_THRESHOLD = 1000 * 60 * 60 * 24 * 7 // 7 days
  * @see <a href="https://github.com/CCBlueX/java-cef/">JCEF</a>
  * @see <a href="https://github.com/CCBlueX/mcef/">MCEF</a>
  *
- * @author 1zuna <marco@ccbluex.net>
+ * @author Izuna <izuna.seikatsu@ccbluex.net>
  */
 @Suppress("TooManyFunctions")
-class JcefBrowser : IBrowser, EventListener {
+class CefBrowserBackend : BrowserBackend, EventListener {
 
     private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
     private val librariesFolder = mcefFolder.resolve("libraries")
     private val cacheFolder = mcefFolder.resolve("cache")
-    private val tabs = mutableListOf<JcefTab>()
+
+    override val isInitialized: Boolean
+        get() = MCEF.INSTANCE.isInitialized
+    override var browsers = mutableListOf<CefBrowser>()
+    override var isAccelerationSupported: Boolean = false
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
@@ -139,37 +147,28 @@ class JcefBrowser : IBrowser, EventListener {
         }
     }
 
-    override fun startBrowser() {
+    override fun start() {
         if (!MCEF.INSTANCE.isInitialized) {
             MCEF.INSTANCE.initialize()
         }
+
+        // Check if acceleration is supported
+        val system = Util.getOperatingSystem()
+        isAccelerationSupported = when (system) {
+            Util.OperatingSystem.WINDOWS -> {
+                // Check if required OpenGL extensions for D3D11 shared texture interop are supported
+                checkAccelerationSupport()
+            }
+            else -> false
+        }
     }
 
-    override fun stopBrowser() {
+    override fun stop() {
         MCEF.INSTANCE.shutdown()
         MCEF.INSTANCE.settings.cacheDirectory?.deleteRecursively()
     }
 
-    override fun isInitialized() = MCEF.INSTANCE.isInitialized
-
-    override fun createTab(url: String, position: TabPosition, frameRate: Int) =
-        JcefTab(this, url, position, frameRate) { false }.apply(::addTab)
-
-    override fun createInputAwareTab(url: String, position: TabPosition, frameRate: Int, takesInput: () -> Boolean) =
-        JcefTab(this, url, position, frameRate, takesInput = takesInput).apply(::addTab)
-
-    override fun getTabs(): List<JcefTab> = tabs
-
-    private fun addTab(tab: JcefTab) {
-        tabs.sortedInsert(tab, JcefTab::preferOnTop)
-    }
-
-    internal fun removeTab(tab: JcefTab) {
-        tabs.remove(tab)
-    }
-
-    override fun getBrowserType() = BrowserType.JCEF
-    override fun drawGlobally() {
+    override fun update() {
         if (MCEF.INSTANCE.isInitialized) {
             try {
                 MCEF.INSTANCE.app.handle.N_DoMessageLoopWork()
@@ -179,4 +178,81 @@ class JcefBrowser : IBrowser, EventListener {
         }
     }
 
+    override fun createBrowser(
+        url: String,
+        position: BrowserViewport,
+        settings: BrowserSettings,
+        priority: Short,
+        inputAcceptor: InputAcceptor?
+    ) = CefBrowser(this, url, position, settings, priority, inputAcceptor)
+        .apply(::addBrowser)
+
+    private fun addBrowser(browser: CefBrowser) {
+        browsers.sortedInsert(browser, CefBrowser::priority)
+    }
+
+    internal fun removeBrowser(browser: CefBrowser) {
+        browsers.remove(browser)
+    }
+
+    /**
+     * Checks if the GPU supports the required OpenGL extensions for accelerated CEF rendering.
+     * Currently only NVIDIA GPUs are known to work reliably with D3D11 shared texture interoperability.
+     *
+     * @return true if all required extensions are supported, false otherwise
+     */
+    private fun checkAccelerationSupport(): Boolean {
+        return try {
+            RenderSystem.assertOnRenderThread()
+
+            val capabilities = GL.getCapabilities()
+            val vendor = GL11.glGetString(GL11.GL_VENDOR) ?: ""
+            val renderer = GL11.glGetString(GL11.GL_RENDERER) ?: ""
+
+            logger.info("GPU Vendor: $vendor")
+            logger.info("GPU Renderer: $renderer")
+
+            // Check if the GPU is NVIDIA or AMD as
+            // we could not get this feature to work reliably on Intel GPUs.
+            // On Intel GPU (Intel ARC), it does not work as well and is reported:
+            // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
+
+            // Disable support for NVIDIA until we can get the dirty rects
+            // rendering to work properly.
+            // vendor.contains("nvidia", true) || renderer.contains("geforce", true) ||
+            // renderer.contains("quadro", true)
+
+            val isSupportedGpu = vendor.contains("amd", true) ||
+                                 renderer.contains("radeon", true)
+            if (!isSupportedGpu) {
+                logger.warn("GPU acceleration only supported on AMD GPUs")
+//                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
+                logger.info("Falling back to software rendering for browser")
+                return false
+            }
+
+            // Required OpenGL extensions for D3D11 shared texture interoperability
+            // See https://registry.khronos.org/OpenGL/extensions/EXT/EXT_external_objects_win32.txt
+            val extensions = arrayOf(
+                capabilities.GL_EXT_memory_object,
+                capabilities.GL_EXT_memory_object_win32
+            )
+
+            logger.info("Checking OpenGL extensions for GPU acceleration" +
+                " support: ${extensions.joinToString(", ")}")
+            for (extension in extensions) {
+                if (!extension) {
+                    logger.warn("Required OpenGL extension for GPU acceleration not supported")
+                    logger.info("Falling back to software rendering for browser")
+                    return false
+                }
+            }
+
+            true
+        } catch (e: Exception) {
+            logger.warn("Failed to check GPU acceleration support: ${e.message}")
+            logger.info("Falling back to software rendering for browser")
+            false
+        }
+    }
 }
