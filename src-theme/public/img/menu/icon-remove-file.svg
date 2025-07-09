@@ -1,7 +1,11 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
 <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-<g id="SVGRepo_iconCarrier"> <path d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H10M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V10.8125" stroke="#ffffff" stroke-width="1.152" stroke-linecap="round" stroke-linejoin="round"/> <path d="M14.0251 15.0251C13.3918 15.6585 13 16.5335 13 17.5C13 19.433 14.567 21 16.5 21C17.4665 21 18.3415 20.6082 18.9749 19.9749M14.0251 15.0251C14.6585 14.3918 15.5335 14 16.5 14C18.433 14 20 15.567 20 17.5C20 18.4665 19.6082 19.3415 18.9749 19.9749M14.0251 15.0251L16.5 17.5L18.9749 19.9749" stroke="#ffffff" stroke-width="1.152" stroke-linecap="round"/> </g>
-</svg>
+
+    <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <g id="SVGRepo_iconCarrier"> <path d="M13.5 3H12H8C6.34315 3 5 4.34315 5 6V18C5 19.6569 6.34315 21 8 21H10M13.5 3L19 8.625M13.5 3V7.625C13.5 8.17728 13.9477 8.625 14.5 8.625H19M19 8.625V10.8125" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M14.0251 15.0251C13.3918 15.6585 13 16.5335 13 17.5C13 19.433 14.567 21 16.5 21C17.4665 21 18.3415 20.6082 18.9749 19.9749M14.0251 15.0251C14.6585 14.3918 15.5335 14 16.5 14C18.433 14 20 15.567 20 17.5C20 18.4665 19.6082 19.3415 18.9749 19.9749M14.0251 15.0251L16.5 17.5L18.9749 19.9749" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/> </g>
+
+</svg>
