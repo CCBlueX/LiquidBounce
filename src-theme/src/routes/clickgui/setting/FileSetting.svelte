@@ -209,10 +209,10 @@
         </div>
         <div class="buttons">
             <button class="button" onclick={removeSelected} disabled={cSetting.value === undefined}>
-                <img src="img/menu/icon-remove-file.svg" alt="remove-file">
+                <img src="img/menu/icon-remove-file.svg" alt="remove-file" />
             </button>
             <button class="button" onclick={selectFile}>
-                Select
+                <img src="img/menu/icon-link-file.svg" alt="link-file" />
             </button>
         </div>
     </div>
