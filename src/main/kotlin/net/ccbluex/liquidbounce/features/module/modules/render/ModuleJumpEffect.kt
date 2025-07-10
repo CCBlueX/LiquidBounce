@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,9 +28,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.Vec3d
-import java.util.ArrayDeque
 
 object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
@@ -47,25 +45,10 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private class JumpRecord(val pos: Vec3d, var tickPassed: Int)
-
-    private val circles by computedOn<PlayerJumpEvent, ArrayDeque<JumpRecord>>(
-        initialValue = ArrayDeque()
-    ) { _, deque ->
-        // Adds new circle when the player jumps
-        deque += JumpRecord(player.pos, 0)
-        deque
-    }
+    private val circles = ExpiringList<Vec3d>()
 
     override fun disable() {
         circles.clear()
-    }
-
-    @Suppress("unused")
-    private val repeatable = handler<GameTickEvent> {
-        circles.removeIf {
-            it.tickPassed++ >= lifetime
-        }
     }
 
     @Suppress("unused")
@@ -75,10 +58,10 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
                 val progress = animCurve
-                    .transform((it.tickPassed + event.partialTicks) / lifetime)
+                    .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)
                     .coerceIn(0f..1f)
 
-                withPositionRelativeToCamera(it.pos) {
+                withPositionRelativeToCamera(it.value) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
@@ -99,6 +82,11 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
         }
 
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
+    }
+
+    private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
+        // Adds new circle when the player jumps
+        circles.add(player.pos, lifetime)
     }
 
 }
