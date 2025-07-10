@@ -158,6 +158,5 @@ inline fun <reified E : Event, V> EventListener.computedOn(
     override fun setValue(thisRef: EventListener, property: KProperty<*>, value: V) {
         this.value = value
     }
-    override fun hashCode(): Int = value.hashCode()
     override fun toString(): String = "ComputedProperty<${E::class.java.simpleName}>($value)"
 }
