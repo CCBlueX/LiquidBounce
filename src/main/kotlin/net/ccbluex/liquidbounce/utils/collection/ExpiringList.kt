@@ -72,8 +72,8 @@ class ExpiringList<E> private constructor(
             private val iterator = list.iterator()
             override fun hasNext(): Boolean = iterator.hasNext()
             override fun next(): E {
-                val next = iterator.next()
-                return next.value
+                if (!hasNext()) throw NoSuchElementException()
+                return iterator.next().value
             }
         }
 
