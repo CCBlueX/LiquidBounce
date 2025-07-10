@@ -31,7 +31,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
 
     init {
         if (browserBackend.isAccelerationSupported) {
-            accelerated = boolean("Accelerated", true).onChanged {
+            accelerated = boolean("Accelerated(BETA)", false).onChanged {
                 RenderSystem.recordRenderCall {
                     IntegrationListener.restart()
                     mc.updateWindowTitle()
