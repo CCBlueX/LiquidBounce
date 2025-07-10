@@ -312,18 +312,21 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                     trackedBlockMap
                 }
 
-                lookUpMap.keys.forEach {
+                val iterator = lookUpMap.entries.iterator()
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    val bedPos = entry.key
                     // Update if the block is close to a bed
-                    if (it.getManhattanDistance(pos) > distance) {
-                        return@forEach
+                    if (bedPos.getManhattanDistance(pos) > distance) {
+                        continue
                     }
 
-                    val trackedState = it.getState() ?: return@forEach
-                    if (!trackedState.isBed) {
+                    val bedState = bedPos.getState()
+                    if (bedState == null || !bedState.isBed) {
                         // The tracked block is not a bed anymore, remove it
-                        lookUpMap.remove(it)
+                        iterator.remove()
                     } else {
-                        lookUpMap[it] = it.getBedPlates(trackedState)
+                        entry.setValue(bedPos.getBedPlates(bedState))
                     }
                 }
 
