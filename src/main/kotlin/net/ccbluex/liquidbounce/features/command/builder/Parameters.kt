@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.block.Block
 import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 import kotlin.jvm.optionals.getOrNull
@@ -45,12 +46,10 @@ object Parameters {
         predicate: (V) -> Boolean,
     ) = ParameterBuilder.begin<V>(paramName)
         .verifiedBy { sourceText ->
-            val value = all.firstOrNull { v -> v.name.equals(sourceText, true) && predicate(v) }
-
-            if (value == null) {
-                ParameterValidationResult.error("'$sourceText' is not a valid $typeName")
-            } else {
-                ParameterValidationResult.ok(value)
+            ParameterValidationResult.ofNullable(
+                all.firstOrNull { v -> v.name.equals(sourceText, true) && predicate(v) }
+            ) {
+                "'$sourceText' is not a valid $typeName"
             }
         }
         .autocompletedWith { begin, _ ->
@@ -134,6 +133,20 @@ object Parameters {
             }
         }
 
+    private fun <T : Any> fromRegistry(
+        paramName: String,
+        typeName: String,
+        registry: Registry<T>,
+    ) = ParameterBuilder.begin<T>(paramName)
+        .verifiedBy { sourceText ->
+            ParameterValidationResult.ofNullable(registry.getOptionalValue(Identifier.tryParse(sourceText)).getOrNull()) {
+                "$sourceText is not a valid $typeName"
+            }
+        }
+        .autocompletedWith { begin, _ ->
+            registry.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
+        }
+
     fun enchantment(
         name: String = "enchantment",
     ) = ParameterBuilder.begin<String>(name)
@@ -146,15 +159,7 @@ object Parameters {
 
     fun block(
         name: String = "block",
-    ) = ParameterBuilder.begin<Block>(name)
-        .verifiedBy {
-            ParameterValidationResult.ofNullable(Registries.BLOCK.getOptionalValue(Identifier.tryParse(it)).getOrNull()) {
-                "$it is not a valid Block"
-            }
-        }
-        .autocompletedWith { begin, _ ->
-            Registries.BLOCK.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
-        }
+    ) = fromRegistry<Block>(name, "Block", Registries.BLOCK)
 
     fun item(
         name: String = "item",
