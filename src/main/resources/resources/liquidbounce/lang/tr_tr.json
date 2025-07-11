@@ -169,7 +169,6 @@
   "liquidbounce.command.items.subcommand.add.parameter.block.description": "Blok adı (örneğin: \"minecraft:stone\")",
   "liquidbounce.command.items.subcommand.add.result.blockAdded": "%s adlı blok, blok dışı listeye eklendi.",
   "liquidbounce.command.items.subcommand.add.result.blockIsPresent": "%s adlı blok zaten blok dışı listede.",
-  "liquidbounce.command.items.subcommand.add.result.blockNotExists": "%s adlı blok mevcut değil.",
   "liquidbounce.command.items.subcommand.clear.description": "Gösterilen bloklar listesini temizler.",
   "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "Gösterilen bloklar listesi temizlendi.",
   "liquidbounce.command.items.subcommand.list.description": "Gösterilen blokların listesini gösterir.",
@@ -179,7 +178,6 @@
   "liquidbounce.command.items.subcommand.list.result.pageCount": "Sayfa: %s",
   "liquidbounce.command.items.subcommand.remove.description": "Blok dışı listeden bir blok kaldırır.",
   "liquidbounce.command.items.subcommand.remove.parameter.block.description": "Blok adı (örneğin: \"minecraft:stone\")",
-  "liquidbounce.command.items.subcommand.remove.result.blockNotExists": "%s adlı blok mevcut değil.",
   "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "%s adlı blok, blok dışı listede değil.",
   "liquidbounce.command.items.subcommand.remove.result.blockRemoved": "%s adlı blok, blok dışı listeden kaldırıldı.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.name.description": "Yapılandırma dosyasının adı.",
@@ -279,7 +277,6 @@
   "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Blok adı (örneğin: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.add.result.blockAdded": "%s adlı blok gösterim listesine eklendi.",
   "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "%s adlı blok zaten gösterim listesinde.",
-  "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "%s adlı blok mevcut değil.",
   "liquidbounce.command.xray.subcommand.clear.description": "Gösterilen bloklar listesini temizler.",
   "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "Gösterilen bloklar listesi temizlendi.",
   "liquidbounce.command.xray.subcommand.list.description": "Gösterilen blokların listesini gösterir.",
@@ -289,7 +286,6 @@
   "liquidbounce.command.xray.subcommand.list.result.pageCount": "Sayfa: %s",
   "liquidbounce.command.xray.subcommand.remove.description": "Gösterim listesinden bir blok kaldırır.",
   "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Blok adı (örneğin: \"minecraft:stone\")",
-  "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "%s adlı blok mevcut değil.",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "%s adlı blok gösterim listesinde değil.",
   "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "%s adlı blok gösterim listesinden kaldırıldı.",
   "liquidbounce.command.fakeplayer.description": "İstemci tarafında oyuncular oluşturmanızı sağlar.",
@@ -650,5 +646,5 @@
   "liquidbounce.module.betterTab.description": "Sekme listesine çeşitli iyileştirmeler yapar.",
   "liquidbounce.module.autoPearl.description": "Bir düşmanın inci yoluna nişan alır ve inci atar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
-  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker.",
+  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker."
 }
