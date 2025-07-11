@@ -200,7 +200,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
         val identifier = Identifier.tryParse(enchantmentName)
         val registry = world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
         val enchantment = registry.getEntry(identifier).orElseThrow {
-            throw CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
+            CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
         }
 
         return enchantment
