@@ -66,7 +66,7 @@ object CommandHide : CommandFactory {
                 result("hidden").withColor(Formatting.RED).bold(true)
             },
             items = {
-                ModuleManager.filter { it.hidden }.sortedBy { it.name }
+                ModuleManager.filter { it.hidden }
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
