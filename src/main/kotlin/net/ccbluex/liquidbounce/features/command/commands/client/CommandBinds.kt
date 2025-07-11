@@ -75,8 +75,10 @@ object CommandBinds : CommandFactory {
                 "\u2B25 ".asText()
                     .formatted(Formatting.BLUE)
                     .append(variable(module.name).copyable())
-                    .append(regular(" ("))
-                    .append(variable(module.bind.keyName).copyable())
+                    .append(regular(": "))
+                    .append(regular(module.bind.keyName).copyable())
+                    .append(regular("("))
+                    .append(variable(module.bind.action.choiceName))
                     .append(regular(")"))
             }
         )
