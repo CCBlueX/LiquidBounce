@@ -37,19 +37,6 @@ sealed interface ParameterValidationResult<T : Any> {
     class Error(val errorMessage: String) : ParameterValidationResult<Nothing>
 }
 
-fun interface ParameterVerificator<T: Any> {
-    /**
-     * Verifies and parses parameter.
-     *
-     * This function must not have any side effects since this function may be called while the command is still being
-     * written!
-     *
-     * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
-     * [ParameterValidationResult.ok] with the parsed content is returned.
-     */
-    fun verifyAndParse(sourceText: String): ParameterValidationResult<out T>
-}
-
 /**
  * Provides autocompletion for one specific parameter
  */
@@ -73,7 +60,7 @@ class Parameter<T: Any>(
     val name: String,
     val required: Boolean,
     val vararg: Boolean,
-    val verifier: ParameterVerificator<T>?,
+    val verifier: Verificator<T>?,
     val autocompletionHandler: AutoCompletionProvider?,
     var command: Command? = null
 ) {
@@ -82,4 +69,17 @@ class Parameter<T: Any>(
 
     val description: MutableText
         get() = translation("$translationBaseKey.description")
+
+    fun interface Verificator<T: Any> {
+        /**
+         * Verifies and parses parameter.
+         *
+         * This function must not have any side effects since this function may be called while the command is still being
+         * written!
+         *
+         * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
+         * [ParameterValidationResult.ok] with the parsed content is returned.
+         */
+        fun verifyAndParse(sourceText: String): ParameterValidationResult<out T>
+    }
 }

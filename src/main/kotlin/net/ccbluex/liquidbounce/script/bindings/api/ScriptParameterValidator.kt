@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
-import net.ccbluex.liquidbounce.features.command.ParameterVerificator
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyObject
