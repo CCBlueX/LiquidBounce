@@ -139,7 +139,10 @@ object Parameters {
         registry: Registry<T>,
     ) = ParameterBuilder.begin<T>(paramName)
         .verifiedBy { sourceText ->
-            ParameterValidationResult.ofNullable(registry.getOptionalValue(Identifier.tryParse(sourceText)).getOrNull()) {
+            val id = Identifier.tryParse(sourceText)
+                ?: return@verifiedBy ParameterValidationResult.error("'$paramName' is not a valid Identifier")
+
+            ParameterValidationResult.ofNullable(registry.getOptionalValue(id).getOrNull()) {
                 "$sourceText is not a valid $typeName"
             }
         }
