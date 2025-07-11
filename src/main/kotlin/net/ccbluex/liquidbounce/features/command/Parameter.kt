@@ -74,8 +74,8 @@ class Parameter<T: Any>(
         /**
          * Verifies and parses parameter.
          *
-         * This function must not have any side effects since this function may be called while the command is still being
-         * written!
+         * This function must not have any side effects since this function may be called
+         * while the command is still being written!
          *
          * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
          * [ParameterValidationResult.ok] with the parsed content is returned.

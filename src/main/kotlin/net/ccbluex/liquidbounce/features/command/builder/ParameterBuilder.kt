@@ -31,37 +31,34 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
     private var autocompletionHandler: AutoCompletionProvider? = null
 
     companion object {
-        val STRING_VALIDATOR: Parameter.Verificator<String> = ParameterVerificator { sourceText ->
+        val STRING_VALIDATOR: Parameter.Verificator<String> = Parameter.Verificator { sourceText ->
             ParameterValidationResult.ok(sourceText)
         }
-        val MODULE_VALIDATOR: Parameter.Verificator<ClientModule> = ParameterVerificator { sourceText ->
+        val MODULE_VALIDATOR: Parameter.Verificator<ClientModule> = Parameter.Verificator { sourceText ->
             ParameterValidationResult.ofNullable(
                 ModuleManager.find { it.name.equals(sourceText, true) }
             ) {
                 "Module '$sourceText' not found"
             }
         }
-        val INTEGER_VALIDATOR: Parameter.Verificator<Int> = ParameterVerificator { sourceText ->
+        val INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
             ParameterValidationResult.ofNullable(
                 sourceText.toIntOrNull()
             ) {
                 "'$sourceText' is not a valid integer"
             }
         }
-        val POSITIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = ParameterVerificator { sourceText ->
-            try {
-                val integer = sourceText.toInt()
+        val POSITIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
+            val integer = sourceText.toIntOrNull() ?:
+                return@Verificator ParameterValidationResult.error("'$sourceText' is not a valid integer")
 
-                if (integer >= 0) {
-                    ParameterValidationResult.ok(integer)
-                } else {
-                    ParameterValidationResult.error("The integer must be positive")
-                }
-            } catch (e: NumberFormatException) {
-                ParameterValidationResult.error("'$sourceText' is not a valid integer")
+            if (integer >= 0) {
+                ParameterValidationResult.ok(integer)
+            } else {
+                ParameterValidationResult.error("The integer must be positive")
             }
         }
-        val BOOLEAN_VALIDATOR: Parameter.Verificator<Boolean> = ParameterVerificator { sourceText ->
+        val BOOLEAN_VALIDATOR: Parameter.Verificator<Boolean> = Parameter.Verificator { sourceText ->
             when (sourceText.lowercase()) {
                 "yes", "on", "true" -> ParameterValidationResult.ok(true)
                 "no", "off", "false" -> ParameterValidationResult.ok(false)
