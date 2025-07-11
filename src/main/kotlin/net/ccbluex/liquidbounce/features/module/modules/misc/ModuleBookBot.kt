@@ -285,6 +285,7 @@ internal sealed class GenerationMode(
     }
 
     object File : GenerationMode("File") {
+        private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
         private val cyclic by boolean("Cyclic", true)
         private val source by file("Source")
 
@@ -297,14 +298,14 @@ internal sealed class GenerationMode(
             } ?: return IntStream.empty()
 
             // UTF-8 averaged 3 bytes -> 1 code point
-            val codePoints = IntArrayList(file.length().toInt() / 3)
+            val codePoints = IntArrayList(minOf(MAX_CODE_POINTS, file.length()).toInt() / 3)
             file.source().buffer().use {
-                while (!it.exhausted()) {
+                while (!it.exhausted() && codePoints.size < MAX_CODE_POINTS) {
                     codePoints.add(it.readUtf8CodePoint())
                 }
             }
 
-            return if (cyclic) {
+            return if (cyclic && codePoints.isNotEmpty()) {
                 var index = 0
                 IntStream.generate {
                     val value = codePoints.getInt(index)
