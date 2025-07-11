@@ -57,7 +57,7 @@ object CommandClientConfigSubcommand {
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
-            Parameters.configurables()
+            Parameters.rootConfigurables()
                 .optional()
                 .build()
         )
@@ -118,7 +118,7 @@ object CommandClientConfigSubcommand {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            Parameters.configurables()
+            Parameters.rootConfigurables()
                 .optional()
                 .build()
         )

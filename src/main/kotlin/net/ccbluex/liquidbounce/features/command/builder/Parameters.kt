@@ -101,7 +101,7 @@ object Parameters {
         paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate
     )
 
-    fun configurables(
+    fun rootConfigurables(
         name: String = "configurables",
         predicate: (Configurable) -> Boolean = { true }
     ) = values<Configurable>(
