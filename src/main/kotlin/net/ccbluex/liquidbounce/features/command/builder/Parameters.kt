@@ -29,8 +29,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.minecraft.block.Block
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.util.Identifier
+import kotlin.jvm.optionals.getOrNull
 
 @Suppress("TooManyFunctions")
 object Parameters {
@@ -143,8 +146,12 @@ object Parameters {
 
     fun block(
         name: String = "block",
-    ) = ParameterBuilder.begin<String>(name)
-        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+    ) = ParameterBuilder.begin<Block>(name)
+        .verifiedBy {
+            ParameterValidationResult.ofNullable(Registries.BLOCK.getOptionalValue(Identifier.tryParse(it)).getOrNull()) {
+                "$it is not a valid Block"
+            }
+        }
         .autocompletedWith { begin, _ ->
             Registries.BLOCK.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
         }

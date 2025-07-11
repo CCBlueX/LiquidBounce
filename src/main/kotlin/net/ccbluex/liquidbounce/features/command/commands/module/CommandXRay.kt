@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.block.Block
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
 
 /**
  * XRay Command
@@ -98,20 +98,13 @@ object CommandXRay : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val identifier = Identifier.tryParse(name)
-            val displayName = identifier.toString()
-
-            val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                throw CommandException(command.result("blockNotExists", displayName))
-            }
-
+            val block = args[0] as Block
             if (!ModuleXRay.blocks.remove(block)) {
-                throw CommandException(command.result("blockNotFound", displayName))
+                throw CommandException(command.result("blockNotFound", block.name))
             }
 
             chat(
-                regular(command.result("blockRemoved", displayName)),
+                regular(command.result("blockRemoved", block.name)),
                 metadata = MessageMetadata(id = "CXRay#info")
             )
         }
@@ -125,20 +118,13 @@ object CommandXRay : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val identifier = Identifier.tryParse(name)
-            val displayName = identifier.toString()
-
-            val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                throw CommandException(command.result("blockNotExists", displayName))
-            }
-
+            val block = args[0] as Block
             if (!ModuleXRay.blocks.add(block)) {
-                throw CommandException(command.result("blockIsPresent", displayName))
+                throw CommandException(command.result("blockIsPresent", block.name))
             }
 
             chat(
-                regular(command.result("blockAdded", displayName)),
+                regular(command.result("blockAdded", block.name)),
                 metadata = MessageMetadata(id = "CXRay#info")
             )
         }

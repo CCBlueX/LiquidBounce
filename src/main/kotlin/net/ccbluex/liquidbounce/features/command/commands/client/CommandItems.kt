@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
+import net.minecraft.block.Block
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
 
 /**
  * Items Command
@@ -88,19 +88,12 @@ object CommandItems : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val identifier = Identifier.tryParse(name)
-            val displayName = identifier.toString()
-
-            val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                throw CommandException(command.result("blockNotExists", displayName))
-            }
-
+            val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.remove(block)) {
-                throw CommandException(command.result("blockNotFound", displayName))
+                throw CommandException(command.result("blockNotFound", block.name))
             }
 
-            chat(regular(command.result("blockRemoved", displayName)))
+            chat(regular(command.result("blockRemoved", block.name)))
         }
         .build()
 
@@ -112,19 +105,12 @@ object CommandItems : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val identifier = Identifier.tryParse(name)
-            val displayName = identifier.toString()
-
-            val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                throw CommandException(command.result("blockNotExists", displayName))
-            }
-
+            val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.add(block)) {
-                throw CommandException(command.result("blockIsPresent", displayName))
+                throw CommandException(command.result("blockIsPresent", block.name))
             }
 
-            chat(regular(command.result("blockAdded", displayName)))
+            chat(regular(command.result("blockAdded", block.name)))
         }
         .build()
 }
