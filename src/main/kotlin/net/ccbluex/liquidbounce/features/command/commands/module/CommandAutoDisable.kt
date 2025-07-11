@@ -24,13 +24,12 @@ import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 /**
  * AutoDisable Command
@@ -66,57 +65,23 @@ object CommandAutoDisable : CommandFactory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .parameter(
-            Parameters.page()
-                .optional()
-                .build()
+        .pagedQuery(
+            pageSize = 8,
+            header = {
+                result("modules").withColor(Formatting.RED).bold(true)
+            },
+            items = {
+                ModuleAutoDisable.listOfModules.sortedBy { it.name }
+            },
+            eachRow = { _, module ->
+                "\u2B25 ".asText()
+                    .formatted(Formatting.BLUE)
+                    .append(variable(module.name).copyable())
+                    .append(regular(" ("))
+                    .append(variable(module.bind.keyName).copyable())
+                    .append(regular(")"))
+            }
         )
-        .handler { command, args ->
-            val page = (args.firstOrNull() as? Int ?: 1).coerceAtLeast(1)
-
-            val modules = ModuleAutoDisable.listOfModules.sortedBy { it.name }
-
-            if (modules.isEmpty()) {
-                throw CommandException(command.result("noModules"))
-            }
-
-            // Max page
-            val maxPage = ceil(modules.size / 8.0).roundToInt()
-            if (page > maxPage) {
-                throw CommandException(command.result("pageNumberTooLarge", maxPage))
-            }
-
-            mc.inGameHud.chatHud.removeMessage("CAutoDisable#global")
-            val data = MessageMetadata(id = "CAutoDisable#global", remove = false)
-
-            // Print out bindings
-            chat(
-                command.result("modules").styled { it.withColor(Formatting.RED).withBold(true) },
-                metadata = data
-            )
-            chat(
-                regular(command.result("page", variable("$page / $maxPage"))),
-                metadata = data
-            )
-
-            val iterPage = 8 * page
-            for (module in modules.subList(iterPage - 8, iterPage.coerceAtMost(modules.size))) {
-                chat(
-                    "> ".asText()
-                        .styled { it.withColor(Formatting.GOLD) }
-                        .append(module.name + " (")
-                        .styled { it.withColor(Formatting.GRAY) }
-                        .append(
-                            module.bind.keyName.asText()
-                                .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
-                        )
-                        .append(")")
-                        .styled { it.withColor(Formatting.GRAY) },
-                    metadata = data
-                )
-            }
-        }
-        .build()
 
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")

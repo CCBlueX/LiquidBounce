@@ -85,7 +85,7 @@ object CommandXRay : CommandFactory {
                 regular("\u2B25 ")
                     .append(variable(block.name).copyable())
                     .append(regular(" ("))
-                    .append(variable(Registries.BLOCK.getId(block).toString()))
+                    .append(variable(Registries.BLOCK.getId(block).toString()).copyable())
                     .append(regular(")"))
             }
         )
