@@ -66,7 +66,7 @@ object CommandBinds : CommandFactory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("modules").withColor(Formatting.RED).bold(true)
+                result("bindings").withColor(Formatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { !it.bind.isUnbound }
