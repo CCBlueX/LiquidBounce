@@ -216,11 +216,13 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             // we could not get this feature to work reliably on Intel GPUs.
             // On Intel GPU (Intel ARC), it does not work as well and is reported:
             // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
-            val isSupportedGpu = vendor.lowercase().contains("nvidia") ||
-                                 renderer.lowercase().contains("geforce") ||
-                                 renderer.lowercase().contains("quadro") ||
-                                 vendor.lowercase().contains("amd") ||
-                                 renderer.lowercase().contains("radeon")
+
+            val isSupportedGpu =
+                vendor.contains("nvidia", true) ||
+                    renderer.contains("geforce", true) ||
+                    renderer.contains("quadro", true) ||
+                    vendor.contains("amd", true) ||
+                    renderer.contains("radeon", true)
             if (!isSupportedGpu) {
                 logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
                 logger.info("Falling back to software rendering for browser")
