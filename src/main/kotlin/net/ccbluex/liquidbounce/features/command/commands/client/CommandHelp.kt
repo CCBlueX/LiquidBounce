@@ -48,9 +48,9 @@ object CommandHelp : CommandFactory {
                 items = {
                     CommandManager.sortedBy { it.name }
                 },
-                eachRow = { index, command ->
+                eachRow = { _, command ->
                     val commandStart = CommandManager.Options.prefix + command.name
-                    "- ".asText()
+                    "\u2B25 ".asText()
                         .formatted(Formatting.BLUE)
                         .onHover(
                             HoverEvent(
