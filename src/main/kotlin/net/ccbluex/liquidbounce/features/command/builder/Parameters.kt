@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
-import kotlin.text.startsWith
 
 @Suppress("TooManyFunctions")
 object Parameters {
@@ -146,25 +145,16 @@ object Parameters {
         name: String = "block",
     ) = ParameterBuilder.begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { _, _ ->
-            Registries.BLOCK.map {
-                it.translationKey
-                    .removePrefix("block.")
-                    .replace('.', ':')
-            }
+        .autocompletedWith { begin, _ ->
+            Registries.BLOCK.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
         }
 
     fun item(
         name: String = "item",
     ) = ParameterBuilder.begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { _, _ ->
-            Registries.ITEM.map {
-                it.translationKey
-                    .removePrefix("item.")
-                    .removePrefix("block.")
-                    .replace('.', ':')
-            }
+        .autocompletedWith { begin, _ ->
+            Registries.ITEM.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
         }
 
     fun playerName(
@@ -174,11 +164,6 @@ object Parameters {
         .autocompletedWith { begin, _ ->
             mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
         }
-
-    fun page(
-        name: String = "page",
-    ) = ParameterBuilder.begin<Int>(name)
-        .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
 
     fun valueName(
         name: String = "valueName",
