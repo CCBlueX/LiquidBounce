@@ -36,19 +36,17 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
             ParameterValidationResult.ok(sourceText)
         }
         val MODULE_VALIDATOR: ParameterVerificator<ClientModule> = ParameterVerificator { sourceText ->
-            val mod = ModuleManager.find { it.name.equals(sourceText, true) }
-
-            if (mod == null) {
-                ParameterValidationResult.error("Module '$sourceText' not found")
-            } else {
-                ParameterValidationResult.ok(mod)
+            ParameterValidationResult.ofNullable(
+                ModuleManager.find { it.name.equals(sourceText, true) }
+            ) {
+                "Module '$sourceText' not found"
             }
         }
         val INTEGER_VALIDATOR: ParameterVerificator<Int> = ParameterVerificator { sourceText ->
-            try {
-                ParameterValidationResult.ok(sourceText.toInt())
-            } catch (e: NumberFormatException) {
-                ParameterValidationResult.error("'$sourceText' is not a valid integer")
+            ParameterValidationResult.ofNullable(
+                sourceText.toIntOrNull()
+            ) {
+                "'$sourceText' is not a valid integer"
             }
         }
         val POSITIVE_INTEGER_VALIDATOR: ParameterVerificator<Int> = ParameterVerificator { sourceText ->
@@ -72,6 +70,7 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
             }
         }
 
+        @JvmStatic
         fun <T: Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
     }
 

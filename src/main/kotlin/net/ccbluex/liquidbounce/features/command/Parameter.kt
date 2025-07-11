@@ -21,15 +21,20 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.lang.translation
 import net.minecraft.text.MutableText
 
-sealed class ParameterValidationResult<T: Any> {
+sealed interface ParameterValidationResult<T : Any> {
 
     companion object {
-        fun <T: Any> ok(value: T): ParameterValidationResult<T> = Ok(value)
-        fun <T: Any> error(errorMessage: String): ParameterValidationResult<T> = Error(errorMessage)
+        @JvmStatic
+        fun <T : Any> ok(value: T) = Ok(value)
+        @JvmStatic
+        fun error(errorMessage: String) = Error(errorMessage)
+        @JvmStatic
+        inline fun <T : Any> ofNullable(value: T?, errorMessage: () -> String) =
+            value?.let { Ok(it) } ?: error(errorMessage())
     }
 
-    class Ok<T: Any>(val mappedResult: T) : ParameterValidationResult<T>()
-    class Error<T: Any>(val errorMessage: String) : ParameterValidationResult<T>()
+    class Ok<T : Any>(val mappedResult: T) : ParameterValidationResult<T>
+    class Error(val errorMessage: String) : ParameterValidationResult<Nothing>
 }
 
 fun interface ParameterVerificator<T: Any> {
@@ -42,7 +47,7 @@ fun interface ParameterVerificator<T: Any> {
      * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
      * [ParameterValidationResult.ok] with the parsed content is returned.
      */
-    fun verifyAndParse(sourceText: String): ParameterValidationResult<T>
+    fun verifyAndParse(sourceText: String): ParameterValidationResult<out T>
 }
 
 /**

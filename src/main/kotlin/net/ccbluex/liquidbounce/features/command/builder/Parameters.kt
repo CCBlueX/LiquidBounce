@@ -1,4 +1,3 @@
-@file:Suppress("TooManyFunctions")
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -17,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -35,6 +33,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
 import kotlin.text.startsWith
 
+@Suppress("TooManyFunctions")
 object Parameters {
 
     private fun <V : Value<*>> value(
