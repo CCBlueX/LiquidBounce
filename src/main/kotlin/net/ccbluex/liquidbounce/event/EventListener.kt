@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import kotlin.properties.ReadOnlyProperty
 
 typealias Handler<T> = (T) -> Unit
 
@@ -122,4 +123,19 @@ fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
             sequence = null
         }
     }
+}
+
+/**
+ * Returns computed [ReadOnlyProperty] based on the [accumulator] of specific event.
+ */
+inline fun <reified E : Event, V> EventListener.computedOn(
+    initialValue: V,
+    priority: Short = 0,
+    crossinline accumulator: (event: E, prev: V) -> V,
+): ReadOnlyProperty<EventListener, V> {
+    var value = initialValue
+    handler<E>(priority) { event ->
+        value = accumulator(event, value)
+    }
+    return ReadOnlyProperty { _, _ -> value }
 }

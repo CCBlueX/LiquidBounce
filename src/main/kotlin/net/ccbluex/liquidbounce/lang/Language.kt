@@ -40,6 +40,7 @@ object LanguageManager : Configurable("lang") {
         "de_de",
         "ja_jp",
         "zh_cn",
+        "zh_tw",
         "ru_ru",
         "ua_ua",
         "en_pt",

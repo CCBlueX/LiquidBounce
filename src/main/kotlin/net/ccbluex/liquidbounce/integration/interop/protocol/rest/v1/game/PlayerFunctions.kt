@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.hideShieldSlot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -93,7 +94,7 @@ data class PlayerData(
     companion object {
 
         fun fromPlayer(player: PlayerEntity) = PlayerData(
-            player.nameForScoreboard,
+            ModuleNameProtect.replace(player.nameForScoreboard),
             player.uuidAsString,
             player.world.registryKey.value,
             player.pos,
