@@ -264,7 +264,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
     }
 
-    inline fun Any.debugParameter(name: String, lazyValue: () -> Any) {
+    inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
         if (!ModuleDebug.running) {
             return
         }

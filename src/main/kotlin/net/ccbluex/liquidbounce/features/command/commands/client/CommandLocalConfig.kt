@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Util
 
@@ -129,14 +129,13 @@ object CommandLocalConfig : CommandFactory {
                 .build()
         )
         .parameter(
-            moduleParameter()
+            Parameters.modules()
                 .optional()
                 .build()
         )
         .handler { command, args ->
             val name = args[0] as String
-            val moduleNames = args.getOrNull(1) as String?
-            val modules = ModuleManager.parseModulesFromParameter(moduleNames)
+            val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
             ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                 if (!exists()) {

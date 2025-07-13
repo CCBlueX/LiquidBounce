@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
@@ -63,7 +62,7 @@ object AutoConfig {
 
             // After completion of loading, sync ClickGUI
             if (!value) {
-                ModuleClickGui.reloadView()
+                ModuleClickGui.reload()
             }
         }
 
@@ -103,7 +102,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         reader: Reader,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         JsonParser.parseReader(publicGson.newJsonReader(reader))?.let { jsonElement ->
             loadAutoConfig(jsonElement.asJsonObject, modules)
@@ -119,7 +118,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
         chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
@@ -304,7 +303,7 @@ object AutoConfig {
      */
     private fun deserializeModuleConfigurable(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         // Deserialize full module configurable
         if (modules.isEmpty()) {
