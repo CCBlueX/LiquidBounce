@@ -11,7 +11,7 @@ import java.util.EnumSet
 class MultiChooseEnumListValue<T>(
     name: String,
     value: EnumSet<T>,
-    choices: EnumSet<T>,
+    choices: Set<T>,
     canBeNone: Boolean = true,
 ) : MultiChooseListValue<T>(
     name,
@@ -82,12 +82,7 @@ sealed class MultiChooseListValue<T>(
             }
         }
 
-        val extra = HashSet(value)
-        extra.removeAll(choices)
-
-        require(extra.isEmpty()) {
-            "Value contains extra elements not present in choices: $extra"
-        }
+        value.retainAll(choices)
     }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
