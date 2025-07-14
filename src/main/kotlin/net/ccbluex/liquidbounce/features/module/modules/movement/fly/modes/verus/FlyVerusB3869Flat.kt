@@ -75,7 +75,7 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND) {
+        if (event.origin == TransferOrigin.OUTGOING) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

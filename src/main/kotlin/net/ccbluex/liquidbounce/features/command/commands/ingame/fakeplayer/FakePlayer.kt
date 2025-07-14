@@ -80,7 +80,7 @@ open class FakePlayer(
             setHealth(1.0f)
 
             val packet = EntityStatusS2CPacket(LivingEntity::class.java.cast(this), 35.toByte())
-            val event = PacketEvent(TransferOrigin.RECEIVE, packet, true)
+            val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
                 mc.execute { packet.apply(MinecraftClient.getInstance().networkHandler) }

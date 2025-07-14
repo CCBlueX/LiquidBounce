@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.itemParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
@@ -39,7 +39,7 @@ object CommandItemGive : CommandFactory {
         return CommandBuilder
             .begin("give")
             .requiresIngame()
-            .parameter(itemParameter().required().build())
+            .parameter(Parameters.item().required().build())
             .parameter(
                 ParameterBuilder
                     .begin<Int>("amount")

@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d

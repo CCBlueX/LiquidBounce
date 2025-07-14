@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.PlayerInteractedItem
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -153,7 +153,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
         }
 
         @Suppress("unused")
-        private val interactionHandler = handler<PlayerInteractedItem> { event ->
+        private val interactionHandler = handler<PlayerInteractedItemEvent> { event ->
             if (!enabled) {
                 return@handler
             }

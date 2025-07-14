@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -71,8 +72,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         private val controlKey by key("Key", InputUtil.GLFW_KEY_LEFT_CONTROL)
 
         val shouldBeGoing
-            get() = running && controlKey != InputUtil.UNKNOWN_KEY &&
-                InputUtil.isKeyPressed(mc.window.handle, controlKey.code)
+            get() = running && controlKey != InputUtil.UNKNOWN_KEY && controlKey.isPressed
 
         /**
          * Creates context for navigation

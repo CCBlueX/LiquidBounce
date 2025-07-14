@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.misc
 
 import com.mojang.blaze3d.systems.RenderSystem
 import com.terraformersmc.modmenu.util.mod.Mod
+import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -94,7 +96,7 @@ object HideAppearance : EventListener {
         if (isHidingNow) {
             IntegrationListener.restoreOriginalScreen()
         } else {
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
         }
 
         mc.updateWindowTitle()
@@ -104,9 +106,9 @@ object HideAppearance : EventListener {
     }
 
     @Suppress("unused")
-    private val keyHandler = handler<KeyboardKeyEvent> {
-        val keyCode = it.keyCode
-        val modifier = it.mods
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        val keyCode = event.keyCode
+        val modifier = event.mods
 
         if (inGame) {
             return@handler
@@ -131,6 +133,9 @@ object HideAppearance : EventListener {
         mc.inGameHud.chatHud.messageHistory.removeIf {
             it.startsWith(CommandManager.Options.prefix)
         }
+
+        // Cancel all async tasks
+        scope.cancel()
 
         callEvent(ClientShutdownEvent)
         EventManager.unregisterAll()
@@ -160,12 +165,12 @@ object HideAppearance : EventListener {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        // Delete JAR file
-        runCatching {
-            FabricLoaderImpl.INSTANCE.allMods.find {
-                it.metadata.id == "liquidbounce"
-            }?.let {
-                val origin = it.origin
+        FabricLoaderImpl.INSTANCE.allMods.find {
+            it.metadata.id == "liquidbounce"
+        }?.let { mod ->
+            // Delete JAR file
+            runCatching {
+                val origin = mod.origin
 
                 for (path in origin.paths) {
                     runCatching {
@@ -173,11 +178,11 @@ object HideAppearance : EventListener {
                     }
                 }
             }
-        }
 
-        // Remove from Fabric Loader Impl
-        runCatching {
-            FabricLoaderImpl.INSTANCE.mods.removeIf { it.metadata.id == "liquidbounce" }
+            // Remove from Fabric Loader Impl
+            runCatching {
+                FabricLoaderImpl.INSTANCE.modsInternal.remove(mod)
+            }
         }
 
         // History clear

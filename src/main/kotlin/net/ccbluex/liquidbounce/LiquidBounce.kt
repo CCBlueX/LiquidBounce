@@ -23,12 +23,13 @@ import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
 import net.ccbluex.liquidbounce.config.types.Configurable
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -71,7 +71,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.TpsObserver
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -114,9 +114,14 @@ object LiquidBounce : EventListener {
         init {
             ConfigSystem.root(this)
 
-            version.onChange {
-                ConfigSystem.backup("backup-${it}-${version.inner}.zip")
-                it
+            version.onChange { previousVersion ->
+                runCatching {
+                    ConfigSystem.backup("automatic_${previousVersion}-${version.inner}")
+                }.onFailure {
+                    logger.error("Unable to create backup", it)
+                }
+
+                previousVersion
             }
         }
     }
@@ -176,7 +181,11 @@ object LiquidBounce : EventListener {
 
         // Do backup before loading configs
         if (!ConfigSystem.isFirstLaunch && !Client.jsonFile.exists()) {
-            ConfigSystem.backup("backup-unknown-${Client.version.inner}.zip")
+            runCatching {
+                ConfigSystem.backup("automatic_${Client.version.inner}")
+            }.onFailure {
+                logger.error("Unable to create backup", it)
+            }
         }
 
         // Load all configurations
@@ -218,14 +227,13 @@ object LiquidBounce : EventListener {
         FriendManager
         InventoryManager
         WorldToScreen
-        Reconnect
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)
         ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
         PostRotationExecutor
-        TpsObserver
+        ServerObserver
         ItemImageAtlas
     }
 
@@ -249,6 +257,10 @@ object LiquidBounce : EventListener {
      * which do not rely on the main thread.
      */
     private fun initializeResources() = runBlocking {
+        logger.info("Initializing API...")
+        // Lookup API config
+        ApiConfig.config
+
         listOf(
             scope.async {
                 // Load translations
@@ -270,7 +282,7 @@ object LiquidBounce : EventListener {
             },
             scope.async {
                 // Load configs
-                configs
+                AutoConfig.reloadConfigs()
             },
             scope.async {
                 // IPC configuration
@@ -313,12 +325,12 @@ object LiquidBounce : EventListener {
 
     /**
      * Prepares the GUI stage of the client.
-     * This will load [ThemeManager], as well as the [BrowserManager] and [ClientInteropServer].
+     * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
         // Load theme and component overlay
         ThemeManager
-        BrowserManager
+        BrowserBackendManager
 
         // Start Interop Server
         ClientInteropServer.start()
@@ -327,7 +339,7 @@ object LiquidBounce : EventListener {
         taskManager = TaskManager(scope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
-            BrowserManager.makeDependenciesAvailable(this)
+            BrowserBackendManager.makeDependenciesAvailable(this)
 
             // Initialize deep learning engine as task, because we cannot know if DJL will request
             // resources from the internet.
@@ -336,6 +348,8 @@ object LiquidBounce : EventListener {
                     DeepLearningEngine.init(task)
                     ModelHolster.load()
                 }.onFailure { exception ->
+                    task.subTasks.clear()
+
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.
                     logger.info("Failed to initialize deep learning.", exception)
@@ -372,7 +386,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.storeAll()
 
         // Shutdown browser as last step
-        BrowserManager.stopBrowser()
+        BrowserBackendManager.stop()
     }
 
     /**

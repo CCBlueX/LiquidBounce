@@ -7,7 +7,7 @@ import com.google.gson.FieldAttributes
 @Target(AnnotationTarget.FIELD)
 annotation class Exclude
 
-class ExcludeStrategy : ExclusionStrategy {
+object ExcludeStrategy : ExclusionStrategy {
     override fun shouldSkipClass(clazz: Class<*>?) = false
     override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(Exclude::class.java) != null
 }

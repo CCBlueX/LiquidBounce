@@ -39,6 +39,8 @@
         let filteredProxies = proxies;
 
         filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo?.country)));
+        filteredProxies = filteredProxies.filter(p => proxyTypes.includes(p.type));
+        console.log(proxies)
         if (favoritesOnly) {
             filteredProxies = filteredProxies.filter(a => a.favorite);
         }
@@ -56,6 +58,7 @@
     let searchQuery = "";
     let favoritesOnly = false;
     let countries: string[] = [];
+    let proxyTypes = ["SOCKS5", "HTTP"];
 
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
@@ -83,11 +86,11 @@
     async function refreshProxies() {
         proxies = await getProxies();
 
-        let c = new Set();
+        const c = new Set<string>();
         for (const p of proxies) {
             c.add(convertCountryCode(p.ipInfo?.country));
         }
-        allCountries = Array.from(c) as string[];
+        allCountries = Array.from(c);
         countries = allCountries;
     }
 
@@ -201,6 +204,7 @@
     <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
                     host={currentEditProxy.host}
                     port={currentEditProxy.port}
+                    proxyType={currentEditProxy.type}
                     forwardAuthentication={currentEditProxy.forwardAuthentication}
                     username={currentEditProxy.credentials?.username ?? ""}
                     password={currentEditProxy.credentials?.password ?? ""}
@@ -211,6 +215,7 @@
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
         <MultiSelect title="Country" options={allCountries} bind:values={countries}/>
+        <MultiSelect title="Type" options={["SOCKS5", "HTTP"]} bind:values={proxyTypes}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleProxySort}>
@@ -226,6 +231,7 @@
 
                 <svelte:fragment slot="tag">
                     <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
+                    <MenuListItemTag text={proxy.type}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
