@@ -49,9 +49,9 @@ Feel free to check the source code on GitHub:
 https://github.com/CCBlueX/LiquidBounce
 
 ➔ Links
-Our website: https://ccbluex.net/
-Our youtube: https://youtube.com/ccbluex
-Our twitter: https://twitter.com/ccbluex
+Our Website: https://ccbluex.net/
+Our YouTube: https://youtube.com/ccbluex
+Our X: https://x.com/ccbluex
 
 ➔ License
 This project is subject to the GNU General Public License v3.0. This does only apply for source code located directly in this clean repository. During the development and compilation process, additional source code may be used to which we have obtained no rights. Such code is not covered by the GPL license.
