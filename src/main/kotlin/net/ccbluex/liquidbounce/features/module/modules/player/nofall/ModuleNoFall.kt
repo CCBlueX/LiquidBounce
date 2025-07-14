@@ -37,6 +37,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
             NoFallNoGround,
             NoFallPacket,
             NoFallPacketJump,
+            NoFallMatrix,
             NoFallMLG,
             NoFallRettungsplatform,
             NoFallSpartan524Flag,
