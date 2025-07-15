@@ -55,6 +55,7 @@ object CommandConfig : CommandFactory {
             .subcommand(loadSubcommand())
             .subcommand(listSubcommand())
             .subcommand(browseSubcommand())
+            .subcommand(reloadSubcommand())
             .build()
     }
 
@@ -65,6 +66,16 @@ object CommandConfig : CommandFactory {
         }
         .build()
 
+    private fun reloadSubcommand() = CommandBuilder
+        .begin("reload")
+        .suspendHandler { command, _ ->
+            if (AutoConfig.reloadConfigs()) {
+                chat(regular("Reloaded ${configs?.size} settings info from API"))
+            } else {
+                chat(markAsError("Failed to load settings list from API"))
+            }
+        }.build()
+
     private fun listSubcommand() = CommandBuilder
         .begin("list")
         .handler { command, _ ->
@@ -72,7 +83,7 @@ object CommandConfig : CommandFactory {
                 chat(regular(command.result("loading")))
                 val widthOfSpace = mc.textRenderer.getWidth(" ")
                 val configs = configs ?: run {
-                    chat(regular("§cFailed to load settings list from API"))
+                    chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
                 val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
@@ -120,7 +131,7 @@ object CommandConfig : CommandFactory {
                     )
                 }
             }.onFailure {
-                chat(regular("§cFailed to load settings list from API"))
+                chat(markAsError("Failed to load settings list from API"))
             }
         }
         .build()
@@ -171,6 +182,5 @@ object CommandConfig : CommandFactory {
     private fun autocompleteConfigs(begin: String): List<String> {
         return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
-
 
 }
