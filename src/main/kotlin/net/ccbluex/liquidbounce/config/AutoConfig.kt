@@ -68,6 +68,7 @@ object AutoConfig {
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
+    @Volatile
     var configs: Array<AutoSettings>? = null
         private set
 
