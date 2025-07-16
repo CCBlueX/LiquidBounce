@@ -178,6 +178,9 @@ object EventManager {
         return eventHook
     }
 
+    inline fun <reified T : Event> registerEventHook(eventHook: EventHook<T>) =
+        registerEventHook(T::class.java, eventHook)
+
     /**
      * Unregisters a handler.
      */
@@ -185,6 +188,9 @@ object EventManager {
         @Suppress("UNCHECKED_CAST")
         registry[eventClass]?.remove(eventHook as EventHook<in Event>)
     }
+
+    inline fun <reified T : Event> unregisterEventHook(eventHook: EventHook<T>) =
+        unregisterEventHook(T::class.java, eventHook)
 
     fun unregisterEventHandler(eventListener: EventListener) {
         registry.values.forEach {

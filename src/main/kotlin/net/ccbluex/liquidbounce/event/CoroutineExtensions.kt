@@ -27,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
@@ -78,6 +79,39 @@ inline fun <reified T : Event> EventListener.suspendHandler(
             handler(event)
         }
     }
+}
+
+/**
+ * Wait an event of type [T] which matches given [predicate].
+ *
+ * @param priority The priority of the event hook.
+ * @param predicate The predicate to match the event.
+ * If it throws a [Throwable], the continuation will be resumed with [Result.failure].
+ */
+suspend inline fun <reified T : Event> EventListener.waitMatches(
+    priority: Short = 0,
+    crossinline predicate: (T) -> Boolean,
+): T = suspendCancellableCoroutine { continuation ->
+    lateinit var eventHook: EventHook<T>
+    fun resumeAndUnregister(result: Result<T>) {
+        EventManager.unregisterEventHook(eventHook)
+        if (continuation.isActive) {
+            continuation.resumeWith(result)
+        }
+    }
+    eventHook = EventHook(this, handler = { event ->
+        try {
+            if (predicate(event)) {
+                resumeAndUnregister(Result.success(event))
+            }
+        } catch (e: Throwable) {
+            resumeAndUnregister(Result.failure(e))
+        }
+    }, priority)
+    continuation.invokeOnCancellation {
+        EventManager.unregisterEventHook(eventHook)
+    }
+    EventManager.registerEventHook(eventHook)
 }
 
 /**

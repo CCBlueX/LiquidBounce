@@ -74,9 +74,7 @@ inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
     noinline handler: Handler<T>
 ): EventHook<T> {
-    return EventManager.registerEventHook(T::class.java,
-        EventHook(this, handler, priority)
-    )
+    return EventManager.registerEventHook(EventHook(this, handler, priority))
 }
 
 inline fun <reified T : Event> EventListener.once(
@@ -86,9 +84,9 @@ inline fun <reified T : Event> EventListener.once(
     lateinit var eventHook: EventHook<T>
     eventHook = EventHook(this, {
         handler(it)
-        EventManager.unregisterEventHook(T::class.java, eventHook)
+        EventManager.unregisterEventHook(eventHook)
     }, priority)
-    return EventManager.registerEventHook(T::class.java, eventHook)
+    return EventManager.registerEventHook(eventHook)
 }
 
 /**
