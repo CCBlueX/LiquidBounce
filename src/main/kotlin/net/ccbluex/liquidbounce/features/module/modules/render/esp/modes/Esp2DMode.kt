@@ -82,7 +82,7 @@ object Esp2DMode : EspMode("2D") {
                 val minZ = projected.minOf { it.z } // TODO: Handle Z-index correctly
                 var rectWidth = (maxX - minX)
                 var rectHeight = (maxY - minY)
-                val black = 0xFF000000.toInt()
+                val black = Color4b.BLACK.toARGB()
 
                 with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
                     with(matrices) {
