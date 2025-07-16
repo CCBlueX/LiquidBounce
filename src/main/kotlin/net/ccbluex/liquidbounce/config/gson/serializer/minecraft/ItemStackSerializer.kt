@@ -35,7 +35,17 @@ object ItemStackSerializer : JsonSerializer<ItemStack> {
             addProperty("damage", it.damage)
             addProperty("maxDamage", it.maxDamage)
             addProperty("empty", it.isEmpty)
-            addProperty("hasEnchantment", !it.enchantments.isEmpty)
+            it.enchantments.enchantmentEntries
+                .takeIf { set -> set.isNotEmpty() }
+                ?.let { entries ->
+                    // TODO: this property is deprecated. Please remove it in 0.32.0
+                    addProperty("hasEnchantment", true)
+                    add("enchantments", JsonObject().apply {
+                        for ((key, level) in entries) {
+                            addProperty(key.idAsString, level)
+                        }
+                    })
+                }
         }
     }
 

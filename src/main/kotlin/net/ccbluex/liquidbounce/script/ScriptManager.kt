@@ -160,7 +160,7 @@ object ScriptManager {
 
         if (scripts.isNotEmpty()) {
             // Reload the ClickGUI to update the module list.
-            RenderSystem.recordRenderCall(ModuleClickGui::reloadView)
+            RenderSystem.recordRenderCall(ModuleClickGui::reload)
         }
     }
 

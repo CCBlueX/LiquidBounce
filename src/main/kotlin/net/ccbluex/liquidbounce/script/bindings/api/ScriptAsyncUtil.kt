@@ -28,7 +28,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.minecraft.util.Util
 import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyExecutable
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.Future
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
@@ -74,6 +75,24 @@ class ScriptAsyncUtil(
             }
         }
     }
+
+    /**
+     * Converts a [CompletableFuture] to a JavaScript [Value] that represents a Promise.
+     */
+    @JvmName("completableFutureToPromise")
+    @ScriptApiRequired
+    fun <T> CompletableFuture<T>.toPromise(): Value =
+        jsPromiseConstructor.newInstance(
+            ProxyExecutable { (onResolve, onReject) ->
+                scriptFutures += this
+                this.thenAcceptAsync( { value ->
+                    onResolve.executeVoid(value)
+                }, mc).exceptionallyAsync( { e ->
+                    onReject.executeVoid(e)
+                    null
+                }, mc)
+            }
+        )
 
     /**
      * `Promise.resolve(0)`
@@ -155,7 +174,7 @@ class ScriptAsyncUtil(
     @ScriptApiRequired
     fun request(
         block: Consumer<okhttp3.Request.Builder>
-    ): Value = launch(Util.getDownloadWorkerExecutor().service) {
+    ): Value = launch(Util.getDownloadWorkerExecutor()) {
         val request = okhttp3.Request.Builder().apply(block::accept).build()
         HttpClient.client.newCall(request).execute()
     }
@@ -169,21 +188,9 @@ class ScriptAsyncUtil(
      */
     @ScriptApiRequired
     fun <T> launch(
-        executor: ExecutorService,
+        executor: Executor,
         block: Supplier<T>,
-    ): Value = jsPromiseConstructor.newInstance(
-        ProxyExecutable { (onResolve, onReject) ->
-            scriptFutures += executor.submit {
-                val result = runCatching { block.get() }
-                // Resume on Render thread
-                mc.execute {
-                    result.getOrNull()?.let { value ->
-                        onResolve.executeVoid(value)
-                    } ?: onReject.executeVoid(result.exceptionOrNull()!!)
-                }
-            }
-        }
-    )
+    ): Value = CompletableFuture.supplyAsync(block, executor).toPromise()
 
     /**
      * Starts an async task on [Util.getMainWorkerExecutor()], returns a `Promise`.
@@ -195,7 +202,6 @@ class ScriptAsyncUtil(
     @ScriptApiRequired
     fun <T> launch(
         block: Supplier<T>,
-    ): Value = launch(Util.getMainWorkerExecutor().service, block)
+    ): Value = launch(Util.getMainWorkerExecutor(), block)
 
 }
-

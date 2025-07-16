@@ -20,15 +20,28 @@ package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.gl.GlUniform
+import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20
 import org.lwjgl.system.MemoryUtil
 
 private val BUFFER = MemoryUtil.memAllocFloat(16)
+var currentProjectionMatrix: Matrix4f? = null
+    get() = field ?: RenderSystem.getProjectionMatrix()
+var currentModelViewMatrix: Matrix4f? = null
+    get() = field ?: RenderSystem.getModelViewMatrix()
 
-val ProjMatUniform = UniformProvider("projMat") { pointer ->
+val ProjMatUniform = UniformProvider("ProjMat") { pointer ->
     BUFFER.position(0)
-    RenderSystem.getProjectionMatrix().get(BUFFER)
+    currentProjectionMatrix?.get(BUFFER)
     GL20.glUniformMatrix4fv(pointer, false, BUFFER)
+    currentProjectionMatrix = null
+}
+
+val ModelViewMatUniform = UniformProvider("ModelViewMat") { pointer ->
+    BUFFER.position(0)
+    currentModelViewMatrix?.get(BUFFER)
+    GL20.glUniformMatrix4fv(pointer, false, BUFFER)
+    currentModelViewMatrix = null
 }
 
 class UniformProvider(val name: String, val set: (pointer: Int) -> Unit) {

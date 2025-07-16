@@ -16,31 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.browser.supports.tab
+package net.ccbluex.liquidbounce.render.engine.type
 
-import net.minecraft.util.Identifier
-
-interface ITab {
-
-    var position: TabPosition
-    var visible: Boolean
-    var drawn: Boolean
-    var preferOnTop: Boolean
-
-    fun forceReload()
-    fun reload()
-    fun goForward()
-    fun goBack()
-    fun loadUrl(url: String)
-    fun getUrl(): String
-    fun closeTab()
-    fun getTexture(): Identifier?
-    fun resize(width: Int, height: Int)
-
-    fun preferOnTop(): ITab {
-        preferOnTop = true
-        return this
-    }
-
-
-}
+@JvmRecord
+data class Rect(val x1: Float, val y1: Float, val x2: Float, val y2: Float)

@@ -19,11 +19,10 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -41,14 +40,12 @@ object CommandToggle : CommandFactory {
             .begin("toggle")
             .alias("t")
             .parameter(
-                moduleParameter()
+                Parameters.module()
                     .required()
                     .build()
             )
             .handler { command, args ->
-                val name = args[0] as String
-                val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException(command.result("moduleNotFound", name))
+                val module = args[0] as ClientModule
 
                 val newState = !module.running
                 module.enabled = newState

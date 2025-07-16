@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hyl
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrix7
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
@@ -97,7 +98,9 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedHylexLowHop(configurable),
         SpeedHylexGround(configurable),
 
-        SpeedBlocksMC(configurable)
+        SpeedBlocksMC(configurable),
+
+        SpeedMatrix7(configurable)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)

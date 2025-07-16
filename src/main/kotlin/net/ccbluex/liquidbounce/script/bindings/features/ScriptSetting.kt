@@ -151,8 +151,8 @@ object ScriptSetting {
     @JvmName("multiChoose")
     fun multiChoose(value: PolyglotValue): MultiChooseStringListValue {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").asArray<String>().toHashSet()
-        val default = value.getMember("default")?.asArray<String>()?.toMutableSet() ?: linkedSetOf()
+        val choices = value.getMember("choices").asArray<String>().toSet()
+        val default = value.getMember("default")?.asArray<String>()?.toHashSet() ?: hashSetOf()
 
         val canBeNone = value.getMember("canBeNone")?.asBoolean() ?: true
 

@@ -21,11 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.valueNameParameter
-import net.ccbluex.liquidbounce.features.command.builder.valueTypeParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -51,20 +48,17 @@ object CommandValue : CommandFactory {
     private fun setSubCommand() = CommandBuilder
         .begin("set")
         .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+            Parameters.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            valueNameParameter()
+            Parameters.valueName()
                 .required()
                 .build()
         )
         .parameter(
-            valueTypeParameter()
+            Parameters.valueType()
                 .required()
                 .build()
         )
@@ -80,7 +74,7 @@ object CommandValue : CommandFactory {
 
             try {
                 value.setByString(valueString)
-                ModuleClickGui.reloadView()
+                ModuleClickGui.reload()
             } catch (e: Exception) {
                 throw CommandException(command.result("valueError", valueName, e.message ?: ""))
             }
@@ -95,15 +89,12 @@ object CommandValue : CommandFactory {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+            Parameters.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            valueNameParameter()
+            Parameters.valueName()
                 .required()
                 .build()
         )
@@ -117,7 +108,7 @@ object CommandValue : CommandFactory {
                 ?: throw CommandException(command.result("valueNotFound", valueName))
 
             value.restore()
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
             chat(
                 regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
                 metadata = MessageMetadata(id = "CValue#reset${module.name}")
@@ -128,10 +119,7 @@ object CommandValue : CommandFactory {
     private fun resetAllSubCommand() = CommandBuilder
         .begin("reset-all")
         .parameter(
-            ParameterBuilder
-                .begin<ClientModule>("moduleName")
-                .verifiedBy(ParameterBuilder.MODULE_VALIDATOR)
-                .autocompletedWith { begin, _ -> ModuleManager.autoComplete(begin) }
+            Parameters.module("moduleName")
                 .required()
                 .build()
         )
@@ -141,7 +129,7 @@ object CommandValue : CommandFactory {
             module.getContainedValuesRecursively()
                 .filter { !it.name.equals("Bind", true) }
                 .forEach { it.restore() }
-            ModuleClickGui.reloadView()
+            ModuleClickGui.reload()
             chat(
                 regular(command.result("resetAllSuccess", variable(module.name))),
                 metadata = MessageMetadata(id = "CValue#resetAll${module.name}")
