@@ -99,9 +99,6 @@ open class ClientModule(
             // Call enable or disable function
             if (new) {
                 enable()
-                eventListenerScope.launch {
-                    enabledEffect()
-                }
             } else {
                 // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
                 cancelAllSequences(this)
@@ -142,6 +139,12 @@ open class ClientModule(
         }
 
         new
+    }.onChanged { newValue ->
+        if (newValue) {
+            eventListenerScope.launch {
+                enabledEffect()
+            }
+        }
     }
 
     /**

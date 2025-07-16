@@ -152,7 +152,7 @@ object ServerObserver : EventListener {
      */
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
-        val completionId = Random.nextInt(0, 1000000) // TODO: check range
+        val completionId = Random.nextInt(0, 32767)
         network.sendPacket(RequestCommandCompletionsC2SPacket(completionId, "/"))
         /**
          * Server sends a command suggestions packet with a list of commands.

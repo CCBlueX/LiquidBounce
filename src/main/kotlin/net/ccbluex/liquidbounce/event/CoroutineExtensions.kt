@@ -94,7 +94,7 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
 ): T = suspendCancellableCoroutine { continuation ->
     lateinit var eventHook: EventHook<T>
     fun resumeAndUnregister(result: Result<T>) {
-        EventManager.unregisterEventHook(eventHook)
+        EventManager.unregisterEventHook(T::class.java, eventHook)
         if (continuation.isActive) {
             continuation.resumeWith(result)
         }
@@ -109,9 +109,9 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
         }
     }, priority)
     continuation.invokeOnCancellation {
-        EventManager.unregisterEventHook(eventHook)
+        EventManager.unregisterEventHook(T::class.java, eventHook)
     }
-    EventManager.registerEventHook(eventHook)
+    EventManager.registerEventHook(T::class.java, eventHook)
 }
 
 /**
