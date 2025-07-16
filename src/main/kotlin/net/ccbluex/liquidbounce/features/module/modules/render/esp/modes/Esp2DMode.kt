@@ -120,7 +120,7 @@ object Esp2DMode : EspMode("2D") {
 
                             translate(-3.0f, 0.0f, 0.0f)
 
-                            verticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
+                            if (border) verticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
                             verticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor.toARGB())
                         }
                     }
