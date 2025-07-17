@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -40,14 +41,19 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.Optional;
 
@@ -108,6 +114,57 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         var chunkPosition = packet.sectionPos.toChunkPos();
         EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(chunkPosition.x, chunkPosition.z));
         ChunkUpdateFlag.chunkUpdate = false;
+    }
+
+    @ModifyExpressionValue(method = "onTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/TitleS2CPacket;text()Lnet/minecraft/text/Text;"))
+    private @Nullable Text hookOnTitle(@Nullable Text original, @Cancellable CallbackInfo ci) {
+        var event = new TitleEvent.Title(original);
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
+        return event.getText();
+    }
+
+    @ModifyExpressionValue(method = "onSubtitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/SubtitleS2CPacket;text()Lnet/minecraft/text/Text;"))
+    private @Nullable Text hookOnSubtitle(@Nullable Text original, @Cancellable CallbackInfo ci) {
+        var event = new TitleEvent.Subtitle(original);
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
+        return event.getText();
+    }
+
+    @ModifyArgs(method = "onTitleFade", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;setTitleTicks(III)V"))
+    private void hookOnTitleFade(Args args, @Cancellable CallbackInfo ci) {
+        var event = new TitleEvent.Fade(args.get(0), args.get(1), args.get(2));
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
+        args.set(0, event.getFadeInTicks());
+        args.set(1, event.getStayTicks());
+        args.set(2, event.getFadeOutTicks());
+    }
+
+    /**
+     * This injection rewrites the method!!!
+     */
+    @Inject(method = "onTitleClear", at = @At(value = "HEAD"), cancellable = true)
+    private void hookOnTitleClear(ClearTitleS2CPacket packet, CallbackInfo ci) {
+        NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, this.client);
+        var event = new TitleEvent.Clear(packet.shouldReset());
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled()) {
+            ci.cancel();
+            return;
+        }
+        this.client.inGameHud.clearTitle();
+        if (event.getReset()) {
+            this.client.inGameHud.setDefaultTitleFade();
+        }
+        ci.cancel();
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

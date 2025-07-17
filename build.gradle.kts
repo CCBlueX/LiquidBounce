@@ -25,7 +25,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.0"
+    id("com.gorylenko.gradle-git-properties") version "2.5.2"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "1.9.10"
@@ -183,7 +183,7 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
+    includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
 
     // SOCKS5 & HTTP Proxy Support
     includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")

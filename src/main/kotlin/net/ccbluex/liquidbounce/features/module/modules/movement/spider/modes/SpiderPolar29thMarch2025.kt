@@ -22,8 +22,10 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.utils.block.shrink
+import net.ccbluex.liquidbounce.utils.math.copy
 
 /**
  * Shrinks the block collision shape and allows you to walk on it.
@@ -37,6 +39,8 @@ internal object SpiderPolar29thMarch2025 : Choice("Polar-29.03.2025") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpider.modes
 
+    private val fast by boolean("Fast", true)
+
     @Suppress("unused")
     private val boxHandler = handler<BlockShapeEvent> { event ->
         if (event.pos.y >= player.pos.y || player.isSneaking && player.isOnGround) {
@@ -44,6 +48,17 @@ internal object SpiderPolar29thMarch2025 : Choice("Polar-29.03.2025") {
                 x = 0.0001,
                 z = 0.0001
             )
+        }
+    }
+
+    /**
+     * Could also count as 2-Block Step. Probably could be abused further
+     * to go even faster.
+     */
+    @Suppress("unused")
+    private val fastHandler = tickHandler {
+        if (fast && player.horizontalCollision && player.isOnGround) {
+            player.velocity = player.velocity.copy(y = 0.6)
         }
     }
 

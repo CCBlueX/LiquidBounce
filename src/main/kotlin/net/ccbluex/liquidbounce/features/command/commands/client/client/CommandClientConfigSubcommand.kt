@@ -20,9 +20,10 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.configurableParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.*
@@ -56,17 +57,12 @@ object CommandClientConfigSubcommand {
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
-            configurableParameter()
+            Parameters.rootConfigurables()
                 .optional()
                 .build()
         )
         .handler { command, args ->
-            val configurableNames =  args.getOrNull(0) as String?
-            val configurables = if (configurableNames != null) {
-                ConfigSystem.parseConfigurablesFromParameter(configurableNames)
-            } else {
-                defaultConfigurableList
-            }
+            val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
             }
@@ -122,17 +118,12 @@ object CommandClientConfigSubcommand {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            configurableParameter()
+            Parameters.rootConfigurables()
                 .optional()
                 .build()
         )
         .handler { command, args ->
-            val configurableNames = args.getOrNull(0) as String?
-            val configurables = if (configurableNames != null) {
-                ConfigSystem.parseConfigurablesFromParameter(configurableNames)
-            } else {
-                defaultConfigurableList
-            }
+            val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
             }

@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.util.math.Vec3d
 
 object AntiVoidBlinkMode : AntiVoidMode("Blink") {
 
@@ -43,8 +43,7 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
 
     // Whether artificial lag is needed to prevent falling into the void.
     private val requiresLag
-        get() = AntiVoidBlinkMode.running && ModuleAntiVoid.isLikelyFalling
-            && !isExempt && isWorth()
+        get() = running && ModuleAntiVoid.isLikelyFalling && ModuleAntiVoid.rescuePosition != null && !isExempt
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
@@ -53,7 +52,18 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
         }
     }
 
-    override fun fix(): Boolean {
+    /**
+     * This method is called to discover a safe position to teleport to.
+     * In this case, we simply return the last known safe position.
+     *
+     * TODO: This does not seem to be consistent enough,
+     *   so we rather rely on the base [discoverRescuePosition] method.
+     */
+//    override fun discoverRescuePosition(): Vec3d? {
+//        return positions.first { pos -> ModuleAntiVoid.isSafeForRescue(pos) }
+//    }
+
+    override fun rescue(): Boolean {
         if (!requiresLag) {
             return false
         }
@@ -63,18 +73,8 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
             return false
         }
 
-        // Teleport the player to the last position.
         PacketQueueManager.cancel()
         return true
-    }
-
-    private fun isWorth(): Boolean {
-        // If we do not have any previous positions, we cannot determine if it is worth it,
-        // so we assume it is.
-        val position = positions.firstOrNull() ?: return true
-
-        // If the first position is not safe, we should not continue to blink and wait for
-        return position.toBlockPos().down().canStandOn()
     }
 
 }

@@ -25,10 +25,13 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableTextAccessor
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
@@ -148,6 +151,14 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
     val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
 
     it.withColor(newColor)
+}
+
+/**
+ * Open a [ChatScreen] with given text,
+ * or set the text of current [ChatScreen]
+ */
+fun MinecraftClient.openChat(text: String) = send {
+    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

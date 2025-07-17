@@ -36,9 +36,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.BrowserScreen;
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
-import net.ccbluex.liquidbounce.utils.client.ProtocolUtil;
+import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
@@ -56,6 +59,7 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
@@ -69,6 +73,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
 
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
@@ -195,8 +201,35 @@ public abstract class MixinMinecraftClient {
 
         titleBuilder.append(" | ");
 
-        // Protocol version title
-        titleBuilder.append(ProtocolUtil.getProtocolVersion().getName());
+        // ViaFabricPlus compatibility
+        if (getUsesViaFabricPlus()) {
+            var protocolVersion = VfpCompatibility.INSTANCE.unsafeGetProtocolVersion();
+
+            if (protocolVersion != null) {
+                titleBuilder.append(protocolVersion.getName());
+            } else {
+                titleBuilder.append(SharedConstants.getGameVersion().getName());
+            }
+        } else {
+            titleBuilder.append(SharedConstants.getGameVersion().getName());
+        }
+
+        // For debugging purposes, will be removed until we have a stable release
+        if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS) {
+            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
+                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
+                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+
+                if (accelerated != null && accelerated.get()) {
+                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
+                    // Hotkey only works when not in-game
+                    if (this.world == null && this.player == null) {
+                        titleBuilder.append(" - Toggle with F12");
+                    }
+                    titleBuilder.append(")");
+                }
+            }
+        }
 
         ClientPlayNetworkHandler clientPlayNetworkHandler = this.getNetworkHandler();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isOpen()) {

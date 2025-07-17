@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -325,12 +325,12 @@ object LiquidBounce : EventListener {
 
     /**
      * Prepares the GUI stage of the client.
-     * This will load [ThemeManager], as well as the [BrowserManager] and [ClientInteropServer].
+     * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
         // Load theme and component overlay
         ThemeManager
-        BrowserManager
+        BrowserBackendManager
 
         // Start Interop Server
         ClientInteropServer.start()
@@ -339,7 +339,7 @@ object LiquidBounce : EventListener {
         taskManager = TaskManager(scope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
-            BrowserManager.makeDependenciesAvailable(this)
+            BrowserBackendManager.makeDependenciesAvailable(this)
 
             // Initialize deep learning engine as task, because we cannot know if DJL will request
             // resources from the internet.
@@ -386,7 +386,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.storeAll()
 
         // Shutdown browser as last step
-        BrowserManager.stopBrowser()
+        BrowserBackendManager.stop()
     }
 
     /**
