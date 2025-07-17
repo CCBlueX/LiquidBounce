@@ -95,8 +95,8 @@ object NotebotEngine : EventListener {
         val songData = ModuleNotebot.songData ?: return
         songTickAccumulator += songData.songTicksPerGameTick
 
-        while (songTickAccumulator >= 1.0f) {
-            songTickAccumulator -= 1.0f
+        while (songTickAccumulator >= 1f) {
+            songTickAccumulator -= 1f
             currentSongTick++
 
             if (currentSongTick > songData.songTickLength) {

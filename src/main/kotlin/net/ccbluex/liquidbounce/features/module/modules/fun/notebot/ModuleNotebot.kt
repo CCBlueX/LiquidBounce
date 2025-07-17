@@ -59,6 +59,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
         NotebotEngine
     }
 
+    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "UseCheckOrError")
     override fun enable() {
         songData = NbsLoader.load(song)
         if (songData == null) {

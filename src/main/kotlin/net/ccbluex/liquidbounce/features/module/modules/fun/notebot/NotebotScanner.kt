@@ -108,6 +108,7 @@ object NotebotScanner : MinecraftShortcuts {
             }
     }
 
+    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, MutableList<BlockPos>>
@@ -135,16 +136,14 @@ object NotebotScanner : MinecraftShortcuts {
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, List<BlockPos>>
     ) {
-        val aggregatedRequirements = EnumMap<NoteBlockInstrument, Int>(net.minecraft.block.enums.NoteBlockInstrument::class.java)
+        val aggregatedRequirements = EnumMap<NoteBlockInstrument, Int>(NoteBlockInstrument::class.java)
         for ((key1, count) in requirements) {
             val instrument = ModuleNotebot.instrumentFromNbs(key1.instrument)
             aggregatedRequirements[instrument] = aggregatedRequirements.getOrDefault(instrument, 0) + count
         }
 
         val sortedRequirements = ArrayList<Map.Entry<NoteBlockInstrument, Int>>(aggregatedRequirements.entries)
-        sortedRequirements.sortedWith { entry1: Map.Entry<NoteBlockInstrument, Int>, entry2: Map.Entry<NoteBlockInstrument, Int> ->
-            entry2.value.compareTo(entry1.value)
-        }
+        sortedRequirements.sortedWith { entry1, entry2 -> entry2.value.compareTo(entry1.value) }
 
         val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
         for ((instrument, requiredCount) in sortedRequirements) {

@@ -31,6 +31,7 @@ object NbsLoader {
 
     val root = File(ConfigSystem.rootFolder, "nbs").apply { mkdirs() }
 
+    @Suppress("PrintStackTrace")
     fun load(songName: String): SongData? {
         val nbsFile = root.resolve("$songName.nbs")
         if (!nbsFile.exists()) {
@@ -42,7 +43,7 @@ object NbsLoader {
             val nbs = Nbs(nbsFile.inputStream(), songName)
             val notesByTick = buildNotesByTick(nbs)
             val songTickLength = Collections.max(notesByTick.keys)
-            val songTicksPerGameTick = (nbs.header.tempo / 100.0f) / 20.0f
+            val songTicksPerGameTick = (nbs.header.tempo / 100f) / 20f
 
             SongData(nbs, notesByTick, songTickLength, songTicksPerGameTick)
         } catch (e: IOException) {
