@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -190,7 +190,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         for ((pos, state) in blocksToBreak) {
-            val (rotation, _) = raytraceBlock(
+            val (rotation, _) = raytraceBlockRotation(
                 player.eyePos,
                 pos,
                 state,

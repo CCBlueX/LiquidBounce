@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.dupe.ModuleDupe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
@@ -242,6 +243,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Fun
             ModuleDankBobbing,
             ModuleDerp,
+            ModuleNotebot,
             ModuleSkinDerp,
             ModuleHandDerp,
             ModuleTwerk,

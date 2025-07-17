@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
@@ -126,7 +127,7 @@ object LegitNukerMode : Choice("Legit") {
                 return@let
             }
 
-            val raytraceResult = raytraceBlock(
+            val raytraceResult = raytraceBlockRotation(
                 eyes = eyes,
                 pos = pos,
                 state = blockState,
@@ -149,7 +150,7 @@ object LegitNukerMode : Choice("Legit") {
         }
 
         for ((pos, blockState) in areaMode.activeChoice.lookupTargets(range)) {
-            val raytraceResult = raytraceBlock(
+            val raytraceResult = raytraceBlockRotation(
                 eyes = eyes,
                 pos = pos,
                 state = blockState,
