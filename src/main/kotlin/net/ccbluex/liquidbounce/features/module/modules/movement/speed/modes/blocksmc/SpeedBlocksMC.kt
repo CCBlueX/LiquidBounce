@@ -24,18 +24,12 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.ccbluex.liquidbounce.utils.input.InputTracker.pressedOnMouse
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -44,8 +38,6 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 
 class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("BlocksMC") {
-
-    private val scaffoldGroundSpeed by boolean("ScaffoldGroundSpeed", false)
 
     private var fastHopMode = 0
     private var flagDelay = 0
@@ -89,7 +81,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
             }
         }
 
-        if (!player.isOnGround) {
+        if (!player.isOnGround && fastHopMode != 0) {
             player.velocity = player.velocity.withStrafe(speed = speed)
         }
         if (flagDelay > 10) {
