@@ -19,10 +19,13 @@
 package net.ccbluex.liquidbounce.api.services.client
 
 import com.vdurmont.semver4j.Semver
+import kotlinx.datetime.toKotlinLocalDateTime
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 object ClientUpdate {
@@ -52,7 +55,10 @@ object ClientUpdate {
 
             val isNewer = if (LiquidBounce.IN_DEVELOPMENT) { // check if new build is newer than current build
                 val newestVersionDate = newestBuild.date
-                val currentVersionDate = LocalDateTime.parse(gitInfo["git.commit.time"].toString())
+                val currentVersionDate = OffsetDateTime.parse(
+                    gitInfo["git.commit.time"].toString(),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+                )
 
                 newestVersionDate > currentVersionDate
             } else {

@@ -27,6 +27,7 @@ import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 object LocalDateAdapter : JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
@@ -50,6 +51,18 @@ object LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<Lo
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): LocalDateTime {
         return LocalDateTime.parse(json.asString, FORMATTER)
+    }
+}
+
+object OffsetDateTimeAdapter : JsonSerializer<OffsetDateTime>, JsonDeserializer<OffsetDateTime> {
+    private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
+
+    override fun serialize(src: OffsetDateTime, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        return JsonPrimitive(src.format(FORMATTER))
+    }
+
+    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): OffsetDateTime {
+        return OffsetDateTime.parse(json.asString, FORMATTER)
     }
 }
 
