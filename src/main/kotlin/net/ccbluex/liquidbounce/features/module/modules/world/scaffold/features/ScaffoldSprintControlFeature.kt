@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.entity.onGroundTicks
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "SprintControl", false) {
@@ -56,6 +57,12 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
          * This mode will stop sprinting on place.
          */
         NO_SPRINT_ON_PLACE("NoSprintOnPlace"),
+
+        /**
+         * This mod will stop sprinting when the player is
+         * grounded.
+         */
+        NO_SPRINT_ON_GROUND("NoSprintOnGround"),
 
     }
 
@@ -100,6 +107,10 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
                     event.sprint = false
                 }
 
+                SprintMode.NO_SPRINT_ON_GROUND -> {
+                    event.sprint = !player.isOnGround
+                }
+
                 SprintMode.DO_NOT_CHANGE -> { }
 
             }
@@ -120,6 +131,10 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
 
                 SprintMode.NO_SPRINT_ON_PLACE -> if (wasPlaced) {
                     event.sprint = false
+                }
+
+                SprintMode.NO_SPRINT_ON_GROUND -> {
+                    event.sprint = !player.isOnGround
                 }
 
                 SprintMode.DO_NOT_CHANGE -> { }
