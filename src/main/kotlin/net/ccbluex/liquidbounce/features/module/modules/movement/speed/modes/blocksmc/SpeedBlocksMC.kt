@@ -26,16 +26,16 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.ccbluex.liquidbounce.utils.input.InputTracker.pressedOnMouse
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -45,19 +45,13 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("BlocksMC") {
 
-    private val fullStrafe by boolean("FullStrafe", true)
-    private val lowHop by boolean("LowHop", true)
-    private val damageBoost by boolean("DamageBoost", true)
-    private val damageLowHop by boolean("DamageLowHop", false)
-    private val safeY by boolean("SafeY", true)
+    private val scaffoldGroundSpeed by boolean("ScaffoldGroundSpeed", false)
 
-    private var canSpeed = false
-
-    private var lastVelocity = 0
+    private var fastHopMode = 0
+    private var flagDelay = 0
 
     override fun enable() {
-        canSpeed = false
-        lastVelocity = 9999
+        fastHopMode = 0
     }
 
     override fun disable() {
@@ -66,114 +60,59 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (player.isOnGround) {
-            canSpeed = true
-        } else {
+        flagDelay--
+        flagDelay = flagDelay.coerceAtLeast(0)
 
-            if (!canSpeed) {
-                return@tickHandler
-            }
-            if (fullStrafe) {
-                if (player.moving) {
-                    player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed - 0.004)
-                }
-            } else {
-                if (player.airTicks >= 6 && player.moving) {
-                    player.velocity = player.velocity.withStrafe()
-                }
-            }
+        var speed = 0.06 + when {
+            player.isOnGround -> 0.12
+            else -> 0.24
+        } + player.velocity.y / 20
 
-            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) > 0 && player.airTicks == 3) {
-                player.velocity = player.velocity.multiply(
-                    1.12,
-                    1.0,
-                    1.12
-                )
-            }
 
-            if (lowHop && player.airTicks == 4) {
-                if (safeY) {
-                    if (player.y % 1.0 == 0.16610926093821377) {
-                        player.velocity.y = -0.09800000190734863
-                    }
-                } else {
+        if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) == 1) {
+            speed += 0.1
+        }
+
+        when (fastHopMode) {
+            0 -> {}
+            1 -> {
+                if (player.airTicks == 4) {
                     player.velocity.y = -0.09800000190734863
                 }
             }
-
-            if (damageBoost && player.moving) {
-                when (lastVelocity) {
-                    1, 2 -> {
-                        player.velocity = player.velocity.withStrafe(speed = 1.1)
-                    }
-                    3, 4, 5, 6, 7, 8, 9 -> {
-                        player.velocity = player.velocity.withStrafe(speed = 1.0)
-                    }
-                    10, 11, 12, 13, 14 -> {
-                        player.velocity = player.velocity.withStrafe(speed = 0.75)
-                    }
-                    15, 16, 17, 18, 19, 20 -> {
-                        player.velocity = player.velocity.withStrafe(speed = 0.5)
-                    }
+            2 -> {
+                when (player.airTicks) {
+                    1 -> player.velocity.y += 0.0568
+                    3 -> player.velocity.y -= 0.13
+                    4 -> player.velocity.y -= 0.2
                 }
             }
-
-            if (damageLowHop && player.hurtTime >= 1) {
-                if (player.velocity.y > 0) {
-                    player.velocity.y -= 0.15
-                }
-            }
-
         }
 
-        lastVelocity++
-
-    }
-
-    @Suppress("unused")
-    private val jumpHandler = handler<PlayerJumpEvent> {
-        val atLeast = 0.281 + 0.2 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
-        if (!canSpeed) {
-            return@handler
+        if (!player.isOnGround) {
+            player.velocity = player.velocity.withStrafe(speed = speed)
         }
-
-        if (!player.moving) {
-            return@handler
+        if (flagDelay > 10) {
+            fastHopMode = 0
         }
-
-        player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast) - 0.01)
     }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
-        if (event.directionalInput.isMoving) {
+        if (player.isOnGround) {
+            fastHopMode = if (ModuleScaffold.enabled) 2 else 1
+        }
+        if (event.directionalInput.isMoving && flagDelay < 15) {
             event.jump = true
         }
     }
 
     @Suppress("unused")
-    val packetHandler = sequenceHandler<PacketEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        val packet = event.packet
-
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            val velocityX = packet.velocityX / 8000.0
-            val velocityY = packet.velocityY / 8000.0
-            val velocityZ = packet.velocityZ / 8000.0
-
-            waitTicks(1)
-
-            // Fall damage velocity
-            val fallDamage = velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375
-            if (!fallDamage) {
-                lastVelocity = 0
-            }
-
-            return@sequenceHandler
-        }
+    private val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            lastVelocity = 9999
-            player.stopXZVelocity()
+            flagDelay = 20
         }
     }
 
