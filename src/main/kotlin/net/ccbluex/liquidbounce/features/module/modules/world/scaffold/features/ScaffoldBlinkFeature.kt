@@ -31,6 +31,7 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
 
     private val time by intRange("Time", 50..250, 0..3000, "ms")
     private val fallCancel by boolean("FallCancel", true)
+    private val notInTower by boolean("NotInTower", false)
 
     private var pulseTime = 0L
     private val pulseTimer = Chronometer()
@@ -54,6 +55,11 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING) {
+            return@handler
+        }
+
+        if (ModuleScaffold.isTowering && notInTower) {
+            // 在tower时不进行blink
             return@handler
         }
 
