@@ -25,14 +25,20 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableTextAccessor
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
+import net.minecraft.util.Util
+import java.io.File
 
 // Chat formatting
-private val clientPrefix = Text.empty()
+private val clientPrefix: Text = Text.empty()
     .formatted(Formatting.RESET, Formatting.GRAY)
     .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
@@ -44,6 +50,11 @@ fun regular(text: String): MutableText = text.asText().formatted(Formatting.GRAY
 fun variable(text: MutableText): MutableText = text.formatted(Formatting.GOLD)
 
 fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOLD)
+
+fun clickablePath(file: File): MutableText =
+    variable(file.absolutePath)
+        .onClick { Util.getOperatingSystem().open(file) }
+        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, "Open".asText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
 
@@ -142,6 +153,14 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
     it.withColor(newColor)
 }
 
+/**
+ * Open a [ChatScreen] with given text,
+ * or set the text of current [ChatScreen]
+ */
+fun MinecraftClient.openChat(text: String) = send {
+    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text))
+}
+
 private val defaultMessageMetadata = MessageMetadata()
 
 /**
@@ -162,15 +181,11 @@ data class MessageMetadata(
     val count: Int = 1
 )
 
-/**
- * Adds a new chat message.
- */
-fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val literalText = if (metadata.prefix) clientPrefix.copy() else Text.literal("")
-    texts.forEach { literalText.append(it) }
+fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+    val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
 
     if (mc.player == null) {
-        logger.info("(Chat) ${literalText.convertToString()}")
+        logger.info("(Chat) ${realText.convertToString()}")
         return
     }
 
@@ -180,7 +195,17 @@ fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata)
         chatHud.removeMessage(metadata.id)
     }
 
-    chatHud.addMessage(literalText, metadata.id, metadata.count)
+    chatHud.addMessage(realText, metadata.id, metadata.count)
+}
+
+/**
+ * Adds a new chat message.
+ */
+fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+    val text: Text = MixinMutableTextAccessor.create(
+        PlainTextContent.EMPTY, texts.asList(), Style.EMPTY
+    )
+    chat(text, metadata)
 }
 
 fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata(id = "M${module.name}#info"))

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -45,33 +46,38 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
-    private var nametagsToRender: List<Nametag>? = null
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
-        nametagsToRender = collectAndSortNametagsToRender()
+    private val nametagsToRender by computedOn<GameTickEvent, MutableList<Nametag>>(
+        initialValue = mutableListOf()
+    ) { _, list ->
+        list.clear()
+        collectAndSortNametagsToRender(list)
+        list
     }
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent> {
-        nametagsToRender = null
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        nametagsToRender.clear()
     }
 
     override fun disable() {
         RenderedEntities.unsubscribe(this)
-        nametagsToRender = null
+        nametagsToRender.clear()
     }
 
     override fun enable() {
         RenderedEntities.subscribe(this)
-        nametagsToRender = null
     }
 
     @Suppress("unused")
-    val overlayRenderHandler = handler<OverlayRenderEvent>(priority = FIRST_PRIORITY) { event ->
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(priority = FIRST_PRIORITY) { event ->
+        if (nametagsToRender.isEmpty()) {
+            return@handler
+        }
+
         renderEnvironmentForGUI {
             val nametagRenderer = NametagRenderer()
 
@@ -84,7 +90,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
-        val nametagsToRender = nametagsToRender ?: return
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
         val filteredNameTags = nametagsToRender.filter { it.position != null }
         val nametagsCount = filteredNameTags.size.toFloat()
@@ -103,9 +108,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
      * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(): List<Nametag> {
-        val nametagsToRender = mutableListOf<Nametag>()
-
+    private fun collectAndSortNametagsToRender(list: MutableList<Nametag>) {
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
@@ -113,12 +116,10 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
                 continue
             }
 
-            nametagsToRender += Nametag(entity)
+            list += Nametag(entity)
         }
 
-        nametagsToRender.sortByDescending { abs(it.entity.z - player.pos.z) }
-
-        return nametagsToRender
+        list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
 
     /**

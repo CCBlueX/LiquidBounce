@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.input
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import org.lwjgl.glfw.GLFW
@@ -69,7 +68,7 @@ object InputTracker : EventListener {
      */
     val KeyBinding.pressedOnKeyboard: Boolean
         get() = this.boundKey.category == InputUtil.Type.KEYSYM
-            && InputUtil.isKeyPressed(mc.window.handle, this.boundKey.code)
+            && boundKey.isPressed
 
     /**
      * Extension property that checks if a key binding is pressed on the mouse.

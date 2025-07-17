@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.common;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
+import net.ccbluex.liquidbounce.render.shader.CustomShaderProgramPhase;
+import net.ccbluex.liquidbounce.render.shader.shaders.BgraPositionTexColorShader;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.client.render.VertexFormat;
@@ -49,6 +51,12 @@ public class RenderLayerExtensions {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
     });
+
+    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
+            BgraPositionTexColorShader.INSTANCE,
+            BgraPositionTexColorShader.INSTANCE.getUniforms(),
+            BgraPositionTexColorShader.INSTANCE.getSamples()
+    );
 
     /**
      * Render Layer for smoother textures using bilinear filtering.
@@ -87,12 +95,57 @@ public class RenderLayerExtensions {
                                     .build(false)
                     ));
 
+    /**
+     * Render Layer for BGRA textures.
+     */
+    private static final Function<Identifier, RenderLayer> BGRA_TEXTURE_LAYER = Util.memoize(
+            textureId ->
+                    RenderLayer.of(
+                            "bgra_texture_layer",
+                            VertexFormats.POSITION_TEXTURE_COLOR,
+                            VertexFormat.DrawMode.QUADS,
+                            786432,
+                            RenderLayer.MultiPhaseParameters.builder()
+                                    .texture(new Texture(textureId, TriState.FALSE, false))
+                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
+                                    .transparency(JCEF_COMPATIBLE_BLEND)
+                                    .depthTest(RenderPhase.LEQUAL_DEPTH_TEST)
+                                    .build(false)
+                    ));
+
+    /**
+     * Render Layer for BGRA textures that also need blur effect.
+     */
+    private static final Function<Identifier, RenderLayer> BGRA_BLURRED_TEXTURE_LAYER = Util.memoize(
+            textureId ->
+                    RenderLayer.of(
+                            "bgra_blurred_texture_layer",
+                            VertexFormats.POSITION_TEXTURE_COLOR,
+                            VertexFormat.DrawMode.QUADS,
+                            786432,
+                            RenderLayer.MultiPhaseParameters.builder()
+                                    .texture(new Texture(textureId, TriState.FALSE, false))
+                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
+                                    .transparency(JCEF_COMPATIBLE_BLEND)
+                                    .depthTest(RenderPhase.LEQUAL_DEPTH_TEST)
+                                    .target(BlurEffectRenderer.getOutlineTarget())
+                                    .build(false)
+                    ));
+
     public static RenderLayer getSmoothTextureLayer(Identifier textureId) {
         return SMOOTH_TEXTURE_LAYER.apply(textureId);
     }
 
     public static RenderLayer getBlurredTextureLayer(Identifier textureId) {
         return BLURRED_TEXTURE_LAYER.apply(textureId);
+    }
+
+    public static RenderLayer getBgraTextureLayer(Identifier textureId) {
+        return BGRA_TEXTURE_LAYER.apply(textureId);
+    }
+
+    public static RenderLayer getBgraBlurredTextureLayer(Identifier textureId) {
+        return BGRA_BLURRED_TEXTURE_LAYER.apply(textureId);
     }
 
 }

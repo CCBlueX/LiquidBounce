@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.playerParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleInventoryTracker
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
@@ -47,7 +47,7 @@ object CommandInvsee : CommandFactory {
             .begin("invsee")
             .requiresIngame()
             .parameter(
-                playerParameter()
+                Parameters.playerName()
                     .required()
                     .build()
             )

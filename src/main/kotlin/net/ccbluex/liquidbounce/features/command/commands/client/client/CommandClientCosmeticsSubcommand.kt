@@ -18,12 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
+import kotlin.coroutines.resume
 
 object CommandClientCosmeticsSubcommand {
     fun cosmeticsCommand() = CommandBuilder
@@ -40,7 +43,7 @@ object CommandClientCosmeticsSubcommand {
         .build()
 
     private fun refreshSubcommand() = CommandBuilder.begin("refresh")
-        .handler { _, _ ->
+        .suspendHandler { _, _ ->
             chat(
                 regular(
                     "Refreshing cosmetics..."
@@ -49,12 +52,15 @@ object CommandClientCosmeticsSubcommand {
             CosmeticService.carriersCosmetics.clear()
             ClientAccountManager.clientAccount.cosmetics = null
 
-            CosmeticService.refreshCarriers(true) {
-                chat(
-                    regular(
-                        "Cosmetic System has been refreshed."
+            suspendCancellableCoroutine { continuation ->
+                CosmeticService.refreshCarriers(true) {
+                    chat(
+                        regular(
+                            "Cosmetic System has been refreshed."
+                        )
                     )
-                )
+                    continuation.resume(Unit)
+                }
             }
         }
         .build()
