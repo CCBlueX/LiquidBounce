@@ -30,7 +30,7 @@ object AntiVoidFlagMode : AntiVoidMode("Flag") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiVoid.mode
 
-    override fun fix(): Boolean {
+    override fun rescue(): Boolean {
         if (player.fallDistance >= fallDistance) {
             player.setPosition(player.pos.add(0.0, 0.42, 0.0))
             return true

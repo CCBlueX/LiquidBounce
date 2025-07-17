@@ -20,8 +20,8 @@
  */
 package net.ccbluex.liquidbounce.api.services.cdn
 
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.CLIENT_CDN
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.core.CLIENT_CDN
 import net.ccbluex.liquidbounce.api.core.utf8Lines
 import net.ccbluex.liquidbounce.api.models.cdn.IpcConfiguration
 import okio.BufferedSource

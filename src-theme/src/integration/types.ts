@@ -238,7 +238,11 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
+    /**
+     * @deprecated use {@link enchantments} instead.
+     */
     hasEnchantment: boolean;
+    enchantments?: Record<string, number>;
 }
 
 export interface PrintableKey {
@@ -332,6 +336,7 @@ export interface Proxy {
     id: number;
     host: string;
     port: number;
+    type: 'HTTP' | 'SOCKS5';
     forwardAuthentication: boolean;
     favorite: boolean;
     credentials: {

@@ -20,12 +20,24 @@ package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
@@ -39,13 +51,20 @@ import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.convertToString(), cause)
@@ -53,59 +72,161 @@ class CommandException(val text: MutableText, cause: Throwable? = null, val usag
 /**
  * Links minecraft with the command engine
  */
-
 object CommandExecutor : EventListener {
+
+    @Volatile
+    private var isShuttingDown: Boolean = false
+
+    /**
+     * Add a wrapped suspend handler to [CommandBuilder] if you don't want to block the render thread.
+     *
+     * @param allowParallel allow or prevent duplicated executions
+     * @author MukjepScarlet
+     */
+    fun CommandBuilder.suspendHandler(
+        allowParallel: Boolean = false,
+        handler: suspend (command: Command, args: Array<Any>) -> Unit,
+    ) = if (allowParallel) {
+        this.handler { command, args ->
+            commandCoroutineScope.launch {
+                handler.invoke(command, args)
+            }
+        }
+    } else {
+        val running = AtomicBoolean(false)
+        this.handler { command, args ->
+            if (!running.compareAndSet(false, true)) {
+                chat(
+                    markAsError(
+                        translation("liquidbounce.commandManager.commandExecuting", command.name)
+                    ),
+                    command
+                )
+                return@handler
+            }
+
+            // Progress message job
+            val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
+            val progressJob = commandCoroutineScope.launch {
+                val startAt = System.currentTimeMillis()
+                var n = 0
+                val chars = charArrayOf('|', '/', '-', '\\')
+                while (isActive) {
+                    delay(0.25.seconds)
+                    val duration = (System.currentTimeMillis() - startAt) / 1000
+                    val char = chars[n % chars.size]
+                    chat(
+                        regular("<$char> Executing command "),
+                        variable(command.name),
+                        regular(" ("),
+                        variable(duration.toString()),
+                        regular("s)"),
+                        metadata = progressMessageMetadata
+                    )
+                    n++
+                }
+            }
+
+            // Handler job
+            commandCoroutineScope.launch {
+                handler.invoke(command, args)
+            }.invokeOnCompletion {
+                running.set(false)
+                progressJob.cancel()
+                mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+            }
+        }
+    }
+
+    /**
+     * Handling exceptions for suspend handlers
+     */
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        if (isShuttingDown && throwable is CancellationException) {
+            // Client shutdown, ignored
+        } else {
+            handleExceptions(throwable)
+        }
+    }
+
+    /**
+     * Render thread scope
+     */
+    private val commandCoroutineScope = CoroutineScope(
+        mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
+    )
+
+    private fun handleExceptions(e: Throwable) {
+        when (e) {
+            is CommandException -> {
+                mc.inGameHud.chatHud.removeMessage("CommandManager#error")
+                val data = MessageMetadata(id = "CommandManager#error", remove = false)
+                chat(e.text.formatted(Formatting.RED), metadata = data)
+
+                if (!e.usageInfo.isNullOrEmpty()) {
+                    chat("Usage: ".asText().formatted(Formatting.RED), metadata = data)
+
+                    var first = true
+
+                    // Zip the usage info together, e.g.
+                    //  .friend add <name> [<alias>]
+                    //  OR .friend remove <name>
+                    for (usage in e.usageInfo) {
+                        chat(
+                            buildString {
+                                if (first) {
+                                    first = false
+                                } else {
+                                    append("OR ")
+                                }
+                                append(CommandManager.Options.prefix)
+                                append(usage)
+                            }.asText().formatted(Formatting.RED),
+                            metadata = data
+                        )
+
+                        first = false
+                    }
+                }
+            }
+            else -> {
+                chat(
+                    markAsError(
+                        translation(
+                            "liquidbounce.commandManager.exceptionOccurred",
+                            e.javaClass.simpleName ?: "Class name missing", e.message ?: "No message"
+                        )
+                    ),
+                    metadata = MessageMetadata(id = "CommandManager#error")
+                )
+                logger.error("An exception occurred while executing a command", e)
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private val shutdownHandler = handler<ClientShutdownEvent> {
+        isShuttingDown = true
+        commandCoroutineScope.cancel()
+    }
 
     /**
      * Handles command execution
      */
     @Suppress("unused")
-    val chatEventHandler = handler<ChatSendEvent> {
+    private val chatEventHandler = handler<ChatSendEvent>(priority = FIRST_PRIORITY) {
         if (!it.message.startsWith(CommandManager.Options.prefix)) {
             return@handler
         }
 
         try {
             CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
-        } catch (e: CommandException) {
-            mc.inGameHud.chatHud.removeMessage("CommandManager#error")
-            val data = MessageMetadata(id = "CommandManager#error", remove = false)
-            chat(e.text.styled { it.withColor(Formatting.RED) }, metadata = data)
-            chat("Usage: ".asText().styled { it.withColor(Formatting.RED) }, metadata = data)
-
-            if (e.usageInfo != null) {
-                var first = true
-
-                // Zip the usage info together, e.g.
-                //  .friend add <name> [<alias>]
-                //  OR .friend remove <name>
-                e.usageInfo.forEach { usage ->
-                    chat(
-                        "${if (first) "" else "OR "}.$usage".asText().styled { it.withColor(Formatting.RED) },
-                        metadata = data
-                    )
-
-                    if (first) {
-                        first = false
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            chat(
-                markAsError(
-                    translation(
-                        "liquidbounce.commandManager.exceptionOccurred",
-                        e::class.simpleName ?: "Class name missing", e.message ?: "No message"
-                    )
-                ),
-                metadata = MessageMetadata(id = "CommandManager#error")
-            )
-            logger.error("An exception occurred while executing a command", e)
+        } catch (e: Throwable) {
+            handleExceptions(e)
+        } finally {
+            it.cancelEvent()
         }
-
-        it.cancelEvent()
     }
-
 }
 
 private val commands = mutableListOf<Command>()
@@ -132,6 +253,10 @@ object CommandManager : Iterable<Command> by commands {
          */
         var prefix by text("prefix", ".")
 
+        /**
+         * How many hints should we give for unknown commands?
+         */
+        val hintCount by int("HintCount", 5, 0..10)
     }
 
     init {
@@ -181,7 +306,9 @@ object CommandManager : Iterable<Command> by commands {
             CommandPlayerTeleport,
             CommandTps,
             CommandServerInfo,
-            CommandModels
+            CommandModels,
+            CommandTranslate,
+            CommandAutoTranslate,
         )
 
         commands.forEach {
@@ -268,7 +395,28 @@ object CommandManager : Iterable<Command> by commands {
             translation(
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
-            )
+            ),
+            usageInfo = if (commands.isEmpty() || Options.hintCount == 0) {
+                null
+            } else {
+                commands.sortedBy { command ->
+                    var distance = levenshtein(args[0], command.name)
+                    if (command.aliases.isNotEmpty()) {
+                        distance = min(
+                            distance,
+                            command.aliases.minOf { levenshtein(args[0], it) }
+                        )
+                    }
+                    distance
+                }.take(Options.hintCount).map { command ->
+                    buildString {
+                        append(command.name)
+                        if (command.aliases.isNotEmpty()) {
+                            command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
+                        }
+                    }
+                }
+            }
         )
         val command = pair.first
 
@@ -362,7 +510,7 @@ object CommandManager : Iterable<Command> by commands {
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
             is ParameterValidationResult.Ok -> {
-                return validationResult.mappedResult!!
+                return validationResult.mappedResult
             }
             is ParameterValidationResult.Error -> {
                 throw CommandException(

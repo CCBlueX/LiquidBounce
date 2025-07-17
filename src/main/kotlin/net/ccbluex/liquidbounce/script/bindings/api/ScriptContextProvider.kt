@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
 import net.minecraft.util.math.*
+import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Value
 import java.util.concurrent.ConcurrentHashMap
 
@@ -32,36 +33,49 @@ object ScriptContextProvider {
 
     private val localStorage = ConcurrentHashMap<String, Any>()
 
-    internal fun setupContext(bindings: Value) = bindings.apply {
-        // Class bindings
-        // -> Client API
-        putMember("Setting", ScriptSetting)
-
-        // -> Minecraft API
-        putMember("Vec3i", Vec3i::class.java)
-        putMember("Vec3d", Vec3d::class.java)
-        putMember("MathHelper", MathHelper::class.java)
-        putMember("BlockPos", BlockPos::class.java)
-        putMember("Hand", Hand::class.java)
-        putMember("RotationAxis", RotationAxis::class.java)
-
-        // Variable bindings
-        putMember("mc", mc)
-        putMember("Client", ScriptClient)
-
-        // Register utilities
-        putMember("RotationUtil", ScriptRotationUtil)
-        putMember("ItemUtil", ScriptItemUtil)
-        putMember("NetworkUtil", ScriptNetworkUtil)
-        putMember("InteractionUtil", ScriptInteractionUtil)
-        putMember("BlockUtil", ScriptBlockUtil)
-        putMember("MovementUtil", ScriptMovementUtil)
-        putMember("ReflectionUtil", ScriptReflectionUtil())
-        putMember("ParameterValidator", ScriptParameterValidator(bindings))
-        putMember("UnsafeThread", ScriptUnsafeThread)
-
-        // Global variables
-        putMember("localStorage", localStorage) // Script scope
+    internal fun cleanup() {
+        localStorage.clear()
     }
 
+    internal fun Context.setupContext(language: String, bindings: Value) {
+        bindings.apply {
+            // Class bindings
+            // -> Client API
+            putMember("Setting", ScriptSetting)
+
+            // -> Minecraft API
+            putMember("Vec3i", Vec3i::class.java)
+            putMember("Vec3d", Vec3d::class.java)
+            putMember("MathHelper", MathHelper::class.java)
+            putMember("BlockPos", BlockPos::class.java)
+            putMember("Hand", Hand::class.java)
+            putMember("RotationAxis", RotationAxis::class.java)
+
+            // Variable bindings
+            putMember("mc", mc)
+            putMember("Client", ScriptClient)
+
+            // Register utilities
+            putMember("RotationUtil", ScriptRotationUtil)
+            putMember("ItemUtil", ScriptItemUtil)
+            putMember("NetworkUtil", ScriptNetworkUtil)
+            putMember("InteractionUtil", ScriptInteractionUtil)
+            putMember("BlockUtil", ScriptBlockUtil)
+            putMember("MovementUtil", ScriptMovementUtil)
+            putMember("ReflectionUtil", ScriptReflectionUtil())
+            putMember("ParameterValidator", ScriptParameterValidator(bindings))
+            putMember("UnsafeThread", ScriptUnsafeThread)
+            putMember("Primitives", ScriptPrimitives)
+
+            // Global variables
+            putMember("localStorage", localStorage)
+
+            // Async support (JavaScript only)
+            if (language.equals("js", true)) {
+                // Init Promise constructor
+                val asyncUtil = ScriptAsyncUtil(getBindings(language).getMember("Promise"))
+                putMember("AsyncUtil", asyncUtil)
+            }
+        }
+    }
 }

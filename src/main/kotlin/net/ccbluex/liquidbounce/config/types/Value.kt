@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
@@ -79,6 +81,12 @@ open class Value<T : Any>(
     @Exclude
     @ProtocolExclude
     private val changedListeners = mutableListOf<ValueChangedListener<T>>()
+
+    @Exclude
+    @ProtocolExclude
+    private val stateFlow = MutableStateFlow(inner)
+
+    fun asStateFlow(): StateFlow<T> = stateFlow
 
     /**
      * If true, value will not be included in generated public config
@@ -230,6 +238,7 @@ open class Value<T : Any>(
             apply(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it(currT) }
+            stateFlow.value = currT
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
@@ -327,6 +336,11 @@ open class Value<T : Any>(
     }
 
 }
+
+/**
+ * Order by name of [Value] (ignoreCase)
+ */
+val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
 /**
  * Ranged value adds support for closed ranges

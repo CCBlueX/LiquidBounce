@@ -156,9 +156,9 @@ fun handlePacket(packet: Packet<*>) =
 
 fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking
-    val packetEvent = PacketEvent(TransferOrigin.SEND, packet, false)
+    val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)
     RotationManager.packetHandler.handler(packetEvent)
-    ModulePacketLogger.onPacket(TransferOrigin.SEND, packet)
+    ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
     mc.networkHandler?.connection?.send(packetEvent.packet, null)
 }
 

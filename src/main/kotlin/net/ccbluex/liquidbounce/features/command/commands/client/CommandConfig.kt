@@ -21,16 +21,16 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -55,6 +55,7 @@ object CommandConfig : CommandFactory {
             .subcommand(loadSubcommand())
             .subcommand(listSubcommand())
             .subcommand(browseSubcommand())
+            .subcommand(reloadSubcommand())
             .build()
     }
 
@@ -65,6 +66,16 @@ object CommandConfig : CommandFactory {
         }
         .build()
 
+    private fun reloadSubcommand() = CommandBuilder
+        .begin("reload")
+        .suspendHandler { command, _ ->
+            if (AutoConfig.reloadConfigs()) {
+                chat(regular("Reloaded ${configs?.size} settings info from API"))
+            } else {
+                chat(markAsError("Failed to load settings list from API"))
+            }
+        }.build()
+
     private fun listSubcommand() = CommandBuilder
         .begin("list")
         .handler { command, _ ->
@@ -72,7 +83,7 @@ object CommandConfig : CommandFactory {
                 chat(regular(command.result("loading")))
                 val widthOfSpace = mc.textRenderer.getWidth(" ")
                 val configs = configs ?: run {
-                    chat(regular("§cFailed to load settings list from API"))
+                    chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
                 val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
@@ -89,42 +100,38 @@ object CommandConfig : CommandFactory {
                     )
 
                     chat(
-                        variable(settingName).styled { style ->
-                            style
-                                .withClickEvent(
-                                    ClickEvent(
-                                        ClickEvent.Action.SUGGEST_COMMAND,
-                                        ".config load $settingName"
-                                    )
+                        variable(settingName)
+                            .onClick(
+                                ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                    ".config load $settingName"
                                 )
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of("§7Click to load $settingName")
-                                    )
+                            )
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of("§7Click to load $settingName")
                                 )
-                        },
+                            ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName).styled { style ->
-                            style
-                                .withFormatting(it.statusType.formatting)
-                                .withHoverEvent(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        Text.of(it.statusDateFormatted)
-                                    )
+                        Text.literal(it.statusType.displayName)
+                            .formatted(it.statusType.formatting)
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of(it.statusDateFormatted)
                                 )
-                        },
-                        regular(" | ${it.serverAddress ?: "Global"}"), metadata = MessageMetadata(
-                            prefix = false
-                        )
+                            )
+                        ,
+                        regular(" | ${it.serverAddress ?: "Global"}"),
+                        metadata = MessageMetadata(prefix = false)
                     )
                 }
             }.onFailure {
-                chat(regular("§cFailed to load settings list from API"))
+                chat(markAsError("Failed to load settings list from API"))
             }
         }
         .build()
@@ -140,38 +147,34 @@ object CommandConfig : CommandFactory {
                 .build()
         )
         .parameter(
-            moduleParameter()
+            Parameters.modules()
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val name = args[0] as String
-            val moduleNames = args.getOrNull(1) as String?
-            val modules = ModuleManager.parseModulesFromParameter(moduleNames)
+            val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
-            // Load the config in a separate thread to prevent the client from freezing
-            withScope {
-                runCatching {
-                    if (name.startsWith("http")) {
-                        // Load the config from the specified URL
-                        HttpClient.request(name, HttpMethod.GET).parse<Reader>()
-                    } else {
-                        // Get online config from API
-                        ClientApi.requestSettingsScript(name)
-                    }
-                }.onSuccess { sourceReader ->
-                    AutoConfig.withLoading {
-                        runCatching {
-                            AutoConfig.loadAutoConfig(sourceReader, modules)
-                        }.onFailure {
-                            chat(markAsError(command.result("failedToLoad", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("loaded", variable(name))))
-                        }
-                    }
-                }.onFailure { exception ->
-                    chat(markAsError(command.result("failedToLoad", variable(name))))
+            runCatching {
+                if (name.startsWith("http")) {
+                    // Load the config from the specified URL
+                    HttpClient.request(name, HttpMethod.GET).parse<Reader>()
+                } else {
+                    // Get online config from API
+                    ClientApi.requestSettingsScript(name)
                 }
+            }.onSuccess { sourceReader ->
+                AutoConfig.withLoading {
+                    runCatching {
+                        AutoConfig.loadAutoConfig(sourceReader, modules)
+                    }.onFailure {
+                        chat(markAsError(command.result("failedToLoad", variable(name))))
+                    }.onSuccess {
+                        chat(regular(command.result("loaded", variable(name))))
+                    }
+                }
+            }.onFailure { exception ->
+                chat(markAsError(command.result("failedToLoad", variable(name))))
             }
         }
         .build()
@@ -179,6 +182,5 @@ object CommandConfig : CommandFactory {
     private fun autocompleteConfigs(begin: String): List<String> {
         return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
-
 
 }

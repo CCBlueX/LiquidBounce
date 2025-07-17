@@ -78,6 +78,10 @@ export interface AccountManagerAdditionEvent {
     error: string | null;
 }
 
+export interface AccountManagerRemovalEvent {
+    username: string | null;
+}
+
 export interface AccountManagerMessageEvent {
     message: string;
 }

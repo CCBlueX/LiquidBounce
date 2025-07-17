@@ -29,7 +29,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .container {
     background-color: rgba($hotbar-base-color, 0.5);

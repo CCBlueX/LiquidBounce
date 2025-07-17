@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -105,6 +106,29 @@ val ItemStack.isFood: Boolean
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
 
+private val BUNDLE_ITEMS = setOf(
+    Items.BUNDLE,
+    Items.WHITE_BUNDLE,
+    Items.ORANGE_BUNDLE,
+    Items.MAGENTA_BUNDLE,
+    Items.LIGHT_BLUE_BUNDLE,
+    Items.YELLOW_BUNDLE,
+    Items.LIME_BUNDLE,
+    Items.PINK_BUNDLE,
+    Items.GRAY_BUNDLE,
+    Items.LIGHT_GRAY_BUNDLE,
+    Items.CYAN_BUNDLE,
+    Items.PURPLE_BUNDLE,
+    Items.BLUE_BUNDLE,
+    Items.BROWN_BUNDLE,
+    Items.GREEN_BUNDLE,
+    Items.RED_BUNDLE,
+    Items.BLACK_BUNDLE
+)
+
+val ItemStack.isBundle
+    get() = this.item in BUNDLE_ITEMS
+
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val MiningToolItem.type: Int
@@ -136,7 +160,9 @@ val ItemStack.attackDamage: Double
          * see https://bugs.mojang.com/browse/MC-196250
          *
          * We now use the following formula to calculate the damage:
-         * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
+         * https://minecraft.wiki/w/Sharpness
+         * >= 1.9 -> 0.5 * level + 0.5
+         * else -> 1.25 * level
          */
         return entityBaseDamage + baseDamage + getSharpnessDamage()
     }
@@ -144,7 +170,15 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = if (level == 0) 0.0 else 0.5 * level + 0.5
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
+    if (!isOlderThanOrEqual1_8) {
+        when (level) {
+            0 -> 0.0
+            else -> 0.5 * level + 0.5
+        }
+    } else {
+        level * 1.25
+    }
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)

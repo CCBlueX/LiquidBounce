@@ -86,7 +86,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
 
         models.choices = choices.toMutableList()
         models.setByString(models.activeChoice.name)
-        ModuleClickGui.reloadView()
+        ModuleClickGui.reload()
     }
 
     /**
