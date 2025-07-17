@@ -108,7 +108,7 @@ object NotebotScanner : MinecraftShortcuts {
             }
     }
 
-    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException")
+    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, MutableList<BlockPos>>
@@ -117,7 +117,7 @@ object NotebotScanner : MinecraftShortcuts {
             requirements.forEach { (instrumentNote, count) ->
                 val instrument = ModuleNotebot.instrumentFromNbs(instrumentNote.instrument)
                 val blockPosList = available[instrument]!!
-                for (i in 0..<count) {
+                repeat(count) {
                     val pos = blockPosList.removeFirst()
                     ModuleNotebot.noteBlocks.add(NoteBlock(pos, instrument, instrumentNote.noteValue))
                     ModuleNotebot.renderer.addBlock(pos, false)
