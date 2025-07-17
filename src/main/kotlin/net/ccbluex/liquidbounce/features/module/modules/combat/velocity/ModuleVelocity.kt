@@ -52,6 +52,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
             VelocityReversal,
             VelocityStrafe,
             VelocityJumpReset,
+            VelocityTransaction,
 
             // Server modes
             VelocityHypixel,
