@@ -68,11 +68,12 @@ object HttpClient {
             try {
                 val response = chain.proceed(request)
 
-                // Response is not successful (code is not 2xx)
                 if (response.isSuccessful) {
                     response
                 } else {
-                    throw HttpException(enumValueOf(request.method), request.url.toString(), response.code, response.body.string())
+                    // Response is not successful (code is not 2xx)
+                    throw HttpException(enumValueOf(request.method),
+                                        request.url.toString(), response.code, response.body.string())
                 }
             } catch (e: IOException) {
                 // Failed to request
