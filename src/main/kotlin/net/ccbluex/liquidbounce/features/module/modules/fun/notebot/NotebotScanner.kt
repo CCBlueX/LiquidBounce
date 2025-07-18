@@ -140,7 +140,7 @@ object NotebotScanner : MinecraftShortcuts {
                 0
             }
 
-            val messageLine = "\n - " + instrument.name + " (" + availableCount + "/" + requiredCount + ")"
+            val messageLine = "\n - ${instrument.name} ($availableCount/$requiredCount)"
             if (availableCount >= requiredCount) {
                 text.append(messageLine.asText().formatted(Formatting.GREEN))
             } else if (availableCount == 0) {
