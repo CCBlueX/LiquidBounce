@@ -59,7 +59,6 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         }
 
         if (ModuleScaffold.isTowering && notInTower) {
-            // 在tower时不进行blink
             return@handler
         }
 
