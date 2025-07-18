@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SequenceManager.cancelAllSequences
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -44,7 +46,7 @@ import net.minecraft.client.util.InputUtil
 /**
  * A module also called 'hack' can be enabled and handle events
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "detekt:TooManyFunctions")
 open class ClientModule(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
@@ -137,6 +139,12 @@ open class ClientModule(
         }
 
         new
+    }.onChanged { newValue ->
+        if (newValue) {
+            eventListenerScope.launch {
+                enabledEffect()
+            }
+        }
     }
 
     /**
@@ -190,6 +198,11 @@ open class ClientModule(
      * Called when module is turned on
      */
     open fun enable() {}
+
+    /**
+     * Launches an async task on [eventListenerScope] when module is turned on.
+     */
+    open suspend fun enabledEffect() {}
 
     /**
      * Called when module is turned off

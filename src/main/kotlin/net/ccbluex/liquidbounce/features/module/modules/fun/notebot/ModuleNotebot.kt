@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoader
@@ -36,7 +38,7 @@ import net.minecraft.util.Formatting
  *
  * @author ccetl
  */
-object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
+object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = true) {
 
     private val song by text("SongName", "")
     private val pianoOnly by boolean("PianoOnly", false)
@@ -64,17 +66,21 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
         NotebotEngine
     }
 
-    override fun enable() {
-        songData = NbsLoader.load(song) ?: run {
+    override suspend fun enabledEffect() {
+        chat("Starting loading song...", this)
+        val songData = withContext(Dispatchers.IO) {
+            NbsLoader.load(song)
+        } ?: run {
             this.enabled = false
             return
         }
 
-        if (!NotebotScanner.scanAndAssignNotes()) {
+        if (!NotebotScanner.scanAndAssignNotes(songData)) {
             this.enabled = false
             return
         }
 
+        this.songData = songData
         packetMineState = ModulePacketMine.enabled
         ModulePacketMine.enabled = false
         chat("Starting testing...".asText().formatted(Formatting.GREEN), this)

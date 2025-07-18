@@ -36,20 +36,19 @@ import kotlin.math.min
 
 object NotebotScanner : MinecraftShortcuts {
 
-    fun scanAndAssignNotes(): Boolean {
-        val songData = ModuleNotebot.songData ?: return true
+    fun scanAndAssignNotes(songData: SongData): Boolean {
         val noteBlocks = scanSurroundingNoteBlocks()
         val requirements = calculateRequirements(songData)
 
         if (!validateRequirements(requirements, noteBlocks)) {
             printRequirements(requirements, noteBlocks)
-            return true
+            return false
         }
 
         assignNoteBlocks(requirements, noteBlocks)
         ModuleNotebot.renderer.updateAll()
 
-        return false
+        return true
     }
 
     private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<BlockPos>> {
