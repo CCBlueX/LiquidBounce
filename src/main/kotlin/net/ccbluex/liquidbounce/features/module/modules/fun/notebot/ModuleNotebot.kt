@@ -57,6 +57,9 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
 
     private var packetMineState = false
 
+    internal var readyToStart = false
+        private set
+
     init {
         NotebotEngine
     }
@@ -67,15 +70,20 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
             return
         }
 
-        require(NotebotScanner.scanAndAssignNotes()) // TODO: add msg here
+        if (!NotebotScanner.scanAndAssignNotes()) {
+            this.enabled = false
+            return
+        }
 
         packetMineState = ModulePacketMine.enabled
         ModulePacketMine.enabled = false
         chat("Starting testing...".asText().formatted(Formatting.GREEN), this)
+        readyToStart = true
     }
 
     override fun disable() {
         noteBlocks.clear()
+        readyToStart = false
         songData = null
 
         previousState = state
