@@ -52,15 +52,16 @@ object NotebotScanner : MinecraftShortcuts {
         return false
     }
 
-    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<BlockPos>> {
-        val middle = player.blockPos
-        return BlockPos.ORIGIN.getSortedSphere(ModuleNotebot.range)
-            .map { it.toImmutable().add(middle) }
-            .filter { pos ->
-                pos.getState()!!.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
-            }
-            .groupBy { pos -> pos.down().getState()!!.instrument }
-            .mapValues { ArrayDeque(it.value) }
+    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, ArrayDeque<BlockPos>> {
+        val result = EnumMap<_, ArrayDeque<BlockPos>>(NoteBlockInstrument::class.java)
+
+        player.blockPos.getSortedSphere(ModuleNotebot.range).filter { pos ->
+            pos.getState()!!.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
+        }.forEach { pos ->
+            result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(pos)
+        }
+
+        return result
     }
 
     private fun calculateRequirements(songData: SongData): Map<InstrumentNote, Int> {
@@ -111,7 +112,7 @@ object NotebotScanner : MinecraftShortcuts {
     @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
-        available: Map<NoteBlockInstrument, MutableList<BlockPos>>
+        available: Map<NoteBlockInstrument, ArrayDeque<BlockPos>>
     ) {
         try {
             requirements.forEach { (instrumentNote, count) ->
@@ -143,7 +144,7 @@ object NotebotScanner : MinecraftShortcuts {
         }
 
         val sortedRequirements = ArrayList<Map.Entry<NoteBlockInstrument, Int>>(aggregatedRequirements.entries)
-        sortedRequirements.sortedWith { entry1, entry2 -> entry2.value.compareTo(entry1.value) }
+        sortedRequirements.sortWith { entry1, entry2 -> entry2.value.compareTo(entry1.value) }
 
         val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
         for ((instrument, requiredCount) in sortedRequirements) {
