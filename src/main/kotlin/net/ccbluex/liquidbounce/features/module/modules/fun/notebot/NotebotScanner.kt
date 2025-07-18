@@ -114,7 +114,7 @@ object NotebotScanner : MinecraftShortcuts {
         }
     }
 
-    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException", "UseCheckOrError")
+    @Suppress("SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, MutableList<BlockPos>>
@@ -134,7 +134,7 @@ object NotebotScanner : MinecraftShortcuts {
             printRequirements(requirements, available)
             ModuleNotebot.noteBlocks.clear()
             ModuleNotebot.renderer.disable()
-            throw IllegalStateException()
+            throw IllegalStateException(e)
         }
     }
 
@@ -142,19 +142,16 @@ object NotebotScanner : MinecraftShortcuts {
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, List<BlockPos>>
     ) {
-        val aggregatedRequirements = EnumMap<NoteBlockInstrument, Int>(NoteBlockInstrument::class.java)
+        val aggregatedRequirements = EnumMap<_, Int>(NoteBlockInstrument::class.java)
         for ((key1, count) in requirements) {
             val instrument = ModuleNotebot.instrumentFromNbs(key1.instrument)
             aggregatedRequirements[instrument] = aggregatedRequirements.getOrDefault(instrument, 0) + count
         }
 
-        val sortedRequirements = ArrayList<Map.Entry<NoteBlockInstrument, Int>>(aggregatedRequirements.entries)
-        sortedRequirements.sortWith { entry1, entry2 -> entry2.value.compareTo(entry1.value) }
-
         val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
-        for ((instrument, requiredCount) in sortedRequirements) {
+        aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
             val availableCount = if (available.containsKey(instrument)) {
-                min(available[instrument]!!.size.toDouble(), requiredCount.toDouble()).toInt()
+                min(available[instrument]!!.size, requiredCount)
             } else {
                 0
             }
