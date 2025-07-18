@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgramKey
 import net.minecraft.client.gl.ShaderProgramKeys
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
@@ -827,4 +829,48 @@ fun RenderEnvironment.drawGradientSides(
         ),
         vertexColors
     )
+}
+
+/**
+ * Float version of [DrawContext.fill]
+ */
+@Suppress("LongParameterList")
+fun DrawContext.fill(x1: Float, y1: Float, x2: Float, y2: Float, z: Float, color: Int) {
+    val layer = RenderLayer.getGui()
+    var x1 = x1
+    var y1 = y1
+    var x2 = x2
+    var y2 = y2
+    val matrix4f = this.matrices.peek().getPositionMatrix()
+    if (x1 < x2) {
+        val i = x1
+        x1 = x2
+        x2 = i
+    }
+
+    if (y1 < y2) {
+        val i = y1
+        y1 = y2
+        y2 = i
+    }
+
+    val vertexConsumer: VertexConsumer = (this as MixinDrawContextAccessor).vertexConsumers.getBuffer(layer)
+    vertexConsumer.vertex(matrix4f, x1, y1, z).color(color)
+    vertexConsumer.vertex(matrix4f, x1, y2, z).color(color)
+    vertexConsumer.vertex(matrix4f, x2, y2, z).color(color)
+    vertexConsumer.vertex(matrix4f, x2, y1, z).color(color)
+}
+
+/**
+ * Float version of [DrawContext.drawHorizontalLine]
+ */
+fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Int) {
+    this.fill(x1, y, x2, y + thickness, 0f, color)
+}
+
+/**
+ * Float version of [DrawContext.drawVerticalLine]
+ */
+fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Int) {
+    this.fill(x, y1, x + thickness, y2, 0f, color)
 }

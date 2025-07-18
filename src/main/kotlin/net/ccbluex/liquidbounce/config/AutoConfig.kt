@@ -271,10 +271,11 @@ object AutoConfig {
 
         val author = mc.session.username
 
+        val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
-        val date = dateFormatter.format(Date())
-        val time = timeFormatter.format(Date())
+        val date = dateFormatter.format(now)
+        val time = timeFormatter.format(now)
 
         val (protocolName, protocolVersion) = protocolVersion
 

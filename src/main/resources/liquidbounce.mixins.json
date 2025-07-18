@@ -60,6 +60,7 @@
     "minecraft.gui.MixinChatScreen",
     "minecraft.gui.MixinChatScreenAccessor",
     "minecraft.gui.MixinDrawContext",
+    "minecraft.gui.MixinDrawContextAccessor",
     "minecraft.gui.MixinHandledScreen",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinPlayerListHud",
