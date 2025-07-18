@@ -108,7 +108,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
             val queuedBoxes = mutableListOf<BoxRecord>()
 
-            for ((pos, type) in StorageScanner.trackedBlockMap) {
+            for ((pos, type) in StorageScanner.iterate()) {
                 val color = type.color
 
                 if (color.a <= 0 || !type.shouldRender(pos)) {
@@ -157,13 +157,13 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         @Suppress("unused")
         val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
-                || StorageScanner.trackedBlockMap.isEmpty()) {
+                || StorageScanner.isEmpty()) {
                 return@handler
             }
 
             renderEnvironmentForWorld(event.matrixStack) {
                 BoxRenderer.drawWith(this) {
-                    for ((pos, type) in StorageScanner.trackedBlockMap) {
+                    for ((pos, type) in StorageScanner.iterate()) {
                         val state = pos.getState() ?: continue
 
                         // non-model blocks are already processed by WorldRenderer where we injected code which renders
@@ -256,7 +256,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         open fun shouldRender(pos: BlockPos): Boolean = true
     }
 
-    private object StorageScanner : AbstractBlockLocationTracker<ChestType>() {
+    private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             val chunk = mc.world?.getChunk(pos) ?: return null
             return chunk.getBlockEntity(pos)?.categorize()
