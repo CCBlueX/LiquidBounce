@@ -7,10 +7,13 @@
     import VirtualList from "./VirtualList.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import ExpandArrow from "../common/ExpandArrow.svelte";
+    import {setItem} from "../../../../integration/persistent_storage";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as BlocksSetting;
+    const thisPath = `${path}.${cSetting.name}`;
 
     interface TBlock {
         name: string;
@@ -21,6 +24,9 @@
     let blocks: TBlock[] = [];
     let renderedBlocks: TBlock[] = blocks;
     let searchQuery = "";
+    let expanded = localStorage.getItem(thisPath) === "true";
+
+    $: setItem(thisPath, expanded.toString());
 
     $: {
         let filteredBlocks = blocks;
@@ -45,45 +51,9 @@
             cSetting.value = cSetting.value.filter(b => b !== e.detail.identifier);
         }
 
-        setting = { ...cSetting };
+        setting = {...cSetting};
         dispatch("change");
     }
-
-    let expanded = true;
-
-    // --- Resizable List ---
-
-    let height = 200; // Default height
-    let isResizing = false;
-    let startY = 0;
-    let startHeight = 0;
-
-    function onMouseDown(event: MouseEvent) {
-        isResizing = true;
-        startY = event.clientY;
-        startHeight = height;
-
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
-    }
-
-    function onMouseMove(event: MouseEvent) {
-        if (isResizing) {
-            const dy = event.clientY - startY;
-            height = Math.max(40, startHeight + dy); // Minimum height
-        }
-    }
-
-    function onMouseUp() {
-        isResizing = false;
-        window.removeEventListener('mousemove', onMouseMove);
-        window.removeEventListener('mouseup', onMouseUp);
-    }
-
-    onDestroy(() => {
-        window.removeEventListener('mousemove', onMouseMove);
-        window.removeEventListener('mouseup', onMouseUp);
-    });
 </script>
 
 <div class="setting">
@@ -95,12 +65,11 @@
     {#if expanded}
         <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
-            <div class="results" style="height: {height}px;">
+            <div class="results">
                 <VirtualList items={renderedBlocks} let:item>
-                    <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
+                    <Block identifier={item.identifier} name={item.name}
+                           enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
                 </VirtualList>
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div class="resizer" on:mousedown={onMouseDown}></div>
             </div>
         </div>
     {/if}
@@ -130,21 +99,12 @@
   }
 
   .results {
-    position: relative;
+    height: 200px;
     overflow-y: auto;
     overflow-x: hidden;
-
-    .resizer {
-      all: unset;
-      z-index: 1;
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      background: $accent-color;
-      cursor: ns-resize;
-      height: 4px;
-      border-radius: 2px;
-    }
+    min-height: 100px;
+    max-height: 500px;
+    position: relative;
   }
 
   .search-input {
