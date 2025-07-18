@@ -28,6 +28,10 @@
     let searchQuery = "";
     let accounts: Account[] = [];
 
+    let isLoggingIn = false;
+
+    listen("accountManagerLogin", () => isLoggingIn = false);
+
     $: renderedAccounts = accounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()) || searchQuery === "");
 
     const inAccountManager = $location === "/altmanager";
@@ -81,6 +85,7 @@
     }
 
     async function login(account: Account) {
+        isLoggingIn = true;
         notification.set({
             title: "AltManager",
             message: "Logging in...",
@@ -102,9 +107,17 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
-        <object data={avatar} type="image/png" class="avatar" aria-label="avatar">
-            <img src="img/steve.png" alt=avatar class="avatar">
-        </object>
+        {#if isLoggingIn}
+            <div class="avatar loader" transition:fade={{ duration: 200 }}>
+                {#each Array.from({ length: 8 }) as _, i (i)}
+                    <div class="dot"></div>
+                {/each}
+            </div>
+        {:else}
+            <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
+                <img src="img/steve.png" alt=avatar class="avatar">
+            </object>
+        {/if}
         <div class="username">{username}</div>
         <div class="account-type">
             {#if premium}
@@ -159,6 +172,8 @@
 <style lang="scss">
   @use "../../../../../colors" as *;
 
+  $loader-dot-transition: 20px;
+
   .account {
     width: 488px;
     position: relative;
@@ -189,6 +204,31 @@
       width: 68px;
       border-radius: 50%;
       grid-area: a;
+
+      &.loader {
+        position: relative;
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          background-color: $accent-color;
+          border-radius: 50%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation: rotate 2s linear infinite;
+          transform-origin: 0 0;
+
+          @for $i from 0 through 7 {
+            &:nth-child(#{$i + 1}) {
+              transform: rotate(#{($i * 45)}deg) translate(0, -30px);
+              animation-delay: #{-($i * 0.125)}s;
+              opacity: #{1 - ($i * 0.1)};
+            }
+          }
+        }
+      }
     }
 
     .username {
@@ -304,6 +344,15 @@
           color: $accent-color;
         }
       }
+    }
+  }
+
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg) translate(0, -30px);
+    }
+    100% {
+      transform: rotate(360deg) translate(0, -30px);
     }
   }
 </style>
