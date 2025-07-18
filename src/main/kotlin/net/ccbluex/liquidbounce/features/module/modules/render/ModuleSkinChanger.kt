@@ -39,6 +39,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     init {
         withScope {
             username.asStateFlow().debounce { 2.seconds }.collectLatest {
+                while (mc.player == null) { delay(1.seconds) }
                 skinTextures = textureSupplier(it)
             }
         }
