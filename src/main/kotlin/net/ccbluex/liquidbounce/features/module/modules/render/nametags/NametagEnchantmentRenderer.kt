@@ -121,15 +121,15 @@ private data class EnchantmentInfo(
 object NametagEnchantmentRenderer {
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
-    private const val Y_OFFSET = -40f
+    private const val Y_OFFSET = -450f
     private const val LINE_HEIGHT = 14f
     private const val COLUMN_SPACING = 20f
     private const val PADDING = 3f
     private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
     private const val VERTICAL_SPACING = 4f
     private const val FRAME_MARGIN = 6f
-    private val BG_COLOR_NORMAL = Color4b.BLACK.with(a = 180)
-    private val BG_COLOR_CURSE = Color4b.RED.darker().with(a = 180)
+    private val BG_COLOR_NORMAL = Color4b.BLACK.with(a = 200)
+    private val BG_COLOR_CURSE = Color4b.RED.darker().with(a = 200)
 
     private val supportedEnchantments by lazy {
         mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
@@ -179,6 +179,10 @@ object NametagEnchantmentRenderer {
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 
+        if (isPositionOccluded(x, y)) {
+            return
+        }
+
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
 
@@ -192,7 +196,20 @@ object NametagEnchantmentRenderer {
         }
 
         if (columnData.isNotEmpty()) {
+            // Add this position to the drawn areas list
+            ModuleNametags.drawnEnchantmentAreas.add(Pair(x, y))
             drawEnchantmentColumns(env, x, y, fontRenderer, columnData)
+        }
+    }
+    
+    // Check if a position would be occluded by another enchantment panel
+    private fun isPositionOccluded(x: Float, y: Float): Boolean {
+        val OCCLUSION_THRESHOLD = 30f // Threshold to consider a panel occluded
+        
+        return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
+            val distance = Math.sqrt(((existingX - x) * (existingX - x) + 
+                                     (existingY - y) * (existingY - y)).toDouble()).toFloat()
+            distance < OCCLUSION_THRESHOLD
         }
     }
 
@@ -351,6 +368,21 @@ object NametagEnchantmentRenderer {
     }
 
     private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
+        // Drawing a semi-transparent background instead of just lines for better visibility
+        env.drawCustomMesh(
+            DrawMode.QUADS,
+            VertexFormats.POSITION_COLOR,
+            ShaderProgramKeys.POSITION_COLOR
+        ) { matrix ->
+            val bgColor = Color4b.BLACK.with(a = 120).toARGB()
+            
+            vertex(matrix, rect.x1, rect.y1, 0.0f).color(bgColor)
+            vertex(matrix, rect.x1, rect.y2, 0.0f).color(bgColor)
+            vertex(matrix, rect.x2, rect.y2, 0.0f).color(bgColor)
+            vertex(matrix, rect.x2, rect.y1, 0.0f).color(bgColor)
+        }
+        
+        // Still drawing the border lines
         env.drawCustomMesh(
             DrawMode.DEBUG_LINES,
             VertexFormats.POSITION_COLOR,
