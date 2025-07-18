@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
 
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
+
 data class NbsHeader(
     val version: Byte = 0,
     val vanillaInstrumentCount: Byte = 0,
@@ -52,7 +54,9 @@ data class NbsNoteBlock(
     val pitch: Short,
 )
 
-data class InstrumentNote(val instrument: Int, val noteValue: Int)
+data class InstrumentNote(val instrument: Int, val noteValue: Int) {
+    val instrumentEnum = ModuleNotebot.instrumentFromNbs(instrument)
+}
 
 data class SongData(
     /** The original name of file. */

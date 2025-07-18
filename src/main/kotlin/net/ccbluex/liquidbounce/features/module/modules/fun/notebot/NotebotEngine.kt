@@ -111,7 +111,7 @@ object NotebotEngine : EventListener {
 
     private fun playNotesAtTick(tick: Int, songData: SongData) {
         val notes = songData.notesByTick[tick] ?: return
-        val usedBlocks = mutableSetOf<NoteBlock>()
+        val usedBlocks = hashSetOf<NoteBlock>()
 
         notes.forEach { note ->
             val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
@@ -119,9 +119,8 @@ object NotebotEngine : EventListener {
 
             ModuleNotebot.noteBlocks
                 .firstOrNull {
-                    it.noteValue == noteValue && it.instrument == instrument && it !in usedBlocks
+                    it.noteValue == noteValue && it.instrument == instrument && usedBlocks.add(it)
                 }?.apply {
-                    usedBlocks.add(this)
                     click()
                 }
         }

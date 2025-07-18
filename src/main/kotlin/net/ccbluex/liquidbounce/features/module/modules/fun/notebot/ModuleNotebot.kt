@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
-import java.io.FileNotFoundException
 
 /**
  * Notebot Module
@@ -48,10 +47,13 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
     val renderer = tree(NotebotRenderer)
 
     var state = NotebotState.TEST
+        internal set
     var previousState = NotebotState.TEST
+        private set
 
     val noteBlocks = mutableListOf<NoteBlock>()
     var songData: SongData? = null
+        private set
 
     private var packetMineState = false
 
@@ -59,16 +61,13 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN) {
         NotebotEngine
     }
 
-    @Suppress("ThrowingExceptionsWithoutMessageOrCause", "UseCheckOrError")
     override fun enable() {
-        songData = NbsLoader.load(song)
-        if (songData == null) {
-            throw FileNotFoundException()
+        songData = NbsLoader.load(song) ?: run {
+            this.enabled = false
+            return
         }
 
-        if (NotebotScanner.scanAndAssignNotes()) {
-            throw IllegalStateException()
-        }
+        require(NotebotScanner.scanAndAssignNotes()) // TODO: add msg here
 
         packetMineState = ModulePacketMine.enabled
         ModulePacketMine.enabled = false

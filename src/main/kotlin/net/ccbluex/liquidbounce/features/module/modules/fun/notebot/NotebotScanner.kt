@@ -52,11 +52,11 @@ object NotebotScanner : MinecraftShortcuts {
         return false
     }
 
-    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, ArrayDeque<BlockPos>> {
+    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<BlockPos>> {
         val result = EnumMap<_, ArrayDeque<BlockPos>>(NoteBlockInstrument::class.java)
 
         player.blockPos.getSortedSphere(ModuleNotebot.range).filter { pos ->
-            pos.getState()!!.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
+            pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
         }.forEach { pos ->
             result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(pos)
         }
@@ -99,20 +99,25 @@ object NotebotScanner : MinecraftShortcuts {
         if (totalAvailable < totalRequired) {
             return false
         }
+        val requirementEachCount = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+        requirements.forEach {
+            val instrument = it.key.instrumentEnum
+            requirementEachCount[instrument] = requirementEachCount.getOrDefault(instrument, 0) + it.value
+        }
 
-        return requirements.entries
-            .groupBy({it.key.instrument}, {it.value})
-            .mapValues { it.value.sum() }
-            .all { (instrumentId, required) ->
-                val instrument = ModuleNotebot.instrumentFromNbs(instrumentId)
-                (available[instrument]?.size ?: 0) >= required
-            }
+        if (!requirementEachCount.keys.containsAll(available.keys)) {
+            return false
+        }
+
+        return requirementEachCount.all { (instrument, required) ->
+            available[instrument]!!.size >= required
+        }
     }
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause", "SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
-        available: Map<NoteBlockInstrument, ArrayDeque<BlockPos>>
+        available: Map<NoteBlockInstrument, MutableList<BlockPos>>
     ) {
         try {
             requirements.forEach { (instrumentNote, count) ->
