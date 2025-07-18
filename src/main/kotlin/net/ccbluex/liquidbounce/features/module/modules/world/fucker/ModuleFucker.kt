@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -87,6 +89,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val action by enumChoice("Action", DestroyAction.DESTROY).apply(::tagBy)
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
+    private val cancelVelocityOnBreaking by boolean("CancelVelocityOnBreaking", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
@@ -119,6 +122,14 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         currentTarget = null
         wasTarget = null
         targetRenderer.clearSilently()
+    }
+
+    @Suppress("unused")
+    private val cancelVelocityPacketHandler = sequenceHandler<PacketEvent>(priority = 1) {  event ->
+        val packet = event.packet
+        if (cancelVelocityOnBreaking && packet is net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket && currentTarget != null){
+            event.cancelEvent()
+        }
     }
 
     @Suppress("unused")

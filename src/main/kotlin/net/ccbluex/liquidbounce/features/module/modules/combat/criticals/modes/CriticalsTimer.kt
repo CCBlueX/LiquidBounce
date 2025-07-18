@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
 import net.ccbluex.liquidbounce.config.types.Choice
@@ -11,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.player.PlayerEntity
 
 object CriticalsTimer : Choice("Timer") {
 
@@ -20,13 +37,11 @@ object CriticalsTimer : Choice("Timer") {
 
     private val speed by float("Speed", 0.8f, 0.1f..1.0f)
     private val range by float("Range", 4.0f, 0.0f..10.0f)
-    private val fallOnly by boolean("Fall only", true)
 
     // 新增配置项
     private val optimizeForCooldown by boolean("OptimizeForCooldown", true)
-    private val checkKillAura by boolean("CheckKillaura", false)
-    private val checkAutoClicker by boolean("CheckAutoClicker", false)
-    private val canBeSeen by boolean("CanBeSeen", true)
+    private val checkKillAura by boolean("CheckKillAura", true)
+    private val checkAutoClicker by boolean("CheckAutoClicker", true)
 
     private fun isActive(): Boolean {
         if (!ModuleCriticals.running) {
@@ -48,12 +63,6 @@ object CriticalsTimer : Choice("Timer") {
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
-    private fun getCooldownDamageFactor(player: PlayerEntity, tickDelta: Float): Float {
-        val base = ((tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
-
-        return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
-    }
-
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val world = mc.world ?: return@handler
@@ -69,14 +78,8 @@ object CriticalsTimer : Choice("Timer") {
             return@handler
         }
 
-        if (canBeSeen && !player.canSee(enemy)) {
-            return@handler
-        }
-
         if (wouldDoCriticalHit(ignoreSprint = true)) {
-            if (!fallOnly || player.velocity.y < 0.0) {
-                Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleCriticals)
-            }
+            Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleCriticals)
         }
     }
 }
