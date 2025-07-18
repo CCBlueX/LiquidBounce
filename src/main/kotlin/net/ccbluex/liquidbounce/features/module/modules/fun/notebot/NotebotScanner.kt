@@ -98,19 +98,14 @@ object NotebotScanner : MinecraftShortcuts {
         if (totalAvailable < totalRequired) {
             return false
         }
-        val requirementEachCount = EnumMap<_, Int>(NoteBlockInstrument::class.java)
-        requirements.forEach {
-            val instrument = it.key.instrumentEnum
-            requirementEachCount[instrument] = requirementEachCount.getOrDefault(instrument, 0) + it.value
-        }
 
-        if (!requirementEachCount.keys.containsAll(available.keys)) {
-            return false
-        }
-
-        return requirementEachCount.all { (instrument, required) ->
-            available[instrument]!!.size >= required
-        }
+        return requirements.entries
+            .groupBy({it.key.instrument}, {it.value})
+            .mapValues { it.value.sum() }
+            .all { (instrumentId, required) ->
+                val instrument = ModuleNotebot.instrumentFromNbs(instrumentId)
+                (available[instrument]?.size ?: 0) >= required
+            }
     }
 
     @Suppress("SwallowedException", "UseCheckOrError")
