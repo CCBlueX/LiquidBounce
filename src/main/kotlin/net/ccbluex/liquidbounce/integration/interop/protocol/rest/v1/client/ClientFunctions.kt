@@ -63,8 +63,7 @@ fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
         addProperty("minecraftVersion", updateInfo.mcVersion)
         addProperty("release", updateInfo.release)
 
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(updateInfo.date)
-        addProperty("date", SimpleDateFormat().format(dateFormat))
+        addProperty("date", updateInfo.date.toString())
         addProperty("message", updateInfo.message)
 
         addProperty("url", updateInfo.url)
