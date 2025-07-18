@@ -64,10 +64,10 @@ object NotebotScanner : MinecraftShortcuts {
     }
 
     private fun calculateRequirements(songData: SongData): Map<InstrumentNote, Int> {
-        val maxConcurrentCounts = mutableMapOf<InstrumentNote, Int>()
-        for ((_, notes) in songData.notesByTick) {
-            val countsInTick = mutableMapOf<InstrumentNote, Int>()
-
+        val maxConcurrentCounts = hashMapOf<InstrumentNote, Int>()
+        val countsInTick = hashMapOf<InstrumentNote, Int>()
+        for (notes in songData.notesByTick.values) {
+            countsInTick.clear()
             for (note in notes) {
                 val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
                 val instrumentNote = InstrumentNote(
@@ -75,14 +75,11 @@ object NotebotScanner : MinecraftShortcuts {
                     noteValue = noteValue
                 )
 
-                countsInTick[instrumentNote] = countsInTick.getOrDefault(instrumentNote, 0) + 1
+                countsInTick.inlineMerge(instrumentNote, 1, Int::plus)
             }
 
             for ((instrumentNote, count) in countsInTick) {
-                val currentMax = maxConcurrentCounts.getOrDefault(instrumentNote, 0)
-                if (count > currentMax) {
-                    maxConcurrentCounts[instrumentNote] = count
-                }
+                maxConcurrentCounts.inlineMerge(instrumentNote, count, ::maxOf)
             }
         }
 
@@ -101,7 +98,7 @@ object NotebotScanner : MinecraftShortcuts {
         val requirementEachCount = EnumMap<_, Int>(NoteBlockInstrument::class.java)
         requirements.forEach {
             val instrument = it.key.instrumentEnum
-            requirementEachCount[instrument] = requirementEachCount.getOrDefault(instrument, 0) + it.value
+            requirementEachCount.inlineMerge(instrument, it.value, Int::plus)
         }
 
         if (!requirementEachCount.keys.containsAll(available.keys)) {
@@ -113,12 +110,12 @@ object NotebotScanner : MinecraftShortcuts {
         }
     }
 
-    @Suppress("SwallowedException", "UseCheckOrError")
+//    @Suppress("SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, MutableList<BlockPos>>
     ) {
-        try {
+//        try {
             requirements.forEach { (instrumentNote, count) ->
                 val instrument = ModuleNotebot.instrumentFromNbs(instrumentNote.instrument)
                 val blockPosList = available[instrument]!!
@@ -128,13 +125,13 @@ object NotebotScanner : MinecraftShortcuts {
                     ModuleNotebot.renderer.addBlock(pos, false)
                 }
             }
-        } catch (e: Exception) {
-            // TODO why tf does this happen?????? why is the block pos list empty?
-            printRequirements(requirements, available)
-            ModuleNotebot.noteBlocks.clear()
-            ModuleNotebot.renderer.disable()
-            throw IllegalStateException(e)
-        }
+//        } catch (e: Exception) {
+//            // TODO why tf does this happen?????? why is the block pos list empty?
+//            printRequirements(requirements, available)
+//            ModuleNotebot.noteBlocks.clear()
+//            ModuleNotebot.renderer.disable()
+//            throw IllegalStateException(e)
+//        }
     }
 
     private fun printRequirements(
@@ -144,7 +141,7 @@ object NotebotScanner : MinecraftShortcuts {
         val aggregatedRequirements = EnumMap<_, Int>(NoteBlockInstrument::class.java)
         for ((key1, count) in requirements) {
             val instrument = ModuleNotebot.instrumentFromNbs(key1.instrument)
-            aggregatedRequirements[instrument] = aggregatedRequirements.getOrDefault(instrument, 0) + count
+            aggregatedRequirements.inlineMerge(instrument, count, Int::plus)
         }
 
         val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
@@ -166,6 +163,12 @@ object NotebotScanner : MinecraftShortcuts {
         }
 
         chat(text, ModuleNotebot)
+    }
+
+    private inline fun <K> MutableMap<K, Int>.inlineMerge(key: K, value: Int, remappingFunction: (Int, Int) -> Int) {
+        get(key)?.let {
+            put(key, remappingFunction(it, value))
+        } ?: put(key, value)
     }
 
 }
