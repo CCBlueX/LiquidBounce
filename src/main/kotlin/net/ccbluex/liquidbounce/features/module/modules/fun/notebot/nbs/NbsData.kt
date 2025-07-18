@@ -19,44 +19,51 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
 
 data class NbsHeader(
-    var version: Byte = 0,
-    var vanillaInstrumentCount: Byte = 0,
-    var songLength: Short = 0 ,
-    var layerCount: Short = 0,
-    var songName: String? = null,
-    var songAuthor: String? = null,
-    var songOriginalAuthor: String? = null,
-    var songDescription: String? = null,
-    var tempo: Short = 0,
-    var autoSaving: Byte = 0,
-    var autoSavingDuration: Byte = 0,
-    var timeSignature: Byte = 0,
-    var minutesSpent: Int = 0,
-    var leftClicks: Int = 0,
-    var rightClicks: Int = 0,
-    var noteBlocksAdded: Int = 0,
-    var noteBlocksRemoved: Int = 0,
-    var midiFileName: String? = null,
-    var loopOnOff: Byte = 0,
-    var maxLoopCount: Byte = 0,
-    var loopStartTick: Short = 0
+    val version: Byte = 0,
+    val vanillaInstrumentCount: Byte = 0,
+    val songLength: Short = 0 ,
+    val layerCount: Short = 0,
+    val songName: String? = null,
+    val songAuthor: String? = null,
+    val songOriginalAuthor: String? = null,
+    val songDescription: String? = null,
+    val tempo: Short = 0,
+    val autoSaving: Byte = 0,
+    val autoSavingDuration: Byte = 0,
+    val timeSignature: Byte = 0,
+    val minutesSpent: Int = 0,
+    val leftClicks: Int = 0,
+    val rightClicks: Int = 0,
+    val noteBlocksAdded: Int = 0,
+    val noteBlocksRemoved: Int = 0,
+    val midiFileName: String? = null,
+    val loopOnOff: Byte = 0,
+    val maxLoopCount: Byte = 0,
+    val loopStartTick: Short = 0,
 )
 
 data class NbsNoteBlock(
-    var tick: Int,
-    var layer: Int,
-    var instrument: Byte,
-    var key: Byte,
-    var velocity: Byte,
-    var panning: Int,
-    var pitch: Short
+    val tick: Int,
+    val layer: Int,
+    val instrument: Byte,
+    val key: Byte,
+    val velocity: Byte,
+    val panning: Int,
+    val pitch: Short,
 )
 
 data class InstrumentNote(val instrument: Int, val noteValue: Int)
 
 data class SongData(
-    val nbs: Nbs,
+    /** The original name of file. */
+    val name: String,
+    val nbs: NbsData,
     val notesByTick: Map<Int, List<NbsNoteBlock>>,
     val songTickLength: Int,
     val songTicksPerGameTick: Float
+)
+
+data class NbsData(
+    val header: NbsHeader,
+    val noteBlocks: List<NbsNoteBlock>,
 )
