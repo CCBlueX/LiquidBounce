@@ -19,12 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundCategory
 import net.minecraft.util.Formatting
@@ -46,7 +49,10 @@ object NotebotEngine : EventListener {
     fun reset() {
         songTickAccumulator = 0f
         currentSongTick = 0
+        mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
     }
+
+    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress")
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -70,7 +76,8 @@ object NotebotEngine : EventListener {
     }
 
     @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
+    private val tickHandler = tickHandler {
+        waitTicks(ModuleNotebot.ticksToWait)
         when (ModuleNotebot.state) {
             NotebotState.TEST -> handleTestState()
             NotebotState.TUNE -> handleTuneState()

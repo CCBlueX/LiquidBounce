@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoader
@@ -49,12 +50,36 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     val rotationsConfigurable = RotationsConfigurable(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
+    private object StartDelay : Configurable("StartDelay") {
+        val test by int("Test", 2, 0..20, "ticks")
+        val tune by int("Tune", 2, 0..20, "ticks")
+        val play by int("Play", 2, 0..20, "ticks")
+    }
 
+    init {
+        tree(StartDelay)
+    }
 
     val renderer = tree(NotebotRenderer)
 
     var state = NotebotState.TEST
-        internal set
+        internal set(value) {
+            ticksToWait = when (value) {
+                NotebotState.TEST -> StartDelay.test
+                NotebotState.TUNE -> StartDelay.tune
+                NotebotState.PLAY -> StartDelay.play
+            }
+            field = value
+        }
+
+    internal var ticksToWait = 0
+        get() {
+            val original = field
+            field = 0
+            return original
+        }
+        private set
+
     var previousState = NotebotState.TEST
         private set
 
@@ -72,6 +97,12 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     override suspend fun enabledEffect() {
+        if (player.isCreative) {
+            chat("You can't use this module in creative mode!", this)
+            this.enabled = false
+            return
+        }
+
         chat("Starting loading song...", this)
         val songData = withContext(Dispatchers.IO) {
             NbsLoader.load(song)
