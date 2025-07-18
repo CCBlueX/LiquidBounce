@@ -27,11 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoa
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
 
@@ -51,8 +47,8 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private object StartDelay : Configurable("StartDelay") {
-        val test by int("Test", 2, 0..20, "ticks")
-        val tune by int("Tune", 2, 0..20, "ticks")
+        val test by int("Test", 0, 0..20, "ticks")
+        val tune by int("Tune", 0, 0..20, "ticks")
         val play by int("Play", 2, 0..20, "ticks")
     }
 
@@ -62,6 +58,9 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     val renderer = tree(NotebotRenderer)
 
+    var previousState = NotebotState.TEST
+        private set
+
     var state = NotebotState.TEST
         internal set(value) {
             ticksToWait = when (value) {
@@ -69,6 +68,8 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
                 NotebotState.TUNE -> StartDelay.tune
                 NotebotState.PLAY -> StartDelay.play
             }
+            previousState = field
+            renderer.indicateStateChange()
             field = value
         }
 
@@ -78,9 +79,6 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
             field = 0
             return original
         }
-        private set
-
-    var previousState = NotebotState.TEST
         private set
 
     val noteBlocks = mutableListOf<NoteBlock>()
@@ -97,6 +95,15 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     override suspend fun enabledEffect() {
+        if (!inGame) {
+            chat("You must be in game to use this module.", this)
+            this.enabled = false
+            return
+        }
+
+        val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
+        mc.inGameHud.chatHud.removeMessage(messageMetadata.id)
+
         if (player.isCreative) {
             chat("You can't use this module in creative mode!", this)
             this.enabled = false
@@ -116,7 +123,6 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
             return
         }
 
-        val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
         chat(
             regular("Loaded song '")
                 .append(variable(songData.name))

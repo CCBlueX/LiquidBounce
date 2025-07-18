@@ -25,6 +25,7 @@ import it.unimi.dsi.fastutil.chars.CharSets
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
+import net.minecraft.util.Formatting
 import net.minecraft.world.World
 import java.util.*
 import java.util.regex.Pattern
@@ -205,4 +206,26 @@ fun String.hideSensitiveAddress(): String {
         this.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
         else -> this
     }
+}
+
+/**
+ * Generates a progress bar based on the [percent]age (range 0 to 100).
+ */
+fun textLoadingBar(
+    percent: Int,
+    progress: Char = '█',
+    progressColor: Formatting = Formatting.WHITE,
+    remaining: Char = '░',
+    remainingColor: Formatting = Formatting.DARK_GRAY,
+    length: Int = 10
+): Text {
+    val clampedPercent = percent.coerceIn(0, 100)
+    val filledBars = clampedPercent * length / 100
+
+    val progressPart = progress.toString().repeat(filledBars)
+    val remainingPart = remaining.toString().repeat(length - filledBars)
+
+    return Text.empty()
+        .append(progressPart.asText().formatted(progressColor))
+        .append(remainingPart.asText().formatted(remainingColor))
 }

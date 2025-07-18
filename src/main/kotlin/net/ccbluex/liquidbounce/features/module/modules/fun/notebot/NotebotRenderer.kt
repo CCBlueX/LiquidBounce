@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 
 // TODO animate transition
@@ -29,12 +30,20 @@ object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
     private val tuneColor by color("TuneColor", Color4b.YELLOW.with(a = 90))
     private val outlineTuneColor by color("TuneOutlineColor", Color4b.YELLOW)
 
+    private val chronometer = Chronometer()
+
     override fun getColor(id: Int): Color4b {
         val state = getState()
         return when (state) {
             NotebotState.TEST -> testColor
-            NotebotState.TUNE -> tuneColor
-            NotebotState.PLAY -> super.getColor(id)
+            NotebotState.TUNE -> testColor.interpolateTo(tuneColor, getTransitionProgress())
+            NotebotState.PLAY -> {
+                if (ModuleNotebot.previousState == NotebotState.TEST) {
+                    testColor
+                } else {
+                    tuneColor
+                }.interpolateTo(super.getColor(id), getTransitionProgress())
+            }
         }
     }
 
@@ -42,10 +51,22 @@ object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
         val state = getState()
         return when (state) {
             NotebotState.TEST -> outlineTestColor
-            NotebotState.TUNE -> outlineTuneColor
-            NotebotState.PLAY -> super.getOutlineColor(id)
+            NotebotState.TUNE -> testColor.interpolateTo(outlineTuneColor, getTransitionProgress())
+            NotebotState.PLAY -> {
+                if (ModuleNotebot.previousState == NotebotState.TEST) {
+                    outlineTestColor
+                } else {
+                    outlineTuneColor
+                }.interpolateTo(super.getOutlineColor(id), getTransitionProgress())
+            }
         }
     }
+
+    fun indicateStateChange() {
+        chronometer.reset()
+    }
+
+    private fun getTransitionProgress() = (chronometer.elapsed / 300.0).coerceAtMost(1.0)
 
     private fun getState(): NotebotState {
         return if (ModuleNotebot.enabled) {

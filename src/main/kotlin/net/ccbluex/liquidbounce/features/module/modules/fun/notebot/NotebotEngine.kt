@@ -23,13 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundCategory
 import net.minecraft.util.Formatting
@@ -62,13 +56,15 @@ object NotebotEngine : EventListener {
 
     private fun sendNewProgressMessage(name: String, progress: Int, total: Int) {
         removeProgressMessage()
+
+        val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
         chat(
             variable(name)
-                .append(regular(" ("))
-                .append(variable(progress.toString()))
-                .append(regular("/"))
-                .append(variable(total.toString()))
-                .append(regular(")")),
+                .append(regular(" ["))
+                .append(textLoadingBar(percent))
+                .append(regular("] "))
+                .append(variable(percent.toString()))
+                .append(regular("%")),
             metadata = progressMessageMetadata
         )
     }
@@ -105,7 +101,13 @@ object NotebotEngine : EventListener {
     }
 
     private fun handleTestState() {
-        val progress = ModuleNotebot.noteBlocks.count { it.test() }
+        var progress = 0
+        // `all` so it just calls a maximum of one click a tick
+        ModuleNotebot.noteBlocks.all {
+            progress++
+            it.test()  // loops until it finds a noteblock that hasn't been tested, clicks it and then exits the loop
+        }
+
         val total = ModuleNotebot.noteBlocks.size
         sendNewProgressMessage("Test", progress, total)
         if (progress == total) {
@@ -118,7 +120,13 @@ object NotebotEngine : EventListener {
     }
 
     private fun handleTuneState() {
-        val progress = ModuleNotebot.noteBlocks.count { it.tune() }
+        var progress = 0
+        // `all` so it just calls a maximum of one interaction a tick
+        ModuleNotebot.noteBlocks.all {
+            progress++
+            it.tune() // function -> read comment above in handleTestState
+        }
+
         val total = ModuleNotebot.noteBlocks.size
         sendNewProgressMessage("Tune", progress, total)
         if (progress == total) {
