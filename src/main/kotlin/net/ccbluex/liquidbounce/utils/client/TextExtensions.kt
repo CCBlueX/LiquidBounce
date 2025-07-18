@@ -211,6 +211,7 @@ fun String.hideSensitiveAddress(): String {
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
  */
+@Suppress("LongParameterList")
 fun textLoadingBar(
     percent: Int,
     progress: Char = '█',
