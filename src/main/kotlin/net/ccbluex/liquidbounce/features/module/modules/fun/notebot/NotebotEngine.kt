@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundCategory
 import net.minecraft.util.Formatting
@@ -49,10 +51,27 @@ object NotebotEngine : EventListener {
     fun reset() {
         songTickAccumulator = 0f
         currentSongTick = 0
+        removeProgressMessage()
+    }
+
+    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress", remove = false)
+
+    private fun removeProgressMessage() {
         mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
     }
 
-    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress")
+    private fun sendNewProgressMessage(name: String, progress: Int, total: Int) {
+        removeProgressMessage()
+        chat(
+            variable(name)
+                .append(regular(" ("))
+                .append(variable(progress.toString()))
+                .append(regular("/"))
+                .append(variable(total.toString()))
+                .append(regular(")")),
+            metadata = progressMessageMetadata
+        )
+    }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -86,7 +105,10 @@ object NotebotEngine : EventListener {
     }
 
     private fun handleTestState() {
-        if (ModuleNotebot.noteBlocks.all { it.test() }) {
+        val progress = ModuleNotebot.noteBlocks.count { it.test() }
+        val total = ModuleNotebot.noteBlocks.size
+        sendNewProgressMessage("Test", progress, total)
+        if (progress == total) {
             if (ModuleNotebot.noteBlocks.all { it.currentNote == it.noteValue }) {
                 transitionToPlayState()
             } else {
@@ -96,18 +118,23 @@ object NotebotEngine : EventListener {
     }
 
     private fun handleTuneState() {
-        if (ModuleNotebot.noteBlocks.all { it.tune() }) {
+        val progress = ModuleNotebot.noteBlocks.count { it.tune() }
+        val total = ModuleNotebot.noteBlocks.size
+        sendNewProgressMessage("Tune", progress, total)
+        if (progress == total) {
             transitionToPlayState()
         }
     }
 
     private fun handlePlayState() {
-        val songData = ModuleNotebot.songData ?: return
+        val songData = ModuleNotebot.songData ?: error("No song data!")
         songTickAccumulator += songData.songTicksPerGameTick
 
         while (songTickAccumulator >= 1f) {
             songTickAccumulator -= 1f
             currentSongTick++
+
+            sendNewProgressMessage("Play", currentSongTick, songData.songTickLength)
 
             if (currentSongTick > songData.songTickLength) {
                 chat("Finished song!".asText().formatted(Formatting.GREEN), ModuleNotebot)
