@@ -40,6 +40,9 @@ object NotebotEngine : EventListener {
 
     override fun parent() = ModuleNotebot
 
+    override val running: Boolean
+        get() = super.running && ModuleNotebot.readyToStart
+
     fun reset() {
         songTickAccumulator = 0f
         currentSongTick = 0
