@@ -26,8 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoa
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
 
@@ -45,6 +48,8 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     val range by float("Range", 6f, 1f..6f)
     val rotationsConfigurable = RotationsConfigurable(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+
+
 
     val renderer = tree(NotebotRenderer)
 
@@ -79,6 +84,29 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
             this.enabled = false
             return
         }
+
+        val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
+        chat(
+            regular("Loaded song '")
+                .append(variable(songData.name))
+                .append(regular("'.")),
+            messageMetadata
+        )
+        chat(
+            regular("Ticks per game tick: ")
+                .append(variable(songData.songTicksPerGameTick.toString())),
+            messageMetadata
+        )
+        chat(
+            regular("Tick length: ")
+                .append(variable(songData.songTickLength.toString())),
+            messageMetadata
+        )
+        chat(
+            regular("Total notes: ")
+                .append(variable(songData.nbs.noteBlocks.size.toString())),
+            messageMetadata
+        )
 
         this.songData = songData
         packetMineState = ModulePacketMine.enabled

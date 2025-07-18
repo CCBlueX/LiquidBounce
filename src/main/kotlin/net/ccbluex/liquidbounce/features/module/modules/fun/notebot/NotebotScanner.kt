@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
@@ -32,7 +33,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
 import java.util.*
 import kotlin.collections.ArrayDeque
-import kotlin.math.min
 
 object NotebotScanner : MinecraftShortcuts {
 
@@ -54,7 +54,7 @@ object NotebotScanner : MinecraftShortcuts {
     private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<BlockPos>> {
         val result = EnumMap<_, ArrayDeque<BlockPos>>(NoteBlockInstrument::class.java)
 
-        player.blockPos.getSortedSphere(ModuleNotebot.range).filter { pos ->
+        player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
             pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
         }.forEach { pos ->
             result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(pos)
@@ -96,37 +96,30 @@ object NotebotScanner : MinecraftShortcuts {
             return false
         }
 
-        return requirements.entries
-            .groupBy({it.key.instrument}, {it.value})
-            .mapValues { it.value.sum() }
-            .all { (instrumentId, required) ->
-                val instrument = ModuleNotebot.instrumentFromNbs(instrumentId)
-                (available[instrument]?.size ?: 0) >= required
-            }
+        val requirementByInstrument = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+
+        requirements.forEach { (key, value) ->
+            requirementByInstrument.inlineMerge(key.instrumentEnum, value, Int::plus)
+        }
+
+        return requirementByInstrument.all { (instrument, required) ->
+            available[instrument].let { it != null && it.size >= required }
+        }
     }
 
-//    @Suppress("SwallowedException", "UseCheckOrError")
     private fun assignNoteBlocks(
         requirements: Map<InstrumentNote, Int>,
         available: Map<NoteBlockInstrument, MutableList<BlockPos>>
     ) {
-//        try {
-            requirements.forEach { (instrumentNote, count) ->
-                val instrument = ModuleNotebot.instrumentFromNbs(instrumentNote.instrument)
-                val blockPosList = available[instrument]!!
-                repeat(count) {
-                    val pos = blockPosList.removeFirst()
-                    ModuleNotebot.noteBlocks.add(NoteBlock(pos, instrument, instrumentNote.noteValue))
-                    ModuleNotebot.renderer.addBlock(pos, false)
-                }
+        requirements.forEach { (instrumentNote, count) ->
+            val instrument = ModuleNotebot.instrumentFromNbs(instrumentNote.instrument)
+            val blockPosList = available[instrument]!!
+            repeat(count) {
+                val pos = blockPosList.removeFirst()
+                ModuleNotebot.noteBlocks.add(NoteBlock(pos, instrument, instrumentNote.noteValue))
+                ModuleNotebot.renderer.addBlock(pos, false)
             }
-//        } catch (e: Exception) {
-//            // TODO why tf does this happen?????? why is the block pos list empty?
-//            printRequirements(requirements, available)
-//            ModuleNotebot.noteBlocks.clear()
-//            ModuleNotebot.renderer.disable()
-//            throw IllegalStateException(e)
-//        }
+        }
     }
 
     private fun printRequirements(
@@ -142,7 +135,7 @@ object NotebotScanner : MinecraftShortcuts {
         val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
         aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
             val availableCount = if (available.containsKey(instrument)) {
-                min(available[instrument]!!.size, requiredCount)
+                minOf(available[instrument]!!.size, requiredCount)
             } else {
                 0
             }
