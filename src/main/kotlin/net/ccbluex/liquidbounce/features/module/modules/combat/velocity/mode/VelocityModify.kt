@@ -102,6 +102,7 @@ internal object VelocityModify : VelocityMode("Modify") {
 
         if (packet is CommonPongC2SPacket && transactionBuffer > 0) {
             event.cancelEvent()
+            transactionBuffer--
         }
     }
 
