@@ -24,12 +24,17 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.airTicks
+import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -38,6 +43,8 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 
 class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("BlocksMC") {
+
+    private var roundStrafeYaw by boolean("RoundStrafeYaw", false)
 
     private var fastHopMode = 0
     private var flagDelay = 0
@@ -57,12 +64,22 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
 
         var speed = 0.06 + when {
             player.isOnGround -> 0.12
-            else -> 0.24
+            else -> 0.21
         } + player.velocity.y / 20
 
 
         if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) == 1) {
             speed += 0.1
+        }
+
+        if (flagDelay > 0) {
+            repeat(flagDelay) {
+                speed -= 0.007
+            }
+        }
+
+        if (!player.isOnGround && fastHopMode == 3 && mc.options.jumpKey.isPressed) {
+            fastHopMode = 2
         }
 
         when (fastHopMode) {
@@ -79,22 +96,53 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
                     4 -> player.velocity.y -= 0.2
                 }
             }
+            3 -> {
+                if (player.isOnGround) {
+                    speed = if (flagDelay > 20) 0.6 else 1.125
+                    player.velocity.x *= speed
+                    player.velocity.z *= speed
+                }
+            }
         }
 
-        if (!player.isOnGround && fastHopMode != 0) {
-            player.velocity = player.velocity.withStrafe(speed = speed)
+        var yaw = player.getMovementDirectionOfInput(DirectionalInput(player.input))
+        if (roundStrafeYaw) {
+            yaw = (Math.round(yaw / 45) * 45).toFloat()
         }
-        if (flagDelay > 10) {
-            fastHopMode = 0
+
+        if (!player.isOnGround && fastHopMode != 0 && fastHopMode != 3) {
+            player.velocity = player.velocity.withStrafe(speed = speed, yaw = yaw)
         }
     }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         if (player.isOnGround) {
-            fastHopMode = if (ModuleScaffold.enabled) 2 else 1
+            if (fastHopMode == 3) {
+                if (player.age % 2 == 0) {
+                    fastHopMode = 1
+                    if (ModuleScaffold.enabled) {
+                        fastHopMode++
+                        if (!mc.options.jumpKey.isPressed) {
+                            fastHopMode++
+                        }
+                    }
+                    if (fastHopMode < 3) {
+                        player.velocity.x *= 0.6
+                        player.velocity.z *= 0.6
+                    }
+                }
+            } else {
+                fastHopMode = 1
+                if (ModuleScaffold.enabled) {
+                    fastHopMode++
+                    if (!mc.options.jumpKey.isPressed) {
+                        fastHopMode++
+                    }
+                }
+            }
         }
-        if (event.directionalInput.isMoving && flagDelay < 15) {
+        if (event.directionalInput.isMoving && fastHopMode != 0 && fastHopMode != 3) {
             event.jump = true
         }
     }
@@ -103,8 +151,27 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
     private val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
+        when (fastHopMode) {
+            3 -> {
+                if (packet is PlayerMoveC2SPacket && player.isOnGround && player.age % 2 == 0) {
+                    packet.y += 0.03
+                }
+            }
+        }
+
         if (packet is PlayerPositionLookS2CPacket) {
             flagDelay = 20
+        }
+    }
+
+    @Suppress("unused")
+    private val jumpHandler = handler<PlayerJumpEvent> {
+        when (fastHopMode) {
+            3 -> {
+                if (player.isOnGround && player.age % 2 == 1) {
+                    it.cancelEvent()
+                }
+            }
         }
     }
 
