@@ -55,7 +55,8 @@ object CapeCosmeticsManager : EventListener {
     fun loadPlayerCape(player: GameProfile): CompletableFuture<Identifier> = eventListenerScope.future {
         val uuid = player.id
 
-        val cosmetic = CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) ?: error("Failed to fetch cosmetic for UUID $uuid")
+        val cosmetic = CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE)
+            ?: error("Failed to fetch cosmetic for UUID $uuid")
         // Get url of cape from cape service
         val name = getCapeName(cosmetic) ?: error("The cosmetic is not a cape")
 

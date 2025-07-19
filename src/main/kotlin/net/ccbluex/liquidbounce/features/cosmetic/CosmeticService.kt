@@ -113,17 +113,19 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
         if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
-            clientAccount.cosmetics?.let { cosmetics ->
-                return cosmetics.findWithCategory(category)
+            return clientAccount.cosmetics?.findWithCategory(category) ?: run {
+                // Pre-allocate a set to prevent multiple requests
+                clientAccount.cosmetics = emptySet()
+
+                runCatching {
+                    // Update cosmetics
+                    clientAccount.updateCosmetics()
+                }.onFailure {
+                    logger.error("Failed to get cosmetics of client player", it)
+                }
+
+                clientAccount.cosmetics?.findWithCategory(category)
             }
-
-            // Pre-allocate a set to prevent multiple requests
-            clientAccount.cosmetics = emptySet()
-
-            // Update cosmetics
-            clientAccount.updateCosmetics()
-
-            return clientAccount.cosmetics?.findWithCategory(category)
         }
 
         refreshCarriers().onSuccess { carriers ->
@@ -132,20 +134,18 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
             }
 
             // Check if we already have the cosmetic
-            carriersCosmetics[uuid]?.let { cosmetics ->
-                return cosmetics.findWithCategory(category)
-            }
+            return carriersCosmetics[uuid]?.findWithCategory(category) ?: run {
+                // Pre-allocate a set to prevent multiple requests
+                carriersCosmetics[uuid] = emptySet()
 
-            // Pre-allocate a set to prevent multiple requests
-            carriersCosmetics[uuid] = emptySet()
+                runCatching {
+                    val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
+                    carriersCosmetics[uuid] = cosmetics
 
-            runCatching {
-                val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
-                carriersCosmetics[uuid] = cosmetics
-
-                return cosmetics.findWithCategory(category)
-            }.onFailure {
-                logger.error("Failed to get cosmetics of carrier $uuid", it)
+                    cosmetics.findWithCategory(category)
+                }.onFailure {
+                    logger.error("Failed to get cosmetics of carrier $uuid", it)
+                }.getOrNull()
             }
         }
 
