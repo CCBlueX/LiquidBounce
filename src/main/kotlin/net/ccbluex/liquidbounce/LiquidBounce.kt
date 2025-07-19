@@ -272,8 +272,10 @@ object LiquidBounce : EventListener {
             },
             scope.async {
                 // Load cosmetics
-                CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
+                CosmeticService.refreshCarriers(force = true).onSuccess { carriers ->
+                    logger.info("Successfully loaded ${carriers.size} cosmetics carriers.")
+                }.onFailure {
+                    logger.info("Failed to load cosmetics carriers.", it)
                 }
             },
             scope.async {

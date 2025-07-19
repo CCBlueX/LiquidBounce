@@ -35,7 +35,7 @@ object LanguageManager : Configurable("lang") {
     private const val COMMON_UNDERSTOOD_LANGUAGE = "en_us"
 
     // List of all languages
-    val knownLanguages = arrayOf(
+    val knownLanguages = setOf(
         "en_us",
         "de_de",
         "ja_jp",
@@ -65,7 +65,7 @@ object LanguageManager : Configurable("lang") {
         } else {
             runCatching {
                 languageMap.computeIfAbsent(language) {
-                    val languageFile = javaClass.getResourceAsStream("/resources/liquidbounce/lang/$language.json")
+                    val languageFile = javaClass.getResourceAsStream("/resources/liquidbounce/lang/$it.json")
                     val translations = decode<HashMap<String, String>>(languageFile!!)
 
                     ClientLanguage(translations)

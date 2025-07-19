@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
-import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
@@ -26,7 +25,6 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import kotlin.coroutines.resume
 
 object CommandClientCosmeticsSubcommand {
     fun cosmeticsCommand() = CommandBuilder
@@ -43,24 +41,15 @@ object CommandClientCosmeticsSubcommand {
         .build()
 
     private fun refreshSubcommand() = CommandBuilder.begin("refresh")
-        .suspendHandler { _, _ ->
-            chat(
-                regular(
-                    "Refreshing cosmetics..."
-                )
-            )
-            CosmeticService.carriersCosmetics.clear()
+        .suspendHandler { command, _ ->
+            chat(regular("Refreshing cosmetics..."), command)
+            CosmeticService.clearCarriersCosmetics()
             ClientAccountManager.clientAccount.cosmetics = null
 
-            suspendCancellableCoroutine { continuation ->
-                CosmeticService.refreshCarriers(true) {
-                    chat(
-                        regular(
-                            "Cosmetic System has been refreshed."
-                        )
-                    )
-                    continuation.resume(Unit)
-                }
+            CosmeticService.refreshCarriers(force = true).onSuccess {
+                chat(regular("Cosmetic System has been refreshed."), command)
+            }.onFailure {
+                chat(regular("Failed to refresh Cosmetic System: ${it.message}"), command)
             }
         }
         .build()

@@ -18,17 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.cosmetic
 
-import kotlinx.coroutines.Job
-import net.ccbluex.liquidbounce.api.core.withScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CosmeticApi
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -56,103 +60,107 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
      * We start with an empty list, which will be updated by the refreshCapeCarriers
      * function frequently based on the REFRESH_DELAY.
      */
-    internal var carriers = emptySet<String>()
-    internal var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
+    private var carriers = emptySet<String>()
+    private val carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
-    private var task: Job? = null
+    private var task: Deferred<Result<Set<String>>>? = null
 
     /**
-     * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
-     * and then call out [done].
+     * Refreshes cosmetic carriers if needed from the API in a MD5-hashed UUID.
      * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
+     *
+     * @return the refreshed carriers, or the exception
      */
-    fun refreshCarriers(force: Boolean = false, done: () -> Unit) {
-        // Check if there is not another task running which could conflict.
-        if (task == null) {
-            // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-            if (lastUpdate.hasElapsed(REFRESH_DELAY) || force) {
-                task = withScope {
-                    runCatching {
-                        carriers = CosmeticApi.getCarriers()
-                        task = null
+    suspend fun refreshCarriers(force: Boolean = false): Result<Set<String>> {
+        // If there is another running task, returns the shared value from it.
+        task?.let {
+            return it.await()
+        }
 
-                        // Reset timer and start once again
-                        lastUpdate.reset()
+        // Check if the required time in milliseconds has passed of the REFRESH_DELAY
+        if (!lastUpdate.hasElapsed(REFRESH_DELAY) && !force) {
+            // Returns immediately because there is no refresh required at the moment
+            return Result.success(carriers)
+        } else {
+            val task = eventListenerScope.async(Dispatchers.IO) {
+                runCatching {
+                    carriers = CosmeticApi.getCarriers()
 
-                        // Call out done
-                        mc.execute(done)
-                    }.onFailure {
-                        logger.error("Failed to refresh cape carriers due to error.", it)
-                    }
+                    // Reset the timer and task, allow to start once again
+                    lastUpdate.reset()
+                    task = null
+
+                    // Result
+                    carriers
+                }.onFailure {
+                    logger.error("Failed to refresh cape carriers due to error.", it)
                 }
-            } else {
-                // Call out done immediate because there is no refresh required at the moment
-                done()
             }
+
+            this.task = task
+            return task.await()
         }
     }
 
-    fun fetchCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit = { }) {
+    /**
+     * Fetches the cosmetic for the player with given [uuid] and [category].
+     *
+     * @return null if no [Cosmetic] found (yet)
+     */
+    suspend fun fetchCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
         val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
         if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
-                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
-                return
+                return cosmetics.findWithCategory(category)
             }
 
             // Pre-allocate a set to prevent multiple requests
             clientAccount.cosmetics = emptySet()
 
             // Update cosmetics
-            withScope {
-                clientAccount.updateCosmetics()
+            clientAccount.updateCosmetics()
 
-                clientAccount.cosmetics?.let { cosmetics ->
-                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@withScope)
-                }
-            }
-            return
+            return clientAccount.cosmetics?.findWithCategory(category)
         }
 
-        refreshCarriers {
+        refreshCarriers().onSuccess { carriers ->
             if (uuid.toMD5() !in carriers) {
-                return@refreshCarriers
+                return null
             }
 
             // Check if we already have the cosmetic
             carriersCosmetics[uuid]?.let { cosmetics ->
-                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@refreshCarriers)
-                return@refreshCarriers
+                return cosmetics.findWithCategory(category)
             }
 
             // Pre-allocate a set to prevent multiple requests
             carriersCosmetics[uuid] = emptySet()
 
-            withScope {
-                runCatching {
-                    val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
-                    carriersCosmetics[uuid] = cosmetics
+            runCatching {
+                val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
+                carriersCosmetics[uuid] = cosmetics
 
-                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runCatching)
-                }.onFailure {
-                    logger.error("Failed to get cosmetics of carrier $uuid", it)
-                }
+                return cosmetics.findWithCategory(category)
+            }.onFailure {
+                logger.error("Failed to get cosmetics of carrier $uuid", it)
             }
         }
+
+        return null
     }
 
     private fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
-        fetchCosmetic(uuid, category)
+        eventListenerScope.launch(Dispatchers.IO) { fetchCosmetic(uuid, category) }
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
         val clientAccount = ClientAccountManager.clientAccount
 
         if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
-                return cosmetics.find { cosmetic -> cosmetic.category == category }
+                return cosmetics.findWithCategory(category)
             }
         }
 
@@ -160,50 +168,56 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
             return null
         }
 
-        return carriersCosmetics[uuid]?.find { cosmetic -> cosmetic.category == category }
+        return carriersCosmetics[uuid]?.findWithCategory(category)
     }
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
 
-    private fun transferTemporaryOwnership(uuid: UUID) {
+    private suspend fun transferTemporaryOwnership(uuid: UUID) {
         val clientAccount = ClientAccountManager.clientAccount
         if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
             return
         }
 
-        withScope {
-            runCatching {
-                clientAccount.transferTemporaryOwnership(uuid)
-            }.onSuccess {
-                logger.info("[Cosmetics] Transferred cape ownership to $uuid")
+        runCatching {
+            clientAccount.transferTemporaryOwnership(uuid)
+        }.onSuccess {
+            logger.info("[Cosmetics] Transferred cape ownership to $uuid")
 
-                // Refresh carriers after transfer
-                refreshCarriers(true) {
-                    logger.info("[Cosmetics] Successfully loaded ${carriers.size} cosmetics carriers.")
-                }
+            // Refresh carriers after transfer
+            refreshCarriers(force = true).onSuccess {
+                logger.info("[Cosmetics] Successfully loaded ${it.size} cosmetics carriers.")
             }.onFailure {
-                logger.error("[Cosmetics] Failed to transfer cosmetic ownership to $uuid", it)
+                logger.error("[Cosmetics] Failed to loaded cosmetics carriers.", it)
             }
+        }.onFailure {
+            logger.error("[Cosmetics] Failed to transfer cosmetic ownership to $uuid", it)
         }
     }
 
     @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent> { event ->
+    private val sessionHandler = suspendHandler<SessionEvent> { event ->
         val session = event.session
 
         // Check if the account is valid
         if (session.accountType == Session.AccountType.LEGACY || session.accessToken.length < 2) {
-            return@handler
+            return@suspendHandler
         }
-        val uuid = session.uuidOrNull ?: return@handler
+        val uuid = session.uuidOrNull ?: return@suspendHandler
 
         transferTemporaryOwnership(uuid)
     }
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
+        clearCarriersCosmetics()
+    }
+
+    fun clearCarriersCosmetics() {
         carriersCosmetics.clear()
     }
+
+    private fun Set<Cosmetic>.findWithCategory(category: CosmeticCategory) = find { it.category == category }
 
 }
 

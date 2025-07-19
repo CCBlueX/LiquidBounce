@@ -82,7 +82,8 @@ public abstract class MixinPlayerListEntry {
         }
 
         capeTextureLoading = true;
-        CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile, id -> capeTexture = id);
+        CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile)
+                .thenApplyAsync(id -> capeTexture = id, MinecraftClient.getInstance());
     }
 
 }

@@ -19,18 +19,18 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.mojang.authlib.GameProfile
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.future.future
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CapeApi
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Identifier
+import java.util.concurrent.CompletableFuture
 
 /**
  * A cape cosmetic manager
@@ -45,61 +45,42 @@ object CapeCosmeticsManager : EventListener {
      * We also don't need to worry about memory leaks
      * because the cache is cleared when the player disconnects from the world.
      */
-    private val cachedCapes = mutableMapOf<String, Identifier>()
+    private val cachedCapes = hashMapOf<String, Identifier>()
 
     /**
-     * Interface for returning a cape texture
+     * Loads a player cape. Result is wrapped with [CompletableFuture] for Java-side invocation.
+     *
+     * @return the [Identifier] of cape texture if the [player] has a cape carrier, or an exception
      */
-    interface ReturnCapeTexture {
+    fun loadPlayerCape(player: GameProfile): CompletableFuture<Identifier> = eventListenerScope.future {
+        val uuid = player.id
 
-        /**
-         * Returns the cape texture when it is loaded
-         */
-        fun response(id: Identifier)
+        val cosmetic = CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) ?: error("Failed to fetch cosmetic for UUID $uuid")
+        // Get url of cape from cape service
+        val name = getCapeName(cosmetic) ?: error("The cosmetic is not a cape")
 
-    }
-
-    /**
-     * Loads a player cape
-     */
-    fun loadPlayerCape(player: GameProfile, response: ReturnCapeTexture) {
-        withScope {
-            runCatching {
-                val uuid = player.id
-
-                CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
-                    // Get url of cape from cape service
-                    val name = getCapeName(cosmetic) ?: return@fetchCosmetic
-
-                    // Check if the cape is cached
-                    if (cachedCapes.containsKey(name)) {
-                        LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
-                        response.response(cachedCapes[name]!!)
-                        return@fetchCosmetic
-                    }
-
-                    // Request cape texture
-                    val nativeImageBackedTexture = runCatching {
-                        runBlocking(Dispatchers.IO) {
-                            CapeApi.getCape(name)
-                        }
-                    }.getOrNull() ?: return@fetchCosmetic
-
-                    LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
-
-                    val id = Identifier.of("liquidbounce", "cape-$name")
-
-                    // Register cape texture
-                    mc.textureManager.registerTexture(id, nativeImageBackedTexture)
-
-                    // Cache cape texture
-                    cachedCapes[name] = id
-
-                    // Return cape texture
-                    response.response(id)
-                }
-            }
+        // Check if the cape is cached
+        val cachedOrNull = cachedCapes[name]
+        if (cachedOrNull != null) {
+            LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
+            return@future cachedOrNull
         }
+
+        // Request cape texture
+        val nativeImageBackedTexture = CapeApi.getCape(name)
+
+        LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
+
+        val id = Identifier.of("liquidbounce", "cape-$name")
+
+        // Register cape texture
+        mc.textureManager.registerTexture(id, nativeImageBackedTexture)
+
+        // Cache cape texture
+        cachedCapes[name] = id
+
+        // Return cape texture
+        id
     }
 
     private fun getCapeName(cosmetic: Cosmetic): String? {
