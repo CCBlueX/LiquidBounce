@@ -244,6 +244,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
         SPEED("Speed", {
             ModuleSpeed.running
         }),
+        KILLAURA("KillAura", {
+            ModuleKillAura.running
+        }),
         GROUND("Ground", {
            player.isOnGround
         });
