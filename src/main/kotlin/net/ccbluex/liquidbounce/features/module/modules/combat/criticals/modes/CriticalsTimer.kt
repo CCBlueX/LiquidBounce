@@ -38,7 +38,6 @@ object CriticalsTimer : Choice("Timer") {
     private val speed by float("Speed", 0.8f, 0.1f..1.0f)
     private val range by float("Range", 4.0f, 0.0f..10.0f)
 
-    // 新增配置项
     private val optimizeForCooldown by boolean("OptimizeForCooldown", true)
     private val checkKillAura by boolean("CheckKillAura", true)
     private val checkAutoClicker by boolean("CheckAutoClicker", true)
