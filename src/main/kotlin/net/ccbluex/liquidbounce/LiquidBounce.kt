@@ -256,7 +256,7 @@ object LiquidBounce : EventListener {
      * such as translations, cosmetics, player heads, configs and so on,
      * which do not rely on the main thread.
      */
-    private fun initializeResources() = runBlocking {
+    private fun initializeResources(): Unit = runBlocking {
         logger.info("Initializing API...")
         // Lookup API config
         ApiConfig.config
@@ -267,8 +267,7 @@ object LiquidBounce : EventListener {
                 LanguageManager.loadDefault()
             },
             scope.async {
-                val update = update ?: return@async
-                logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
+                update?.let { logger.info("[Update] Update available: $clientVersion -> ${it.lbVersion}") }
             },
             scope.async {
                 // Load cosmetics
