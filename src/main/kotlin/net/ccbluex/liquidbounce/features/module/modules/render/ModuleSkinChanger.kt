@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import net.ccbluex.liquidbounce.api.core.withScope
@@ -39,6 +40,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     init {
         withScope {
             username.asStateFlow().debounce { 2.seconds }.collectLatest {
+                while (mc.player == null) { delay(1.seconds) }
                 skinTextures = textureSupplier(it)
             }
         }
