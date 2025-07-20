@@ -205,9 +205,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     }
 
     @Suppress("unused")
-    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
         if (currentTarget != null && !ModulePacketMine.running) {
-            it.cancelEvent()
+            event.cancelEvent()
         }
     }
 
