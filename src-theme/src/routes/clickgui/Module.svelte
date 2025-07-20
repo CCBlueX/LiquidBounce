@@ -26,8 +26,7 @@
     let hasSettings = false;
 
     onMount(async () => {
-        configurable = await getModuleSettings(name);
-        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
+        await fetchModuleSettings();
 
         setTimeout(() => {
             expanded = localStorage.getItem(path) === "true"
@@ -50,9 +49,14 @@
         }, 1000);
     });
 
+    async function fetchModuleSettings() {
+        configurable = await getModuleSettings(name);
+        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
+    }
+
     async function updateModuleSettings() {
         await setModuleSettings(name, configurable);
-        configurable = await getModuleSettings(name);
+        await fetchModuleSettings();
     }
 
     async function toggleModule() {
