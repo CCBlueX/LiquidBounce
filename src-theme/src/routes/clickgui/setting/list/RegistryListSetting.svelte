@@ -11,7 +11,7 @@
     let items: NamedItem[] = [];
 
     onMount(async () => {
-        const registryItems: Record<string, RegistryItem> = await getRegistryItems(cSetting.registry);
+        const registryItems = await getRegistryItems(cSetting.registry);
         items = Object.entries(registryItems)
             .map(([identifier, item]) => ({
                 value: identifier,

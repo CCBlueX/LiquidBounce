@@ -219,6 +219,12 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         tree(ScaffoldBlinkFeature)
     }
 
+    /**
+     * Temporarily turns on [net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed]
+     * while Scaffold is enabled.
+     */
+    val autoSpeed by boolean("AutoSpeed", false)
+
     private var ledge by boolean("Ledge", true)
 
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
