@@ -98,7 +98,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
             }
             3 -> {
                 if (player.isOnGround) {
-                    speed = if (flagDelay > 20) 0.6 else 1.125
+                    speed = if (flagDelay > 0) 0.6 else 1.125
                     player.velocity.x *= speed
                     player.velocity.z *= speed
                 }
