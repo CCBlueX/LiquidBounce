@@ -23,9 +23,11 @@
     let configurable: ConfigurableSetting;
     const path = `clickgui.${name}`;
     let expanded = false;
+    let hasSettings = false;
 
     onMount(async () => {
         configurable = await getModuleSettings(name);
+        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
 
         setTimeout(() => {
             expanded = localStorage.getItem(path) === "true"
@@ -99,7 +101,7 @@
 <div
         class="module"
         class:expanded
-        class:has-settings={configurable?.value.length > 2}
+        class:has-settings={hasSettings}
         in:slide={{ duration: 500, easing: quintOut }}
         out:slide={{ duration: 500, easing: quintOut }}
 >
