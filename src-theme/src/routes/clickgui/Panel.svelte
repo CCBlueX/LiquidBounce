@@ -257,7 +257,7 @@
   }
 
   .modules {
-    transition: max-height 300ms ease-in-out;
+    transition: max-height 300ms ease;
     scroll-behavior: smooth;
     max-height: 0;
     overflow-y: auto;
