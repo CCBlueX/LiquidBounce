@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import java.util.*
 
 open class ListValue<T : MutableCollection<E>, E>(
@@ -40,6 +41,15 @@ open class ListValue<T : MutableCollection<E>, E>(
         require(value is List<*> || value is HashSet<*> || value is Set<*>) {
             "Inner value must be a List, HashSet or Set, but was ${value::class.java.name}"
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun setByString(string: String) {
+        val deserializer = this.innerValueType.deserializer
+
+        requireNotNull(deserializer) { "Cannot deserialize values of type ${this.innerValueType} yet." }
+
+        set(HumanInputDeserializer.parseArray(string, deserializer) as T)
     }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {

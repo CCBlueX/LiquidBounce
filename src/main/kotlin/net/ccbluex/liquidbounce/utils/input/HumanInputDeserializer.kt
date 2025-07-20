@@ -66,12 +66,6 @@ object HumanInputDeserializer {
         requireNotNull(block) { "Unknown block '$it'" }
     }
 
-    val listDeserializer: StringDeserializer<MutableList<Item>> = StringDeserializer {
-        // todo: automatically detect if blockDeserializer or itemDeserializer should be used
-
-        parseArray(it, itemDeserializer)
-    }
-
     val itemDeserializer: StringDeserializer<Item> = StringDeserializer {
         val block = Registries.ITEM.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
 
@@ -93,7 +87,7 @@ object HumanInputDeserializer {
 
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
 
-    private fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
+    fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
     }
 
