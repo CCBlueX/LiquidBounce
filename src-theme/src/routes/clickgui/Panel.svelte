@@ -22,6 +22,7 @@
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
+    let expandButtonElement: HTMLElement;
 
     let renderedModules: TModule[] = [];
 
@@ -99,7 +100,9 @@
         offsetX = e.clientX * (2 / $scaleFactor) - panelConfig.left;
         offsetY = e.clientY * (2 / $scaleFactor) - panelConfig.top;
         panelConfig.zIndex = ++$maxPanelZIndex;
-        $showGrid = $snappingEnabled;
+
+        console.log(e.target);
+        $showGrid = $snappingEnabled && !expandButtonElement.contains(e.target as HTMLElement);
     }
 
     function onMouseMove(e: MouseEvent) {
@@ -229,7 +232,7 @@
         <span class="category">{category}</span>
 
         <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button class="expand-toggle" on:click={toggleExpanded}>
+        <button class="expand-toggle" on:click={toggleExpanded} bind:this={expandButtonElement}>
             <div class="icon" class:expanded={panelConfig.expanded}></div>
         </button>
     </div>
