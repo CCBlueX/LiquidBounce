@@ -25,12 +25,14 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -169,6 +171,17 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
                     event.cancelEvent()
                 }
             }
+        }
+    }
+
+    @Suppress("unused")
+    private val sprintHandler = handler<SprintEvent>(priority = SAFETY_FEATURE) { event ->
+        if (!event.directionalInput.isMoving) {
+            return@handler
+        }
+
+        if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
+            event.sprint = true
         }
     }
 
