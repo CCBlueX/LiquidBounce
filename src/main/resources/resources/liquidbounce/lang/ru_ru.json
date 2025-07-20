@@ -614,6 +614,7 @@
   "liquidbounce.module.packetLogger.messages.canceled": "Отмененные",
   "liquidbounce.module.packetLogger.messages.receive": "Получаемые",
   "liquidbounce.module.packetLogger.messages.send": "Отправляющиеся",
+  "liquidbounce.module.potionSpoof.description": "Позволяет получить эффект от зелья, без самого зелья.",
   "liquidbounce.module.packetMine.description": "Позволяет добывать блоки, щелкая по ним один раз.",
   "liquidbounce.module.packetMine.messages.noVfp": "Смени метод или поставь ViaFabricPlus!",
   "liquidbounce.module.parkour.description": "Автоматически прыгает на самый край блока.",

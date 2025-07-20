@@ -416,6 +416,7 @@
   "liquidbounce.module.packetLogger.messages.send": "发送",
   "liquidbounce.module.packetLogger.messages.receive": "接收",
   "liquidbounce.module.packetLogger.messages.canceled": "已取消",
+  "liquidbounce.module.potionSpoof.description": "让你凭空获得药水效果。",
   "liquidbounce.module.ESP.description": "允许你透过墙看到你选中的目标实体。",
   "liquidbounce.module.logoffSpot.description": "允许您看到已退出服务器或超出可视范围的玩家。",
   "liquidbounce.module.logoffSpot.messages.disappeared": "%s 消失于 X: %s, Y: %s, Z: %s.",

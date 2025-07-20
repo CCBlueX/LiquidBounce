@@ -1,14 +1,19 @@
 <script lang="ts">
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {slide} from "svelte/transition";
     import type {BlocksSetting, ModuleSetting} from "../../../../integration/types";
     import {getRegistries} from "../../../../integration/rest";
     import Block from "./Block.svelte";
     import VirtualList from "./VirtualList.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
+    import ExpandArrow from "../common/ExpandArrow.svelte";
+    import {setItem} from "../../../../integration/persistent_storage";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as BlocksSetting;
+    const thisPath = `${path}.${cSetting.name}`;
 
     interface TBlock {
         name: string;
@@ -19,6 +24,9 @@
     let blocks: TBlock[] = [];
     let renderedBlocks: TBlock[] = blocks;
     let searchQuery = "";
+    let expanded = localStorage.getItem(thisPath) === "true";
+
+    $: setItem(thisPath, expanded.toString());
 
     $: {
         let filteredBlocks = blocks;
@@ -43,19 +51,28 @@
             cSetting.value = cSetting.value.filter(b => b !== e.detail.identifier);
         }
 
-        setting = { ...cSetting };
+        setting = {...cSetting};
         dispatch("change");
     }
 </script>
 
 <div class="setting">
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
-    <div class="results">
-        <VirtualList items={renderedBlocks} let:item>
-            <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
-        </VirtualList>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="head" class:expanded on:contextmenu|preventDefault={() => expanded = !expanded}>
+        <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+        <ExpandArrow bind:expanded/>
     </div>
+    {#if expanded}
+        <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
+            <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
+            <div class="results">
+                <VirtualList items={renderedBlocks} let:item>
+                    <Block identifier={item.identifier} name={item.name}
+                           enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
+                </VirtualList>
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -65,17 +82,29 @@
     padding: 7px 0;
   }
 
+  .head {
+    display: flex;
+    justify-content: space-between;
+    transition: ease margin-bottom .2s;
+
+    &.expanded {
+      margin-bottom: 10px;
+    }
+
+    .name {
+      color: $clickgui-text-color;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+
   .results {
     height: 200px;
     overflow-y: auto;
     overflow-x: hidden;
-  }
-
-  .name {
-    color: $clickgui-text-color;
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 5px;
+    min-height: 100px;
+    max-height: 500px;
+    position: relative;
   }
 
   .search-input {

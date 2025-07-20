@@ -88,7 +88,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         val maxDistanceSquared = maxDistance.sq()
         list.clear()
 
-        BedBlockTracker.trackedBlockMap.mapTo(list) { (pos, bedState) ->
+        BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
             DoubleObjectPair.of(pos.getSquaredDistance(playerPos), bedState)
         }
 
@@ -283,10 +283,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         bedStatesWithSquaredDistance.clear()
     }
 
-    private object BedBlockTracker : AbstractBlockLocationTracker<BedState>() {
-        private val searchStart by ThreadLocal.withInitial(BlockPos::Mutable)
-        private val searchEnd by ThreadLocal.withInitial(BlockPos::Mutable)
-
+    private object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>() {
         @Suppress("detekt:CognitiveComplexMethod")
         override fun getStateFor(pos: BlockPos, state: BlockState): BedState? {
             return if (state.isBed) {
@@ -301,29 +298,18 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                 // A non-bed block was updated, we need to update the bed blocks around it
                 val distance = maxLayers
 
-                // Get a sub map of the sorted map when there are many beds
-                val lookUpMap = if (trackedBlockMap.size > 32) {
-                    trackedBlockMap.subMap(
-                        searchStart.set(pos, -distance, -distance, -distance), true,
-                        // Don't check beds above
-                        searchEnd.set(pos, distance, 0, distance), true,
-                    )
-                } else {
-                    trackedBlockMap
-                }
-
-                lookUpMap.keys.forEach {
+                allPositions().forEach { bedPos ->
                     // Update if the block is close to a bed
-                    if (it.getManhattanDistance(pos) > distance) {
+                    if (bedPos.getManhattanDistance(pos) > distance) {
                         return@forEach
                     }
 
-                    val trackedState = it.getState() ?: return@forEach
-                    if (!trackedState.isBed) {
+                    val bedState = bedPos.getState()
+                    if (bedState == null || !bedState.isBed) {
                         // The tracked block is not a bed anymore, remove it
-                        lookUpMap.remove(it)
+                        untrack(bedPos)
                     } else {
-                        lookUpMap[it] = it.getBedPlates(trackedState)
+                        track(bedPos, bedPos.getBedPlates(bedState))
                     }
                 }
 
