@@ -215,7 +215,7 @@
 
     <div
             class="modules"
-            style="max-height: {panelConfig.expanded ? '545px' : '0'}"
+            class:expanded={panelConfig.expanded}
             on:scroll={handleModulesScroll}
             bind:this={modulesElement}
     >
@@ -259,10 +259,14 @@
   .modules {
     transition: max-height 300ms ease-in-out;
     scroll-behavior: smooth;
-    max-height: 545px;
+    max-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: rgba($clickgui-base-color, 0.8);
+
+    &.expanded {
+      max-height: 545px;
+    }
   }
 
   .modules::-webkit-scrollbar {
