@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyInCombat.modes
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.potionEffects
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
@@ -121,13 +121,11 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             // prevents accessing player when it's null below
             // in case it was forgotten to be checked
             return when {
-                !super.running -> false
+                !(super.running || ModuleScaffold.running && ModuleScaffold.autoSpeed) -> false
                 !passesRequirements() -> false
                 OnlyInCombat.enabled && CombatManager.isInCombat -> false
                 OnlyOnPotionEffect.enabled && potionEffects.activeChoice.checkPotionEffects() -> false
-                else -> {
-                    true
-                }
+                else -> true
             }
         }
 
