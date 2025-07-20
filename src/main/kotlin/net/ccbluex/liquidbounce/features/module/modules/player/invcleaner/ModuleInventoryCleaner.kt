@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
-import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.minecraft.screen.slot.SlotActionType
 
 /**
@@ -35,8 +35,10 @@ import net.minecraft.screen.slot.SlotActionType
  *
  * Automatically throws away useless items and sorts them.
  */
-object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER) {
-
+object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
+    aliases = arrayOf("InventoryManager")
+) {
+  
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
@@ -59,28 +61,25 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {
-            val slotTargets: HashMap<ItemSlot, ItemSortChoice> = hashMapOf(
+            val slotTargets = hashMapOf<ItemSlot, ItemSortChoice>(
                 Pair(OffHandSlot, offHandItem),
-                Pair(HotbarItemSlot(0), slotItem1),
-                Pair(HotbarItemSlot(1), slotItem2),
-                Pair(HotbarItemSlot(2), slotItem3),
-                Pair(HotbarItemSlot(3), slotItem4),
-                Pair(HotbarItemSlot(4), slotItem5),
-                Pair(HotbarItemSlot(5), slotItem6),
-                Pair(HotbarItemSlot(6), slotItem7),
-                Pair(HotbarItemSlot(7), slotItem8),
-                Pair(HotbarItemSlot(8), slotItem9),
+                Pair(Slots.Hotbar[0], slotItem1),
+                Pair(Slots.Hotbar[1], slotItem2),
+                Pair(Slots.Hotbar[2], slotItem3),
+                Pair(Slots.Hotbar[3], slotItem4),
+                Pair(Slots.Hotbar[4], slotItem5),
+                Pair(Slots.Hotbar[5], slotItem6),
+                Pair(Slots.Hotbar[6], slotItem7),
+                Pair(Slots.Hotbar[7], slotItem8),
+                Pair(Slots.Hotbar[8], slotItem9),
             )
 
             val forbiddenSlots = slotTargets
-                .filter { it.value == ItemSortChoice.IGNORE }
-                .map { (slot, _) -> slot }
-                .toHashSet()
+                .filterValues { it == ItemSortChoice.IGNORE }
+                .keys.toHashSet()
 
             // Disallow tampering with armor slots since auto armor already handles them
-            for (armorSlot in 0 until 4) {
-                forbiddenSlots.add(ArmorItemSlot(armorSlot))
-            }
+            forbiddenSlots += Slots.Armor
 
             if (ModuleOffhand.isOperating()) {
                 // Disallow tampering with off-hand slot when AutoTotem is active
@@ -165,8 +164,8 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
     ) = itemsInInv.filter { it !in cleanupPlan.usefulItems }
 
     private class AmountConstraintProvider(
-        val desiredItemsPerCategory: HashMap<ItemCategory, Int>,
-        val desiredValuePerFunction: HashMap<ItemFunction, Int>,
+        val desiredItemsPerCategory: Map<ItemCategory, Int>,
+        val desiredValuePerFunction: Map<ItemFunction, Int>,
     ) {
         fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
             val constraints = ArrayList<ItemConstraintInfo>()

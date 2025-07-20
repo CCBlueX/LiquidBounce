@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
@@ -73,7 +73,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             if (recievedLagback) {
                 player.velocity.y = 1.0
                 player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-                player.strafe(strength = 1.0, speed = 4.2)
+                player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 4.2)
                 recievedLagback = false
             }
 
@@ -83,7 +83,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
                 }
                 5 -> {
                     player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-                    player.strafe(strength = 1.0, speed = 0.3)
+                    player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 0.3)
                     started = false
                     ModuleLongJump.jumped = true
                     ModuleLongJump.boosted = true

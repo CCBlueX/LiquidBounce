@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
@@ -37,10 +38,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.gri
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrix7
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043FastFall
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
@@ -77,8 +80,8 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedHypixelBHop(configurable),
         SpeedHypixelLowHop(configurable),
 
-        SpeedSpartan524(configurable),
-        SpeedSpartan524GroundTimer(configurable),
+        SpeedSpartanV4043(configurable),
+        SpeedSpartanV4043FastFall(configurable),
 
         SpeedSentinelDamage(configurable),
 
@@ -90,18 +93,19 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedNCP(configurable),
 
         SpeedIntave14(configurable),
+        SpeedIntave14Fast(configurable),
 
         SpeedHylexLowHop(configurable),
         SpeedHylexGround(configurable),
 
-        SpeedBlocksMC(configurable)
+        SpeedBlocksMC(configurable),
+
+        SpeedMatrix7(configurable)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
 
-    private val notWhileUsingItem by boolean("NotWhileUsingItem", false)
-    private val notDuringScaffold by boolean("NotDuringScaffold", true)
-    private val notWhileSneaking by boolean("NotWhileSneaking", false)
+    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_SCAFFOLD)
 
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
@@ -130,16 +134,12 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
     private fun passesRequirements() = when {
         // DO NOT REMOVE - PLAYER COULD BE NULL!
         !inGame || isDestructed -> false
-        notDuringScaffold && ModuleScaffold.running || ModuleFly.running -> false
-        notWhileUsingItem && player.isUsingItem -> false
-        notWhileSneaking && player.isSneaking -> false
-        else -> true
+        else -> notCondition.all { it.testCondition() }
     }
 
     private object OnlyInCombat : ToggleableConfigurable(this, "OnlyInCombat", false) {
 
-        val modes = choices(this, "Mode", { it.choices[0] },
-            ModuleSpeed::initializeSpeeds)
+        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -162,8 +162,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             arrayOf(SpeedPotionEffectChoice, SlownessPotionEffectChoice, BothEffectsChoice)
         )
 
-        val modes = choices(this, "Mode", { it.choices[0] },
-            ModuleSpeed::initializeSpeeds)
+        val modes = choices(this, "Mode", activeIndex = 0, ModuleSpeed::initializeSpeeds)
 
         /**
          * Controls [modes] activation state.
@@ -184,6 +183,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         abstract fun checkPotionEffects(): Boolean
     }
 
+    @Suppress("ReturnCount", "MagicNumber")
     internal fun doOptimizationsPreventJump(): Boolean {
         if (CriticalsJump.running && CriticalsJump.shouldWaitForJump(0.42f)) {
             return true
@@ -196,4 +196,19 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         return false
     }
 
+    @Suppress("unused")
+    private enum class NotCondition(
+        override val choiceName: String,
+        val testCondition: () -> Boolean
+    ) : NamedChoice {
+        WHILE_USING_ITEM("WhileUsingItem", {
+            !player.isUsingItem
+        }),
+        DURING_SCAFFOLD("DuringScaffold", {
+            !(ModuleScaffold.running || ModuleFly.running)
+        }),
+        WHILE_SNEAKING("WhileSneaking", {
+            !player.isSneaking
+        })
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.shader.shaders
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.shader.FramebufferShader
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
@@ -30,8 +30,8 @@ import net.minecraft.client.util.Handle
 import org.lwjgl.opengl.GL20
 
 object OutlineShader : FramebufferShader(Shader(
-    resourceToString("/assets/liquidbounce/shaders/sobel.vert"),
-    resourceToString("/assets/liquidbounce/shaders/outline/entity_outline.frag"),
+    resourceToString("/resources/liquidbounce/shaders/sobel.vert"),
+    resourceToString("/resources/liquidbounce/shaders/outline/entity_outline.frag"),
     arrayOf(
         UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) }
     )

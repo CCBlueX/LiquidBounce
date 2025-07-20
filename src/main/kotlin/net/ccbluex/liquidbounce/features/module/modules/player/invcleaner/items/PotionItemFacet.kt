@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.mapInt
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain

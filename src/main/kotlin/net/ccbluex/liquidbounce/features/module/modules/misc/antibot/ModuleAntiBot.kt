@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,23 +42,24 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     private val literalNPC by boolean("LiteralNPC", false)
 
-    val tagHandler = handler<TagEntityEvent> {
-        if (it.entity is PlayerEntity && isBot(it.entity)) {
+    @Suppress("unused")
+    private val tagHandler = handler<TagEntityEvent> {
+        if (isBot(it.entity)) {
            it.ignore()
         }
     }
 
+    private fun reset() = this.modes.choices.forEach {
+        (it as IAntiBotMode).reset()
+    }
+
     override fun disable() {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+        reset()
     }
 
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+        reset()
     }
 
     fun isADuplicate(profile: GameProfile): Boolean {

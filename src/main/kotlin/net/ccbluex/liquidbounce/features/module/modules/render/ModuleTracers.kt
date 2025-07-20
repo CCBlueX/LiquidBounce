@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -86,31 +86,33 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
-            for (entity in filteredEntities) {
-                if (entity !is LivingEntity) {
-                    continue
-                }
+            longLines {
+                for (entity in filteredEntities) {
+                    if (entity !is LivingEntity) {
+                        continue
+                    }
 
-                val dist = player.distanceTo(entity) * 2.0F
+                    val dist = player.distanceTo(entity) * 2.0F
 
-                val color = if (useDistanceColor) {
-                    Color4b(
-                        Color.getHSBColor(
-                            (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
-                            1.0f,
-                            1.0f
+                    val color = if (useDistanceColor) {
+                        Color4b(
+                            Color.getHSBColor(
+                                (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
+                                1.0f,
+                                1.0f
+                            )
                         )
-                    )
-                } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
-                    Color4b.BLUE
-                } else {
-                    EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity) ?: continue
-                }
+                    } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
+                        Color4b.BLUE
+                    } else {
+                        EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
+                    }
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
+                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
 
-                withColor(color) {
-                    drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                    withColor(color) {
+                        drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                    }
                 }
             }
         }

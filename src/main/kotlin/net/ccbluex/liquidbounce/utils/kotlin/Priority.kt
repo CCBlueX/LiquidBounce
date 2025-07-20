@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.utils.kotlin
+
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+
 
 enum class Priority(val priority: Int) {
     NOT_IMPORTANT(-20),
@@ -42,6 +45,12 @@ object EventPriorityConvention {
      * The event should be called first.
      */
     const val FIRST_PRIORITY: Short = 1000
+
+    /**
+     * Priority for critical modifications that need to happen early in the event chain,
+     * after input preparation but before model state processing
+     */
+    const val CRITICAL_MODIFICATION: Short = 500
 
     /**
      * At the stage of modeling what the player is actually going to do after other events added their suggestions

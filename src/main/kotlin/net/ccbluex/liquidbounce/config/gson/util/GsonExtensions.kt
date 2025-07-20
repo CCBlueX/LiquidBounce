@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,64 +16,108 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.config.gson.util
 
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import java.io.InputStream
+import java.io.Reader
 
 /**
  * Decode JSON content
  */
 inline fun <reified T> decode(stringJson: String): T =
-    Gson().fromJson(stringJson, object : TypeToken<T>() {}.type)
+    stringJson.reader().use(::decode)
 
 /**
- * Decode JSON content from an Input Stream
+ * Decode JSON content from an [InputStream] and close it
  */
 inline fun <reified T> decode(inputStream: InputStream): T =
-    Gson().fromJson(inputStream.bufferedReader(), object : TypeToken<T>() {}.type)
+    inputStream.bufferedReader().use(::decode)
+
+/**
+ * Decode JSON content from a [Reader] and close it
+ */
+inline fun <reified T> decode(reader: Reader): T = reader.use {
+    publicGson.fromJson(reader, object : TypeToken<T>() {}.type)
+}
+
+// Never add elements to it!
+private val EMPTY_JSON_ARRAY = JsonArray(0)
+private val EMPTY_JSON_OBJECT = JsonObject()
+
+internal fun emptyJsonArray(): JsonArray = EMPTY_JSON_ARRAY
+internal fun emptyJsonObject(): JsonObject = EMPTY_JSON_OBJECT
 
 fun String.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
 fun Char.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
 fun Number.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
 fun Boolean.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
 
-fun jsonArrayOf(vararg values: JsonElement?): JsonArray = JsonArray(values.size).apply {
-    values.forEach(::add)
+fun jsonArrayOf(vararg elements: JsonElement) = JsonArray(elements.size).apply {
+    elements.forEach { add(it) }
 }
 
-@JvmName("jsonArrayOfAny")
-fun jsonArrayOf(vararg values: Any?): JsonArray = JsonArray(values.size).apply {
-    values.forEach {
-        when (it) {
-            null -> add(JsonNull.INSTANCE)
-            is JsonElement -> add(it)
-            is Boolean -> add(it)
-            is Number -> add(it)
-            is String -> add(it)
-            is Char -> add(it)
-            else -> throw IllegalArgumentException("Unsupported type: " + it.javaClass)
-        }
+class JsonArrayBuilder(initialCapacity: Int) {
+    private val backend = JsonArray(initialCapacity)
+
+    operator fun JsonElement.unaryPlus() {
+        backend.add(this)
     }
+
+    fun build() = backend
 }
 
-fun jsonObjectOf(vararg entries: Pair<String, JsonElement?>): JsonObject = JsonObject().apply {
-    entries.forEach { add(it.first, it.second) }
-}
+inline fun jsonArray(
+    initialCapacity: Int = 10,
+    builderAction: JsonArrayBuilder.() -> Unit
+) = JsonArrayBuilder(initialCapacity).apply(builderAction).build()
 
-@JvmName("jsonObjectOfAny")
-fun jsonObjectOf(vararg entries: Pair<String, Any?>): JsonObject = JsonObject().apply {
-    entries.forEach {
-        val (key, value) = it
+class JsonObjectBuilder {
+    private val backend = JsonObject()
+
+    infix fun String.to(value: JsonElement) {
+        backend.add(this, value)
+    }
+
+    infix fun String.to(value: Char) {
+        backend.addProperty(this, value)
+    }
+
+    infix fun String.to(value: Number) {
+        backend.addProperty(this, value)
+    }
+
+    infix fun String.to(value: String) {
+        backend.addProperty(this, value)
+    }
+
+    infix fun String.to(value: Boolean) {
+        backend.addProperty(this, value)
+    }
+
+    /**
+     * Fallback
+     */
+    infix fun String.to(value: Any?) {
         when (value) {
-            null -> add(key, JsonNull.INSTANCE)
-            is JsonElement -> add(key, value)
-            is Boolean -> add(key, JsonPrimitive(value))
-            is Number -> add(key, JsonPrimitive(value))
-            is String -> add(key, JsonPrimitive(value))
-            is Char -> add(key, JsonPrimitive(value))
-            else -> throw IllegalArgumentException("Unsupported type: " + it.javaClass)
+            null -> backend.add(this, JsonNull.INSTANCE)
+            is String -> backend.addProperty(this, value)
+            is Number -> backend.addProperty(this, value)
+            is Boolean -> backend.addProperty(this, value)
+            is JsonElement -> backend.add(this, value)
+            is JsonObjectBuilder -> backend.add(this, value.build())
+            else -> throw IllegalArgumentException("Unsupported type: ${value::class.java}")
         }
     }
+
+    fun build() = backend
 }
+
+inline fun json(
+    builderAction: JsonObjectBuilder.() -> Unit
+) = JsonObjectBuilder().apply(builderAction).build()

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.downwards
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.entity.effect.StatusEffects
 
 /**
@@ -46,18 +46,20 @@ class SpeedVulcan286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
         val speedLevel = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
         waitTicks(1)
-        player.strafe(speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819))
+        player.velocity =
+            player.velocity.withStrafe(speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819))
         waitTicks(1)
         if (player.isSprinting) {
-            player.strafe(speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355))
+            player.velocity =
+                player.velocity.withStrafe(speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355))
         }
 
         waitTicks(2)
-        player.downwards(0.376f)
+        player.velocity = player.velocity.copy(y = -0.376)
 
         waitTicks(2)
         if (player.speed > 0.298) {
-            player.strafe(speed = 0.298)
+            player.velocity = player.velocity.withStrafe(speed = 0.298)
         }
     }
 

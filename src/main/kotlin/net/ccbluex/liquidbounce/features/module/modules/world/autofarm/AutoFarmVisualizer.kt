@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -72,7 +72,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {
                     withPosition(Vec3(target)) {
-                        withColor((if (colorRainbow) rainbow() else color).alpha(50)) {
+                        withColor((if (colorRainbow) rainbow() else color).with(a = 50)) {
                             drawSolidBox(FULL_BOX)
                         }
                     }
@@ -85,14 +85,12 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
-            val fillColor = baseColor.alpha(50)
-            val outlineColor = baseColor.alpha(100)
-
-            val markedBlocks = AutoFarmBlockTracker.trackedBlockMap
+            val fillColor = baseColor.with(a = 50)
+            val outlineColor = baseColor.with(a = 100)
 
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
-                for ((pos, type) in markedBlocks) {
+                for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                     if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
 
                     withPositionRelativeToCamera(pos.toVec3d()) {

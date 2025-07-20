@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.block.BlockState
@@ -28,7 +28,7 @@ class GenericRainbowColorMode(
     override val parent: ChoiceConfigurable<*>,
     private val alpha: Int = 50
 ) : GenericColorMode<Any?>("Rainbow") {
-    override fun getColor(param: Any?) = rainbow().alpha(alpha)
+    override fun getColor(param: Any?) = rainbow().with(a = alpha)
 }
 
 class MapColorMode(
@@ -39,7 +39,7 @@ class MapColorMode(
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
         val (pos, state) = param
 
-        return Color4b(state.getMapColor(world, pos).color).alpha(alpha)
+        return Color4b(state.getMapColor(world, pos).color).with(a = alpha)
     }
 
 }

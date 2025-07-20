@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.ints.IntObjectPair
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.isSelfBedChoices
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
@@ -56,7 +55,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         var maxCount = 0
         var best: HotbarItemSlot? = null
 
-        HOTBAR_SLOTS.forEach {
+        Slots.OffhandWithHotbar.forEach {
             if (!it.itemStack.isFullBlock()) {
                 return@forEach
             }
@@ -101,7 +100,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
     private val requiresSneak by boolean("RequiresSneak", false)
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<RotationUpdateEvent> {
         if (!placer.ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -116,7 +115,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
 
         placer.slotFinder(null) ?: return@handler
 
-        val eyesPos = player.eyes
+        val eyesPos = player.eyePos
         val rangeSq = placer.range * placer.range
 
         // The bed that need to be defended may be already covered, so we search further
@@ -150,9 +149,11 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             )
         }
 
-        ModuleDebug.debugGeometry(this, "PlacementPosition") {
+        debugGeometry("PlacementPosition") {
             ModuleDebug.DebugCollection(
-                updatePositions.map { (_, pos) -> ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.alpha(100)) }
+                updatePositions.map { (_, pos) ->
+                    ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.with(a = 100))
+                }
             )
         }
 

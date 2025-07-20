@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,8 @@ class ConfigurableSerializer(
             /**
              * Do not include modules that are heavily user-personalised
              */
-            if (value.category == Category.RENDER || value.category == Category.CLIENT) {
+            if (value.category == Category.RENDER || value.category == Category.CLIENT ||
+                value.category == Category.FUN) {
                 return false
             }
         }

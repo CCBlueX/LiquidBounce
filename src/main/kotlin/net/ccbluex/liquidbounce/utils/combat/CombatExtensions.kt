@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.component1
@@ -45,6 +47,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import java.util.*
+import java.util.function.Predicate
 
 /**
  * Global target configurable
@@ -54,9 +58,6 @@ import net.minecraft.world.GameMode
  *
  * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
-val combatTargetsConfigurable = TargetConfigurable("CombatTargets", false)
-val visualTargetsConfigurable = TargetConfigurable("VisualTargets", true)
-
 data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
         val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
@@ -72,98 +73,76 @@ enum class EntityTargetClassification {
 /**
  * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
-class TargetConfigurable(
-    name: String,
-    isVisual: Boolean
-) : Configurable(name) {
-    // Players should be considered as a target
-    var players by boolean("Players", true)
+enum class Targets(override val choiceName: String) : NamedChoice {
+    PLAYERS("Players"),
+    HOSTILE("Hostile"),
+    ANGERABLE("Angerable"),
+    WATER_CREATURE("WaterCreature"),
+    PASSIVE("Passive"),
+    INVISIBLE("Invisible"),
+    DEAD("Dead"),
+    SLEEPING("Sleeping"),
+    FRIENDS("Friends");
+}
 
-    // Hostile mobs (like skeletons and zombies) should be considered as a target
-    var hostile by boolean("Hostile", true)
+fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
+    val info = EntityTaggingManager.getTag(entity).targetingInfo
 
-    // Angerable mobs (like wolfs) should be considered as a target
-    val angerable by boolean("Angerable", true)
+    return when {
+        info.isFriend && Targets.FRIENDS !in this -> false
+        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity)
+        else -> false
+    }
+}
 
-    // Water Creature mobs should be considered as a target
-    val waterCreature by boolean("WaterCreature", true)
+fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
+    val info = EntityTaggingManager.getTag(entity).targetingInfo
 
-    // Passive mobs (like cows, pigs and so on) should be considered as a target
-    var passive by boolean("Passive", false)
+    return when {
+        info.isFriend && Targets.FRIENDS !in this -> false
+        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity)
+        else -> false
+    }
+}
 
-    // Invisible entities should be also considered as a target
-    var invisible by boolean("Invisible", true)
-
-    // Dead entities should NOT be considered as a target - but this is useful to bypass anti-cheats
-    var dead by boolean("Dead", false)
-
-    // Sleeping entities should NOT be considered as a target
-    var sleeping by boolean("Sleeping", false)
-
-    // Client friends should be also considered as target
-    var friends by boolean("Friends", isVisual)
-
-    init {
-        ConfigSystem.root(this)
+/**
+ * Check if an entity is considered a target
+ */
+@Suppress("CyclomaticComplexMethod", "ReturnCount")
+private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
+    // Check if the enemy is living and not dead (or ignore being dead)
+    if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
+        return false
     }
 
-    fun shouldAttack(entity: Entity): Boolean {
-        val info = EntityTaggingManager.getTag(entity).targetingInfo
-
-        return when {
-            info.isFriend && !friends -> false
-            info.classification == EntityTargetClassification.TARGET -> isInteresting(entity)
-            else -> false
-        }
+    // Check if enemy is invisible (or ignore being invisible)
+    if (Targets.INVISIBLE !in this && suspect.isInvisible) {
+        return false
     }
 
-    fun shouldShow(entity: Entity): Boolean {
-        val info = EntityTaggingManager.getTag(entity).targetingInfo
-
-        return when {
-            info.isFriend && !friends -> false
-            info.classification != EntityTargetClassification.IGNORED -> isInteresting(entity)
-            else -> false
+    // Check if enemy is a player and should be considered as a target
+    return when (suspect) {
+        is PlayerEntity -> when {
+            suspect == mc.player -> false
+            // Check if enemy is sleeping (or ignore being sleeping)
+            suspect.isSleeping && Targets.SLEEPING !in this -> false
+            else -> Targets.PLAYERS in this
         }
+        is WaterCreatureEntity -> Targets.WATER_CREATURE in this
+        is PassiveEntity -> Targets.PASSIVE in this
+        is HostileEntity, is Monster -> Targets.HOSTILE in this
+        is Angerable -> Targets.ANGERABLE in this
+        else -> false
     }
-
-    /**
-     * Check if an entity is considered a target
-     */
-    private fun isInteresting(suspect: Entity): Boolean {
-        // Check if the enemy is living and not dead (or ignore being dead)
-        if (suspect !is LivingEntity || !(dead || suspect.isAlive)) {
-            return false
-        }
-
-        // Check if enemy is invisible (or ignore being invisible)
-        if (!invisible && suspect.isInvisible) {
-            return false
-        }
-
-        // Check if enemy is a player and should be considered as a target
-        return when (suspect) {
-            is PlayerEntity -> when {
-                suspect == mc.player -> false
-                // Check if enemy is sleeping (or ignore being sleeping)
-                suspect.isSleeping && !sleeping -> false
-                else -> players
-            }
-            is WaterCreatureEntity -> waterCreature
-            is PassiveEntity -> passive
-            is HostileEntity, is Monster -> hostile
-            is Angerable -> angerable
-            else -> false
-        }
-    }
-
 }
 
 // Extensions
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: TargetConfigurable = visualTargetsConfigurable) =
+fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = ModuleTargets.visual) =
     enemyConf.shouldShow(this)
-fun Entity.shouldBeAttacked(enemyConf: TargetConfigurable = combatTargetsConfigurable) =
+
+@JvmOverloads
+fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) =
     enemyConf.shouldAttack(this)
 
 /**
@@ -171,12 +150,12 @@ fun Entity.shouldBeAttacked(enemyConf: TargetConfigurable = combatTargetsConfigu
  */
 fun ClientWorld.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: TargetConfigurable = combatTargetsConfigurable
+    enemyConf: EnumSet<Targets> = ModuleTargets.combat
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
 
 fun ClientWorld.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: TargetConfigurable = combatTargetsConfigurable
+    enemyConf: EnumSet<Targets> = ModuleTargets.combat
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
@@ -189,7 +168,7 @@ fun ClientWorld.findEnemies(
 fun ClientWorld.getEntitiesInCuboid(
     midPos: Vec3d,
     range: Double,
-    predicate: (Entity) -> Boolean = { true }
+    predicate: Predicate<Entity> = Predicate { true }
 ): MutableList<Entity> {
     return getOtherEntities(null, Box(midPos.subtract(range, range, range),
         midPos.add(range, range, range)), predicate)
@@ -206,12 +185,21 @@ inline fun ClientWorld.getEntitiesBoxInRange(
 }
 
 fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
-    EventManager.callEvent(AttackEntityEvent(this))
+    attack(if (swing) SwingMode.DO_NOT_HIDE else SwingMode.HIDE_BOTH, keepSprint)
+}
 
-    with (player) {
+@Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
+fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
+    if (EventManager.callEvent(AttackEntityEvent(this) {
+        attack(swing, keepSprint)
+    }).isCancelled) {
+        return
+    }
+
+    with(player) {
         // Swing before attacking (on 1.8)
-        if (swing && isOlderThanOrEqual1_8) {
-            swingHand(Hand.MAIN_HAND)
+        if (isOlderThanOrEqual1_8) {
+            swing.swing(Hand.MAIN_HAND)
         }
 
         network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
@@ -254,8 +242,8 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
         resetLastAttackedTicks()
 
         // Swing after attacking (on 1.9+)
-        if (swing && !isOlderThanOrEqual1_8) {
-            swingHand(Hand.MAIN_HAND)
+        if (!isOlderThanOrEqual1_8) {
+            swing.swing(Hand.MAIN_HAND)
         }
     }
 }

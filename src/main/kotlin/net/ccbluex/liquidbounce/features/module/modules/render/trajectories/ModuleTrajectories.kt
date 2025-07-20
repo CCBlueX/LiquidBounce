@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,38 +18,38 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.math.Vec3d
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * Trajectories module
  *
  * Allows you to see where projectile items will land.
  */
-
+@Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
-    private val alwaysShowBow by boolean("AlwaysShowBow", false)
-    private val otherPlayers by boolean("OtherPlayers", true)
-    private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)
-    private val activeTrajectoryOther by boolean("ActiveTrajectoryOther", false)
+    private val show by multiEnumChoice("Show",
+        Show.OTHER_PLAYERS,
+        Show.ACTIVE_TRAJECTORY_ARROW
+    )
+
+    private val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
+    private val otherPlayers get() = Show.OTHER_PLAYERS in show
+    private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
+    private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
@@ -97,7 +97,17 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
         } ?: return
 
-        val rotation = RotationManager.workingAimPlan?.rotation ?: otherPlayer.rotation
+        val rotation = if (otherPlayer == player) {
+            if (ModuleFreeCam.running) {
+                RotationManager.serverRotation
+            } else {
+                RotationManager.activeRotationTarget?.rotation
+                    ?: RotationManager.currentRotation ?: otherPlayer.rotation
+            }
+        } else {
+            otherPlayer.rotation
+        }
+
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             entity = otherPlayer,
             trajectoryInfo = trajectoryInfo,
@@ -116,4 +126,12 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         )
     }
 
+    private enum class Show(
+        override val choiceName: String
+    ) : NamedChoice {
+        ALWAYS_SHOW_BOW("AlwaysShowBow"),
+        OTHER_PLAYERS("OtherPlayers"),
+        ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),
+        ACTIVE_TRAJECTORY_OTHER("ActiveTrajectoryOther"),
+    }
 }

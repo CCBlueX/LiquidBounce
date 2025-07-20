@@ -3,6 +3,7 @@
 
     export let textComponent: TTextComponent | string;
     export let allowPreformatting = false;
+    export let preFormattingMonospace = true;
     export let inheritedColor = "#ffffff";
     export let inheritedStrikethrough = false;
     export let inheritedItalic = false;
@@ -107,7 +108,7 @@
 
 <span class="text-component">
     {#if typeof textComponent === "string"}
-        <svelte:self {fontSize} {allowPreformatting} textComponent={convertLegacyCodes(textComponent)}/>
+        <svelte:self {fontSize} {allowPreformatting} {preFormattingMonospace} textComponent={convertLegacyCodes(textComponent)}/>
     {:else if textComponent}
         {#if textComponent.text}
             {#if !textComponent.text.includes("§")}
@@ -116,9 +117,10 @@
                       class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
                       class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
                       class:allow-preformatting={allowPreformatting}
+                      class:monospace={preFormattingMonospace && allowPreformatting}
                       style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
             {:else}
-                <svelte:self {allowPreformatting} {fontSize}
+                <svelte:self {allowPreformatting} {preFormattingMonospace} {fontSize}
                              inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
                              inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
                              inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
@@ -129,7 +131,7 @@
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self {allowPreformatting} {fontSize}
+                <svelte:self {allowPreformatting} {preFormattingMonospace} {fontSize}
                              inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
                              inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
                              inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
@@ -150,8 +152,11 @@
         display: inline;
 
         &.allow-preformatting {
-            font-family: monospace;
             white-space: pre;
+        }
+
+        &.monospace {
+            font-family: monospace;
         }
 
         &.bold {

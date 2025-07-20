@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,51 +18,54 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.max
 
-data class LedgeState(
-    val requiresJump: Boolean,
-    val requiresSneak: Int
+data class LedgeAction(
+    val jump: Boolean = false,
+    val sneakTime: Int = 0,
+    val stopInput: Boolean = false,
+    val stepBack: Boolean = false
 ) {
     companion object {
-        val NO_LEDGE = LedgeState(requiresJump = false, requiresSneak = 0)
+        val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false)
     }
+
 }
 
 fun ledge(
-    simulatedPlayer: SimulatedPlayer,
     target: BlockPlacementTarget?,
     rotation: Rotation,
     extension: ScaffoldLedgeExtension? = null
-): LedgeState {
-    val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
-    val simClone = simulatedPlayer.clone()
-    simClone.tick()
+): LedgeAction {
+    if (player.isCloseToEdge(DirectionalInput(player.input))) {
+        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.calculateTicks(rotation)
 
-    // [ledgeSoon] could be replaced with isCloseToEdge, but I feel like this is more consistent
-    val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
+        ModuleDebug.debugParameter(ModuleScaffold, "TicksUntilDestination", ticks)
 
-    if ((ticks >= 1 || ModuleScaffold.blockCount <= 0) && ledgeSoon) {
-        return LedgeState(requiresJump = false, requiresSneak = max(1, ticks))
+        val isLowOnBlocks = ModuleScaffold.blockCount <= 0
+        val isNotReady = ticks >= 1
+
+        if (isLowOnBlocks || isNotReady) {
+            return LedgeAction(jump = false, sneakTime = max(1, ticks))
+        }
     }
 
     return extension?.ledge(
-        ledge = simulatedPlayer.clipLedged,
-        ledgeSoon = ledgeSoon,
         target = target,
         rotation = rotation
-    ) ?: LedgeState.NO_LEDGE
+    ) ?: LedgeAction.NO_LEDGE
 }
 
 interface ScaffoldLedgeExtension {
     fun ledge(
-        ledge: Boolean,
-        ledgeSoon: Boolean,
         target: BlockPlacementTarget?,
         rotation: Rotation
-    ): LedgeState
+    ): LedgeAction
 }

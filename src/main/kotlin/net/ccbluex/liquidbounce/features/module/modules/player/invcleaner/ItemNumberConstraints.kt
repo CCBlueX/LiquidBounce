@@ -21,7 +21,7 @@ abstract class ItemNumberContraintGroup(
     val acceptableRange: IntRange,
     /**
      * The priority of this constraint group. Lower values are processed first.
-     * Affects the order in which items are processed.
+     * It Affects the order in which items are processed.
      */
     val priority: Int,
 ) {

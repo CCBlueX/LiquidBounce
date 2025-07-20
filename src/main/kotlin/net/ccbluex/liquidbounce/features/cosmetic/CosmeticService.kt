@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.cosmetic
 
-import net.ccbluex.liquidbounce.api.ClientApi.API_V3_ENDPOINT
-import net.ccbluex.liquidbounce.api.oauth.ClientAccount
-import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
-import net.ccbluex.liquidbounce.api.oauth.OAuthClient
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import kotlinx.coroutines.Job
+import net.ccbluex.liquidbounce.api.core.withScope
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
+import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
+import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
+import net.ccbluex.liquidbounce.api.services.cosmetics.CosmeticApi
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -32,12 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
 import net.minecraft.client.session.Session
-import net.minecraft.util.Util
 import java.util.*
-import java.util.concurrent.Future
 
 /**
  * A more reliable, safer and stress reduced cosmetics service
@@ -51,9 +49,6 @@ import java.util.concurrent.Future
  */
 object CosmeticService : EventListener, Configurable("Cosmetics") {
 
-    private const val COSMETICS_API = "$API_V3_ENDPOINT/cosmetics"
-    private const val CARRIERS_URL = "$COSMETICS_API/carriers"
-
     private const val REFRESH_DELAY = 60000L // Every minute should update
 
     /**
@@ -65,7 +60,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
     internal var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
-    private var task: Future<*>? = null
+    private var task: Job? = null
 
     /**
      * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
@@ -77,9 +72,9 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         if (task == null) {
             // Check if the required time in milliseconds has passed of the REFRESH_DELAY
             if (lastUpdate.hasElapsed(REFRESH_DELAY) || force) {
-                task = Util.getDownloadWorkerExecutor().service.submit {
+                task = withScope {
                     runCatching {
-                        carriers = decode<Set<String>>(HttpClient.get(CARRIERS_URL))
+                        carriers = CosmeticApi.getCarriers()
                         task = null
 
                         // Reset timer and start once again
@@ -112,11 +107,11 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
             clientAccount.cosmetics = emptySet()
 
             // Update cosmetics
-            OAuthClient.runWithScope {
+            withScope {
                 clientAccount.updateCosmetics()
 
                 clientAccount.cosmetics?.let { cosmetics ->
-                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runWithScope)
+                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@withScope)
                 }
             }
             return
@@ -136,9 +131,9 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
             // Pre-allocate a set to prevent multiple requests
             carriersCosmetics[uuid] = emptySet()
 
-            Util.getDownloadWorkerExecutor().execute {
+            withScope {
                 runCatching {
-                    val cosmetics = decode<Set<Cosmetic>>(HttpClient.get("$COSMETICS_API/carrier/$uuid"))
+                    val cosmetics = CosmeticApi.getCarrierCosmetics(uuid)
                     carriersCosmetics[uuid] = cosmetics
 
                     done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runCatching)
@@ -176,7 +171,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
             return
         }
 
-        OAuthClient.runWithScope {
+        withScope {
             runCatching {
                 clientAccount.transferTemporaryOwnership(uuid)
             }.onSuccess {
@@ -193,7 +188,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
     }
 
     @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent>(ignoreNotRunning = true) { event ->
+    private val sessionHandler = handler<SessionEvent> { event ->
         val session = event.session
 
         // Check if the account is valid

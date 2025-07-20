@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@ import net.minecraft.entity.EquipmentSlot.Type.*
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 /**
  * Module InventoryTracker
@@ -46,15 +47,15 @@ import java.util.*
  *
  * Command: [CommandInvsee]
  */
-object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) {
+object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD) {
 
     /** Saves the non-persistent player object associated with the uuid.
      * This makes it possible to look up inventories of players which aren't in
      * the render distance. */
     private val savePlayers by boolean("SavePlayers", false).onChanged { playerMap.clear() }
 
-    private val inventoryMap = HashMap<UUID, TrackedInventory>()
-    val playerMap = HashMap<UUID, PlayerEntity>()
+    private val inventoryMap = hashMapOf<UUID, TrackedInventory>()
+    val playerMap = hashMapOf<UUID, PlayerEntity>()
 
     @Suppress("unused")
     val playerEquipmentChangeHandler = handler<PlayerEquipmentChangeEvent> { event ->
@@ -62,12 +63,12 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) 
         if (player !is OtherClientPlayerEntity || ModuleAntiBot.isBot(player)) return@handler
 
         val updatedSlot = event.equipmentSlot
-        if (updatedSlot.type == ANIMAL_ARMOR) return@handler
+        if (updatedSlot.type === ANIMAL_ARMOR) return@handler
 
         val newItemStack = event.itemStack
 
-        val mainHandStack = if (updatedSlot == MAINHAND) newItemStack else player.mainHandStack
-        val offHandStack = if (updatedSlot == OFFHAND) newItemStack else player.offHandStack
+        val mainHandStack = if (updatedSlot === MAINHAND) newItemStack else player.mainHandStack
+        val offHandStack = if (updatedSlot === OFFHAND) newItemStack else player.offHandStack
 
         val trackedInventory = inventoryMap.getOrPut(player.uuid) { TrackedInventory() }
         if (savePlayers) {
@@ -84,7 +85,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) 
         }
 
         val inventory = player.inventory
-        val items = trackedInventory.items.toTypedArray()
+        val items = trackedInventory.items
 
         val mainHandEmpty = mainHandStack.isEmpty
         val range = if (mainHandEmpty) 0..34 else 1..35
@@ -97,11 +98,13 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) 
 
     override fun disable() = reset()
 
-    val worldChangeHandler = handler<WorldChangeEvent> { reset() }
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> { reset() }
 
     private fun reset() {
+        val players = world.players.associateBy { it.uuid }
         inventoryMap.keys.forEach { uuid ->
-            val player = world.players.find { it.uuid == uuid } ?: return@forEach
+            val player = players[uuid] ?: return@forEach
             for (i in 1 until player.inventory.main.size) {
                 player.inventory.main[i] = ItemStack.EMPTY
             }
@@ -111,13 +114,13 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) 
     }
 
     @Suppress("unused")
-    val itemLoreQueryHandler = handler<ItemLoreQueryEvent> { event ->
+    private val itemLoreQueryHandler = handler<ItemLoreQueryEvent> { event ->
         if (mc.currentScreen !is ViewedInventoryScreen) return@handler
         val player = CommandInvsee.viewedPlayer
         val timeStamp = inventoryMap[player]?.timeMap?.getLong(event.itemStack)?.takeIf { it != 0L } ?: return@handler
         val lastSeen = System.currentTimeMillis() - timeStamp
         event.lore.add(
-            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().styled { it.withFormatting(Formatting.GRAY) }
+            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().formatted(Formatting.GRAY)
         )
     }
 
@@ -125,11 +128,11 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.MISC) 
         val totalSeconds = ms / 1000
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
-        return String.format(Locale.ROOT, "%02d:%02d", minutes, seconds)
+        return "%02d:%02d".format(Locale.US, minutes, seconds)
     }
 }
 
-class TrackedInventory {
+private class TrackedInventory {
 
     val items = ArrayDeque<ItemStack>()
     val timeMap = Object2LongOpenHashMap<ItemStack>()
@@ -143,7 +146,7 @@ class TrackedInventory {
         if (newItemStack.isEmpty) return
 
         items.removeIf { newItemStack.item == it.item && newItemStack.enchantments == it.enchantments }
-        if (updatedSlot.type == HAND) {
+        if (updatedSlot.type === HAND) {
             items.addFirst(newItemStack)
             timeMap.put(newItemStack, System.currentTimeMillis())
 

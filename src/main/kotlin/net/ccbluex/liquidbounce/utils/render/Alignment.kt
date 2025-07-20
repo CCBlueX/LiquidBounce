@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,10 @@ class Alignment(
     verticalAlignment: ScreenAxisY,
     verticalOffset: Int,
 ) : Configurable("Alignment") {
+
+    companion object {
+        fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
+    }
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
     val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)

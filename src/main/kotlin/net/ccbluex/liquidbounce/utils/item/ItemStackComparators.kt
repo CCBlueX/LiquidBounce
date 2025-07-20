@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -84,8 +83,16 @@ object PreferWalkableBlocks : Comparator<ItemStack> {
 /**
  * We want to place average hard blocks such as stone or wood. We don't want to use obsidian or leaves first
  * (high/low hardness).
+ *
+ * @param neutralRange if enabled, there is a range of hardness values which are accepted as *good*. If disabled we
+ * prefer the closest to the *ideal* hardness value.
  */
-object PreferAverageHardBlocks : Comparator<ItemStack> {
+class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<ItemStack> {
+    companion object {
+        private val GOOD_HARDNESS_RANGE = 0.8..2.0
+        private const val IDEAL_HARDNESS = 1.7
+    }
+
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         val o1HardnessDist = hardnessDist(o1)
         val o2HardnessDist = hardnessDist(o2)
@@ -97,7 +104,12 @@ object PreferAverageHardBlocks : Comparator<ItemStack> {
         val defaultState = (stack.item as BlockItem).block.defaultState
         val hardness = defaultState.getHardness(mc.world!!, BlockPos.ORIGIN)
 
-        return (1.5 - hardness).absoluteValue
+        // If neutral range is enabled, items with a specific range of hardness values should be considered ideal.
+        if (this.neutralRange && hardness in GOOD_HARDNESS_RANGE) {
+            return 0.0
+        }
+
+        return (IDEAL_HARDNESS - hardness).absoluteValue
     }
 
 }

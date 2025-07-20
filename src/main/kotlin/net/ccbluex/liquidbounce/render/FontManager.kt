@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.render
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
-import org.apache.commons.exec.OS
+import net.minecraft.util.Util
+import net.minecraft.util.Util.OperatingSystem.*
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -32,10 +33,10 @@ object FontManager {
      * As fallback, we can use a common font that is available on all systems.
      */
     private val COMMON_FONT = runCatching {
-        when {
-            OS.isFamilyWindows() -> systemFont("Segoe UI")
-            OS.isFamilyMac() -> systemFont("Helvetica")
-            OS.isFamilyUnix() -> systemFont("DejaVu Sans")
+        when (Util.getOperatingSystem()) {
+            WINDOWS -> systemFont("Segoe UI")
+            OSX -> systemFont("Helvetica")
+            LINUX -> systemFont("DejaVu Sans")
             else -> systemFont("Arial")
         }
     }.onFailure { throwable ->
@@ -46,10 +47,10 @@ object FontManager {
      * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
      */
     private val CJK_FONT = runCatching {
-        when {
-            OS.isFamilyWindows() -> systemFont("Microsoft YaHei")
-            OS.isFamilyMac() -> systemFont("PingFang SC")
-            OS.isFamilyUnix() -> systemFont("Noto Sans CJK")
+        when (Util.getOperatingSystem()) {
+            WINDOWS -> systemFont("Microsoft YaHei")
+            OSX -> systemFont("PingFang SC")
+            LINUX -> systemFont("Noto Sans CJK")
             else -> null // No default CJK font available
         }
     }.onFailure { throwable ->

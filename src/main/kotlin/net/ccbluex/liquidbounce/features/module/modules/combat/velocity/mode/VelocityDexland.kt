@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
 
-internal object VelocityDexland : Choice("Dexland") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = modes
+internal object VelocityDexland : VelocityMode("Dexland") {
 
     private val hReduce by float("HReduce", 0.3f, 0f..1f)
     private val times by int("AttacksToWork", 4, 1..10)
@@ -36,7 +30,11 @@ internal object VelocityDexland : Choice("Dexland") {
     var count = 0
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEntityEvent> {
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        if (event.isCancelled) {
+            return@handler
+        }
+
         if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
             player.velocity.x *= hReduce
             player.velocity.z *= hReduce

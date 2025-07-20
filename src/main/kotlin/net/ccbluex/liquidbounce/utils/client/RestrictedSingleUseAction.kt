@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import java.util.function.BooleanSupplier
+
 /**
  * Represents an operation that does not return a result and can only be executed once when [canExecute] returns true.
  * This is protected, so all future calls won't execute the actual [action].
  */
-class RestrictedSingleUseAction(private val canExecute: () -> Boolean, private val action: () -> Unit) {
+class RestrictedSingleUseAction(private val canExecute: BooleanSupplier, private val action: Runnable) {
 
     private var isExecuted = false
 
     operator fun invoke() {
-        if (!isExecuted && canExecute()) {
-            action()
+        if (!isExecuted && canExecute.asBoolean) {
+            action.run()
             isExecuted = true
         }
     }

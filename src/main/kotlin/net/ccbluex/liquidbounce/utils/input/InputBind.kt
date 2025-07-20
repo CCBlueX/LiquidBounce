@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ data class InputBind(
         get() = when {
             isUnbound -> "None"
             else -> this.boundKey.translationKey
-                .split(".")
+                .split('.')
                 .drop(2) // Drops the "key.keyboard" or "key.mouse" part
                 .joinToString(separator = "_") // Joins the remaining parts with underscores
                 .uppercase() // Converts the key name to uppercase

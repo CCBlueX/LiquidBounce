@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.gson.adapter
 
 import com.google.gson.*
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import java.lang.reflect.Type
@@ -54,6 +55,20 @@ object Vec3dAdapter : JsonSerializer<Vec3d>, JsonDeserializer<Vec3d> {
         json.asJsonObject["x"].asDouble,
         json.asJsonObject["y"].asDouble,
         json.asJsonObject["z"].asDouble
+    )
+
+}
+
+object Vec2fAdapter : JsonSerializer<Vec2f>, JsonDeserializer<Vec2f> {
+
+    override fun serialize(src: Vec2f, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
+        addProperty("x", src.x)
+        addProperty("y", src.y)
+    }
+
+    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec2f(
+        json.asJsonObject["x"].asFloat,
+        json.asJsonObject["y"].asFloat
     )
 
 }

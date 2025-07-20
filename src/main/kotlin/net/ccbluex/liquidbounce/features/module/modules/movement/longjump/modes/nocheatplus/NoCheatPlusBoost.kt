@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
 
 /**
  * @anticheat NoCheatPlus
@@ -52,7 +52,7 @@ internal object NoCheatPlusBoost : Choice("NoCheatPlusBoost") {
 
     val moveHandler = handler<PlayerMoveEvent> {
         if (!player.moving && ModuleLongJump.jumped) {
-            player.zeroXZ()
+            player.stopXZVelocity()
         }
     }
 }

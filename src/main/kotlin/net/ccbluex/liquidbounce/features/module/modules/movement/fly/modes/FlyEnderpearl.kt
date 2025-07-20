@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.block.Block
@@ -63,7 +63,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val repeatable = tickHandler {
-        val slot = findHotbarSlot(Items.ENDER_PEARL)
+        val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlot
 
         if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
             return@tickHandler
@@ -76,8 +76,8 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
                 }
 
                 if (player.pitch <= 80) {
-                    RotationManager.aimAt(
-                        Rotation(player.yaw, (80f..90f).random().toFloat()),
+                    RotationManager.setRotationTarget(
+                        Rotation(player.yaw, (80f..90f).random()),
                         configurable = rotations,
                         provider = ModuleFastUse,
                         priority = Priority.IMPORTANT_FOR_USAGE_2
@@ -96,7 +96,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
                 threwPearl = true
             }
         } else if (!threwPearl && canFly) {
-            player.strafe(speed = speed.toDouble())
+            player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
             player.velocity.y = when {
                 mc.options.jumpKey.isPressed -> speed.toDouble()
                 mc.options.sneakKey.isPressed -> -speed.toDouble()
@@ -107,7 +107,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket
+        if (event.origin == TransferOrigin.OUTGOING && event.packet is TeleportConfirmC2SPacket
             && isABitAboveGround() && threwPearl) {
             threwPearl = false
             canFly = true

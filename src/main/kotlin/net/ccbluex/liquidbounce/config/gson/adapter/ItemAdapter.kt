@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,7 @@
 
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.*
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import java.lang.reflect.Type
 
-object ItemAdapter : JsonSerializer<Item>, JsonDeserializer<Item> {
-
-    override fun serialize(src: Item, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(Registries.ITEM.getId(src).toString())
-    }
-
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Item {
-        return Registries.ITEM.get(Identifier.tryParse(json.asString))
-    }
-
-}
+object ItemAdapter : IdentifierAsStringAdapter<Item>(Registries.ITEM)

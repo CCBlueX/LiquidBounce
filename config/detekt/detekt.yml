@@ -19,9 +19,9 @@ complexity:
     active: false
   CognitiveComplexMethod:
     active: true
+    threshold: 16
   StringLiteralDuplication:
-    active: true
-    threshold: 8
+    active: false
 
 performance:
   active: true

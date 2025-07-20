@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.canStep
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
 
@@ -50,12 +51,19 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
         Instant,
         Legit,
         Vulcan286,
-        BlocksMC
+        BlocksMC,
+        Hypixel
     )).apply { tagBy(this) }
 
     object Legit : Choice("Legit") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
+
+        @Suppress("unused")
+        private val autoJumpHandler = handler<MinecraftAutoJumpEvent> { event ->
+            event.autoJump = true
+        }
+
     }
 
     object Instant : Choice("Instant") {
@@ -183,7 +191,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 waitTicks(2)
                 if (stepCounter % 2 == 0) {
                     player.velocity.y = 0.24680001947880004
-                    player.strafe(speed = 0.2)
+                    player.velocity = player.velocity.withStrafe(speed = 0.2)
                 }
                 waitTicks(1)
                 if (stepCounter % 2 == 0) {
@@ -233,7 +241,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 waitTicks(1)
                 player.velocity.y = 0.25
                 waitTicks(2)
-                player.strafe(speed = 0.281)
+                player.velocity = player.velocity.withStrafe(speed = 0.281)
                 player.velocity.y -= player.y % 1.0
                 Timer.requestTimerSpeed(recoveryTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 2)
                 stepping = false
@@ -242,7 +250,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
         @Suppress("unused")
         private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-            if (event.origin == TransferOrigin.SEND && stepping) {
+            if (event.origin == TransferOrigin.OUTGOING && stepping) {
                 event.action = PacketQueueManager.Action.QUEUE
             }
         }
@@ -254,6 +262,70 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
         override val running: Boolean
             get() = super.running && !ModuleSpeed.running
+
+    }
+
+    /**
+     * does not seem to work above a certain y level for some reason
+     */
+    object Hypixel : Choice("Hypixel") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        val alternateBypass by boolean("AlternateBypass", false)
+        val spoof by boolean("Spoof", false)
+
+        private var stepping = false
+
+        private val stepHeight get() = when {
+            player.canStep(1.0) -> 1.0
+            player.canStep(1.25) -> 1.25
+            else -> 1.5
+        }
+
+        @Suppress("unused")
+        private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
+            if (player.canStep(1.5) && !stepping) {
+                val currentStepHeight = stepHeight
+                event.jump = true
+
+                stepping = true
+                player.velocity.y = 0.42
+                waitTicks(1)
+                if(currentStepHeight > 1.0) {
+                    player.velocity.y += 0.061
+                }
+                waitTicks(2)
+                if (currentStepHeight == 1.0) {
+                    player.velocity.y -= 0.14
+                } else {
+                    player.velocity.y -= 0.095
+                    if (currentStepHeight > 1.25) {
+                        waitTicks(5)
+                        if(alternateBypass) {
+                            player.isOnGround = true
+                        } else {
+                            player.velocity.y = 0.42
+                        }
+                    }
+                }
+                stepping = false
+                player.velocity = player.velocity.withStrafe(speed = 0.1838601407459074)
+            }
+        }
+
+        @Suppress("unused")
+        private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
+            if(spoof && player.airTicks == 8) {
+                event.ground = true
+            }
+        }
+
+        override fun disable() {
+            stepping = false
+            super.disable()
+        }
 
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,16 +27,18 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 
-// TODO check whether the Boxes actually touch
 /**
  * A renderer instance that can be added to a [PlacementRenderer], it contains the core logic.
  * Culling is handled in each handler for its boxes individually.
  */
+@Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
 
     private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
     private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
     private val outList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+
+    private val culler = BlockCuller(this)
 
     @JvmRecord
     private data class InOutBlockData(val startTime: Long, val cullData: Long, val box: Box) {
@@ -142,7 +144,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Updates the culling of all blocks around a position that has been removed or added.
      */
-    fun updateNeighbors(pos: BlockPos) {
+    private fun updateNeighbors(pos: BlockPos) {
         if (!placementRenderer.clump) {
             return
         }
@@ -152,110 +154,27 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             val longValue = it.asLong()
 
             if (inList.containsKey(longValue)) {
-                inList.put(longValue, inList.get(longValue).copy(cullData = getCullData(it)))
+                inList.put(longValue, inList.get(longValue).copy(cullData = this.culler.getCullData(it)))
                 return@forEach
             }
 
             if (currentList.containsKey(longValue)) {
-                currentList.put(longValue, currentList.get(longValue).copy(cullData = getCullData(it)))
+                currentList.put(longValue, currentList.get(longValue).copy(cullData = this.culler.getCullData(it)))
                 return@forEach
             }
         }
     }
 
-    /**
-     * Returns a long that stores in the first 32 bits what vertices are to be rendered for the faces and
-     * in the other half what vertices are to be rendered for the outline.
-     */
-    private fun getCullData(pos: BlockPos): Long {
-        var faces = 1 shl 30
-        var edges = 1 shl 30
 
-        val eastPos = pos.east()
-        val westPos = pos.west()
-        val upPos = pos.up()
-        val downPos = pos.down()
-        val southPos = pos.south()
-        val northPos = pos.north()
-
-        val east = contains(eastPos)
-        val west = contains(westPos)
-        val up = contains(upPos)
-        val down = contains(downPos)
-        val south = contains(southPos)
-        val north = contains(northPos)
-
-        faces = cullSide(faces, east, FACE_EAST)
-        faces = cullSide(faces, west, FACE_WEST)
-        faces = cullSide(faces, up, FACE_UP)
-        faces = cullSide(faces, down, FACE_DOWN)
-        faces = cullSide(faces, south, FACE_SOUTH)
-        faces = cullSide(faces, north, FACE_NORTH)
-
-        edges = cullEdge(edges, north, down, contains(northPos.down()), EDGE_NORTH_DOWN)
-        edges = cullEdge(edges, east, down, contains(eastPos.down()), EDGE_EAST_DOWN)
-        edges = cullEdge(edges, south, down, contains(southPos.down()), EDGE_SOUTH_DOWN)
-        edges = cullEdge(edges, west, down, contains(westPos.down()), EDGE_WEST_DOWN)
-        edges = cullEdge(edges, north, west, contains(northPos.west()), EDGE_NORTH_WEST)
-        edges = cullEdge(edges, north, east, contains(northPos.east()), EDGE_NORTH_EAST)
-        edges = cullEdge(edges, south, east, contains(southPos.east()), EDGE_SOUTH_EAST)
-        edges = cullEdge(edges, south, west, contains(westPos.south()), EDGE_SOUTH_WEST)
-        edges = cullEdge(edges, north, up, contains(northPos.up()), EDGE_NORTH_UP)
-        edges = cullEdge(edges, east, up, contains(eastPos.up()), EDGE_EAST_UP)
-        edges = cullEdge(edges, south, up, contains(southPos.up()), EDGE_SOUTH_UP)
-        edges = cullEdge(edges, west, up, contains(westPos.up()), EDGE_WEST_UP)
-
-        // combines the data in a single long and inverts it, so that all vertices that are to be rendered are
-        // represented by 1s
-        return ((faces.toLong() shl 32) or edges.toLong()).inv()
-    }
 
     /**
      * Checks whether the position is rendered.
      */
-    private fun contains(pos: BlockPos): Boolean {
+    internal fun contains(pos: BlockPos): Boolean {
         val longValue = pos.asLong()
         return inList.containsKey(longValue) || currentList.containsKey(longValue) || outList.containsKey(longValue)
     }
 
-    /**
-     * Applies a mask to the current data if either [direction1Present] and [direction2Present] are `false` or
-     * [direction1Present] and [direction2Present] are `true` but [diagonalPresent] is `false`.
-     *
-     * This will result in the edge only being rendered if it's not surrounded by blocks and is on an actual
-     * edge from multiple blocks seen as one entity.
-     *
-     * @return The updated [currentData]
-     */
-    private fun cullEdge(
-        currentData: Int,
-        direction1Present: Boolean,
-        direction2Present: Boolean,
-        diagonalPresent: Boolean,
-        mask: Int
-    ): Int {
-        return if ((!direction1Present && !direction2Present)
-            || (direction1Present && direction2Present && !diagonalPresent)) {
-            currentData or mask
-        } else {
-            currentData
-        }
-    }
-
-    /**
-     * Applies a mask to the current data if either [directionPresent] is `false`.
-     *
-     * This will result in the face only being visible if it's on the outside of multiple blocks.
-     *
-     * @return The updated [currentData]
-     */
-    private fun cullSide(currentData: Int, directionPresent: Boolean, mask: Int): Int {
-        return if (!directionPresent) {
-            currentData or mask
-        } else {
-            currentData
-        }
-    }
 
     /**
      * Adds a block to be rendered. First it will make an appear-animation, then
@@ -304,13 +223,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         inList.long2ObjectEntrySet().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
-            inList.put(key, value.copy(cullData = getCullData(blockPosCache.set(key))))
+            inList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
         }
 
         currentList.long2ObjectEntrySet().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
-            currentList.put(key, value.copy(cullData = getCullData(blockPosCache.set(key))))
+            currentList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
         }
     }
 

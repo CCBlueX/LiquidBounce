@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.script
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptAsyncUtil
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.Source
@@ -32,6 +36,8 @@ import java.io.File
  * Scripts are stored in the scripts directory and can be organized in subdirectories when using a main script file.
  */
 object ScriptManager {
+
+    private var isInitialized = false
 
     /**
      * A list that holds all the loaded scripts.
@@ -47,11 +53,16 @@ object ScriptManager {
         }
     }
 
-    init {
+    fun initializeEngine() {
+        ScriptAsyncUtil.TickScheduler
+
         // Initialize the script engine and log its version and supported languages.
         val engine = Engine.create()
-        logger.info("[ScriptAPI] Engine Version: ${engine.version}, " +
-            "Supported languages: [ ${engine.languages.keys.joinToString(", ")} ]")
+        logger.info(
+            "[ScriptAPI] Engine Version: ${engine.version}, " +
+                "Supported languages: [ ${engine.languages.keys.joinToString(", ")} ]"
+        )
+        isInitialized = true
     }
 
     /**
@@ -59,13 +70,15 @@ object ScriptManager {
      * and directories containing a main script file. It then loads and enables all found scripts.
      */
     fun loadAll() {
-        root.listFiles {
-            file -> Source.findLanguage(file) != null || file.isDirectory
+        require(isInitialized) { "Cannot load scripts before the script engine is initialized." }
+
+        root.listFiles { file ->
+            Source.findLanguage(file) != null || file.isDirectory
         }?.forEach { file ->
             if (file.isDirectory) {
                 // If a directory is found, look for a main script file inside it.
-                val mainFile = file.listFiles {
-                        dirFile -> dirFile.nameWithoutExtension == "main" && Source.findLanguage(dirFile) != null
+                val mainFile = file.listFiles { dirFile ->
+                    dirFile.nameWithoutExtension == "main" && Source.findLanguage(dirFile) != null
                 }?.firstOrNull()
 
                 if (mainFile != null) {
@@ -88,7 +101,10 @@ object ScriptManager {
      */
     fun unloadAll() {
         scripts.forEach(PolyglotScript::disable)
+        scripts.forEach(PolyglotScript::close)
         scripts.clear()
+        ScriptAsyncUtil.TickScheduler.clear()
+        ScriptContextProvider.cleanup()
     }
 
     /**
@@ -111,8 +127,14 @@ object ScriptManager {
      * @param language The language of the script. If not specified, it is inferred from the file.
      * @return The loaded script.
      */
-    fun loadScript(file: File, language: String = Source.findLanguage(file)): PolyglotScript {
-        val script = PolyglotScript(language, file)
+    fun loadScript(
+        file: File,
+        language: String = Source.findLanguage(file),
+        debugOptions: ScriptDebugOptions = ScriptDebugOptions()
+    ): PolyglotScript {
+        require(isInitialized) { "Cannot load scripts before the script engine is initialized." }
+
+        val script = PolyglotScript(language, file, debugOptions)
         script.initScript()
 
         scripts += script
@@ -126,6 +148,7 @@ object ScriptManager {
      */
     fun unloadScript(script: PolyglotScript) {
         script.disable()
+        script.close()
         scripts.remove(script)
     }
 
@@ -134,6 +157,11 @@ object ScriptManager {
      */
     fun enableAll() {
         scripts.forEach(PolyglotScript::enable)
+
+        if (scripts.isNotEmpty()) {
+            // Reload the ClickGUI to update the module list.
+            RenderSystem.recordRenderCall(ModuleClickGui::reload)
+        }
     }
 
     /**
@@ -148,7 +176,15 @@ object ScriptManager {
      * directory, and then enables them. It logs a message upon successful completion.
      */
     fun reload() {
-        unloadAll()
+        // Unload
+        try {
+            disableAll()
+            unloadAll()
+        } catch (e: Exception) {
+            logger.error("Failed to unload scripts.", e)
+        }
+
+        // Load
         loadAll()
         enableAll()
 

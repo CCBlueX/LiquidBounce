@@ -1,6 +1,6 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import {getGameWindow, getModules, getModuleSettings} from "../../integration/rest";
+    import {getGameWindow, getModules, getModuleSettings, setTyping} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
     import type {ConfigurableSetting, GroupedModules, Module, TogglableSetting} from "../../integration/types";
     import Panel from "./Panel.svelte";
@@ -8,11 +8,7 @@
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
     import {listen} from "../../integration/ws";
-    import type {
-        ClickGuiScaleChangeEvent,
-        ClickGuiValueChangeEvent,
-        ScaleFactorChangeEvent
-    } from "../../integration/events";
+    import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import {gridSize, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
 
     let categories: GroupedModules = {};
@@ -41,6 +37,8 @@
 
         const clickGuiSettings = await getModuleSettings("ClickGUI");
         applyValues(clickGuiSettings);
+
+        await setTyping(false);
     });
 
     listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {

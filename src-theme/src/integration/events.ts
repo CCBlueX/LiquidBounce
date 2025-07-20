@@ -1,4 +1,13 @@
-import type {Component, ConfigurableSetting, PlayerData, Proxy, Screen, Server, TextComponent} from "./types";
+import type {
+    Component,
+    ConfigurableSetting,
+    ItemStack,
+    PlayerData,
+    Proxy,
+    Screen,
+    Server,
+    TextComponent
+} from "./types";
 
 export interface ClickGuiValueChangeEvent {
     configurable: ConfigurableSetting;
@@ -16,6 +25,14 @@ export interface KeyboardKeyEvent {
     action: number;
     mods: number;
     key: string;
+    screen: Screen | undefined;
+}
+
+export interface MouseButtonEvent {
+    key: string;
+    button: number;
+    action: number;
+    mods: number;
     screen: Screen | undefined;
 }
 
@@ -61,6 +78,10 @@ export interface AccountManagerAdditionEvent {
     error: string | null;
 }
 
+export interface AccountManagerRemovalEvent {
+    username: string | null;
+}
+
 export interface AccountManagerMessageEvent {
     message: string;
 }
@@ -72,6 +93,16 @@ export interface AccountManagerLoginEvent {
 
 export interface ServerPingedEvent {
     server: Server;
+}
+
+export interface PlayerInventoryEvent {
+    inventory: PlayerInventory;
+}
+
+export interface PlayerInventory {
+    armor: ItemStack[];
+    main: ItemStack[];
+    crafting: ItemStack[];
 }
 
 export interface ProxyAdditionResultEvent {

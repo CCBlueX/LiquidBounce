@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,12 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.minecraft.client.util.math.MatrixStack
@@ -42,7 +41,6 @@ import net.minecraft.util.math.Vec3d
 internal object KillAuraNotifyWhenFail {
 
     internal val failedHits = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
-    var hasFailedHit = false
     var failedHitsIncrement = 0
 
     object Box : Choice("Box") {
@@ -68,13 +66,12 @@ internal object KillAuraNotifyWhenFail {
         get() = 50 * Box.fadeSeconds
 
     fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
-        hasFailedHit = true
         failedHitsIncrement++
 
         when (mode.activeChoice) {
             Box -> {
-                val centerDistance = entity.box.center.subtract(player.eyes).length()
-                val boxSpot = player.eyes.add(rotation.rotationVec.multiply(centerDistance))
+                val centerDistance = entity.box.center.subtract(player.eyePos).length()
+                val boxSpot = player.eyePos.add(rotation.directionVector.multiply(centerDistance))
 
                 failedHits.add(ObjectLongMutablePair(boxSpot, 0L))
             }
@@ -118,8 +115,8 @@ internal object KillAuraNotifyWhenFail {
             for ((pos, opacity) in markedBlocks) {
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
-                val baseColor = base.alpha(fade)
-                val outlineColor = base.alpha(fade)
+                val baseColor = base.with(a = fade)
+                val outlineColor = base.with(a = fade)
 
                 withPositionRelativeToCamera(pos) {
                     withColor(baseColor) {

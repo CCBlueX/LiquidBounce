@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.SprintEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
-import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.minecraft.client.option.KeyBinding
+import net.minecraft.entity.Entity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.BlockItem
 import net.minecraft.item.SwordItem
@@ -42,13 +46,14 @@ import net.minecraft.util.hit.EntityHitResult
 
 object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
 
-    object Left : ToggleableConfigurable(this, "Attack", true) {
+    object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 
-        val clickScheduler = tree(ClickScheduler(this, true))
+        val clicker = tree(Clicker(this, mc.options.attackKey, true))
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
         private val weapon by enumChoice("Weapon", Weapon.ANY)
+        private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
         enum class ObjectiveType(override val choiceName: String) : NamedChoice {
@@ -93,7 +98,11 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
         }
 
-        suspend fun Sequence<*>.encounterItemUse(): Boolean {
+        fun isCriticalHit(entity: Entity): Boolean {
+            return criticalsSelectionMode.isCriticalHit(entity)
+        }
+
+        suspend fun Sequence.encounterItemUse(): Boolean {
             return when (onItemUse) {
                 Use.WAIT -> {
                     this.waitUntil { !player.isUsingItem }
@@ -119,10 +128,24 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
         }
 
+        @Suppress("unused")
+        private val sprintHandler = handler<SprintEvent> { event ->
+            if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
+                if (!attack || !isOnObjective() || !isWeaponSelected()) {
+                    return@handler
+                }
+
+                val target = mc.crosshairTarget as? EntityHitResult ?: return@handler
+                if (criticalsSelectionMode.shouldStopSprinting(clicker, target.entity)) {
+                    event.sprint = false
+                }
+            }
+        }
+
     }
 
-    object Right : ToggleableConfigurable(this, "Use", false) {
-        val clickScheduler = tree(ClickScheduler(this, false))
+    object UseButton : ToggleableConfigurable(this, "Use", false) {
+        val clicker = tree(Clicker(this, mc.options.useKey, false))
         internal val delayStart by boolean("DelayStart", false)
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)
@@ -131,26 +154,35 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     init {
-        tree(Left)
-        tree(Right)
+        tree(AttackButton)
+        tree(UseButton)
     }
 
     val attack: Boolean
-        get() = mc.options.attackKey.isPressed || Left.requiresNoInput
+        get() = mc.options.attackKey.isPressedOnAny || AttackButton.requiresNoInput
 
     val use: Boolean
-        get() = mc.options.useKey.isPressed || Right.requiresNoInput
+        get() = mc.options.useKey.isPressedOnAny || UseButton.requiresNoInput
 
+    @Suppress("unused")
     val tickHandler = tickHandler {
-        Left.run {
+        AttackButton.run {
             if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) {
                 return@run
             }
 
-            val crosshairTarget = mc.crosshairTarget
-
-            if (crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit(crosshairTarget.entity)) {
+            // Check if the player is breaking a block, if so, return
+            if (interaction.isBreakingBlock) {
                 return@run
+            }
+
+            val crosshairTarget = mc.crosshairTarget
+            if (crosshairTarget is EntityHitResult) {
+                ModuleAutoWeapon.prepare(crosshairTarget.entity)
+
+                if (!isCriticalHit(crosshairTarget.entity)) {
+                    return@run
+                }
             }
 
             if (player.usingItem) {
@@ -161,13 +193,13 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
 
-            clickScheduler.clicks {
+            clicker.click {
                 KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
                 true
             }
         }
 
-        Right.run {
+        UseButton.run {
             if (!enabled) return@run
 
             if (!use) {
@@ -175,7 +207,9 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            if (onlyBlock && player.mainHandStack.item !is BlockItem) return@run
+            if (onlyBlock && player.mainHandStack.item !is BlockItem) {
+                return@run
+            }
 
             if (delayStart && needToWait) {
                 needToWait = false
@@ -183,7 +217,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            clickScheduler.clicks {
+            clicker.click {
                 KeyBinding.onKeyPressed(mc.options.useKey.boundKey)
                 true
             }

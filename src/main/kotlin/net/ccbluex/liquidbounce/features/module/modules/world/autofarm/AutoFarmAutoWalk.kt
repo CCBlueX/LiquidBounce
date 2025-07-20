@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,18 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.ItemEntity
 import net.minecraft.util.math.Vec3d
+import java.util.EnumSet
 
 object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", false) {
 
@@ -80,8 +80,8 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
         val target = walkTarget ?: return false
 
-        RotationManager.aimAt(
-            RotationManager.makeRotation(target, player.eyes),
+        RotationManager.setRotationTarget(
+            Rotation.lookingAt(point = target, from = player.eyePos),
             configurable = ModuleAutoFarm.rotations,
             priority = Priority.IMPORTANT_FOR_USAGE_1,
             provider = ModuleAutoFarm
@@ -90,26 +90,24 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     }
 
     private fun findWalkToBlock(): Vec3d? {
-        if (AutoFarmBlockTracker.trackedBlockMap.isEmpty()) return null
+        if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = booleanArrayOf(true, false, false)
+        val allowedItems = EnumSet.of(AutoFarmTrackedStates.Destroy)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
         if (toPlace) {
-            for (item in Hotbar.items) {
+            for (item in Slots.OffhandWithHotbar.items) {
                 when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedItems[1] = true
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems[2] = true
+                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.Farmland)
+                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.Soulsand)
                 }
             }
         }
 
-        val closestBlock = AutoFarmBlockTracker.trackedBlockMap.filter {
-            allowedItems[it.value.ordinal]
-        }.keys.map {
-            it.toCenterPos()
-        }.minByOrNull { it.squaredDistanceTo(player.pos) }
+        val closestBlock = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
+            if (state in allowedItems) pos.toCenterPos() else null
+        }.minByOrNull(player::squaredDistanceTo)
 
         return closestBlock
     }
@@ -120,15 +118,18 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     private fun shouldWalk() = (walkTarget != null && mc.currentScreen !is HandledScreen<*>)
 
-    val horizontalMovementHandling = handler<RotatedMovementInputEvent> { event ->
-        if (!shouldWalk()) return@handler
+    @Suppress("unused")
+    private val horizontalMovementHandling = handler<MovementInputEvent> { event ->
+        if (!shouldWalk()) {
+            return@handler
+        }
 
-        event.forward = 1f
-
+        event.directionalInput = event.directionalInput.copy(forwards = true)
         player.isSprinting = true
     }
 
-    val verticalMovementHandling = handler<MovementInputEvent> { event ->
+    @Suppress("unused")
+    private val verticalMovementHandling = handler<MovementInputEvent> { event ->
         if (!shouldWalk()) return@handler
 
         // We want to swim up in water, so we don't drown and can move onwards

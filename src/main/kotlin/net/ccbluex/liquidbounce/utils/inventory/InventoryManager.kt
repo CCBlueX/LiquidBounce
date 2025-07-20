@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ContainerItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -88,6 +86,9 @@ object InventoryManager : EventListener {
             return@tickHandler
         }
 
+        ModuleDebug.debugParameter(this, "Inventory Open", isInventoryOpen)
+        ModuleDebug.debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
+
         var maximumCloseDelay = 0
 
         var cycles = 0
@@ -116,6 +117,8 @@ object InventoryManager : EventListener {
                     acc + inventoryActionChains
                 } ?: break
 
+            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+
             // If the schedule is empty, we can break the loop
             if (schedule.isEmpty()) {
                 break
@@ -140,6 +143,7 @@ object InventoryManager : EventListener {
                     if (recentInventoryOpen) {
                         recentInventoryOpen = false
                         waitTicks(constraints.startDelay.random())
+                        cycles = 0
                     }
 
                     // Handle player inventory open requirements
@@ -148,11 +152,13 @@ object InventoryManager : EventListener {
                         if (!isInventoryOpen) {
                             openInventorySilently()
                             waitTicks(constraints.startDelay.random())
+                            cycles = 0
                         }
                     } else if (canCloseMainInventory) {
                         // When all scheduled actions are done, we can close the inventory
                         if (isInventoryOpen) {
                             waitTicks(constraints.closeDelay.random())
+                            cycles = 0
                             closeInventorySilently()
                         }
                     }
@@ -173,15 +179,18 @@ object InventoryManager : EventListener {
                         // TODO: Add support for inventory slots
                         if (action.performMissClick()) {
                             waitTicks(constraints.clickDelay.random())
+                            cycles = 0
                         }
                     }
 
                     if (action is CloseContainerAction) {
                         waitTicks(constraints.closeDelay.random())
+                        cycles = 0
                     }
                     if (action.performAction()) {
                         if (action !is CloseContainerAction) {
                             waitTicks(constraints.clickDelay.random())
+                            cycles = 0
                         }
                     }
                 }
@@ -221,8 +230,12 @@ object InventoryManager : EventListener {
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
+        if (event.isCancelled) {
+            return@handler
+        }
+
         // If we actually send a click packet, we can reset the click chronometer
-        if (packet is ClickSlotC2SPacket && !event.isCancelled) {
+        if (packet is ClickSlotC2SPacket) {
             clickOccurred()
 
             if (packet.syncId == 0) {
@@ -252,6 +265,12 @@ object InventoryManager : EventListener {
         }
 
         if (screen is InventoryScreen || screen is GenericContainerScreen) {
+            // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
+            // the easy way and just listen for the screen event.
+            if (screen is InventoryScreen && isOlderThanOrEqual1_11_1) {
+                isInventoryOpenServerSide = true
+            }
+
             inventoryOpened()
         }
     }

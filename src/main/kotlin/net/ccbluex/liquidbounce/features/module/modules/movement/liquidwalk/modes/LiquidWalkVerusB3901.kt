@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (player.input.playerInput.sneak || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.sneakKey.isPressed || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
@@ -62,8 +62,8 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.SEND && packet is PlayerMoveC2SPacket) {
-            if (!player.input.playerInput.sneak &&
+        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
+            if (!mc.options.sneakKey.isPressed &&
                 !player.isTouchingWater &&
                 standingOnWater() &&
                 !collidesWithAnythingElse()

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ public class MixinMessageHandler {
 
     @Inject(method = "onGameMessage", at = @At(value = "HEAD"), cancellable = true)
     private void injectGameMessage(Text message, boolean overlay, CallbackInfo ci) {
-        var result = liquid_bounce$emitChatEvent(null, message, ChatReceiveEvent.ChatType.GAME_MESSAGE);
+        var result = liquid_bounce$emitChatEvent(null, message, overlay ? ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE : ChatReceiveEvent.ChatType.GAME_MESSAGE);
         if (result) {
             lastProcessTime = Util.getMeasuringTimeMs();
             ci.cancel();

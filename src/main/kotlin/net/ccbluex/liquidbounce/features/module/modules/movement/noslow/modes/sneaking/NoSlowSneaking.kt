@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking
 
-import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.NoneChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerSneakMultiplier
@@ -32,7 +31,7 @@ internal object NoSlowSneaking : ToggleableConfigurable(ModuleNoSlow, "Sneaking"
     private val minMultiplier by float("MinMultiplier", 1f, 0.3f..1f)
 
     @Suppress("unused")
-    private val modes = choices<Choice>(this, "Mode", { it.choices[0] }) {
+    private val modes = choices(this, "Mode") {
         arrayOf(
             NoneChoice(it),
             NoSlowSneakingSwitch(it),

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ public class MixinWindow {
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
 
         // Find client icons
-        final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_16x16.png");
-        final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_32x32.png");
+        final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/resources/liquidbounce/icon_16x16.png");
+        final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/resources/liquidbounce/icon_32x32.png");
 
         // In case one of the icons was not found
         if (stream16 == null || stream32 == null) {

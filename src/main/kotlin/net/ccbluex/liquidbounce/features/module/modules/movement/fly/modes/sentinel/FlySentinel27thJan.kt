@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 /**
@@ -59,13 +58,13 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
             player.input.playerInput.jump -> 0.42
             else -> 0.2
         }
-        player.strafe(speed = horizontalSpeed.random())
+        player.velocity = player.velocity.withStrafe(speed = horizontalSpeed.random().toDouble())
 
         waitTicks(6)
     }
 
-    val moveHandler = handler<PlayerMoveEvent> {
-        it.movement.strafe(player.directionYaw)
+    val moveHandler = handler<PlayerMoveEvent> { event ->
+        event.movement = event.movement.withStrafe()
     }
 
 }

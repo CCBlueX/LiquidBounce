@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.entity.MovementType
 
 /**
@@ -46,8 +46,6 @@ object ModuleStrafe : ClientModule("Strafe", Category.MOVEMENT) {
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
         if (event.type == MovementType.SELF) {
-            val movement = event.movement
-
             val strength = if (player.isOnGround) strengthOnGround else strengthInAir
 
             // Don't strafe if strength is 0
@@ -56,10 +54,9 @@ object ModuleStrafe : ClientModule("Strafe", Category.MOVEMENT) {
             }
 
             if (player.moving) {
-                movement.strafe(player.directionYaw, strength = strength.toDouble())
+                event.movement = event.movement.withStrafe(strength = strength.toDouble())
             } else if (strictMovement) {
-                movement.x = 0.0
-                movement.z = 0.0
+                event.movement = event.movement.copy(x = 0.0, z = 0.0)
             }
         }
     }

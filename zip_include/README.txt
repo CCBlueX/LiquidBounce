@@ -5,11 +5,11 @@
 █   █▄▄▄█   █  █▄█  █       █   █ █▄█   █  ▄   ██  █▄█  █       █  ▄    █    █  █    ▄▄▄█
 █       █   █      ██       █   █       █ █▄█   █       █       █ █ █   █    █▄▄█   █▄▄▄ 
 █▄▄▄▄▄▄▄█▄▄▄█▄▄▄▄██▄█▄▄▄▄▄▄▄█▄▄▄█▄▄▄▄▄▄██▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█  █▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█
-an open source minecraft hacked client for 1.7 - 1.21.1.
+an open source minecraft hacked client for 1.7 - 1.21.4.
 https://liquidbounce.net/
 
-➔ How to install on Fabric 1.21.1
-1. Install the Fabric Mod Loader for 1.21.1 (How to: https://fabricmc.net/use/).
+➔ How to install on Fabric 1.21.4
+1. Install the Fabric Mod Loader for 1.21.4 (How to: https://fabricmc.net/use/).
 2. Create a folder called "mods" inside in the ".minecraft" directory.
 3. Copy "liquidbounce.jar" into the mods folder.
 4. REQUIRED: Install the Kotlin fabric language mod (https://modrinth.com/mod/fabric-language-kotlin)
@@ -17,12 +17,12 @@ https://liquidbounce.net/
 6. OPTIONAL: Install the ViaFabricPlus Mod (https://modrinth.com/mod/viafabricplus).
 7. Launch Fabric from the Minecraft launcher.
 
-➔ How to install on Forge 1.21.1
+➔ How to install on Forge 1.21.4
 | Forge is currently not supported. Sorry! Please use Fabric instead.
 
-➔ How to install on Lunar Client 1.21.1
+➔ How to install on Lunar Client 1.21.4
 1. Install Lunar Client Launcher (https://www.lunarclient.com/download).
-3. Click on "Versions" in the Lunar Launcher, select "Version 1.21.1" and click on Addons "Fabric".
+3. Click on "Versions" in the Lunar Launcher, select "Version 1.21.4" and click on Addons "Fabric".
 4. Click on settings button next to "Launch Game" and click on "Mods".
 5. Click on the folder icon "Open Mods Folder" next to "Search mods" field.
 6. Copy "liquidbounce.jar" into the mods folder.
@@ -49,11 +49,11 @@ Feel free to check the source code on GitHub:
 https://github.com/CCBlueX/LiquidBounce
 
 ➔ Links
-Our website: https://ccbluex.net/
-Our youtube: https://youtube.com/ccbluex
-Our twitter: https://twitter.com/ccbluex
+Our Website: https://ccbluex.net/
+Our YouTube: https://youtube.com/ccbluex
+Our X: https://x.com/ccbluex
 
 ➔ License
 This project is subject to the GNU General Public License v3.0. This does only apply for source code located directly in this clean repository. During the development and compilation process, additional source code may be used to which we have obtained no rights. Such code is not covered by the GPL license.
 
-Copyright © 2024 | CCBlueX | All rights reserved.
+Copyright © 2025 | CCBlueX | All rights reserved.

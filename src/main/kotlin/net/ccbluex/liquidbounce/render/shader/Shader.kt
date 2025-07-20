@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ open class Shader(vertex: String, fragment: String, private val uniforms: Array<
 
         this.program = GlStateManager.glCreateProgram()
 
+        bindAttributes(this.program)
         GlStateManager.glAttachShader(program, vertProgram)
         GlStateManager.glAttachShader(program, fragProgram)
         GlStateManager.glLinkProgram(program)
@@ -50,6 +51,9 @@ open class Shader(vertex: String, fragment: String, private val uniforms: Array<
         uniforms.forEach { uniform ->
             uniform.init(program)
         }
+    }
+
+    open fun bindAttributes(program: Int) {
     }
 
     private fun compileShader(source: String, type: Int): Int {

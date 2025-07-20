@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
-import java.io.FileInputStream
 import kotlin.concurrent.thread
 
 private const val HASH_FILE_NAME = ".hash"
@@ -33,10 +32,7 @@ object HashValidator {
 
     private fun validateHashFile(hashFile: File) {
         val delete = runCatching {
-            val hashes = FileInputStream(hashFile).use {
-                decode<Map<String, String>>(it)
-            }
-
+            val hashes = decode<Map<String, String>>(hashFile.inputStream())
             shouldDelete(hashFile, hashes)
         }.onFailure {
             logger.warn("Invalid hash file ${hashFile.absolutePath}", it)
@@ -80,7 +76,7 @@ object HashValidator {
 
                 // Read the file, hash it and compare it to the hash in the hash file
                 // Use the InputStream, don't read the full file
-                val sha256Hex = DigestUtils.sha256Hex(resolveSibling.inputStream())
+                val sha256Hex = resolveSibling.inputStream().use(DigestUtils::sha256Hex)
 
                 if (!sha256Hex.equals(checkedFile.value, ignoreCase = true)) {
                     return true

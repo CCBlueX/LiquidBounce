@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -61,7 +61,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
             it.noClip = true
 
             if (!ModuleVehicleControl.running) {
-                it.velocity = it.velocity.strafe(speed = speed)
+                it.velocity = it.velocity.withStrafe(speed = speed)
                 it.velocity.y = when {
                     mc.options.jumpKey.isPressed -> speed
                     mc.options.sneakKey.isPressed -> -speed
@@ -69,7 +69,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
                 }
             }
         } ?: run {
-            player.strafe(speed = speed)
+            player.velocity = player.velocity.withStrafe(speed = speed)
 
             player.velocity.y = when {
                 mc.options.jumpKey.isPressed -> speed

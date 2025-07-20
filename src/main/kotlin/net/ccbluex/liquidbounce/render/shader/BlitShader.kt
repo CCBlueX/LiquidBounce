@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,18 +28,22 @@ import net.minecraft.client.render.VertexFormats
 open class BlitShader(vertex: String, fragment: String, uniforms: Array<UniformProvider> = emptyArray()) :
     Shader(vertex, fragment, uniforms) {
 
-    private var buffer = VertexBuffer(GlUsage.DYNAMIC_WRITE)
+    companion object {
 
-    init {
-        val builder = Tessellator.getInstance()
-        val bufferBuilder = builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE)
-        bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
-        bufferBuilder.vertex(1f, -1f, 0f).texture(1f, 0f)
-        bufferBuilder.vertex(1f, 1f, 0f).texture(1f, 1f)
-        bufferBuilder.vertex(-1f, 1f, 0f).texture(0f, 1f)
-        buffer.bind()
-        buffer.upload(bufferBuilder.end())
-        VertexBuffer.unbind()
+        private var buffer = VertexBuffer(GlUsage.DYNAMIC_WRITE)
+
+        init {
+            val builder = Tessellator.getInstance()
+            val bufferBuilder = builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE)
+            bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
+            bufferBuilder.vertex(1f, -1f, 0f).texture(1f, 0f)
+            bufferBuilder.vertex(1f, 1f, 0f).texture(1f, 1f)
+            bufferBuilder.vertex(-1f, 1f, 0f).texture(0f, 1f)
+            buffer.bind()
+            buffer.upload(bufferBuilder.end())
+            VertexBuffer.unbind()
+        }
+
     }
 
     fun blit() {

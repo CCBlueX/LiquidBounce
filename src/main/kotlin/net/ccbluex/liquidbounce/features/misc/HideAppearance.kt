@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import com.mojang.blaze3d.systems.RenderSystem
+import com.terraformersmc.modmenu.util.mod.Mod
+import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -26,17 +29,24 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
 import net.minecraft.client.util.Icons
 import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
+
+private val modMenuPresent = runCatching {
+    Class.forName("com.terraformersmc.modmenu.ModMenu")
+    true
+}.getOrDefault(false)
 
 /**
  * Hides client appearance
@@ -45,20 +55,48 @@ import kotlin.concurrent.thread
  */
 object HideAppearance : EventListener {
 
-    val shiftChronometer = Chronometer()
+    /**
+     * These mods will be removed from ModMenu.
+     * When [isHidingNow] is true
+     * Or added, if [isHidingNow] is false
+     *
+     * Because we don't know about the [Mod] container on each mod in this list
+     * We set the default value is null.
+     * And we'll provide the value after first removing the mod
+     */
+    private val modContainersToHide: MutableMap<String, Mod?> = arrayOf(
+        "liquidbounce", "mcef"
+    ).associateWith { null }.toMutableMap()
+
+    private val shiftChronometer = Chronometer()
 
     var isHidingNow = false
         set(value) {
             field = value
             RenderSystem.recordRenderCall(::updateClient)
+
+            if (modMenuPresent) {
+                if (value) {
+                    for (id in modContainersToHide.keys) {
+                        modContainersToHide[id] = ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
+                    }
+                } else {
+                    for ((id, container) in modContainersToHide) {
+                        container?.let {
+                            ModMenuCompatibility.INSTANCE.addModUnchecked(id, it)
+                        }
+                    }
+                }
+            }
         }
+
     var isDestructed = false
 
     private fun updateClient() {
         if (isHidingNow) {
             IntegrationListener.restoreOriginalScreen()
         } else {
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
         }
 
         mc.updateWindowTitle()
@@ -68,9 +106,9 @@ object HideAppearance : EventListener {
     }
 
     @Suppress("unused")
-    val keyHandler = handler<KeyboardKeyEvent>(ignoreNotRunning = true) {
-        val keyCode = it.keyCode
-        val modifier = it.mods
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        val keyCode = event.keyCode
+        val modifier = event.mods
 
         if (inGame) {
             return@handler
@@ -92,7 +130,14 @@ object HideAppearance : EventListener {
         isHidingNow = true
         isDestructed = true
 
-        callEvent(ClientShutdownEvent())
+        mc.inGameHud.chatHud.messageHistory.removeIf {
+            it.startsWith(CommandManager.Options.prefix)
+        }
+
+        // Cancel all async tasks
+        scope.cancel()
+
+        callEvent(ClientShutdownEvent)
         EventManager.unregisterAll()
 
         // Disable all modules
@@ -120,12 +165,12 @@ object HideAppearance : EventListener {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        // Delete JAR file
-        runCatching {
-            FabricLoaderImpl.INSTANCE.allMods.find {
-                it.metadata.id == "liquidbounce"
-            }?.let {
-                val origin = it.origin
+        FabricLoaderImpl.INSTANCE.allMods.find {
+            it.metadata.id == "liquidbounce"
+        }?.let { mod ->
+            // Delete JAR file
+            runCatching {
+                val origin = mod.origin
 
                 for (path in origin.paths) {
                     runCatching {
@@ -133,11 +178,11 @@ object HideAppearance : EventListener {
                     }
                 }
             }
-        }
 
-        // Remove from Fabric Loader Impl
-        runCatching {
-            FabricLoaderImpl.INSTANCE.mods.removeIf { it.metadata.id == "liquidbounce" }
+            // Remove from Fabric Loader Impl
+            runCatching {
+                FabricLoaderImpl.INSTANCE.modsInternal.remove(mod)
+            }
         }
 
         // History clear

@@ -124,7 +124,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         reset()
     }
 
-    private suspend fun Sequence<*>.doClicks(remainingElements: List<ShopElement>) {
+    private suspend fun Sequence.doClicks(remainingElements: List<ShopElement>) {
         val currentElement = remainingElements.first()
         val categorySlot = currentElement.categorySlot
         val itemSlot = currentElement.itemSlot
@@ -148,7 +148,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         buyAllItemsInCategory(remainingElements)
     }
 
-    private suspend fun Sequence<*>.switchCategory(nextCategorySlot: Int) {
+    private suspend fun Sequence.switchCategory(nextCategorySlot: Int) {
         // we don't need to open, for example, "Blocks" category again if it's already open
         if (prevCategorySlot == nextCategorySlot) {
             return
@@ -172,7 +172,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence<*>.buyItem(itemSlot: Int, shopElement: ShopElement) {
+    private suspend fun Sequence.buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = autoShopInventoryManager.getInventoryItems()
 
         interaction.clickSlot(
@@ -206,7 +206,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         waitConditional(NormalPurchaseMode.extraDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence<*>.buyAllItemsInCategory(remainingElements: List<ShopElement>) {
+    private suspend fun Sequence.buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = autoShopInventoryManager.getInventoryItems()

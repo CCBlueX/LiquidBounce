@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,108 +18,215 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clickScheduler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.prevPos
-import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.math.times
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.entity.Entity
-import kotlin.math.abs
+import net.minecraft.util.math.Vec3d
+import kotlin.math.min
+import kotlin.math.pow
 
 /**
- * A fight bot, fights for you, probably better than you. Lol.
+ * Data class holding combat-related context
  */
-object KillAuraFightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
+data class CombatContext(
+    val playerPosition: Vec3d,
+    val combatTarget: CombatTarget?
+)
 
-    private val safeRange by float("SafeRange", 4f, 0.1f..5f)
-    private var sideToGo = false
+data class CombatTarget(
+    val entity: Entity,
+    val distance: Double,
+    val range: Float,
+    val outOfDistance: Boolean,
+    val targetRotation: Rotation,
+    val requiredTargetRotation: Rotation,
+    val outOfDanger: Boolean
+)
 
-    val repeatable = tickHandler {
-        sideToGo = !sideToGo
+/**
+ * A fight bot that handles combat and movement automatically
+ */
+object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAura, "FightBot", false) {
 
-        waitTicks(
-            if (player.horizontalCollision) {
-                (60..90).random()
-            } else {
-                (10..35).random()
+    private val opponentRange by float("OpponentRange", 3f, 0.1f..10f)
+    private val dangerousYawDiff by float("DangerousYaw", 55f, 0f..90f, suffix = "°")
+    private val runawayOnCooldown by boolean("RunawayOnCooldown", true)
+
+    internal object TargetFilter : Configurable("TargetFilter") {
+        internal var range by float("Range", 50f, 10f..100f)
+        internal var visibleOnly by boolean("VisibleOnly", true)
+        internal var notWhenVoid by boolean("NotWhenVoid", true)
+    }
+
+    /**
+     * Configuration for leader following functionality
+     */
+    internal object LeaderFollower : ToggleableConfigurable(this, "Leader", false) {
+        internal val username by text("Username", "")
+        internal val radius by float("Radius", 5f, 2f..10f)
+    }
+
+    init {
+        tree(TargetFilter)
+        tree(LeaderFollower)
+    }
+
+    fun updateTarget() {
+        targetTracker.select { entity ->
+            if (player.squaredBoxedDistanceTo(entity) > TargetFilter.range.pow(2)) {
+                return@select null
             }
+
+            if (TargetFilter.visibleOnly && !player.canSee(entity)) {
+                return@select null
+            }
+
+            if (TargetFilter.notWhenVoid && entity.doesNotCollideBelow()) {
+                return@select null
+            }
+
+            entity
+        }
+    }
+
+    /**
+     * Creates combat context
+     */
+    override fun createNavigationContext(): CombatContext {
+        val playerPosition = player.pos
+
+        val combatTarget = targetTracker.target?.let { entity ->
+            val distance = playerPosition.distanceTo(entity.pos)
+            val range = min(ModuleKillAura.range, distance.toFloat())
+            val outOfDistance = distance > opponentRange
+
+            val targetRotation = entity.rotation.copy(pitch = 0.0f)
+            val requiredTargetRotation = Rotation.lookingAt(playerPosition, entity.eyePos).copy(pitch = 0.0f)
+            val outOfDanger = targetRotation.angleTo(requiredTargetRotation) > dangerousYawDiff
+
+            CombatTarget(entity, distance, range, outOfDistance, targetRotation, requiredTargetRotation, outOfDanger)
+        }
+
+        return CombatContext(
+            playerPosition,
+            combatTarget
         )
     }
 
-    @Suppress("unused")
-    val inputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { ev ->
-        val enemy = targetTracker.lockedOnTarget ?: return@handler
-        val distance = enemy.boxedDistanceTo(player)
-
-        if (clickScheduler.isClickOnNextTick()) {
-            if (distance < ModuleKillAura.range) {
-                ev.directionalInput = DirectionalInput.NONE
-                sideToGo = !sideToGo
-            } else {
-                ev.directionalInput = DirectionalInput.FORWARDS
+    /**
+     * Calculates the desired position to move towards
+     *
+     * @return Target position as Vec3d
+     */
+    override fun calculateGoalPosition(context: CombatContext): Vec3d? {
+        // Try to follow leader first
+        if (LeaderFollower.running && LeaderFollower.username.isNotEmpty()) {
+            val leader = world.players.find { it.gameProfile.name == LeaderFollower.username }
+            if (leader != null) {
+                return calculateLeaderGoalPosition(leader.pos, context.playerPosition)
             }
-        } else if (distance < safeRange) {
-            ev.directionalInput = DirectionalInput.BACKWARDS
-        } else {
-            ev.directionalInput = DirectionalInput.NONE
         }
 
-        // We are now in range of the player, so try to circle around him
-        ev.directionalInput = ev.directionalInput.copy(left = !sideToGo, right = sideToGo)
-
-        // Jump if we are stuck
-        if (player.horizontalCollision) {
-            ev.jump = true
+        // Otherwise handle combat movement
+        val combatTarget = context.combatTarget ?: return null
+        return if (runawayOnCooldown && !clickScheduler.willClickAt()) {
+            calculateRunawayPosition(context, combatTarget)
+        } else {
+            calculateAttackPosition(context, combatTarget)
         }
     }
 
-    private val maximumDriftRandom = (10f..30f).random()
+    /**
+     * Handles additional movement mechanics like swimming and jumping
+     *
+     * @param event Movement input event to modify
+     */
+    override fun handleMovementAssist(event: MovementInputEvent, context: CombatContext) {
+        super.handleMovementAssist(event, context)
 
-    fun makeClientSideRotationNeeded(target: Entity): Rotation? {
-        if (!enabled) return null
+        val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
+            && !context.combatTarget.outOfDanger
+        val goal = calculateGoalPosition(context)
+        val leaderAllowsJump = LeaderFollower.running && player.pos.distanceTo(goal) > LeaderFollower.radius
 
-        val targetDistance = target.boxedDistanceTo(player)
-
-        // Unlikely that we can travel such distance with such basic methods
-        if (targetDistance > 69) {
-            return null
+        if (contextAllowsJump || leaderAllowsJump) {
+            event.jump = true
         }
+    }
 
-        // Cause lag behind
-        var box = target.box.center
+    /**
+     * Gets rotation based on movement and target
+     *
+     * @return Movement rotation or null if no target
+     */
+    override fun getMovementRotation(): Rotation {
+        val movementRotation = super.getMovementRotation()
+        val movementPitch = targetTracker.target?.let { entity ->
+            Rotation.lookingAt(point = entity.box.center, from = player.eyePos).pitch
+        } ?: return movementRotation
 
-        val positionNow = target.pos
-        val prevTargetPosition = target.prevPos
-        val diff = positionNow - prevTargetPosition
+        return movementRotation.copy(pitch = movementPitch)
+    }
 
-        box -= (diff * ((targetDistance - 4.0).coerceAtLeast(1.0)))
-
-        val directRotation = RotationManager.makeRotation(box, player.eyePos)
-
-        if (directRotation != player.rotation) {
-            val pitchDifference = abs(directRotation.pitch - player.rotation.pitch)
-
-            // Limit pitch difference
-            if (pitchDifference < maximumDriftRandom) {
-                directRotation.pitch = player.rotation.pitch + (-2f..2f).random().toFloat()
+    private fun calculateLeaderGoalPosition(leaderPosition: Vec3d, playerPosition: Vec3d): Vec3d {
+        return (-180..180 step 45)
+            .mapNotNull { yaw ->
+                val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
+                val position = leaderPosition.add(rotation.directionVector * LeaderFollower.radius.toDouble())
+                ModuleDebug.debugGeometry(
+                    this,
+                    "Possible Position $yaw",
+                    ModuleDebug.DebuggedPoint(position, Color4b.MAGENTA)
+                )
+                position
             }
-        }
+            .minByOrNull { it.squaredDistanceTo(playerPosition) } ?: leaderPosition
+    }
 
-        // This is very basic and should be handled by the path finder in the future
-        return directRotation
+    private fun calculateRunawayPosition(context: CombatContext, combatTarget: CombatTarget): Vec3d {
+        return context.playerPosition.add(
+            combatTarget.requiredTargetRotation.directionVector * combatTarget.range.toDouble()
+        )
+    }
+
+    private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3d {
+        val target = combatTarget.entity
+        val targetLookPosition = target.pos.add(
+            combatTarget.targetRotation.directionVector * combatTarget.range.toDouble()
+        )
+
+        return (-180..180 step 10)
+            .mapNotNull { yaw ->
+                val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
+                val position = target.pos.add(rotation.directionVector * combatTarget.range.toDouble())
+
+                // Check if this point collides with a block
+                if (player.doesCollideAt(position)) {
+                    return@mapNotNull null
+                }
+
+                val isInAngle = rotation.angleTo(combatTarget.targetRotation) <= dangerousYawDiff
+                ModuleDebug.debugGeometry(
+                    this,
+                    "Possible Position $yaw",
+                    ModuleDebug.DebuggedPoint(position, if (!isInAngle) Color4b.GREEN else Color4b.RED)
+                )
+
+                if (isInAngle) null else position
+            }
+            .sortedBy { pos -> pos.squaredDistanceTo(targetLookPosition) }
+            .minByOrNull { pos -> pos.squaredDistanceTo(context.playerPosition) }
+            ?: targetLookPosition
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,9 @@ import net.ccbluex.liquidbounce.script.ScriptApiRequired
 abstract class ToggleableConfigurable(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
-    enabled: Boolean
-) : EventListener, Configurable(name, valueType = ValueType.TOGGLEABLE), MinecraftShortcuts {
+    enabled: Boolean,
+    aliases: Array<String> = emptyArray(),
+) : EventListener, Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), MinecraftShortcuts {
 
     // TODO: Make enabled change also call newState
     internal var enabled by boolean("Enabled", enabled)

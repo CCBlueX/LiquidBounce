@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,20 @@ object IntRangeAdapter : JsonSerializer<IntRange>, JsonDeserializer<IntRange> {
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): IntRange {
-        val obj = json.asJsonObject
+        if (json.isJsonPrimitive) {
+            val primitive = json.asJsonPrimitive
+            if (!primitive.isNumber) {
+                throw JsonParseException("Expected number, got ${primitive.asString}")
+            }
 
+            return IntRange(primitive.asInt, primitive.asInt)
+        }
+
+        if (!json.isJsonObject) {
+            throw JsonParseException("Expected object, got ${json.javaClass.name}")
+        }
+
+        val obj = json.asJsonObject
         return obj["from"].asInt..obj["to"].asInt
     }
 

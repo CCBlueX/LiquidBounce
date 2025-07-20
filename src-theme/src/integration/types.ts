@@ -22,6 +22,7 @@ export type ModuleSetting =
     | IntRangeSetting
     | ChoiceSetting
     | ChooseSetting
+    | MultiChooseSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
@@ -151,6 +152,14 @@ export interface ChooseSetting {
     value: string;
 }
 
+export interface MultiChooseSetting {
+    valueType: string;
+    name: string;
+    choices: string[];
+    value: string[];
+    canBeNone: boolean;
+}
+
 export interface ConfigurableSetting {
     valueType: string;
     name: string;
@@ -170,7 +179,6 @@ export interface PersistentStorageItem {
 
 export interface VirtualScreen {
     name: string;
-    showingSplash: boolean;
 }
 
 export interface Scoreboard {
@@ -230,6 +238,11 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
+    /**
+     * @deprecated use {@link enchantments} instead.
+     */
+    hasEnchantment: boolean;
+    enchantments?: Record<string, number>;
 }
 
 export interface PrintableKey {
@@ -323,6 +336,7 @@ export interface Proxy {
     id: number;
     host: string;
     port: number;
+    type: 'HTTP' | 'SOCKS5';
     forwardAuthentication: boolean;
     favorite: boolean;
     credentials: {
@@ -368,10 +382,9 @@ export interface ClientInfo {
 }
 
 export interface ClientUpdate {
-    updateAvailable: boolean;
     development: boolean;
     commit: string;
-    newestVersion: {
+    update: {
         buildId: number | undefined;
         commitId: string | undefined;
         branch: string | undefined;
@@ -381,7 +394,7 @@ export interface ClientUpdate {
         date: string;
         message: string;
         url: string;
-    }
+    } | undefined;
 }
 
 export interface Browser {

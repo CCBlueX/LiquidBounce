@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,10 +81,15 @@ class ArmorKitParameters(
  * @property armorKitParametersForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based
  * on the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
  * dependent on the other armor pieces, the armor parameters have to be provided slot-wise.
+ * @property durabilityThreshold the minimum durability an armor piece must have to be prioritized for use.
+ * If an armor piece's remaining durability is lower than this threshold,
+ * the piece is not prioritized anymore, and it can be replaced with another piece
+ * so that this piece can be preserved.
  */
 class ArmorComparator(
     private val expectedDamage: Float,
-    private val armorKitParametersForSlot: ArmorKitParameters
+    private val armorKitParametersForSlot: ArmorKitParameters,
+    private val durabilityThreshold : Int = Int.MIN_VALUE
 ) : Comparator<ArmorPiece> {
     companion object {
         private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
@@ -106,6 +111,7 @@ class ArmorComparator(
     }
 
     private val comparator = ComparatorChain(
+        compareBy { it.itemSlot.itemStack.durability > durabilityThreshold },
         compareByDescending { round(getThresholdedDamageReduction(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { round(getEnchantmentThreshold(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
@@ -124,10 +130,11 @@ class ArmorComparator(
             itemStack.get(DataComponentTypes.EQUIPPABLE)!!.slot
         )
 
+        val material = item.material()
         return getDamageFactor(
             damage = expectedDamage,
-            defensePoints = parameters.defensePoints + item.material().defense.getOrDefault(item.type(), 0),
-            toughness = parameters.toughness + item.material().toughness
+            defensePoints = parameters.defensePoints + material.defense.getOrDefault(item.type(), 0),
+            toughness = parameters.toughness + material.toughness
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 

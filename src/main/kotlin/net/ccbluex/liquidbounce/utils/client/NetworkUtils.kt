@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.inventory.OFFHAND_SLOT
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.network.SequencedPacketCreator
@@ -45,14 +46,16 @@ import net.minecraft.world.GameMode
 import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
 
+@Suppress("LongParameterList")
 fun clickBlockWithSlot(
     player: ClientPlayerEntity,
     rayTraceResult: BlockHitResult,
     slot: Int,
     swingMode: SwingMode,
-    switchMode: SwitchMode = SwitchMode.SILENT
+    switchMode: SwitchMode = SwitchMode.SILENT,
+    sequenced: Boolean = true
 ) {
-    val hand = if (slot == OFFHAND_SLOT.hotbarSlotForServer) {
+    val hand = if (slot == OffHandSlot.hotbarSlotForServer) {
         Hand.OFF_HAND
     } else {
         Hand.MAIN_HAND
@@ -72,8 +75,12 @@ fun clickBlockWithSlot(
         }
     }
 
-    interaction.sendSequencedPacket(world) { sequence ->
-        PlayerInteractBlockC2SPacket(hand, rayTraceResult, sequence)
+    if (sequenced) {
+        interaction.sendSequencedPacket(world) { sequence ->
+            PlayerInteractBlockC2SPacket(hand, rayTraceResult, sequence)
+        }
+    } else {
+        network.sendPacket(PlayerInteractBlockC2SPacket(hand, rayTraceResult, 0))
     }
 
     val itemUsageContext = ItemUsageContext(player, hand, rayTraceResult)
@@ -149,8 +156,9 @@ fun handlePacket(packet: Packet<*>) =
 
 fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking
-    val packetEvent = PacketEvent(TransferOrigin.SEND, packet, false)
+    val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)
     RotationManager.packetHandler.handler(packetEvent)
+    ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
     mc.networkHandler?.connection?.send(packetEvent.packet, null)
 }
 

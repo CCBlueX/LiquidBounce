@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -54,7 +54,7 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
 
     val repeatable = tickHandler {
         player.velocity.y = jumpHeight.toDouble()
-        player.strafe(speed = jumpSpeed.toDouble())
+        player.velocity = player.velocity.withStrafe(speed = jumpSpeed.toDouble())
         spoofOnGround = true
         waitTicks(ticks)
     }

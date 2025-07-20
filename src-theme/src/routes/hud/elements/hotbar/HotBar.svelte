@@ -68,7 +68,7 @@
         {#if overlayMessage !== null}
             <div class="overlay-message" out:fade={{duration: 200}}
                  style="max-width: {slotsElement?.offsetWidth ?? 0}px">
-                <TextComponent fontSize={14} textComponent={overlayMessage.text}/>
+                <TextComponent fontSize={14} textComponent={overlayMessage.text} allowPreformatting={true} />
             </div>
         {/if}
         {#if showItemStackName && itemStackName !== null}

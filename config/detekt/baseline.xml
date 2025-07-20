@@ -2,152 +2,32 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BracesOnIfStatements:AimDebugRecorder.kt$AimDebugRecorder$else</ID>
-    <ID>BracesOnIfStatements:AutoFarmBlockHandler.kt$AutoFarmBlockTracker$if</ID>
-    <ID>BracesOnIfStatements:ClientModule.kt$ClientModule$else</ID>
-    <ID>BracesOnIfStatements:ClientModule.kt$ClientModule$if</ID>
-    <ID>BracesOnIfStatements:CommandItemEnchant.kt$CommandItemEnchant$else</ID>
-    <ID>BracesOnIfStatements:CommandItemEnchant.kt$CommandItemEnchant$if</ID>
-    <ID>BracesOnIfStatements:DebugCPSRecorder.kt$DebugCPSRecorder$if</ID>
-    <ID>BracesOnIfStatements:FaceTargetPositionFactory.kt$NearestRotationTargetPositionFactory$if</ID>
-    <ID>BracesOnIfStatements:FaceTargetPositionFactory.kt$ReverseYawTargetPositionFactory$if</ID>
-    <ID>BracesOnIfStatements:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$if</ID>
-    <ID>BracesOnIfStatements:FlyFireball.kt$FlyFireball$else</ID>
-    <ID>BracesOnIfStatements:FlyFireballCustomTechnique.kt$FlyFireballCustomTechnique$if</ID>
-    <ID>BracesOnIfStatements:FlyFireballLegitTechnique.kt$FlyFireballLegitTechnique$if</ID>
-    <ID>BracesOnIfStatements:FlyGrim2859V.kt$FlyGrim2859V$if</ID>
-    <ID>BracesOnIfStatements:ItemImageAtlas.kt$ItemImageAtlas$if</ID>
-    <ID>BracesOnIfStatements:ModuleAntiExploit.kt$ModuleAntiExploit$if</ID>
-    <ID>BracesOnIfStatements:ModuleAutoFarm.kt$ModuleAutoFarm$if</ID>
-    <ID>BracesOnIfStatements:ModuleBlockESP.kt$ModuleBlockESP.Glow$if</ID>
-    <ID>BracesOnIfStatements:ModuleBlockESP.kt$ModuleBlockESP.Outline$if</ID>
-    <ID>BracesOnIfStatements:ModuleClickTp.kt$ModuleClickTp$else</ID>
-    <ID>BracesOnIfStatements:ModuleClickTp.kt$ModuleClickTp$if</ID>
-    <ID>BracesOnIfStatements:ModuleHighJump.kt$ModuleHighJump.Vulcan$else</ID>
-    <ID>BracesOnIfStatements:ModuleHoleESP.kt$ModuleHoleESP$if</ID>
-    <ID>BracesOnIfStatements:ModuleNoSlow.kt$ModuleNoSlow$else</ID>
-    <ID>BracesOnIfStatements:ModuleNoSlow.kt$ModuleNoSlow$if</ID>
-    <ID>BracesOnIfStatements:ModulePlugins.kt$ModulePlugins$else</ID>
-    <ID>BracesOnIfStatements:ModulePlugins.kt$ModulePlugins$if</ID>
-    <ID>BracesOnIfStatements:ModuleSkinDerp.kt$ModuleSkinDerp$else</ID>
-    <ID>BracesOnIfStatements:ModuleSkinDerp.kt$ModuleSkinDerp$if</ID>
-    <ID>BracesOnIfStatements:ModuleSmartEat.kt$ModuleSmartEat.Estimator$else</ID>
-    <ID>BracesOnIfStatements:ModuleSmartEat.kt$ModuleSmartEat.Estimator$if</ID>
-    <ID>BracesOnIfStatements:ModuleSmartEat.kt$ModuleSmartEat.SilentOffhand$if</ID>
-    <ID>BracesOnIfStatements:ModuleTimerRange.kt$ModuleTimerRange$if</ID>
-    <ID>BracesOnIfStatements:RenderShortcuts.kt$else</ID>
-    <ID>BracesOnIfStatements:RenderShortcuts.kt$if</ID>
-    <ID>BracesOnIfStatements:SpeedGrimCollide.kt$SpeedGrimCollide$if</ID>
-    <ID>BracesOnIfStatements:SpeedPreventDeadlyJump.kt$SpeedPreventDeadlyJump$if</ID>
-    <ID>BracesOnIfStatements:TargetFinding.kt$BlockPlacementTarget$if</ID>
-    <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$else</ID>
-    <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$if</ID>
     <ID>CognitiveComplexMethod:AStarMode.kt$AStarMode$private fun findPath(start: Vec3i, end: Vec3i, maxCost: Int, maxIterations: Int = 500): List&lt;Vec3i></ID>
-    <ID>CognitiveComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>CognitiveComplexMethod:BlockExtensions.kt$fun Block?.isInteractable(blockState: BlockState?): Boolean</ID>
-    <ID>CognitiveComplexMethod:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>CognitiveComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
-    <ID>CognitiveComplexMethod:CommandClient.kt$CommandClient$private fun accountCommand()</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$fun tokenizeCommand(line: String): Pair&lt;List&lt;String>, List&lt;Int>></ID>
-    <ID>CognitiveComplexMethod:CommandScript.kt$CommandScript$override fun createCommand(): Command</ID>
-    <ID>CognitiveComplexMethod:ContainerFunctions.kt$@Suppress("UNUSED_PARAMETER") fun postGiveItem(requestObject: RequestObject): FullHttpResponse</ID>
-    <ID>CognitiveComplexMethod:ItemCategorization.kt$ItemCategorization$@Suppress("CyclomaticComplexMethod", "LongMethod") fun getItemFacets(slot: ItemSlot): Array&lt;ItemFacet></ID>
-    <ID>CognitiveComplexMethod:KillAuraFailSwing.kt$KillAuraFailSwing$suspend fun Sequence&lt;*>.dealWithFakeSwing(target: Entity?)</ID>
-    <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence&lt;*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
-    <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$private suspend fun Sequence&lt;*>.mightAttack(chosenEntity: Entity, rotation: Rotation)</ID>
+    <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
+    <ID>CognitiveComplexMethod:ModuleKillAura.kt$ModuleKillAura$private suspend fun Sequence.mightAttack(chosenEntity: Entity, rotation: Rotation)</ID>
     <ID>CognitiveComplexMethod:PlacementRenderHandler.kt$PlacementRenderHandler$fun render(event: WorldRenderEvent, time: Long)</ID>
     <ID>CognitiveComplexMethod:RegistryFunctions.kt$@Suppress("UNUSED_PARAMETER") fun getRegistries(requestObject: RequestObject)</ID>
-    <ID>CognitiveComplexMethod:ScaffoldGodBridgeTechnique.kt$ScaffoldGodBridgeTechnique$override fun ledge( ledge: Boolean, ledgeSoon: Boolean, target: BlockPlacementTarget?, rotation: Rotation ): LedgeState</ID>
     <ID>CognitiveComplexMethod:SimulatedArrow.kt$SimulatedArrow$private fun updateCollision(pos: Vec3d, newPos: Vec3d): HitResult?</ID>
-    <ID>CognitiveComplexMethod:SpeedAntiCornerBump.kt$SpeedAntiCornerBump$fun getSuggestedJumpDelay( simulatedPlayer: SimulatedPlayer, n: Int = 2, ): Int?</ID>
-    <ID>ComplexCondition:PlacementRenderHandler.kt$PlacementRenderHandler$(!direction1Present &amp;&amp; !direction2Present) || (direction1Present &amp;&amp; direction2Present &amp;&amp; !diagonalPresent)</ID>
-    <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
-    <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
-    <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
-    <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
-    <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandBinds.kt$CommandBinds$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandClient.kt$CommandClient$private fun componentCommand()</ID>
-    <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
-    <ID>LongMethod:CommandConfig.kt$CommandConfig$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandContainers.kt$CommandContainers$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandHide.kt$CommandHide$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandItems.kt$CommandItems$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$override fun createCommand(): Command</ID>
+    <ID>EmptyFunctionBlock:ModuleFreeCam.kt$ModuleFreeCam.Navigation${ }</ID>
+    <ID>FunctionNaming:ProtocolUtil.kt$fun send1_8BlockPlacement(blockPos: BlockPos, face: Int, heldItem: ItemStack, facingXIn: Float, facingYIn: Float, facingZIn: Float)</ID>
+    <ID>FunctionNaming:ProtocolUtil.kt$fun send1_8SignUpdate(blockPos: BlockPos, lines: Array&lt;String>)</ID>
+    <ID>LongMethod:CommandClientIntegrationSubcommand.kt$CommandClientIntegrationSubcommand$private fun menuSubcommand()</ID>
     <ID>LongMethod:CommandManager.kt$CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>LongMethod:CommandRemoteView.kt$CommandRemoteView$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandScript.kt$CommandScript$override fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandXRay.kt$CommandXRay$override fun createCommand(): Command</ID>
-    <ID>LongMethod:InteropFunctionRegistry.kt$internal fun registerInteropFunctions(node: Node)</ID>
-    <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
-    <ID>LongMethod:RegistryFunctions.kt$@Suppress("UNUSED_PARAMETER") fun getRegistries(requestObject: RequestObject)</ID>
-    <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
-    <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, val requiresIngame: Boolean, private var parentCommand: Command? = null )</ID>
-    <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
-    <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
-    <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
-    <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
-    <ID>LongParameterList:RotationsUtil.kt$RotationManager$( rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority, provider: ClientModule, whenReached: RestrictedSingleUseAction? = null )</ID>
-    <ID>LongParameterList:RotationsUtil.kt$RotationManager$( vecRotation: VecRotation, entity: Entity? = null, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority, provider: ClientModule )</ID>
-    <ID>LongParameterList:TargetFinding.kt$BlockPlacementTargetFindingOptions$( val offsetsToInvestigate: List&lt;Vec3i>, val stackToPlaceWith: ItemStack, val facePositionFactory: FaceTargetPositionFactory, val offsetPriorityGetter: (Vec3i) -> Double, val playerPositionOnPlacement: Vec3d, val playerPoseOnPlacement: EntityPose = EntityPose.STANDING, val allowPointingAway: Boolean = false )</ID>
-    <ID>LongParameterList:ThemeManager.kt$ThemeManager$(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float)</ID>
+    <ID>LongParameterList:ProtocolUtil.kt$(blockPos: BlockPos, face: Int, heldItem: ItemStack, facingXIn: Float, facingYIn: Float, facingZIn: Float)</ID>
     <ID>LoopWithTooManyJumpStatements:BlockPlacer.kt$BlockPlacer$while</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
-    <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
-    <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
-    <ID>MaxLineLength:CriticalsPacket.kt$CriticalsPacket$(ModuleCriticals.WhenSprinting.enabled &amp;&amp; ModuleCriticals.WhenSprinting.stopSprinting != ModuleCriticals.WhenSprinting.StopSprintingMode.NONE)</ID>
-    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
-    <ID>MaxLineLength:ModuleAutoBuff.kt$ModuleAutoBuff$object</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$if</ID>
-    <ID>MaxLineLength:Parameters.kt$fun</ID>
+    <ID>MaxLineLength:ModuleBookBot.kt$ModuleBookBot.BookBuilder$*</ID>
+    <ID>MaxLineLength:ModuleBookBot.kt$ModuleBookBot.GenerationMode.Random$*</ID>
     <ID>NestedBlockDepth:AStarMode.kt$AStarMode$private fun findPath(start: Vec3i, end: Vec3i, maxCost: Int, maxIterations: Int = 500): List&lt;Vec3i></ID>
-    <ID>NestedBlockDepth:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
-    <ID>NestedBlockDepth:ContainerFunctions.kt$@Suppress("UNUSED_PARAMETER") fun postGiveItem(requestObject: RequestObject): FullHttpResponse</ID>
-    <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
-    <ID>NestedBlockDepth:ScaffoldGodBridgeTechnique.kt$ScaffoldGodBridgeTechnique$override fun ledge( ledge: Boolean, ledgeSoon: Boolean, target: BlockPlacementTarget?, rotation: Rotation ): LedgeState</ID>
-    <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
-    <ID>ReturnCount:IntegrationListener.kt$IntegrationListener$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
-    <ID>ReturnCount:SpeedAntiCornerBump.kt$SpeedAntiCornerBump$fun getSuggestedJumpDelay( simulatedPlayer: SimulatedPlayer, n: Int = 2, ): Int?</ID>
-    <ID>StringLiteralDuplication:AutoQueueGommeDuels.kt$AutoQueueGommeDuels$"AutoPlay"</ID>
-    <ID>StringLiteralDuplication:ScriptSetting.kt$ScriptSetting$"default"</ID>
-    <ID>SwallowedException:ClientInteropServer.kt$ClientInteropServer$e: Exception</ID>
-    <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
-    <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalArgumentException()</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>TooManyFunctions:AccountFunctions.kt$net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.AccountFunctions.kt</ID>
-    <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableEventListener</ID>
-    <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
-    <ID>TooManyFunctions:BlockPlacer.kt$BlockPlacer : ConfigurableEventListener</ID>
-    <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
-    <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>TooManyFunctions:CommandClient.kt$CommandClient : CommandFactory</ID>
-    <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
-    <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
-    <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
-    <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
-    <ID>TooManyFunctions:InventoryUtils.kt$net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.kt</ID>
-    <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
-    <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : EventListenerIterable</ID>
-    <ID>TooManyFunctions:PlacementRenderHandler.kt$PlacementRenderHandler</ID>
-    <ID>TooManyFunctions:ProxyFunctions.kt$net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.ProxyFunctions.kt</ID>
-    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
-    <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : EventListener</ID>
-    <ID>TooManyFunctions:ScriptSetting.kt$ScriptSetting</ID>
-    <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
-    <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
-    <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (ClientModule) -> Boolean = { true }</ID>
-    <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (ClientModule) -> Boolean = { true }</ID>
-    <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
-    <ID>UnusedPrivateProperty:NoFallBlink.kt$NoFallBlink$i</ID>
+    <ID>UnusedPrivateMember:HumanInputDeserializer.kt$HumanInputDeserializer$private fun fail(s: String): Boolean</ID>
   </CurrentIssues>
 </SmellBaseline>

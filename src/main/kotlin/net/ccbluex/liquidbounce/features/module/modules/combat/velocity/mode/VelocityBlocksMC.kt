@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,10 +30,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
  * BlocksMC velocity
  * @author liquidsquid1
  */
-internal object VelocityBlocksMC : Choice("BlocksMC") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = modes
+internal object VelocityBlocksMC : VelocityMode("BlocksMC") {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

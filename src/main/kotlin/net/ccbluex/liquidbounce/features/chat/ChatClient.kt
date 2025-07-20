@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
  *
  */
 
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.features.chat
 
 import com.google.gson.GsonBuilder
@@ -26,49 +28,48 @@ import com.mojang.authlib.exceptions.InvalidCredentialsException
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
-import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.util.Util
+import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import java.net.URI
 import java.util.*
 
 class ChatClient {
 
-    var channel: Channel? = null
+    private var channel: Channel? = null
 
     private val serializer = PacketSerializer().apply {
-        registerPacket("RequestMojangInfo", ServerRequestMojangInfoPacket::class.java)
-        registerPacket("LoginMojang", ServerLoginMojangPacket::class.java)
-        registerPacket("Message", ServerMessagePacket::class.java)
-        registerPacket("PrivateMessage", ServerPrivateMessagePacket::class.java)
-        registerPacket("BanUser", ServerBanUserPacket::class.java)
-        registerPacket("UnbanUser", ServerUnbanUserPacket::class.java)
-        registerPacket("RequestJWT", ServerRequestJWTPacket::class.java)
-        registerPacket("LoginJWT", ServerLoginJWTPacket::class.java)
+        register<ServerRequestMojangInfoPacket>("RequestMojangInfo")
+        register<ServerLoginMojangPacket>("LoginMojang")
+        register<ServerMessagePacket>("Message")
+        register<ServerPrivateMessagePacket>("PrivateMessage")
+        register<ServerBanUserPacket>("BanUser")
+        register<ServerUnbanUserPacket>("UnbanUser")
+        register<ServerRequestJWTPacket>("RequestJWT")
+        register<ServerLoginJWTPacket>("LoginJWT")
     }
 
     private val deserializer = PacketDeserializer().apply {
-        registerPacket("MojangInfo", ClientMojangInfoPacket::class.java)
-        registerPacket("NewJWT", ClientNewJWTPacket::class.java)
-        registerPacket("Message", ClientMessagePacket::class.java)
-        registerPacket("PrivateMessage", ClientPrivateMessagePacket::class.java)
-        registerPacket("Error", ClientErrorPacket::class.java)
-        registerPacket("Success", ClientSuccessPacket::class.java)
+        register<ClientMojangInfoPacket>("MojangInfo")
+        register<ClientNewJWTPacket>("NewJWT")
+        register<ClientMessagePacket>("Message")
+        register<ClientPrivateMessagePacket>("PrivateMessage")
+        register<ClientErrorPacket>("Error")
+        register<ClientSuccessPacket>("Success")
     }
 
     val connected: Boolean
@@ -77,13 +78,24 @@ class ChatClient {
     private var isConnecting = false
     var loggedIn = false
 
+    private val serializerGson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(Packet::class.java, serializer)
+            .create()
+    }
+
+    private val deserializerGson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(Packet::class.java, deserializer)
+            .create()
+    }
+
     fun connectAsync() {
         if (isConnecting || connected) {
             return
         }
 
-        // Async connecting using IO worker from Minecraft
-        Util.getIoWorkerExecutor().execute {
+        withScope {
             connect()
         }
     }
@@ -93,7 +105,7 @@ class ChatClient {
      * Supports SSL and non-SSL connections.
      * Be aware SSL takes insecure certificates.
      */
-    fun connect() = runCatching {
+    private fun connect() = runCatching {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTING))
         isConnecting = true
         loggedIn = false
@@ -102,12 +114,11 @@ class ChatClient {
 
         val ssl = uri.scheme.equals("wss", true)
         val sslContext = if (ssl) {
-            SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE)
+            SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
         } else {
             null
         }
 
-        val group = NioEventLoopGroup()
         val handler = ChannelHandler(
             this,
             WebSocketClientHandshakerFactory.newHandshaker(
@@ -121,8 +132,7 @@ class ChatClient {
 
         val bootstrap = Bootstrap()
 
-        bootstrap.group(group)
-            .channel(NioSocketChannel::class.java)
+        bootstrap.clientChannelAndGroup(tryToUseEpoll = true)
             .handler(object : ChannelInitializer<SocketChannel>() {
 
                 /**
@@ -225,11 +235,7 @@ class ChatClient {
      * Send packet to server
      */
     internal fun sendPacket(packet: Packet) {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, serializer)
-            .create()
-
-        channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
+        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, Packet::class.java)))
     }
 
     private fun handleFunctionalPacket(packet: Packet) {
@@ -266,26 +272,7 @@ class ChatClient {
                 ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT))
             is ClientErrorPacket -> {
                 // TODO: Replace with translation
-                val message = when (packet.message) {
-                    "NotSupported" -> "This method is not supported!"
-                    "LoginFailed" -> "Login Failed!"
-                    "NotLoggedIn" -> "You must be logged in to use the chat!"
-                    "AlreadyLoggedIn" -> "You are already logged in!"
-                    "MojangRequestMissing" -> "Mojang request missing!"
-                    "NotPermitted" -> "You are missing the required permissions!"
-                    "NotBanned" -> "You are not banned!"
-                    "Banned" -> "You are banned!"
-                    "RateLimited" -> "You have been rate limited. Please try again later."
-                    "PrivateMessageNotAccepted" -> "Private message not accepted!"
-                    "EmptyMessage" -> "You are trying to send an empty message!"
-                    "MessageTooLong" -> "Message is too long!"
-                    "InvalidCharacter" -> "Message contains a non-ASCII character!"
-                    "InvalidId" -> "The given ID is invalid!"
-                    "Internal" -> "An internal server error occurred!"
-                    else -> packet.message
-                }
-
-                EventManager.callEvent(ClientChatErrorEvent(message))
+                EventManager.callEvent(ClientChatErrorEvent(translateErrorMessage(packet)))
             }
             is ClientSuccessPacket -> {
                 when (packet.reason) {
@@ -304,16 +291,35 @@ class ChatClient {
         }
     }
 
+    private fun translateErrorMessage(packet: ClientErrorPacket): String {
+        val message = when (packet.message) {
+            "NotSupported" -> "This method is not supported!"
+            "LoginFailed" -> "Login Failed!"
+            "NotLoggedIn" -> "You must be logged in to use the chat!"
+            "AlreadyLoggedIn" -> "You are already logged in!"
+            "MojangRequestMissing" -> "Mojang request missing!"
+            "NotPermitted" -> "You are missing the required permissions!"
+            "NotBanned" -> "You are not banned!"
+            "Banned" -> "You are banned!"
+            "RateLimited" -> "You have been rate limited. Please try again later."
+            "PrivateMessageNotAccepted" -> "Private message not accepted!"
+            "EmptyMessage" -> "You are trying to send an empty message!"
+            "MessageTooLong" -> "Message is too long!"
+            "InvalidCharacter" -> "Message contains a non-ASCII character!"
+            "InvalidId" -> "The given ID is invalid!"
+            "Internal" -> "An internal server error occurred!"
+            else -> packet.message
+        }
+
+        return message
+    }
+
 
     /**
      * Handle incoming message of websocket
      */
     internal fun handlePlainMessage(message: String) {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, deserializer)
-            .create()
-
-        val packet = gson.fromJson(message, Packet::class.java)
+        val packet = deserializerGson.fromJson(message, Packet::class.java)
         handleFunctionalPacket(packet)
     }
 

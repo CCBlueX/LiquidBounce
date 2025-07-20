@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.ChatScreen
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.openChat
+import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -32,15 +39,25 @@ import net.minecraft.client.gui.screen.DeathScreen
  *
  * Quality of life improvements to the in-game chat.
  */
-object ModuleBetterChat : ClientModule("BetterChat", Category.MISC, aliases = arrayOf("AntiSpam")) {
+object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = arrayOf("AntiSpam")) {
+    private val features by multiEnumChoice("Features",
+        Features.INFINITE,
+        Features.ANTI_CLEAR,
+        Features.KEEP_AFTER_DEATH
+    )
 
-    val infiniteLength by boolean("Infinite", true)
-    val antiClear by boolean("AntiClear", true)
+    val infiniteLength get() = Features.INFINITE in features
+    val antiClear get() = Features.ANTI_CLEAR in features
+
+    /**
+     * Allows you to transform your message text to unicode.
+     */
+    private val forceUnicodeChat get() = Features.FORCE_UNICODE_CHAT in features
 
     /**
      * Allows you to use the chat on the death screen.
      */
-    private val keepAfterDeath by boolean("KeepAfterDeath", true)
+    private val keepAfterDeath get() = Features.KEEP_AFTER_DEATH in features
 
     private object AppendPrefix : MessageModifier("AppendPrefix", false) {
         val prefix by text("Prefix", "> ")
@@ -55,24 +72,24 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.MISC, aliases = ar
         override fun getMessage(content: String) = content + suffix
     }
 
+    private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
+
     init {
         tree(AppendPrefix)
         tree(AppendSuffix)
+        tree(AntiSpam)
+        tree(Copy)
     }
 
-    /**
-     * Allows you to transform your message text to unicode.
-     */
-    private val forceUnicodeChat by boolean("ForceUnicodeChat", false)
-
-    init {
-        tree(AntiSpam)
+    object Copy : ToggleableConfigurable(this, "Copy", true) {
+        val notification by boolean("Notificate", true)
+        val highlight by boolean("Highlight", true)
     }
 
     var antiChatClearPaused = false
 
     @Suppress("unused")
-    val keyboardKeyHandler = handler<KeyboardKeyEvent> {
+    private val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         if (keepAfterDeath && mc.currentScreen !is DeathScreen) {
             return@handler
         }
@@ -80,14 +97,25 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.MISC, aliases = ar
         val options = mc.options
         val prefix = CommandManager.Options.prefix[0]
         when (it.keyCode) {
-            options.chatKey.boundKey.code -> openChat("")
-            options.commandKey.boundKey.code -> openChat("/")
-            prefix.code -> openChat(prefix.toString())
+            options.chatKey.boundKey.code -> mc.openChat("")
+            options.commandKey.boundKey.code -> mc.openChat("/")
+            prefix.code -> mc.openChat(prefix.toString())
         }
     }
 
-    private fun openChat(text: String) {
-        mc.send { mc.setScreen(ChatScreen(text)) }
+    @Suppress("unused")
+    private val chatReceiveHandler = suspendHandler<ChatReceiveEvent> { event ->
+        if (event.type !in autoTranslate) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = event.message.stripMinecraftColorCodes())
+        if (result.isValid) {
+            chat(
+                result.toResultText(),
+                metadata = MessageMetadata(prefix = false)
+            )
+        }
     }
 
     fun modifyMessage(content: String): String {
@@ -116,19 +144,25 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.MISC, aliases = ar
         }
     }
 
-    private abstract class MessageModifier(
+    private sealed class MessageModifier(
         name: String,
         enabled: Boolean
     ) : ToggleableConfigurable(this, name, enabled) {
-        fun modifyMessage(content: String): String {
+        fun modifyMessage(content: String) =
             if (!this.enabled) {
-                return content
+                content
+            } else {
+                getMessage(content)
             }
-
-            return getMessage(content)
-        }
 
         abstract fun getMessage(content: String): String
     }
 
+    @Suppress("unused")
+    private enum class Features(override val choiceName: String) : NamedChoice {
+        INFINITE("Infinite"),
+        ANTI_CLEAR("AntiClear"),
+        KEEP_AFTER_DEATH("KeepAfterDeath"),
+        FORCE_UNICODE_CHAT("ForceUnicodeChat")
+    }
 }

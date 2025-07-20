@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.entity.isFallingToVoid
+import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -39,13 +39,14 @@ internal object NoFallVulcanTP : Choice("VulcanTP288") {
 
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
-    val packetHandler = handler<PacketEvent> {
-        val packet = it.packet
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
 
         if (packet is PlayerMoveC2SPacket && player.fallDistance in 2.5..50.0
             // Check if the player is falling into the void and set safety expand to 0.0 - otherwise,
             // the player will be teleported to the void and flag
-            && !player.isFallingToVoid(voidLevel = voidThreshold.toDouble(), safetyExpand = 0.0)) {
+            && !player.doesNotCollideBelow(until = voidThreshold.toDouble())) {
             // Rewrite the packet to make the server think we're on the ground
             packet.onGround = true
 

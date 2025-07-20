@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
 import java.io.Closeable
 
@@ -81,13 +80,12 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
         }
 
         val active = GlStateManager._getActiveTexture()
-        val alphaTest = GL11.glIsEnabled(GL11.GL_ALPHA_TEST)
 
-        GL11.glDisable(GL11.GL_ALPHA_TEST)
         GlStateManager._bindTexture(0)
-
         RenderSystem.disableDepthTest()
         enableBlend()
+
+        buffer.bind()
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
         shaders.forEachIndexed { i, shader ->
@@ -101,25 +99,15 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
             GlStateManager._bindTexture(inputFramebuffer.colorAttachment)
 
             shader.use()
-
-            buffer.bind()
             buffer.draw()
-            VertexBuffer.unbind()
-
             shader.stop()
         }
 
-        shaders.indices.forEach {
-            GlStateManager._activeTexture(GL13.GL_TEXTURE0 + it)
-            GlStateManager._bindTexture(0)
-        }
+        VertexBuffer.unbind()
 
         endBlend()
         RenderSystem.enableDepthTest()
         GlStateManager._activeTexture(active)
-        if (alphaTest) {
-            GL11.glEnable(GL11.GL_ALPHA_TEST)
-        }
     }
 
     protected open fun enableBlend() {

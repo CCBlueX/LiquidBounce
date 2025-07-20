@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.client.option.Perspective
@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Allows to queue packets and flush them later on demand.
  *
  * Fires [QueuePacketEvent] to determine whether a packet should be queued or not. They can be
- * from origin [TransferOrigin.RECEIVE] or [TransferOrigin.SEND], but will be handled separately.
+ * from origin [TransferOrigin.INCOMING] or [TransferOrigin.OUTGOING], but will be handled separately.
  */
 object PacketQueueManager : EventListener {
 
@@ -70,24 +70,30 @@ object PacketQueueManager : EventListener {
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
-        if (!inGame) {
+        if (mc.networkHandler?.connection?.isOpen != true) {
             packetQueue.clear()
             return@handler
         }
 
-        if (fireEvent(null, TransferOrigin.RECEIVE) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.RECEIVE }
-        }
-
-        if (fireEvent(null, TransferOrigin.SEND) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.SEND }
+        if (fireEvent(null, TransferOrigin.OUTGOING) == Action.FLUSH) {
+            flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
         }
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent>(
-        priority = EventPriorityConvention.FINAL_DECISION
-    ) { event ->
+    private val flushReceiveHandler = handler<TickPacketProcessEvent> {
+        if (mc.networkHandler?.connection?.isOpen != true) {
+            packetQueue.clear()
+            return@handler
+        }
+
+        if (fireEvent(null, TransferOrigin.INCOMING) == Action.FLUSH) {
+            flush { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
+        }
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent>(priority = FINAL_DECISION) { event ->
         // Ignore packets that are already cancelled, as they are already handled
         if (event.isCancelled) {
             return@handler
@@ -240,8 +246,8 @@ object PacketQueueManager : EventListener {
 
     private fun flushSnapshot(snapshot: PacketSnapshot) {
         when (snapshot.origin) {
-            TransferOrigin.SEND -> sendPacketSilently(snapshot.packet)
-            TransferOrigin.RECEIVE -> handlePacket(snapshot.packet)
+            TransferOrigin.OUTGOING -> sendPacketSilently(snapshot.packet)
+            TransferOrigin.INCOMING -> handlePacket(snapshot.packet)
         }
     }
 

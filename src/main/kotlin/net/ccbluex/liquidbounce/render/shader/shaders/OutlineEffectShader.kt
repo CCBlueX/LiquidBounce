@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.render.shader.shaders
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.shader.FramebufferShader
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
@@ -18,8 +18,8 @@ object OutlineEffectShaderData  {
 
 object OutlineEffectShader : FramebufferShader(
     Shader(
-        resourceToString("/assets/liquidbounce/shaders/plane_projection.vert"),
-        resourceToString("/assets/liquidbounce/shaders/glow/glow.frag"),
+        resourceToString("/resources/liquidbounce/shaders/plane_projection.vert"),
+        resourceToString("/resources/liquidbounce/shaders/glow/glow.frag"),
         arrayOf(
             UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) },
             UniformProvider("image") { pointer -> GL20.glUniform1i(pointer, 0) },

@@ -2,16 +2,19 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.ccbluex.liquidbounce.utils.math.findFunctionMinimumByBisect
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.entity.EntityDimensions
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.ln
+import kotlin.math.pow
+import kotlin.math.round
 
 /**
  * Implements the angle calculator described by Cydhra
@@ -32,7 +35,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
     ): Rotation? {
         val calculatedLookVec = predictArrowDirection(projectileInfo, sourcePos, targetShape, targetPosFunction)
 
-        return calculatedLookVec?.let(RotationManager::makeRotation)
+        return calculatedLookVec?.let(Rotation::fromRotationVec)
     }
 
     private fun getDirectionByTime(
@@ -97,7 +100,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
         val maxTravelTime = distance / trajectoryInfo.initialVelocity * 1.75
 
         // Calculate how long the arrow would need to travel to hit the entity with the given position function.
-        val (ticks, delta) = findFunctionMinimumByBisect(0.0..maxTravelTime) { ticks ->
+        val (ticks, delta) = findFunctionMinimumByBisect(0.0, maxTravelTime) { ticks ->
             val newLimit = getDirectionByTime(
                 trajectoryInfo,
                 enemyPosition = positionFunction.getPositionInTicks(ticks).add(defaultBoxOffset),
@@ -158,7 +161,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
             playerHeadPosition,
             directionOnImpact,
             entityPositionOnImpact,
-            targetEntityBox = targetDimensions.getBoxAt(entityPositionOnImpact)
+            targetEntityBox = targetDimensions.getBoxAt(entityPositionOnImpact).expand(trajectoryInfo.hitboxRadius)
         ) ?: return null
 
         return getDirectionByTime(trajectoryInfo, finalTargetPos, playerHeadPosition, round(ticksUntilImpact))

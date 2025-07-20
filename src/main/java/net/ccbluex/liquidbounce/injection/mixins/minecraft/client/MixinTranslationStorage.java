@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public abstract class MixinTranslationStorage {
         for (Resource res : resourceRefs) {
             if (VanillaTranslationRecognizer.INSTANCE.isPackLegit(res.getPack())) {
                 vanillaResources.add(res);
-            } else if (!VanillaTranslationRecognizer.INSTANCE.shouldPreventLoad(res.getPack())) {
+            } else {
                 loadedResources.add(res);
             }
         }
@@ -54,9 +54,7 @@ public abstract class MixinTranslationStorage {
         load(langCode, loadedResources, translations);
 
         var map = new HashMap<String, String>();
-
         load(langCode, vanillaResources, map);
-
         VanillaTranslationRecognizer.INSTANCE.getVanillaTranslations().addAll(map.keySet());
 
         translations.putAll(map);

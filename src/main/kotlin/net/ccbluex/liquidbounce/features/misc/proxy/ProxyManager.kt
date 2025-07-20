@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.event.events.ProxyAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.events.ProxyEditResultEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.proxy.Proxy.Credentials.Companion.credentials
 
 /**
  * Proxy Manager
@@ -40,7 +39,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy.Credentials.Companion.
  */
 object ProxyManager : Configurable("proxy"), EventListener {
 
-    private val NO_PROXY = Proxy("", 0, null)
+    private val NO_PROXY = Proxy("", 0, null, Proxy.Type.SOCKS5)
 
     private var proxy by value("selectedProxy", NO_PROXY, valueType = ValueType.PROXY)
     internal val proxies by value(name, mutableListOf<Proxy>(), listType = ListValueType.Proxy)
@@ -55,9 +54,16 @@ object ProxyManager : Configurable("proxy"), EventListener {
         ConfigSystem.root(this)
     }
 
-    fun addProxy(host: String, port: Int, username: String = "", password: String = "",
-                 forwardAuthentication: Boolean = false) {
-        Proxy(host, port, credentials(username, password), forwardAuthentication).check(
+    @Suppress("LongParameterList")
+    fun addProxy(
+        host: String,
+        port: Int,
+        username: String = "",
+        password: String = "",
+        type: Proxy.Type = Proxy.Type.SOCKS5,
+        forwardAuthentication: Boolean = false
+    ) {
+        Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication).check(
             success = { proxy ->
                 LiquidBounce.logger.info("Added proxy [${proxy.host}:${proxy.port}]")
                 proxies.add(proxy)
@@ -74,9 +80,16 @@ object ProxyManager : Configurable("proxy"), EventListener {
     }
 
     @Suppress("LongParameterList")
-    fun editProxy(index: Int, host: String, port: Int, username: String = "", password: String = "",
-                  forwardAuthentication: Boolean = false) {
-        Proxy(host, port, credentials(username, password), forwardAuthentication).check(
+    fun editProxy(
+        index: Int,
+        host: String,
+        port: Int,
+        username: String = "",
+        password: String = "",
+        type: Proxy.Type = Proxy.Type.SOCKS5,
+        forwardAuthentication: Boolean = false
+    ) {
+        Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication).check(
             success = { newProxy ->
                 val isConnected = proxy == proxies[index]
 

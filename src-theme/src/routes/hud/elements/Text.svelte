@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { listen } from "../../../integration/ws";
-    import type { ClientPlayerDataEvent } from "../../../integration/events";
-    import type { PlayerData } from "../../../integration/types";
-    import { rgbaToHex } from "../../../integration/util";
-    import { intToRgba } from "../../../integration/util.js";
+    import {listen} from "../../../integration/ws";
+    import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import type {PlayerData} from "../../../integration/types";
+    import {rgbaToHex} from "../../../integration/util";
+    import {intToRgba} from "../../../integration/util.js";
 
     let playerData: PlayerData | null = null;
     let processedText: string = '';
@@ -25,24 +25,25 @@
             const keys = p1.split(".");
             let value: any = playerData;
 
-            // Traverse playerData to get the correct value
             for (const key of keys) {
                 value = value ? value[key] : null;
             }
 
-            // Format the value based on type
             if (value !== null && value !== undefined) {
                 switch (typeof value) {
-                    case 'number': // Round numbers to two decimal places
+                    case 'number':
+                        if (value % 1 === 0) {
+                            return value.toString();
+                        }
+
                         return value.toFixed(2);
-                    case 'object': // Convert objects to JSON strings
+                    case 'object':
                         return JSON.stringify(value);
                     default:
                         return value.toString();
                 }
             }
 
-            // Return original tag if value is null or undefined
             return match;
         });
     }

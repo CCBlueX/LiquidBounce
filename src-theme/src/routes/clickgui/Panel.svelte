@@ -6,9 +6,15 @@
     import type {ModuleToggleEvent} from "../../integration/events";
     import {fly} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {gridSize, highlightModuleName, maxPanelZIndex, showGrid, snappingEnabled} from "./clickgui_store";
+    import {
+        gridSize,
+        highlightModuleName,
+        maxPanelZIndex,
+        scaleFactor,
+        showGrid,
+        snappingEnabled
+    } from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
-    import {scaleFactor} from "./clickgui_store";
 
     export let category: string;
     export let modules: TModule[];
@@ -142,9 +148,9 @@
         }, 500)
     }
 
-    highlightModuleName.subscribe((m) => {
+    highlightModuleName.subscribe((name) => {
         const highlightModule = modules.find(
-            (m) => m.name === m.name,
+            (m) => m.name === name,
         );
         if (highlightModule) {
             panelConfig.zIndex = ++$maxPanelZIndex;

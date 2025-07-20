@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -57,7 +57,7 @@ internal object NoFallBlink : Choice("Blink") {
     override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    val inputHandler = handler<MovementInputEvent> { event ->
+    private val inputHandler = handler<MovementInputEvent> { event ->
         // If we are invincible, we don't need to care about fall damage
         if (player.isCreative || player.abilities.allowFlying || player.abilities.flying) {
             blinkFall = false
@@ -112,7 +112,7 @@ internal object NoFallBlink : Choice("Blink") {
         )
 
         // Check if we collect fall distance above 2f in the next 10 ticks
-        for (i in 0..MAXIMUM_TICKS) {
+        for (ignored in 0..MAXIMUM_TICKS) {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.fallDistance > triggerFallDistance) {
@@ -138,7 +138,7 @@ internal object NoFallBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && blinkFall) {
+        if (event.origin == TransferOrigin.OUTGOING && blinkFall) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

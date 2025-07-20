@@ -58,17 +58,35 @@
     }
 
     function setDescription() {
-        const y = (moduleNameElement?.getBoundingClientRect().top ?? 0) + ((moduleNameElement?.clientHeight ?? 0) / 2);
-        const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
+        if (!moduleNameElement) return;
+
+        const boundingRect = moduleNameElement.getBoundingClientRect();
+        const y = (boundingRect.top + (moduleNameElement.clientHeight / 2)) * (2 / $scaleFactor);
+
         let moduleDescription = description;
         if (aliases.length > 0) {
-            moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
+            moduleDescription += ` (aka ${aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})`;
         }
-        descriptionStore.set({
-            x: x * (2 / $scaleFactor),
-            y: y * (2 / $scaleFactor),
-            description: moduleDescription
-        });
+
+        // If element is less than 300px from the right, display description on the left
+        if (window.innerWidth - boundingRect.right > 300) {
+            const x = boundingRect.right * (2 / $scaleFactor);
+            descriptionStore.set({
+                x,
+                y,
+                anchor: "right",
+                description: moduleDescription
+            });
+        } else {
+            const x = boundingRect.left * (2 / $scaleFactor);
+
+            descriptionStore.set({
+                x,
+                y,
+                anchor: "left",
+                description: moduleDescription
+            });
+        }
     }
 
     async function toggleExpanded() {
@@ -96,17 +114,13 @@
             class:enabled
             class:highlight={name === $highlightModuleName}
     >
-        {#if $spaceSeperatedNames}
-            {convertToSpacedString(name)}
-        {:else}
-            {name}
-        {/if}
+        {$spaceSeperatedNames ? convertToSpacedString(name) : name}
     </div>
 
     {#if expanded && configurable}
         <div class="settings">
             {#each configurable.value as setting (setting.name)}
-                <GenericSetting skipAnimationDelay={true} {path} bind:setting on:change={updateModuleSettings}/>
+                <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
             {/each}
         </div>
     {/if}

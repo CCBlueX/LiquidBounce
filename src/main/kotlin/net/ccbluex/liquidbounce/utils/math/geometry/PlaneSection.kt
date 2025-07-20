@@ -1,5 +1,8 @@
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -25,7 +28,7 @@ class PlaneSection(
         }
     }
 
-    fun getFairStepSide(nPoints: Int): Pair<Double, Double> {
+    fun getFairStepSide(nPoints: Int): DoubleDoublePair {
         val aspectRatio = this.dirVec2.length() / this.dirVec1.length()
 
         val vec1zero = MathHelper.approximatelyEquals(this.dirVec1.length(), 0.0)
@@ -36,11 +39,11 @@ class PlaneSection(
                 val dz = sqrt(1 / (aspectRatio * nPoints))
                 val dy = sqrt(aspectRatio / nPoints)
 
-                dz to dy
+                DoubleDoublePair.of(dz, dy)
             }
-            vec1zero && vec2zero -> 1.0 to 1.0
-            vec1zero -> 1.0 to (2.0 / nPoints)
-            else -> 2.0 / nPoints to 1.0
+            vec1zero && vec2zero -> DoubleDoublePair.of(1.0, 1.0)
+            vec1zero -> DoubleDoublePair.of(1.0, 2.0 / nPoints)
+            else -> DoubleDoublePair.of(2.0 / nPoints, 1.0)
         }
     }
 

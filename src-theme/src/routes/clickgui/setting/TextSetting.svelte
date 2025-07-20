@@ -2,6 +2,7 @@
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, TextSetting,} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import {setTyping} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
@@ -18,8 +19,12 @@
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <input type="text" class="value" spellcheck="false"
-           placeholder={$spaceSeperatedNames ? convertToSpacedString(setting.name) : setting.name}
-           bind:value={cSetting.value} on:input={handleChange}>
+           placeholder={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
+           bind:value={cSetting.value}
+           on:input={handleChange}
+           on:focusin={async () => await setTyping(true)}
+           on:focusout={async () => await setTyping(false)}
+    >
 </div>
 
 <style lang="scss">

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,9 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
@@ -69,11 +67,13 @@ object ScriptInteractionUtil {
     fun placeBlock(blockPos: BlockPos, hand: Hand): Boolean {
         val itemStack = player.getStackInHand(hand)
         val blockPlacementOptions = BlockPlacementTargetFindingOptions(
-            listOf(Vec3i.ZERO),
-            itemStack,
-            CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            player.pos
+            BlockOffsetOptions(
+                listOf(Vec3i.ZERO),
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            ),
+            FaceHandlingOptions(CenterTargetPositionFactory),
+            stackToPlaceWith = itemStack,
+            PlayerLocationOnPlacement(position = player.pos),
         )
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)
@@ -83,7 +83,7 @@ object ScriptInteractionUtil {
         val rayTraceResult = raycast(bestPlacement.rotation)
             ?: return false
 
-        // If the type we are aiming at, is not a block, we can't place it
+        // If the type we are aiming at is not a block, we can't place it
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return false
         }

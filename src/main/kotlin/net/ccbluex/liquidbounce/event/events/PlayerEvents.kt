@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,16 +39,16 @@ class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float,
 
 @Nameable("death")
 @WebSocketEvent
-class DeathEvent : Event()
+object DeathEvent : Event()
 
 @Nameable("playerTick")
 class PlayerTickEvent : CancellableEvent()
 
 @Nameable("playerPostTick")
-class PlayerPostTickEvent : Event()
+object PlayerPostTickEvent : Event()
 
 @Nameable("playerMovementTick")
-class PlayerMovementTickEvent : Event()
+object PlayerMovementTickEvent : Event()
 
 @Nameable("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(val state: EventState,
@@ -62,16 +62,13 @@ class PlayerNetworkMovementTickEvent(val state: EventState,
 class PlayerPushOutEvent : CancellableEvent()
 
 @Nameable("playerMove")
-class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
-
-@Nameable("rotatedMovementInput")
-class RotatedMovementInputEvent(var forward: Float, var sideways: Float) : Event()
+class PlayerMoveEvent(val type: MovementType, var movement: Vec3d) : Event()
 
 @Nameable("playerJump")
-class PlayerJumpEvent(var motion: Float) : CancellableEvent()
+class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 
 @Nameable("playerAfterJump")
-class PlayerAfterJumpEvent : Event()
+object PlayerAfterJumpEvent : Event()
 
 @Nameable("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
@@ -79,8 +76,14 @@ class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 @Nameable("playerSneakMultiplier")
 class PlayerSneakMultiplier(var multiplier: Double) : Event()
 
+/**
+ * Warning: UseHotbarSlotOrOffHand won't stimulate this event
+ */
+@Nameable("playerInteractItem")
+class PlayerInteractItemEvent : CancellableEvent()
+
 @Nameable("playerInteractedItem")
-class PlayerInteractedItem(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
+class PlayerInteractedItemEvent(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
 
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()

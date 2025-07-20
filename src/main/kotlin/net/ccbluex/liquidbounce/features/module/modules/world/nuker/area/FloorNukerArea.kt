@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
+import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.isNotEmpty
 import net.ccbluex.liquidbounce.utils.math.component1
@@ -55,7 +55,7 @@ object FloorNukerArea : NukerArea("Floor") {
         )
 
         // Check if the box is within the radius
-        val eyesPos = player.eyes
+        val eyesPos = player.eyePos
         val rangeSquared = radius * radius
         if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
             // Return empty list if not
@@ -82,7 +82,7 @@ object FloorNukerArea : NukerArea("Floor") {
                 for (pos in start..end) {
                     val state = pos.getState() ?: continue
 
-                    if (state.isNotBreakable(pos)) {
+                    if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
                         continue
                     }
 

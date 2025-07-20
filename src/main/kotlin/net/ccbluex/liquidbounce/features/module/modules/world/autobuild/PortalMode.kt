@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Items
@@ -49,7 +49,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
     }
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<RotationUpdateEvent> {
         if (!placer.isDone()) {
             return@handler
         }
@@ -73,47 +73,51 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
         portal = null
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     private fun getPortal(): NetherPortal? {
-        val portals = mutableListOf<NetherPortal>()
+        var result: NetherPortal? = null
         val pos = BlockPos.ofFloored(player.pos)
         for (direction in Direction.HORIZONTAL) {
-            for (yOffset in -1 until 1) {
+            for (yOffset in -1..0) {
                 for (dirOffset in 0 downTo  -1) {
-                    var portalOrigin = pos.offset(direction)
+                    val portalOrigin = pos.mutableCopy().move(direction)
                     val rotated = direction.rotateYClockwise()
                     if (dirOffset == -1) {
-                        portalOrigin = portalOrigin.offset(rotated.opposite)
+                        portalOrigin.move(rotated.opposite)
                     }
                     if (yOffset == -1) {
-                        portalOrigin = portalOrigin.down()
+                        portalOrigin.move(Direction.DOWN)
                     }
 
                     val portal = NetherPortal(portalOrigin, yOffset == -1, direction, rotated)
                     portal.calculateScore()
-                    portals.add(portal)
+                    if (!portal.isValid()) continue
+
+                    if (result == null || result.score < portal.score) {
+                        result = portal
+                    }
                 }
             }
         }
 
-        return portals.filter { it.isValid() }.maxByOrNull { it.score }
+        return result
     }
 
     override fun getSlot(): HotbarItemSlot? {
-        HOTBAR_SLOTS.forEach {
+        for (it in Slots.OffhandWithHotbar) {
             val item = it.itemStack.item
             if (phase == Phase.IGNITE) {
                 if (item == Items.FLINT_AND_STEEL) {
                     return it
                 }
 
-                return@forEach
+                continue
             }
 
             // build phase...
 
             if (item !is BlockItem) {
-                return@forEach
+                continue
             }
 
             if (item.block == Blocks.OBSIDIAN) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,17 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.dropPort
-import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 
 object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = true, aliases = arrayOf("AutoSettings")) {
 
@@ -43,7 +41,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         "loyisa.cn",
         "anticheat-test.com"
     )
-    private var requiresConfigLoad = false
+    private var isScheduled = false
 
     init {
         doNotIncludeAlways()
@@ -60,31 +58,42 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        loadServerConfig(currentServerEntry.address.dropPort().rootDomain())
+        withScope {
+            loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
+        }
         super.enable()
     }
 
-    override fun disable() {
-        requiresConfigLoad = false
-        super.disable()
-    }
-
-    val repeatable = tickHandler {
-        if (requiresConfigLoad && inGame && mc.currentScreen == null) {
-            enable()
-            requiresConfigLoad = false
-        }
-    }
-
     @Suppress("unused")
-    val handleServerConnect = handler<ServerConnectEvent> {
-        requiresConfigLoad = true
+    private val handleServerConnect = handler<ServerConnectEvent> { event ->
+        if (isScheduled) {
+            return@handler
+        }
+
+        // This will stop us from connecting to the server right away
+        event.cancelEvent()
+
+        withScope {
+            try {
+                isScheduled = true
+                val address = event.serverInfo.address.dropPort().rootDomain()
+
+                loadServerConfig(address, event.connectScreen)
+            } finally {
+                // Proceed to connect to the server
+                event.connectScreen.connect(mc, event.address, event.serverInfo, event.cookieStorage)
+                isScheduled = false
+            }
+        }
     }
 
     /**
      * Loads the config for the given server address
      */
-    private fun loadServerConfig(address: String) {
+    private suspend fun loadServerConfig(
+        address: String,
+        connectScreen: ConnectScreen? = null
+    ) {
         if (blacklistedServer.any { address.endsWith(it, true) }) {
             notification(
                 "Auto Config", "This server is blacklisted.",
@@ -97,10 +106,10 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         // There can be multiple configs for the same server, but with different names
         // and the global config is likely named e.g "hypixel", while the more specific ones are named
         // "hypixel-csgo", "hypixel-legit", etc.
-        val autoConfig = configs.filter {
-            it.serverAddress?.rootDomain().equals(address, true) ||
-                    it.serverAddress.equals(address, true)
-        }.minByOrNull { it.name.length }
+        val autoConfig = (configs ?: return).filter { config ->
+            config.serverAddress?.rootDomain().equals(address, true) ||
+                    config.serverAddress.equals(address, true)
+        }.minByOrNull { config -> config.name.length }
 
         if (autoConfig == null) {
             notification(
@@ -110,7 +119,19 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        AutoConfig.loadAutoConfig(autoConfig)
+        connectScreen?.setStatus(regular(message("loading", address)))
+        runCatching {
+            AutoConfig.loadAutoConfig(autoConfig)
+        }.onFailure { error ->
+            logger.error("Failed to load config ${autoConfig.name} for $address.", error)
+            connectScreen?.setStatus(markAsError(message("failed", address)))
+            notification("Auto Config", "Failed to load config ${autoConfig.name}.",
+                NotificationEvent.Severity.ERROR)
+        }.onSuccess {
+            connectScreen?.setStatus(regular(message("loaded", address)))
+            notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
+                NotificationEvent.Severity.SUCCESS)
+        }
     }
 
     /**

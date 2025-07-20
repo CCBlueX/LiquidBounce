@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,4 +28,4 @@ open class DynamicConfigurable(
     value: MutableList<Value<*>> = mutableListOf(),
     val factory: (String, JsonObject) -> Value<*>,
     valueType: ValueType = ValueType.CONFIGURABLE
-) : Configurable(name, value, valueType)
+) : Configurable(name, value = value, valueType = valueType)

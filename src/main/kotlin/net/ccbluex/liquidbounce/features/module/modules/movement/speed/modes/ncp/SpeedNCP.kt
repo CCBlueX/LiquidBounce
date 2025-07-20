@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
 
@@ -58,7 +58,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             } else {
                 ticksInAir++
                 if (ticksInAir == onTick) {
-                    player.strafe()
+                    player.velocity = player.velocity.withStrafe()
                     player.velocity.y -= (0.1523351824467155 * motionMultiplier)
                 }
             }
@@ -110,10 +110,11 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             if (player.isOnGround) {
                 val groundMin = GROUND_CONSTANT + SPEED_CONSTANT * speedMultiplier
 
-                player.strafe(speed = player.sqrtSpeed.coerceAtLeast(groundMin))
+                player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(groundMin))
             } else if (shouldStrafeInAir) {
                 val airMin = AIR_CONSTANT + SPEED_CONSTANT * speedMultiplier
-                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airMin))
+                player.velocity =
+                    player.velocity.withStrafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airMin))
             }
         }
 
@@ -122,7 +123,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageBoost) {
-            player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
+            player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
         }
     }
 

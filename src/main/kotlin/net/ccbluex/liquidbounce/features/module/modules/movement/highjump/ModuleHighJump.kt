@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +83,9 @@ object ModuleHighJump : ClientModule("HighJump", Category.MOVEMENT) {
                     if (player.age % 2 == 0) {
                         player.velocity.y = -0.155
                     }
-                } else player.velocity.y = -0.1
+                } else {
+                    player.velocity.y = -0.1
+                }
             }
         }
 

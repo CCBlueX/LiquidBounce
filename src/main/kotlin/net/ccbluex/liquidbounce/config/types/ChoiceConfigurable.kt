@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,20 +26,18 @@ import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 
 /**
- * Allows to configure and manage modes
+ * Allows configuring and manage modes
  */
 class ChoiceConfigurable<T : Choice>(
     @Exclude @ProtocolExclude val eventListener: EventListener,
     name: String,
-    activeChoiceCallback: (ChoiceConfigurable<T>) -> T,
+    activeChoiceIndexCallback: (List<T>) -> Int,
     choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
     var choices: MutableList<T> = choicesCallback(this).toMutableList()
-    private var defaultChoice: T = activeChoiceCallback(this)
+    private var defaultChoice: T = choices[activeChoiceIndexCallback(choices)]
     var activeChoice: T = defaultChoice
-
-    operator fun T.unaryPlus() = choices.add(this)
 
     init {
         for (choice in choices) {
@@ -143,9 +141,9 @@ abstract class Choice(name: String) : Configurable(name), EventListener, NamedCh
 
     protected fun <T: Choice> choices(
         name: String,
-        activeCallback: (ChoiceConfigurable<T>) -> T,
+        activeIndex: Int = 0,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
-    ) = choices(this, name, activeCallback, choicesCallback)
+    ) = choices(this, name, activeIndex, choicesCallback)
 }
 
 /**

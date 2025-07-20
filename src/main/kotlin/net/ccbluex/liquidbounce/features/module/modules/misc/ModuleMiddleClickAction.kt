@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.ccbluex.liquidbounce.utils.item.findHotbarItemSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
 
@@ -47,6 +47,10 @@ object ModuleMiddleClickAction : ClientModule(
     Category.MISC,
     aliases = arrayOf("FriendClicker", "MiddleClickPearl")
 ) {
+
+    init {
+        doNotIncludeAlways()
+    }
 
     private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
@@ -70,11 +74,11 @@ object ModuleMiddleClickAction : ClientModule(
 
             if (pickup) {
                 // visually select the slot
-                val slot = findHotbarItemSlot(Items.ENDER_PEARL)?.hotbarSlotForServer ?: return@tickHandler
+                val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlotForServer ?: return@tickHandler
                 SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
                 wasPressed = true
             } else if (wasPressed) { // the key was released
-                findHotbarItemSlot(Items.ENDER_PEARL)?.let {
+                Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
 
@@ -93,7 +97,7 @@ object ModuleMiddleClickAction : ClientModule(
         fun cancelPick(): Boolean {
             return ModuleMiddleClickAction.running &&
                 mode.activeChoice == this &&
-                findHotbarItemSlot(Items.ENDER_PEARL) != null
+                Slots.Hotbar.findSlot(Items.ENDER_PEARL) != null
         }
 
         override val parent: ChoiceConfigurable<*>

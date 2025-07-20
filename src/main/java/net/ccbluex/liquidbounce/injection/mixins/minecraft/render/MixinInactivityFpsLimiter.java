@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,21 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.utils.render.RefreshRateKt;
 import net.minecraft.client.option.InactivityFpsLimiter;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 @Mixin(InactivityFpsLimiter.class)
 public abstract class MixinInactivityFpsLimiter {
 
-    @Shadow
-    private int maxFps;
-
     /**
      * Removes frame rate limit
      */
     @ModifyConstant(method = "update", constant = @Constant(intValue = 60))
     private int getFramerateLimit(int original) {
-        return maxFps;
+        return RefreshRateKt.getRefreshRate();
     }
 
 }

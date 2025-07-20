@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.Dispatchers
+import net.ccbluex.liquidbounce.api.thirdparty.OPENAI_BASE_URL
+import net.ccbluex.liquidbounce.api.thirdparty.OpenAiApi
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -27,18 +29,18 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.openai.OPENAI_BASE_URL
-import net.ccbluex.liquidbounce.utils.openai.OpenAi
 
 /**
  * Automatically solves chat game riddles.
  */
 object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
 
+    init {
+        doNotIncludeAlways()
+    }
+
     private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)
-        .doNotIncludeAlways() // Keeps API key private
     private val openAiKey by text("OpenAiKey", "")
-        .doNotIncludeAlways() // Keeps API key private
     private val model by text("Model", "gpt-4o-mini") // GPT 4O Mini should be enough for this
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
         "ms")
@@ -47,6 +49,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
     private val triggerSentence by text("TriggerSentence", "Chat Game")
     private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
+    private val answerTemplate by text("AnswerTemplate", "%s")
 
     /**
      * Default prompt for the AI.
@@ -154,7 +157,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         val answer = waitFor(Dispatchers.IO) {
             runCatching {
                 // Create new AI instance with OpenAI key
-                val ai = OpenAi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+                val ai = OpenAiApi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
                 ai.requestNewAnswer(question).trimEnd {
                     // Remove dot on the end of answer
@@ -173,7 +176,11 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         waitTicks(delay / 50)
 
         // Send answer
-        network.sendChatMessage(answer)
+        val formattedAnswer = answerTemplate.format(answer)
+        if (formattedAnswer.startsWith("/")) {
+            network.sendCommand(formattedAnswer.substring(1))
+        } else {
+            network.sendChatMessage(formattedAnswer)
+        }
     }
-
 }

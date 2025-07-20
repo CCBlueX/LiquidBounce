@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import net.minecraft.client.render.Camera
 import net.minecraft.client.util.math.MatrixStack
 
 @Nameable("gameRender")
-class GameRenderEvent : Event()
+object GameRenderEvent : Event()
 
 @Nameable("screenRender")
 class ScreenRenderEvent(val context: DrawContext, val partialTicks: Float) : Event()
@@ -41,7 +41,7 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  *
  * Note: After writing to the outline framebuffer [markDirty] must be called.
  */
-@Nameable("worldRender")
+@Nameable("drawOutlines")
 class DrawOutlinesEvent(
     val matrixStack: MatrixStack,
     val camera: Camera,

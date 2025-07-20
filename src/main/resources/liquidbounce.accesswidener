@@ -9,6 +9,7 @@ mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client
 accessible field net/minecraft/client/MinecraftClient authenticationService Lcom/mojang/authlib/yggdrasil/YggdrasilAuthenticationService;
 accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
+accessible field net/minecraft/client/MinecraftClient attackCooldown I
 
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
@@ -56,6 +57,9 @@ mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket pitch F
 mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
 mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
 mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
+
+accessible field net/minecraft/client/gui/hud/InGameHud title Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/hud/InGameHud subtitle Lnet/minecraft/text/Text;
 
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
@@ -177,3 +181,17 @@ accessible method net/minecraft/client/texture/NativeImage write (Ljava/nio/chan
 
 accessible field net/minecraft/client/render/LightmapTextureManager lightmapFramebuffer Lnet/minecraft/client/gl/SimpleFramebuffer;
 accessible field net/minecraft/client/render/WorldRenderer entityOutlineFramebuffer Lnet/minecraft/client/gl/Framebuffer;
+
+accessible method net/minecraft/client/render/RenderLayer of (Ljava/lang/String;Lnet/minecraft/client/render/VertexFormat;Lnet/minecraft/client/render/VertexFormat$DrawMode;ILnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;)Lnet/minecraft/client/render/RenderLayer$MultiPhase;
+accessible class net/minecraft/client/render/RenderPhase$Transparency
+accessible method net/minecraft/client/render/RenderPhase$Texture <init> (Lnet/minecraft/util/Identifier;Lnet/minecraft/util/TriState;Z)V
+accessible field net/minecraft/client/render/RenderPhase POSITION_TEXTURE_COLOR_PROGRAM Lnet/minecraft/client/render/RenderPhase$ShaderProgram;
+accessible field net/minecraft/client/render/RenderPhase TRANSLUCENT_TRANSPARENCY Lnet/minecraft/client/render/RenderPhase$Transparency;
+accessible field net/minecraft/client/render/RenderPhase ALWAYS_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
+accessible field net/minecraft/client/render/RenderPhase LEQUAL_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
+accessible method net/minecraft/client/gl/ShaderProgram <init> (I)V
+
+accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
+accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V
+
+accessible method net/minecraft/client/network/PlayerListEntry texturesSupplier (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;

@@ -43,7 +43,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
         // stacks messages so that e.g., when a message is sent twice
         // it gets replaces by a new messages that has `[2]` appended
-        if (stack) {
+        if (stack && event.type != ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE) {
             // always cancel so each message gets an ID
             event.cancelEvent()
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
@@ -112,13 +112,13 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to jump (just like speeding up) and boost strafe entry
             player.jump()
-            player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
+            player.velocity = player.velocity.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
             waitUntil { !player.isOnGround }
 
             // Proceed to strafe with the normal speed
-            player.strafe(speed = speed.toDouble())
+            player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
         } else if (collidesBottomVertical()) {
             shouldLag = false
 
@@ -142,7 +142,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // Strafe the player to improve control
         if (strafe) {
-            player.strafe()
+            player.velocity = player.velocity.withStrafe()
         }
 
         // Set timer speed
@@ -185,7 +185,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (blink && shouldLag && event.origin == TransferOrigin.SEND) {
+        if (blink && shouldLag && event.origin == TransferOrigin.OUTGOING) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

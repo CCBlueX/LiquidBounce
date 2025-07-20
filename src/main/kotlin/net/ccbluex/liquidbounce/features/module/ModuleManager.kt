@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl
-import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.dupe.ModuleDupe
+import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
@@ -54,6 +52,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
@@ -72,6 +71,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.features.module.modules.render.*
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
@@ -84,6 +84,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
@@ -142,16 +143,51 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         }
     }
 
+    /**
+     * Handles world change and enables modules that are not enabled yet
+     */
     @Suppress("unused")
-    val worldHandler = handler<WorldChangeEvent> {
+    private val handleWorldChange = handler<WorldChangeEvent> { event ->
+        // Delayed start handling
+        if (event.world != null) {
+            for (module in modules) {
+                if (!module.enabled || module.calledSinceStartup) continue
+
+                try {
+                    module.calledSinceStartup = true
+                    module.enable()
+                } catch (e: Exception) {
+                    logger.error("Failed to enable module ${module.name}", e)
+                }
+            }
+        }
+
+        // Store modules configuration after world change, happens on disconnect as well
         ConfigSystem.storeConfigurable(modulesConfigurable)
+    }
+
+    /**
+     * Handles disconnect and if [Module.disableOnQuit] is true disables module
+     */
+    @Suppress("unused")
+    private val handleDisconnect = handler<DisconnectEvent> {
+        for (module in modules) {
+            if (module.disableOnQuit) {
+                try {
+                    module.enabled = false
+                } catch (e: Exception) {
+                    logger.error("Failed to disable module ${module.name}", e)
+                }
+            }
+        }
     }
 
     /**
      * Register inbuilt client modules
      */
+    @Suppress("LongMethod")
     fun registerInbuilt() {
-        var builtin = arrayOf(
+        val builtin = arrayOf(
             // Combat
             ModuleAimbot,
             ModuleAutoArmor,
@@ -181,6 +217,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAntiReducedDebugInfo,
             ModuleAntiHunger,
             ModuleClip,
+            ModuleExtendedFirework,
             ModuleResetVL,
             ModuleDamage,
             ModuleDisabler,
@@ -193,18 +230,14 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModulePingSpoof,
             ModulePlugins,
             ModulePortalMenu,
-            ModuleResourceSpoof,
             ModuleSleepWalker,
-            ModuleSpoofer,
-            ModuleBungeeSpoofer,
             ModuleVehicleOneHit,
             ModuleServerCrasher,
             ModuleDupe,
             ModuleClickTp,
-            ModuleConsoleSpammer,
-            ModuleTranslationFix,
             ModuleTimeShift,
             ModuleTeleport,
+            ModulePhase,
 
             // Fun
             ModuleDankBobbing,
@@ -215,8 +248,12 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleVomit,
 
             // Misc
+            ModuleBookBot,
             ModuleAntiBot,
+            ModuleBetterTab,
+            ModuleItemScroller,
             ModuleBetterChat,
+            ModuleElytraTarget,
             ModuleMiddleClickAction,
             ModuleInventoryTracker,
             ModuleNameProtect,
@@ -224,12 +261,16 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSpammer,
             ModuleAutoAccount,
             ModuleTeams,
+            ModuleElytraSwap,
             ModuleAutoChatGame,
-            ModuleFocus,
+            ModuleTargetLock,
             ModuleAutoPearl,
             ModuleAntiStaff,
             ModuleFlagCheck,
             ModulePacketLogger,
+            ModuleDebugRecorder,
+            ModuleAntiCheatDetect,
+            ModuleEasyPearl,
 
             // Movement
             ModuleAirJump,
@@ -266,6 +307,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleVehicleControl,
             ModuleSpider,
             ModuleTargetStrafe,
+            ModuleAnchor,
 
             // Player
             ModuleAntiVoid,
@@ -288,6 +330,8 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleReach,
             ModuleAutoQueue,
             ModuleSmartEat,
+            ModuleReplenish,
+            ModulePotionSpoof,
 
             // Render
             ModuleAnimations,
@@ -298,7 +342,9 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleCameraClip,
             ModuleClickGui,
             ModuleDamageParticles,
+            ModuleParticles,
             ModuleESP,
+            ModuleLogoffSpot,
             ModuleFreeCam,
             ModuleFreeLook,
             ModuleFullBright,
@@ -312,6 +358,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAttackEffects,
             ModuleNametags,
             ModuleCombineMobs,
+            ModuleAspect,
             ModuleAutoF5,
             ModuleChams,
             ModuleBedPlates,
@@ -330,10 +377,13 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleTracers,
             ModuleTrajectories,
             ModuleTrueSight,
+            ModuleVoidESP,
             ModuleXRay,
             ModuleDebug,
             ModuleZoom,
             ModuleItemChams,
+            ModuleCrystalView,
+            ModuleSkinChanger,
 
             // World
             ModuleAutoBuild,
@@ -345,6 +395,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleFastPlace,
             ModuleFucker,
             ModuleAutoTrap,
+            ModuleBlockTrap,
             ModuleNoSlowBreak,
             ModuleLiquidPlace,
             ModuleProjectilePuncher,
@@ -353,6 +404,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleNuker,
             ModuleExtinguish,
             ModuleBedDefender,
+            ModuleBlockIn,
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
@@ -361,13 +413,9 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoConfig,
             ModuleRichPresence,
             ModuleTargets,
+            ModuleTranslation,
             ModuleLiquidChat
         )
-
-        // Register dev modules
-        if (LiquidBounce.IN_DEVELOPMENT) {
-            builtin += ModuleDebugRecorder
-        }
 
         builtin.forEach { module ->
             addModule(module)
@@ -376,13 +424,13 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         }
     }
 
-    private fun addModule(module: ClientModule) {
+    fun addModule(module: ClientModule) {
         module.initConfigurable()
         module.init()
         modules.sortedInsert(module, ClientModule::name)
     }
 
-    private fun removeModule(module: ClientModule) {
+    fun removeModule(module: ClientModule) {
         if (module.running) {
             module.disable()
         }
@@ -390,46 +438,8 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         modules -= module
     }
 
-    /**
-     * Allow `ModuleManager += Module` syntax
-     */
-    operator fun plusAssign(module: ClientModule) {
-        addModule(module)
-    }
-
-    operator fun plusAssign(modules: Iterable<ClientModule>) {
-        modules.forEach(this::addModule)
-    }
-
-    operator fun minusAssign(module: ClientModule) {
-        removeModule(module)
-    }
-
-    operator fun minusAssign(modules: Iterable<ClientModule>) {
-        modules.forEach(this::removeModule)
-    }
-
     fun clear() {
         modules.clear()
-    }
-
-    fun autoComplete(begin: String, args: List<String>, validator: (ClientModule) -> Boolean = { true }): List<String> {
-        val parts = begin.split(",")
-        val matchingPrefix = parts.last()
-        val resultPrefix = parts.dropLast(1).joinToString(",") + ","
-        return filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-            .map {
-                if (parts.size == 1) {
-                    it.name
-                } else {
-                    resultPrefix + it.name
-                }
-            }
-    }
-
-    fun parseModulesFromParameter(name: String?): List<ClientModule> {
-        if (name == null) return emptyList()
-        return name.split(",").mapNotNull { getModuleByName(it) }
     }
 
     /**
@@ -440,6 +450,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
     fun getCategories() = Category.entries.mapArray { it.readableName }
 
     @JvmName("getModules")
+    @ScriptApiRequired
     fun getModules(): Iterable<ClientModule> = modules
 
     @JvmName("getModuleByName")

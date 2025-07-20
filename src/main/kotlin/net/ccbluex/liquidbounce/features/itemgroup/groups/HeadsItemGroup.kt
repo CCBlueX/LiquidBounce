@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup.groups
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -55,28 +56,21 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
 
 }
 
-val headsCollection by lazy {
+/**
+ * The API endpoint to fetch heads from which is owned by CCBlueX
+ * and therefore can reliably depend on.
+ */
+const val HEAD_DB_API = "https://headdb.org/api/category/all"
+
+val heads by AsyncLazy {
     runCatching {
-        class HeadsService(val enabled: Boolean, val url: String)
+        val heads: HashMap<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).parse()
 
-        logger.info("Loading heads...")
-        // Load head service from cloud
-        // Makes it possible to disable service or change domain in case of an emergency
-        val headService: HeadsService = decode(HttpClient.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
-
-        if (headService.enabled) {
-            // Load heads from service
-            //  Syntax based on HeadDB (headdb.org)
-            val heads: HashMap<String, Head> = decode(HttpClient.get(headService.url))
-
-            heads.values.toTypedArray().also {
-                logger.info("Successfully loaded ${it.size} heads from the database")
-            }
-        } else {
-            error("Head service has been disabled")
+        heads.values.toTypedArray().also {
+            logger.info("Successfully loaded ${it.size} heads from HeadDB")
         }
-    }.onFailure {
-        logger.error("Unable to load heads database", it)
+    }.onFailure { exception ->
+        logger.error("Unable to load heads", exception)
     }.getOrElse { emptyArray() }
 }
 
@@ -85,7 +79,7 @@ class HeadsItemGroup : ClientItemGroup(
     icon = { ItemStack(Items.SKELETON_SKULL) },
     items = { items ->
         items.addAll(
-            headsCollection
+            heads
                 .distinctBy { it.name }
                 .map(Head::asItemStack)
         )

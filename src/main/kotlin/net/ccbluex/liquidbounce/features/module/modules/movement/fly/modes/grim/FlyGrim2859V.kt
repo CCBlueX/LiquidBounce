@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,12 +57,15 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
     }
 
     val tickHandler = handler<PlayerTickEvent> {
-        if (ticks == 0) player.jump()
-        // For some reason, low timer makes the timer jump (2 tick start)
-        // A lot more stable.
-        else if (ticks <= 5) Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly, 1)
-        // If ticks goes over toggle limit and toggle isnt 0, disable.
-        else if (ticks >= toggle && toggle != 0) ModuleFly.enabled = false
+        when {
+            ticks == 0 -> player.jump()
+            // For some reason, low timer makes the timer jump (2 tick start)
+            // A lot more stable.
+            ticks <= 5 -> Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly, 1)
+            // If ticks goes over toggle limit and toggle isnt 0, disable.
+            ticks >= toggle && toggle != 0 -> ModuleFly.enabled = false
+        }
+
         ticks++
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
@@ -41,7 +42,7 @@ open class FakePlayer(
 ) : OtherClientPlayerEntity(
     clientWorld,
     gameProfile
-) {
+), MinecraftShortcuts {
 
     lateinit var onRemoval: () -> Unit
 
@@ -79,10 +80,10 @@ open class FakePlayer(
             setHealth(1.0f)
 
             val packet = EntityStatusS2CPacket(LivingEntity::class.java.cast(this), 35.toByte())
-            val event = PacketEvent(TransferOrigin.RECEIVE, packet, true)
+            val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
-                packet.apply(MinecraftClient.getInstance().networkHandler)
+                mc.execute { packet.apply(MinecraftClient.getInstance().networkHandler) }
             }
         }
     }

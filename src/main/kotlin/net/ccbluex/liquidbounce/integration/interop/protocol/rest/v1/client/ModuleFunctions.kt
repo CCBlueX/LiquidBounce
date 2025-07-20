@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,32 +27,43 @@ import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
-import java.io.StringReader
+
+private fun ClientModule.toJsonObject() = JsonObject().apply {
+    addProperty("name", name)
+    addProperty("category", category.readableName)
+    add("keyBind", interopGson.toJsonTree(bind))
+    addProperty("enabled", enabled)
+    addProperty("description", description.get())
+    addProperty("tag", tag)
+    addProperty("hidden", hidden)
+    add("aliases", interopGson.toJsonTree(aliases))
+}
 
 // GET /api/v1/client/modules
 @Suppress("UNUSED_PARAMETER")
 fun getModules(requestObject: RequestObject): FullHttpResponse {
     val mods = JsonArray()
     for (module in ModuleManager) {
-        mods.add(JsonObject().apply {
-            addProperty("name", module.name)
-            addProperty("category", module.category.readableName)
-            add("keyBind", interopGson.toJsonTree(module.bind))
-            addProperty("enabled", module.enabled)
-            addProperty("description", module.description.get())
-            addProperty("tag", module.tag)
-            addProperty("hidden", module.hidden)
-            add("aliases", interopGson.toJsonTree(module.aliases))
-        })
+        mods.add(module.toJsonObject())
     }
     return httpOk(mods)
+}
+
+// GET /api/v1/client/module/:name
+fun getModule(requestObject: RequestObject): FullHttpResponse {
+    val name = requestObject.params["name"] ?: return httpForbidden("Module not found")
+    val module = ModuleManager[name] ?: return httpForbidden("Module not found")
+
+    return httpOk(module.toJsonObject())
 }
 
 // PUT /api/v1/client/modules/toggle
@@ -92,7 +103,7 @@ fun postPanic(requestObject: RequestObject): FullHttpResponse {
             }
         }
     }
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 data class ModuleRequest(val name: String) {
@@ -115,7 +126,7 @@ data class ModuleRequest(val name: String) {
                 logger.error("Failed to toggle module $name", it)
             }
         }
-        return httpOk(JsonObject())
+        return httpOk(emptyJsonObject())
     }
 
     fun acceptGetSettingsRequest(): FullHttpResponse {
@@ -126,12 +137,9 @@ data class ModuleRequest(val name: String) {
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
 
-        StringReader(content).use {
-            ConfigSystem.deserializeConfigurable(module, it)
-        }
-
+        ConfigSystem.deserializeConfigurable(module, content.reader())
         ConfigSystem.storeConfigurable(modulesConfigurable)
-        return httpOk(JsonObject())
+        return httpOk(emptyJsonObject())
     }
 
 }

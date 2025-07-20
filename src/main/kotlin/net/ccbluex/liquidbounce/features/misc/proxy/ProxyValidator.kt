@@ -2,18 +2,17 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
-import io.netty.channel.epoll.Epoll
-import io.netty.channel.epoll.EpollSocketChannel
-import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.timeout.ReadTimeoutHandler
-import net.ccbluex.liquidbounce.api.IpInfoApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import net.minecraft.client.network.Address
 import net.minecraft.client.network.AllowedAddressResolver
 import net.minecraft.client.network.ServerAddress
@@ -34,7 +33,7 @@ import kotlin.jvm.optionals.getOrNull
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +108,9 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
             logger.info("Proxy Ping [$host:$port]: $ping ms")
 
             runCatching {
-                val ipInfo = IpInfoApi.someoneElse(serverMetadata.description.convertToString())
+                val ipInfo = runBlocking(Dispatchers.IO) {
+                    IpInfoApi.someoneElse(serverMetadata.description.convertToString())
+                }
                 this@check.ipInfo = ipInfo
                 logger.info("Proxy Info [$host:$port]: ${ipInfo.ip} [${ipInfo.country}, ${ipInfo.org}]")
             }.onFailure { throwable ->
@@ -140,24 +141,11 @@ private fun Proxy.connect(
     useEpoll: Boolean,
     connection: ClientConnection
 ): ChannelFuture {
-    val clazz: Class<out SocketChannel?>
-    val eventLoopGroup: EventLoopGroup
-    if (Epoll.isAvailable() && useEpoll) {
-        clazz = EpollSocketChannel::class.java
-        eventLoopGroup = ClientConnection.EPOLL_CLIENT_IO_GROUP.get() as EventLoopGroup
-    } else {
-        clazz = NioSocketChannel::class.java
-        eventLoopGroup = ClientConnection.CLIENT_IO_GROUP.get() as EventLoopGroup
-    }
-
-    return Bootstrap().group(eventLoopGroup).handler(object : ChannelInitializer<Channel?>() {
-        override fun initChannel(channel: Channel?) {
-            val channel = channel!!
-
+    return Bootstrap().clientChannelAndGroup(useEpoll).handler(object : ChannelInitializer<Channel>() {
+        override fun initChannel(channel: Channel) {
             try {
                 channel.config().setOption(ChannelOption.TCP_NODELAY, true)
-            } catch (_: ChannelException) {
-            }
+            } catch (_: ChannelException) {}
 
             val channelPipeline = channel.pipeline().addLast("timeout", ReadTimeoutHandler(PING_TIMEOUT))
             // Assign proxy before [ClientConnection.addHandlers] to avoid overriding the proxy
@@ -165,5 +153,5 @@ private fun Proxy.connect(
             ClientConnection.addHandlers(channelPipeline, NetworkSide.CLIENTBOUND, false, null)
             connection.addFlowControlHandler(channelPipeline)
         }
-    }).channel(clazz).connect(address.address, address.port)
+    }).connect(address.address, address.port)
 }

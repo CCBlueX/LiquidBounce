@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,12 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OFFHAND_SLOT
-import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.ccbluex.liquidbounce.utils.item.findHotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.enchantment.Enchantments
@@ -44,6 +39,7 @@ import net.minecraft.item.Items
  *
  * Automatically repairs your armor.
  */
+@Suppress("MagicNumber")
 object ModuleFastExp : ClientModule(
     "FastExp",
     Category.PLAYER,
@@ -64,9 +60,9 @@ object ModuleFastExp : ClientModule(
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
-    @Suppress("unused")
+    @Suppress("unused", "ComplexCondition")
     private val repeatable = tickHandler {
-        val slot = getSlot()
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE)
         if (slot == null || player.isDead || InventoryManager.isInventoryOpen || isRepaired(slot)) {
             return@tickHandler
         }
@@ -76,8 +72,8 @@ object ModuleFastExp : ClientModule(
         if (Rotate.enabled) {
             waitUntil {
                 val rotation = Rotation(player.yaw, 90f)
-                RotationManager.aimAt(
-                    Rotate.rotations.toAimPlan(rotation),
+                RotationManager.setRotationTarget(
+                    Rotate.rotations.toRotationTarget(rotation),
                     Priority.IMPORTANT_FOR_USAGE_3,
                     this@ModuleFastExp
                 )
@@ -115,13 +111,5 @@ object ModuleFastExp : ClientModule(
         itemStack.damage <= 0
 
     private fun noMending(itemStack: ItemStack?) = itemStack.getEnchantment(Enchantments.MENDING) == 0
-
-    private fun getSlot(): HotbarItemSlot? {
-        if (OFFHAND_SLOT.itemStack.item == Items.EXPERIENCE_BOTTLE) {
-            return OFFHAND_SLOT
-        }
-
-        return findHotbarItemSlot(Items.EXPERIENCE_BOTTLE)
-    }
 
 }

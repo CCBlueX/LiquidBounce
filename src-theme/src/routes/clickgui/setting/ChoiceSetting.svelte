@@ -1,11 +1,11 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {ChoiceSetting, ModuleSetting,} from "../../../integration/types";
-    import Dropdown from "./common/Dropdown.svelte";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import GenericSetting from "./common/GenericSetting.svelte";
-    import { setItem } from "../../../integration/persistent_storage";
+    import {setItem} from "../../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import Dropdown from "./common/Dropdown.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -24,8 +24,6 @@
 
     $: setItem(thisPath, expanded.toString());
 
-    let skipAnimationDelay = false;
-
     function handleChange() {
         setting = { ...cSetting };
         dispatch("change");
@@ -33,7 +31,6 @@
 
     function toggleExpanded() {
         expanded = !expanded;
-        skipAnimationDelay = true;
     }
 </script>
 
@@ -47,7 +44,7 @@
                 name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
                 on:change={handleChange}
             />
-            <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
+            <ExpandArrow bind:expanded />
         </div>
     {:else}
         <div class="head">
@@ -63,7 +60,7 @@
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting={setting} on:change={handleChange} />
+                <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}
         </div>
     {/if}

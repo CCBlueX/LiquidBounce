@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  *
  *
  */
+
+@file:Suppress("LongMethod")
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
@@ -40,8 +42,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import kotlin.jvm.optionals.getOrNull
 
-val ACCEPTED_ITEM_TAGS
-    get() = arrayOf(
+private val ACCEPTED_ITEM_TAGS =
+    arrayOf(
         ItemTags.WOOL,
         ItemTags.PLANKS,
         ItemTags.STONE_BRICKS,
@@ -90,8 +92,8 @@ val ACCEPTED_ITEM_TAGS
         ItemTags.SHOVELS,
     )
 
-val ACCEPTED_BLOCK_TAGS
-    get() = arrayOf(
+private val ACCEPTED_BLOCK_TAGS =
+    arrayOf(
         BlockTags.WOOL,
         BlockTags.PLANKS,
         BlockTags.STONE_BRICKS,
@@ -140,7 +142,7 @@ val ACCEPTED_BLOCK_TAGS
         BlockTags.SNOW,
     )
 
-fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
+private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
     val map = hashMapOf<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
@@ -149,13 +151,12 @@ fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>):
         get.forEach {
             val itemId = registry.getId(it.value())
 
-            if (map.containsKey(itemId)) {
-                println("Duplicate $itemId in ${acceptedTag.id} in ${map[itemId]}")
+            val prev = map.putIfAbsent(itemId, acceptedTag.id)
+            if (prev != null) {
+                logger.warn("Duplicate $itemId in ${acceptedTag.id} in $prev")
 
                 return@forEach
             }
-
-            map[itemId] = acceptedTag.id
         }
     }
 
@@ -205,7 +206,7 @@ fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
     })
     add("itemGroups", JsonObject().apply {
-        for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS).entries) {
+        for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
             add(
                 k.toString(),
                 JsonObject().apply {
@@ -224,12 +225,14 @@ fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
             val obj = when (id) {
                 in parentMap -> JsonObject().apply {
                     addProperty("relation", "parent")
-                    addProperty("relative", parentMap[id].toString())
+                    addProperty("relative", parentMap[id]!!.toString())
                 }
+
                 in constructedMap -> JsonObject().apply {
                     addProperty("relation", "group")
-                    addProperty("relative", constructedMap[id].toString())
+                    addProperty("relative", constructedMap[id]!!.toString())
                 }
+
                 else -> return@forEach
             }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,14 @@ package net.ccbluex.liquidbounce.features.command.commands.module
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.blockParameter
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.block.Block
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 /**
  * XRay Command
@@ -46,150 +43,91 @@ object CommandXRay : CommandFactory {
         return CommandBuilder
             .begin("xray")
             .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("add")
-                    .parameter(
-                        blockParameter()
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val name = args[0] as String
-                        val identifier = Identifier.tryParse(name)
-                        val displayName = identifier.toString()
-
-                        val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                            throw CommandException(command.result("blockNotExists", displayName))
-                        }
-
-                        if (!ModuleXRay.blocks.add(block)) {
-                            throw CommandException(command.result("blockIsPresent", displayName))
-                        }
-
-                        chat(
-                            regular(command.result("blockAdded", displayName)),
-                            metadata = MessageMetadata(id = "CXRay#info")
-                        )
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("remove")
-                    .parameter(
-                        blockParameter()
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val name = args[0] as String
-                        val identifier = Identifier.tryParse(name)
-                        val displayName = identifier.toString()
-
-                        val block = Registries.BLOCK.getOptionalValue(identifier).orElseThrow {
-                            throw CommandException(command.result("blockNotExists", displayName))
-                        }
-
-                        if (!ModuleXRay.blocks.remove(block)) {
-                            throw CommandException(command.result("blockNotFound", displayName))
-                        }
-
-                        chat(
-                            regular(command.result("blockRemoved", displayName)),
-                            metadata = MessageMetadata(id = "CXRay#info")
-                        )
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("list")
-                    .parameter(
-                        pageParameter()
-                            .optional()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val page = if (args.size > 1) {
-                            args[0] as Int
-                        } else {
-                            1
-                        }.coerceAtLeast(1)
-
-                        val blocks = ModuleXRay.blocks.sortedBy { it.translationKey }
-
-                        // Max page
-                        val maxPage = ceil(blocks.size / 8.0).roundToInt()
-                        if (page > maxPage) {
-                            throw CommandException(command.result("pageNumberTooLarge", maxPage))
-                        }
-
-                        mc.inGameHud.chatHud.removeMessage("CXRay#global")
-                        val data = MessageMetadata(id = "CXRay#global", remove = false)
-
-                        // Print out help page
-                        chat(
-                            command.result("list").styled { it.withColor(Formatting.RED).withBold(true) },
-                            metadata = data
-                        )
-                        chat(
-                            regular(command.result("pageCount", variable("$page / $maxPage"))),
-                            metadata = data
-                        )
-
-                        val iterPage = 8 * page
-                        for (block in blocks.subList(iterPage - 8, iterPage.coerceAtMost(blocks.size))) {
-                            val identifier = block.translationKey
-                                .replace("block.", "")
-                                .replace(".", ":")
-
-                            chat(
-                                block.name
-                                    .styled { it.withColor(Formatting.GRAY) }
-                                    .append(variable(" ("))
-                                    .append(regular(identifier))
-                                    .append(variable(")")),
-                                metadata = data
-                            )
-                        }
-
-                        chat(
-                            "--- ".asText()
-                                .styled { it.withColor(Formatting.DARK_GRAY) }
-                                .append(variable("${CommandManager.Options.prefix}xray list <"))
-                                .append(variable(command.result("page")))
-                                .append(variable(">")),
-                            metadata = data
-                        )
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("clear")
-                    .handler { command, _ ->
-                        ModuleXRay.blocks.clear()
-                        chat(
-                            regular(command.result("blocksCleared")),
-                            metadata = MessageMetadata(id = "CXRay#global")
-                        )
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("reset")
-                    .handler {command, _ ->
-                        ModuleXRay.applyDefaults()
-                        chat(
-                            regular(command.result("Reset the blocks to the default values")),
-                            metadata = MessageMetadata(id = "CXRay#global")
-                        )
-                    }
-                    .build()
-            )
+            .subcommand(andSubcommand())
+            .subcommand(removeSubcommand())
+            .subcommand(listSubcommand())
+            .subcommand(clearSubcommand())
+            .subcommand(resetSubcommand())
             .build()
     }
+
+    private fun resetSubcommand() = CommandBuilder
+        .begin("reset")
+        .handler { command, _ ->
+            ModuleXRay.applyDefaults()
+            chat(
+                regular(command.result("Reset the blocks to the default values")),
+                metadata = MessageMetadata(id = "CXRay#global")
+            )
+        }
+        .build()
+
+    private fun clearSubcommand() = CommandBuilder
+        .begin("clear")
+        .handler { command, _ ->
+            ModuleXRay.blocks.clear()
+            chat(
+                regular(command.result("blocksCleared")),
+                metadata = MessageMetadata(id = "CXRay#global")
+            )
+        }
+        .build()
+
+    private fun listSubcommand() = CommandBuilder
+        .begin("list")
+        .pagedQuery(
+            pageSize = 8,
+            header = { result("list").withColor(Formatting.RED).bold(true) },
+            items = {
+                ModuleXRay.blocks.sortedBy { it.translationKey }
+            },
+            eachRow = { _, block ->
+                regular("\u2B25 ")
+                    .append(variable(block.name).copyable())
+                    .append(regular(" ("))
+                    .append(variable(Registries.BLOCK.getId(block).toString()).copyable())
+                    .append(regular(")"))
+            }
+        )
+
+    private fun removeSubcommand() = CommandBuilder
+        .begin("remove")
+        .parameter(
+            Parameters.block()
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val block = args[0] as Block
+            if (!ModuleXRay.blocks.remove(block)) {
+                throw CommandException(command.result("blockNotFound", block.name))
+            }
+
+            chat(
+                regular(command.result("blockRemoved", block.name)),
+                metadata = MessageMetadata(id = "CXRay#info")
+            )
+        }
+        .build()
+
+    private fun andSubcommand() = CommandBuilder
+        .begin("add")
+        .parameter(
+            Parameters.block()
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val block = args[0] as Block
+            if (!ModuleXRay.blocks.add(block)) {
+                throw CommandException(command.result("blockIsPresent", block.name))
+            }
+
+            chat(
+                regular(command.result("blockAdded", block.name)),
+                metadata = MessageMetadata(id = "CXRay#info")
+            )
+        }
+        .build()
 
 }

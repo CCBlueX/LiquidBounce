@@ -1,13 +1,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -113,8 +114,8 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
         val focusedEntity = this.focusedEntity
 
-        if (mc.options.sneakKey.isPressed && focusedEntity != null) {
-            val rot = RotationManager.makeRotation(focusedEntity.entity.box.center, this.cameraPos)
+        if (mc.options.sneakKey.isPressedOnAny && focusedEntity != null) {
+            val rot = Rotation.lookingAt(point = focusedEntity.entity.box.center, from = this.cameraPos)
 
             this.cameraRotation = Vec2f(rot.yaw, rot.pitch)
         }
@@ -155,7 +156,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
             ModuleDebug.debugGeometry(
                 ModuleProjectileAimbot,
                 "focusEntity",
-                ModuleDebug.DebuggedBox(it.entity.box, Color4b.RED.alpha(127))
+                ModuleDebug.DebuggedBox(it.entity.box, Color4b.RED.with(a = 127))
             )
 
             val plane = NormalizedPlane(Vec3d(0.0, it.baseY, 0.0), Vec3d(0.0, 1.0, 0.0))
@@ -175,7 +176,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
                 "focusEntity",
                 ModuleDebug.DebuggedBox(
                     it.entity.dimensions.getBoxAt(entityPos),
-                    Color4b.RED.alpha(127)
+                    Color4b.RED.with(a = 127)
                 )
             )
         }

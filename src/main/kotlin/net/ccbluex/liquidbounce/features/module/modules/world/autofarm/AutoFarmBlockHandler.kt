@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,10 +31,11 @@ enum class AutoFarmTrackedStates {
     Soulsand
 }
 
-object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates>() {
+object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedStates>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
-        if (ModuleAutoFarm.isTargeted(state, pos))
+        if (ModuleAutoFarm.isTargeted(state, pos)) {
             return AutoFarmTrackedStates.Destroy
+        }
 
         val stateBellow = pos.down().getState() ?: return null
 
@@ -64,10 +65,10 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates
         val targetBlockPos = pos.down()
         if (state.isAir) {
             // If there is no air above, add it
-            this.trackedBlockMap[targetBlockPos] = trackedState
+            track(targetBlockPos, trackedState)
         } else {
             // If there is no air above, we want to remove it
-            this.trackedBlockMap.remove(targetBlockPos)
+            untrack(targetBlockPos)
         }
     }
 }

@@ -7,13 +7,28 @@
     description.subscribe((v) => {
         data = v;
     });
+
+    let element: HTMLElement | null = null;
+    let left = 0;
+    let anchor: "right" | "left" = "right";
+
+    $: {
+        if (data?.x !== undefined && element !== null) {
+            anchor = data.anchor;
+            if (data.anchor === "left") {
+                left = data.x - element.clientWidth - 20;
+            } else {
+                left = data.x + 20;
+            }
+        }
+    }
 </script>
 
 {#key data}
     {#if data !== null}
-        <div transition:fly|global={{duration: 200, x: -15}} class="description-wrapper"
-             style="top: {data.y}px; left: {data.x + 20}px;">
-            <div class="description">
+        <div transition:fly|global={{duration: 200, x: anchor === "right" ? -15 : 15}} class="description-wrapper"
+             style="top: {data.y}px; left: {left}px;" bind:this={element}>
+            <div class="description" class:right={anchor === "left"}>
                 <div class="text">{data.description}</div>
             </div>
         </div>
@@ -47,6 +62,14 @@
       left: -8px;
       top: 50%;
       transform: translateY(-50%);
+    }
+
+    &.right {
+      &::before {
+        transform: translateY(-50%) rotate(180deg);
+        left: unset;
+        right: -8px;
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,20 +88,22 @@ object ClientItemGroups : Configurable("tabs") {
         }.onSuccess {
             runCatching {
                 // Create item groups
-                arrayOf(
+                val itemGroups = arrayOf(
                     HeadsItemGroup(),
                     ExploitsItemGroup(),
                     ContainerItemGroup(),
-                ).forEach {
-                    it.create()
-                    logger.info("Created item group ${it.plainName}")
+                )
+
+                for (itemGroup in itemGroups) {
+                    itemGroup.setup()
                 }
 
                 beenSetup = true
-            }.onFailure {
-                logger.error("Unable to setup tabs", it)
-            }.onSuccess {
-                logger.info("Successfully setup tabs")
+                itemGroups
+            }.onFailure { exception ->
+                logger.error("Unable to setup item groups", exception)
+            }.onSuccess { itemGroups ->
+                logger.info("Item Groups: [ ${itemGroups.joinToString { group -> group.plainName }} ]")
             }
         }
     }

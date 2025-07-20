@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawGradientCircle
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.Vec3d
 
@@ -46,32 +45,23 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private val circles = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
+    private val circles = ExpiringList<Vec3d>()
 
-    val repeatable = tickHandler {
-        with(circles.iterator()) {
-            while (hasNext()) {
-                val pair = next()
-                val newValue = pair.valueLong() + 1L
-                if (newValue >= lifetime) {
-                    remove()
-                    continue
-                }
-                pair.value(newValue)
-            }
-        }
+    override fun disable() {
+        circles.clear()
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
                 val progress = animCurve
-                    .transform((it.valueLong() + event.partialTicks) / lifetime)
+                    .transform((lifetime - circles.timeToDie(it) + event.partialTicks) / lifetime)
                     .coerceIn(0f..1f)
 
-                withPositionRelativeToCamera(it.key()) {
+                withPositionRelativeToCamera(it.value) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
@@ -84,19 +74,19 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     }
 
-
     private fun animateColor(baseColor: Color4b, progress: Float): Color4b {
-        val color = baseColor.alpha((baseColor.a * (1 - progress)).toInt())
+        val color = baseColor.fade(1.0F - progress)
+
         if (hueOffsetAnim == 0){
             return color
         }
+
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
-    @Suppress("unused")
-    val onJump = handler<PlayerJumpEvent> { _ ->
+    private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(ObjectLongMutablePair(player.pos, 0L))
+        circles.add(player.pos, lifetime)
     }
 
 }

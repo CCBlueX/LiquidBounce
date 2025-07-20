@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,53 +18,68 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.Entity
+import kotlin.math.abs
 
 /**
  * Nametags module
  *
  * Makes player name tags more visible and adds useful information.
  */
-
+@Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
-
-    /**
-     * Contains the list of toggleable options for the [NametagTextFormatter]
-     */
-    object ShowOptions : Configurable("Show") {
-        val health by boolean("Health", true)
-        val distance by boolean("Distance", true)
-        val ping by boolean("Ping", true)
-        val items by boolean("Items", true)
-    }
-
-    init {
-        tree(ShowOptions)
-    }
-
-    val border by boolean("Border", true)
+    internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+
+    internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
+    private val nametagsToRender by computedOn<GameTickEvent, MutableList<Nametag>>(
+        initialValue = mutableListOf()
+    ) { _, list ->
+        list.clear()
+        collectAndSortNametagsToRender(list)
+        list
+    }
+
     @Suppress("unused")
-    val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        nametagsToRender.clear()
+    }
+
+    override fun disable() {
+        RenderedEntities.unsubscribe(this)
+        nametagsToRender.clear()
+    }
+
+    override fun enable() {
+        RenderedEntities.subscribe(this)
+    }
+
+    @Suppress("unused")
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(priority = FIRST_PRIORITY) { event ->
+        if (nametagsToRender.isEmpty()) {
+            return@handler
+        }
+
         renderEnvironmentForGUI {
             val nametagRenderer = NametagRenderer()
 
@@ -77,11 +92,23 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
-        val nametagsToRender = collectAndSortNametagsToRender(tickDelta)
+        
+        drawnEnchantmentAreas.clear()
+        
+        nametagsToRender.forEach { it.calculatePosition(tickDelta) }
+        val filteredNameTags = nametagsToRender.filter { it.position != null }
+        val nametagsCount = filteredNameTags.size.toFloat()
+        
+       
+        val sortedTags = filteredNameTags.sortedBy { tag -> 
+            tag.entity.squaredDistanceTo(mc.cameraEntity)
+        }
 
-        nametagsToRender.forEachIndexed { index, (pos, nametagInfo) ->
+        sortedTags.forEachIndexed { index, nametagInfo ->
+            val pos = nametagInfo.position!!
+
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = index / nametagsToRender.size.toFloat() * 1000.0F
+            val renderZ = index / nametagsCount * 1000.0F
 
             nametagRenderer.drawNametag(this, nametagInfo, Vec3(pos.x, pos.y, renderZ))
         }
@@ -89,29 +116,20 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     /**
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
-     * add what should be rendered ([NametagInfo]). The nametags are sorted in order of rendering.
+     * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(tickDelta: Float): List<Pair<Vec3, NametagInfo>> {
-        val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
+    private fun collectAndSortNametagsToRender(list: MutableList<Nametag>) {
+        val maximumDistanceSquared = maximumDistance.sq()
 
-        val maximumDistanceSquared = maximumDistance * maximumDistance
+        for (entity in RenderedEntities) {
+            if (entity.squaredDistanceTo(mc.cameraEntity) > maximumDistanceSquared) {
+                continue
+            }
 
-        for (entity in ModuleESP.findRenderedEntities()) {
-            if (entity.squaredDistanceTo(mc.cameraEntity) > maximumDistanceSquared) continue
-
-            val nametagPos = entity.interpolateCurrentPosition(tickDelta)
-                .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
-
-            val screenPos = WorldToScreen.calculateScreenPos(nametagPos) ?: continue
-
-            val nametagInfo = NametagInfo.createForEntity(entity)
-
-            nametagsToRender.add(Pair(screenPos, nametagInfo))
+            list += Nametag(entity)
         }
 
-        nametagsToRender.sortByDescending { it.first.z }
-
-        return nametagsToRender
+        list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.downwards
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import kotlin.math.abs
@@ -43,17 +43,17 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {
         val hasSpeed = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) != 0
 
-        player.strafe(speed = if (hasSpeed) 0.771 else 0.5)
+        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.771 else 0.5)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.605 else 0.31)
+        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.605 else 0.31)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.57 else 0.29)
+        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.57 else 0.29)
         // does max possible motion down without introducing other issues
-        player.downwards(motion = if (hasSpeed) 0.5f else 0.37f)
+        player.velocity = player.velocity.copy(y = if (hasSpeed) -0.5 else -0.37)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.595 else 0.27)
+        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.595 else 0.27)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.595 else 0.28)
+        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.595 else 0.28)
     }
 
     @Suppress("unused")

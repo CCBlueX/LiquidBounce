@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,19 +22,24 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
+import java.util.function.Predicate
 
-val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
-    { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
-val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
-    { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
-val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = compareBy { it.itemStack.maxDamage - it.itemStack.damage }
+val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
+val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
+    it.itemStack.hashCode()
+}
+val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
+    it.itemStack.maxDamage - it.itemStack.damage
+}
 
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
@@ -59,8 +64,8 @@ enum class ItemType(
     val providedFunction: ItemFunction? = null
 ) {
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
-    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
-    WEAPON(true, allocationPriority = Priority.NOT_IMPORTANT, providedFunction = ItemFunction.WEAPON_LIKE),
+    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
+    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -90,7 +95,7 @@ enum class ItemSortChoice(
      *
      * IF IT WAS IMPLEMENTED
      */
-    val satisfactionCheck: ((ItemStack) -> Boolean)? = null,
+    val satisfactionCheck: Predicate<ItemStack>? = null,
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
@@ -123,7 +128,30 @@ enum class ItemSortChoice(
 class ItemCategorization(
     availableItems: List<ItemSlot>,
 ) {
-    private val bestPiecesIfFullArmor: List<ItemSlot>
+    companion object {
+        @JvmStatic
+        private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
+            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
+        }
+
+        /**
+         * We expect to be full armor to be diamond armor.
+         */
+        @JvmStatic
+        private val diamondArmorPieces = mapOf(
+            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        )
+    }
+
+    /**
+     * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
+     * the best ones as soon as we upgrade one of the other armor pieces.
+     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     */
+    private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
     init {
@@ -131,21 +159,11 @@ class ItemCategorization(
 
         this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
 
-        fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
-        }
-
-        // We expect to be full armor to be diamond armor.
-        val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(mapOf(
-            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
-            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
-            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
-            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
-        ))
+        val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(diamondArmorPieces)
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
 
-        this.bestPiecesIfFullArmor = ArmorEvaluation.findBestArmorPiecesWithComparator(
+        this.futureArmorToKeep = ArmorEvaluation.findBestArmorPiecesWithComparator(
             availableItems,
             armorComparatorForFullArmor
         ).values.mapNotNull { it?.itemSlot }
@@ -163,14 +181,9 @@ class ItemCategorization(
         }
 
         val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
-            is ArmorItem -> {
-                // Treat animal armor as a normal item
-                if (item is AnimalArmorItem) {
-                    return arrayOf(ItemFacet(slot))
-                }
-
-                arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
-            }
+            // Treat animal armor as a normal item
+            is AnimalArmorItem -> arrayOf(ItemFacet(slot))
+            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
             is SwordItem -> arrayOf(SwordItemFacet(slot))
             is BowItem -> arrayOf(BowItemFacet(slot))
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
@@ -230,6 +243,6 @@ class ItemCategorization(
         }
 
         // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
-        return specificItemFacets + arrayOf(WeaponItemFacet(slot))
+        return specificItemFacets + WeaponItemFacet(slot)
     }
 }

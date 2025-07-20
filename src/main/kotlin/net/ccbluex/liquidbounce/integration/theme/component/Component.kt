@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,15 +28,13 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 /**
  * Represents a HUD component
  */
-abstract class Component(name: String, enabled: Boolean)
-    : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
+abstract class Component(
+    name: String,
+    enabled: Boolean,
+    alignment: Alignment = Alignment.center()
+) : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
 
-    val alignment = tree(Alignment(
-        Alignment.ScreenAxisX.CENTER,
-        0,
-        Alignment.ScreenAxisY.CENTER,
-        0
-    ))
+    val alignment = tree(alignment)
 
     protected fun registerComponentListen(cfg: Configurable = this) {
         for (v in cfg.inner) {

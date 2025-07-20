@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,17 @@ object ItemStackSerializer : JsonSerializer<ItemStack> {
             addProperty("damage", it.damage)
             addProperty("maxDamage", it.maxDamage)
             addProperty("empty", it.isEmpty)
+            it.enchantments.enchantmentEntries
+                .takeIf { set -> set.isNotEmpty() }
+                ?.let { entries ->
+                    // TODO: this property is deprecated. Please remove it in 0.32.0
+                    addProperty("hasEnchantment", true)
+                    add("enchantments", JsonObject().apply {
+                        for ((key, level) in entries) {
+                            addProperty(key.idAsString, level)
+                        }
+                    })
+                }
         }
     }
 

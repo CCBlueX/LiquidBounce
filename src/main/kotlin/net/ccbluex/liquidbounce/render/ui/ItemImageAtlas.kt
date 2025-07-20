@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -20,7 +21,6 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
 import java.awt.image.BufferedImage
-import java.util.stream.Collectors
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -39,7 +39,7 @@ private class Atlas(
 /**
  *
  */
-object ItemImageAtlas: EventListener {
+object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
 
@@ -49,7 +49,7 @@ object ItemImageAtlas: EventListener {
         }
 
         val renderer = ItemFramebufferRenderer(
-            Registries.ITEM.stream().collect(Collectors.toList()),
+            Registries.ITEM.stream().toTypedArray(),
             4
         )
 
@@ -88,7 +88,7 @@ object ItemImageAtlas: EventListener {
     }
 
     @Suppress("unused")
-    val onReload = handler<ResourceReloadEvent> {
+    private val resourceReloadHandler = handler<ResourceReloadEvent> {
         this.atlas = null
     }
 
@@ -114,7 +114,7 @@ object ItemImageAtlas: EventListener {
 
 
 private class ItemFramebufferRenderer(
-    val items: List<Item>,
+    val items: Array<Item>,
     val scale: Int,
 ): MinecraftShortcuts {
     val itemsPerDimension = ceil(sqrt(items.size.toDouble())).toInt()
@@ -171,7 +171,7 @@ private class ItemFramebufferRenderer(
             )
 
             item to (fbFrom to fbTo)
-        }.associate { it }
+        }.toMap()
 
         ctx.matrices.pop()
 

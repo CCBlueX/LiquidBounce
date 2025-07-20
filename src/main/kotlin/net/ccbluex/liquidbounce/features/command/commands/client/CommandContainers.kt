@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,78 +37,78 @@ object CommandContainers : CommandFactory {
         return CommandBuilder
             .begin("containers")
             .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("add")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<String>("tag")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val tag = args[0] as String
-                        val nbtCompound = StringNbtReader.parse(tag)
-
-                        if (!nbtCompound.contains("BlockEntityTag")) {
-                            throw CommandException(command.result("noBlockEntityTag"))
-                        }
-
-                        ClientItemGroups.storeAsContainerItem(nbtCompound)
-                        chat(regular(command.result("added")))
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("remove")
-                    .parameter(
-                        ParameterBuilder.begin<Int>("index")
-                            .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val index = args[0] as Int
-
-                        if (index >= ClientItemGroups.containers.size) {
-                            throw CommandException(command.result("indexOutOfBounds"))
-                        }
-
-                        ClientItemGroups.removeContainer(index)
-                        chat(command.result("removed"))
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("list")
-                    .handler { command, _ ->
-                        val itemStacks = ClientItemGroups.containersAsItemStacks()
-
-                        if (itemStacks.isEmpty()) {
-                            throw CommandException(command.result("noContainers"))
-                        }
-
-                        itemStacks.forEachIndexed { index, itemStack ->
-                            chat(regular("-> ").append(variable(index.toString()).styled {
-                                it.withColor(Formatting.GOLD)
-                            }).append(regular(": ")).append(variable(itemStack.name.string)))
-                        }
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("clear")
-                    .handler { command, _ ->
-                        ClientItemGroups.clearContainers()
-                        chat(command.result("cleared"))
-                    }
-                    .build()
-            )
+            .subcommand(addSubcommand())
+            .subcommand(removeSubcommand())
+            .subcommand(listSubcommand())
+            .subcommand(clearSubcommand())
             .build()
     }
+
+    private fun clearSubcommand() = CommandBuilder
+        .begin("clear")
+        .handler { command, _ ->
+            ClientItemGroups.clearContainers()
+            chat(command.result("cleared"))
+        }
+        .build()
+
+    private fun listSubcommand() = CommandBuilder
+        .begin("list")
+        .handler { command, _ ->
+            val itemStacks = ClientItemGroups.containersAsItemStacks()
+
+            if (itemStacks.isEmpty()) {
+                throw CommandException(command.result("noContainers"))
+            }
+
+            itemStacks.forEachIndexed { index, itemStack ->
+                chat(regular("-> ").append(variable(index.toString()).styled {
+                    it.withColor(Formatting.GOLD)
+                }).append(regular(": ")).append(variable(itemStack.name.string)))
+            }
+        }
+        .build()
+
+    private fun removeSubcommand() = CommandBuilder
+        .begin("remove")
+        .parameter(
+            ParameterBuilder.begin<Int>("index")
+                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val index = args[0] as Int
+
+            if (index >= ClientItemGroups.containers.size) {
+                throw CommandException(command.result("indexOutOfBounds"))
+            }
+
+            ClientItemGroups.removeContainer(index)
+            chat(command.result("removed"))
+        }
+        .build()
+
+    private fun addSubcommand() = CommandBuilder
+        .begin("add")
+        .parameter(
+            ParameterBuilder
+                .begin<String>("tag")
+                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val tag = args[0] as String
+            val nbtCompound = StringNbtReader.parse(tag)
+
+            if (!nbtCompound.contains("BlockEntityTag")) {
+                throw CommandException(command.result("noBlockEntityTag"))
+            }
+
+            ClientItemGroups.storeAsContainerItem(nbtCompound)
+            chat(regular(command.result("added")))
+        }
+        .build()
 
 }

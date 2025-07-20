@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.item.ItemStack
 
@@ -30,7 +32,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     open val category: ItemCategory
         get() = ItemCategory(ItemType.NONE, 0)
 
-    open val providedItemFunctions: List<Pair<ItemFunction, Int>>
+    open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = emptyList()
 
     val itemStack: ItemStack

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 package net.ccbluex.liquidbounce.features.chat.packet
 
 import com.google.gson.*
+import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import java.lang.reflect.Type
 
 /**
@@ -37,6 +39,10 @@ class PacketSerializer : JsonSerializer<Packet> {
      */
     fun registerPacket(packetName: String, packetClass: Class<out Packet>) {
         packetRegistry[packetClass] = packetName
+    }
+
+    inline fun <reified T : Packet> register(name: String) {
+        registerPacket(name, T::class.java)
     }
 
     /**
@@ -59,7 +65,7 @@ class PacketSerializer : JsonSerializer<Packet> {
         val serializedPacket =
             SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src)
 
-        return Gson().toJsonTree(serializedPacket)
+        return publicGson.toJsonTree(serializedPacket)
     }
 
 }
@@ -78,6 +84,10 @@ class PacketDeserializer : JsonDeserializer<Packet> {
      */
     fun registerPacket(packetName: String, packetClass: Class<out Packet>) {
         packetRegistry[packetName] = packetClass
+    }
+
+    inline fun <reified T : Packet> register(name: String) {
+        registerPacket(name, T::class.java)
     }
 
     /**
@@ -101,9 +111,9 @@ class PacketDeserializer : JsonDeserializer<Packet> {
 
         if (!packetRegistry.containsKey(packetName)) return null
 
-        if (!packetObject.has("c")) packetObject.add("c", JsonObject())
+        if (!packetObject.has("c")) packetObject.add("c", emptyJsonObject())
 
-        return Gson().fromJson(packetObject.get("c"), packetRegistry[packetName])
+        return publicGson.fromJson(packetObject.get("c"), packetRegistry[packetName])
 
     }
 

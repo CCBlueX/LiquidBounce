@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.config.gson.adapter.*
 import net.ccbluex.liquidbounce.config.gson.serializer.*
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.*
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
-import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclusionStrategy
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.block.Block
 import net.minecraft.client.gui.screen.Screen
@@ -45,9 +45,13 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Supplier
 
 /**
@@ -90,7 +94,7 @@ enum class GsonInstance(
  * A GSON instance which is used for local files.
  */
 val fileGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.FILE_SERIALIZER)
     .create()
@@ -100,7 +104,7 @@ val fileGson: Gson = GsonBuilder()
  */
 val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.PUBLIC_SERIALIZER)
     .create()
@@ -108,8 +112,8 @@ val publicGson: Gson = GsonBuilder()
 /**
  * This GSON instance is used for interop communication.
  */
-internal val interopGson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+internal val interopGson: Gson = GsonBuilder()
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .create()
@@ -118,8 +122,8 @@ internal val interopGson = GsonBuilder()
  * This GSON instance is used for serializing objects as accessible JSON which means it is READ-ONLY (!)
  * and often comes with an easier syntax to use in other programming languages like JavaScript.
  */
-internal val accessibleInteropGson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+internal val accessibleInteropGson: Gson = GsonBuilder()
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .registerTypeHierarchyAdapter(Component::class.javaObjectType, ReadOnlyComponentSerializer)
@@ -135,12 +139,16 @@ internal val accessibleInteropGson = GsonBuilder()
  * @see GsonBuilder.registerTypeAdapter
  */
 internal fun GsonBuilder.registerCommonTypeAdapters() =
-    registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
+    registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
+        .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
+        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
+        .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockAdapter)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)

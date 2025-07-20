@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.shader.shaders
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.shader.BlitShader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.io.resourceToString
@@ -29,8 +29,8 @@ object BlendShaderData {
 }
 
 object BlendShader : BlitShader(
-    resourceToString("/assets/liquidbounce/shaders/position_tex.vert"),
-    resourceToString("/assets/liquidbounce/shaders/blend.frag"),
+    resourceToString("/resources/liquidbounce/shaders/position_tex.vert"),
+    resourceToString("/resources/liquidbounce/shaders/blend.frag"),
     arrayOf(
         UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) },
         UniformProvider("mixColor") { pointer -> BlendShaderData.color.putToUniform(pointer) }
