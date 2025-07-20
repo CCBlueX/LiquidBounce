@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -109,6 +110,13 @@ object LegitNukerMode : Choice("Legit") {
 
         doBreak(rayTraceResult, forceImmediateBreak)
         wasTarget = currentTarget
+    }
+
+    @Suppress("unused")
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
+        if (currentTarget != null && !ModulePacketMine.running) {
+            event.cancelEvent()
+        }
     }
 
     /**
