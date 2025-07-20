@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 
-object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == Items.MUSHROOM_STEW }) {
+object Soup : HealthBasedBuff("Soup") {
 
     object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
@@ -42,7 +43,11 @@ object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == 
         tree(DropAfterUse)
     }
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
+        return stack.item == Items.MUSHROOM_STEW
+    }
+
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         // Use item (be aware, it will always return false in this case)
         useHotbarSlotOrOffhand(slot)
 

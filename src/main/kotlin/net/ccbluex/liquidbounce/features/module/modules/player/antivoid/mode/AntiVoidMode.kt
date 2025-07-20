@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
+import net.minecraft.util.math.Vec3d
 
 abstract class AntiVoidMode(name: String) : Choice(name) {
 
@@ -32,11 +33,18 @@ abstract class AntiVoidMode(name: String) : Choice(name) {
 
     // Cases in which the AntiVoid protection should not be active.
     open val isExempt: Boolean
-        get() = player.isDead || ModuleFly.enabled
+        get() = player.isDead || ModuleFly.running
+
+    open fun discoverRescuePosition(): Vec3d? {
+        if (!ModuleAntiVoid.isLikelyFalling) {
+            return player.pos
+        }
+        return null
+    }
 
     /**
      * Attempt to safely move the player to a safe location.
      */
-    abstract fun fix(): Boolean
+    abstract fun rescue(): Boolean
 
 }

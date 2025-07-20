@@ -39,7 +39,7 @@
         await updateEnabledModules();
     });
 
-    listen("toggleModule", async () => {
+    listen("moduleToggle", async () => {
         await updateEnabledModules();
     });
 
@@ -50,7 +50,7 @@
 
 <div class="arraylist">
     {#each enabledModules as {name, tag} (name)}
-        <div class="module" animate:flip={{ duration: 200 }} in:fly={{ x: 50, duration: 200 }}>
+        <div class="module" animate:flip={{ duration: 200 }} transition:fly={{ x: 50, duration: 200 }}>
             {$spaceSeperatedNames ? convertToSpacedString(name) : name}
             {#if tag}
                 <span class="tag"> {tag}</span>
@@ -60,13 +60,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors.scss";
-
-  .arraylist {
-    //position: fixed;
-    //top: 0;
-    //right: 0;
-  }
+  @use "../../../colors.scss" as *;
 
   .module {
     background-color: rgba($arraylist-base-color, 0.68);

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.GsonBuilder
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
@@ -88,6 +89,6 @@ enum class ShopConfigPreset(override val choiceName: String, val localFileName: 
     FUNNYMC("FunnyMC", "funnymc"),
     DEXLAND("Dexland", "dexland");
 
-    val internalPath = "/assets/liquidbounce/data/shops/${localFileName}.json"
+    val internalPath = "/resources/liquidbounce/data/shops/${localFileName}.json"
 
 }

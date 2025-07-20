@@ -29,10 +29,13 @@ jobs:
         uses: gradle/gradle-build-action@v3
         env:
           CI: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: genSources build -x test -x detekt
 
       - name: Upload artifact
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           function gradleprop {
               grep "^${1}=" gradle.properties | cut -d'=' -f2
@@ -45,12 +48,27 @@ jobs:
           export FABRIC_KOTLIN_VERSION=$(gradleprop 'fabric_kotlin_version')
           echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
           cd build/libs
-          export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
+          export JAR=$(find . -regex '.*liquidbounce-[0-9.]*\.jar')
           cp $JAR zip/liquidbounce.jar
           cd zip
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
-          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" -F "subsystem=fabric" -F "jre_version=21" -F "jre_distribution=graalvm" -F "fabric_loader_version=$LOADER_VERSION" -F "fabric_api_version=$FABRICAPI_VERSION" -F "kotlin_version=$KOTLIN_VERSION" -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" https://api.liquidbounce.net/api/v1/version/new
+          
+          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" \
+            -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" \
+            -F "gh_id=${{ github.event.head_commit.id }}" \
+            -F "gh_ref=${{ github.ref }}" \
+            -F "gh_message=${COMMIT_MESSAGE}" \
+            -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" \
+            -F "lb_version=$LB_VERSION" \
+            -F "mc_version=$MINECRAFT_VERSION" \
+            -F "subsystem=fabric" \
+            -F "jre_version=21" \
+            -F "fabric_loader_version=$LOADER_VERSION" \
+            -F "fabric_api_version=$FABRICAPI_VERSION" \
+            -F "kotlin_version=$KOTLIN_VERSION" \
+            -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" \
+            https://api.liquidbounce.net/api/v1/version/new
 
   verify-pr:
     runs-on: ubuntu-latest
@@ -76,3 +94,11 @@ jobs:
           CI: true
         with:
           arguments: genSources build
+
+      # Make sure we always run this upload task,
+      # because the previous step may fail if there are findings.
+      - name: Upload SARIF to GitHub using the upload-sarif action
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()
+        with:
+          sarif_file: build/reports/detekt/detekt.sarif

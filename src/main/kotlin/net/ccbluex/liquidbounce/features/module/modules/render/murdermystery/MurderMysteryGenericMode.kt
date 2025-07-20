@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.item.BowItem
@@ -18,7 +18,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
     protected var currentPlayerType = MurderMysteryMode.PlayerType.NEUTRAL
 
     val repeatable =
-        repeatable {
+        tickHandler {
             currentPlayerType = player.handItems.firstNotNullOfOrNull {
                 when {
                     it.item is BowItem || it.item == Items.ARROW -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE

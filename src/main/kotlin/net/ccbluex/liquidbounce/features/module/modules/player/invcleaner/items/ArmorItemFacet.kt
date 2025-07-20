@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 
 /**
- * @param fullArmorKit the armor kit, if the other armor pieces were already the best ones expected (i.e. full dia)
+ * @param stacksToKeep armor items which should be kept since they might be strong in future situations
  */
 class ArmorItemFacet(
     itemSlot: ItemSlot,
-    private val fullArmorKit: List<ItemSlot>,
+    private val stacksToKeep: List<ItemSlot>,
     private val armorComparator: ArmorComparator
 ) : ItemFacet(itemSlot) {
     private val armorPiece = ArmorPiece(itemSlot)
@@ -38,10 +38,7 @@ class ArmorItemFacet(
         get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
 
     override fun shouldKeep(): Boolean {
-        // Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
-        // the best ones as soon as we upgrade one of the other armor pieces. In those cases we don't want to miss out
-        // on this armor piece in the future thus we keep it.
-        return this.fullArmorKit.contains(this.itemSlot)
+        return this.stacksToKeep.contains(this.itemSlot)
     }
 
     override fun compareTo(other: ItemFacet): Int {

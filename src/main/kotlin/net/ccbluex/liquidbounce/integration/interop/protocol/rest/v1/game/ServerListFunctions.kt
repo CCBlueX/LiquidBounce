@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,17 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.interop.protocol.ResourcePolicy
-import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option.MixinServerListAccessor
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -51,19 +52,19 @@ import net.minecraft.client.option.ServerList
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
+import net.minecraft.util.Util
 import java.net.UnknownHostException
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
 @Suppress("UNUSED_PARAMETER")
 fun getServers(requestObject: RequestObject) = runCatching {
-    serverList = ServerList(mc).apply { loadFile() }
+    serverList.loadFile()
     pingThemAll()
 
     val servers = JsonArray()
-    serverList.toList().forEachIndexed { id, serverInfo ->
-        val json = protocolGson.toJsonTree(serverInfo)
+    serverList.servers.forEachIndexed { id, serverInfo ->
+        val json = interopGson.toJsonTree(serverInfo)
 
         if (!json.isJsonObject) {
             logger.warn("Failed to convert serverInfo to json")
@@ -91,7 +92,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
     RenderSystem.recordRenderCall {
         ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // PUT /api/v1/client/servers/add
@@ -112,7 +113,7 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     serverList.add(serverInfo, false)
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/servers/remove
@@ -125,7 +126,7 @@ fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     serverList.remove(serverInfo)
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // PUT /api/v1/client/servers/edit
@@ -147,7 +148,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
     }
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/servers/swap
@@ -158,7 +159,7 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 
     serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
     serverList.saveFile()
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/servers/order
@@ -173,68 +174,79 @@ fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
         }
     serverList.saveFile()
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
-object ActiveServerList : Listenable {
+object ActiveServerList : EventListener {
 
-    internal var serverList = ServerList(mc).apply { loadFile() }
+    internal val serverList = ServerList(mc).apply { loadFile() }
 
     private val serverListPinger = MultiplayerServerListPinger()
-    private val serverPingerThreadPool: ThreadPoolExecutor = ScheduledThreadPoolExecutor(
-        10,
-        ThreadFactoryBuilder().setNameFormat("Server Pinger #%d")
-            .setDaemon(true)
-            .build()
-    )
     private val cannotConnectText = Text.translatable("multiplayer.status.cannot_connect")
         .withColor(Colors.RED)
     private val cannotResolveText = Text.translatable("multiplayer.status.cannot_resolve")
         .withColor(Colors.RED)
 
+    private val pingTasks = mutableListOf<Future<*>>()
+
+    private fun cancelTasks() {
+        pingTasks.forEach { it.cancel(true) }
+        pingTasks.clear()
+    }
+
     internal fun pingThemAll() {
-        serverList.toList()
+        cancelTasks()
+        serverList.servers
             .distinctBy { it.address } // We do not want to ping the same server multiple times
             .forEach(this::ping)
     }
 
-    fun ping(serverEntry: ServerInfo) {
-        if (serverEntry.status == ServerInfo.Status.INITIAL) {
-            serverEntry.status = ServerInfo.Status.PINGING
-            serverEntry.label = ScreenTexts.EMPTY
-            serverEntry.playerCountLabel = ScreenTexts.EMPTY
+    @Suppress("unused")
+    private val screenHandler = handler<ScreenEvent> {
+        cancelTasks()
+    }
 
-            serverPingerThreadPool.submit {
-                try {
-                    serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
-                        serverEntry.status =
-                            if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
-                                ServerInfo.Status.SUCCESSFUL
-                            } else {
-                                ServerInfo.Status.INCOMPATIBLE
-                            }
-                    }
-                } catch (unknownHostException: UnknownHostException) {
-                    serverEntry.status = ServerInfo.Status.UNREACHABLE
-                    serverEntry.label = cannotResolveText
-                    logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
-                } catch (exception: Exception) {
-                    serverEntry.status = ServerInfo.Status.UNREACHABLE
-                    serverEntry.label = cannotConnectText
-                    logger.error("Failed to ping server ${serverEntry.name}", exception)
+    fun ping(serverEntry: ServerInfo) {
+        if (serverEntry.status != ServerInfo.Status.INITIAL) {
+            return
+        }
+
+        serverEntry.status = ServerInfo.Status.PINGING
+        serverEntry.label = ScreenTexts.EMPTY
+        serverEntry.playerCountLabel = ScreenTexts.EMPTY
+
+        pingTasks += Util.getDownloadWorkerExecutor().service.submit {
+            try {
+                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
+                    serverEntry.status =
+                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
+                            ServerInfo.Status.SUCCESSFUL
+                        } else {
+                            ServerInfo.Status.INCOMPATIBLE
+                        }
                 }
+            } catch (unknownHostException: UnknownHostException) {
+                serverEntry.status = ServerInfo.Status.UNREACHABLE
+                serverEntry.label = cannotResolveText
+                logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
+            } catch (exception: Exception) {
+                serverEntry.status = ServerInfo.Status.UNREACHABLE
+                serverEntry.label = cannotConnectText
+                logger.error("Failed to ping server ${serverEntry.name}", exception)
             }
         }
     }
 
-    val tickHandler = handler<GameTickEvent> {
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
         serverListPinger.tick()
     }
 
-    override fun handleEvents() = true
+    override val running = true
 
 }
 
-fun ServerList.toList() = (0 until size()).map { get(it) }
+val ServerList.servers: List<ServerInfo>
+    get() = (this as MixinServerListAccessor).`liquid_bounce$getServers`()
 
-fun ServerList.getByAddress(address: String) = toList().firstOrNull { it.address == address }
+fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.address == address }

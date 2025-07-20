@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.minecraft.entity.effect.StatusEffects
 
 /**
@@ -38,24 +38,25 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
         super.enable()
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (!player.isOnGround) {
             groundTicks = 0
-            return@repeatable
+            return@tickHandler
         }
 
         groundTicks++
 
         if (groundTicks <= 5) {
-            return@repeatable
+            return@tickHandler
         }
 
         if (player.hurtTime >= 1) {
-            return@repeatable
+            return@tickHandler
         }
 
         if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) >= 1) {
-            return@repeatable
+            return@tickHandler
         }
 
         if (!(mc.options.leftKey.isPressed || mc.options.rightKey.isPressed)) {
@@ -64,7 +65,7 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
                 1.0,
                 1.2174
             )
-            return@repeatable
+            return@tickHandler
         }
 
         player.velocity = player.velocity.multiply(

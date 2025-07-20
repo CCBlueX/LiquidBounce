@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -43,7 +43,7 @@ import java.awt.Color
  * Draws a line to every entity a certain radius.
  */
 
-object ModuleTracers : Module("Tracers", Category.RENDER) {
+object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
     private val modes = choices("ColorMode", 0) {
         arrayOf(
@@ -66,7 +66,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        val useDistanceColor = DistanceColor.isActive
+        val useDistanceColor = DistanceColor.isSelected
 
         val viewDistance = 16.0F * MathHelper.SQUARE_ROOT_OF_TWO *
             (if (DistanceColor.useViewDistance) {
@@ -86,31 +86,33 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
-            for (entity in filteredEntities) {
-                if (entity !is LivingEntity) {
-                    continue
-                }
+            longLines {
+                for (entity in filteredEntities) {
+                    if (entity !is LivingEntity) {
+                        continue
+                    }
 
-                val dist = player.distanceTo(entity) * 2.0F
+                    val dist = player.distanceTo(entity) * 2.0F
 
-                val color = if (useDistanceColor) {
-                    Color4b(
-                        Color.getHSBColor(
-                            (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
-                            1.0f,
-                            1.0f
+                    val color = if (useDistanceColor) {
+                        Color4b(
+                            Color.getHSBColor(
+                                (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
+                                1.0f,
+                                1.0f
+                            )
                         )
-                    )
-                } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
-                    Color4b.BLUE
-                } else {
-                    EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity) ?: continue
-                }
+                    } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
+                        Color4b.BLUE
+                    } else {
+                        EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
+                    }
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
+                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
 
-                withColor(color) {
-                    drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                    withColor(color) {
+                        drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                    }
                 }
             }
         }

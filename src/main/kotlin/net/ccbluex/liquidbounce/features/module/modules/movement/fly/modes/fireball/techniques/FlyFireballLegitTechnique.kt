@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.util.math.MathHelper
 
 object FlyFireballLegitTechnique : Choice("Legit") {
 
@@ -63,9 +64,9 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     }
 
     @Suppress("unused")
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        RotationManager.aimAt(
-            Rotation(if (Rotations.backwards) RotationManager.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
+    private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        RotationManager.setRotationTarget(
+            Rotation(if (Rotations.backwards) this.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
             configurable = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
@@ -80,7 +81,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     }
 
     @Suppress("unused")
-    private val repeatable = repeatable {
+    private val repeatable = tickHandler {
         if (FlyFireball.wasTriggered) {
             canMove = !stopMove
 
@@ -95,13 +96,21 @@ object FlyFireballLegitTechnique : Choice("Legit") {
 
             FlyFireball.throwFireball()
 
-            if (sprint)
+            if (sprint) {
                 player.isSprinting = true
+            }
 
             ModuleFly.enabled = false // Disable after the fireball was thrown
             canMove = true
             FlyFireball.wasTriggered = false
         }
+    }
+
+    /**
+     * Inverts yaw (-180 to 180)
+     */
+    private fun invertYaw(yaw: Float): Float {
+        return MathHelper.wrapDegrees(yaw + 180)
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,16 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.fakelag.DelayData
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.handlePacket
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -47,18 +47,9 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
     override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    private val packetQueue = LinkedHashSet<DelayData>()
     private var damageTaken = false
     private var release = false
     private var ticks = 0
-
-    override fun disable() {
-        if (inGame) {
-            packetQueue.forEach { handlePacket(it.packet) }
-        }
-
-        packetQueue.clear()
-    }
 
     override fun enable() {
         ticks = 0
@@ -66,39 +57,55 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
         release = false
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         waitTicks(1)
-        if (ticks > 0) ticks--
+
+        if (ticks > 0) {
+            ticks--
+        }
     }
 
     /**
      * Used to works on different servers as well but now only Hycraft
      */
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is EntityDamageS2CPacket && packet.entityId == player.id && ticks <= 0) {
-            damageTaken = true
-            ticks = 40
+        if (event.origin != TransferOrigin.INCOMING) {
+            return@handler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && damageTaken) {
-            packetQueue.add(DelayData(packet, System.currentTimeMillis()))
-            damageTaken = false
-            release = true
-        }
+        event.action = when {
+            packet is EntityDamageS2CPacket && packet.entityId == player.id && ticks <= 0 -> {
+                damageTaken = true
+                ticks = 40
+                handlePacket(packet)
+                PacketQueueManager.Action.QUEUE
+            }
 
-        if (packet is CommonPingS2CPacket) {
-            if (ticks > 0) {
-                packetQueue.add(DelayData(packet, System.currentTimeMillis()))
-                event.cancelEvent()
+            packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && damageTaken -> {
+                damageTaken = false
+                release = true
+                handlePacket(packet)
+                PacketQueueManager.Action.QUEUE
+            }
+
+            packet is CommonPingS2CPacket -> {
+                if (ticks <= 0) {
+                    if (release) {
+                        ModuleFly.enabled = false
+                    }
+                    return@handler
+                }
 
                 ticks--
-            } else {
-                if (release) {
-                    ModuleFly.enabled = false
-                }
+                PacketQueueManager.Action.QUEUE
             }
+
+            // Prevent [PacketQueueManager] from flushing queued packets
+            else -> PacketQueueManager.Action.PASS
         }
 
     }

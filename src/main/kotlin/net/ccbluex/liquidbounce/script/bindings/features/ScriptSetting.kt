@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,18 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import net.ccbluex.liquidbounce.config.*
+import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.script.asDoubleArray
+import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
-import org.graalvm.polyglot.Value as PolyglotValue;
+import org.graalvm.polyglot.Value as PolyglotValue
 
 /**
  * Object used by the script API to provide an idiomatic way of creating module values.
  */
-@Suppress("unused")
+@Suppress("unused", "TooManyFunctions", "StringLiteralDuplication")
 object ScriptSetting {
 
     @JvmName("boolean")
@@ -40,14 +43,14 @@ object ScriptSetting {
     @JvmName("float")
     fun float(value: PolyglotValue): RangedValue<Float> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").asFloat()
-        val range = value.getMember("range").`as`(Array<Double>::class.java)
+        val default = value.getMember("default").asDouble()
+        val range = value.getMember("range").asDoubleArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(range.size == 2)
         return rangedValue(
             name,
-            default,
+            default.toFloat(),
             range.first().toFloat()..range.last().toFloat(),
             suffix,
             ValueType.FLOAT
@@ -57,8 +60,8 @@ object ScriptSetting {
     @JvmName("floatRange")
     fun floatRange(value: PolyglotValue): RangedValue<ClosedFloatingPointRange<Float>> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<Double>::class.java)
-        val range = value.getMember("range").`as`(Array<Double>::class.java)
+        val default = value.getMember("default").asDoubleArray()
+        val range = value.getMember("range").asDoubleArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(default.size == 2)
@@ -76,7 +79,7 @@ object ScriptSetting {
     fun int(value: PolyglotValue): RangedValue<Int> {
         val name = value.getMember("name").asString()
         val default = value.getMember("default").asInt()
-        val range = value.getMember("range").`as`(Array<Int>::class.java)
+        val range = value.getMember("range").asIntArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(range.size == 2)
@@ -86,8 +89,8 @@ object ScriptSetting {
     @JvmName("intRange")
     fun intRange(value: PolyglotValue): RangedValue<IntRange> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<Int>::class.java)
-        val range = value.getMember("range").`as`(Array<Int>::class.java)
+        val default = value.getMember("default").asIntArray()
+        val range = value.getMember("range").asIntArray()
         val suffix = value.getMember("suffix")?.asString() ?: ""
 
         require(default.size == 2)
@@ -120,7 +123,7 @@ object ScriptSetting {
     @JvmName("textArray")
     fun textArray(value: PolyglotValue): Value<MutableList<String>> {
         val name = value.getMember("name").asString()
-        val default = value.getMember("default").`as`(Array<String>::class.java)
+        val default = value.getMember("default").asArray<String>()
 
         return value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
     }
@@ -128,7 +131,7 @@ object ScriptSetting {
     @JvmName("choose")
     fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").`as`(Array<String>::class.java).map {
+        val choices = value.getMember("choices").asArray<String>().map {
             object : NamedChoice {
                 override val choiceName = it
             }
@@ -142,21 +145,36 @@ object ScriptSetting {
                 }'"
             )
 
-        return ChooseListValue(name, default, choices)
+        return ChooseListValue(name, defaultValue = default, choices = choices)
     }
 
+    @JvmName("multiChoose")
+    fun multiChoose(value: PolyglotValue): MultiChooseStringListValue {
+        val name = value.getMember("name").asString()
+        val choices = value.getMember("choices").asArray<String>().toSet()
+        val default = value.getMember("default")?.asArray<String>()?.toHashSet() ?: hashSetOf()
+
+        val canBeNone = value.getMember("canBeNone")?.asBoolean() ?: true
+
+        return MultiChooseStringListValue(
+            name,
+            value = default,
+            choices = choices,
+            canBeNone = canBeNone
+        )
+    }
 
     private fun <T : Any> value(
         name: String,
         default: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) = Value(name, default, valueType, listType)
+    ) = Value(name, defaultValue = default, valueType = valueType, listType = listType)
 
     private fun <T : Any> rangedValue(
         name: String, default: T, range: ClosedRange<*>, suffix: String,
         valueType: ValueType
     ) =
-        RangedValue(name, default, range, suffix, valueType)
+        RangedValue(name, defaultValue = default, range = range, suffix = suffix, valueType = valueType)
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
@@ -94,7 +95,7 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/worlds/edit
@@ -135,7 +136,7 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/worlds/delete
@@ -151,7 +152,7 @@ fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 data class LevelRequest(val name: String)

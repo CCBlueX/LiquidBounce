@@ -6,13 +6,15 @@ import net.fabricmc.mappings.model.V2MappingsProvider
 
 object EnvironmentRemapper {
 
-    private var mappings = runCatching {
-        V2MappingsProvider.readTinyMappings(resource("/mappings/mappings.tiny").bufferedReader())
+    private val mappings = runCatching {
+        resource("/mappings/mappings.tiny").bufferedReader().use {
+            V2MappingsProvider.readTinyMappings(it)
+        }
     }.onFailure {
         logger.error("Unable to load mappings. Ignore this if you are using a development environment.", it)
     }.getOrNull()
 
-    private var environment = runCatching {
+    private val environment = runCatching {
         probeEnvironment()
     }.onFailure {
         logger.error("Unable to probe environment. Please make sure you are using a valid environment.", it)
@@ -61,6 +63,15 @@ object EnvironmentRemapper {
         }?.get(environment)?.toDotNotation() ?: clazz
     }
 
+    fun remapClass(clazz: Class<*>): String {
+        environment ?: return clazz.name
+
+        val className = clazz.name.toSlashNotation()
+        return mappings?.classEntries?.find {
+            it?.get(environment) == className
+        }?.get("named")?.toDotNotation() ?: clazz.name
+    }
+
     fun remapField(clazz: Class<*>, name: String): String {
         environment ?: return name
 
@@ -69,6 +80,16 @@ object EnvironmentRemapper {
         return mappings?.fieldEntries?.find { entry ->
             val intern = entry.get(environment)
             clazzNames.contains(intern.owner) && intern.name == name
+        }?.get("named")?.name ?: name
+    }
+
+    fun remapField(clazz: String, name: String): String {
+        environment ?: return name
+
+        val className = clazz.toSlashNotation()
+        return mappings?.fieldEntries?.find { entry ->
+            val intern = entry.get(environment)
+            className == intern.owner && intern.name == name
         }?.get("named")?.name ?: name
     }
 
@@ -87,9 +108,13 @@ object EnvironmentRemapper {
         val clazzNames = mutableSetOf(clazz.name.toSlashNotation())
         var current = clazz
 
+        current.interfaces.forEach { interfaceClazz ->
+            clazzNames.addAll(getClassHierarchyNames(interfaceClazz))
+        }
+
         while (current.name != "java.lang.Object") {
             current = current.superclass ?: break
-            clazzNames.add(current.name.toSlashNotation())
+            clazzNames.addAll(getClassHierarchyNames(current))
         }
 
         return clazzNames

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayerEntityAccessor
 import net.minecraft.network.packet.c2s.common.ClientOptionsC2SPacket
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions
@@ -37,7 +37,7 @@ import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket
  *
  * Switches your main hand.
  */
-object ModuleHandDerp : Module("HandDerp", Category.FUN) {
+object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
 
 
     private val silent by boolean("Silent", false)
@@ -68,7 +68,8 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
                     calculatePlayerPartValue(),
                     currentHand,
                     mc.shouldFilterText(),
-                    mc.options.allowServerListing.value
+                    mc.options.allowServerListing.value,
+                    mc.options.particles.value
                 )
             )
         )
@@ -97,7 +98,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
         val delayValue by int("Delay", 1, 0..20, "ticks")
 
         @Suppress("unused")
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             waitTicks(delayValue)
             switchHand()
         }

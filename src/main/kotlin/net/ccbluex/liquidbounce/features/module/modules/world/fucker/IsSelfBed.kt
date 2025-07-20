@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
@@ -60,7 +60,8 @@ class IsSelfBedSpawnLocationChoice(parent: ChoiceConfigurable<*>) : IsSelfBedCho
         val packet = it.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            val packetPos = Vec3d(packet.x, packet.y, packet.z)
+            val pos = packet.change.position
+            val packetPos = Vec3d(pos.x, pos.y, pos.z)
             val dist = player.pos.distanceTo(packetPos)
 
             if (dist > 16.0) {

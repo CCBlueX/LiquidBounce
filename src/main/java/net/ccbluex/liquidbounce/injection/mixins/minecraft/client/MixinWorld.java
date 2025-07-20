@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -43,8 +42,7 @@ public class MixinWorld {
         }
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
-        var blockPos = new BlockPos(pos);
-        EventManager.INSTANCE.callEvent(new BlockChangeEvent(blockPos, state));
+        EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos.toImmutable(), state));
     }
 
     @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
@@ -56,7 +54,7 @@ public class MixinWorld {
     private void injectOverrideWeather(float delta, CallbackInfoReturnable<Float> cir) {
         var module = ModuleCustomAmbience.INSTANCE;
         var desiredWeather = module.getWeather().get();
-        if (module.getEnabled()) {
+        if (module.getRunning()) {
             switch (desiredWeather) {
                 case SUNNY -> cir.setReturnValue(0.0f);
                 case RAINY, THUNDER -> cir.setReturnValue(1.0f);
@@ -69,7 +67,7 @@ public class MixinWorld {
     private void injectOverrideThunder(float delta, CallbackInfoReturnable<Float> cir) {
         var module = ModuleCustomAmbience.INSTANCE;
         var desiredWeather = module.getWeather().get();
-        if (module.getEnabled()) {
+        if (module.getRunning()) {
             switch (desiredWeather) {
                 case SUNNY, RAINY, SNOWY -> cir.setReturnValue(0.0f);
                 case THUNDER -> cir.setReturnValue(1.0f);

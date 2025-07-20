@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
+import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
+import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.average
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.ItemEntity
@@ -46,42 +56,77 @@ private const val BACKGROUND_PADDING: Int = 2
  *
  * Show the names and quantities of items in several boxes.
  */
-object ModuleItemTags : Module("ItemTags", Category.RENDER) {
+object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.itemTags"
 
-    private val boxSize by float("BoxSize", 1.0F, 0.1F..10.0F)
+    private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
+        arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
     private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val renderY by float("RenderY", 0.0F, -2.0F..2.0F)
-    private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+    private val renderY by float("RenderY", 0F, -2F..2F)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..256F)
 
-    private val fontRenderer by lazy {
-        Fonts.DEFAULT_FONT.get()
+    private sealed class ClusterSizeMode(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*>
+            get() = clusterSizeMode
+
+        abstract fun size(entity: ItemEntity): Float
+
+        object Static : ClusterSizeMode("Static") {
+            private val size = float("Size", 1F, 0.1F..32F)
+            override fun size(entity: ItemEntity): Float = size.get()
+        }
+
+        object Distance : ClusterSizeMode("Distance") {
+            private val size by floatRange("Size", 1F..16F, 0.1F..32.0F)
+            private val range by floatRange("Range", 32F..64F, 1F..256F)
+            private val curve by curve("Curve", Easing.LINEAR)
+
+            override fun size(entity: ItemEntity): Float {
+                val playerDistance = player.distanceTo(entity)
+                return size.valueAtProportion(curve.transform(range.proportionOfValue(playerDistance)))
+            }
+        }
+    }
+
+    private val fontRenderer
+        get() = FontManager.FONT_RENDERER
+
+    private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
+        initialValue = emptyMap()
+    ) { _, _ ->
+        val maxDistSquared = maximumDistance.sq()
+
+        @Suppress("UNCHECKED_CAST")
+        (world.entities.filter {
+            it is ItemEntity && it.squaredDistanceTo(player) < maxDistSquared
+        } as List<ItemEntity>).cluster()
+    }
+
+    override fun disable() {
+        itemEntities = emptyMap()
     }
 
     @Suppress("unused")
-    val renderHandler = handler<OverlayRenderEvent> {
-        val maxDistSquared = maximumDistance * maximumDistance
+    private val worldHandler = handler<WorldChangeEvent> {
+        itemEntities = emptyMap()
+    }
 
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
-                world.entities
-                    .filterIsInstance<ItemEntity>()
-                    .filter {
-                        it.squaredDistanceTo(player) < maxDistSquared
+                itemEntities.mapNotNull { (center, items) ->
+                    val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
+                        ?: return@mapNotNull null
+                    renderPos to items
+                }.forEachWithSelf { (center, items), i, self ->
+                    withMatrixStack {
+                        val z = 1000.0F * i / self.size
+                        drawItemTags(items, Vec3(center.x, center.y, z), buf)
                     }
-                    .clusterWithIn(boxSize.toDouble())
-                    .mapNotNull { (center, items) ->
-                        val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
-                            ?: return@mapNotNull null
-                        renderPos to items
-                    }.forEachWithSelf { (center, items), i, self ->
-                        withMatrixStack {
-                            val z = 1000.0F * i / self.size
-                            drawItemTags(items, Vec3(center.x, center.y, z), buf)
-                        }
-                    }
+                }
             }
         }
     }
@@ -151,13 +196,18 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
     }
 
     @JvmStatic
-    private fun List<ItemEntity>.clusterWithIn(radius: Double): Map<Vec3d, List<ItemStack>> {
-        val groups = arrayListOf<MutableSet<ItemEntity>>()
+    private fun List<ItemEntity>.cluster(): Map<Vec3d, List<ItemStack>> {
+        if (isEmpty()) {
+            return emptyMap()
+        }
+
+        val groups = arrayListOf<Set<ItemEntity>>()
         val visited = hashSetOf<ItemEntity>()
 
-        val radiusSquared = radius * radius
         for (entity in this) {
             if (entity in visited) continue
+
+            val radiusSquared = clusterSizeMode.activeChoice.size(entity).sq()
 
             // `entity` will also be added
             val group = this.filterTo(hashSetOf()) { other ->
@@ -171,7 +221,7 @@ object ModuleItemTags : Module("ItemTags", Category.RENDER) {
         return groups.associate { entities ->
             Pair(
                 // Get the center pos of all entities
-                entities.map { it.box.center }.reduce(Vec3d::add).multiply(1.0 / entities.size),
+                entities.map { it.box.center }.average(),
                 // Merge stacks with same item, order by count desc
                 entities.groupBy {
                     it.stack.item

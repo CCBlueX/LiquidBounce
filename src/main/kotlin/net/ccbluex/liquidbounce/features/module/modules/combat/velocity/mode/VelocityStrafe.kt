@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,55 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
 /**
  * Strafe velocity
  */
-internal object VelocityStrafe : Choice("Strafe") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = modes
+internal object VelocityStrafe : VelocityMode("Strafe") {
 
     private val delay by int("Delay", 2, 0..10, "ticks")
     private val strength by float("Strength", 1f, 0.1f..2f)
+
+    object OnlyFacing: ToggleableConfigurable(this, "OnlyFacing", false) {
+        val range by float("Range", 3.5f, 0.1f..6f)
+    }
+
+    init {
+        tree(OnlyFacing)
+    }
+
     private val untilGround by boolean("UntilGround", false)
 
     private var applyStrafe = false
+    private var shouldStrafe = false
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        if (!OnlyFacing.enabled) return@handler
+        val target = world.findEnemy(0f..OnlyFacing.range) ?: return@handler
+
+        val isFacingEnemy = facingEnemy(
+            target,
+            OnlyFacing.range.toDouble(),
+            RotationManager.currentRotation ?: player.rotation
+        )
+
+        shouldStrafe = isFacingEnemy
+    }
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
@@ -49,11 +74,15 @@ internal object VelocityStrafe : Choice("Strafe") {
 
         // Check if this is a regular velocity update
         if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) || packet is ExplosionS2CPacket) {
+            if (OnlyFacing.enabled && !shouldStrafe) {
+                return@sequenceHandler
+            }
+
             // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
             waitTicks(delay)
 
             // Apply strafe
-            player.strafe(speed = player.sqrtSpeed * strength)
+            player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed * strength)
 
             if (untilGround) {
                 applyStrafe = true
@@ -66,7 +95,7 @@ internal object VelocityStrafe : Choice("Strafe") {
         if (player.isOnGround) {
             applyStrafe = false
         } else if (applyStrafe) {
-            event.movement.strafe(player.directionYaw, player.sqrtSpeed * strength)
+            event.movement = event.movement.withStrafe(speed = player.sqrtSpeed * strength)
         }
     }
 

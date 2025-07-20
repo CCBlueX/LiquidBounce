@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.script.bindings.api
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
 @Suppress("unused")
 object ScriptMovementUtil {
@@ -34,22 +34,22 @@ object ScriptMovementUtil {
 
     @JvmName("strafe")
     fun strafe() {
-        player.strafe()
+        player.velocity = player.velocity.withStrafe()
     }
 
     @JvmName("strafeWithSpeed")
     fun strafeWithSpeed(speed: Double) {
-        player.strafe(speed = speed)
+        player.velocity = player.velocity.withStrafe(speed = speed)
     }
 
     @JvmName("strafeWithStrength")
     fun strafeWithStrength(strength: Double) {
-        player.strafe(strength = strength)
+        player.velocity = player.velocity.withStrafe(strength = strength)
     }
 
     @JvmName("strafeWithSpeedAndStrength")
     fun strafeWithSpeedAndStrength(speed: Double, strength: Double) {
-        player.strafe(speed = speed, strength = strength)
+        player.velocity = player.velocity.withStrafe(speed = speed, strength = strength)
     }
 
 }

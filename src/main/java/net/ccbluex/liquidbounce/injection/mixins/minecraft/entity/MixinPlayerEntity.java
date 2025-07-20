@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,20 +23,19 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.FakePlayer;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals;
+import net.ccbluex.liquidbounce.event.events.PlayerEquipmentChangeEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
-import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -74,8 +73,6 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     /**
      * Hook safe walk event
-     *
-     * @return
      */
     @ModifyReturnValue(method = "clipAtLedge", at = @At("RETURN"))
     private boolean hookSafeWalk(boolean original) {
@@ -94,11 +91,11 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             return original;
         }
 
-        RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
-        AimPlan configurable = rotationManager.getWorkingAimPlan();
+        var rotationManager = RotationManager.INSTANCE;
+        var rotation = rotationManager.getCurrentRotation();
+        var rotationTarget = rotationManager.getActiveRotationTarget();
 
-        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
+        if (rotationTarget == null || rotationTarget.getMovementCorrection() == MovementCorrection.OFF || rotation == null) {
             return original;
         }
 
@@ -107,7 +104,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Inject(method = "hasReducedDebugInfo", at = @At("HEAD"), cancellable = true)
     private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (ModuleAntiReducedDebugInfo.INSTANCE.getEnabled()) {
+        if (ModuleAntiReducedDebugInfo.INSTANCE.getRunning()) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -118,29 +115,15 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
         var clip = ModuleNoClip.INSTANCE;
-        if (!this.noClip && clip.getEnabled() && !clip.paused()) {
+        if (!this.noClip && clip.getRunning() && !clip.paused()) {
             this.noClip = true;
-        }
-    }
-
-    @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
-    private void hookJumpEvent(CallbackInfo ci) {
-        if ((Object) this != MinecraftClient.getInstance().player) {
-            return;
-        }
-
-        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-        EventManager.INSTANCE.callEvent(jumpEvent);
-        if (jumpEvent.isCancelled()) {
-            ci.cancel();
         }
     }
 
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
-        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getMiningFatigue()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleNoSlowBreak.getMiningFatigue()) {
             return false;
         }
 
@@ -151,8 +134,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
-        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getWater()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleNoSlowBreak.getWater()) {
             return false;
         }
 
@@ -163,15 +145,15 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()){
+            if (ModuleNoSlowBreak.getOnAir()) {
                 return true;
             }
 
-            if (ModuleNoFall.INSTANCE.getEnabled() && NoFallNoGround.INSTANCE.isActive()) {
+            if (NoFallNoGround.INSTANCE.getRunning()) {
                 return false;
             }
 
-            if (ModuleCriticals.INSTANCE.getEnabled() && ModuleCriticals.NoGroundCrit.INSTANCE.isActive()) {
+            if (CriticalsNoGround.INSTANCE.getRunning()) {
                 return false;
             }
         }
@@ -179,48 +161,40 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return original;
     }
 
-    /**
-     * Head rotations injection hook
-     */
-    @ModifyExpressionValue(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private float hookHeadRotations(float original) {
-        if ((Object) this != MinecraftClient.getInstance().player) {
-            return original;
-        }
-
-        ModuleRotations rotations = ModuleRotations.INSTANCE;
-        final var pitch = rotations.getRotationPitch();
-        Rotation rotation = rotations.displayRotations();
-
-        // Update pitch here
-        pitch.key(pitch.valueFloat());
-        pitch.value(rotation.getPitch());
-
-        return rotations.shouldDisplayRotations() && rotations.getBodyParts().getHead() ? rotation.getYaw() : original;
-    }
-
     @SuppressWarnings({"UnreachableCode", "ConstantValue"})
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;multiply(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookSlowVelocity(Vec3d instance, double x, double y, double z) {
-        if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getEnabled()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getRunning()) {
             x = z = ModuleKeepSprint.INSTANCE.getMotion();
         }
 
         return instance.multiply(x, y, z);
     }
 
+    @SuppressWarnings("UnreachableCode")
     @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
     private boolean hookSlowVelocity(PlayerEntity instance, boolean b) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            return !ModuleKeepSprint.INSTANCE.getEnabled() || b;
+            ModuleKeepSprint.INSTANCE.setSprinting(b);
+            return !ModuleKeepSprint.INSTANCE.getRunning() || b;
         }
 
         return true;
     }
 
+    @SuppressWarnings({"UnreachableCode", "ConstantValue"})
+    @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
+    private boolean hookSlowVelocity(boolean original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getRunning()) {
+            return ModuleKeepSprint.INSTANCE.getSprinting();
+        }
+
+        return original;
+    }
+
     @ModifyReturnValue(method = "getEntityInteractionRange", at = @At("RETURN"))
     private double hookEntityInteractionRange(double original) {
-        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getCombatReach();
         }
 
@@ -229,7 +203,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @ModifyReturnValue(method = "getBlockInteractionRange", at = @At("RETURN"))
     private double hookBlockInteractionRange(double original) {
-        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
             return ModuleReach.INSTANCE.getBlockReach();
         }
 

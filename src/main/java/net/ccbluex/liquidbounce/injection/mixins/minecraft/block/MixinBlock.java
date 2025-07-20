@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,7 @@ import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -35,10 +33,10 @@ import org.spongepowered.asm.mixin.injection.At;
 public class MixinBlock {
 
     @ModifyReturnValue(method = "shouldDrawSide", at = @At("RETURN"))
-    private static boolean injectXRay(boolean original, BlockState state, BlockView world, BlockPos pos, Direction side, BlockPos otherPos) {
+    private static boolean injectXRay(boolean original, BlockState state, BlockState otherState, Direction side) {
         var xRay = ModuleXRay.INSTANCE;
-        if (xRay.getEnabled()) {
-            return xRay.shouldRender(state, pos);
+        if (xRay.getRunning()) {
+            return xRay.shouldRender(state, otherState, side);
         }
 
         return original;

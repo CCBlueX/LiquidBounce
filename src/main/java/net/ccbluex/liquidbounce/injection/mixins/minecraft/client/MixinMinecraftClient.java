@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,24 +20,32 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.common.GlobalFramebuffer;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.BrowserScreen;
-import net.ccbluex.liquidbounce.integration.VrScreen;
+import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
+import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -51,20 +59,22 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 
-import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getHasProtocolTranslator;
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
 
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
@@ -90,7 +100,7 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getEnabled() || !module.getFullBright()) {
+        if (!module.getRunning() || !module.getFullBright()) {
             return;
         }
 
@@ -121,6 +131,16 @@ public abstract class MixinMinecraftClient {
     @org.jetbrains.annotations.Nullable
     public Screen currentScreen;
 
+    @Shadow
+    protected abstract void handleBlockBreaking(boolean breaking);
+
+    @Shadow
+    private @org.jetbrains.annotations.Nullable Overlay overlay;
+
+    @Shadow
+    @org.jetbrains.annotations.Nullable
+    public ClientWorld world;
+
     /**
      * Entry point of our hacked client
      *
@@ -128,7 +148,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;onResolutionChanged()V"))
     private void startClient(CallbackInfo callback) {
-        EventManager.INSTANCE.callEvent(new ClientStartEvent());
+        EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
 
     /**
@@ -138,7 +158,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "stop", at = @At("HEAD"))
     private void stopClient(CallbackInfo callback) {
-        EventManager.INSTANCE.callEvent(new ClientShutdownEvent());
+        EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
 
     @Inject(method = "<init>", at = @At(value = "FIELD",
@@ -182,7 +202,7 @@ public abstract class MixinMinecraftClient {
         titleBuilder.append(" | ");
 
         // ViaFabricPlus compatibility
-        if (getHasProtocolTranslator()) {
+        if (getUsesViaFabricPlus()) {
             var protocolVersion = VfpCompatibility.INSTANCE.unsafeGetProtocolVersion();
 
             if (protocolVersion != null) {
@@ -192,6 +212,23 @@ public abstract class MixinMinecraftClient {
             }
         } else {
             titleBuilder.append(SharedConstants.getGameVersion().getName());
+        }
+
+        // For debugging purposes, will be removed until we have a stable release
+        if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS) {
+            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
+                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
+                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+
+                if (accelerated != null && accelerated.get()) {
+                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
+                    // Hotkey only works when not in-game
+                    if (this.world == null && this.player == null) {
+                        titleBuilder.append(" - Toggle with F12");
+                    }
+                    titleBuilder.append(")");
+                }
+            }
         }
 
         ClientPlayNetworkHandler clientPlayNetworkHandler = this.getNetworkHandler();
@@ -213,6 +250,14 @@ public abstract class MixinMinecraftClient {
     }
 
     /**
+     * Fixes recursive screen opening,
+     * this is usually caused by another mod such as Lunar Client.
+     * Can also happen when opening a screen during [ScreenEvent].
+     */
+    @Unique
+    private boolean recursiveScreenOpening = false;
+
+    /**
      * Handle opening screens
      *
      * @param screen       to be opened (null = no screen at all)
@@ -220,9 +265,21 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        ScreenEvent event = new ScreenEvent(screen);
-        EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled()) callbackInfo.cancel();
+        if (recursiveScreenOpening) {
+            return;
+        }
+
+        try {
+            recursiveScreenOpening = true;
+
+            var event = EventManager.INSTANCE.callEvent(new ScreenEvent(screen));
+            if (event.isCancelled()) {
+                callbackInfo.cancel();
+            }
+        } finally {
+            recursiveScreenOpening = false;
+        }
+
         // Who need this GUI?
         if (screen instanceof AccessibilityOnboardingScreen) {
             callbackInfo.cancel();
@@ -235,7 +292,20 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookTickEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new GameTickEvent());
+        EventManager.INSTANCE.callEvent(GameTickEvent.INSTANCE);
+    }
+
+    /**
+     * Hook game render task queue event
+     */
+    @Inject(method = "render", at = @At("HEAD"))
+    private void hookRenderTaskQueue(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(GameRenderTaskQueueEvent.INSTANCE);
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;runTasks()V", shift = At.Shift.BEFORE))
+    private void hookPacketProcess(CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(TickPacketProcessEvent.INSTANCE);
     }
 
     /**
@@ -243,7 +313,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "handleInputEvents", at = @At("RETURN"))
     private void hookHandleInputEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new InputHandleEvent());
+        EventManager.INSTANCE.callEvent(InputHandleEvent.INSTANCE);
     }
 
     /**
@@ -273,8 +343,15 @@ public abstract class MixinMinecraftClient {
     @ModifyExpressionValue(method = "doAttack",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 0))
     private int injectNoMissCooldown(int original) {
-        if (ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
+        if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
             return 0;
+        }
+
+        if (ModuleAutoClicker.AttackButton.INSTANCE.getRunning()) {
+            var clickAmount = ModuleAutoClicker.AttackButton.INSTANCE.getClicker().getClickAmount();
+            if (clickAmount != null && clickAmount > 0) {
+                return 0;
+            }
         }
 
         return original;
@@ -283,13 +360,13 @@ public abstract class MixinMinecraftClient {
     @WrapWithCondition(method = "doAttack", at = @At(value = "FIELD",
             target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 1))
     private boolean disableAttackCooldown(MinecraftClient instance, int value) {
-        return !(ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
+        return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
 
     @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
     private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
         if (player == null || crosshairTarget == null || crosshairTarget.getType() == HitResult.Type.MISS) {
-            if (ModuleNoMissCooldown.INSTANCE.getEnabled() && ModuleNoMissCooldown.INSTANCE.getCancelAttackOnMiss()) {
+            if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getCancelAttackOnMiss()) {
                 // Prevent swinging
                 cir.setReturnValue(true);
             }
@@ -306,14 +383,6 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
-    /**
-     * Removes frame rate limit
-     */
-    @ModifyConstant(method = "getFramerateLimit", constant = @Constant(intValue = 60))
-    private int getFramerateLimit(int original) {
-        return getWindow().getFramerateLimit();
-    }
-
     @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentFps:I",
             ordinal = 0, shift = At.Shift.AFTER))
     private void hookFpsChange(CallbackInfo ci) {
@@ -322,28 +391,42 @@ public abstract class MixinMinecraftClient {
 
     @Inject(method = "onFinishedLoading", at = @At("HEAD"))
     private void onFinishedLoading(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ResourceReloadEvent());
+        EventManager.INSTANCE.callEvent(ResourceReloadEvent.INSTANCE);
     }
 
     @ModifyExpressionValue(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
     private boolean injectMultiActionsBreakingWhileUsing(boolean original) {
-        return original && !(ModuleMultiActions.INSTANCE.handleEvents() && ModuleMultiActions.INSTANCE.getBreakingWhileUsing());
+        return original && !ModuleMultiActions.mayBreakWhileUsing();
     }
 
     @ModifyExpressionValue(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;isBreakingBlock()Z"))
     private boolean injectMultiActionsPlacingWhileBreaking(boolean original) {
-        return original && !(ModuleMultiActions.INSTANCE.handleEvents() && ModuleMultiActions.INSTANCE.getPlacingWhileBreaking());
+        return original && !ModuleMultiActions.mayPlaceWhileBreaking();
+    }
+
+    /**
+     * Alternative input handler of [handleInputEvents] while being inside a client-side screen.
+     * @param ci
+     */
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void passthroughInputHandler(CallbackInfo ci, @Local Profiler profiler) {
+        if (this.overlay == null && this.player != null && this.world != null && isAClientScreen(this.currentScreen)) {
+            profiler.swap("Keybindings");
+
+            if (ModuleAutoBreak.INSTANCE.getEnabled()) {
+                this.handleBlockBreaking(this.options.attackKey.isPressed());
+            }
+        }
     }
 
     @ModifyExpressionValue(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
     private boolean injectMultiActionsAttackingWhileUsingAndEnforcedBlockingState(boolean isUsingItem) {
         if (isUsingItem) {
-            if (!this.options.useKey.isPressed() && !(ModuleKillAura.INSTANCE.getEnabled()
-                    && AutoBlock.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getBlockingStateEnforced())) {
+            if (!this.options.useKey.isPressed() && !(KillAuraAutoBlock.INSTANCE.getRunning() && KillAuraAutoBlock.INSTANCE.getBlockingStateEnforced())) {
                 this.interactionManager.stopUsingItem(this.player);
             }
 
-            if (!ModuleMultiActions.INSTANCE.handleEvents() || !ModuleMultiActions.INSTANCE.getAttackingWhileUsing()) {
+            if (!ModuleMultiActions.mayAttackWhileUsing()) {
                 this.options.attackKey.timesPressed = 0;
             }
 
@@ -358,7 +441,26 @@ public abstract class MixinMinecraftClient {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(MinecraftClient instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !(this.currentScreen instanceof BrowserScreen || this.currentScreen instanceof VrScreen);
+        return !isAClientScreen(this.currentScreen);
+    }
+
+    @Unique
+    private boolean isAClientScreen(Screen screen) {
+        return screen instanceof BrowserScreen || screen instanceof VirtualDisplayScreen ||
+                screen instanceof ModuleClickGui.ClickScreen;
+    }
+
+    @Inject(method = "getFramebuffer", at = @At("HEAD"), cancellable = true)
+    private void hookSpoofFramebuffer(CallbackInfoReturnable<Framebuffer> cir) {
+        var framebuffer = GlobalFramebuffer.getSpoofedFramebuffer();
+        if (framebuffer != null) {
+            cir.setReturnValue(framebuffer);
+        }
+    }
+
+    @Inject(method = "onDisconnected", at = @At("HEAD"))
+    private void handleDisconnection(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(DisconnectEvent.INSTANCE);
     }
 
 }

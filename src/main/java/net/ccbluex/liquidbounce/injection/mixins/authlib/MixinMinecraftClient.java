@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import java.net.PasswordAuthentication;
 import java.net.Proxy;
 
 @Mixin(value = MinecraftClient.class, remap = false)
-public class MixinMinecraftClient {
+public abstract class MixinMinecraftClient {
 
     @ModifyExpressionValue(method = "createUrlConnection", at = @At(
             value = "FIELD",

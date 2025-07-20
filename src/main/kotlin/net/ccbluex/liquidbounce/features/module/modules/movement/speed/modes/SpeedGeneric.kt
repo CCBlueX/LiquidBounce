@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,31 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.utils.entity.downwards
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.doOptimizationsPreventJump
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.entity.upwards
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 
-class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : Choice("YPort") {
+class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("YPort", parent) {
 
-    val repeatable = repeatable {
-        if (player.isOnGround && player.moving) {
-            player.strafe(speed = 0.4)
-            player.upwards(0.42f)
-            waitTicks(1)
-            player.downwards(1f)
+    private val speed by float("Speed", 0.4f, 0.1f..1f)
+
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
+        if (!player.isOnGround && player.moving) {
+            player.velocity = player.velocity.copy(y = -1.0)
         }
+    }
+
+    @Suppress("unused")
+    private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
+        player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
     }
 
 }
@@ -47,16 +52,16 @@ class SpeedLegitHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
 open class SpeedBHopBase(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
 
     @Suppress("unused")
-    val handleMovementInput = handler<MovementInputEvent> {
-        if (!player.isOnGround || !player.moving) {
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
+        if (!player.isOnGround || !event.directionalInput.isMoving) {
             return@handler
         }
 
-        // We want the player to be able to jump if he wants to
-        if (!mc.options.jumpKey.isPressed && ModuleSpeed.shouldDelayJump())
+        if (doOptimizationsPreventJump()) {
             return@handler
+        }
 
-        it.jumping = true
+        event.jump = true
     }
 
 }

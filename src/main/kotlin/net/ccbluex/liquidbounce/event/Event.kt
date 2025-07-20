@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,13 +25,12 @@ import kotlin.reflect.full.findAnnotation
 /**
  * A callable event
  */
-open class Event
+abstract class Event
 
 /**
  * A cancellable event
  */
-open class CancellableEvent : Event() {
-
+abstract class CancellableEvent : Event() {
     /**
      * Let you know if the event is cancelled
      *
@@ -50,7 +49,7 @@ open class CancellableEvent : Event() {
 }
 
 /**
- * State of event. Might be PRE or POST.
+ * MixinEntityRenderState of event. Might be PRE or POST.
  */
 enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")

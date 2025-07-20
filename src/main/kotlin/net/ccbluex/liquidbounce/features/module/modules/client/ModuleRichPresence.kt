@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,39 +25,39 @@ import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
-import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.config.util.jsonArrayOf
-import net.ccbluex.liquidbounce.config.util.jsonObjectOf
+import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
+import net.ccbluex.liquidbounce.config.gson.util.json
+import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.io.HttpClient
 
-data class IpcConfiguration(
-    val appID: Long,
-    val assets: Map<String, String>
-)
-
-val ipcConfiguration by lazy {
-    logger.info("Loading Discord IPC configuration...")
-    decode<IpcConfiguration>(HttpClient.get("$CLIENT_CLOUD/discord.json"))
+val ipcConfiguration by AsyncLazy {
+    runCatching {
+        ClientCdn.requestDiscordConfiguration()
+    }.onSuccess {
+        LiquidBounce.logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
+    }.onFailure {
+        LiquidBounce.logger.error("Failed to load Discord IPC configuration.", it)
+    }.getOrNull()
 }
 
-object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true, hide = true,
+object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state = true, hide = true,
     aliases = arrayOf("DiscordPresence")) {
 
     private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
@@ -83,6 +83,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     }
 
     private fun connectIpc() {
+        val ipcConfiguration = ipcConfiguration ?: return
+
         if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
         }
@@ -91,7 +93,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
-            logger.error("Failed to connect to Discord RPC.", it)
+            logger.info("Failed to connect to Discord RPC.", it)
 
             if (it is NoDiscordClientException) {
                 notification(
@@ -111,16 +113,16 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         }.onSuccess {
             logger.info("Successfully connected to Discord RPC.")
         }
-        super.enable()
     }
 
     private fun shutdownIpc() {
-        if (ipcClient == null || ipcClient?.status != PipeStatus.CONNECTED) {
+        val ipcClient = ipcClient
+        if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
             return
         }
 
         runCatching {
-            ipcClient?.close()
+            ipcClient.close()
         }.onFailure {
             logger.error("Failed to close Discord RPC.", it)
         }.onSuccess {
@@ -130,25 +132,28 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     }
 
     @Suppress("unused")
-    val updateCycle = repeatable {
-        waitTicks(20)
+    val updateCycle = tickHandler {
+        waitSeconds(1)
 
         /**
          * Don't block the render thread
          */
-        withContext(Dispatchers.IO) {
+        waitFor(Dispatchers.IO) {
             if (enabled) {
                 connectIpc()
             } else {
                 shutdownIpc()
             }
 
+            val ipcClient = ipcClient
             // Check ipc client is connected and send rpc
-            if (ipcClient == null || ipcClient!!.status != PipeStatus.CONNECTED) {
-                return@withContext
+            if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
+                return@waitFor
             }
 
-            ipcClient!!.sendRichPresence {
+            val ipcConfiguration = ipcConfiguration ?: return@waitFor
+
+            ipcClient.sendRichPresence {
                 // Set playing time
                 setStartTimestamp(timestamp)
 
@@ -165,15 +170,15 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
                 setState(formatText(stateText))
 
                 setButtons(jsonArrayOf(
-                    jsonObjectOf(
-                        "label" to "Download",
-                        "url" to "https://liquidbounce.net/",
-                    ),
+                    json {
+                        "label" to "Download"
+                        "url" to "https://liquidbounce.net/"
+                    },
 
-                    jsonObjectOf(
-                        "label" to "GitHub",
-                        "url" to "https://github.com/CCBlueX/LiquidBounce",
-                    ),
+                    json {
+                        "label" to "GitHub"
+                        "url" to "https://github.com/CCBlueX/LiquidBounce"
+                    },
                 ))
             }
         }
@@ -189,14 +194,17 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         .replace("%clientName%", CLIENT_NAME)
         .replace("%clientBranch%", clientBranch)
         .replace("%clientCommit%", clientCommit)
-        .replace("%enabledModules%", ModuleManager.count { it.enabled }.toString())
+        .replace("%enabledModules%", ModuleManager.count { it.running }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
         .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
-        .replace("%server%", hideSensitiveAddress(mc.currentServerEntry?.address ?: "none"))
-
-    override fun handleEvents() = true
+        .replace("%server%", (mc.currentServerEntry?.address ?: "none").hideSensitiveAddress())
 
     private inline fun IPCClient.sendRichPresence(builderAction: RichPresence.Builder.() -> Unit) =
         sendRichPresence(RichPresence.Builder().apply(builderAction).build())
+
+    /**
+     * Always running
+     */
+    override val running = true
 
 }

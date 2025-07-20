@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.collection
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.block.Block
 
-@Suppress("unused")
 enum class Filter(override val choiceName: String) : NamedChoice {
     WHITELIST("Whitelist") {
         override fun <T> invoke(item: T, collection: Collection<T>): Boolean = item in collection
@@ -39,13 +38,11 @@ enum class Filter(override val choiceName: String) : NamedChoice {
     abstract operator fun <T> invoke(item: T, collection: Collection<T>): Boolean
 }
 
-fun Filter.getSlot(blocks: Set<Block>): HotbarItemSlot? {
-    HOTBAR_SLOTS.forEach {
-        val block = it.itemStack.getBlock() ?: return@forEach
-        if (this(block, blocks)) {
-            return it
-        }
-    }
+fun Filter.getSlot(blocks: Set<Block>, offhand: Boolean = true): HotbarItemSlot? {
+    val slots = if (offhand) Slots.OffhandWithHotbar else Slots.Hotbar
 
-    return null
+    return slots.find {
+        val block = it.itemStack.getBlock() ?: return@find false
+        this(block, blocks)
+    }
 }

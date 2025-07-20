@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import io.netty.channel.ChannelPipeline;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent;
 import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
@@ -52,7 +51,7 @@ public abstract class MixinClientConnection {
      */
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void hookSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
-        final PacketEvent event = new PacketEvent(TransferOrigin.SEND, packet, true);
+        final PacketEvent event = new PacketEvent(TransferOrigin.OUTGOING, packet, true);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -84,7 +83,7 @@ public abstract class MixinClientConnection {
             return;
         }
 
-        final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+        final PacketEvent event = new PacketEvent(TransferOrigin.INCOMING, packet, true);
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -100,11 +99,6 @@ public abstract class MixinClientConnection {
             final PipelineEvent event = new PipelineEvent(pipeline, local);
             EventManager.INSTANCE.callEvent(event);
         }
-    }
-
-    @Inject(method = "handleDisconnection", at = @At("HEAD"))
-    private void handleDisconnection(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new DisconnectEvent());
     }
 
 }

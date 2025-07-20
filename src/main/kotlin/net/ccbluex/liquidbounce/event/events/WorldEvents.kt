@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -53,6 +54,9 @@ class BlockShapeEvent(var state: BlockState, var pos: BlockPos, var shape: Voxel
 @Nameable("blockBreakingProgress")
 class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
+@Nameable("blockBreakingProgress")
+class BlockAttackEvent(val pos: BlockPos) : CancellableEvent()
+
 @Nameable("blockVelocityMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
 
@@ -66,3 +70,6 @@ class PlayerEquipmentChangeEvent(
 
 @Nameable("fluidPush")
 class FluidPushEvent : CancellableEvent()
+
+@Nameable("worldEntityRemove")
+class WorldEntityRemoveEvent(val entity: Entity) : Event()

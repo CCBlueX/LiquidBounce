@@ -1,16 +1,20 @@
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
+import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerMessageEvent
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
+import net.ccbluex.liquidbounce.utils.client.randomUsername
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import org.lwjgl.glfw.GLFW
@@ -26,8 +30,8 @@ fun getAccounts(requestObject: RequestObject): FullHttpResponse {
             addProperty("id", i)
             addProperty("username", profile.username)
             addProperty("uuid", profile.uuid.toString())
-            addProperty("avatar", ClientApi.formatAvatarUrl(profile.uuid, profile.username))
-            add("bans", protocolGson.toJsonTree(account.bans))
+            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+            add("bans", interopGson.toJsonTree(account.bans))
             addProperty("type", account.type)
             addProperty("favorite", account.favorite)
         })
@@ -42,7 +46,7 @@ fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
         browseUrl(it)
         EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
     }
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/clipboard
@@ -54,7 +58,7 @@ fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpRespons
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/new/cracked
@@ -64,7 +68,7 @@ fun postNewCrackedAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/new/session
@@ -74,7 +78,7 @@ fun postNewSessionAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/new/altening
@@ -83,7 +87,7 @@ fun postNewAlteningAccount(requestObject: RequestObject): FullHttpResponse {
     data class AlteningForm(val token: String)
     val accountForm = requestObject.asJson<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/generate
@@ -93,7 +97,7 @@ fun postGenerateAlteningAccount(requestObject: RequestObject): FullHttpResponse 
     val accountForm = requestObject.asJson<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/swap
@@ -103,7 +107,7 @@ fun postSwapAccounts(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/order
@@ -113,7 +117,7 @@ fun postOrderAccounts(requestObject: RequestObject): FullHttpResponse {
     val accountOrderRequest = requestObject.asJson<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/login
@@ -123,7 +127,7 @@ fun postLoginAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/cracked
@@ -133,7 +137,7 @@ fun postLoginCrackedAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/session
@@ -143,14 +147,14 @@ fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // POST /api/v1/client/accounts/restore
 @Suppress("UNUSED_PARAMETER")
 fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
     AccountManager.restoreInitial()
-    return httpOk(protocolGson.toJsonTree(mc.session))
+    return httpOk(interopGson.toJsonTree(mc.session))
 }
 
 // PUT /api/v1/client/accounts/favorite
@@ -160,7 +164,7 @@ fun putFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/accounts/favorite
@@ -170,7 +174,7 @@ fun deleteFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/accounts
@@ -186,7 +190,15 @@ fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
         val profile = account.profile ?: return@apply
         addProperty("username", profile.username)
         addProperty("uuid", profile.uuid.toString())
-        addProperty("avatar", ClientApi.formatAvatarUrl(profile.uuid, profile.username))
+        addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
         addProperty("type", account.type)
+    })
+}
+
+// POST /api/v1/client/account/random-name
+@Suppress("UNUSED_PARAMETER")
+fun generateName(requestObject: RequestObject): FullHttpResponse {
+    return httpOk(JsonObject().apply {
+        addProperty("name", randomUsername())
     })
 }

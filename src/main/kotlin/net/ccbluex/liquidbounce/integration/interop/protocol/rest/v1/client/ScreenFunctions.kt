@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,20 +22,26 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.integration.IntegrationListener
+import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.client.gui.screen.SplashOverlay
+import net.minecraft.client.gui.screen.TitleScreen
 
 // GET /api/v1/client/virtualScreen
 @Suppress("UNUSED_PARAMETER")
 fun getVirtualScreenInfo(requestObject: RequestObject): FullHttpResponse {
     return httpOk(JsonObject().apply {
-        addProperty("name", IntegrationHandler.momentaryVirtualScreen?.type?.routeName)
+        addProperty("name", IntegrationListener.momentaryVirtualScreen?.type?.routeName)
         addProperty("showingSplash", mc.overlay is SplashOverlay)
     })
 }
@@ -45,21 +51,20 @@ fun postVirtualScreen(requestObject: RequestObject): FullHttpResponse {
     val body = requestObject.asJson<JsonObject>()
     val name = body["name"]?.asString ?: return httpForbidden("No name")
 
-    val virtualScreen = IntegrationHandler.momentaryVirtualScreen
+    val virtualScreen = IntegrationListener.momentaryVirtualScreen
     if ((virtualScreen?.type?.routeName ?: "none") != name) {
         return httpForbidden("Wrong virtual screen")
     }
 
-    IntegrationHandler.acknowledgement.confirm()
-    return httpOk(JsonObject())
+    IntegrationListener.acknowledgement.confirm()
+    return httpOk(emptyJsonObject())
 }
 
 // GET /api/v1/client/screen
 @Suppress("UNUSED_PARAMETER")
 fun getScreenInfo(requestObject: RequestObject): FullHttpResponse {
     val mcScreen = mc.currentScreen ?: return httpForbidden("No screen")
-    val name = VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.routeName
-        ?: mcScreen::class.qualifiedName
+    val name = VirtualScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
     return httpOk(JsonObject().apply {
         addProperty("name", name)
@@ -82,5 +87,29 @@ fun putScreen(requestObject: RequestObject): FullHttpResponse {
 
     VirtualScreenType.byName(screenName)?.open()
         ?: return httpForbidden("No screen with name $screenName")
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
+}
+
+// DELETE /api/v1/client/screen
+@Suppress("UNUSED_PARAMETER")
+fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
+    val screen = mc.currentScreen ?: return httpForbidden("No screen")
+
+    if (screen is VirtualDisplayScreen && screen.parentScreen != null) {
+        RenderSystem.recordRenderCall {
+            mc.setScreen(screen.parentScreen)
+        }
+        return httpNoContent()
+    }
+
+    RenderSystem.recordRenderCall {
+        mc.setScreen(
+            if (inGame) {
+                null
+            } else {
+                TitleScreen()
+            }
+        )
+    }
+    return httpNoContent()
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,12 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.client.util.InputUtil
 
@@ -56,3 +58,24 @@ fun getKeybinds(requestObject: RequestObject) = httpOk(
         }
     }
 )
+
+/**
+ * Keeps track if we are currently typing in a text field
+ */
+var isTyping = false
+
+// POST /api/v1/client/typing
+fun isTyping(requestObject: RequestObject): FullHttpResponse {
+    data class TypingRequest(val typing: Boolean)
+
+    val typingRequest = requestObject.asJson<TypingRequest>()
+    isTyping = typingRequest.typing
+
+    return httpNoContent()
+}
+
+// GET /api/v1/client/typing
+@Suppress("UNUSED_PARAMETER")
+fun getIsTyping(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    addProperty("typing", isTyping)
+})

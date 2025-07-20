@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,25 +19,24 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
 import com.google.common.base.Predicate
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.effect.StatusEffects
@@ -56,13 +55,12 @@ import org.lwjgl.glfw.GLFW
  *
  * Manages your offhand.
  */
-object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
+object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private var switchMode = enumChoice("SwitchMode", SwitchMode.AUTOMATIC)
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
-    private val totem = tree(Totem())
 
     private object Gapple : ToggleableConfigurable(this, "Gapple", true) {
         object WhileHoldingSword : ToggleableConfigurable(this, "WhileHoldingSword", true) {
@@ -89,17 +87,20 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
     }
 
     init {
-        tree(Crystal)
-        tree(Gapple)
-        tree(Strength)
+        treeAll(
+            Totem,
+            Crystal,
+            Gapple,
+            Strength
+        )
 
-        if (!hasProtocolTranslator) {
+        if (!usesViaFabricPlus) {
             switchMode = enumChoice("SwitchMode", SwitchMode.SWITCH)
         }
     }
 
-    private val INVENTORY_MAIN_PRIORITY = INVENTORY_SLOTS + HOTBAR_SLOTS
-    private val INVENTORY_HOTBAR_PRIORITY = HOTBAR_SLOTS + INVENTORY_SLOTS
+    private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
+    private val INVENTORY_HOTBAR_PRIORITY = Slots.Hotbar + Slots.Inventory
     private val chronometer = Chronometer()
     private var activeMode: Mode = Mode.NONE
     private var lastMode: Mode? = null
@@ -114,7 +115,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         staticMode = when {
             Crystal.enabled && Mode.CRYSTAL.canCycleTo() -> Mode.CRYSTAL
             Gapple.enabled -> Mode.GAPPLE
-            totem.enabled && !Totem.Health.enabled -> Mode.TOTEM
+            Totem.enabled && !Totem.Health.enabled -> Mode.TOTEM
             else -> Mode.NONE
         }
     }
@@ -161,9 +162,22 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         }
 
         if (activeMode != lastTagMode) {
-            EventManager.callEvent(RefreshArrayListEvent())
+            EventManager.callEvent(RefreshArrayListEvent)
             lastTagMode = activeMode
         }
+
+        if (activeMode != lastMode && lastMode == Mode.TOTEM) {
+            if (!Totem.switchBackStarted) {
+                Totem.switchBack.reset()
+            }
+
+            Totem.switchBackStarted = true
+            if (!Totem.switchBack.hasElapsed(Totem.switchBackDelay.toLong())) {
+                return@handler
+            }
+        }
+
+        Totem.switchBackStarted = false
 
         if (!chronometer.hasElapsed(activeMode.getDelay().toLong())) {
             return@handler
@@ -173,7 +187,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         lastMode = activeMode
 
         // the item is already located in Off-hand slot
-        if (slot == OFFHAND_SLOT) {
+        if (slot == OffHandSlot) {
             return@handler
         }
 
@@ -187,7 +201,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             return@handler
         }
 
-        if (activeMode != Mode.TOTEM || !totem.send(actions)) {
+        if (activeMode != Mode.TOTEM || !Totem.send(actions)) {
             it.schedule(inventoryConstraints, actions)
         }
 
@@ -224,13 +238,13 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
         return actions
     }
 
-    fun isOperating() = enabled && activeMode != Mode.NONE
+    fun isOperating() = running && activeMode != Mode.NONE
 
     private enum class Mode(val modeName: String, private val item: Item, private val fallBackItem: Item? = null) {
         TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
-            override fun shouldEquip() = totem.shouldEquip()
+            override fun shouldEquip() = Totem.shouldEquip()
 
-            override fun getDelay() = totem.switchDelay
+            override fun getDelay() = Totem.switchDelay
 
             override fun getPrioritizedInventoryPart() = 1
 
@@ -243,7 +257,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
                 return slot
             }
 
-            override fun canCycleTo() = totem.enabled
+            override fun canCycleTo() = Totem.enabled
         },
         STRENGTH("Strength", Items.POTION) {
             val isStrengthPotion = Predicate<ItemStack> { stack ->
@@ -262,7 +276,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             }
 
             override fun shouldEquip(): Boolean {
-                val killAura = Strength.onlyWhileKa && !ModuleKillAura.enabled
+                val killAura = Strength.onlyWhileKa && !ModuleKillAura.running
                 if (!Strength.enabled || killAura || player.hasStatusEffect(StatusEffects.STRENGTH)) {
                     return false
                 }
@@ -272,10 +286,10 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
             override fun getSlot(): ItemSlot? {
                 if (isStrengthPotion.test(player.offHandStack)) {
-                    return OFFHAND_SLOT
+                    return OffHandSlot
                 }
 
-                return findInventorySlot(INVENTORY_MAIN_PRIORITY) { isStrengthPotion.test(it) }
+                return INVENTORY_MAIN_PRIORITY.findSlot { isStrengthPotion.test(it) }
             }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
@@ -286,7 +300,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
 
                 if (player.mainHandStack.item is SwordItem && Gapple.WhileHoldingSword.enabled) {
                     return if (Gapple.WhileHoldingSword.onlyWhileKa) {
-                        ModuleKillAura.enabled
+                        ModuleKillAura.running
                     } else {
                         true
                     }
@@ -298,7 +312,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             override fun canCycleTo() = Gapple.enabled
         },
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
-            override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.enabled)
+            override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
         },
         BACK("Back", Items.AIR) {
             override fun getSlot(): ItemSlot? {
@@ -341,7 +355,7 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
             }
 
             if (player.offHandStack.item == item) {
-                return OFFHAND_SLOT
+                return OffHandSlot
             }
 
             val slots = if (getPrioritizedInventoryPart() == 0) {
@@ -350,13 +364,13 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
                 INVENTORY_HOTBAR_PRIORITY
             }
 
-            var itemSlot = findInventorySlot(slots) { it.item == item }
+            var itemSlot = slots.findSlot(item)
             if (itemSlot == null && fallBackItem != null) {
                 if (player.offHandStack.item == fallBackItem) {
-                    return OFFHAND_SLOT
+                    return OffHandSlot
                 }
 
-                itemSlot = findInventorySlot(slots) { it.item == fallBackItem }
+                itemSlot = slots.findSlot(fallBackItem)
             }
 
             return itemSlot
@@ -381,10 +395,12 @@ object ModuleOffhand : Module("Offhand", Category.PLAYER, aliases = arrayOf("Aut
          * The best method on newer servers.
          */
         SWITCH("Switch") {
-            override fun performSwitch(from: ItemSlot) = listOf(ClickInventoryAction.performSwap(
-                from = from,
-                to = OffHandSlot
-            ))
+            override fun performSwitch(from: ItemSlot) = listOf(
+                ClickInventoryAction.performSwap(
+                    from = from,
+                    to = OffHandSlot
+                )
+            )
         },
 
         /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -57,7 +57,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker", "IdNuker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -118,11 +118,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         currentTarget = null
         wasTarget = null
-        super.disable()
+        targetRenderer.clearSilently()
     }
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<RotationUpdateEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -136,9 +136,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     }
 
     @Suppress("unused")
-    private val breaker = repeatable {
+    private val breaker = tickHandler {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-            return@repeatable
+            return@tickHandler
         }
 
         // Delay if the target changed - this also includes when introducing a new target from null.
@@ -152,20 +152,25 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
 
         // Check if blink is enabled - if so, we don't want to do anything.
-        if (ModuleBlink.enabled) {
-            return@repeatable
+        if (ModuleBlink.running) {
+            return@tickHandler
         }
 
-        val destroyerTarget = currentTarget ?: return@repeatable
+        val destroyerTarget = currentTarget ?: return@tickHandler
         val currentRotation = RotationManager.serverRotation
+
+        if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
+            ModulePacketMine.setTarget(destroyerTarget.pos)
+            return@tickHandler
+        }
 
         // Check if we are already looking at the block
         val rayTraceResult = raytraceBlock(
             max(range, wallRange).toDouble(),
             currentRotation,
             destroyerTarget.pos,
-            destroyerTarget.pos.getState() ?: return@repeatable
-        ) ?: return@repeatable
+            destroyerTarget.pos.getState() ?: return@tickHandler
+        ) ?: return@tickHandler
 
         val raytracePos = rayTraceResult.blockPos
 
@@ -173,7 +178,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
             raytracePos != destroyerTarget.pos || raytracePos.getState()!!.isNotBreakable(raytracePos)
         ) {
-            return@repeatable
+            return@tickHandler
         }
 
         // Use action should be used if the block is the same as the current target and the action is set to use.
@@ -190,13 +195,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
     @Suppress("unused")
     private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
-        if (currentTarget != null) {
+        if (currentTarget != null && !ModulePacketMine.running) {
             it.cancelEvent()
         }
     }
 
     private fun updateTarget() {
-        val eyesPos = player.eyes
+        val eyesPos = player.eyePos
 
         val rangeSq = range.sq()
 
@@ -314,7 +319,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
 
         val raytrace = raytraceBlock(
-            player.eyes,
+            player.eyePos,
             target.pos,
             target.pos.getState()!!,
             range = range,
@@ -327,14 +332,16 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             return null
         }
 
-        val (rotation, _) = raytrace
-        RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotations,
-            if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
-            this@ModuleFucker
-        )
+        if (!ModulePacketMine.running) {
+            val (rotation, _) = raytrace
+            RotationManager.setRotationTarget(
+                rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleFucker
+            )
+        }
 
         ModuleFucker.currentTarget = target
 
@@ -344,7 +351,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     private fun updateSurroundings(initialPosition: BlockPos) {
         val raytraceResult = world.raycast(
             RaycastContext(
-                player.eyes,
+                player.eyePos,
                 initialPosition.toCenterPos(),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
@@ -360,9 +367,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         val arr = ArrayList<Pair<BlockPos, Vec3d>>()
 
-        traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
+        traceWayToTarget(initialPosition, player.eyePos, blockPos, HashSet(), arr)
 
-        val hotbarItems = HOTBAR_SLOTS.map { it.itemStack }
+        val hotbarItems = Slots.Hotbar.map { it.itemStack }
 
         val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
             .sumOf {

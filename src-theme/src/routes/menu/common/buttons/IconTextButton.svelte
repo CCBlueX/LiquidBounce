@@ -18,7 +18,7 @@
 </button>
 
 <style lang="scss">
-    @import "../../../../colors.scss";
+    @use "../../../../colors.scss" as *;
 
     .icon-text-button {
       display: flex;

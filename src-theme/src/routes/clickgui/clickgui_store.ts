@@ -2,6 +2,7 @@ import {type Writable, writable} from "svelte/store";
 
 export interface TDescription {
     description: string;
+    anchor: "left" | "right",
     x: number;
     y: number;
 }

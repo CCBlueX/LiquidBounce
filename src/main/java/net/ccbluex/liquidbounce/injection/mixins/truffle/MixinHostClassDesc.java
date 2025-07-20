@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,38 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.truffle;
 
+import kotlin.Lazy;
+import kotlin.LazyKt;
 import net.ccbluex.liquidbounce.interfaces.MemberRetriever;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 @Pseudo
 @Mixin(targets = "com/oracle/truffle/host/HostClassDesc$Members")
 public abstract class MixinHostClassDesc {
+
+    @Unique
+    @SuppressWarnings("unchecked")
+    private static final Lazy<BiFunction<Object, Object, Object>> mergeMethod = LazyKt.lazy(() -> {
+        try {
+            var clazz = Class.forName("com.oracle.truffle.host.HostClassDesc$Members");
+            var field = clazz.getDeclaredField("MERGE");
+            return (BiFunction<Object, Object, Object>) field.get(null);
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    });
 
     @Shadow(remap = false)
     @Final
@@ -55,77 +70,132 @@ public abstract class MixinHostClassDesc {
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void remapClassDesc(CallbackInfo ci) {
-        remapEntries(methods, this::getMethod);
-        remapEntries(fields, this::getField);
-        remapEntries(staticFields, this::getField);
-        remapEntries(staticMethods, this::getMethod);
+        remapFieldEntries(fields, MixinHostClassDesc::getField);
+        remapFieldEntries(staticFields, MixinHostClassDesc::getField);
+
+        remapMethodEntries(methods);
+        remapMethodEntries(staticMethods);
     }
 
     @Unique
-    private void remapEntries(Map<String, Object> map, MemberRetriever retriever) {
+    private static Object[] getOverloadsFromHostMethodDesc(Object value) throws
+            IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        var clazz = value.getClass();
+        var getOverloads = clazz.getMethod("getOverloads");
+        getOverloads.setAccessible(true);
+        return (Object[]) getOverloads.invoke(value);
+    }
+
+    @Unique
+    private static @Nullable Executable getReflectionMethodFromSingleMethod(Object value)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        var clazz = value.getClass();
+        if (NOT_MAPPED.contains(clazz.getName())) {
+            return null;
+        }
+        var descMethod = clazz.getDeclaredMethod("getReflectionMethod");
+        descMethod.setAccessible(true);
+        return (Executable) descMethod.invoke(value);
+    }
+
+    @Unique
+    private static void remapMethodEntries(Map<String, Object> map) {
+        if (map.isEmpty()) {
+            return;
+        }
+
         var entries = new HashMap<>(map).entrySet();
 
         for (var entry : entries) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            String remapped;
-
+            var key = entry.getKey();
+            var value = entry.getValue();
             try {
-                Member member = retriever.getMember(value);
-                remapped = remapDescriptor(member);
-            } catch (ReflectiveOperationException e) {
-                ClientUtilsKt.getLogger().error("Failed to remap: {}", key, e);
-                continue;
-            }
+                // Get all overload methods
+                for (var overload : getOverloadsFromHostMethodDesc(value)) {
+                    var method = getReflectionMethodFromSingleMethod(overload);
+                    var remappedName = remapDescriptor(method);
 
-            if (remapped != null) {
-                map.remove(key);
-                map.put(remapped, value);
+                    if (remappedName == null) {
+                        continue;
+                    }
+
+                    if (map.containsKey(remappedName)) {
+                        var mergedMethod = mergeMethod.getValue().apply(map.get(remappedName), value);
+                        map.remove(key);
+                        map.put(remappedName, mergedMethod);
+                    } else {
+                        map.remove(key);
+                        map.put(remappedName, value);
+                    }
+                }
+            } catch (Exception e) {
+                ClientUtilsKt.getLogger().error("Failed to remap method: {}", key, e);
             }
         }
     }
 
     @Unique
-    private Member getMethod(Object o) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        try {
-            // If this works, it is likely a SingleMethod instance
-            Method descMethod = o.getClass().getDeclaredMethod("getReflectionMethod");
+    private static void remapFieldEntries(Map<String, Object> map, MemberRetriever retriever) {
+        if (map.isEmpty()) {
+            return;
+        }
 
-            descMethod.setAccessible(true);
-            return (Member) descMethod.invoke(o);
-        } catch (NoSuchMethodException ignored) {
+        var remappedEntries = new HashMap<String, Object>();
+        var iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            var key = entry.getKey();
+            var value = entry.getValue();
             try {
-                var getOverloads = o.getClass().getDeclaredMethod("getOverloads");
-                var overloads = (Object[]) getOverloads.invoke(o);
-
-                return getMethod(overloads[0]);
-            } catch (NoSuchMethodException ignored2) {
-                ClientUtilsKt.getLogger().error("Unsupported method type: {}", o.getClass().getName());
+                var member = retriever.getMember(value);
+                var remapped = remapDescriptor(member);
+                if (remapped != null) {
+                    iterator.remove();
+                    remappedEntries.put(remapped, value);
+                }
+            } catch (ReflectiveOperationException e) {
+                ClientUtilsKt.getLogger().error("Failed to remap field: {}", key, e);
             }
+        }
+        map.putAll(remappedEntries);
+    }
 
+    /**
+     * Skip synthetic array field/method with singleton check
+     */
+    @Unique
+    private static final Set<String> NOT_MAPPED = Set.of(
+            "com.oracle.truffle.host.HostFieldDesc$SyntheticArrayLengthField",
+            "com.oracle.truffle.host.HostMethodDesc$SingleMethod$SyntheticArrayCloneMethod"
+    );
+
+    @Unique
+    private static @Nullable Member getField(Object o) throws IllegalAccessException, NoSuchFieldException {
+        var clazz = o.getClass();
+        if (NOT_MAPPED.contains(clazz.getName())) {
             return null;
         }
-    }
-
-    @Unique
-    private Member getField(Object o) throws IllegalAccessException, NoSuchFieldException {
-        var descField = o.getClass().getDeclaredField("field");
+        var descField = clazz.getDeclaredField("field");
         descField.setAccessible(true);
         return (Member) descField.get(o);
     }
 
     @Unique
-    private static String remapDescriptor(Member member) {
-        var name = member.getName();
-
-        String remapped;
-        if (member instanceof java.lang.reflect.Method) {
-            remapped = EnvironmentRemapper.INSTANCE.remapMethod(member.getDeclaringClass(), name);
-        } else if (member instanceof java.lang.reflect.Field) {
-            remapped = EnvironmentRemapper.INSTANCE.remapField(member.getDeclaringClass(), name);
-        } else {
-            ClientUtilsKt.getLogger().error("Unknown member type: {}", member.getClass().getName());
+    private static @Nullable String remapDescriptor(@Nullable Member member) {
+        if (member == null) {
             return null;
+        }
+
+        var name = member.getName();
+        var owner = member.getDeclaringClass();
+        var remapped = switch (member) {
+            case Method ignored -> EnvironmentRemapper.INSTANCE.remapMethod(owner, name);
+            case Field ignored -> EnvironmentRemapper.INSTANCE.remapField(owner, name);
+            default -> null;
+        };
+
+        if (remapped == null) {
+            ClientUtilsKt.getLogger().error("Unknown member type {} of class {}", member.getClass().getName(), owner.getName());
         }
 
         // If the name is the same, return the original field

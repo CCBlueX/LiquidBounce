@@ -6,7 +6,6 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import Menu from "../common/Menu.svelte";
     import Search from "../common/Search.svelte";
-    import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onMount} from "svelte";
@@ -14,15 +13,19 @@
         browse,
         connectToServer,
         getClientInfo,
+        getModule,
         getProtocols,
         getSelectedProtocol,
         getServers,
+        getSpooferSettings,
         openScreen,
         orderServers,
         removeServer as removeServerRest,
-        setSelectedProtocol
+        setModuleEnabled,
+        setSelectedProtocol,
+        setSpooferSettings
     } from "../../../integration/rest";
-    import type {ClientInfo, Protocol, Server} from "../../../integration/types";
+    import type {ClientInfo, ConfigurableSetting, Protocol, Server} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
@@ -34,6 +37,8 @@
     import type {ServerPingedEvent} from "../../../integration/events";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import Divider from "../common/optionbar/Divider.svelte";
+    import WrappedSetting from "../common/setting/WrappedSetting.svelte";
+    import SwitchSetting from "../common/setting/SwitchSetting.svelte";
 
     let onlineOnly = false;
     let searchQuery = "";
@@ -55,6 +60,8 @@
     }
 
     let clientInfo: ClientInfo | null = null;
+    let autoConfig = false;
+    let spooferConfigurable: ConfigurableSetting | null = null;
     let servers: Server[] = [];
     let renderedServers: Server[] = [];
     let protocols: Protocol[] = [];
@@ -73,6 +80,8 @@
 
     onMount(async () => {
         clientInfo = await getClientInfo();
+        spooferConfigurable = await getSpooferSettings();
+        autoConfig = (await getModule("AutoConfig")).enabled;
         await refreshServers();
         renderedServers = servers;
         protocols = await getProtocols();
@@ -132,7 +141,6 @@
         await refreshServers();
         renderedServers = servers;
         timesSorted++; // See declaration
-        console.log("sorted")
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
@@ -142,6 +150,19 @@
     function editServer(server: Server) {
         currentEditServer = server;
         editServerModalVisible = true;
+    }
+
+    async function updateSpooferSettings() {
+        if (!spooferConfigurable) {
+            return;
+        }
+
+        await setSpooferSettings(spooferConfigurable);
+        spooferConfigurable = await getSpooferSettings();
+    }
+
+    async function updateAutoConfigState() {
+        await setModuleEnabled("AutoConfig", autoConfig);
     }
 </script>
 
@@ -155,8 +176,13 @@
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
+
         <SwitchSetting title="Online only" bind:value={onlineOnly}/>
         <Divider/>
+        <SwitchSetting title="Auto Config" bind:value={autoConfig} on:change={updateAutoConfigState}/>
+        {#if spooferConfigurable}
+            <WrappedSetting bind:value={spooferConfigurable} on:change={updateSpooferSettings} path="multiplayer.spoofer"/>
+        {/if}
         {#if clientInfo && clientInfo.viaFabricPlus}
             <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
                           on:change={changeProtocolVersion}/>
@@ -177,7 +203,8 @@
                             :`data:image/png;base64,${server.icon}`}
                               title={server.name}
                               on:dblclick={() => connectToServer(server.address)}>
-                    <TextComponent slot="subtitle" fontSize={18}
+                    <TextComponent allowPreformatting={true} preFormattingMonospace={false} slot="subtitle"
+                                   fontSize={18}
                                    textComponent={server.ping <= 0 ? "§CCan't connect to server" : server.label}/>
 
                     <svelte:fragment slot="tag">

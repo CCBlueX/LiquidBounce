@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.minecraft.item.ItemStack
-
-abstract class HealthBasedBuff(name: String, isValidItem: (ItemStack, Boolean) -> Boolean) : Buff(name, isValidItem) {
+abstract class HealthBasedBuff(name: String) : Buff(name) {
 
     private val healthPercent by int("Health", 40, 1..100, "%HP")
     private val considerAbsorption by boolean("ConsiderAbsorption", true)

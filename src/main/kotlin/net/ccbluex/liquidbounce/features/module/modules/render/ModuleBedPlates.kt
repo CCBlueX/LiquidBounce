@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.Fonts
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
-import net.ccbluex.liquidbounce.utils.kotlin.getValue
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.kotlin.*
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
@@ -46,7 +45,7 @@ import kotlin.math.sqrt
 private const val ITEM_SIZE: Int = 16
 private const val BACKGROUND_PADDING: Int = 2
 
-object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
+object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V")
 
     private val maxLayers by int("MaxLayers", 5, 1..5)
@@ -55,10 +54,10 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
+    private val compact by boolean("Compact", true)
 
-    private val fontRenderer by lazy {
-        Fonts.DEFAULT_FONT.get()
-    }
+    private val fontRenderer
+        get() = FontManager.FONT_RENDERER
 
     private val WHITELIST_NON_SOLID = setOf(
         Blocks.LADDER,
@@ -82,20 +81,30 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         Blocks.BLACK_STAINED_GLASS,
     )
 
-    val renderHandler = handler<OverlayRenderEvent> {
+    private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<DoubleObjectPair<BedState>>>(
+        initialValue = mutableListOf()
+    ) { _, list ->
         val playerPos = player.blockPos
-
         val maxDistanceSquared = maxDistance.sq()
+        list.clear()
 
+        BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
+            DoubleObjectPair.of(pos.getSquaredDistance(playerPos), bedState)
+        }
+
+        list.removeIf { it.firstDouble() > maxDistanceSquared } // filter items out of range
+        list.sortBy { it.firstDouble() } // order by distance asc
+        if (list.size > maxCount) {
+            list.removeRange(fromInclusive = maxCount)
+        }
+        list
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
-                BedBlockTracker.trackedBlockMap.map { (pos, bedState) ->
-                    DoubleObjectPair.of(pos.getSquaredDistance(playerPos), bedState)
-                }.filter { (distSq, _) ->
-                    distSq < maxDistanceSquared
-                }.sortedBy { (distSq, _) ->
-                    distSq
-                }.take(maxCount).forEachWithSelf { (distSq, bedState), i, self ->
+                bedStatesWithSquaredDistance.forEachWithSelf { (distSq, bedState), i, self ->
                     val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(0.0, renderY.toDouble(), 0.0))
                         ?: return@forEachWithSelf
                     val distance = sqrt(distSq)
@@ -154,9 +163,9 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
                             val defaultState = it.block.defaultState
                             val color =
-                                if (highlightUnbreakable && defaultState.isToolRequired && findHotbarSlot { stack ->
-                                        stack.isSuitableFor(defaultState)
-                                    } == null) {
+                                if (highlightUnbreakable && defaultState.isToolRequired
+                                    && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
+                                ) {
                                     Color4b.RED
                                 } else {
                                     Color4b.WHITE
@@ -173,16 +182,18 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                             )
                             commit(buf)
 
-                            // layer
-                            val layerText = process(ROMAN_NUMERALS[it.layer], color)
-                            draw(
-                                layerText,
-                                topLeftX.toFloat(),
-                                0F,
-                                shadow = true,
-                                scale = fontScale,
-                            )
-                            commit(buf)
+                            if (!compact) {
+                                // layer
+                                val layerText = process(ROMAN_NUMERALS[it.layer], color)
+                                draw(
+                                    layerText,
+                                    topLeftX.toFloat(),
+                                    0F,
+                                    shadow = true,
+                                    scale = fontScale,
+                                )
+                                commit(buf)
+                            }
                         }
                     }
                 }
@@ -196,27 +207,13 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val count: Int,
         val layer: Int,
     ) : Comparable<SurroundingBlock> {
-        override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(this, other,
+        override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
+            this, other,
             { it.layer }, { -it.count }, { -it.block.hardness }, { it.block.translationKey })
     }
 
-    private sealed class BedState(val block: Block, val pos: Vec3d) {
-        abstract val surroundingBlocks: Set<SurroundingBlock>
-
-        class Normal(
-            block: Block,
-            pos: Vec3d,
-            override val surroundingBlocks: Set<SurroundingBlock>
-        ) : BedState(block, pos)
-
-        class Lazy(
-            block: Block,
-            pos: Vec3d,
-            supplier: () -> Set<SurroundingBlock>
-        ) : BedState(block, pos) {
-            override val surroundingBlocks by lazy(LazyThreadSafetyMode.NONE, supplier)
-        }
-    }
+    @JvmRecord
+    private data class BedState(val block: Block, val pos: Vec3d, val surroundingBlocks: Set<SurroundingBlock>)
 
     private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): Set<SurroundingBlock> {
         val layers = Array<Object2IntOpenHashMap<Block>>(maxLayers, ::Object2IntOpenHashMap)
@@ -232,9 +229,9 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
                 val block = state.block
                 if (state.isSolidBlock(world, pos) || block in WHITELIST_NON_SOLID) {
-                    // Count blocks
+                    // Count blocks (getInt default = 0)
                     with(layers[layer - 1]) {
-                        put(block, if (containsKey(block)) getInt(block) + 1 else 1)
+                        put(block, getInt(block) + 1)
                     }
                 }
             }
@@ -247,7 +244,21 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             }
         }
 
-        return result
+        return if (compact) {
+            result.groupBy { surrounding ->
+                surrounding.block
+            }.map { (block, group) ->
+                group.reduce { acc, item ->
+                    SurroundingBlock(
+                        block = block,
+                        count = acc.count + item.count,
+                        layer = minOf(acc.layer, item.layer)
+                    )
+                }
+            }.toSet()
+        } else {
+            result
+        }
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {
@@ -260,13 +271,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             z - (bedDirection.offsetZ * 0.5) + 0.5,
         )
 
-        // When there are many beds, we don't load them all
-        return if (BedBlockTracker.trackedBlockMap.size < maxCount + 4
-                    || player.blockPos.getSquaredDistance(this) < maxDistance.sq()) {
-            BedState.Normal(bedBlock, renderPos, getBedSurroundingBlocks(headState))
-        } else {
-            BedState.Lazy(bedBlock, renderPos) { getBedSurroundingBlocks(headState) }
-        }
+        return BedState(bedBlock, renderPos, getBedSurroundingBlocks(headState))
     }
 
     override fun enable() {
@@ -275,12 +280,11 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
     override fun disable() {
         ChunkScanner.unsubscribe(BedBlockTracker)
+        bedStatesWithSquaredDistance.clear()
     }
 
-    private object BedBlockTracker : AbstractBlockLocationTracker<BedState>() {
-        private val searchStart by ThreadLocal.withInitial(BlockPos::Mutable)
-        private val searchEnd by ThreadLocal.withInitial(BlockPos::Mutable)
-
+    private object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>() {
+        @Suppress("detekt:CognitiveComplexMethod")
         override fun getStateFor(pos: BlockPos, state: BlockState): BedState? {
             return if (state.isBed) {
                 val part = BedBlock.getBedPart(state)
@@ -292,25 +296,23 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                 }
             } else {
                 // A non-bed block was updated, we need to update the bed blocks around it
-                // Get a sub map of the sorted map
-                trackedBlockMap.subMap(
-                    searchStart.set(pos, -maxLayers, -maxLayers, -maxLayers), true,
-                    // Don't check beds above
-                    searchEnd.set(pos, maxLayers, 0, maxLayers), true,
-                ).keys.forEach {
+                val distance = maxLayers
+
+                allPositions().forEach { bedPos ->
                     // Update if the block is close to a bed
-                    if (it.getManhattanDistance(pos) > maxLayers) {
+                    if (bedPos.getManhattanDistance(pos) > distance) {
                         return@forEach
                     }
 
-                    val trackedState = it.getState() ?: return@forEach
-                    if (!trackedState.isBed) {
+                    val bedState = bedPos.getState()
+                    if (bedState == null || !bedState.isBed) {
                         // The tracked block is not a bed anymore, remove it
-                        trackedBlockMap.remove(it)
+                        untrack(bedPos)
                     } else {
-                        trackedBlockMap[it] = it.getBedPlates(trackedState)
+                        track(bedPos, bedPos.getBedPlates(bedState))
                     }
                 }
+
                 null
             }
         }

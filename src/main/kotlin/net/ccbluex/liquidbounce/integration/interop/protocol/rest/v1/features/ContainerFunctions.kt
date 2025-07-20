@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,8 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.features.container.inventoryAsCompound
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.features.item.inventoryAsCompound
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.netty.http.model.RequestObject
@@ -61,47 +62,57 @@ fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // POST /api/v1/container/give
 @Suppress("UNUSED_PARAMETER")
 fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
-    return if (!interaction.hasCreativeInventory()) {
-        httpForbidden("Must be in creative mode")
-    } else {
-        val screenHandler = mc.currentScreen
+    if (!interaction.hasCreativeInventory()) {
+        return httpForbidden("Must be in creative mode")
+    }
 
-        if (screenHandler is GenericContainerScreen) {
-            val inventory = screenHandler.screenHandler.inventory
+    val screenHandler = mc.currentScreen
 
-            if (inventory !is SimpleInventory) {
-                return httpForbidden("Not a simple inventory")
-            }
+    if (screenHandler !is GenericContainerScreen) {
+        return httpForbidden("Not a container")
+    }
 
-            val compoundList = inventory.inventoryAsCompound(screenHandler.title)
+    val inventory = screenHandler.screenHandler.inventory
 
-            for (compound in compoundList) {
-                val chestItemNbt = NbtCompound().apply {
-                    putString("id", "minecraft:chest")
-                    putByte("Count", 1)
-                    put("tag", compound)
-                }
+    if (inventory !is SimpleInventory) {
+        return httpForbidden("Not a simple inventory")
+    }
 
-                val itemStack = ItemStack.fromNbt(mc.world!!.registryManager, chestItemNbt).getOrNull()
-                    ?: return httpForbidden("Invalid item")
+    val compoundList = inventory.inventoryAsCompound(screenHandler.title)
 
-                val emptySlot = player.inventory.emptySlot
+    for (compound in compoundList) {
+        val errResponse = giveItem(compound)
 
-                if (emptySlot == -1) {
-                    return httpForbidden("No empty slot")
-                }
-
-                player.inventory.setStack(emptySlot, itemStack)
-                network.sendPacket(
-                    CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
-                )
-            }
-
-            httpOk(JsonObject())
-        } else {
-            httpForbidden("Not a container")
+        if (errResponse != null) {
+            return errResponse
         }
     }
+
+    return httpOk(emptyJsonObject())
+}
+
+private fun giveItem(compound: NbtCompound): FullHttpResponse? {
+    val chestItemNbt = NbtCompound().apply {
+        putString("id", "minecraft:chest")
+        putByte("Count", 1)
+        put("tag", compound)
+    }
+
+    val itemStack = ItemStack.fromNbt(mc.world!!.registryManager, chestItemNbt).getOrNull()
+        ?: return httpForbidden("Invalid item")
+
+    val emptySlot = player.inventory.emptySlot
+
+    if (emptySlot == -1) {
+        return httpForbidden("No empty slot")
+    }
+
+    player.inventory.setStack(emptySlot, itemStack)
+    network.sendPacket(
+        CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
+    )
+
+    return null
 }
 
 // POST /api/v1/container/store
@@ -119,7 +130,7 @@ fun postStoreItem(requestObject: RequestObject): FullHttpResponse {
         val compoundList = inventory.inventoryAsCompound(screenHandler.title)
         compoundList.forEach(ClientItemGroups::storeAsContainerItem)
 
-        httpOk(JsonObject())
+        httpOk(emptyJsonObject())
     } else {
         httpForbidden("Not a container")
     }

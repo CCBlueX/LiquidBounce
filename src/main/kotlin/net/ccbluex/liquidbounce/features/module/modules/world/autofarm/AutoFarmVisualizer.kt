@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
     private object Path : ToggleableConfigurable(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
         val renderHandler = handler<WorldRenderEvent> { event ->
-            renderEnvironmentForWorld(event.matrixStack){
-                withColor(color){
+            renderEnvironmentForWorld(event.matrixStack) {
+                withColor(color) {
                     AutoFarmAutoWalk.walkTarget?.let { target ->
                         drawLines(
                             relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3(),
@@ -45,9 +46,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     }
                 }
             }
-
         }
-
     }
 
     private object Blocks : ToggleableConfigurable(this, "Blocks", true) {
@@ -56,11 +55,11 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
         private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
         private val range by int("Range", 50, 10..128).onChange {
-            rangeSquared = it * it
+            rangeSquared = it.sq()
             it
         }
-        var rangeSquared: Int = range * range
 
+        private var rangeSquared: Int = range * range
 
         private val colorRainbow by boolean("Rainbow", false)
 
@@ -69,11 +68,11 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             private val colorRainbow by boolean("Rainbow", false)
 
             fun render(renderEnvironment: RenderEnvironment) {
-                if(!this.enabled) return
+                if (!this.enabled) return
                 val target = ModuleAutoFarm.currentTarget ?: return
-                with(renderEnvironment){
-                    withPosition(Vec3(target)){
-                        withColor((if(colorRainbow) rainbow() else color).alpha(50)){
+                with(renderEnvironment) {
+                    withPosition(Vec3(target)) {
+                        withColor((if (colorRainbow) rainbow() else color).with(a = 50)) {
                             drawSolidBox(FULL_BOX)
                         }
                     }
@@ -86,21 +85,16 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
-            val fillColor = baseColor.alpha(50)
-            val outlineColor = baseColor.alpha(100)
+            val fillColor = baseColor.with(a = 50)
+            val outlineColor = baseColor.with(a = 100)
 
-
-            val markedBlocks = AutoFarmBlockTracker.trackedBlockMap
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
-                for ((pos, type) in markedBlocks) {
-                    val vec3 = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                    val xdiff = pos.x - player.x
-                    val zdiff = pos.z - player.z
-                    if (xdiff * xdiff + zdiff * zdiff > rangeSquared) continue
+                for ((pos, type) in AutoFarmBlockTracker.iterate()) {
+                    if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
 
-                    withPositionRelativeToCamera(vec3) {
-                        if(type == AutoFarmTrackedStates.Destroy){
+                    withPositionRelativeToCamera(pos.toVec3d()) {
+                        if (type == AutoFarmTrackedStates.Destroy) {
                             withColor(fillColor) {
                                 drawSolidBox(FULL_BOX)
                             }
@@ -121,6 +115,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             }
         }
     }
+
     init {
         tree(Path)
         tree(Blocks)

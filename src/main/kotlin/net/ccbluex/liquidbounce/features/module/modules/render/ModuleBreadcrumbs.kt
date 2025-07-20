@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,28 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
+import it.unimi.dsi.fastutil.objects.ObjectFloatPair
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.render.*
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.minecraft.client.gl.ShaderProgramKeys
+import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.BufferRenderer
+import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
-import org.apache.commons.lang3.tuple.MutablePair
-import org.apache.commons.lang3.tuple.Pair
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -45,14 +51,14 @@ import java.util.*
  *
  * Leaves traces behind players.
  */
-object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
+object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(70, 119, 255, 120))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
-    internal object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
+    private object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
         val alive by int("Alive", 900, 10..10000, "ms")
         val fade by boolean("Fade", true)
     }
@@ -98,7 +104,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             VertexFormats.POSITION_COLOR)
         val renderData = RenderData(matrix, buffer, colorF, lines)
 
-        RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
 
         trails.forEach { (entity, trail) ->
             trail.verifyAndRenderTrail(renderData, camera, entity, time)
@@ -138,11 +144,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         }
 
         lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
-        trails.computeIfAbsent(entity) { Trail() }.positions.add(TrailPart(entity.x, entity.y, entity.z, time))
+        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent>(ignoreCondition = true) {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         clear()
     }
 
@@ -163,7 +169,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private class Trail {
 
-        var positions = ArrayDeque<TrailPart>()
+        val positions = ArrayDeque<TrailPart>()
 
         fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
             val aliveDurationF = TemporaryConfigurable.alive.toFloat()
@@ -194,12 +200,12 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 }
 
                 val point = calculatePoint(camera, position.x, position.y, position.z)
-                MutablePair(point, alpha)
+                ObjectFloatMutablePair.of(point, alpha)
             }
 
             val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
-            pointsWithAlpha.last().left = point
+            pointsWithAlpha.last().left(point)
 
             addVerticesToBuffer(renderData, pointsWithAlpha)
         }
@@ -210,28 +216,22 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             return point
         }
 
-        private fun addVerticesToBuffer(renderData: RenderData, list: List<Pair<Vector3f, Float>>) {
+        private fun addVerticesToBuffer(renderData: RenderData, list: List<ObjectFloatPair<Vector3f>>) {
             val red = renderData.color.x
             val green = renderData.color.y
             val blue = renderData.color.z
 
-            for (i in list.indices) {
-                if (i - 1 < 0) {
-                    continue
-                }
+            with(renderData.bufferBuilder) {
+                for (i in 1..<list.size) {
+                    val (v0, alpha0) = list[i]
+                    val (v2, alpha2) = list[i - 1]
 
-                val v0 = list[i]
-                val v2 = list[i - 1]
-
-                renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
-                    .color(red, green, blue, v0.right)
-                renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
-                    .color(red, green, blue, v2.right)
-                if (!renderData.lines) {
-                    renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
-                        .color(red, green, blue, v2.right)
-                    renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
-                        .color(red, green, blue, v0.right)
+                    vertex(renderData.matrix, v0.x, v0.y, v0.z).color(red, green, blue, alpha0)
+                    vertex(renderData.matrix, v2.x, v2.y, v2.z).color(red, green, blue, alpha2)
+                    if (!renderData.lines) {
+                        vertex(renderData.matrix, v2.x, v2.y + height, v2.z).color(red, green, blue, alpha2)
+                        vertex(renderData.matrix, v0.x, v0.y + height, v0.z).color(red, green, blue, alpha0)
+                    }
                 }
             }
         }

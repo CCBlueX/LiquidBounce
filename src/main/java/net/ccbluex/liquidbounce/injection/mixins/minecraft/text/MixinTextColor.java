@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(TextColor.class)
 public class MixinTextColor implements ClientTextColorAdditions {
+
     @Shadow
     @Final
     private @Nullable String name;
@@ -58,4 +59,5 @@ public class MixinTextColor implements ClientTextColorAdditions {
     public int hashCode() {
         return Objects.hashCode(this.name, this.rgb, this.bypassesNameProtect);
     }
+
 }

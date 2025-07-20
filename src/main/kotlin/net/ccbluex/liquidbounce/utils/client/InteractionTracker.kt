@@ -1,17 +1,16 @@
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.player
+import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
-import net.minecraft.util.UseAction
 
-object InteractionTracker : Listenable {
+object InteractionTracker : EventListener {
 
     val isBlocking: Boolean
         get() = currentInteraction?.action == UseAction.BLOCK
@@ -65,6 +64,7 @@ object InteractionTracker : Listenable {
 
     data class Interaction(val hand: Hand, val action: UseAction)
 
-    override fun handleEvents() = inGame
+    override val running
+        get() = inGame
 
 }

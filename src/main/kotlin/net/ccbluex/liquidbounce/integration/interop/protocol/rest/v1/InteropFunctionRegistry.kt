@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+@file:Suppress("LongMethod")
+
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.*
@@ -48,6 +51,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     get("/screen", ::getScreenInfo)
     get("/screen/size", ::getScreenSize)
     put("/screen", ::putScreen)
+    delete("/screen", ::deleteScreen)
 
     // Module Functions
     get("/modules", ::getModules).apply {
@@ -58,6 +62,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
         put("/settings", ::putSettings)
         post("/panic", ::postPanic)
     }
+    get("/module/:name", ::getModule)
 
 
     // Component Functions
@@ -84,6 +89,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     post("/account/restore", ::postRestoreInitial)
     put("/account/favorite", ::putFavoriteAccount)
     delete("/account/favorite", ::deleteFavoriteAccount)
+    post("/account/random-name", ::generateName)
 
     // Proxy Functions
     get("/proxy", ::getProxyInfo)
@@ -123,12 +129,19 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     // Reconnect Functions
     post("/reconnect", ::postReconnect)
 
+    // Spoofer Functions
+    get("/spoofer", ::getSpooferConfigurable)
+    put("/spoofer", ::putSpooferConfigurable)
+
     // Input Functions
     get("/input", ::getInputInfo)
     get("/keybinds", ::getKeybinds)
+    post("/typing", ::isTyping)
+    get("/typing", ::getIsTyping)
 
     // Player Functions
     get("/player", ::getPlayerData)
+    get("/player/inventory", ::getPlayerInventory)
     get("/crosshair", ::getCrosshairData)
 
     // Registry Functions

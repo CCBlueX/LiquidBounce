@@ -17,7 +17,7 @@
 </div>
 <style lang="scss">
   @use "sass:color";
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .switch-setting {
     display: flex;
@@ -37,7 +37,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: darken($menu-text-color, 55%);
+    background-color: color.adjust($menu-text-color, $lightness: -55%);
     transition: ease 0.4s;
     height: 14px;
     border-radius: 10px;
@@ -69,10 +69,7 @@
     }
 
     input:checked + .slider {
-      background-color: color.scale(
-                      desaturate($accent-color, 60%),
-              $lightness: -15%
-      );
+      background-color: color.adjust($accent-color, $saturation: -60%, $lightness: -15%);
     }
 
     input:checked + .slider:before {

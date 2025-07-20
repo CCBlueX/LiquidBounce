@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
 /**
  * Hylex Velocity
@@ -36,17 +29,11 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-object VelocityHylex : Choice("Hylex") {
-    override val parent: ChoiceConfigurable<Choice>
-        get() = modes
+object VelocityHylex : VelocityMode("Hylex") {
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEvent> {
-        if (!player.moving) {
-            return@handler
-        }
-
-        if (!player.isSprinting) {
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        if (event.isCancelled || !player.moving || !player.isSprinting) {
             return@handler
         }
 
@@ -79,7 +66,7 @@ object VelocityHylex : Choice("Hylex") {
     }
 
     @Suppress("unused")
-    private val repeatable = repeatable {
+    private val repeatable = tickHandler {
         val shouldJump = player.hurtTime > 5
         val canJump = player.isOnGround
 

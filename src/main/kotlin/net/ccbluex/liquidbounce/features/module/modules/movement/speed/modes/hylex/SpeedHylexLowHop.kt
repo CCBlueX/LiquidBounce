@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 
@@ -35,8 +34,10 @@ import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
  */
 class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
-    var airTicks = 0
-    val repeatable = repeatable {
+    private var airTicks = 0
+
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (player.isOnGround) {
             airTicks = 0
             if (player.moving && player.sqrtSpeed < 0.32) {
@@ -47,7 +48,7 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
                     1.1
                 )
             }
-            return@repeatable
+            return@tickHandler
         }
         airTicks++
 
@@ -83,8 +84,8 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
     }
 
     @Suppress("unused")
-    private val jumpHandler = handler<PlayerJumpEvent> {
-        it.motion = 0.33f
+    private val jumpHandler = handler<PlayerJumpEvent> { event ->
+        event.motion = 0.33f
     }
 
 }

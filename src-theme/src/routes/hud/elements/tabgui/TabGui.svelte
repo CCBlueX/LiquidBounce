@@ -8,7 +8,7 @@
     import {listen} from "../../../../integration/ws";
     import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
-    import type {KeyEvent, ToggleModuleEvent} from "../../../../integration/events";
+    import type {KeyEvent, ModuleToggleEvent} from "../../../../integration/events";
 
     let modules: TModule[] = [];
     let groupedModules: GroupedModules = {};
@@ -78,7 +78,7 @@
 
     listen("key", handleKeyDown);
 
-    listen("toggleModule", (e: ToggleModuleEvent) => {
+    listen("moduleToggle", (e: ModuleToggleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
@@ -110,12 +110,9 @@
 </div>
 
 <style lang="scss">
-    @import "../../../../colors.scss";
+    @use "../../../../colors.scss" as *;
 
     .tabgui {
-        //position: fixed;
-        //top: 90px;
-        //left: 15px;
         display: flex;
     }
 

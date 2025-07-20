@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,24 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class RequestHandlerTest {
+
+    class TestClientModule(name: String) : ClientModule(name, Category.MISC, state = true) {
+        override val running: Boolean
+            get() = enabled
+    }
+
     companion object {
-        private val MODULE_1 = Module("module1", Category.MISC, state = true)
-        private val MODULE_2 = Module("module2", Category.MISC, state = true)
-        private val MODULE_3 = Module("module3", Category.MISC, state = true)
-        private val MODULE_4 = Module("module4", Category.MISC, state = true)
+        private val MODULE_1 = TestClientModule("module1")
+        private val MODULE_2 = TestClientModule("module2")
+        private val MODULE_3 = TestClientModule("module3")
+        private val MODULE_4 = TestClientModule("module4")
     }
 
     @BeforeEach

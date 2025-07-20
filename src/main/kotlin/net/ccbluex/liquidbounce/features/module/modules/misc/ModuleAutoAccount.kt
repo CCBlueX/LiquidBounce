@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.event.SuspendableHandler
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 
 
@@ -32,8 +32,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
  * Auto account module
  *
  * Automatically handles logins or registrations on servers when requested.
+ *
+ * Command: [CommandAutoAccount]
  */
-object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
+object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
 
     private val password by text("Password", "a1b2c3d4")
         .doNotIncludeAlways()
@@ -42,14 +44,34 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
 
-    private val registerRegexString by text("RegisterRegex", "/register")
-    private val loginRegexString by text("LoginRegex", "/login")
+    private val registerRegexString: String by text("RegisterRegex", "/register").onChanged {
+        registerRegex = Regex(it)
+    }
+    private val loginRegexString: String by text("LoginRegex", "/login").onChanged {
+        loginRegex = Regex(it)
+    }
 
-    var sequence: Sequence<DummyEvent>? = null
+    private var registerRegex = Regex(registerRegexString)
+    private var loginRegex = Regex(loginRegexString)
 
     // We can receive chat messages before the world is initialized,
-    // so we have to handel events even before the that
-    override fun handleEvents() = enabled
+    // so we have to handle events even before that
+    override val running
+        get() = !HideAppearance.isDestructed && enabled
+
+    private var sending = false
+
+    override fun disable() {
+        sending = false
+    }
+
+    private suspend inline fun Sequence.action(operation: () -> Unit) {
+        sending = true
+        waitUntil { mc.networkHandler != null }
+        waitTicks(delay.random())
+        operation()
+        sending = false
+    }
 
     fun login() {
         chat("login")
@@ -58,41 +80,25 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     fun register() {
         chat("register")
-
         network.sendCommand("$registerCommand $password $password")
     }
 
     @Suppress("unused")
-    val onChat = handler<ChatReceiveEvent> { event ->
+    val onChat = sequenceHandler<ChatReceiveEvent> { event ->
+        if (sending) {
+            return@sequenceHandler
+        }
+
         val msg = event.message
 
-        val registerRegex = Regex(registerRegexString)
-
-        if (registerRegex.containsMatchIn(msg)) {
-            startDelayedAction { register() }
-
-            return@handler
+        when {
+            registerRegex.containsMatchIn(msg) -> {
+                action(::register)
+            }
+            loginRegex.containsMatchIn(msg) -> {
+                action(::login)
+            }
         }
-
-        val loginRegex = Regex(loginRegexString)
-
-        if (loginRegex.containsMatchIn(msg)) {
-            startDelayedAction { login() }
-        }
-    }
-
-    private fun startDelayedAction(action: SuspendableHandler<DummyEvent>) {
-        // cancel the previous sequence
-        sequence?.cancel()
-
-        //start the new sequence
-        sequence = Sequence(this, {
-            waitUntil { mc.networkHandler != null }
-            sync()
-            waitTicks(delay.random())
-
-            action(it)
-        }, DummyEvent())
     }
 
 }

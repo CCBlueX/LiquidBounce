@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandCenter
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandCenter.CenterHandlerState
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter.CenterHandlerState
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
+import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
+import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.CrystalDestroyFeature
-import net.ccbluex.liquidbounce.utils.block.placer.NoRotationMode
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
@@ -41,68 +41,39 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
 import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3i
 import org.joml.Vector2d
-import org.lwjgl.glfw.GLFW
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * Surround module
  *
  * Builds safe holes.
+ *
+ * @author ccetl
  */
-object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true) {
+object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit = true) {
 
     /**
      * The blocks the surround normal utilizes.
      */
     private val DEFAULT_BLOCKS = hashSetOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
 
-    /**
-     * Runs [CommandCenter] when the module is enabled.
-     */
-    private val center by boolean("Center", false)
-
-    /**
-     * Extends when entities block placement spots.
-     */
-    private val extend by boolean("Extend", true)
-
-    /**
-     * When enabled, the surround won't build 2x1 or 2x2 holes if we already are in a completed 1x1 hole, even if
-     * we block replacements.
-     *
-     * This should only be enabled if no wall placements are possible, or we have a significantly lower ping
-     * than our opponent.
-     */
-    private val noWaste by boolean("NoWaste", false)
-
-    /**
-     * Places blocks bellow the surround so that enemies can't mine the block bellow you making you fall down.
-     */
-    private val down by boolean("Down", true)
+    private val features by multiEnumChoice("Features",
+        Features.EXTEND,
+        Features.DOWN,
+    )
 
     /**
      * Disables the module when the y-coordinate changes.
+     * Or when the player has moved at least 0.5 blocks away from the original center.
+     * Or when the player has a speed that is faster than or equal to 5 m/s.
      */
-    private val disableOnYChange by boolean("DisableOnYChange", true)
-
-    /**
-     * Disables the module when the player has moved at least 0.5 blocks away from the original center.
-     */
-    private val disableOnXZMove by boolean("DisableOnXZMove", false)
-
-    /**
-     * Disables the module when the player has a speed that is faster than or equal to 5 m/s.
-     */
-    private val disableOnXZSpeed by boolean("DisableOnXZSpeed", false)
+    private val disableOn by multiEnumChoice("DisableOn", DisableOn.Y_CHANGE)
 
     /**
      * Replaces broken blocks instantly.
@@ -121,6 +92,7 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
         /**
          * At what destroy stage, actions should be taken.
          */
+        @Suppress("MagicNumber")
         private val minDestroyProgress by int("MinDestroyProgress", 4, 0..9, "stage")
 
         /**
@@ -222,7 +194,7 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
     /**
      * Manually triggers the protection mechanism [Protect.ExtraLayer].
      */
-    private val addExtraLayer by bind("AddExtraLayer", GLFW.GLFW_KEY_UNKNOWN)
+    private val addExtraLayer by bind("AddExtraLayer")
 
     init {
         tree(Protect)
@@ -230,7 +202,12 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
 
     private val filter by enumChoice("Filter", Filter.WHITELIST)
     private val blocks by blocks("Blocks", DEFAULT_BLOCKS)
-    private val placer = tree(BlockPlacer("Placing", this, Priority.NORMAL, { filter.getSlot(blocks) }))
+    private val placer = tree(BlockPlacer(
+        "Placing",
+        this,
+        Priority.IMPORTANT_FOR_PLAYER_LIFE,
+        { filter.getSlot(blocks) }
+    ))
 
     private var addExtraLayerBlocks = false
     private var startY = 0.0
@@ -242,7 +219,7 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
     }
 
     override fun enable() {
-        if (center) {
+        if (Features.CENTER in features) {
             CommandCenter.state = CenterHandlerState.APPLY_ON_NEXT_EVENT
         }
 
@@ -261,26 +238,26 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
         addExtraLayerBlocks = addExtraLayer.getNewState(it, addExtraLayerBlocks)
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "MagicNumber")
     private val tickMoveHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state == EventState.PRE) {
             return@handler
         }
 
-        val yChange = disableOnYChange && it.y != startY
+        val yChange = DisableOn.Y_CHANGE in disableOn && it.y != startY
         val dx = abs(player.x - (centerPos?.x ?: 0.0))
         val dz = abs(player.z - (centerPos?.y ?: 0.0))
-        val xzChange = disableOnXZMove && (dx > 0.5 || dz > 0.5)
+        val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
         val speed = player.pos.subtract(player.prevX, player.prevY, player.prevZ).lengthSquared() * 20.0
-        val highSpeed = disableOnXZSpeed && speed >= 5.0
+        val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0
         if (yChange || xzChange || highSpeed) {
             enabled = false
         }
     }
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
-        if (disableOnYChange && player.pos.y != startY) {
+    private val targetUpdater = handler<RotationUpdateEvent> {
+        if (DisableOn.Y_CHANGE in disableOn && player.pos.y != startY) {
             enabled = false
             return@handler
         }
@@ -289,14 +266,16 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
         val y = ceil(bb.minY)
 
         val feetBlockPos = player.getFeetBlockPos()
-        val hole = if (noWaste && player.isInHole(feetBlockPos)) {
+        val hole = if (Features.NO_WASTE in features && player.isInHole(feetBlockPos)) {
             setOf(feetBlockPos)
         } else {
+            val maxX = getMax(bb, Direction.Axis.X)
+            val maxZ = getMax(bb, Direction.Axis.Z)
             setOf(
                 BlockPos.ofFloored(bb.minX, y, bb.minZ),
-                BlockPos.ofFloored(bb.minX, y, bb.maxZ),
-                BlockPos.ofFloored(bb.maxX, y, bb.minZ),
-                BlockPos.ofFloored(bb.maxX, y, bb.maxZ),
+                BlockPos.ofFloored(bb.minX, y, maxZ),
+                BlockPos.ofFloored(maxX, y, bb.minZ),
+                BlockPos.ofFloored(maxX, y, maxZ),
             )
         }
 
@@ -312,7 +291,7 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
                 }
 
                 val isDown = direction == Direction.DOWN
-                if (isDown && down) {
+                if (isDown && Features.DOWN in features) {
                     holeBlocks.add(holePos.offset(direction, 2))
                 }
 
@@ -324,7 +303,7 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
                     }
                 }
 
-                if (!isDown && extend) {
+                if (!isDown && Features.EXTEND in features) {
                     pos.getBlockingEntities { it !is EndCrystalEntity && it != player }.forEach {
                         getEntitySurround(it, holeBlocks, blocked, y)
                     }
@@ -337,68 +316,36 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
 
     @Suppress("unused")
     private val blockUpdateHandler = handler<PacketEvent> {
-        val packet = it.packet
-        if (!instant || packet !is BlockUpdateS2CPacket) {
+        if (!instant) {
             return@handler
         }
 
-        val irrelevantPacket = !packet.state.isReplaceable || packet.pos !in placer.blocks
-
-        val pos = packet.pos
-        val rotationMode = placer.rotationMode.activeChoice
-        if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
-            return@handler
-        }
-
-        val searchOptions = BlockPlacementTargetFindingOptions(
-            listOf(Vec3i(0, 0, 0)),
-            ItemStack(Items.SANDSTONE),
-            CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            player.pos,
-            player.pose,
-            placer.wallRange > 0
-        )
-
-        val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: return@handler
-
-        // Check if we can reach the target
-        if (!placer.canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
-            return@handler
-        }
-
-        if (placementTarget.interactedBlockPos.getBlock().isInteractable(
-                placementTarget.interactedBlockPos.getState()
-            )
-        ) {
-            return@handler
-        }
-
-        if (rotationMode.send) {
-            val rotation = placementTarget.rotation.normalize()
-            network.connection!!.send(
-                PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround),
-                null
-            )
-        }
-
-        placer.doPlacement(false, pos, placementTarget)
+        placer.placeInstantOnBlockUpdate(it)
     }
 
-    private fun getEntitySurround(entity: Entity, list: HashSet<BlockPos>, blocked: HashSet<BlockPos>, y: Double) {
+    fun getEntitySurround(
+        entity: Entity,
+        list: HashSet<BlockPos>,
+        blocked: HashSet<BlockPos>,
+        y: Double,
+        down: Boolean = false
+    ) {
         val bb = entity.boundingBox
 
+        val maxX = getMax(bb, Direction.Axis.X)
+        val maxZ = getMax(bb, Direction.Axis.Z)
         val hole = setOf(
             BlockPos.ofFloored(bb.minX, y, bb.minZ),
-            BlockPos.ofFloored(bb.minX, y, bb.maxZ),
-            BlockPos.ofFloored(bb.maxX, y, bb.minZ),
-            BlockPos.ofFloored(bb.maxX, y, bb.maxZ),
+            BlockPos.ofFloored(bb.minX, y, maxZ),
+            BlockPos.ofFloored(maxX, y, bb.minZ),
+            BlockPos.ofFloored(maxX, y, maxZ),
         )
 
         blocked.addAll(hole)
 
+        val directions = if (down) DIRECTIONS_EXCLUDING_UP else Direction.HORIZONTAL
         hole.forEach {
-            Direction.HORIZONTAL.forEach { direction ->
+            directions.forEach { direction ->
                 val pos = it.offset(direction)
 
                 if (it !in blocked) {
@@ -408,4 +355,50 @@ object ModuleSurround : Module("Surround", Category.WORLD, disableOnQuit = true)
         }
     }
 
+    private fun getMax(boundingBox: Box, axis: Direction.Axis): Double {
+        val max = boundingBox.getMax(axis)
+        val min = boundingBox.getMin(axis)
+
+        return if (max == floor(min) + 1.0) {
+            min
+        } else {
+            max
+        }
+    }
+
+    private enum class DisableOn(
+        override val choiceName: String
+    ) : NamedChoice {
+        Y_CHANGE("YChange"),
+        XZ_MOVE("XZMove"),
+        XZ_SPEED("XZSpeed");
+    }
+
+    private enum class Features(
+        override val choiceName: String
+    ) : NamedChoice {
+        /**
+         * Runs [CommandCenter] when the module is enabled.
+         */
+        CENTER("Center"),
+
+        /**
+         * Extends when entities block placement spots.
+         */
+        EXTEND("Extend"),
+
+        /**
+         * When enabled, the surround won't build 2x1 or 2x2 holes if we already are in a completed 1x1 hole, even if
+         * we block replacements.
+         *
+         * This should only be enabled if no wall placements are possible, or we have a significantly lower ping
+         * than our opponent.
+         */
+        NO_WASTE("NoWaste"),
+
+        /**
+         * Places blocks below the surround so that enemies can't mine the block bellow you making you fall down.
+         */
+        DOWN("Down");
+    }
 }

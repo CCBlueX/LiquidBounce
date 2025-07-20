@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -36,13 +36,15 @@ import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.StringUtils
+import kotlin.math.abs
+import kotlin.math.roundToLong
 
 /**
  * Module Flag Check.
  *
  * Alerts you about set backs.
  */
-object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
+object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
 
     private var chatMessage by boolean("ChatMessage", true)
     private var notification by boolean("Notification", false)
@@ -53,7 +55,7 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
         private var afterSeconds by int("After", 30, 1..300, "s")
 
         @Suppress("unused")
-        private val repeatable = repeatable {
+        private val repeatable = tickHandler {
             flagCount = 0
             waitSeconds(afterSeconds)
         }
@@ -66,7 +68,7 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
         private val fadeOut by curve("FadeOut", Easing.QUAD_OUT)
         private val outTime by int("OutTime", 500, 0..2000, "ms")
-        private var color by color("Color", Color4b.RED.alpha(100).darker())
+        private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
         val wireframePlayer = WireframePlayer(Vec3d.ZERO, 0f, 0f)
@@ -112,19 +114,34 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
     }
 
     private var flagCount = 0
+    private var lastYaw = 0F
+    private var lastPitch = 0F
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
+        if (player.age <= 25) {
+            return@handler
+        }
+
         when (val packet = event.packet) {
             is PlayerPositionLookS2CPacket -> {
-                if (player.age <= 25) {
-                    return@handler
-                }
+                val change = packet.change
+                val deltaYaw = calculateAngleDelta(change.yaw, lastYaw)
+                val deltaPitch = calculateAngleDelta(change.pitch, lastPitch)
 
                 flagCount++
-                alert(AlertReason.LAGBACK)
+                if (deltaYaw >= 90 || deltaPitch >= 90) {
+                    alert(AlertReason.FORCEROTATE, "(${deltaYaw.roundToLong()}° | ${deltaPitch.roundToLong()}°)")
+                } else {
+                    alert(AlertReason.LAGBACK)
+                }
+
                 Render.reset()
-                Render.wireframePlayer.setPosRot(packet.x, packet.y, packet.z, packet.yaw, packet.pitch)
+                val position = change.position
+                Render.wireframePlayer.setPosRot(position.x, position.y, position.z, change.yaw, change.pitch)
+
+                lastYaw = player.headYaw
+                lastPitch = player.pitch
             }
 
             is DisconnectS2CPacket -> {
@@ -134,16 +151,16 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
     }
 
     @Suppress("unused")
-    private val repeatable = repeatable {
+    private val repeatable = tickHandler {
         if (!invalidAttributes) {
-            return@repeatable
+            return@tickHandler
         }
 
         val invalidHeath = player.health <= 0f && player.isAlive
         val invalidHunger = player.hungerManager.foodLevel <= 0
 
         if (!invalidHeath && !invalidHunger) {
-            return@repeatable
+            return@tickHandler
         }
 
         val invalidReasons = mutableListOf<String>()
@@ -180,9 +197,17 @@ object ModuleFlagCheck : Module("FlagCheck", Category.MISC, aliases = arrayOf("F
         }
     }
 
+    private fun calculateAngleDelta(newAngle: Float, oldAngle: Float): Float {
+        var delta = newAngle - oldAngle
+        if (delta > 180) delta -= 360
+        if (delta < -180) delta += 360
+        return abs(delta)
+    }
+
     @Suppress("SpellCheckingInspection")
     private enum class AlertReason(val key: String) {
         INVALID("invalid"),
+        FORCEROTATE("forceRotate"),
         LAGBACK("lagback")
     }
 

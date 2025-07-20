@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect;
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.OrderedText;
@@ -32,14 +32,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer {
 
-    @ModifyArg(method = "drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;drawLayer(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)F"), index = 0)
+    @ModifyArg(method = "drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;drawLayer(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)F"), index = 0)
     private String injectNameProtectA(String text) {
         return ModuleNameProtect.INSTANCE.replace(text);
     }
 
-    @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))
+    @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))
     private boolean injectNameProtectB(OrderedText orderedText, CharacterVisitor visitor) {
-        if (ModuleNameProtect.INSTANCE.getEnabled()) {
+        if (ModuleNameProtect.INSTANCE.getRunning()) {
             final OrderedText wrapped = new ModuleNameProtect.NameProtectOrderedText(orderedText);
             return wrapped.accept(visitor);
         }
@@ -49,7 +49,7 @@ public abstract class MixinTextRenderer {
 
     @ModifyArg(method = "getWidth(Ljava/lang/String;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Ljava/lang/String;)F"), index = 0)
     private @Nullable String injectNameProtectWidthA(@Nullable String text) {
-        if (text != null && ModuleNameProtect.INSTANCE.getEnabled()) {
+        if (text != null && ModuleNameProtect.INSTANCE.getRunning()) {
             return ModuleNameProtect.INSTANCE.replace(text);
         }
 
@@ -60,7 +60,7 @@ public abstract class MixinTextRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Lnet/minecraft/text/OrderedText;)F"),
             index = 0)
     private OrderedText injectNameProtectWidthB(OrderedText text) {
-        if (ModuleNameProtect.INSTANCE.getEnabled()) {
+        if (ModuleNameProtect.INSTANCE.getRunning()) {
             return new ModuleNameProtect.NameProtectOrderedText(text);
         }
 

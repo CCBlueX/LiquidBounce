@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -29,20 +30,20 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  *
  * Automatically jumps at the very edge of a block.
  */
-object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
+object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
 
     @Suppress("unused")
-    private val simulatedTickHandler = handler<SimulatedTickEvent> { event ->
+    private val simulatedTickHandler = handler<MovementInputEvent> { event ->
+        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
         val shouldJump = player.moving &&
                 player.isOnGround &&
                 !player.isSneaking &&
                 !mc.options.sneakKey.isPressed &&
                 !mc.options.jumpKey.isPressed &&
-                !event.simulatedPlayer.onGround
-        val movementInput = event.movementEvent
+                !simulatedPlayer.getSnapshotAt(1).onGround
 
         if (shouldJump) {
-            movementInput.jumping = true
+            event.jump = true
         }
     }
 

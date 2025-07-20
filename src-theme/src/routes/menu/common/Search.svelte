@@ -12,7 +12,7 @@
        on:input={() => dispatch("search", {query: value})} spellcheck="false">
 
 <style lang="scss">
-  @import "../../../colors.scss";
+  @use "../../../colors.scss" as *;
 
   .search {
     background-color: rgba($menu-base-color, .36);

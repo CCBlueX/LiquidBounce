@@ -7,6 +7,7 @@ import type {
     Component,
     ConfigurableSetting,
     GameWindow,
+    GeneratorResult,
     HitResult,
     MinecraftKeybind,
     Module,
@@ -21,12 +22,20 @@ import type {
     VirtualScreen,
     World
 } from "./types";
+import type {PlayerInventory} from "./events";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getModule(name: string): Promise<Module> {
+    const response = await fetch(`${API_BASE}/client/module/${name}`);
+    const data = await response.json();
 
     return data;
 }
@@ -44,6 +53,23 @@ export async function setModuleSettings(name: string, settings: ConfigurableSett
     const searchParams = new URLSearchParams({name});
 
     await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+}
+
+export async function getSpooferSettings(): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/spoofer`);
+    const data = await response.json();
+
+    return data;
+}
+
+export async function setSpooferSettings(settings: ConfigurableSetting) {
+    await fetch(`${API_BASE}/client/spoofer`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -102,6 +128,13 @@ export async function confirmVirtualScreen(name: string) {
 export async function getPlayerData(): Promise<PlayerData> {
     const response = await fetch(`${API_BASE}/client/player`);
     const data: PlayerData = await response.json();
+
+    return data;
+}
+
+export async function getPlayerInventory(): Promise<PlayerInventory> {
+    const response = await fetch(`${API_BASE}/client/player/inventory`);
+    const data: PlayerInventory = await response.json();
 
     return data;
 }
@@ -166,6 +199,12 @@ export async function openScreen(name: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({name})
+    });
+}
+
+export async function deleteScreen() {
+    await fetch(`${API_BASE}/client/screen`, {
+        method: "DELETE"
     });
 }
 
@@ -463,23 +502,23 @@ export async function setProxyFavorite(id: number, favorite: boolean) {
     }
 }
 
-export async function addProxy(host: string, port: number, username: string, password: string, forwardAuthentication: boolean) {
+export async function addProxy(host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({host, port, username, password,forwardAuthentication})
+        body: JSON.stringify({host, port, username, password, type, forwardAuthentication})
     });
 }
 
-export async function editProxy(id: number, host: string, port: number, username: string, password: string, forwardAuthentication: boolean) {
+export async function editProxy(id: number, host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/edit`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({id, host, port, username, password, forwardAuthentication})
+        body: JSON.stringify({id, host, port, username, password, type, forwardAuthentication})
     })
 }
 
@@ -591,5 +630,24 @@ export async function browserForceReload() {
 export async function browserClose() {
     await fetch(`${API_BASE}/client/browser/close`, {
         method: "POST",
+    });
+}
+
+export async function randomUsername(): Promise<string> {
+    let response = await fetch(`${API_BASE}/client/account/random-name`, {
+        method: "POST",
+    });
+    let data: GeneratorResult = await response.json();
+
+    return data.name;
+}
+
+export async function setTyping(typing: boolean) {
+    await fetch(`${API_BASE}/client/typing`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({typing})
     });
 }

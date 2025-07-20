@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -79,23 +79,23 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     }
 
     override fun disable() {
-        player.zeroXZ()
+        player.stopXZVelocity()
     }
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         boost()
         waitTicks(reboostTicks)
 
         if (boostOnce) {
             ModuleFly.enabled = false
-            player.zeroXZ()
+            player.stopXZVelocity()
         }
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.hurtTime > 0  && !hasBeenHurt) {
             hasBeenHurt = true
-            player.strafe(speed = horizontalSpeed.toDouble())
+            player.velocity = player.velocity.withStrafe(speed = horizontalSpeed.toDouble())
             notification(
                 "Fly",
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
@@ -118,25 +118,26 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
         }
 
         event.movement.y = when {
-            player.input.jumping -> verticalSpeed.toDouble()
-            player.input.sneaking -> (-verticalSpeed).toDouble()
+            mc.options.jumpKey.isPressed -> verticalSpeed.toDouble()
+            mc.options.sneakKey.isPressed -> (-verticalSpeed).toDouble()
             else -> 0.0
         }
 
         if (constantSpeed) {
-            event.movement.strafe(speed = horizontalSpeed.toDouble(), keyboardCheck = true)
+            event.movement = event.movement.withStrafe(speed = horizontalSpeed.toDouble())
         }
     }
 
     private fun boost() {
         hasBeenHurt = false
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+            player.horizontalCollision))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z,
-            false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+            false, player.horizontalCollision))
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+            player.horizontalCollision))
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true,
+            player.horizontalCollision))
     }
-
-
 
 }

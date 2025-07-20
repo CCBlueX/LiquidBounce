@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,15 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.features.module.Module
-import java.util.*
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.client.MinecraftClient
+import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
+
     private var currentTick = 0
 
-    private val activeRequests = PriorityQueue<Request<T>>(compareBy { -it.priority })
+    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, compareBy { -it.priority })
 
     fun tick(deltaTime: Int = 1) {
         currentTick += deltaTime
@@ -34,17 +36,21 @@ class RequestHandler<T> {
         // we remove all requests provided by module on new request
         activeRequests.removeAll { it.provider == request.provider }
         request.expiresIn += currentTick
-        this.activeRequests.add(request)
+        activeRequests.add(request)
     }
 
     fun getActiveRequestValue(): T? {
-        // we remove all outdated requests here
-        while ((this.activeRequests.peek() ?: return null).expiresIn <= currentTick ||
-            !this.activeRequests.peek().provider.enabled
-        ) {
-            this.activeRequests.remove()
+        var top = activeRequests.peek() ?: return null
+
+        if (MinecraftClient.getInstance()?.isOnThread != false) {
+            // we remove all outdated requests here
+            while (top.expiresIn <= currentTick || !top.provider.running) {
+                activeRequests.remove()
+                top = activeRequests.peek() ?: return null
+            }
         }
-        return this.activeRequests.peek().value
+
+        return top.value
     }
 
     /**
@@ -57,6 +63,6 @@ class RequestHandler<T> {
      * @param provider module which requested value
      */
     class Request<T>(
-        var expiresIn: Int, val priority: Int, val provider: Module, val value: T
+        var expiresIn: Int, val priority: Int, val provider: ClientModule, val value: T
     )
 }

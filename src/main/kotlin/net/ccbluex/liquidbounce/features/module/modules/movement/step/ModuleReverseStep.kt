@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -41,7 +41,7 @@ import net.minecraft.util.shape.VoxelShapes
  * Allows you to step down blocks faster.
  */
 
-object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
+object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
 
     private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator)).apply { tagBy(this) }
     private val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)
@@ -68,7 +68,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         initiatedJump = true
     }
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (player.velocity.y > 0.0) {
             initiatedJump = true
         } else if (player.isOnGround) {
@@ -83,10 +83,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         private val ticks by int("Ticks", 20, 1..40, "ticks")
         private val simulateFalling by boolean("SimulateFalling", false)
 
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 val simInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput.NONE)
@@ -111,7 +111,8 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
                     if (simulateFalling) {
                         simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(
                             simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround
+                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround,
+                            simulatePlayer.horizontalCollision
                         )
                     }
                 }
@@ -128,10 +129,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
         private val factor by float("Factor", 1.0F, 0.1F..5.0F)
 
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             if (!initiatedJump && !player.isOnGround && player.velocity.y < 0.0 && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 player.velocity = player.velocity.multiply(0.0, factor.toDouble(), 0.0)
@@ -147,10 +148,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
         private val motion by float("Motion", 1.0F, 0.1F..5.0F)
 
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 player.velocity.y = -motion.toDouble()

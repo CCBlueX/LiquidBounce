@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.ItemStack
@@ -34,7 +34,7 @@ import net.minecraft.util.math.random.Random
  * Drops items from the inventory in a random order to make it look like the player is vomiting.
  * If the player is in creative mode, the player will drop random block items.
  */
-object ModuleVomit : Module("Vomit", Category.FUN) {
+object ModuleVomit : ClientModule("Vomit", Category.FUN) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val random = Random.create()
@@ -56,12 +56,8 @@ object ModuleVomit : Module("Vomit", Category.FUN) {
             event.schedule(inventoryConstraints, if (inventoryConstraints.clickDelay.last <= 0) {
                 // Depending on how many empty slots we have, this might kick in the packet rate limit
                 // of ViaVersion or Minecraft/Paper itself
-                listOf(
-                    *emptySlots.map { slot -> CreativeInventoryAction.performFillSlot(randomStack, slot) }
-                        .toTypedArray(),
-                    *emptySlots.map { slot -> ClickInventoryAction.performThrow(null, slot) }
-                        .toTypedArray()
-                )
+                emptySlots.map { slot -> CreativeInventoryAction.performFillSlot(randomStack, slot) } +
+                    emptySlots.map { slot -> ClickInventoryAction.performThrow(null, slot) }
             } else {
                 val slot = emptySlots.random()
 

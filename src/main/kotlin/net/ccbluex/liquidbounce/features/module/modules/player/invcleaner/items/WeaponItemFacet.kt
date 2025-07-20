@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.SwordItem
-import net.minecraft.item.ToolItem
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -58,7 +60,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 compareByCondition { it.itemStack.item is SwordItem },
                 PREFER_BETTER_DURABILITY,
-                compareBy { it.itemStack.item.enchantability },
+                compareBy { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
@@ -87,8 +89,8 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory
         get() = ItemCategory(ItemType.WEAPON, 0)
 
-    override val providedItemFunctions: List<Pair<ItemFunction, Int>>
-        get() = arrayListOf(ItemFunction.WEAPON_LIKE to 1)
+    override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
+        get() = listOf(ObjectIntPair.of(ItemFunction.WEAPON_LIKE, 1))
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as WeaponItemFacet)

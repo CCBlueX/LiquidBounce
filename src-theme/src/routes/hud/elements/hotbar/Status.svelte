@@ -24,7 +24,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .label {
     color: $hotbar-text-color;

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,23 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
-object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("AutoPot", "AutoGapple", "AutoSoup")) {
+object ModuleAutoBuff : ClientModule(
+    name = "AutoBuff",
+    category = Category.PLAYER,
+    aliases = arrayOf("AutoPot", "AutoGapple", "AutoSoup")
+) {
 
     /**
      * All buff features
@@ -75,34 +80,48 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("A
         tree(Refill)
     }
 
+    internal class AutoBuffRotationsConfigurable : RotationsConfigurable(this) {
+
+        val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
+
+        enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
+            NORMAL("Normal"),
+            ON_TICK("OnTick"),
+            ON_USE("OnUse")
+        }
+
+    }
+
     /**
      * Rotation Configurable for every feature that depends on rotation change
      */
-    internal val rotations = tree(RotationsConfigurable(this))
+    internal val rotations = tree(AutoBuffRotationsConfigurable())
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
-    var canRefill = false
-
     private val activeFeatures
         get() = features.filter { it.enabled }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (notDuringCombat && CombatManager.isInCombat) {
-            return@repeatable
+            return@tickHandler
+        }
+
+        if (player.isDead || player.isCreative || player.isSpectator || player.age < 20) {
+            return@tickHandler
         }
 
         for (feature in activeFeatures) {
             if (feature.runIfPossible(this)) {
-                return@repeatable
+                return@tickHandler
             }
         }
-
-        canRefill = true
     }
 
-    val refiller = handler<ScheduleInventoryActionEvent> {
+    @Suppress("unused")
+    private val refiller = handler<ScheduleInventoryActionEvent> {
         // If no feature was run, we should run refill
         if (Refill.enabled) {
             Refill.execute(it)

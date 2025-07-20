@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.common;
 
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleGhostHand;
@@ -33,7 +32,7 @@ import net.minecraft.world.RaycastContext;
 public class TweakedMethods {
 
     public static BlockHitResult tweakedRaycast(BlockView blockView, RaycastContext context) {
-        if (ModuleGhostHand.INSTANCE.getEnabled()) {
+        if (ModuleGhostHand.INSTANCE.getRunning()) {
             var returned = (BlockHitResult) BlockView.raycast(context.getStart(), context.getEnd(), context, (contextx, pos) -> {
                 BlockState blockState = blockView.getBlockState(pos);
 
@@ -66,4 +65,5 @@ public class TweakedMethods {
             return BlockHitResult.createMissed(contextx.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(contextx.getEnd()));
         });
     }
+
 }

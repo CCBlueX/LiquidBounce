@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,14 +20,16 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
 
-import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.math.ChunkPos
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * Size of the texture atlas in chunks (size x size)
@@ -39,34 +41,38 @@ private const val ATLAS_SIZE: Int = 64
  */
 private const val FULL_UPLOAD_THRESHOLD: Int = 15
 
+private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
+
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
     private val texture = NativeImageBackedTexture(ATLAS_SIZE * 16, ATLAS_SIZE * 16, false)
-    private val availableAtlasPositions = ArrayList<AtlasPosition>(ATLAS_SIZE * ATLAS_SIZE - 1)
+    private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
     private val dirtyAtlasPositions = hashSetOf<AtlasPosition>()
     private val chunkPosAtlasPosMap = hashMapOf<ChunkPos, AtlasPosition>()
 
-    private val lock = ReentrantLock()
+    private val lock = ReentrantReadWriteLock()
 
     private var allocated = false
 
     init {
+        val atlasPositions = ArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS)
         for (x in 0 until ATLAS_SIZE) {
             for (y in 0 until ATLAS_SIZE) {
                 if (x == 0 && y == 0) {
                     continue
                 }
 
-                availableAtlasPositions.add(AtlasPosition(x, y))
+                atlasPositions.add(AtlasPosition(x, y))
             }
         }
+        availableAtlasPositions = ArrayBlockingQueue(MAX_ATLAS_POSITIONS, false, atlasPositions)
 
         for (x in 0..15) {
             for (y in 0..15) {
                 val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
 
-                this.texture.image!!.setColor(x, y, color)
+                this.texture.image!!.setColorArgb(x, y, color)
             }
         }
 
@@ -74,45 +80,49 @@ class MinimapTextureAtlasManager {
     }
 
     private fun allocate(chunkPos: ChunkPos): AtlasPosition {
-        val atlasPosition = availableAtlasPositions.removeLastOrNull() ?: error("No more space in the texture atlas!")
+        val atlasPosition = availableAtlasPositions.take() ?: error("No more space in the texture atlas!")
 
-        chunkPosAtlasPosMap[chunkPos] = atlasPosition
+        lock.write {
+            chunkPosAtlasPosMap[chunkPos] = atlasPosition
+        }
 
         return atlasPosition
     }
 
     fun deallocate(chunkPos: ChunkPos) {
-        lock.withLock {
-            val atlasPosition = chunkPosAtlasPosMap.remove(chunkPos) ?: return
-
-            availableAtlasPositions.add(atlasPosition)
+        lock.write {
+            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::add)
         }
     }
 
     fun deallocateAll() {
-        availableAtlasPositions.addAll(chunkPosAtlasPosMap.values)
-        chunkPosAtlasPosMap.clear()
-        dirtyAtlasPositions.clear()
+        lock.write {
+            availableAtlasPositions.addAll(chunkPosAtlasPosMap.values)
+            chunkPosAtlasPosMap.clear()
+            dirtyAtlasPositions.clear()
+        }
     }
 
     fun getOrNotLoadedTexture(chunkPos: ChunkPos): AtlasPosition {
-        return chunkPosAtlasPosMap[chunkPos] ?: NOT_LOADED_ATLAS_POSITION
+        return get(chunkPos) ?: NOT_LOADED_ATLAS_POSITION
     }
 
     fun get(chunkPos: ChunkPos): AtlasPosition? {
-        return chunkPosAtlasPosMap[chunkPos]
+        return lock.read { chunkPosAtlasPosMap[chunkPos] }
     }
 
     private fun getOrAllocate(chunkPos: ChunkPos): AtlasPosition {
-        return get(chunkPos) ?: allocate(chunkPos)
+        return chunkPosAtlasPosMap[chunkPos] ?: allocate(chunkPos)
     }
 
     fun editChunk(
         chunkPos: ChunkPos,
         editor: (NativeImageBackedTexture, AtlasPosition) -> Unit,
     ) {
-        val atlasPosition = lock.withLock {
-            getOrAllocate(chunkPos).apply(dirtyAtlasPositions::add)
+        val atlasPosition = getOrAllocate(chunkPos)
+
+        lock.write {
+            dirtyAtlasPositions.add(atlasPosition)
         }
 
         editor(texture, atlasPosition)
@@ -124,7 +134,7 @@ class MinimapTextureAtlasManager {
      * @return the GLid of the texture
      */
     fun prepareRendering(): Int {
-        lock.withLock {
+        lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
                 return this.texture.glId
             }
@@ -137,11 +147,13 @@ class MinimapTextureAtlasManager {
                 !this.allocated || dirtyChunks >= FULL_UPLOAD_THRESHOLD -> uploadFullTexture()
                 else -> uploadOnlyDirtyPositions()
             }
-
-            this.dirtyAtlasPositions.clear()
-
-            return this.texture.glId
         }
+
+        lock.write {
+            this.dirtyAtlasPositions.clear()
+        }
+
+        return this.texture.glId
     }
 
     private fun uploadFullTexture() {
@@ -170,7 +182,7 @@ class MinimapTextureAtlasManager {
                     dirtyAtlasPosition.baseXOnAtlas, dirtyAtlasPosition.baseYOnAtlas,
                     0, 0,
                     16, 16,
-                    false, false
+                    false
                 )
             }
         }

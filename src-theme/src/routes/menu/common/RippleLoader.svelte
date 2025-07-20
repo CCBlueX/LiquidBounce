@@ -5,8 +5,8 @@
   Taken from https://loading.io/css/
  */
 
-  @import "../../../colors";
-
+  @use "../../../colors.scss" as *;
+ 
   .lds-ripple {
     color: $accent-color;
   }

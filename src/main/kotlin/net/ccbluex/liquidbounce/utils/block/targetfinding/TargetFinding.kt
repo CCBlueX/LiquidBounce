@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.geometry.Face
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
@@ -46,34 +46,64 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
     RANDOM("Random"),
     STABILIZED("Stabilized"),
     NEAREST_ROTATION("NearestRotation"),
-    REVERSE_YAW("ReverseYaw")
+    REVERSE_YAW("ReverseYaw"),
+    DIAGONAL_YAW("DiagonalYaw"),
+    ANGLE_YAW("AngleYaw"),
+    EDGE_POINT("EdgePoint"),
 }
 
 /**
  * Parameters used when generating a targeting plan for a block placement.
- *
- * @param offsetsToInvestigate the offsets (to the position) which the targeting algorithm will consider to place.
- * Prioritized with [offsetPriorityGetter]
- * @param offsetPriorityGetter compares two offsets by their priority. The offset with the higher priority will be
- * prioritized.
- * @param playerPositionOnPlacement the position the player will be at when placing the block
- * @param allowPointingAway will consider faces the point away from the player
  */
 class BlockPlacementTargetFindingOptions(
-    val offsetsToInvestigate: List<Vec3i>,
+    val offsetOptions: BlockOffsetOptions,
+    val faceHandlingOptions: FaceHandlingOptions,
     val stackToPlaceWith: ItemStack,
-    val facePositionFactory: FaceTargetPositionFactory,
-    val offsetPriorityGetter: (Vec3i) -> Double,
-    val playerPositionOnPlacement: Vec3d,
-    val playerPoseOnPlacement: EntityPose = EntityPose.STANDING,
-    val allowPointingAway: Boolean = false
+    val playerLocationOnPlacement: PlayerLocationOnPlacement
 ) {
     companion object {
-        val PRIORITIZE_LEAST_BLOCK_DISTANCE: (Vec3i) -> Double = { vec ->
-            -Vec3d.of(vec).add(0.5, 0.5, 0.5).squaredDistanceTo(mc.player!!.pos)
+        val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareByDescending { vec ->
+            Vec3d.of(vec).add(0.5, 0.5, 0.5).squaredDistanceTo(mc.player!!.pos)
         }
     }
 }
+
+/**
+ * Contains information about offsets (to the target pos) which should be investigated.
+ *
+ * @param offsetsToInvestigate the offsets (to the position) which the targeting algorithm will consider to place.
+ * Prioritized with [priorityComparator]
+ * @param priorityComparator compares two offsets by their priority. An offset which ranks higher is prioritized.
+ */
+class BlockOffsetOptions(
+    val offsetsToInvestigate: List<Vec3i>,
+    val priorityComparator: Comparator<Vec3i>,
+)
+
+/**
+ * Decides how scaffold processes the faces of the considered target blocks.
+ *
+ * @param facePositionFactory given a face, it will yield a point on the face to target.
+ * @param considerFacingAwayFaces decides whether scaffold will consider faces which point away from the player camera
+ * as possible targets, as it is mostly nonsensical.
+ * The expand-scaffold, for example, needs them to be considered to
+ * work.
+ */
+class FaceHandlingOptions(
+    val facePositionFactory: FaceTargetPositionFactory,
+    val considerFacingAwayFaces: Boolean = false,
+)
+
+/**
+ * Contains information about where the player will be _on placement_.
+ *
+ * @param position the player's position (on placement)
+ * @param pose the player's pose (on placement)
+ */
+class PlayerLocationOnPlacement(
+    val position: Vec3d,
+    val pose: EntityPose = player.pose
+)
 
 /**
  * A draft of a block placement
@@ -90,7 +120,7 @@ data class BlockTargetPlan(
     /**
      * The center of the target block face
      */
-    val targetPositionOnBlock =
+    val targetPositionOnBlock: Vec3d =
         blockPosToInteractWith
             .toCenterPos()
             .add(Vec3d.of(interactionDirection.vector).multiply(0.5))
@@ -126,8 +156,8 @@ private fun findBestTargetPlanForTargetPosition(
                 ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
-        if (!targetFindingOptions.allowPointingAway &&
-            targetPlan.calculateAngleToPlayerEyeCosine(targetFindingOptions.playerPositionOnPlacement) < 0) {
+        if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&
+            targetPlan.calculateAngleToPlayerEyeCosine(targetFindingOptions.playerLocationOnPlacement.position) < 0) {
             return@mapNotNull null
         }
 
@@ -136,13 +166,16 @@ private fun findBestTargetPlanForTargetPosition(
 
     val currentRotation = RotationManager.serverRotation
 
-    return options.minByOrNull {
-        val rotation = RotationManager.makeRotation(
-            it.targetPositionOnBlock,
-            targetFindingOptions.playerPositionOnPlacement.add(0.0, player.standingEyeHeight.toDouble(), 0.0)
-        )
+    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.position.add(
+        0.0,
+        player.standingEyeHeight.toDouble(),
+        0.0
+    )
 
-        RotationManager.rotationDifference(rotation, currentRotation)
+    return options.minByOrNull {
+        val targetRotation = Rotation.lookingAt(point = it.targetPositionOnBlock, from = playerEyePositionOnPlacement)
+
+        currentRotation.angleTo(targetRotation)
     }
 }
 
@@ -171,7 +204,7 @@ fun getTargetPlanForPositionAndDirection(
     }
 }
 
-class PointOnFace(val face: Face, val point: Vec3d)
+class PointOnFace(val face: AlignedFace, val point: Vec3d)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.getState()!!
@@ -181,9 +214,12 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         return null
     }
 
-    val offsetsToInvestigate = options.offsetsToInvestigate.sortedByDescending {
-        options.offsetPriorityGetter(pos.add(it))
+    val comparator = Comparator<Vec3i> { a, b ->
+        // Sort DESCENDING!
+        options.offsetOptions.priorityComparator.compare(b.add(pos), a.add(pos))
     }
+
+    val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith(comparator)
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.add(offset)
@@ -219,11 +255,11 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         // to rotate to
         val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
 
-        val rotation = RotationManager.makeRotation(
-            pointOnFace.point.add(Vec3d.of(currPos)),
-            options.playerPositionOnPlacement.add(
+        val rotation = Rotation.lookingAt(
+            point = pointOnFace.point.add(Vec3d.of(currPos)),
+            from = options.playerLocationOnPlacement.position.add(
                 0.0,
-                player.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
+                player.getEyeHeight(options.playerLocationOnPlacement.pose).toDouble(),
                 0.0
             )
         )
@@ -258,7 +294,8 @@ private fun findTargetPointOnFace(
             searchFace = searchFace.truncateY(0.6).requireNonEmpty() ?: face
         }
 
-        val targetPos = options.facePositionFactory.producePositionOnFace(searchFace, currPos)
+        val targetPos = options.faceHandlingOptions.facePositionFactory.producePositionOnFace(searchFace, currPos)
+            ?: return@mapNotNull null
 
         PointOnFace(
             face,
@@ -306,16 +343,13 @@ data class BlockPlacementTarget(
         )
 
     fun doesCrosshairTargetFullFillRequirements(crosshairTarget: BlockHitResult): Boolean {
-        if (crosshairTarget.type != HitResult.Type.BLOCK)
-            return false
-        if (crosshairTarget.blockPos != this.interactedBlockPos)
-            return false
-        if (crosshairTarget.side != this.direction)
-            return false
-        if (crosshairTarget.pos.y < this.minPlacementY)
-            return false
-
-        return true
+        return when {
+            crosshairTarget.type != HitResult.Type.BLOCK -> false
+            crosshairTarget.blockPos != this.interactedBlockPos -> false
+            crosshairTarget.side != this.direction -> false
+            crosshairTarget.pos.y < this.minPlacementY -> false
+            else -> true
+        }
     }
 }
 

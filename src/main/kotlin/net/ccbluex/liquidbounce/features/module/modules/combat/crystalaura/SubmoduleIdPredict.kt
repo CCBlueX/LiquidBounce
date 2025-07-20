@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -51,7 +52,7 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
     /**
      * Swings before every attack. Otherwise, it will only swing once.
      *
-     * Only works when [SubmoduleCrystalDestroyer.swing] is enabled.
+     * Only works when [SubmoduleCrystalDestroyer.swingMode] is enabled.
      */
     private val swingAlways by boolean("SwingAlways", false)
 
@@ -76,7 +77,8 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
                 player.z,
                 rotation.yaw,
                 rotation.pitch,
-                player.isOnGround
+                player.isOnGround,
+                player.horizontalCollision
             ))
         }
 
@@ -91,7 +93,8 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
                 player.z,
                 oldRotation!!.yaw,
                 oldRotation!!.pitch,
-                player.isOnGround
+                player.isOnGround,
+                player.horizontalCollision
             ))
         }
 
@@ -126,9 +129,9 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
 
         Rotate.sendRotation(rotation.normalize())
 
-        val swing = SubmoduleCrystalDestroyer.swing
-        if (swing && !swingAlways) {
-            player.swingHand(Hand.MAIN_HAND)
+        val swingMode = SubmoduleCrystalDestroyer.swingMode
+        if (!swingAlways) {
+            swingMode.swing(Hand.MAIN_HAND)
         }
 
         offsetRange.forEach { idOffset ->
@@ -140,8 +143,8 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
                 return@forEach
             }
 
-            if (swing && swingAlways) {
-                player.swingHand(Hand.MAIN_HAND)
+            if (swingAlways) {
+                swingMode.swing(Hand.MAIN_HAND)
             }
 
             val packet = PlayerInteractEntityC2SPacket(id, player.isSneaking, PlayerInteractEntityC2SPacket.ATTACK)
@@ -161,7 +164,7 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
     }
 
     @Suppress("unused")
-    val entitySpawnHandler = handler<PacketEvent> {
+    private val entitySpawnHandler = handler<PacketEvent> {
         when(val packet = it.packet) {
             is ExperienceOrbSpawnS2CPacket -> highestId = max(packet.entityId, highestId)
             is EntitySpawnS2CPacket -> highestId = max(packet.entityId, highestId)

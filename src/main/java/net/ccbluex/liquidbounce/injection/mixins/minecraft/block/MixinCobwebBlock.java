@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ public class MixinCobwebBlock {
      */
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo callback) {
-        if (ModuleNoWeb.INSTANCE.getEnabled() && entity == MinecraftClient.getInstance().player &&
+        if (ModuleNoWeb.INSTANCE.getRunning() && entity == MinecraftClient.getInstance().player &&
                 ModuleNoWeb.INSTANCE.handleEntityCollision(pos)) {
             callback.cancel();
         }

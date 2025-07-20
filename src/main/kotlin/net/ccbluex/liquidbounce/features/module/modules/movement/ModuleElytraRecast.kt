@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.ElytraItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
@@ -35,7 +32,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * @author Pivo1lovv
  */
-object ModuleElytraRecast : Module("ElytraRecast", Category.MOVEMENT) {
+object ModuleElytraRecast : ClientModule("ElytraRecast", Category.MOVEMENT) {
 
     init {
         enableLock()
@@ -47,7 +44,7 @@ object ModuleElytraRecast : Module("ElytraRecast", Category.MOVEMENT) {
 
             return !player.abilities.flying && !player.hasVehicle() && !player.isClimbing &&
                 !player.isTouchingWater && !player.hasStatusEffect(StatusEffects.LEVITATION) &&
-                itemStack.isOf(Items.ELYTRA) && ElytraItem.isUsable(itemStack) && mc.options.jumpKey.isPressed
+                itemStack.isOf(Items.ELYTRA) && !itemStack.willBreakNextUse() && mc.options.jumpKey.isPressed
         }
 
     /**
@@ -57,7 +54,7 @@ object ModuleElytraRecast : Module("ElytraRecast", Category.MOVEMENT) {
      */
     fun recastElytra(): Boolean {
         if (shouldRecast) {
-            player.startFallFlying()
+            player.startGliding()
             network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING))
             return true
         }

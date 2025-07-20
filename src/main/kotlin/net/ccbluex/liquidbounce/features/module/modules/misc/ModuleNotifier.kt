@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -35,7 +35,11 @@ import java.util.*
  *
  * Notifies you about all kinds of events.
  */
-object ModuleNotifier : Module("Notifier", Category.MISC) {
+object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
+
+    init {
+        doNotIncludeAlways()
+    }
 
     private val joinMessages by boolean("JoinMessages", true)
     private val joinMessageFormat by text("JoinMessageFormat", "%s joined")

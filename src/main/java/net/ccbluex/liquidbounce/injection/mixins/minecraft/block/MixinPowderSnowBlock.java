@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.PowderSnowBlock;
@@ -35,7 +34,7 @@ public class MixinPowderSnowBlock {
 
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowPowderSnow.INSTANCE.getEnabled()) {
+        if (NoSlowPowderSnow.INSTANCE.getRunning()) {
             ci.cancel();
 
             var multiplier = NoSlowPowderSnow.INSTANCE.getMultiplier();

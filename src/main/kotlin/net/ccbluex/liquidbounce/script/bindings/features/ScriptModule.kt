@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,31 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.script.PolyglotScript
 import net.ccbluex.liquidbounce.utils.client.*
+import java.util.function.Supplier
 import kotlin.reflect.KClass
 
-class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) : Module(
+class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) : ClientModule(
     name = moduleObject["name"] as String,
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
 
-    private val events = hashMapOf<String, (Any?) -> Unit>()
+    private val events = hashMapOf<String, org.graalvm.polyglot.Value>()
     private val _values = linkedMapOf<String, Value<*>>()
-    private var _tag: String? = null
-    override val tag: String?
-        get() = _tag
+    override var tag: String? = null
+        set(value) {
+            field = value
+            EventManager.callEvent(RefreshArrayListEvent)
+        }
 
     private var _description: String? = null
-    override var description: String? = ""
-        get() = _description ?: ""
+    override var description: Supplier<String?> = Supplier { _description ?: "" }
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -56,7 +59,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
         }
 
         if (moduleObject.containsKey("tag")) {
-            _tag = moduleObject["tag"] as String
+            tag = moduleObject["tag"] as String
         }
 
         if (moduleObject.containsKey("description")) {
@@ -68,8 +71,16 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
      * Called from inside the script to register a new event handler.
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
+     *   1. `() => void` (enable/disable)
+     *   2. `(Event) => void` (handler<T>)
+     *   3. `async (Event) => void` (sequenceHandler<T>)
      */
-    fun on(eventName: String, handler: (Any?) -> Unit) {
+    fun on(eventName: String, handler: org.graalvm.polyglot.Value) {
+        if (!handler.canExecute()) {
+            logger.error("Invalid event handler for $eventName")
+            return
+        }
+
         events[eventName] = handler
         hookHandler(eventName)
     }
@@ -79,11 +90,13 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
     override fun disable() = callEvent("disable")
 
     /**
-     * Calls the function of the [event]  with the [payload] of the event.
+     * Calls the function of the [event] with the [payload] of the event.
+     *
+     * @param payload when event is "enable" or "disable", it will be null
      */
     private fun callEvent(event: String, payload: Event? = null) {
         try {
-            events[event]?.invoke(payload)
+            events[event]?.executeVoid(payload)
         } catch (throwable: Throwable) {
             if (inGame) {
                 chat(
@@ -99,7 +112,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
                     highlight(throwable.javaClass.simpleName),
                     regular("]: "),
                     variable(throwable.message ?: ""),
-                    prefix = false
+                    metadata = MessageMetadata(prefix = false)
                 )
 
             }
@@ -124,8 +137,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
                 this,
                 {
                     callEvent(eventName, it)
-                },
-                false
+                }
             )
         )
     }

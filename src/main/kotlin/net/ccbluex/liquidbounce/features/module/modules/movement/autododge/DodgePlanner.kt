@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.rayTraceCollidingBlocks
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -147,10 +146,7 @@ class DodgePlanner(
         val isJumpEffective = effectiveVelocity > 0.11
 
         val rotation =
-            RotationManager.makeRotation(
-                player.pos + optimalDodgePosRelativeToPlayer,
-                player.eyes,
-            ).normalize()
+            Rotation.lookingAt(point = player.pos + optimalDodgePosRelativeToPlayer, from = player.eyePos).normalize()
 
         return DodgePlan(
             directionalInput = DirectionalInput.FORWARDS,
@@ -236,7 +232,7 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
 
 fun getWalkableDistance(basePos: Vec3d, dodgePos: Vec3d): Double {
     val playerY = mc.player!!.y
-    val rayYs = arrayOf(0.6, 1.6)
+    val rayYs = doubleArrayOf(0.6, 1.6)
 
     val worstRay =
         rayYs

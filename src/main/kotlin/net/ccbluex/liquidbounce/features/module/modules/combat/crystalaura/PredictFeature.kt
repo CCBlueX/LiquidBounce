@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.minecraft.entity.LivingEntity
@@ -29,6 +31,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import kotlin.math.abs
 
 /**
  * Tries to run calculations with simulated player positions.
@@ -53,9 +56,9 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
     /**
      * How the predicted data will be used. For damage prediction only.
      */
-    val calculationMode = choices<CalculationMode>(this, "CalculationMode", { it.choices[0] }, {
+    val calculationMode = choices(this, "CalculationMode") {
         arrayOf(Both(it), PredictOnly(it))
-    })
+    }
 
     /**
      * Check if the target will block the placement.
@@ -75,14 +78,27 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
         }
 
         val simulation = getSnapshotPos(target, if (basePlace) basePlaceTicks else placeTicks)
-        return box.intersects(
-            simulation.x,
+
+        val boundingBox = target?.boundingBox ?: player.boundingBox
+        val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
+        val predictedBoundingBox = Box(
+            simulation.x - halfWidth,
             simulation.y,
-            simulation.z,
-            simulation.x + 1.0,
-            simulation.y + 1.0,
-            simulation.z + 1.0
+            simulation.z - halfWidth,
+            simulation.x + halfWidth,
+            simulation.y + boundingBox.maxY - boundingBox.minY,
+            simulation.z + halfWidth
         )
+
+        mc.execute {
+            ModuleDebug.debugGeometry(
+                ModuleCrystalAura,
+                "predictedIntersect$name",
+                ModuleDebug.DebuggedBox(predictedBoundingBox, Color4b.BLUE.fade(0.4f))
+            )
+        }
+
+        return box.intersects(predictedBoundingBox)
     }
 
     fun getDamage(
@@ -95,24 +111,37 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
         if (!enabled) {
             return NormalDamageProvider(player.getDamageFromExplosion(
                 crystal,
-                maxBlastResistance = maxBlastResistance,
-                include = include
+                include = include,
+                maxBlastResistance = maxBlastResistance
             ))
         }
 
         val simulated = getSnapshotPos(player, ticks)
+
+        val boundingBox = player.boundingBox
+        val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
+        val predictedBoundingBox = Box(
+            simulated.x - halfWidth,
+            simulated.y,
+            simulated.z - halfWidth,
+            simulated.x + halfWidth,
+            simulated.y + boundingBox.maxY - boundingBox.minY,
+            simulated.z + halfWidth
+        )
+
+        mc.execute {
+            ModuleDebug.debugGeometry(
+                ModuleCrystalAura,
+                "predictedDamage$name",
+                ModuleDebug.DebuggedBox(predictedBoundingBox, Color4b.GRAY.fade(0.4f))
+            )
+        }
+
         val predictedDamage = player.getDamageFromExplosion(
             crystal,
-            maxBlastResistance = maxBlastResistance,
             include = include,
-            entityBoundingBox = Box(
-                simulated.x,
-                simulated.y,
-                simulated.z,
-                simulated.x + 1.0,
-                simulated.y + 1.0,
-                simulated.z + 1.0
-            )
+            maxBlastResistance = maxBlastResistance,
+            entityBoundingBox = predictedBoundingBox
         )
 
         val calcMode = calculationMode.activeChoice
@@ -120,7 +149,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
             return NormalDamageProvider(predictedDamage)
         }
 
-        val damage = player.getDamageFromExplosion(crystal, maxBlastResistance = maxBlastResistance, include = include)
+        val damage = player.getDamageFromExplosion(crystal, include = include, maxBlastResistance = maxBlastResistance)
         calcMode as Both
         return calcMode.logicalOperator.getDamageProvider(damage, predictedDamage)
     }

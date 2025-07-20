@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration
 
+import com.mojang.blaze3d.systems.RenderCall
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
@@ -37,6 +38,7 @@ import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import java.util.function.Predicate
 
 /**
  * Checks for Lunar client screens
@@ -48,9 +50,11 @@ private val Screen.isLunar
 
 enum class VirtualScreenType(
     val routeName: String,
-    val recognizer: (Screen) -> Boolean = { false },
+    private val recognizer: Predicate<Screen> = Predicate { false },
     val isInGame: Boolean = false,
-    private val open: () -> Unit = { mc.setScreen(VrScreen(byName(routeName)!!)) }
+    private val open: RenderCall = RenderCall {
+        mc.setScreen(VirtualDisplayScreen(byName(routeName)!!))
+    }
 ) {
 
     HUD("hud", isInGame = true),
@@ -67,34 +71,34 @@ enum class VirtualScreenType(
     MULTIPLAYER(
         "multiplayer",
         recognizer = { it is MultiplayerScreen || it is MultiplayerWarningScreen },
-        open = { mc.setScreen(MultiplayerScreen(IntegrationHandler.parent)) }
+        open = { mc.setScreen(MultiplayerScreen(IntegrationListener.parent)) }
     ),
 
     MULTIPLAYER_REALMS(
         "multiplayer_realms",
         recognizer = { it is RealmsMainScreen },
-        open = { mc.setScreen(RealmsMainScreen(IntegrationHandler.parent)) }
+        open = { mc.setScreen(RealmsMainScreen(IntegrationListener.parent)) }
     ),
 
     SINGLEPLAYER(
         "singleplayer",
         recognizer = { it is SelectWorldScreen },
         open = {
-            mc.setScreen(SelectWorldScreen(IntegrationHandler.parent))
+            mc.setScreen(SelectWorldScreen(IntegrationListener.parent))
         }
     ),
 
     CREATE_WORLD(
         "create_world",
         recognizer = { it is CreateWorldScreen },
-        open = { CreateWorldScreen.create(mc, IntegrationHandler.parent) }
+        open = { CreateWorldScreen.show(mc, IntegrationListener.parent) }
     ),
 
     OPTIONS(
         "options",
         recognizer = { it is OptionsScreen },
         open = {
-            mc.setScreen(OptionsScreen(IntegrationHandler.parent, mc.options))
+            mc.setScreen(OptionsScreen(IntegrationListener.parent, mc.options))
         }
     ),
 
@@ -130,7 +134,7 @@ enum class VirtualScreenType(
 
     companion object {
         fun byName(name: String) = entries.find { it.routeName == name }
-        fun recognize(screen: Screen) = entries.find { it.recognizer(screen) }
+        fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 
 }

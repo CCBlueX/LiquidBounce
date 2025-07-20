@@ -1,13 +1,15 @@
 package net.ccbluex.liquidbounce.render.ui
 
+import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.systems.VertexSorter
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.common.GlobalFramebuffer
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.Vec2i
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
@@ -18,9 +20,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
-import java.awt.Color
 import java.awt.image.BufferedImage
-import java.util.stream.Collectors
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -39,16 +39,17 @@ private class Atlas(
 /**
  *
  */
-object ItemImageAtlas: Listenable {
+object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
 
     fun updateAtlas(drawContext: DrawContext) {
-        if (this.atlas != null)
+        if (this.atlas != null) {
             return
+        }
 
         val renderer = ItemFramebufferRenderer(
-            Registries.ITEM.stream().collect(Collectors.toList()),
+            Registries.ITEM.stream().toTypedArray(),
             4
         )
 
@@ -60,12 +61,7 @@ object ItemImageAtlas: Listenable {
 
         for (x in 0 until image.width) {
             for (y in 0 until image.height) {
-                val r = image.getRed(x, y).toInt() and 0xFF
-                val g = image.getGreen(x, y).toInt() and 0xFF
-                val b = image.getBlue(x, y).toInt() and 0xFF
-                val a = image.getOpacity(x, y).toInt() and 0xFF
-
-                img.setRGB(x, y, Color(r, g, b, a).rgb)
+                img.setRGB(x, y, image.getColorArgb(x, y))
             }
         }
 
@@ -78,7 +74,7 @@ object ItemImageAtlas: Listenable {
         val map = hashMapOf<Identifier, Identifier>()
 
         Registries.BLOCK.forEach {
-            val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState)
+            val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState, false)
 
             if (pickUpState.item != it) {
                 val blockId = Registries.BLOCK.getId(it)
@@ -92,7 +88,7 @@ object ItemImageAtlas: Listenable {
     }
 
     @Suppress("unused")
-    val onReload = handler<ResourceReloadEvent> {
+    private val resourceReloadHandler = handler<ResourceReloadEvent> {
         this.atlas = null
     }
 
@@ -118,17 +114,16 @@ object ItemImageAtlas: Listenable {
 
 
 private class ItemFramebufferRenderer(
-    val items: List<Item>,
+    val items: Array<Item>,
     val scale: Int,
-) {
+): MinecraftShortcuts {
     val itemsPerDimension = ceil(sqrt(items.size.toDouble())).toInt()
 
     val framebuffer: Framebuffer = run {
         val fb = SimpleFramebuffer(
             NATIVE_ITEM_SIZE * scale * itemsPerDimension,
             NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-            true,
-            MinecraftClient.IS_SYSTEM_MAC
+            true
         )
 
         fb.setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
@@ -158,7 +153,8 @@ private class ItemFramebufferRenderer(
             21000.0f
         )
 
-        RenderSystem.setProjectionMatrix(matrix4f, VertexSorter.BY_Z)
+        RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.ORTHOGRAPHIC)
+        GlobalFramebuffer.push(framebuffer)
 
         val map = this.items.mapIndexed { idx, item ->
             val from = Vec2i(
@@ -175,13 +171,14 @@ private class ItemFramebufferRenderer(
             )
 
             item to (fbFrom to fbTo)
-        }.associate { it }
+        }.toMap()
 
         ctx.matrices.pop()
 
-        MinecraftClient.getInstance().framebuffer.beginWrite(true)
+        GlobalFramebuffer.pop()
+        mc.framebuffer.beginWrite(true)
 
-        RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorter.BY_Z)
+        RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
         return map
     }

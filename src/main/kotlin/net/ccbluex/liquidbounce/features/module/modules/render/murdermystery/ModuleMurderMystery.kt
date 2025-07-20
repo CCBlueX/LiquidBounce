@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,22 +23,29 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.Item
 import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.sound.SoundEvent
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.Box
 
-object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
+object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     var playHurt = false
     var playBow = false
 
@@ -61,7 +68,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     }
 
     @Suppress("unused")
-    val handleSounds = handler<WorldRenderEvent> {
+    val renderHandler = handler<WorldRenderEvent> { event ->
         if (playHurt) {
             mc.soundManager.play(
                 PositionedSoundInstance.master(
@@ -83,6 +90,13 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
             playBow = false
         }
+
+        world.entities.filterIsInstance<ArmorStandEntity>().forEach {
+            if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
+                renderDroppedBowBox(event, it)
+            }
+        }
+
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
@@ -121,12 +135,20 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             it.dontTarget()
         }
 
-
         val playerType = this.currentMode.getPlayerType(it.entity)
+        val entity = it.entity
 
         val col = when (playerType) {
-            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
-            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
+            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
+                entity.scoreboard.getTeam(entity.gameProfile.name)?.prefix = Text.literal("§b[BOW] ")
+                Color4b(0, 144, 255)
+            }
+
+            MurderMysteryMode.PlayerType.MURDERER -> {
+                entity.scoreboard.getTeam(entity.gameProfile.name)?.prefix = Text.literal("§c[MURD] ")
+                Color4b(203, 9, 9)
+            }
+
             MurderMysteryMode.PlayerType.NEUTRAL -> return@handler
         }
 
@@ -152,12 +174,30 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
     }
 
+    private fun renderDroppedBowBox(event: WorldRenderEvent, armorStandEntity: ArmorStandEntity) {
+        val matrixStack = event.matrixStack
+
+        renderEnvironmentForWorld(matrixStack) {
+            BoxRenderer.drawWith(this) {
+                val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
+                val pos = armorStandEntity.interpolateCurrentPosition(event.partialTicks)
+
+                withPositionRelativeToCamera(pos) {
+                    drawBox(
+                        box,
+                        Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
+                    )
+                }
+            }
+        }
+    }
+
     private fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
         return this.currentMode.shouldAttack(entityPlayer)
     }
 
     fun disallowsArrowDodge(): Boolean {
-        if (!enabled) {
+        if (!running) {
             return false
         }
 

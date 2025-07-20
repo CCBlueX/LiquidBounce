@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
 
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.block.BlockState
@@ -82,7 +83,7 @@ object ChunkRenderer {
                 textureAtlasManager.editChunk(ChunkPos(posToUpdate)) { texture, atlasPosition ->
                     val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
 
-                    texture.image!!.setColor(x, y, color)
+                    texture.image!!.setColorArgb(x, y, color)
                 }
             }
         }
@@ -98,46 +99,53 @@ object ChunkRenderer {
             Vec2i(1, -1),
         )
 
+        private val AIR_COLOR = Color(255, 207, 179).rgb
+
         private fun getColor(x: Int, z: Int): Int {
-            val world = mc.world!!
+            try {
+                val chunk = mc.world?.getChunk(x shr 4, z shr 4) ?: return AIR_COLOR
 
-            val height = heightmapManager.getHeight(x, z)
+                val height = heightmapManager.getHeight(x, z)
 
-            val higherOffsets = offsetsToCheck.filter { offset ->
-                heightmapManager.getHeight(x + offset.x, z + offset.y) > height
-            }
-
-            val higherOffsetVec = higherOffsets.fold(Vec2i(0, 0)) { acc, vec -> acc.add(vec) }
-
-            val brightness =
-                if (higherOffsets.size < 2) {
-                    220.0 / 255.0
-                } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
-                    130.0 / 255.0
-                } else {
-                    val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)
-                    val eee = higherOffsetVec.dotProduct(Vec2i(x, z)).toDouble() / higherOffsetVec.length()
-                    val sine = sin(eee * 0.5 * PI)
-
-                    (190.0 + (similarityToSunDirection * 55.0) + sine * 10.0) / 255.0
+                val higherOffsets = offsetsToCheck.filter { offset ->
+                    heightmapManager.getHeight(x + offset.x, z + offset.y) > height
                 }
 
-            val surfaceBlockPos = BlockPos(x, height, z)
-            val surfaceBlockState = world.getBlockState(surfaceBlockPos)
+                val higherOffsetVec = higherOffsets.fold(Vec2i.ZERO) { acc, vec -> acc.add(vec) }
 
-            if (surfaceBlockState.isAir) {
-                return Color(255, 207, 179).rgb
+                val brightness =
+                    if (higherOffsets.size < 2) {
+                        220.0 / 255.0
+                    } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
+                        130.0 / 255.0
+                    } else {
+                        val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)
+                        val eee = higherOffsetVec.dotProduct(Vec2i(x, z)).toDouble() / higherOffsetVec.length()
+                        val sine = sin(eee * 0.5 * PI)
+
+                        (190.0 + (similarityToSunDirection * 55.0) + sine * 10.0) / 255.0
+                    }
+
+                val surfaceBlockPos = BlockPos(x, height, z)
+                val surfaceBlockState = chunk.getBlockState(surfaceBlockPos)
+
+                if (surfaceBlockState.isAir) {
+                    return AIR_COLOR
+                }
+
+                val baseColor = surfaceBlockState.getMapColor(chunk, surfaceBlockPos).getRenderColor(Brightness.HIGH)
+
+                val color = Color(baseColor)
+
+                return Color(
+                    (color.red * brightness).roundToInt(),
+                    (color.green * brightness).roundToInt(),
+                    (color.blue * brightness).roundToInt(),
+                ).rgb
+            } catch (e: Exception) {
+                logger.error("Failed to get color for chunk at $x, $z", e)
+                return AIR_COLOR
             }
-
-            val baseColor = surfaceBlockState.getMapColor(world, surfaceBlockPos).getRenderColor(Brightness.HIGH)
-
-            val color = Color(baseColor)
-
-            return Color(
-                (color.red * brightness).roundToInt(),
-                (color.green * brightness).roundToInt(),
-                (color.blue * brightness).roundToInt(),
-            ).rgb
         }
 
         override fun chunkUpdate(
@@ -163,7 +171,7 @@ object ChunkRenderer {
 
                         val color = getColor(offX or (x shl 4), offZ or (z shl 4))
 
-                        texture.image!!.setColor(texX, texY, color)
+                        texture.image!!.setColorArgb(texX, texY, color)
                     }
                 }
             }
@@ -174,9 +182,9 @@ object ChunkRenderer {
                         for (offZ in from.y..to.y) {
                             val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
-                            val color = getColor(offX + otherPos.startX, offZ + otherPos.startZ)
+                            val color = getColor(offX or otherPos.startX, offZ or otherPos.startZ)
 
-                            texture.image!!.setColor(texX, texY, color)
+                            texture.image!!.setColorArgb(texX, texY, color)
                         }
                     }
                 }

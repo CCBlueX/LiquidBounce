@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,39 @@
  */
 package net.ccbluex.liquidbounce.utils.render.placement
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
 
-// TODO check whether the Boxes actually touch
 /**
  * A renderer instance that can be added to a [PlacementRenderer], it contains the core logic.
  * Culling is handled in each handler for its boxes individually.
  */
+@Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
 
-    private val inList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
-    private val currentList = linkedMapOf<BlockPos, Pair<Long, Box>>()
-    private val outList = linkedMapOf<BlockPos, Triple<Long, Long, Box>>()
+    private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+    private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
+    private val outList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+
+    private val culler = BlockCuller(this)
+
+    @JvmRecord
+    private data class InOutBlockData(val startTime: Long, val cullData: Long, val box: Box) {
+        fun toCurrent() = CurrentBlockData(cullData, box)
+    }
+
+    @JvmRecord
+    private data class CurrentBlockData(val cullData: Long, val box: Box) {
+        fun toInOut(startTime: Long) = InOutBlockData(startTime, cullData, box)
+    }
+
+    private val blockPosCache = BlockPos.Mutable()
 
     fun render(event: WorldRenderEvent, time: Long) {
         val matrixStack = event.matrixStack
@@ -47,8 +62,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             renderEnvironmentForWorld(matrixStack) {
                 BoxRenderer.drawWith(this) {
                     fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
-                        val vec3d = Vec3d(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
-                        withPositionRelativeToCamera(vec3d) {
+                        withPositionRelativeToCamera(blockPos.toVec3d()) {
                             drawBox(
                                 box,
                                 color.fade(colorFactor),
@@ -59,44 +73,53 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                         }
                     }
 
-                    inList.iterator().apply {
+                    inList.long2ObjectEntrySet().iterator().apply {
                         while (hasNext()) {
+                            // Do not use destructuring declaration which returns boxed [Long] values
                             val entry = next()
+                            val pos = entry.longKey
+                            val value = entry.value
 
-                            val sizeFactor = startSizeCurve.getFactor(entry.value.first, time, inTime.toFloat())
+                            val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
                             val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                            val box = getBox(if (expand < 1f) 1f - expand else expand, entry.value.third)
-                            val colorFactor = fadeInCurve.getFactor(entry.value.first, time, inTime.toFloat())
+                            val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
+                            val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
-                            drawEntryBox(entry.key, entry.value.second, box, colorFactor)
+                            drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                            if (time - entry.value.first >= outTime) {
+                            if (time - value.startTime >= outTime) {
                                 if (keep) {
-                                    currentList[entry.key] = entry.value.second to entry.value.third
+                                    currentList[pos] = value.toCurrent()
                                 } else {
-                                    outList[entry.key] = Triple(time, entry.value.second, entry.value.third)
+                                    outList[pos] = value.copy(startTime = time)
                                 }
                                 remove()
                             }
                         }
                     }
 
-                    currentList.forEach { drawEntryBox(it.key, it.value.first, it.value.second, 1f) }
+                    currentList.long2ObjectEntrySet().forEach { entry ->
+                        val pos = entry.longKey
+                        val value = entry.value
+                        drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
+                    }
 
-                    outList.iterator().apply {
+                    outList.long2ObjectEntrySet().iterator().apply {
                         while (hasNext()) {
                             val entry = next()
+                            val pos = entry.longKey
+                            val value = entry.value
 
-                            val sizeFactor = endSizeCurve.getFactor(entry.value.first, time, outTime.toFloat())
+                            val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
                             val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
-                            val box = getBox(expand, entry.value.third)
-                            val colorFactor = 1f - fadeOutCurve.getFactor(entry.value.first, time, outTime.toFloat())
+                            val box = getBox(expand, value.box)
+                            val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
-                            drawEntryBox(entry.key, entry.value.second, box, colorFactor)
+                            drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                            if (time - entry.value.first >= outTime) {
+                            if (time - value.startTime >= outTime) {
                                 remove()
-                                updateNeighbors(entry.key)
+                                updateNeighbors(blockPosCache.set(pos))
                             }
                         }
                     }
@@ -121,147 +144,73 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Updates the culling of all blocks around a position that has been removed or added.
      */
-    fun updateNeighbors(pos: BlockPos) {
+    private fun updateNeighbors(pos: BlockPos) {
         if (!placementRenderer.clump) {
             return
         }
 
         // TODO in theory a one block radius should be enough
         pos.searchBlocksInCuboid(2).forEach {
-            val blockPos = it.toImmutable()
-            inList.computeIfPresent(blockPos) { _, value ->
-                Triple(value.first, getCullData(blockPos), value.third)
-            }?.let { return@forEach }
+            val longValue = it.asLong()
 
-            currentList.computeIfPresent(blockPos) { _, value ->
-                getCullData(blockPos) to value.second
-            }?.let { return@forEach }
+            if (inList.containsKey(longValue)) {
+                inList.put(longValue, inList.get(longValue).copy(cullData = this.culler.getCullData(it)))
+                return@forEach
+            }
+
+            if (currentList.containsKey(longValue)) {
+                currentList.put(longValue, currentList.get(longValue).copy(cullData = this.culler.getCullData(it)))
+                return@forEach
+            }
         }
     }
 
-    /**
-     * Returns a long that stores in the first 32 bits what vertices are to be rendered for the faces and
-     * in the other half what vertices are to be rendered for the outline.
-     */
-    private fun getCullData(pos: BlockPos): Long {
-        var faces = 1 shl 30
-        var edges = 1 shl 30
 
-        val eastPos = pos.east()
-        val westPos = pos.west()
-        val upPos = pos.up()
-        val downPos = pos.down()
-        val southPos = pos.south()
-        val northPos = pos.north()
-
-        val east = contains(eastPos)
-        val west = contains(westPos)
-        val up = contains(upPos)
-        val down = contains(downPos)
-        val south = contains(southPos)
-        val north = contains(northPos)
-
-        faces = cullSide(faces, east, FACE_EAST)
-        faces = cullSide(faces, west, FACE_WEST)
-        faces = cullSide(faces, up, FACE_UP)
-        faces = cullSide(faces, down, FACE_DOWN)
-        faces = cullSide(faces, south, FACE_SOUTH)
-        faces = cullSide(faces, north, FACE_NORTH)
-
-        edges = cullEdge(edges, north, down, contains(northPos.down()), EDGE_NORTH_DOWN)
-        edges = cullEdge(edges, east, down, contains(eastPos.down()), EDGE_EAST_DOWN)
-        edges = cullEdge(edges, south, down, contains(southPos.down()), EDGE_SOUTH_DOWN)
-        edges = cullEdge(edges, west, down, contains(westPos.down()), EDGE_WEST_DOWN)
-        edges = cullEdge(edges, north, west, contains(northPos.west()), EDGE_NORTH_WEST)
-        edges = cullEdge(edges, north, east, contains(northPos.east()), EDGE_NORTH_EAST)
-        edges = cullEdge(edges, south, east, contains(southPos.east()), EDGE_SOUTH_EAST)
-        edges = cullEdge(edges, south, west, contains(westPos.south()), EDGE_SOUTH_WEST)
-        edges = cullEdge(edges, north, up, contains(northPos.up()), EDGE_NORTH_UP)
-        edges = cullEdge(edges, east, up, contains(eastPos.up()), EDGE_EAST_UP)
-        edges = cullEdge(edges, south, up, contains(southPos.up()), EDGE_SOUTH_UP)
-        edges = cullEdge(edges, west, up, contains(westPos.up()), EDGE_WEST_UP)
-
-        // combines the data in a single long and inverts it, so that all vertices that are to be rendered are
-        // represented by 1s
-        return ((faces.toLong() shl 32) or edges.toLong()).inv()
-    }
 
     /**
      * Checks whether the position is rendered.
      */
-    private fun contains(pos: BlockPos) = inList.contains(pos) || currentList.contains(pos) || outList.contains(pos)
-
-    /**
-     * Applies a mask to the current data if either [direction1Present] and [direction2Present] are `false` or
-     * [direction1Present] and [direction2Present] are `true` but [diagonalPresent] is `false`.
-     *
-     * This will result in the edge only being rendered if it's not surrounded by blocks and is on an actual
-     * edge from multiple blocks seen as one entity.
-     *
-     * @return The updated [currentData]
-     */
-    private fun cullEdge(
-        currentData: Int,
-        direction1Present: Boolean,
-        direction2Present: Boolean,
-        diagonalPresent: Boolean,
-        mask: Int
-    ): Int {
-        return if ((!direction1Present && !direction2Present)
-            || (direction1Present && direction2Present && !diagonalPresent)) {
-            currentData or mask
-        } else {
-            currentData
-        }
+    internal fun contains(pos: BlockPos): Boolean {
+        val longValue = pos.asLong()
+        return inList.containsKey(longValue) || currentList.containsKey(longValue) || outList.containsKey(longValue)
     }
 
-    /**
-     * Applies a mask to the current data if either [directionPresent] is `false`.
-     *
-     * This will result in the face only being visible if it's on the outside of multiple blocks.
-     *
-     * @return The updated [currentData]
-     */
-    private fun cullSide(currentData: Int, directionPresent: Boolean, mask: Int): Int {
-        return if (!directionPresent) {
-            currentData or mask
-        } else {
-            currentData
-        }
-    }
 
     /**
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
-        if (!currentList.contains(pos) && !inList.contains(pos)) {
-            inList[pos] = Triple(System.currentTimeMillis(), 0L, box)
+        val longValue = pos.asLong()
+        if (!currentList.containsKey(longValue) && !inList.containsKey(longValue)) {
+            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), 0L, box))
             if (update) {
                 updateNeighbors(pos)
             }
         }
 
-        outList.remove(pos)
+        outList.remove(longValue)
     }
 
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      */
     fun removeBlock(pos: BlockPos) {
+        val longValue = pos.asLong()
         var cullData = 0L
         var box: Box? = null
-        currentList.remove(pos)?.let {
-            cullData = it.first
-            box = it.second
+
+        currentList.remove(longValue)?.let {
+            cullData = it.cullData
+            box = it.box
         } ?: run {
-            inList.remove(pos)?.let {
-                cullData = it.second
-                box = it.third
+            inList.remove(longValue)?.let {
+                cullData = it.cullData
+                box = it.box
             } ?: return
         }
 
-        outList[pos] = Triple(System.currentTimeMillis(), cullData, box!!)
+        outList.put(longValue, InOutBlockData(System.currentTimeMillis(), cullData, box!!))
     }
 
     /**
@@ -271,11 +220,40 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * so that positions don't get updated multiple times.
      */
     fun updateAll() {
-        for (entry in inList) {
-            inList[entry.key] = Triple(entry.value.first, getCullData(entry.key), entry.value.third)
+        inList.long2ObjectEntrySet().forEach { entry ->
+            val key = entry.longKey
+            val value = entry.value
+            inList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
         }
-        for (entry in currentList) {
-            currentList[entry.key] = getCullData(entry.key) to entry.value.second
+
+        currentList.long2ObjectEntrySet().forEach { entry ->
+            val key = entry.longKey
+            val value = entry.value
+            currentList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
+        }
+    }
+
+    /**
+     * Updates the box of [pos] to [box].
+     *
+     * This method won't affect positions that are in the state of fading out.
+     */
+    fun updateBox(pos: BlockPos, box: Box) {
+        val longValue = pos.asLong()
+        var needUpdate = false
+
+        if (inList.containsKey(longValue)) {
+            needUpdate = true
+            inList.put(longValue, inList.get(longValue).copy(box = box))
+        }
+
+        if (currentList.containsKey(longValue)) {
+            needUpdate = true
+            currentList.put(longValue, currentList.get(longValue).copy(box = box))
+        }
+
+        if (needUpdate) {
+            updateNeighbors(pos)
         }
     }
 
@@ -284,18 +262,22 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * all animations have been finished even though the module might be already disabled.
      */
     fun clearSilently() {
-        inList.iterator().apply {
+        inList.long2ObjectEntrySet().iterator().apply {
             while (hasNext()) {
                 val entry = next()
-                outList[entry.key] = Triple(System.currentTimeMillis(), entry.value.second, entry.value.third)
+                val pos = entry.longKey
+                val value = entry.value
+                outList.put(pos, value.copy(startTime = System.currentTimeMillis()))
                 remove()
             }
         }
 
-        currentList.iterator().apply {
+        currentList.long2ObjectEntrySet().iterator().apply {
             while (hasNext()) {
                 val entry = next()
-                outList[entry.key] = Triple(System.currentTimeMillis(), entry.value.first, entry.value.second)
+                val pos = entry.longKey
+                val value = entry.value
+                outList.put(pos, value.toInOut(startTime = System.currentTimeMillis()))
                 remove()
             }
         }

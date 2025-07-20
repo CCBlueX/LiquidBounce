@@ -1,19 +1,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
-import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
+import net.ccbluex.liquidbounce.utils.combat.TargetSelector
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
@@ -26,23 +26,25 @@ import kotlin.math.*
  *
  * TODO: Implement visuals
  */
-object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
+object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
 
     // Configuration options
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode)).apply { tagBy(this) }
-    private val range by float("Range", 2f, 0.0f..8.0f)
+    private val targetSelector = TargetSelector(range = float("Range", 2.95f, 0.0f..8.0f))
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
-        it.coerceAtLeast(range)
+        it.coerceAtLeast(targetSelector.maxRange)
     }
-    private val requiresSpace by boolean("RequiresSpace", false)
+
+    private val requirements by multiEnumChoice<Requirements>("Requirements")
+
+    private val requirementsMet
+        get() = requirements.all { it.meets() }
 
     object MotionMode : Choice("Motion") {
-
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
-        private val requiresSpeed by boolean("RequiresSpeed", false)
         private val hypixel by boolean("Hypixel", false)
 
         init {
@@ -73,7 +75,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                     return false
                 }
 
-                if (!this.enabled) {
+                if (!enabled) {
                     return true
                 }
 
@@ -122,22 +124,18 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         @Suppress("unused")
         private val moveHandler = handler<PlayerMoveEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
             // If the player is not pressing any movement keys, we exit early
-            if (!player.pressingMovementButton) {
+            if (!player.input.initial.any) {
                 return@handler
             }
 
-            // If the player is not pressing the jump key and requires space, we exit early
-            if (requiresSpace && !mc.options.jumpKey.isPressed) {
+            if (!requirementsMet) {
                 return@handler
             }
 
-            // If speed isn't enabled and requiresSpeed is, we exit early
-            if (requiresSpeed && !ModuleSpeed.enabled) {
-                return@handler
-            }
-
-            // Get the target entity, requires a locked target from KillAura
-            val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
+            // Get the target entity, requires a locked target
+            val target = ModuleKillAura.targetTracker.target
+                ?: ModuleAimbot.targetTracker.target
+                ?: targetSelector.targets().firstOrNull() ?: return@handler
             val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
 
             // return if we're too far
@@ -150,22 +148,22 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             }
 
             // Determine the direction to strafe
-            if (!(player.input.pressingLeft && player.input.pressingRight) && controlDirection) {
+            if (!(player.input.untransformed.left && player.input.untransformed.right) && controlDirection) {
                 when {
-                    player.input.pressingLeft -> direction = -1
-                    player.input.pressingRight -> direction = 1
+                    player.input.untransformed.left -> direction = -1
+                    player.input.untransformed.right -> direction = 1
                 }
             }
 
             val speed = player.sqrtSpeed
             val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
-            var strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
             var pointCoords = player.pos.add(strafeVec)
 
             if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
                     direction = -direction
-                    strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+                    strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
                 } else {
                     var currentRange = AdaptiveRange.rangeStep
                     while (!Validation.validatePoint(pointCoords)) {
@@ -174,7 +172,9 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
                             direction = -direction
-                            strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+                            strafeVec = computeDirectionVec(
+                                strafeYaw, distance, speed, targetSelector.maxRange, direction
+                            )
                             break
                         }
                     }
@@ -182,7 +182,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             }
 
             // Perform the strafing movement
-            if (hypixel && ModuleSpeed.enabled) {
+            if (hypixel && ModuleSpeed.running) {
                 val minSpeed = if (player.isOnGround) {
                     0.48
                 } else {
@@ -190,24 +190,24 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 }
 
                 if (SpeedHypixelLowHop.shouldStrafe) {
-                    event.movement.strafe(
+                    event.movement = event.movement.withStrafe(
                         yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
                         speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
-                        keyboardCheck = false
+                        input = null
                     )
                 } else {
-                    event.movement.strafe(
+                    event.movement = event.movement.withStrafe(
                         yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
                         speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
-                        keyboardCheck = false,
-                        strength = 0.02
+                        strength = 0.02,
+                        input = null
                     )
                 }
             } else {
-                event.movement.strafe(
+                event.movement = event.movement.withStrafe(
                     yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
                     speed = player.sqrtSpeed,
-                    keyboardCheck = false
+                    input = null
                 )
             }
         }
@@ -233,4 +233,22 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
     }
 
+    @Suppress("unused")
+    private enum class Requirements(
+        override val choiceName: String,
+        val meets: () -> Boolean
+    ) : NamedChoice {
+        SPACE("Space", {
+            mc.options.jumpKey.isPressed
+        }),
+        SPEED("Speed", {
+            ModuleSpeed.running
+        }),
+        KILLAURA("KillAura", {
+            ModuleKillAura.running
+        }),
+        GROUND("Ground", {
+           player.isOnGround
+        });
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,36 +18,37 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
 /**
  * Executes code right after the client sent the normal movement packet or at the start of the next tick.
  */
-object PostRotationExecutor : Listenable {
+object PostRotationExecutor : EventListener {
 
     /**
      * This should be used by actions that depend on the rotation sent in the tick movement packet.
      */
-    private var priorityAction: Pair<Module, () -> Unit>? = null
+    private var priorityAction: Pair<ClientModule, () -> Unit>? = null
 
     private var priorityActionPostMove = false
 
     /**
      * All other actions that should be executed on post-move.
      */
-    private val postMoveTasks = ArrayDeque<Pair<Module, () -> Unit>>()
+    private val postMoveTasks = ArrayDeque<Pair<ClientModule, () -> Unit>>()
 
     /**
      * All other actions that should be executed on tick.
      */
-    private val normalTasks = ArrayDeque<Pair<Module, () -> Unit>>()
+    private val normalTasks = ArrayDeque<Pair<ClientModule, () -> Unit>>()
 
     @Suppress("unused")
     val worldChangeHandler = handler<WorldChangeEvent> {
@@ -61,10 +62,8 @@ object PostRotationExecutor : Listenable {
      * Has [EventPriorityConvention.FIRST_PRIORITY] to run before any other module can send packets.
      */
     @Suppress("unused")
-    val networkMoveHandler = handler<PlayerNetworkMovementTickEvent>(
-        priority = EventPriorityConvention.FIRST_PRIORITY
-    ) {
-        if (it.state != EventState.POST) {
+    val networkMoveHandler = handler<PlayerNetworkMovementTickEvent>(priority = FIRST_PRIORITY) { event ->
+        if (event.state != EventState.POST) {
             return@handler
         }
 
@@ -80,7 +79,7 @@ object PostRotationExecutor : Listenable {
         }
 
         priorityAction?.let { action ->
-            if (action.first.enabled) {
+            if (action.first.running) {
                 action.second.invoke()
             }
         }
@@ -90,7 +89,7 @@ object PostRotationExecutor : Listenable {
         // execute all other actions
         while (postMoveTasks.isNotEmpty()) {
             val next = postMoveTasks.removeFirst()
-            if (next.first.enabled) {
+            if (next.first.running) {
                 next.second.invoke()
             }
         }
@@ -102,11 +101,11 @@ object PostRotationExecutor : Listenable {
      * Has [EventPriorityConvention.FIRST_PRIORITY] to run before any other module can send packets.
      */
     @Suppress("unused")
-    val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
+    val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         if (!priorityActionPostMove) {
             // execute the priority action
             priorityAction?.let { action ->
-                if (action.first.enabled) {
+                if (action.first.running) {
                     action.second.invoke()
                 }
             }
@@ -117,7 +116,7 @@ object PostRotationExecutor : Listenable {
         // if we reach this point, the post-move queue should be empty, if not it gets cleared here
         while (postMoveTasks.isNotEmpty()) {
             val next = postMoveTasks.removeFirst()
-            if (next.first.enabled) {
+            if (next.first.running) {
                 next.second.invoke()
             }
         }
@@ -125,13 +124,13 @@ object PostRotationExecutor : Listenable {
         // execute all other actions
         while (normalTasks.isNotEmpty()) {
             val next = normalTasks.removeFirst()
-            if (next.first.enabled) {
+            if (next.first.running) {
                 next.second.invoke()
             }
         }
     }
 
-    fun addTask(module: Module, postMove: Boolean, task: () -> Unit, priority: Boolean = false) {
+    fun addTask(module: ClientModule, postMove: Boolean, task: () -> Unit, priority: Boolean = false) {
         if (priority) {
             priorityAction = module to task
             priorityActionPostMove = postMove

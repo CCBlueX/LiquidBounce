@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.ClientUpdate
-import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
@@ -46,31 +45,28 @@ fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
     addProperty("gameDir", mc.runDirectory.path)
     addProperty("inGame", inGame)
     addProperty("viaFabricPlus", usesViaFabricPlus)
-    addProperty("hasProtocolHack", hasProtocolTranslator)
+    addProperty("hasProtocolHack", usesViaFabricPlus)
 })
 
 // GET /api/v1/client/update
 @Suppress("UNUSED_PARAMETER")
 fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("updateAvailable", LiquidBounce.updateAvailable)
     addProperty("development", LiquidBounce.IN_DEVELOPMENT)
     addProperty("commit", LiquidBounce.clientCommit)
 
-    add("newestVersion", JsonObject().apply {
-        val newestVersion = ClientUpdate.newestVersion ?: return@apply
+    val updateInfo = update ?: return@apply
+    add("update", JsonObject().apply {
+        addProperty("buildId", updateInfo.buildId)
+        addProperty("commitId", updateInfo.commitId.substring(0, 7))
+        addProperty("branch", updateInfo.branch)
+        addProperty("clientVersion", updateInfo.lbVersion)
+        addProperty("minecraftVersion", updateInfo.mcVersion)
+        addProperty("release", updateInfo.release)
 
-        addProperty("buildId", newestVersion.buildId)
-        addProperty("commitId", newestVersion.commitId.substring(0, 7))
-        addProperty("branch", newestVersion.branch)
-        addProperty("clientVersion", newestVersion.lbVersion)
-        addProperty("minecraftVersion", newestVersion.mcVersion)
-        addProperty("release", newestVersion.release)
+        addProperty("date", updateInfo.date.toString())
+        addProperty("message", updateInfo.message)
 
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
-        addProperty("date", SimpleDateFormat().format(dateFormat))
-        addProperty("message", newestVersion.message)
-
-        addProperty("url", newestVersion.url)
+        addProperty("url", updateInfo.url)
     })
 })
 
@@ -106,7 +102,7 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {
     val properties = Properties()
 
-    properties.load(LiquidBounce::class.java.getResourceAsStream("/assets/liquidbounce/client_urls.properties"))
+    properties.load(LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/client_urls.properties"))
 
     properties.stringPropertyNames().associateWith { URI(properties.getProperty(it)) }
 }

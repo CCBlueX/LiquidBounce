@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
@@ -64,49 +62,73 @@ internal object NoFallMLG : Choice("MLG") {
     private var currentTarget: PlacementPlan? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
-    private val itemsForMLG = arrayOf(
-        Items.WATER_BUCKET, Items.COBWEB, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK
-    )
+    private val netherItems =
+        arrayOf(
+            // overworld
+            Items.COBWEB,
+            Items.POWDER_SNOW_BUCKET,
+            Items.HAY_BLOCK,
+            Items.SLIME_BLOCK,
+            Items.HONEY_BLOCK,
+            // nether
+            Items.TWISTING_VINES,
+        )
+    private val normalItems = arrayOf(Items.WATER_BUCKET) + netherItems
+
+    private val itemsForMLG
+        get() = if (world.dimension.ultrawarm) netherItems else normalItems
+
+    init {
+        tree(PickupWater)
+    }
 
     @Suppress("unused")
-    val tickMovementHandler = handler<SimulatedTickEvent> {
-        val currentGoal = this.getCurrentGoal()
+    private val tickMovementHandler =
+        handler<RotationUpdateEvent> {
+            val currentGoal = this.getCurrentGoal()
 
-        this.currentTarget = currentGoal
+            this.currentTarget = currentGoal
 
-        if (currentGoal == null) {
-            return@handler
+            if (currentGoal == null) {
+                return@handler
+            }
+
+            RotationManager.setRotationTarget(
+                currentGoal.placementTarget.rotation,
+                configurable = rotationsConfigurable,
+                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+                provider = ModuleNoFall,
+            )
         }
 
-        RotationManager.aimAt(
-            currentGoal.placementTarget.rotation,
-            configurable = rotationsConfigurable,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleNoFall
-        )
-    }
+    @Suppress("unused")
+    private val tickHandler =
+        tickHandler {
+            val target = currentTarget ?: return@tickHandler
 
-    val tickHandler = repeatable {
-        val target = currentTarget ?: return@repeatable
+            val rayTraceResult = raycast()
 
-        val rayTraceResult = raycast() ?: return@repeatable
+            if (!target.doesCorrespondTo(rayTraceResult)) {
+                return@tickHandler
+            }
 
-        if (target.doesCorrespondTo(rayTraceResult)) {
-            return@repeatable
+            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+
+            val onSuccess: () -> Boolean = {
+                lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
+
+                true
+            }
+
+            doPlacement(
+                rayTraceResult,
+                hand = target.hotbarItemSlot.useHand,
+                onItemUseSuccess = onSuccess,
+                onPlacementSuccess = onSuccess,
+            )
+
+            currentTarget = null
         }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot.hotbarSlotForServer, 1)
-
-        val onSuccess: () -> Boolean = {
-            lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
-
-            true
-        }
-
-        doPlacement(rayTraceResult, onItemUseSuccess = onSuccess, onPlacementSuccess = onSuccess)
-
-        currentTarget = null
-    }
 
     /**
      * Finds something to do, either
@@ -129,7 +151,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
-        val bestPickupItem = Hotbar.findClosestItem(Items.BUCKET) ?: return null
+        val bestPickupItem = Slots.Hotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
         this.lastPlacements.removeIf {
@@ -155,7 +177,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Find a way to prevent fall damage if we are falling.
      */
     private fun getCurrentMLGPlacementPlan(): PlacementPlan? {
-        val itemForMLG = Hotbar.findClosestItem(items = itemsForMLG)
+        val itemForMLG = Slots.OffhandWithHotbar.findClosestSlot(items = itemsForMLG)
 
         if (player.fallDistance <= minFallDist || itemForMLG == null) {
             return null
@@ -170,18 +192,23 @@ internal object NoFallMLG : Choice("MLG") {
         return findPlacementPlanAtPos(collision.up(), itemForMLG)
     }
 
-    private fun findPlacementPlanAtPos(pos: BlockPos, item: HotbarItemSlot): PlacementPlan? {
-        val options = BlockPlacementTargetFindingOptions(
-            listOf(Vec3i(0, 0, 0)),
-            item.itemStack,
-            CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            player.pos
-        )
+    private fun findPlacementPlanAtPos(
+        pos: BlockPos,
+        item: HotbarItemSlot,
+    ): PlacementPlan? {
+        val options =
+            BlockPlacementTargetFindingOptions(
+                BlockOffsetOptions(
+                    listOf(Vec3i.ZERO),
+                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                ),
+                FaceHandlingOptions(CenterTargetPositionFactory),
+                stackToPlaceWith = item.itemStack,
+                PlayerLocationOnPlacement(position = player.pos),
+            )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null
 
         return PlacementPlan(pos, bestPlacementPlan, item)
     }
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -47,16 +48,17 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    var arrowBoost = 0f
-    var shotArrows = 0f
+    private var arrowBoost = 0f
+    private var shotArrows = 0f
 
     val rotations = tree(RotationsConfigurable(this))
-    val charged by int("Charged", 4, 3..20)
+    private val charged by int("Charged", 4, 3..20)
     val speed by float("Speed", 2.5f, 0f..20f)
-    val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
+    private val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
     val fallDistance by float("FallDistanceToJump", 0.42f, 0f..2f)
 
-    var stopMovement = false
+    private var stopMovement = false
+    private var forceUseKey = false
 
     val movementInputHandler = handler<MovementInputEvent> {
         if (stopMovement) {
@@ -65,10 +67,18 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
         }
     }
 
-    val tickJumpHandler = repeatable {
+    @Suppress("unused")
+    private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.useKey && forceUseKey) {
+            event.isPressed = true
+        }
+    }
+
+    @Suppress("unused")
+    private val tickJumpHandler = tickHandler {
         if (arrowBoost <= arrowsToShoot) {
-            mc.options.useKey.isPressed = true
-            RotationManager.aimAt(
+            forceUseKey = true
+            RotationManager.setRotationTarget(
                 Rotation(player.yaw, -90f),
                 configurable = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
@@ -84,7 +94,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
                 shotArrows++
             }
         } else {
-            mc.options.useKey.isPressed = false
+            forceUseKey = false
             if (player.isUsingItem) {
                 interaction.stopUsingItem(player)
             }
@@ -92,25 +102,27 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
             shotArrows = 0f
             waitTicks(5)
             player.jump()
-            player.strafe(speed = speed.toDouble())
+            player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
             waitTicks(5)
             arrowBoost = 0f
         }
     }
 
     // what, why two events here?
-    val handleMovementInput = handler<MovementInputEvent> {
+    @Suppress("unused")
+    private val handleMovementInput = handler<MovementInputEvent> {
         if (arrowBoost <= arrowsToShoot) {
             return@handler
         }
 
         if (player.fallDistance >= fallDistance) {
-            it.jumping = true
+            it.jump = true
             player.fallDistance = 0f
         }
     }
 
-    val velocityHandler = handler<PacketEvent> {
+    @Suppress("unused")
+    private val velocityHandler = handler<PacketEvent> {
         val packet = it.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && shotArrows > 0.0) {

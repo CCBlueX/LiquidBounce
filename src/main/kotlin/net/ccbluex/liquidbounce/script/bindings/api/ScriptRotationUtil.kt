@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,16 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.script.bindings.api.ScriptRotationUtil.newRotationEntity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import kotlin.math.sqrt
@@ -46,7 +47,7 @@ import kotlin.math.sqrt
 object ScriptRotationUtil {
 
     /**
-     * Creates a new [Rotation] from [entity]'s bounding box.
+     * Creates a new [net.ccbluex.liquidbounce.utils.aiming.data.Rotation] from [entity]'s bounding box.
      * This uses raytracing, so it's guaranteed to be the best spot.
      *
      * It has a performance impact, so it's recommended to use [newRotationEntity] if you don't need the best spot.
@@ -57,7 +58,7 @@ object ScriptRotationUtil {
 
         // Finds the best spot (and undefined if no spot was found)
         val (rotation, _) = raytraceBox(
-            mc.player!!.eyes,
+            mc.player!!.eyePos,
             box,
             range = sqrt(range),
             wallsRange = throughWallsRange
@@ -74,7 +75,10 @@ object ScriptRotationUtil {
      * It has almost zero performance impact, so it's recommended to use this if you don't need the best spot.
      */
     @JvmName("newRotationEntity")
-    fun newRotationEntity(entity: Entity) = RotationManager.makeRotation(entity.boundingBox.center, mc.player!!.eyes)
+    fun newRotationEntity(entity: Entity) = Rotation.lookingAt(
+        point = entity.boundingBox.center,
+        from = mc.player!!.eyePos
+    )
 
     /**
      * Aims at the given [rotation] using the in-built RotationManager.
@@ -85,13 +89,12 @@ object ScriptRotationUtil {
      */
     @JvmName("aimAtRotation")
     fun aimAtRotation(rotation: Rotation, fixVelocity: Boolean) {
-        RotationManager.aimAt(
+        RotationManager.setRotationTarget(
             rotation,
             configurable = RotationsConfigurable(
-                object : Listenable { }
-            ).also {
-                it.fixVelocity = fixVelocity
-            }, priority = Priority.NORMAL, provider = Module("ScriptAPI", Category.MISC)
+                object : EventListener { },
+                movementCorrection = if (fixVelocity) MovementCorrection.SILENT else MovementCorrection.OFF
+            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", Category.MISC)
         )
     }
 

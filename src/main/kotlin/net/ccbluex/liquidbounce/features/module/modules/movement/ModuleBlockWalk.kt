@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.block.Blocks
 import net.minecraft.util.shape.VoxelShapes
 
@@ -31,7 +31,7 @@ import net.minecraft.util.shape.VoxelShapes
  * Allows you to walk on non-fullblock blocks.
  */
 
-object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
+object ModuleBlockWalk : ClientModule("BlockWalk", Category.MOVEMENT) {
 
     private val blocks by blocks("Blocks", hashSetOf(Blocks.COBWEB, Blocks.SNOW))
 

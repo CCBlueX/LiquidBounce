@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -33,7 +33,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  *
  * Allows you to fly through blocks.
  */
-object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
+object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
     private val onlyInVehicle by boolean("OnlyInVehicle", false)
@@ -42,13 +42,13 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     private var noClipSet = false
 
     @Suppress("unused")
-    private val handleGameTick = repeatable {
+    private val handleGameTick = tickHandler {
         if (paused()) {
             if (noClipSet) {
                 disable()
             }
 
-            return@repeatable
+            return@tickHandler
         }
 
         noClipSet = true
@@ -60,8 +60,8 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         player.controllingVehicle?.let {
             it.noClip = true
 
-            if (!ModuleVehicleControl.enabled) {
-                it.velocity = it.velocity.strafe(speed = speed)
+            if (!ModuleVehicleControl.running) {
+                it.velocity = it.velocity.withStrafe(speed = speed)
                 it.velocity.y = when {
                     mc.options.jumpKey.isPressed -> speed
                     mc.options.sneakKey.isPressed -> -speed
@@ -69,7 +69,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
                 }
             }
         } ?: run {
-            player.strafe(speed = speed)
+            player.velocity = player.velocity.withStrafe(speed = speed)
 
             player.velocity.y = when {
                 mc.options.jumpKey.isPressed -> speed

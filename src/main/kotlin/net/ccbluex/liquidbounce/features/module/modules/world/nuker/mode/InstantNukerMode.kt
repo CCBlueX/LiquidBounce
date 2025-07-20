@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.ignoreOpenInventory
@@ -44,20 +44,21 @@ object InstantNukerMode : Choice("Instant") {
     private val doNotStop by boolean("DoNotStop", false)
 
     @Suppress("unused")
-    private val tickHandler = repeatable {
-        if (ModuleBlink.enabled) {
-            return@repeatable
+    private val tickHandler = tickHandler {
+        if (ModuleBlink.running) {
+            return@tickHandler
         }
 
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-            return@repeatable
+            return@tickHandler
         }
 
         val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random())
 
         if (targets.isEmpty()) {
             wasTarget = null
-            return@repeatable
+            waitTicks(1)
+            return@tickHandler
         }
 
         for ((pos, _) in targets) {

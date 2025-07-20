@@ -1,11 +1,10 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
-import it.unimi.dsi.fastutil.chars.Char2ObjectMap
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.render.engine.font.BaseGlpyhPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.Point
 import kotlin.math.max
 import kotlin.math.min
@@ -16,32 +15,99 @@ import kotlin.math.sqrt
  */
 class StaticGlyphPage(
     override val texture: NativeImageBackedTexture,
-    val glyphs: Char2ObjectMap<Glyph>,
-    val height: Float,
-    val ascent: Float,
-    override val fallbackGlyph: Glyph
-): BaseGlpyhPage() {
+    val glyphs: Set<Pair<FontManager.FontId, GlyphRenderInfo>>
+): GlyphPage() {
     companion object {
-        /**
-         * Creates a glyph page containing all ASCII characters
-         */
-        fun createAscii(font: Font) = create('\u0000'..'\u00FF', font)
+        fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> {
+            val glyphPages = mutableListOf<StaticGlyphPage>()
+
+            var remainingChars = chars
+
+            do {
+                val result = createGlyphPageWithFittingCharacters(remainingChars)
+
+                glyphPages.add(result.first)
+
+                remainingChars = result.second
+            } while (remainingChars.isNotEmpty())
+
+            return glyphPages
+        }
 
         /**
-         * Creates a bitmap based
+         * Creates a bitmap which contains all [chars].
          */
-        fun create(chars: CharRange, font: Font): StaticGlyphPage {
-            // Get information about the glyphs and sort them by their height
-            val glyphsToRender = chars.mapNotNullTo(ArrayList((chars.last - chars.first) / chars.step + 16)) {
-                createCharacterCreationInfo(it, font)
+        fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
+            val result: Pair<GlyphPlacementResult, List<FontGlyph>>? = tryCharacterPlacementWithShrinking(chars)
+
+            val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
+
+            if (res.glyphsToRender.size < chars.size) {
+                logger.warn("Failed to place all characters (${chars.size}) on the atlas, " +
+                        "using a reduced charset (${res.glyphsToRender.size}) instead!")
             }
-            glyphsToRender.sortBy { it.glyphMetrics.bounds2D.height }
+
+            return renderGlyphPage(res) to remainingGlyphs
+        }
+
+        /**
+         * Tries to fit all characters on a page.
+         * If it does not fit, it reduces the list of characters to place by 20% and retries.
+         */
+        private fun tryCharacterPlacementWithShrinking(
+            chars: List<FontGlyph>
+        ): Pair<GlyphPlacementResult, List<FontGlyph>>? {
+            var currentLen = chars.size
+
+            while (currentLen > 1) {
+                val result = tryCharacterPlacement(chars.subList(0, currentLen))
+
+                if (result != null) {
+                    return result to chars.subList(currentLen, chars.size)
+                }
+
+                currentLen = currentLen * 4 / 5
+            }
+
+            return null
+        }
+
+        private fun renderGlyphPage(placementPlan: GlyphPlacementResult): StaticGlyphPage {
+            val atlas = createBufferedImageWithDimensions(placementPlan.atlasDimension)
+
+            renderGlyphs(atlas, placementPlan.glyphsToRender)
+
+            val glyphs = placementPlan.glyphsToRender
+                .map { it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension) }
+                .toSet()
+
+            val nativeImage = atlas.toNativeImage()
+            val texture = NativeImageBackedTexture(nativeImage)
+
+            texture.bindTexture()
+            texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true)
+
+            return StaticGlyphPage(
+                texture,
+                glyphs,
+            )
+        }
+
+        /**
+         * Tries to come up with a placement which includes all [chars].
+         *
+         * @return null if the resulting atlas is bigger than the maximum texture size.
+         */
+        private fun tryCharacterPlacement(chars: List<FontGlyph>): GlyphPlacementResult? {
+            // Get information about the glyphs and sort them by their height
+            val glyphsToRender = chars
+                .mapNotNull { createCharacterCreationInfo(it) }
+                .sortedBy { it.glyphMetrics.bounds2D.height }
 
             val maxTextureSize = maxTextureSize.value
 
             // The suggested width of the atlas, determined by a simple heuristic, capped by the maximal texture size
-            val totalArea =
-                glyphsToRender.sumOf { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height }
+            val totalArea = glyphsToRender.sumOf { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height }
 
             val suggestedAtlasWidth = min(
                 (sqrt(totalArea) * 1.232).toInt(),
@@ -49,47 +115,24 @@ class StaticGlyphPage(
             )
 
             // Do the placement
-            val atlasDimensions = doCharacterPlacement(glyphsToRender, suggestedAtlasWidth)
+            val atlasDimensions = placeCharacters(glyphsToRender, suggestedAtlasWidth)
 
-            check(atlasDimensions.width <= maxTextureSize && atlasDimensions.height <= maxTextureSize) {
-                "Multiple atlases are not implemented yet."
+            // The placement won't fit on the current atlas size.
+            if (atlasDimensions.width > maxTextureSize || atlasDimensions.height > maxTextureSize) {
+                return null
             }
 
-            val (atlas, fontMetrics) = renderGlyphs(
-                createBufferedImageWithDimensions(atlasDimensions),
-                font, glyphsToRender
-            )
-
-            val map = Char2ObjectOpenHashMap<Glyph>(glyphsToRender.size)
-
-            glyphsToRender.forEach {
-                val glyph = createGlyphFromGenerationInfo(it, atlasDimensions)
-                map.put(glyph.char, glyph)
-            }
-
-            val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(nativeImage)
-
-            texture.bindTexture()
-            texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true, false, true, false)
-
-            return StaticGlyphPage(
-                texture,
-                map,
-                fontMetrics.height.toFloat(),
-                fontMetrics.ascent.toFloat(),
-                map.get(font.missingGlyphCode.toChar()) ?: map.get('?') ?: error("No fallback glyph found")
-            )
+            return GlyphPlacementResult(glyphsToRender, atlasDimensions)
         }
 
         /**
-         * Used for [create]. Assigns a position to every glyph.
+         * Used for [createGlyphPageWithFittingCharacters]. Assigns a position to every glyph.
          *
          * @param atlasWidth The width of the atlas. No character will be longer that this width
          *
          * @return The height of the resulting texture. Is at least (1, 1)
          */
-        private fun doCharacterPlacement(glyphs: List<CharacterGenerationInfo>, atlasWidth: Int): Dimension {
+        private fun placeCharacters(glyphs: List<CharacterGenerationInfo>, atlasWidth: Int): Dimension {
             var currentX = 0
             var currentY = 0
 
@@ -105,7 +148,6 @@ class StaticGlyphPage(
                     continue
                 }
 
-                // 1px padding to prevent stuff from happening
                 val allocationSize = glyph.atlasDimension
 
                 // Would the character be longer than the atlas?
@@ -115,15 +157,8 @@ class StaticGlyphPage(
                     currentLineMaxHeight = 0
                 }
 
-                // Update max width
-                if (currentX + allocationSize.width > maxWidth) {
-                    maxWidth = currentX + allocationSize.width
-                }
-
-                // Update currentLineMaxHeight
-                if (allocationSize.height > currentLineMaxHeight) {
-                    currentLineMaxHeight = allocationSize.height
-                }
+                maxWidth = max(maxWidth, currentX + allocationSize.width)
+                currentLineMaxHeight = max(currentLineMaxHeight, allocationSize.height)
 
                 // Do the placement
                 glyph.atlasLocation = Point(currentX, currentY)
@@ -136,8 +171,5 @@ class StaticGlyphPage(
         }
     }
 
-    override fun getGlyph(char: Char): Glyph? {
-        return this.glyphs[char]
-    }
-
+    private class GlyphPlacementResult(val glyphsToRender: List<CharacterGenerationInfo>, val atlasDimension: Dimension)
 }

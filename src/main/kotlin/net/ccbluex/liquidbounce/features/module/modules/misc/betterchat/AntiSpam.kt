@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
@@ -10,11 +10,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.text.Text
 import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Formatting
-import org.apache.commons.lang3.StringUtils
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
-    private val regexFilters = mutableListOf<Regex>()
+    private var regexFilters = emptySet<Regex>()
 
     private val stack by boolean("StackMessages", false)
     private val filters by textArray("Filters", mutableListOf()).onChanged {
@@ -22,19 +21,16 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
     }
 
     private fun compileFilters() {
-        regexFilters.clear()
-        filters.forEach {
-            regexFilters.add(Regex(it))
-        }
+        regexFilters = filters.mapTo(HashSet(filters.size, 1.0F), ::Regex)
     }
 
     @Suppress("unused", "CAST_NEVER_SUCCEEDS" /* succeed with mixins */)
     val chatHandler = handler<ChatReceiveEvent> { event ->
         val string = TextVisitFactory.removeFormattingCodes(event.textData)
-        var content = StringUtils.substringAfter(string, ">") ?: string
-        content = content.trim()
 
         if (regexFilters.isNotEmpty()) {
+            val content = string.subSequence(string.indexOf('>') + 1, string.length).trim()
+
             val shouldBeRemoved = regexFilters.any {
                 it.matches(content)
             }
@@ -47,7 +43,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
         // stacks messages so that e.g., when a message is sent twice
         // it gets replaces by a new messages that has `[2]` appended
-        if (stack) {
+        if (stack && event.type != ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE) {
             // always cancel so each message gets an ID
             event.cancelEvent()
 

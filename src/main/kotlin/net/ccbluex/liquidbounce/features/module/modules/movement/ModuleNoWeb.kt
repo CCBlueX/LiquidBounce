@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.math.BlockPos
@@ -37,15 +37,15 @@ import net.minecraft.util.math.Direction
  *
  * Disables web slowdown.
  */
-object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
+object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
 
     init {
         enableLock()
     }
 
-    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14)).apply { tagBy(this) }
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14, Vulcan)).apply { tagBy(this) }
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
             ModuleAvoidHazards.enabled = false
 
@@ -64,7 +64,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
      * @return if we should cancel the slowdown effect
      */
     fun handleEntityCollision(pos: BlockPos): Boolean {
-        if (!enabled) {
+        if (!running) {
             return false
         }
 
@@ -122,12 +122,33 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
             if (player.moving) {
                 if (player.isOnGround) {
                     if (player.age % 3 == 0) {
-                        player.strafe(strength = 0.734)
+                        player.velocity = player.velocity.withStrafe(strength = 0.734)
                     } else {
                         player.jump()
-                        player.strafe(strength = 0.346)
+                        player.velocity = player.velocity.withStrafe(strength = 0.346)
                     }
                 }
+            }
+            return false
+        }
+    }
+
+    /**
+     * Bypassing Vulcan't Anti Cheat's All Version(6/27/2025)
+     *
+     * @author XeContrast
+     */
+
+    object Vulcan : NoWebMode("Vulcan") {
+        override val parent: ChoiceConfigurable<NoWebMode>
+            get() = modes
+
+        private val strength by float("Strength", 0.23f,0.01f..0.8f)
+
+        override fun handleEntityCollision(pos: BlockPos): Boolean {
+            if (player.moving) {
+                if (player.isOnGround) player.velocity = player.velocity.withStrafe(strength.toDouble())
+                if (player.velocity.y > 0) player.velocity.y = -player.velocity.y
             }
             return false
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import kotlin.math.max
+import net.ccbluex.liquidbounce.features.module.ClientModule
 
 /**
  * Reach module
@@ -28,8 +27,7 @@ import kotlin.math.max
  * Increases your reach.
  */
 
-object ModuleReach : Module("Reach", Category.PLAYER) {
-
+object ModuleReach : ClientModule("Reach", Category.PLAYER) {
     val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
     val blockReach by float("BlockReach", 5f, 4.5f..8f)
 }

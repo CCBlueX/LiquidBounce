@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.*
@@ -39,16 +39,16 @@ import kotlin.math.ceil
  * Automatically steals all items from a chest.
  */
 
-object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
+object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
-    val inventoryConstrains = tree(InventoryConstraints())
-    val autoClose by boolean("AutoClose", true)
+    private val inventoryConstrains = tree(InventoryConstraints())
+    private val autoClose by boolean("AutoClose", true)
 
-    val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
-    val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
-    val quickSwaps by boolean("QuickSwaps", true)
+    private val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
+    private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
+    private val quickSwaps by boolean("QuickSwaps", true)
 
-    val checkTitle by boolean("CheckTitle", true)
+    private val checkTitle by boolean("CheckTitle", true)
 
     init {
         tree(FeatureChestAura)
@@ -80,13 +80,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
 
             val emptySlot = findEmptyStorageSlotsInInventory().firstOrNull() ?: break
-            event.schedule(inventoryConstrains, when (itemMoveMode) {
-                ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, slot))
-                ItemMoveMode.DRAG_AND_DROP -> listOf(
-                    ClickInventoryAction.performPickup(screen, slot),
-                    ClickInventoryAction.performPickup(screen, emptySlot),
-                )
-            },
+
+            val actions = getActionsForMove(screen, from = slot, to = emptySlot)
+
+            event.schedule(inventoryConstrains, actions,
                 /**
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
@@ -98,6 +95,23 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         // Check if stealing the chest was completed
         if (autoClose && sortedItemsToCollect.isEmpty()) {
             event.schedule(inventoryConstrains, CloseContainerAction(screen))
+        }
+    }
+
+    /**
+     * Create a list of actions that will move the item in the slot [from] to the slot [to].
+     */
+    private fun getActionsForMove(
+        screen: GenericContainerScreen,
+        from: ContainerItemSlot,
+        to: ItemSlot
+    ): List<ClickInventoryAction> {
+        return when (itemMoveMode) {
+            ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, from))
+            ItemMoveMode.DRAG_AND_DROP -> listOf(
+                ClickInventoryAction.performPickup(screen, from),
+                ClickInventoryAction.performPickup(screen, to),
+            )
         }
     }
 
@@ -122,7 +136,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
     ): Int {
-        val freeSlotsInInv = (0..35).count { player.inventory.getStack(it).isNothing() }
+        val freeSlotsInInv = (Slots.Inventory + Slots.Hotbar).count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
             val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
@@ -139,12 +153,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
         val titleString = screen.title.string
 
-        return sequenceOf(
+        return arrayOf(
             "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
             "container.barrel"
-        )
-            .map { Text.translatable(it) }
-            .any { it.string == titleString }
+        ).any { Text.translatable(it).string == titleString }
     }
 
 
@@ -175,8 +187,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
                  */
-                ItemCategorization(listOf()).getItemFacets(hotbarSwap.from)
-                    .maxOf { it.category.type.allocationPriority }
+                hotbarSwap.priority
             )
 
             // todo: hook to schedule and check if swap was successful
@@ -195,7 +206,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
     private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
-        val cleanupPlan = if (!ModuleInventoryCleaner.enabled) {
+        val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = findItemsInContainer(screen)
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
@@ -208,7 +219,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         return cleanupPlan
     }
 
-    enum class SelectionMode(
+    @Suppress("unused")
+    private enum class SelectionMode(
         override val choiceName: String,
         val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
     ) : NamedChoice {
@@ -242,7 +254,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
     }
 
-    enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
+    private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
         QUICK_MOVE("QuickMove"),
         DRAG_AND_DROP("DragAndDrop"),
     }

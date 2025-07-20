@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,13 +24,14 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.Matrix7145FlagLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.VulcanLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBow
 import net.ccbluex.liquidbounce.utils.entity.moving
 
-object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
+object ModuleLongJump : ClientModule("LongJump", Category.MOVEMENT) {
 
     init {
         enableLock()
@@ -41,7 +42,8 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
             // NoCheatPlus
             NoCheatPlusBoost,
             NoCheatPlusBow,
-            VulcanLongJump
+            VulcanLongJump,
+            Matrix7145FlagLongJump
         )
     ).apply { tagBy(this) }
     private val autoJump by boolean("AutoJump", false)
@@ -63,7 +65,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         }
 
         // AutoJump
-        if (autoJump && ModuleLongJump.player.isOnGround && ModuleLongJump.player.moving
+        if (autoJump && player.isOnGround && player.moving
             && mode.activeChoice != NoCheatPlusBow) {
             player.jump()
             jumped = true

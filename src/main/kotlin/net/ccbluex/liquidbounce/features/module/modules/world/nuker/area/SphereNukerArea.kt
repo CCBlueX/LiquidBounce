@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
+import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
@@ -34,10 +34,10 @@ object SphereNukerArea : NukerArea("Sphere") {
 
     override fun lookupTargets(radius: Float, count: Int?): Sequence<Pair<BlockPos, BlockState>> {
         val rangeSquared = radius * radius
-        val eyesPos = player.eyes
+        val eyesPos = player.eyePos
 
         val positions = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            if (state.isNotBreakable(pos)) {
+            if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
                 return@searchBlocksInCuboid false
             }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,13 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import net.minecraft.world.chunk.Chunk
 import kotlin.math.max
 import kotlin.math.min
 
+@Suppress("detekt:TooManyFunctions")
 class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<BlockPos> by BlockPos.iterate(from, to) {
 
     override val endInclusive: BlockPos
@@ -50,14 +53,14 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
             val pos = chunk.pos
             return Region(
                 BlockPos(pos.x shl 4, chunk.bottomY, pos.z shl 4),
-                BlockPos(pos.x shl 4 or 15, chunk.topY, pos.z shl 4 or 15)
+                BlockPos(pos.x shl 4 or 15, chunk.topYInclusive, pos.z shl 4 or 15)
             )
         }
 
         fun fromChunkPos(x: Int, z: Int): Region {
             return Region(
                 BlockPos(x shl 4, mc.world!!.bottomY, z shl 4),
-                BlockPos(x shl 4 or 15, mc.world!!.height, z shl 4 or 15)
+                BlockPos(x shl 4 or 15, mc.world!!.topYInclusive, z shl 4 or 15)
             )
         }
 
@@ -113,14 +116,32 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
     }
 
     fun intersects(other: Region): Boolean {
-        return this.intersects(other.from.x, other.from.y, other.from.z, other.to.x, other.to.y, other.to.z)
+        return this.intersects(
+            min = Vec3i(other.from.x, other.from.y, other.from.z),
+            max = Vec3i(other.to.x, other.to.y, other.to.z)
+        )
     }
 
-    private fun intersects(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int): Boolean {
-        return !(this.to.x <= minX || this.from.x >= maxX ||
-            this.to.y <= minY || this.from.y >= maxY ||
-            this.to.z <= minZ || this.from.z >= maxZ)
+    private fun intersects(min: Vec3i, max: Vec3i): Boolean {
+        return !(this.to.x <= min.x || this.from.x >= max.x ||
+            this.to.y <= min.y || this.from.y >= max.y ||
+            this.to.z <= min.z || this.from.z >= max.z)
     }
+
+    fun getBottomFaceCenter() = Vec3d(
+        (from.x + to.x + 1).toDouble() / 2.0,
+        from.y.toDouble(),
+        (from.z + to.z + 1).toDouble() / 2.0
+    )
+
+    fun getBoundingBox() = Box(
+        from.x.toDouble(),
+        from.y.toDouble(),
+        from.z.toDouble(),
+        to.x + 1.0,
+        to.y + 1.0,
+        to.z + 1.0
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -153,6 +174,21 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
                 min(this.to.x, currentRegion.to.x),
                 min(this.to.y, currentRegion.to.y),
                 min(this.to.z, currentRegion.to.z)
+            )
+        )
+    }
+
+    fun union(currentRegion: Region): Region {
+        return Region(
+            BlockPos(
+                min(this.from.x, currentRegion.from.x),
+                min(this.from.y, currentRegion.from.y),
+                min(this.from.z, currentRegion.from.z)
+            ),
+            BlockPos(
+                max(this.to.x, currentRegion.to.x),
+                max(this.to.y, currentRegion.to.y),
+                max(this.to.z, currentRegion.to.z)
             )
         )
     }

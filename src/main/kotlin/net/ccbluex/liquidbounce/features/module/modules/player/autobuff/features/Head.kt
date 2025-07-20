@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
-object Head : HealthBasedBuff("Head", isValidItem = { stack, _ -> stack.item == Items.PLAYER_HEAD }) {
+object Head : HealthBasedBuff("Head") {
 
     val cooldown by int("Cooldown", 0, 0..120, "s")
     val chronometer = Chronometer()
@@ -36,7 +37,11 @@ object Head : HealthBasedBuff("Head", isValidItem = { stack, _ -> stack.item == 
     override val passesRequirements: Boolean
         get() = passesHealthRequirements && chronometer.hasElapsed(cooldown * 1000L)
 
-    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
+        return stack.item == Items.PLAYER_HEAD
+    }
+
+    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)
         chronometer.reset()
     }

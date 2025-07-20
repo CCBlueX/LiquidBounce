@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -59,7 +57,7 @@ internal object NoFallBlink : Choice("Blink") {
     override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    val inputHandler = handler<MovementInputEvent> { event ->
+    private val inputHandler = handler<MovementInputEvent> { event ->
         // If we are invincible, we don't need to care about fall damage
         if (player.isCreative || player.abilities.allowFlying || player.abilities.flying) {
             blinkFall = false
@@ -70,7 +68,7 @@ internal object NoFallBlink : Choice("Blink") {
         if (!player.isOnGround) {
             if (waitUntilGround || player.fallDistance > maximumFallDistance) {
                 if (blinkFall) {
-                    FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
+                    PacketQueueManager.rewrite<PlayerMoveC2SPacket> { packet ->
                         packet.onGround = false
                     }
 
@@ -90,7 +88,7 @@ internal object NoFallBlink : Choice("Blink") {
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput(
                 event.directionalInput,
-                event.jumping,
+                event.jump,
                 player.isSprinting,
                 true
             ))
@@ -114,7 +112,7 @@ internal object NoFallBlink : Choice("Blink") {
         )
 
         // Check if we collect fall distance above 2f in the next 10 ticks
-        for (i in 0..MAXIMUM_TICKS) {
+        for (ignored in 0..MAXIMUM_TICKS) {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.fallDistance > triggerFallDistance) {
@@ -129,11 +127,19 @@ internal object NoFallBlink : Choice("Blink") {
         }
     }
 
-    val packetHandler = handler<PacketEvent> {
-        val packet = it.packet
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
 
         if (packet is PlayerMoveC2SPacket && blinkFall) {
             packet.onGround = true
+        }
+    }
+
+    @Suppress("unused")
+    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+        if (event.origin == TransferOrigin.OUTGOING && blinkFall) {
+            event.action = PacketQueueManager.Action.QUEUE
         }
     }
 
@@ -141,7 +147,5 @@ internal object NoFallBlink : Choice("Blink") {
         blinkFall = false
         super.disable()
     }
-
-    fun shouldLag() = handleEvents() && blinkFall
 
 }

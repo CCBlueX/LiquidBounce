@@ -1,12 +1,11 @@
-#version 120
+#version 330
 
-#ifdef GL_ES
-precision lowp float;
-#endif
-
-// glslsandbox uniforms
+// Uniforms
 uniform float time;
 uniform vec2 resolution;
+
+// Output color
+out vec4 fragColor;
 
 // Simple hash function
 float hash(float n) {
@@ -18,8 +17,11 @@ float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i.x + hash(i.y)), hash(i.x + 1.0 + hash(i.y)), u.x),
-    mix(hash(i.x + hash(i.y + 1.0)), hash(i.x + 1.0 + hash(i.y + 1.0)), u.x), u.y);
+    return mix(
+    mix(hash(i.x + hash(i.y)), hash(i.x + 1.0 + hash(i.y)), u.x),
+    mix(hash(i.x + hash(i.y + 1.0)), hash(i.x + 1.0 + hash(i.y + 1.0)), u.x),
+    u.y
+    );
 }
 
 // Mountain range function
@@ -43,16 +45,14 @@ vec3 auroraLayer(vec2 uv, float speed, float intensity, vec3 color) {
     vec2 p = uv * scaleXY + t * movement;
     float n = noise(p + noise(color.xy + p + t));
 
-    float topEdgeSharpness = 0.0; //the smaller this value, the crispier the edge
-    float bottomFadeOut = 0.3; //the higher this value, the more solid the aurora appears
+    float topEdgeSharpness = 0.0; // The smaller this value, the crisper the edge
+    float bottomFadeOut = 0.3;   // The higher this value, the more solid the aurora appears
     float aurora = smoothstep(0.0, topEdgeSharpness, n - uv.y) * (1.0 - smoothstep(0.0, bottomFadeOut, n - uv.y));
 
-    aurora = (n - uv.y * 0.6) ;
+    aurora = (n - uv.y * 0.6);
 
     return aurora * intensity * color * 0.5;
-
 }
-
 
 // Main image function
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
@@ -75,24 +75,23 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     int numLayers = 5;
     for (int i = 0; i < numLayers; i++) {
         // Calculate the height of the mountain range
-        float height = float(numLayers-i) * 0.1
-        * smoothstep(1.0, 0.0,
+        float height = float(numLayers - i) * 0.1 *
+        smoothstep(1.0, 0.0,
         mountainRange(
         vec2(time * 0.03 * (float(i) + 1.0) + float(i) * 4.0, 0.0)
-        + uv * vec2( 1.0 + float(numLayers - i) * 0.05 , 0.23 )
-        )
-        );
+        + uv * vec2(1.0 + float(numLayers - i) * 0.05, 0.23)
+        ));
 
         // Create the black silhouette of the mountain range
         float mountain = smoothstep(0.0, 0.0, height - uv.y);
 
         // Combine the mountain range and sky
-        color = mix(color, skyColor2 * float(numLayers - i)/4.0, mountain);
+        color = mix(color, skyColor2 * float(numLayers - i) / 4.0, mountain);
     }
 
     fragColor = vec4(color, 1.0);
 }
 
 void main() {
-    mainImage(gl_FragColor, gl_FragCoord.xy);
+    mainImage(fragColor, gl_FragCoord.xy);
 }

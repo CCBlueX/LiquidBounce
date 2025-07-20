@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.SphereNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.InstantNukerMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.LegitNukerMode
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 
 /**
@@ -33,7 +35,7 @@ import net.minecraft.util.math.BlockPos
  *
  * Destroys blocks around you.
  */
-object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
+object ModuleNuker : ClientModule("Nuker", Category.WORLD, disableOnQuit = true) {
 
     val mode =
         choices("Mode", LegitNukerMode, arrayOf(LegitNukerMode, InstantNukerMode))
@@ -42,6 +44,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         SphereNukerArea,
         arrayOf(SphereNukerArea, FloorNukerArea)
     )
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val blocks by blocks("Blocks", mutableSetOf())
 
     var swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -59,9 +63,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             targetRenderer.addBlock(value ?: return)
         }
 
+    fun isValid(blockState: BlockState): Boolean {
+        return filter.invoke(blockState.block, blocks)
+    }
+
     override fun disable() {
         wasTarget = null
-        super.disable()
+        targetRenderer.clearSilently()
     }
 
 }

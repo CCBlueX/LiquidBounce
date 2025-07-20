@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,14 +28,12 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpFileStream
 import net.ccbluex.netty.http.util.httpInternalServerError
-import net.minecraft.client.texture.PlayerSkinTexture
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.jvm.optionals.getOrNull
@@ -69,18 +67,15 @@ fun getItemTexture(requestObject: RequestObject) = run {
 
     val of = RegistryKey.of(RegistryKeys.ITEM, alternativeIdentifier)
 
-    val resource = Registries.ITEM.get(of)
-        ?: return@run httpBadRequest("Item not found")
+    val image = Registries.ITEM.get(of)?.let(ItemImageAtlas::getItemImage)
+        ?: return@run httpBadRequest("Item image not found")
 
-    val writer = ByteArrayOutputStream(2048)
-
-    ImageIO.write(ItemImageAtlas.getItemImage(resource), "PNG", writer)
-
-    httpFileStream(ByteArrayInputStream(writer.toByteArray()))
+    val buffer = okio.Buffer()
+    ImageIO.write(image, "PNG", buffer.outputStream())
+    httpFileStream(buffer.inputStream())
 }
 
 // GET /api/v1/client/skin
-@Suppress("UNUSED_PARAMETER")
 fun getSkin(requestObject: RequestObject) = run {
     val uuid = requestObject.queryParams["uuid"]?.let { UUID.fromString(it) }
         ?: return@run httpBadRequest("Missing UUID parameter")
@@ -88,13 +83,10 @@ fun getSkin(requestObject: RequestObject) = run {
         ?: DefaultSkinHelper.getSkinTextures(uuid)
     val texture = mc.textureManager.getTexture(skinTextures.texture)
 
-    if (texture is PlayerSkinTexture) {
-        val cacheFile = texture.cacheFile
-            ?: return@run httpInternalServerError("Texture is not cached yet")
-
-        cacheFile.inputStream().use {
-            httpFileStream(it)
-        }
+    if (texture is NativeImageBackedTexture) {
+        val buffer = okio.Buffer()
+        texture.image?.write(buffer) ?: return@run httpInternalServerError("Texture is not cached yet")
+        httpFileStream(buffer.inputStream())
     } else {
         val resource = mc.resourceManager.getResource(skinTextures.texture)
             .getOrNull() ?: return@run httpInternalServerError("Texture not found")
