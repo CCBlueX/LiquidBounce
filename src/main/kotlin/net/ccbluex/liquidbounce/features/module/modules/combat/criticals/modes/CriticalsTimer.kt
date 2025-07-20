@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -41,19 +40,17 @@ object CriticalsTimer : Choice("Timer") {
     // 新增配置项
     private val optimizeForCooldown by boolean("OptimizeForCooldown", true)
     private val checkKillAura by boolean("CheckKillAura", true)
-    private val checkAutoClicker by boolean("CheckAutoClicker", true)
 
     private fun isActive(): Boolean {
         if (!ModuleCriticals.running) {
             return false
         }
 
-        if (!checkKillAura && !checkAutoClicker) {
+        if (!checkKillAura) {
             return true
         }
 
-        return (ModuleKillAura.running && checkKillAura) ||
-            (ModuleAutoClicker.running && checkAutoClicker)
+        return (ModuleKillAura.running && checkKillAura)
     }
 
     private fun calculateTicksUntilNextCrit(): Float {
