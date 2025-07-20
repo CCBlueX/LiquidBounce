@@ -55,8 +55,16 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
     private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
-    val tickOff by int("TickOff", 0, 0..2, "ticks")
-    val tickOn by int("TickOn", 0, 0..2, "ticks")
+    val tickOffRange by intRange("TickOff", 0..0, 0..5, "ticks").onChanged { range ->
+        currentTickOff = range.random()
+    }
+    val tickOnRange by intRange("TickOn", 0..0, 0..5, "ticks").onChanged { range ->
+        currentTickOn = range.random()
+    }
+
+    var currentTickOff: Int = tickOffRange.random()
+    var currentTickOn: Int = tickOnRange.random()
+
     val chance by float("Chance", 100f, 0f..100f, "%")
     val blink by int("Blink", 0, 0..10, "ticks")
 
@@ -96,7 +104,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         get() = unblockMode != UnblockMode.NONE
 
     val blockImmediate
-        get() = tickOn == 0 || blockMode == BlockMode.HYPIXEL
+        get() = currentTickOn == 0 || blockMode == BlockMode.HYPIXEL
 
     /**
      * Make it seem like the player is blocking.
@@ -166,6 +174,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
         if (actionResult.isAccepted) {
             if (actionResult.shouldSwingHand()) {
+                currentTickOn = tickOnRange.random()
                 player.swingHand(blockHand)
             }
         }
@@ -196,7 +205,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
     @Suppress("unused")
     private val blinkHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND) {
+        if (event.origin != TransferOrigin.OUTGOING) {
             return@handler
         }
 
@@ -234,6 +243,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         if (!player.isBlockAction) {
             return false
         }
+
+        currentTickOff = tickOffRange.random()
 
         return when {
             unblockMode == UnblockMode.STOP_USING_ITEM -> {

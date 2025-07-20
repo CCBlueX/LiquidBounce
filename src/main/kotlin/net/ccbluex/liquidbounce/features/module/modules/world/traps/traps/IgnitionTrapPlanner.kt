@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
@@ -188,7 +189,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     }
 
     private fun findItemToIgnite(): HotbarItemSlot? {
-        return Slots.Hotbar.findClosestItem(items = trapItems)
+        return Slots.OffhandWithHotbar.findClosestSlot(items = trapItems)
     }
 
     class IgnitionIntentData(

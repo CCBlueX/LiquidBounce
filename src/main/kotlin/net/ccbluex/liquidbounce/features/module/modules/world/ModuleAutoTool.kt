@@ -27,7 +27,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 
@@ -44,8 +48,18 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             arrayOf(DynamicSelectMode, StaticSelectMode)
         )
 
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val blocks by blocks("Blocks", hashSetOf())
+
     sealed class ToolSelectorMode(name: String) : Choice(name) {
-        abstract fun getTool(blockState: BlockState): HotbarItemSlot?
+        fun getTool(blockState: BlockState): HotbarItemSlot? =
+            if (filter(blockState.block, blocks)) {
+                getToolSlot(blockState)
+            } else {
+                null
+            }
+
+        protected abstract fun getToolSlot(blockState: BlockState): HotbarItemSlot?
     }
 
     private object DynamicSelectMode : ToolSelectorMode("Dynamic") {
@@ -54,7 +68,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        override fun getTool(blockState: BlockState) =
+        override fun getToolSlot(blockState: BlockState) =
             Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
     }
 
@@ -64,7 +78,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val slot by int("Slot", 0, 0..8)
 
-        override fun getTool(blockState: BlockState) = Slots.Hotbar[slot]
+        override fun getToolSlot(blockState: BlockState) = Slots.Hotbar[slot]
     }
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
@@ -82,8 +96,32 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }
 
         val blockState = pos.getState()!!
-        val index = toolSelector.activeChoice.getTool(blockState)?.hotbarSlot ?: return
-        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
+        val slot = toolSelector.activeChoice.getTool(blockState) ?: return
+        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+    }
+
+    fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
+        blockState: BlockState,
+        ignoreDurability: Boolean = true
+    ): T? {
+        val player = mc.player ?: return null
+
+        val slot = filter {
+            val stack = it.itemStack
+            val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
+            stack.isNothing() || (!player.isCreative && durabilityCheck)
+        }.maxByOrNull {
+            it.itemStack.getMiningSpeedMultiplier(blockState)
+        } ?: return null
+
+        val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
+
+        // The current slot already matches the best
+        if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
+            return null
+        }
+
+        return slot
     }
 
 }

@@ -25,8 +25,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
@@ -34,6 +32,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -42,13 +41,14 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.minecraft.SharedConstants
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
-import java.io.StringWriter
+import java.util.EnumSet
 
 /**
  * Debug Command to collect information about the client
@@ -60,30 +60,36 @@ import java.io.StringWriter
  */
 object CommandDebug : CommandFactory {
 
+    private val gson = GsonBuilder()
+        .setPrettyPrinting()
+        .create()
+
     override fun createCommand() = CommandBuilder.begin("debug")
-        .handler { _, _ ->
+        .suspendHandler { _, _ ->
             chat("§7Collecting debug information...")
 
-            val autoConfig = StringWriter().use { writer ->
-                serializeAutoConfig(writer)
-                writer.toString()
-            }
+            val buffer = okio.Buffer()
+
+            serializeAutoConfig(buffer.outputStream().writer())
+            val autoConfig = buffer.readUtf8()
             val autoConfigPaste = uploadToPaste(autoConfig)
+            buffer.clear()
+
             val debugJson = createDebugJson(autoConfigPaste)
-
-            val content = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(debugJson)
+            gson.toJson(debugJson, buffer.outputStream().writer())
+            val content = buffer.readUtf8()
             val paste = uploadToPaste(content)
+            buffer.clear()
 
-            chat(Text.literal("Debug information has been uploaded to: ").styled { style ->
-                style.withColor(TextColor.fromFormatting(Formatting.GREEN))
-            }.append(Text.literal(paste).styled { style ->
-                style.withColor(Formatting.YELLOW).withClickEvent(
-                    ClickEvent(ClickEvent.Action.OPEN_URL, paste)
+            chat(
+                Text.literal("Debug information has been uploaded to: ").styled { style ->
+                    style.withColor(TextColor.fromFormatting(Formatting.GREEN))
+                }.append(
+                    Text.literal(paste)
+                        .formatted(Formatting.YELLOW)
+                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
                 )
-            }))
+            )
         }
         .build()
 
@@ -160,19 +166,17 @@ object CommandDebug : CommandFactory {
             }
         })
 
-        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, Enum::class.javaObjectType))
+        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, EnumSet::class.javaObjectType))
     }
 
     /**
      * Uploads the given content to the CCBlueX Paste API
      * and returns the URL of the paste.
      */
-    private fun uploadToPaste(content: String): String {
+    private suspend fun uploadToPaste(content: String): String {
         val form = "content=$content"
-        return runBlocking(Dispatchers.IO) {
-            HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
+        return HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
                 .parse<String>()
-        }
     }
 
 }

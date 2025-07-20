@@ -23,12 +23,13 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.any
+import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import kotlin.random.Random
 
 /**
- * Basic velocity which should bypass the most server with regular anti-cheats like NCP.
+ * Basic velocity which should bypass most servers with common anti-cheats like NCP.
  */
 internal object VelocityModify : VelocityMode("Modify") {
 
@@ -39,6 +40,9 @@ internal object VelocityModify : VelocityMode("Modify") {
     private val chance by int("Chance", 100, 0..100, "%")
     private val filter by enumChoice("Filter", VelocityTriggerFilter.ALWAYS)
     private val onlyMove by boolean("OnlyMove", false)
+    private val transactionBufferAmount by int("TransactionBuffer", 0, 0..3)
+
+    private var transactionBuffer = 0
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -77,6 +81,7 @@ internal object VelocityModify : VelocityMode("Modify") {
             }
 
             NoFallBlink.waitUntilGround = true
+            transactionBuffer += transactionBufferAmount
         } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
             if (chance != 100 && Random.nextInt(100) > chance) return@handler
             if (!filter.allow()) return@handler
@@ -91,7 +96,13 @@ internal object VelocityModify : VelocityMode("Modify") {
                 knockback.z *= horizontal
 
                 NoFallBlink.waitUntilGround = true
+                transactionBuffer += transactionBufferAmount
             }
+        }
+
+        if (packet is CommonPongC2SPacket && transactionBuffer > 0) {
+            event.cancelEvent()
+            transactionBuffer--
         }
     }
 

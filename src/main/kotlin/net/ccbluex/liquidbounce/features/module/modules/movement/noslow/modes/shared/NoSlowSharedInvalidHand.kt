@@ -33,7 +33,7 @@ internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*
     private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
-        if (!event.isCancelled && event.origin == TransferOrigin.SEND && packet is PlayerInteractItemC2SPacket) {
+        if (!event.isCancelled && event.origin == TransferOrigin.OUTGOING && packet is PlayerInteractItemC2SPacket) {
             event.cancelEvent()
             sendPacketSilently(PlayerInteractItemC2SPacket(null, packet.sequence, packet.pitch, packet.yaw))
         }

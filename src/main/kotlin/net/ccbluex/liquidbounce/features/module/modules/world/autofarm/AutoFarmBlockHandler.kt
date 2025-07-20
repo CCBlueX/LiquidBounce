@@ -31,7 +31,7 @@ enum class AutoFarmTrackedStates {
     Soulsand
 }
 
-object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates>() {
+object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedStates>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
         if (ModuleAutoFarm.isTargeted(state, pos)) {
             return AutoFarmTrackedStates.Destroy
@@ -65,10 +65,10 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates
         val targetBlockPos = pos.down()
         if (state.isAir) {
             // If there is no air above, add it
-            this.trackedBlockMap[targetBlockPos] = trackedState
+            track(targetBlockPos, trackedState)
         } else {
             // If there is no air above, we want to remove it
-            this.trackedBlockMap.remove(targetBlockPos)
+            untrack(targetBlockPos)
         }
     }
 }

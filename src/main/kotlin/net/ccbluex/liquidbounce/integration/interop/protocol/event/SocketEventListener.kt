@@ -19,7 +19,8 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.JsonObject
+import com.google.gson.JsonElement
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
@@ -35,7 +36,7 @@ class SocketEventListener : EventListener {
     /**
      * Contains all events that are registered in the current context
      */
-    private val registeredEvents = mutableMapOf<KClass<out Event>, EventHook<in Event>>()
+    private val registeredEvents = hashMapOf<KClass<out Event>, EventHook<in Event>>()
 
     fun registerAll() {
         events.keys.forEach { register(it) }
@@ -49,35 +50,39 @@ class SocketEventListener : EventListener {
             error("Event $name is already registered")
         }
 
-        val eventHook = EventHook<Event>(
-            this,
-            { writeToSockets(it) }
-        )
+        val eventHook = EventHook(this, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
         EventManager.registerEventHook(eventClass.java, eventHook)
     }
 
     fun unregister(name: String) {
-        val (eventClass, eventHook) = registeredEvents.entries.find { it.key.eventName == name } ?:
+        val eventClass = events[name] ?:
             throw IllegalArgumentException("Unknown event: $name")
+        val eventHook = registeredEvents[eventClass] ?:
+            throw IllegalArgumentException("No EventHook for event: $eventClass")
 
         EventManager.unregisterEventHook(eventClass.java, eventHook)
     }
 
-    private fun writeToSockets(event: Event) {
+    private fun writeToSockets(event: Event) = withScope {
+        data class WSEventData(val name: String, val event: JsonElement)
+
         val json = runCatching {
             val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
-
-            val jsonObj = JsonObject()
-            jsonObj.addProperty("name", event::class.eventName)
-            jsonObj.add("event", webSocketAnnotation.serializer.gson.toJsonTree(event))
-            interopGson.toJson(jsonObj)
+            interopGson.toJson(
+                WSEventData(
+                    name = event::class.eventName,
+                    event = webSocketAnnotation.serializer.gson.toJsonTree(event)
+                )
+            )
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return
+        }.getOrNull() ?: return@withScope
 
-        httpServer.webSocketController.broadcast(json)
+        httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
+            logger.error("WebSocket event broadcast failed", t)
+        }
     }
 
 

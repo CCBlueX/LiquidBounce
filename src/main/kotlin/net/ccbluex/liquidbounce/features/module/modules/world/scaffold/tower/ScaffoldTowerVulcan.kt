@@ -18,22 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
-object ScaffoldTowerVulcan : Choice("Vulcan") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = towerMode
+object ScaffoldTowerVulcan : ScaffoldTower("Vulcan") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {

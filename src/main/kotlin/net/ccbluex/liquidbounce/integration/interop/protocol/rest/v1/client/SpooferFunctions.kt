@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import java.io.StringReader
 
 @Suppress("UNUSED_PARAMETER")
 fun getSpooferConfigurable(request: RequestObject): FullHttpResponse {
@@ -37,10 +36,7 @@ fun getSpooferConfigurable(request: RequestObject): FullHttpResponse {
 }
 
 fun putSpooferConfigurable(request: RequestObject): FullHttpResponse {
-    StringReader(request.body).use { reader ->
-        ConfigSystem.deserializeConfigurable(SpooferManager, reader)
-    }
-
+    ConfigSystem.deserializeConfigurable(SpooferManager, request.body.reader())
     ConfigSystem.storeConfigurable(SpooferManager)
     return httpNoContent()
 }

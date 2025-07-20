@@ -5,6 +5,7 @@
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import {addProxy as addProxyRest} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
+    import SingleSelect from "../common/setting/select/SingleSelect.svelte";
 
     export let visible: boolean;
 
@@ -17,6 +18,7 @@
     }
 
     let requiresAuthentication = false;
+    let proxyType = "SOCKS5";
     let hostPort = "";
     let username = "";
     let password = "";
@@ -40,7 +42,7 @@
         const [host, port] = hostPort.split(":");
 
         loading = true;
-        await addProxyRest(host, parseInt(port), username, password, forwardAuthentication);
+        await addProxyRest(host, parseInt(port), username, password, proxyType, forwardAuthentication);
     }
 
     listen("proxyAdditionResult", () => {
@@ -51,6 +53,7 @@
 
     function cleanup() {
         requiresAuthentication = false;
+        proxyType = "SOCKS5";
         hostPort = "";
         username = "";
         password = "";
@@ -60,6 +63,7 @@
 
 <Modal title="Add Proxy" bind:visible={visible} on:close={cleanup}>
     <IconTextInput title="Host:Port" icon="server" pattern=".+:[0-9]+" bind:value={hostPort}/>
+    <SingleSelect title="Proxy Type" options={["HTTP", "SOCKS5"]} bind:value={proxyType}/>
     <SwitchSetting title="Requires Authentication" bind:value={requiresAuthentication}/>
     {#if requiresAuthentication}
         <IconTextInput title="Username" icon="user" bind:value={username}/>

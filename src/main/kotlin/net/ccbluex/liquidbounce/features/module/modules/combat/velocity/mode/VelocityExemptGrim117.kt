@@ -18,11 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
@@ -52,8 +49,8 @@ internal object VelocityExemptGrim117 : VelocityMode("ExemptGrim117") {
     }
 
     @Suppress("unused")
-    private val packetHandler = sequenceHandler<PacketEvent> {
-        val packet = it.packet
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
+        val packet = event.packet
 
         // Check for damage to make sure it will only cancel
         // damage velocity (that all we need) and not affect other types of velocity
@@ -63,7 +60,7 @@ internal object VelocityExemptGrim117 : VelocityMode("ExemptGrim117") {
 
         if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
             && canCancel) {
-            it.cancelEvent()
+            event.cancelEvent()
             waitTicks(1)
             repeat(if (alternativeBypass) 4 else 1) {
                 network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround,

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.ccbluex.liquidbounce.config.types.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
@@ -28,14 +27,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundCategory;
@@ -137,14 +139,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
+    @Unique
+    private PlayerJumpEvent jumpEvent;
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
 
-        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-        EventManager.INSTANCE.callEvent(jumpEvent);
+        jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(getJumpVelocity(), this.getYaw()));
         if (jumpEvent.isCancelled()) {
             ci.cancel();
         }
@@ -152,16 +156,28 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
     private float hookJumpEvent(float original) {
-        if (((Object) this) != MinecraftClient.getInstance().player) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
             return original;
         }
 
-        final var jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(original));
         return jumpEvent.getMotion();
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    private float hookJumpYaw(float original) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
+            return original;
+        }
+
+        return jumpEvent.getYaw();
     }
 
     @Inject(method = "jump", at = @At("RETURN"))
     private void hookAfterJumpEvent(CallbackInfo ci) {
+        jumpEvent = null;
+
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
@@ -206,7 +222,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-        !(ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() instanceof NoneChoice) &&
+        ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
         ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
 
         if (noJumpDelay || towerActive) {
@@ -259,6 +275,13 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return rotation.getPitch();
+    }
+
+    @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
+    private void hookEatParticles(ItemStack stack, int count, CallbackInfo ci) {
+        if (stack.getComponents().contains(DataComponentTypes.FOOD) && !ModuleAntiBlind.canRender(DoRender.EAT_PARTICLES)) {
+            ci.cancel();
+        }
     }
 
     /**

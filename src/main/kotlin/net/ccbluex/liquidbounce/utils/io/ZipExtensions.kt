@@ -18,82 +18,63 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
-import java.util.zip.ZipInputStream
 
 /**
- * Extracts a ZIP archive from an input stream to a specified folder
+ * Extracts an [ArchiveInputStream] to a specified [folder]
  */
-suspend fun extractZip(zipStream: InputStream, folder: File) = withContext(Dispatchers.IO) {
+private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
     if (!folder.exists()) {
         folder.mkdir()
     }
 
-    ZipInputStream(zipStream.buffered()).use { zipInputStream ->
-        generateSequence { zipInputStream.nextEntry }
-            .filterNot { it.isDirectory }
-            .forEach { entry ->
-                val newFile = File(folder, entry.name).apply {
-                    parentFile?.mkdirs()
-                }
+    while (true) {
+        val entry = ais.nextEntry ?: break
 
-                // Ensure the entry is within the target directory to prevent zip slip
-                if (!newFile.canonicalPath.startsWith(folder.canonicalPath)) {
-                    throw SecurityException("Entry is outside of the target directory: ${entry.name}")
-                }
+        if (entry.isDirectory) continue
 
-                FileOutputStream(newFile).buffered().use { outputStream ->
-                    zipInputStream.copyTo(outputStream)
-                }
-            }
+        val newFile = File(folder, entry.name).apply {
+            parentFile?.mkdirs()
+        }
+
+        // Ensure the entry is within the target directory to prevent zip slip
+        if (!newFile.canonicalPath.startsWith(folder.canonicalPath)) {
+            throw SecurityException("Entry is outside of the target directory: ${entry.name}")
+        }
+
+        newFile.outputStream().buffered().use { ais.copyTo(it) }
     }
 }
 
 /**
- * Extracts a ZIP file to a specified
+ * Extracts a ZIP archive from an [InputStream] to a specified [folder] and close it
  */
-suspend fun extractZip(zipFile: File, folder: File) =
-    withContext(Dispatchers.IO) {
-        FileInputStream(zipFile).use { stream ->
-            extractZip(stream, folder)
-        }
-    }
+fun extractZip(zipStream: InputStream, folder: File) =
+    ZipArchiveInputStream(zipStream.buffered()).extractTo(folder)
 
 /**
- * Extracts a tar.gz file to a specified folder
+ * Extracts a ZIP file to a specified [folder]
  */
-suspend fun extractTarGz(tarGzFile: File, folder: File) = withContext(Dispatchers.IO) {
-    if (!folder.exists()) {
-        folder.mkdir()
-    }
+fun extractZip(zipFile: File, folder: File) = extractZip(zipFile.inputStream(), folder)
 
-    FileInputStream(tarGzFile).buffered().use { fileInputStream ->
-        GzipCompressorInputStream(fileInputStream).use { gzipInputStream ->
-            TarArchiveInputStream(gzipInputStream).use { tarInputStream ->
-                generateSequence { tarInputStream.nextTarEntry }
-                    .filterNot { it.isDirectory }
-                    .forEach { entry ->
-                        val newFile = File(folder, entry.name).apply {
-                            parentFile?.mkdirs()
-                        }
+/**
+ * Creates a ZIP file from multiple files
+ */
+fun Collection<File>.createZipArchive(file: File) {
+    ZipArchiveOutputStream(file.outputStream().buffered()).use { aos ->
+        for (item in this) {
+            if (!item.isFile) continue
 
-                        // Prevent tar slip vulnerability
-                        if (!newFile.canonicalPath.startsWith(folder.canonicalPath)) {
-                            throw SecurityException("Entry is outside of the target directory: ${entry.name}")
-                        }
-
-                        FileOutputStream(newFile).buffered().use { outputStream ->
-                            tarInputStream.copyTo(outputStream)
-                        }
-                    }
-            }
+            aos.putArchiveEntry(ZipArchiveEntry(item, item.name))
+            item.inputStream().buffered().use { it.copyTo(aos) }
+            aos.closeArchiveEntry()
         }
+
+        aos.finish()
     }
 }

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -89,6 +90,14 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
         // because otherwise you could guess from the input change that this is automated.
         if (event.source == SprintEvent.Source.MOVEMENT_TICK && shouldPreventSprint()) {
             event.sprint = false
+        }
+    }
+
+    @Suppress("unused")
+    private val jumpHandler = handler<PlayerJumpEvent> { event ->
+        if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
+            // Allows us to sprint boost in every direction
+            event.yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
         }
     }
 

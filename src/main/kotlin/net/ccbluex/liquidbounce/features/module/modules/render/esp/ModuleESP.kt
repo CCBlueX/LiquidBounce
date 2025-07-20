@@ -21,13 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspOutlineMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -46,6 +47,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
 
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
+        Esp2DMode,
         EspOutlineMode,
         EspGlowMode
     ))

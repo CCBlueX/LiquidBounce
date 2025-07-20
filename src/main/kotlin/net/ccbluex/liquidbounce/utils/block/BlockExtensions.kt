@@ -44,9 +44,11 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.function.BooleanBiFunction
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import net.minecraft.util.shape.VoxelShape
+import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.RaycastContext
 import kotlin.math.ceil
@@ -90,6 +92,49 @@ val BlockPos.outlineBox: Box
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
+
+/**
+ * Shrinks a VoxelShape by the specified amounts on selected axes.
+ */
+@Suppress("CognitiveComplexMethod")
+fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
+    return when {
+        this.isEmpty -> VoxelShapes.empty()
+        this == VoxelShapes.fullCube() -> VoxelShapes.cuboid(
+            x, y, z,
+            1.0 - x, 1.0 - y, 1.0 - z
+        )
+        else -> {
+            var shape = VoxelShapes.empty()
+
+            this.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+                val width = maxX - minX
+                val height = maxY - minY
+                val depth = maxZ - minZ
+
+                val canShrinkX = x == 0.0 || width > x * 2
+                val canShrinkY = y == 0.0 || height > y * 2
+                val canShrinkZ = z == 0.0 || depth > z * 2
+
+                if (canShrinkX && canShrinkY && canShrinkZ) {
+                    val shrunkBox = VoxelShapes.cuboid(
+                        minX + (if (x > 0) x else 0.0),
+                        minY + (if (y > 0) y else 0.0),
+                        minZ + (if (z > 0) z else 0.0),
+                        maxX - (if (x > 0) x else 0.0),
+                        maxY - (if (y > 0) y else 0.0),
+                        maxZ - (if (z > 0) z else 0.0)
+                    )
+
+                    shape = VoxelShapes.combine(shape, shrunkBox, BooleanBiFunction.OR)
+                }
+            }
+
+            shape
+        }
+    }
+}
+
 
 /**
  * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.

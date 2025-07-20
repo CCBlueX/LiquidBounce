@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
  *
  * @note I was not able to press faster than 8 CPS. @1zuna
  */
-class SpammingPattern : ClickPattern {
+object SpammingPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,

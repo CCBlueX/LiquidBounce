@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 
@@ -34,59 +34,23 @@ import net.minecraft.util.hit.HitResult
  */
 object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
 
-    private var wasBreaking = false
-    private var ticksSinceMenu = 0
+    @Suppress("unused")
+    private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.attackKey && mc.attackCooldown <= 0) {
+            val crosshairTarget = mc.crosshairTarget
 
-    val repeatable = tickHandler {
-        // We cannot break blocks on the first tick of exiting inventory because attackCooldown gets set to 10000 </3
-        // If we try attackCooldown will not get reset to 0 and so we have to wait 10000 ticks to break again
-        val crosshairTarget = mc.crosshairTarget
+            if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
+                val blockState = crosshairTarget.blockPos.getState() ?: return@handler
+                if (blockState.isAir) {
+                    return@handler
+                }
 
-        if (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen) {
-            if (wasBreaking) {
-                // Stop breaking
-                wasBreaking = false
-                mc.options.attackKey.isPressed = false
-                mc.options.attackKey.timesPressed = 0
+                if (!interaction.isBreakingBlock) {
+                    // First click
+                    KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
+                }
+                event.isPressed = true
             }
-            ticksSinceMenu = 0
-        } else {
-            ticksSinceMenu ++
-        }
-
-        if (ticksSinceMenu > 1 && crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
-            val blockState = crosshairTarget.blockPos.getState() ?: return@tickHandler
-            if (blockState.isAir) {
-                return@tickHandler
-            }
-
-            // Start breaking
-            if (!wasBreaking) {
-                mc.options.attackKey.timesPressed = 1
-            } else {
-                // Disallow duplicate clicks
-                mc.options.attackKey.timesPressed = 0
-            }
-            mc.options.attackKey.isPressed = true
-            wasBreaking = true
-        } else if (wasBreaking) {
-            // Stop breaking
-            wasBreaking = false
-            mc.options.attackKey.isPressed = false
-            mc.options.attackKey.timesPressed = 0
-        }
-    }
-
-    override fun enable() {
-        // Just in case something goes wrong. o.O
-        wasBreaking = false
-    }
-
-    override fun disable() {
-        // Check if auto break was breaking a block
-        if (wasBreaking) {
-            mc.options.attackKey.isPressed = false
-            wasBreaking = false
         }
     }
 

@@ -25,10 +25,8 @@ import com.viaversion.viafabricplus.ViaFabricPlus;
 import com.viaversion.viaversion.api.minecraft.BlockPosition;
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.protocol.packet.ServerboundPacketType;
-import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ServerboundPackets1_8;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.function.Consumer;
@@ -57,15 +55,19 @@ public enum VfpCompatibility1_8 {
         });
     }
 
-    public void sendBlockPlacement(BlockPos blockPos, int face, ItemStack item,
-                                   float facingXIn, float facingYIn, float facingZIn) {
-        writePacket(ServerboundPackets1_8.USE_ITEM_ON, packet -> {
-            packet.write(Types.BLOCK_POSITION1_8, new BlockPosition(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
-            packet.write(Types.UNSIGNED_BYTE, (short) face);
-            packet.write(Types.ITEM1_8, ViaFabricPlus.getImpl().translateItem(item, ProtocolVersion.v1_8));
-            packet.write(Types.FLOAT, facingXIn);
-            packet.write(Types.FLOAT, facingYIn);
-            packet.write(Types.FLOAT, facingZIn);
+    public void sendPlayerInput(Float sideways, Float forwards, boolean jumping, boolean sneaking) {
+        writePacket(ServerboundPackets1_8.PLAYER_INPUT, packet -> {
+            packet.write(Types.FLOAT, sideways);
+            packet.write(Types.FLOAT, forwards);
+            byte b = 0;
+            if (jumping) {
+                b = (byte)(b | 1);
+            }
+
+            if (sneaking) {
+                b = (byte)(b | 2);
+            }
+            packet.write(Types.BYTE, b);
         });
     }
 

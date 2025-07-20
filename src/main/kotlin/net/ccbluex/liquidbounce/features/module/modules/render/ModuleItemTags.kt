@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.Choice
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -28,17 +29,18 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
-import net.ccbluex.liquidbounce.utils.math.*
+import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.average
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.ItemEntity
@@ -91,19 +93,19 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private var itemEntities: Map<Vec3d, List<ItemStack>> = emptyMap()
+    private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
+        initialValue = emptyMap()
+    ) { _, _ ->
+        val maxDistSquared = maximumDistance.sq()
+
+        @Suppress("UNCHECKED_CAST")
+        (world.entities.filter {
+            it is ItemEntity && it.squaredDistanceTo(player) < maxDistSquared
+        } as List<ItemEntity>).cluster()
+    }
 
     override fun disable() {
         itemEntities = emptyMap()
-    }
-
-    @Suppress("unused", "UNCHECKED_CAST")
-    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        val maxDistSquared = maximumDistance.sq()
-
-        itemEntities = (world.entities.filter {
-            it is ItemEntity && it.squaredDistanceTo(player) < maxDistSquared
-        } as List<ItemEntity>).cluster()
     }
 
     @Suppress("unused")

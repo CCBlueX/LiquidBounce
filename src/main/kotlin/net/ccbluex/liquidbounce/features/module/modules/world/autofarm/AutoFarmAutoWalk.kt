@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.ItemEntity
 import net.minecraft.util.math.Vec3d
+import java.util.EnumSet
 
 object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", false) {
 
@@ -89,26 +90,24 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     }
 
     private fun findWalkToBlock(): Vec3d? {
-        if (AutoFarmBlockTracker.trackedBlockMap.isEmpty()) return null
+        if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = booleanArrayOf(true, false, false)
+        val allowedItems = EnumSet.of(AutoFarmTrackedStates.Destroy)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
         if (toPlace) {
-            for (item in Slots.Hotbar.items) {
+            for (item in Slots.OffhandWithHotbar.items) {
                 when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedItems[1] = true
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems[2] = true
+                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.Farmland)
+                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.Soulsand)
                 }
             }
         }
 
-        val closestBlock = AutoFarmBlockTracker.trackedBlockMap.filter {
-            allowedItems[it.value.ordinal]
-        }.keys.map {
-            it.toCenterPos()
-        }.minByOrNull { it.squaredDistanceTo(player.pos) }
+        val closestBlock = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
+            if (state in allowedItems) pos.toCenterPos() else null
+        }.minByOrNull(player::squaredDistanceTo)
 
         return closestBlock
     }

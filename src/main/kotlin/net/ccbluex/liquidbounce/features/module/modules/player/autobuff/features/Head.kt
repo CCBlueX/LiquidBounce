@@ -26,15 +26,20 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBa
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
-object Head : HealthBasedBuff("Head", isValidItem = { stack, _ -> stack.item == Items.PLAYER_HEAD }) {
+object Head : HealthBasedBuff("Head") {
 
     val cooldown by int("Cooldown", 0, 0..120, "s")
     val chronometer = Chronometer()
 
     override val passesRequirements: Boolean
         get() = passesHealthRequirements && chronometer.hasElapsed(cooldown * 1000L)
+
+    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
+        return stack.item == Items.PLAYER_HEAD
+    }
 
     override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)

@@ -33,14 +33,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.airTicks
-import net.ccbluex.liquidbounce.utils.entity.blockVecPosition
 import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
-import kotlin.math.round
 
 /**
  * Step module
@@ -253,7 +250,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
         @Suppress("unused")
         private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-            if (event.origin == TransferOrigin.SEND && stepping) {
+            if (event.origin == TransferOrigin.OUTGOING && stepping) {
                 event.action = PacketQueueManager.Action.QUEUE
             }
         }
@@ -282,8 +279,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
         private var stepping = false
 
         private val stepHeight get() = when {
-            player.canStep(1.25) -> 1.25
             player.canStep(1.0) -> 1.0
+            player.canStep(1.25) -> 1.25
             else -> 1.5
         }
 
@@ -296,7 +293,9 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 stepping = true
                 player.velocity.y = 0.42
                 waitTicks(1)
-                player.velocity.y += 0.061
+                if(currentStepHeight > 1.0) {
+                    player.velocity.y += 0.061
+                }
                 waitTicks(2)
                 if (currentStepHeight == 1.0) {
                     player.velocity.y -= 0.14
@@ -312,6 +311,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                     }
                 }
                 stepping = false
+                player.velocity = player.velocity.withStrafe(speed = 0.1838601407459074)
             }
         }
 

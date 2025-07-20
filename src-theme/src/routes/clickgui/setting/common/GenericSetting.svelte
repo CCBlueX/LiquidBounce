@@ -51,7 +51,7 @@
     {:else if setting.valueType === "TEXT"}
         <TextSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "BLOCKS"}
-        <BlocksSetting bind:setting={setting} on:change/>
+        <BlocksSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "TEXT_ARRAY"}
         <TextArraySetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}

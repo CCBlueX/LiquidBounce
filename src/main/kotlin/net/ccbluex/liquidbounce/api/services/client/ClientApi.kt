@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.api.services.client
 
-import net.ccbluex.liquidbounce.api.core.API_BRANCH
-import net.ccbluex.liquidbounce.api.core.API_V1_ENDPOINT
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.models.client.Build
 import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
+import java.io.Reader
 
-object ClientApi : BaseApi(API_V1_ENDPOINT) {
+object ClientApi : BaseApi(config.apiEndpointV1) {
 
     suspend fun requestNewestBuildEndpoint(branch: String = API_BRANCH, release: Boolean = false) =
         get<Build>("/version/newest/$branch${if (release) "/release" else ""}")
@@ -37,6 +38,6 @@ object ClientApi : BaseApi(API_V1_ENDPOINT) {
         get<Array<AutoSettings>>("/client/$branch/settings")
 
     suspend fun requestSettingsScript(settingId: String, branch: String = API_BRANCH) =
-        get<String>("/client/$branch/settings/$settingId")
+        get<Reader>("/client/$branch/settings/$settingId")
 
 }

@@ -126,6 +126,7 @@
     display: grid;
     grid-template-columns: 1fr max-content max-content;
     transition: ease margin-bottom .2s;
+    align-items: center;
 
     &.expanded {
       margin-bottom: 10px;

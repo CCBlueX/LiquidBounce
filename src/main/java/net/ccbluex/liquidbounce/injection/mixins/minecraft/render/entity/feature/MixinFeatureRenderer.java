@@ -22,8 +22,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.entity.featur
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.ccbluex.liquidbounce.render.engine.Color4b;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
@@ -48,12 +49,15 @@ public abstract class MixinFeatureRenderer {
         if (ModuleTrueSight.canRenderEntities(state)) {
             color = trueSight ? trueSightModule.getEntityFeatureLayerColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
         }
+        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
+            color = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+        }
         original.call(instance, matrixStack, vertexConsumer, light, overlay, color);
     }
 
     @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer;getEntityCutoutNoCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
     private static RenderLayer injectTrueSight(Identifier texture, Operation<RenderLayer> original, @Local(argsOnly = true) LivingEntityRenderState state) {
-        if (ModuleTrueSight.canRenderEntities(state)) {
+        if (ModuleTrueSight.canRenderEntities(state) || ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
             return RenderLayer.getItemEntityTranslucentCull(texture);
         }
         return original.call(texture);

@@ -82,8 +82,8 @@ object KillAuraClicker : Clicker<ModuleKillAura>(ModuleKillAura, mc.options.atta
                 if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.shouldUnblockToHit) {
                     // Wait for the tick off time to be over, if it's not 0
                     // Ideally this should not happen.
-                    if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.tickOff > 0) {
-                        sequence.waitTicks(KillAuraAutoBlock.tickOff)
+                    if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.currentTickOff > 0) {
+                        sequence.waitTicks(KillAuraAutoBlock.currentTickOff)
                     }
                 }
             } else if (player.isUsingItem && !ModuleMultiActions.mayAttackWhileUsing()) {

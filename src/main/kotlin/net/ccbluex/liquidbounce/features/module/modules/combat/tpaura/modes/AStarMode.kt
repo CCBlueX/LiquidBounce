@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.chat

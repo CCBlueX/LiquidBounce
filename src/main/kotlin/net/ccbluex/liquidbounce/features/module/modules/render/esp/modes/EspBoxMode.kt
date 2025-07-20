@@ -31,16 +31,16 @@ import net.minecraft.util.math.Box
 object EspBoxMode : EspMode("Box") {
 
     private val outline by boolean("Outline", true)
+    private val expand by float("Expand", 0.05f, 0f..0.5f)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
         val entitiesWithBoxes = RenderedEntities.map { entity ->
             val dimensions = entity.getDimensions(entity.pose)
-
             val d = dimensions.width.toDouble() / 2.0
 
-            entity to Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
+            entity to Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
         }
 
         renderEnvironmentForWorld(matrixStack) {

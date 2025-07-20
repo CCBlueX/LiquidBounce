@@ -20,12 +20,15 @@ open class RotationsConfigurable(
 ) : Configurable("Rotations") {
 
     private val angleSmooth = choices(owner, "AngleSmooth", 0) {
+        val linearAngleSmooth = LinearAngleSmooth(it)
+        val interpolationAngleSmooth = if (combatSpecific) InterpolationAngleSmooth(it) else null
+
         listOfNotNull(
-            LinearAngleSmooth(it),
+            linearAngleSmooth,
             SigmoidAngleSmooth(it),
-            if (combatSpecific) InterpolationAngleSmooth(it) else null,
+            interpolationAngleSmooth,
             AccelerationAngleSmooth(it),
-            MinaraiAngleSmooth(it)
+            if (combatSpecific) MinaraiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null
         ).toTypedArray()
     }
 

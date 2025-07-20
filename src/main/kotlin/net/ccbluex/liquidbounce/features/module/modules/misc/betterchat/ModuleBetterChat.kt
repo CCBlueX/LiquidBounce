@@ -20,12 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.ChatScreen
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.openChat
+import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -66,18 +72,14 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         override fun getMessage(content: String) = content + suffix
     }
 
+    private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
+
     init {
         tree(AppendPrefix)
         tree(AppendSuffix)
+        tree(AntiSpam)
+        tree(Copy)
     }
-
-    init {
-        treeAll(
-            AntiSpam,
-            Copy
-        )
-    }
-
 
     object Copy : ToggleableConfigurable(this, "Copy", true) {
         val notification by boolean("Notificate", true)
@@ -87,7 +89,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
     var antiChatClearPaused = false
 
     @Suppress("unused")
-    val keyboardKeyHandler = handler<KeyboardKeyEvent> {
+    private val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         if (keepAfterDeath && mc.currentScreen !is DeathScreen) {
             return@handler
         }
@@ -95,14 +97,25 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         val options = mc.options
         val prefix = CommandManager.Options.prefix[0]
         when (it.keyCode) {
-            options.chatKey.boundKey.code -> openChat("")
-            options.commandKey.boundKey.code -> openChat("/")
-            prefix.code -> openChat(prefix.toString())
+            options.chatKey.boundKey.code -> mc.openChat("")
+            options.commandKey.boundKey.code -> mc.openChat("/")
+            prefix.code -> mc.openChat(prefix.toString())
         }
     }
 
-    private fun openChat(text: String) {
-        mc.send { mc.setScreen(ChatScreen(text)) }
+    @Suppress("unused")
+    private val chatReceiveHandler = suspendHandler<ChatReceiveEvent> { event ->
+        if (event.type !in autoTranslate) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = event.message.stripMinecraftColorCodes())
+        if (result.isValid) {
+            chat(
+                result.toResultText(),
+                metadata = MessageMetadata(prefix = false)
+            )
+        }
     }
 
     fun modifyMessage(content: String): String {
@@ -131,7 +144,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         }
     }
 
-    private abstract class MessageModifier(
+    private sealed class MessageModifier(
         name: String,
         enabled: Boolean
     ) : ToggleableConfigurable(this, name, enabled) {

@@ -33,6 +33,7 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
     private val mode by enumChoice("Mode", EagleMode.INPUT)
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
+    private val onlyOnGround by boolean("OnlyOnGround", true)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
@@ -49,7 +50,7 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             return false
         }
 
-        if (!player.isOnGround) {
+        if (!player.isOnGround && onlyOnGround) {
             return false
         }
 
@@ -69,10 +70,18 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             placedBlocks = 0
 
             if (mode == EagleMode.PACKET) {
-                network.sendPacket(ClientCommandC2SPacket(player,
-                    ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(player,
-                    ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                network.sendPacket(
+                    ClientCommandC2SPacket(
+                        player,
+                        ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
+                    )
+                )
+                network.sendPacket(
+                    ClientCommandC2SPacket(
+                        player,
+                        ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
+                    )
+                )
             }
         }
     }

@@ -64,8 +64,7 @@ fun postVirtualScreen(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun getScreenInfo(requestObject: RequestObject): FullHttpResponse {
     val mcScreen = mc.currentScreen ?: return httpForbidden("No screen")
-    val name = VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.routeName
-        ?: mcScreen::class.qualifiedName
+    val name = VirtualScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
     return httpOk(JsonObject().apply {
         addProperty("name", name)

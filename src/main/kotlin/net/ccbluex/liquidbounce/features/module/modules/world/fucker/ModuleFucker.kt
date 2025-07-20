@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
@@ -194,9 +194,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     }
 
     @Suppress("unused")
-    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
         if (currentTarget != null && !ModulePacketMine.running) {
-            it.cancelEvent()
+            event.cancelEvent()
         }
     }
 

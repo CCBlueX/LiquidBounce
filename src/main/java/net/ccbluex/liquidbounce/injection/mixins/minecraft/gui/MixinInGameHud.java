@@ -95,6 +95,13 @@ public abstract class MixinInGameHud {
         }
     }
 
+    @Inject(method = "renderSpyglassOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderSpyglassOverlay(DrawContext context, float scale, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.SPYGLASS_OVERLAY)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
     private void injectPumpkinBlur(DrawContext context, Identifier texture, float opacity, CallbackInfo callback) {
         if (!ModuleAntiBlind.INSTANCE.getRunning()) {
@@ -254,6 +261,13 @@ public abstract class MixinInGameHud {
     )
     private Perspective hookPerspectiveEventOnMiscOverlays(Perspective original) {
         return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+    }
+
+    @Inject(method = "renderTitleAndSubtitle", at = @At("HEAD"), cancellable = true)
+    private void hookRenderTitleAndSubtitle(CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.TITLE)) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "renderNauseaOverlay", at = @At("HEAD"), cancellable = true)

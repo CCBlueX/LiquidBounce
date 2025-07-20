@@ -48,6 +48,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import java.util.*
+import java.util.function.Predicate
 
 /**
  * Global target configurable
@@ -89,7 +90,7 @@ fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
 
     return when {
         info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification == EntityTargetClassification.TARGET -> isInteresting(entity)
+        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity)
         else -> false
     }
 }
@@ -99,7 +100,7 @@ fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
 
     return when {
         info.isFriend && Targets.FRIENDS !in this -> false
-        info.classification != EntityTargetClassification.IGNORED -> isInteresting(entity)
+        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity)
         else -> false
     }
 }
@@ -110,7 +111,7 @@ fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
 @Suppress("CyclomaticComplexMethod", "ReturnCount")
 private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
     // Check if the enemy is living and not dead (or ignore being dead)
-    if (suspect !is LivingEntity || !((Targets.DEAD in this) || suspect.isAlive)) {
+    if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
         return false
     }
 
@@ -167,7 +168,7 @@ fun ClientWorld.findEnemies(
 fun ClientWorld.getEntitiesInCuboid(
     midPos: Vec3d,
     range: Double,
-    predicate: (Entity) -> Boolean = { true }
+    predicate: Predicate<Entity> = Predicate { true }
 ): MutableList<Entity> {
     return getOtherEntities(null, Box(midPos.subtract(range, range, range),
         midPos.add(range, range, range)), predicate)

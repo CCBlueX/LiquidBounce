@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import com.google.common.collect.Sets
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import it.unimi.dsi.fastutil.doubles.DoubleIterator
 import it.unimi.dsi.fastutil.ints.IntArrayList
@@ -145,6 +144,10 @@ fun <T> List<T>.subList(fromIndex: Int): List<T> {
     return this.subList(fromIndex, this.size)
 }
 
+fun <T> MutableList<T>.removeRange(fromInclusive: Int = 0, endExclusive: Int = this.size) {
+    this.subList(fromInclusive, endExclusive).clear()
+}
+
 /**
  * A JavaScript-styled forEach
  */
@@ -163,13 +166,10 @@ inline fun Sequence<*>.isEmpty(): Boolean {
 }
 
 inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =
-    EnumSet.noneOf(T::class.java).apply { addAll(this@toEnumSet) }
-
-inline fun <T : Enum<T>> Iterable<T>.toEnumSet(clazz: Class<T>): EnumSet<T> =
-    Sets.newEnumSet(this, clazz)
+    emptyEnumSet<T>().apply { addAll(this@toEnumSet) }
 
 inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
-    toEnumSet(T::class.java)
+    emptyEnumSet<T>().apply { addAll(this@toEnumSet) }
 
 inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
     EnumSet.noneOf(T::class.java)

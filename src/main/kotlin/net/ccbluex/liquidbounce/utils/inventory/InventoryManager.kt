@@ -143,6 +143,7 @@ object InventoryManager : EventListener {
                     if (recentInventoryOpen) {
                         recentInventoryOpen = false
                         waitTicks(constraints.startDelay.random())
+                        cycles = 0
                     }
 
                     // Handle player inventory open requirements
@@ -151,11 +152,13 @@ object InventoryManager : EventListener {
                         if (!isInventoryOpen) {
                             openInventorySilently()
                             waitTicks(constraints.startDelay.random())
+                            cycles = 0
                         }
                     } else if (canCloseMainInventory) {
                         // When all scheduled actions are done, we can close the inventory
                         if (isInventoryOpen) {
                             waitTicks(constraints.closeDelay.random())
+                            cycles = 0
                             closeInventorySilently()
                         }
                     }
@@ -176,15 +179,18 @@ object InventoryManager : EventListener {
                         // TODO: Add support for inventory slots
                         if (action.performMissClick()) {
                             waitTicks(constraints.clickDelay.random())
+                            cycles = 0
                         }
                     }
 
                     if (action is CloseContainerAction) {
                         waitTicks(constraints.closeDelay.random())
+                        cycles = 0
                     }
                     if (action.performAction()) {
                         if (action !is CloseContainerAction) {
                             waitTicks(constraints.clickDelay.random())
+                            cycles = 0
                         }
                     }
                 }

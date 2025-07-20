@@ -47,7 +47,6 @@ import kotlin.math.max
 object LegitNukerMode : Choice("Legit") {
 
     private var currentTarget: BlockPos? = null
-    private var breaking = false
     private var ourBreakingEvent = false
 
     override val parent: ChoiceConfigurable<Choice>
@@ -89,11 +88,8 @@ object LegitNukerMode : Choice("Legit") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        breaking = false
-
         val currentTarget = currentTarget ?: return@tickHandler
         val state = currentTarget.getState() ?: return@tickHandler
-
 
         if (ModulePacketMine.running) {
             return@tickHandler
@@ -114,20 +110,17 @@ object LegitNukerMode : Choice("Legit") {
             return@tickHandler
         }
 
-        breaking = true
         ourBreakingEvent = true
-
         doBreak(rayTraceResult, forceImmediateBreak)
-
         wasTarget = currentTarget
         ourBreakingEvent = false
     }
 
-    // Shitty hack to fix ABORT_BREAK being sent immediately after START_BREAK
-    // There should really be a block breaking manager
     @Suppress("unused")
-    private val cancelBreakHandler = handler<CancelBlockBreakingEvent> { event ->
-        if (breaking) event.cancelEvent()
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
+        if (currentTarget != null && !ModulePacketMine.running) {
+            event.cancelEvent()
+        }
     }
 
     // Shitty hack to fix left clicking doubling break speed

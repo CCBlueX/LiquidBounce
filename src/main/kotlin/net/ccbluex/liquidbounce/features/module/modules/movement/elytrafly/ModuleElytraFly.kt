@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeStatic
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -62,7 +63,8 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
 
     internal val modes = choices("Mode", ElytraFlyModeStatic, arrayOf(
         ElytraFlyModeStatic,
-        ElytraFlyModeVanilla
+        ElytraFlyModeVanilla,
+        ElytraFlyModeBoost
     ))
 
     private var needsToRestart = false

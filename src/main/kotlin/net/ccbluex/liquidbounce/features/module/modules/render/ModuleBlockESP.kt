@@ -26,12 +26,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
@@ -84,7 +85,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 dirty = drawInternal(
-                    BlockTracker.trackedBlockMap.keys,
+                    BlockTracker.allPositions(),
                     colorMode,
                     fullAlpha,
                     drawOutline
@@ -95,7 +96,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
 
         private fun WorldRenderEnvironment.drawInternal(
-            blocks: Set<BlockPos>,
+            blocks: Sequence<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             fullAlpha: Boolean,
             drawOutline: Boolean
@@ -184,17 +185,9 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 
-    private object TrackedState
-
-    private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (!state.isAir && targets.contains(state.block)) {
-                TrackedState
-            } else {
-                null
-            }
-        }
-
+    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
+            state.block?.takeIf { it in targets }
     }
 
 }

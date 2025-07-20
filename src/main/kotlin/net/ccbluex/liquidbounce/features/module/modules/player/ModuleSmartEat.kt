@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.PlayerInteractedItem
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -65,18 +65,18 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
     private object Estimator {
-        fun findBestFood(): HotbarItemSlot? {
-            val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
-                // If there is an indication for a special item, we should use it. Items with lower health threshold
-                // are preferred since their usage is probably more urgent.
-                compareByDescending { it.second.healthThreshold },
-                compareBy { it.second.restoredHunger },
-                // Use the closest slot
-                compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
-                // Just for stabilization reasons
-                compareBy { SilentHotbar.serversideSlot }
-            )
+        private val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
+            // If there is an indication for a special item, we should use it. Items with lower health threshold
+            // are preferred since their usage is probably more urgent.
+            compareByDescending { it.second.healthThreshold },
+            compareBy { it.second.restoredHunger },
+            // Use the closest slot
+            compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
+            // Just for stabilization reasons
+            compareBy { SilentHotbar.serversideSlot }
+        )
 
+        fun findBestFood(): HotbarItemSlot? {
             return Slots.Hotbar
                 .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
                 .maxWithOrNull(comparator)?.first
@@ -153,7 +153,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
         }
 
         @Suppress("unused")
-        private val interactionHandler = handler<PlayerInteractedItem> { event ->
+        private val interactionHandler = handler<PlayerInteractedItemEvent> { event ->
             if (!enabled) {
                 return@handler
             }
@@ -182,7 +182,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             CombatManager.pauseCombatForAtLeast(combatPauseTime)
             SilentHotbar.selectSlotSilently(
                 this@SilentOffhand,
-                currentFood.hotbarSlot,
+                currentFood,
                 swapBackDelay.coerceAtLeast(5)
             )
         }
@@ -242,7 +242,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
         fun eat() {
             val currentBestFood = Estimator.findBestFood() ?: return
 
-            SilentHotbar.selectSlotSilently(AutoEat, currentBestFood.hotbarSlot, swapBackDelay)
+            SilentHotbar.selectSlotSilently(AutoEat, currentBestFood, swapBackDelay)
             forceUseKey = true
         }
 
