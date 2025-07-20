@@ -141,7 +141,6 @@
         if (highlightModule) {
             panelConfig.zIndex = ++$maxPanelZIndex;
             panelConfig.expanded = true;
-            renderedModules = modules;
             savePanelConfig();
         }
     });
