@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import com.oracle.truffle.runtime.collection.ArrayQueue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -81,7 +80,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
-    private val queue = ArrayQueue<Rotation>()
+    private val queue = ArrayDeque<Rotation>()
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
@@ -105,7 +104,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
 
     @Suppress("unused")
     private val simulatedTickHandler = sequenceHandler<RotationUpdateEvent> {
-        val rotation = queue.peek() ?: return@sequenceHandler
+        val rotation = queue.firstOrNull() ?: return@sequenceHandler
 
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
         if (Rotate.enabled) {
@@ -119,7 +118,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
 
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
-        val rotation = queue.poll() ?: return@tickHandler
+        val rotation = queue.removeFirstOrNull() ?: return@tickHandler
         val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
 
         if (Rotate.enabled) {
@@ -175,7 +174,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             return
         }
 
-        if (queue.size() == 0) {
+        if (queue.isEmpty()) {
             queue.add(rotation)
         }
     }
