@@ -360,6 +360,14 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
     consoleOutputCount.set(5)
 }
 
+tasks.register<JavaExec>("liquidInstruction") {
+    group = "other"
+    description = "Run LiquidInstruction class."
+
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.ccbluex.liquidbounce.LiquidInstruction")
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

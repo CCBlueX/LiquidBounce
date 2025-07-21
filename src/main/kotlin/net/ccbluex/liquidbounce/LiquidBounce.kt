@@ -26,7 +26,7 @@ import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
+import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
@@ -107,9 +107,9 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
-        val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
+        val version = text("Version", ClientUpdate.GitInfo["git.build.version"] ?: "unknown").immutable()
+        val commit = text("Commit", ClientUpdate.GitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
+        val branch = text("Branch", ClientUpdate.GitInfo["git.branch"] ?: "nextgen").immutable()
 
         init {
             ConfigSystem.root(this)
