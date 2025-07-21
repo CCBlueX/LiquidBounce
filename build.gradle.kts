@@ -60,38 +60,18 @@ val includeModDependency: Configuration by configurations.creating
  * - Mod dependencies
  */
 fun Configuration.excludeProvidedLibs() = apply {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-
-    exclude(group = "com.google.code.gson", module = "gson")
-    exclude(group = "net.java.dev.jna", module = "jna")
-    exclude(group = "commons-codec", module = "commons-codec")
-    exclude(group = "commons-io", module = "commons-io")
-    exclude(group = "org.apache.commons", module = "commons-compress")
-    exclude(group = "org.apache.commons", module = "commons-lang3")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
-    exclude(group = "org.slf4j", module = "slf4j-api")
-    exclude(group = "com.mojang", module = "authlib")
-
     // Note: from Netty HTTP Server, not all components are used
+    // TODO: specify rest backend dependency
     exclude(group = "io.netty", module = "netty-all")
-
-    exclude(group = "io.netty", module = "netty-buffer")
-    exclude(group = "io.netty", module = "netty-codec")
-    exclude(group = "io.netty", module = "netty-common")
-    exclude(group = "io.netty", module = "netty-handler")
-    exclude(group = "io.netty", module = "netty-resolver")
-    exclude(group = "io.netty", module = "netty-transport")
-    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
 }
 
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
-configurations.include.get().extendsFrom(includeModDependency)
-configurations.modApi.get().extendsFrom(includeModDependency)
-configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
+configurations {
+    include.configure { extendsFrom(includeModDependency) }
+    modApi.configure { extendsFrom(includeModDependency) }
+}
 
 repositories {
     mavenCentral()
@@ -202,11 +182,22 @@ dependencies {
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 
     afterEvaluate {
+        // Exclude libraries provided by game and mods
+        arrayOf(
+            "minecraftClientLibraries",
+            "modApi",
+            "modImplementation",
+        ).forEach { name ->
+            configurations.getByName(name).resolvedConfiguration.firstLevelModuleDependencies.forEach { dep ->
+                includeDependency.exclude(group = dep.moduleGroup, module = dep.moduleName)
+                includeModDependency.exclude(group = dep.moduleGroup, module = dep.moduleName)
+            }
+        }
+
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
+            val apiDependency = dependencies.api(it.requested.toString()) {
                 isTransitive = false
             }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
 
             dependencies.include(apiDependency)
         }
