@@ -69,6 +69,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
@@ -107,9 +108,12 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", ClientUpdate.GitInfo["git.build.version"] ?: "unknown").immutable()
-        val commit = text("Commit", ClientUpdate.GitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
-        val branch = text("Branch", ClientUpdate.GitInfo["git.branch"] ?: "nextgen").immutable()
+        val version = text("Version", GitInfo.getOrDefault("git.build.version", "unknown"))
+            .immutable()
+        val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
+            .immutable()
+        val branch = text("Branch", GitInfo.getOrDefault("git.branch",  "nextgen"))
+            .immutable()
 
         init {
             ConfigSystem.root(this)

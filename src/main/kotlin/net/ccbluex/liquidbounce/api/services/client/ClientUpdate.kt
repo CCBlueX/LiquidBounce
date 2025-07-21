@@ -21,36 +21,13 @@ package net.ccbluex.liquidbounce.api.services.client
 import com.vdurmont.semver4j.Semver
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 object ClientUpdate {
-
-    object GitInfo {
-        private val gitInfo = Properties().also { properties ->
-            val inputStream = LiquidBounce::class.java.classLoader.getResourceAsStream("git.properties")
-
-            if (inputStream != null) {
-                inputStream.use { properties.load(it) }
-            } else {
-                properties["git.build.version"] = "unofficial"
-            }
-        }
-
-        @JvmStatic
-        operator fun get(key: String): String? = gitInfo.getProperty(key)
-
-        @JvmStatic
-        fun getOrDefault(key: String, defaultValue: String): String = gitInfo.getProperty(key, defaultValue)
-
-        @JvmStatic
-        @get:JvmName("entrySet")
-        @Suppress("UNCHECKED_CAST")
-        val entries: Set<Map.Entry<String, String>>
-            get() = gitInfo.entries as Set<Map.Entry<String, String>>
-    }
 
     val update by AsyncLazy {
         runCatching {
@@ -68,7 +45,7 @@ object ClientUpdate {
             val isNewer = if (LiquidBounce.IN_DEVELOPMENT) { // check if new build is newer than current build
                 val newestVersionDate = newestBuild.date
                 val currentVersionDate = OffsetDateTime.parse(
-                    GitInfo["git.commit.time"].toString(),
+                    GitInfo.get("git.commit.time"),
                     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
                 )
 

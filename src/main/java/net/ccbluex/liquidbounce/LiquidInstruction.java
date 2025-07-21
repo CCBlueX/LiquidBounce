@@ -19,10 +19,8 @@
  */
 package net.ccbluex.liquidbounce;
 
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate;
+import net.ccbluex.liquidbounce.utils.client.GitInfo;
 
-import java.io.IOException;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 import javax.swing.*;
@@ -32,7 +30,7 @@ public final class LiquidInstruction {
   public static void main(String[] args) {
     JOptionPane.showMessageDialog(
         null,
-        ClientUpdate.GitInfo.entrySet().stream()
+        GitInfo.entries().stream()
             .map(e -> e.getKey() + ": " + e.getValue())
             .collect(Collectors.joining("\n")),
         LiquidBounce.CLIENT_NAME,

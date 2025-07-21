@@ -386,6 +386,10 @@ kotlin {
 }
 
 tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+    }
+
     // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
         rename {
