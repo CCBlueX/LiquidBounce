@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-import net.ccbluex.liquidbounce.config.types.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
 
 abstract class TranslatorChoice(
     name: String

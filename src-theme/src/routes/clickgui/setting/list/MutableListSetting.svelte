@@ -1,11 +1,11 @@
 <script lang="ts">
-    import type {ModuleSetting, TextArraySetting} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import type {ListSetting, ModuleSetting} from "../../../../integration/types";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {createEventDispatcher} from "svelte";
 
     export let setting: ModuleSetting;
 
-    const cSetting = setting as TextArraySetting;
+    const cSetting = setting as ListSetting;
 
     const dispatch = createEventDispatcher();
 
@@ -46,7 +46,7 @@
 
 <style lang="scss">
   @use "sass:color";
-  @use "../../../colors.scss" as *;
+  @use "../../../../colors" as *;
 
   .input-wrapper {
     display: grid;

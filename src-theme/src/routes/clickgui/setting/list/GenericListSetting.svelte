@@ -1,54 +1,40 @@
 <script lang="ts">
-    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import {slide} from "svelte/transition";
-    import type {BlocksSetting, ModuleSetting} from "../../../../integration/types";
-    import {getRegistries} from "../../../../integration/rest";
-    import Block from "./Block.svelte";
-    import VirtualList from "./VirtualList.svelte";
+    import type {ListSetting, ModuleSetting, NamedItem} from "../../../../integration/types";
+    import VirtualList from "../list/VirtualList.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import ExpandArrow from "../common/ExpandArrow.svelte";
     import {setItem} from "../../../../integration/persistent_storage";
+    import ListItem from "./ListItem.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
+    export let items: NamedItem[];
 
-    const cSetting = setting as BlocksSetting;
+    const cSetting = setting as ListSetting;
     const thisPath = `${path}.${cSetting.name}`;
 
-    interface TBlock {
-        name: string;
-        identifier: string;
-    }
-
     const dispatch = createEventDispatcher();
-    let blocks: TBlock[] = [];
-    let renderedBlocks: TBlock[] = blocks;
+    let renderedItems: NamedItem[] = items;
     let searchQuery = "";
     let expanded = localStorage.getItem(thisPath) === "true";
 
     $: setItem(thisPath, expanded.toString());
 
     $: {
-        let filteredBlocks = blocks;
+        let filteredItems = items;
         if (searchQuery) {
-            filteredBlocks = filteredBlocks.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredItems = filteredItems.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
-        renderedBlocks = filteredBlocks;
+        renderedItems = filteredItems;
     }
 
-    onMount(async () => {
-        let b = (await getRegistries()).blocks;
-
-        if (b !== undefined) {
-            blocks = b.sort((a, b) => a.identifier.localeCompare(b.identifier));
-        }
-    });
-
-    function handleBlockToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {
+    function handleItemToggle(e: CustomEvent<{ value: string, enabled: boolean }>) {
         if (e.detail.enabled) {
-            cSetting.value = [...cSetting.value, e.detail.identifier];
+            cSetting.value = [...cSetting.value, e.detail.value];
         } else {
-            cSetting.value = cSetting.value.filter(b => b !== e.detail.identifier);
+            cSetting.value = cSetting.value.filter(b => b !== e.detail.value);
         }
 
         setting = {...cSetting};
@@ -66,9 +52,9 @@
         <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
             <div class="results">
-                <VirtualList items={renderedBlocks} let:item>
-                    <Block identifier={item.identifier} name={item.name}
-                           enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
+                <VirtualList items={renderedItems} let:item>
+                    <ListItem value={item.value} name={item.name} icon={item.icon}
+                            enabled={cSetting.value.includes(item.value)} on:toggle={handleItemToggle}/>
                 </VirtualList>
             </div>
         </div>
@@ -94,7 +80,7 @@
     .name {
       color: $clickgui-text-color;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
     }
   }
 

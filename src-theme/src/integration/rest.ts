@@ -10,13 +10,13 @@ import type {
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
+    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
-    Registries,
     Server,
     Session,
     VirtualScreen,
@@ -162,9 +162,9 @@ export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
     return data;
 }
 
-export async function getRegistries(): Promise<Registries> {
-    const response = await fetch(`${API_BASE}/client/registries`);
-    const data: Registries = await response.json();
+export async function getRegistryItems(name: string): Promise<Record<string, RegistryItem>> {
+    const response = await fetch(`${API_BASE}/client/registry/${name}`);
+    const data: Record<string, RegistryItem> = await response.json();
 
     return data;
 }

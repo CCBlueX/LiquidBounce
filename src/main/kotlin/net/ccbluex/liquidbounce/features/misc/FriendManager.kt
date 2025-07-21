@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.ListValueType
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import java.util.*
 
 object FriendManager : Configurable("Friends"), EventListener {
 
-    val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
+    val friends by list(name, TreeSet<Friend>(), valueType = ValueType.FRIEND)
 
     @Suppress("unused")
     private val tagEntityEvent = handler<TagEntityEvent> {

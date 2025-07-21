@@ -23,9 +23,10 @@
     let configurable: ConfigurableSetting;
     const path = `clickgui.${name}`;
     let expanded = false;
+    let hasSettings = false;
 
     onMount(async () => {
-        configurable = await getModuleSettings(name);
+        await fetchModuleSettings();
 
         setTimeout(() => {
             expanded = localStorage.getItem(path) === "true"
@@ -48,9 +49,14 @@
         }, 1000);
     });
 
+    async function fetchModuleSettings() {
+        configurable = await getModuleSettings(name);
+        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
+    }
+
     async function updateModuleSettings() {
         await setModuleSettings(name, configurable);
-        configurable = await getModuleSettings(name);
+        await fetchModuleSettings();
     }
 
     async function toggleModule() {
@@ -99,7 +105,7 @@
 <div
         class="module"
         class:expanded
-        class:has-settings={configurable?.value.length > 2}
+        class:has-settings={hasSettings}
         in:slide={{ duration: 500, easing: quintOut }}
         out:slide={{ duration: 500, easing: quintOut }}
 >
