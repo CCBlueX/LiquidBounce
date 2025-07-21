@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.Command
@@ -117,8 +117,6 @@ class PolyglotScript(
             bindings.putMember("registerScript", RegisterScript())
         }
 
-    private val scriptText: String = file.readText()
-
     // Script information
     lateinit var scriptName: String
     lateinit var scriptVersion: String
@@ -143,7 +141,7 @@ class PolyglotScript(
      */
     fun initScript() {
         // Evaluate script
-        context.eval(Source.newBuilder(language, scriptText, file.name).build())
+        context.eval(Source.newBuilder(language, file).build())
 
         // Call load event
         callGlobalEvent("load")

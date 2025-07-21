@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.IntegrationListener.clientJcef
+import net.ccbluex.liquidbounce.integration.IntegrationListener.browser
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
@@ -39,7 +39,7 @@ object CommandClientIntegrationSubcommand {
     private fun resetSubcommand() = CommandBuilder.begin("reset")
         .handler { _, _ ->
             chat(regular("Resetting client JCEF browser..."))
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
         }.build()
 
     private fun overrideSubcommand() = CommandBuilder.begin("override")
@@ -49,7 +49,7 @@ object CommandClientIntegrationSubcommand {
                 .build()
         ).handler { _, args ->
             chat(regular("Overrides client JCEF browser..."))
-            clientJcef.loadUrl(args[0] as String)
+            browser.url = args[0] as String
         }.build()
 
     private fun menuSubcommand() = CommandBuilder.begin("menu")
@@ -115,8 +115,6 @@ object CommandClientIntegrationSubcommand {
                 )
             }
 
-            chat(
-                variable("Hint: You can also access the integration from another device.")
-                    .styled { it.withItalic(true) })
+            chat(variable("Hint: You can also access the integration from another device.").italic(true))
         }.build()
 }

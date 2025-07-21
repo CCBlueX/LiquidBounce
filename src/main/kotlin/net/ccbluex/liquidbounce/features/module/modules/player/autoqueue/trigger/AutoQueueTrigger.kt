@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueCustom.triggers
 
 abstract class AutoQueueTrigger(name: String) : Choice(name) {

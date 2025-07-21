@@ -22,8 +22,10 @@ import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import java.awt.Color
 import java.util.*
@@ -63,12 +65,6 @@ object HumanInputDeserializer {
 
         requireNotNull(block) { "Unknown block '$it'" }
     }
-    val blockListDeserializer: StringDeserializer<MutableList<Block>> = StringDeserializer {
-        parseArray(it, blockDeserializer)
-    }
-    val itemListDeserializer: StringDeserializer<MutableList<Item>> = StringDeserializer {
-        parseArray(it, itemDeserializer)
-    }
 
     val itemDeserializer: StringDeserializer<Item> = StringDeserializer {
         val block = Registries.ITEM.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
@@ -76,9 +72,22 @@ object HumanInputDeserializer {
         requireNotNull(block) { "Unknown item '$it'" }
     }
 
+    val soundDeserializer: StringDeserializer<SoundEvent> = StringDeserializer {
+        val sound = Registries.SOUND_EVENT.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
+
+        requireNotNull(sound) { "Unknown sound '$it'" }
+    }
+
+    val statusEffectDeserializer: StringDeserializer<StatusEffect> = StringDeserializer {
+        val effect = Registries.STATUS_EFFECT.getOptionalValue(Identifier.fromCommandInput(StringReader(it)))
+            .getOrNull()
+
+        requireNotNull(effect) { "Unknown status effect '$it'" }
+    }
+
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
 
-    private fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
+    fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
     }
 

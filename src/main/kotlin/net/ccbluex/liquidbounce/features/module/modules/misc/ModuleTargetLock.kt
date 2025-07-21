@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
@@ -60,7 +60,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
     private object Filter : LockChoice("Filter") {
 
-        private val usernames by textArray("Usernames", mutableListOf("Notch"))
+        private val usernames by textList("Usernames", mutableListOf("Notch"))
         private val filterType by enumChoice("FilterType", FilterType.WHITELIST)
 
         enum class FilterType(override val choiceName: String) : NamedChoice {

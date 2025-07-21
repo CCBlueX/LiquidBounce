@@ -25,10 +25,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
@@ -190,7 +187,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      */
     @Suppress("LongMethod")
     fun registerInbuilt() {
-        var builtin = arrayOf(
+        val builtin = arrayOf(
             // Combat
             ModuleAimbot,
             ModuleAutoArmor,
@@ -254,6 +251,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleBookBot,
             ModuleAntiBot,
             ModuleBetterTab,
+            ModuleItemScroller,
             ModuleBetterChat,
             ModuleElytraTarget,
             ModuleMiddleClickAction,
@@ -273,6 +271,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModulePacketLogger,
             ModuleDebugRecorder,
             ModuleAntiCheatDetect,
+            ModuleEasyPearl,
 
             // Movement
             ModuleAirJump,
@@ -333,6 +332,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoQueue,
             ModuleSmartEat,
             ModuleReplenish,
+            ModulePotionSpoof,
 
             // Render
             ModuleAnimations,
@@ -414,6 +414,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoConfig,
             ModuleRichPresence,
             ModuleTargets,
+            ModuleTranslation,
             ModuleLiquidChat
         )
 
@@ -440,25 +441,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
 
     fun clear() {
         modules.clear()
-    }
-
-    inline fun autoComplete(begin: String, validator: (ClientModule) -> Boolean = { true }): List<String> {
-        val parts = begin.split(",")
-        val matchingPrefix = parts.last()
-        val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
-        return filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-            .map {
-                if (parts.size == 1) {
-                    it.name
-                } else {
-                    resultPrefix + it.name
-                }
-            }
-    }
-
-    fun parseModulesFromParameter(name: String?): List<ClientModule> {
-        if (name == null) return emptyList()
-        return name.split(",").mapNotNull { getModuleByName(it) }
     }
 
     /**

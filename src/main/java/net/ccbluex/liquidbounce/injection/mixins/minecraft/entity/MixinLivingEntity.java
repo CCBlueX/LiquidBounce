@@ -139,14 +139,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
+    @Unique
+    private PlayerJumpEvent jumpEvent;
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
 
-        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-        EventManager.INSTANCE.callEvent(jumpEvent);
+        jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(getJumpVelocity(), this.getYaw()));
         if (jumpEvent.isCancelled()) {
             ci.cancel();
         }
@@ -154,16 +156,28 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
     private float hookJumpEvent(float original) {
-        if (((Object) this) != MinecraftClient.getInstance().player) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
             return original;
         }
 
-        final var jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(original));
         return jumpEvent.getMotion();
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    private float hookJumpYaw(float original) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
+            return original;
+        }
+
+        return jumpEvent.getYaw();
     }
 
     @Inject(method = "jump", at = @At("RETURN"))
     private void hookAfterJumpEvent(CallbackInfo ci) {
+        jumpEvent = null;
+
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }

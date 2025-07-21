@@ -25,8 +25,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
@@ -34,6 +32,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -66,18 +65,21 @@ object CommandDebug : CommandFactory {
         .create()
 
     override fun createCommand() = CommandBuilder.begin("debug")
-        .handler { _, _ ->
+        .suspendHandler { _, _ ->
             chat("§7Collecting debug information...")
 
-            val autoConfig = okio.Buffer().use {
-                serializeAutoConfig(it.outputStream().writer())
-                it.readUtf8()
-            }
-            val autoConfigPaste = uploadToPaste(autoConfig)
-            val debugJson = createDebugJson(autoConfigPaste)
+            val buffer = okio.Buffer()
 
-            val content = gson.toJson(debugJson)
+            serializeAutoConfig(buffer.outputStream().writer())
+            val autoConfig = buffer.readUtf8()
+            val autoConfigPaste = uploadToPaste(autoConfig)
+            buffer.clear()
+
+            val debugJson = createDebugJson(autoConfigPaste)
+            gson.toJson(debugJson, buffer.outputStream().writer())
+            val content = buffer.readUtf8()
             val paste = uploadToPaste(content)
+            buffer.clear()
 
             chat(
                 Text.literal("Debug information has been uploaded to: ").styled { style ->
@@ -171,12 +173,10 @@ object CommandDebug : CommandFactory {
      * Uploads the given content to the CCBlueX Paste API
      * and returns the URL of the paste.
      */
-    private fun uploadToPaste(content: String): String {
+    private suspend fun uploadToPaste(content: String): String {
         val form = "content=$content"
-        return runBlocking(Dispatchers.IO) {
-            HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
+        return HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
                 .parse<String>()
-        }
     }
 
 }
