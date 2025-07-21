@@ -190,7 +190,6 @@ dependencies {
         ).forEach { name ->
             configurations.getByName(name).resolvedConfiguration.firstLevelModuleDependencies.forEach { dep ->
                 includeDependency.exclude(group = dep.moduleGroup, module = dep.moduleName)
-                includeModDependency.exclude(group = dep.moduleGroup, module = dep.moduleName)
             }
         }
 
