@@ -19,18 +19,18 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.JsonElement
+import com.google.gson.stream.JsonWriter
 import net.ccbluex.liquidbounce.api.core.withScope
-import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
+import org.apache.commons.io.output.StringBuilderWriter
 import kotlin.reflect.KClass
 
 class SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
-        .filter { it.java.isAnnotationPresent(WebSocketEvent::class.java) }
+        .filter { WebSocketEvent::class.java.isAssignableFrom(it.java) }
         .associateBy { it.eventName }
 
     /**
@@ -66,16 +66,17 @@ class SocketEventListener : EventListener {
     }
 
     private fun writeToSockets(event: Event) = withScope {
-        data class WSEventData(val name: String, val event: JsonElement)
-
         val json = runCatching {
-            val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
-            interopGson.toJson(
-                WSEventData(
-                    name = event::class.eventName,
-                    event = webSocketAnnotation.serializer.gson.toJsonTree(event)
-                )
-            )
+            StringBuilderWriter(64).use {
+                JsonWriter(it).use { writer ->
+                    writer.beginObject()
+                    writer.name("name").value(event::class.eventName)
+                    writer.name("event")
+                    (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
+                    writer.endObject()
+                }
+                it.toString()
+            }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@withScope
