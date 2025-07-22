@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
@@ -47,7 +46,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     private val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val chunk = world.getChunk(event.x, event.z)
 
-        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
+        ChunkScannerThread.launchChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
 
         this.loadedChunks.add(ChunkPos.toLong(event.x, event.z))
     }
@@ -55,19 +54,19 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     @Suppress("unused")
     private val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
         val chunk = world.getChunk(event.x, event.z)
-        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
+        ChunkScannerThread.launchChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
     }
 
     @Suppress("unused")
     private val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
-        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUnloadRequest(event.x, event.z))
+        ChunkScannerThread.launchChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUnloadRequest(event.x, event.z))
 
         this.loadedChunks.remove(ChunkPos.toLong(event.x, event.z))
     }
 
     @Suppress("unused")
     private val blockChangeEvent = handler<BlockChangeEvent> { event ->
-        ChunkScannerThread.enqueueChunkUpdate(
+        ChunkScannerThread.launchChunkUpdate(
             ChunkScannerThread.UpdateRequest.BlockUpdateEvent(
                 event.blockPos,
                 event.newState
@@ -83,11 +82,9 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
-        check(newSubscriber !in this.subscribers) {
-            "Subscriber ${newSubscriber.javaClass.simpleName} already registered"
+        if (!this.subscribers.addIfAbsent(newSubscriber)) {
+            error("Subscriber ${newSubscriber.javaClass.simpleName} already registered")
         }
-
-        subscribers.add(newSubscriber)
 
         val world = mc.world ?: return
 
@@ -96,7 +93,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         with(this.loadedChunks.longIterator()) {
             while (hasNext()) {
                 val longChunkPos = nextLong()
-                ChunkScannerThread.enqueueChunkUpdate(
+                ChunkScannerThread.launchChunkUpdate(
                     ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(
                         world.getChunk(
                             ChunkPos.getPackedX(longChunkPos),
@@ -131,48 +128,29 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
         private val scope = CoroutineScope(dispatcher + worldJob)
 
-        private val eventFlow = MutableSharedFlow<UpdateRequest>()
-
         /**
          * Shared cache for [scope]
          */
         private val mutable by ThreadLocal.withInitial(BlockPos::Mutable)
 
-        /**
-         * A standalone [Job] to dispatch all [UpdateRequest] from [eventFlow]
-         */
-        private val collectorJob = scope.launch(Job()) {
-            eventFlow.collect { chunkUpdate ->
-                // Discard current request when world is null
-                if (mc.world == null) {
-                    delay(50L)
-                    return@collect
-                }
-
-                // Process the update request
-                launch {
-                    try {
-                        when (chunkUpdate) {
-                            is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
-
-                            is UpdateRequest.ChunkUnloadRequest -> subscribers.forEach {
-                                it.clearChunk(chunkUpdate.x, chunkUpdate.z)
-                            }
-
-                            is UpdateRequest.BlockUpdateEvent -> subscribers.forEach {
-                                it.recordBlock(chunkUpdate.blockPos, chunkUpdate.newState, cleared = false)
-                            }
-                        }
-                    } catch (e: Throwable) {
-                        logger.warn("Chunk update error", e)
-                    }
-                }
-            }
-        }
-
-        fun enqueueChunkUpdate(request: UpdateRequest) {
+        fun launchChunkUpdate(chunkUpdate: UpdateRequest) {
             scope.launch {
-                eventFlow.emit(request)
+                // Process the update request
+                try {
+                    when (chunkUpdate) {
+                        is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
+
+                        is UpdateRequest.ChunkUnloadRequest -> subscribers.forEach {
+                            it.clearChunk(chunkUpdate.x, chunkUpdate.z)
+                        }
+
+                        is UpdateRequest.BlockUpdateEvent -> subscribers.forEach {
+                            it.recordBlock(chunkUpdate.blockPos, chunkUpdate.newState, cleared = false)
+                        }
+                    }
+                } catch (e: Throwable) {
+                    logger.warn("Chunk update error", e)
+                }
             }
         }
 
@@ -242,7 +220,6 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
         fun stopThread() {
             worldJob.cancel()
-            collectorJob.cancel()
             logger.info("Stopped Chunk Scanner Thread!")
         }
 
