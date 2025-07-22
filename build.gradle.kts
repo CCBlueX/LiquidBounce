@@ -388,6 +388,9 @@ kotlin {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+        attributes["Implementation-Title"] = archives_base_name
+        attributes["Implementation-Version"] = mod_version
+        attributes["Implementation-Vendor"] = maven_group
     }
 
     // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
