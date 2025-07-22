@@ -20,41 +20,73 @@
 package net.ccbluex.liquidbounce;
 
 import net.ccbluex.liquidbounce.utils.client.GitInfo;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.awt.*;
+import java.net.URI;
+import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.swing.*;
 
+/**
+ * This class is for manual open of the jar file.
+ * It should not use any other external libraries such as Kotlin stdlib, JavaFX or Minecraft
+ * because they are not included in the jar.
+ */
 public final class LiquidInstruction {
 
-  public static void main(String[] args) {
-    var rootFrame = new JFrame(LiquidBounce.CLIENT_NAME);
-    rootFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-    rootFrame.setSize(800, 600);
-    rootFrame.setLocationRelativeTo(null);
-    rootFrame.setVisible(true);
+  private LiquidInstruction() {}
 
-    var icons = Stream.of(
-        "/resources/liquidbounce/icon_64x64.png",
-        "/resources/liquidbounce/icon_32x32.png",
-        "/resources/liquidbounce/icon_16x16.png"
-    ).map(LiquidInstruction.class::getResource)
+  private static @NotNull List<Image> loadIcons() {
+    return Stream.of(
+            "/resources/liquidbounce/icon_64x64.png",
+            "/resources/liquidbounce/icon_32x32.png",
+            "/resources/liquidbounce/icon_16x16.png"
+        ).map(LiquidInstruction.class::getResource)
         .filter(Objects::nonNull)
         .map(it -> new ImageIcon(it).getImage())
         .toList();
+  }
 
-    rootFrame.setIconImages(icons);
+  private static boolean browse(@NotNull URI uri) {
+    try {
+      Desktop.getDesktop().browse(uri);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
 
-    JOptionPane.showMessageDialog(
-        rootFrame,
-        GitInfo.entries().stream()
-            .map(e -> e.getKey() + ": " + e.getValue())
-            .collect(Collectors.joining("\n")),
-        LiquidBounce.CLIENT_NAME,
-        JOptionPane.INFORMATION_MESSAGE
+  public static void main(String[] args) {
+    String[] buttons = new String[]{"Download LiquidLauncher", "Open GitHub", "Open Discord", "Close"};
+
+    int result = JOptionPane.showOptionDialog(
+        null,
+        String.format("""
+            Welcome to %s!
+            
+            This file is a Fabric mod, you should use it with a launcher and Fabric.
+            
+            We recommend to use LiquidLauncher, it simplifies the installation of the client and automatically keeps it up to date.
+            You can also use a launcher of your choice, but we cannot guarantee that the client will work.
+            """, LiquidBounce.CLIENT_NAME),
+        LiquidBounce.CLIENT_NAME + " by " + LiquidBounce.CLIENT_AUTHOR + " (" + GitInfo.version() + ")",
+        JOptionPane.DEFAULT_OPTION,
+        JOptionPane.INFORMATION_MESSAGE,
+        loadIcons().stream().findFirst().map(ImageIcon::new).orElse(null),
+        buttons,
+        buttons[0]
     );
+
+    switch (result) {
+      case 0 -> browse(URI.create("https://liquidbounce.net/download"));
+      case 1 -> browse(URI.create("https://github.com/CCBlueX/LiquidBounce"));
+      case 2 -> browse(URI.create("https://liquidbounce.net/discord"));
+      default -> System.exit(0);
+    }
   }
 
 }

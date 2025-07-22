@@ -37,12 +37,18 @@ public final class GitInfo {
     if (inputStream != null) {
       try (inputStream) {
         properties.load(inputStream);
-      } catch (Exception e) {
-        properties.setProperty("git.build.version", "unofficial");
+      } catch (Exception ignored) {
+        // NOP
       }
-    } else {
-      properties.setProperty("git.build.version", "unofficial");
     }
+  }
+
+  public static @NotNull String version() {
+    return getOrDefault("git.build.version", "unofficial");
+  }
+
+  public static @NotNull String branch() {
+    return getOrDefault("git.branch", "nextgen");
   }
 
   public static @Nullable String get(@NotNull String key) {

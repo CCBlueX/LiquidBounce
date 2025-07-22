@@ -108,11 +108,11 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", GitInfo.getOrDefault("git.build.version", "unknown"))
+        val version = text("Version", GitInfo.version())
             .immutable()
         val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
             .immutable()
-        val branch = text("Branch", GitInfo.getOrDefault("git.branch",  "nextgen"))
+        val branch = text("Branch", GitInfo.branch())
             .immutable()
 
         init {
