@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.cheatdetector.ModuleCheatDetector
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
@@ -250,6 +251,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Misc
             ModuleBookBot,
             ModuleAntiBot,
+            ModuleCheatDetector,
             ModuleBetterTab,
             ModuleItemScroller,
             ModuleBetterChat,
