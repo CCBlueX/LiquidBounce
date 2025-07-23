@@ -37,8 +37,8 @@ import ai.djl.training.optimizer.Adam
 import ai.djl.training.tracker.Tracker
 import ai.djl.translate.TranslateException
 import ai.djl.translate.Translator
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener

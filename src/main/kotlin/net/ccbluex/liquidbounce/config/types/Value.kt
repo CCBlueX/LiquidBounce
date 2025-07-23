@@ -23,12 +23,12 @@ import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
-import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
-import java.util.*
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
@@ -60,10 +59,9 @@ open class Value<T : Any>(
     @Exclude val aliases: Array<out String> = emptyArray(),
     @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
-    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None,
 
     /**
-     * If true, the description won't be bound to any [Configurable].
+     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.nesting.Configurable].
      */
     @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
@@ -288,42 +286,19 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.inner
 
-        set(
-            when (currValue) {
-                is List<*> -> {
-                    element.asJsonArray.mapTo(
-                        mutableListOf()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
+        var clazz: Class<*>? = currValue.javaClass
+        var r: T? = null
 
-                is HashSet<*> -> {
-                    element.asJsonArray.mapTo(
-                        HashSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
+        while (clazz != null && clazz != Any::class.java) {
+            try {
+                r = gson.fromJson(element, clazz) as T?
+                break
+            } catch (@Suppress("SwallowedException") e: ClassCastException) {
+                clazz = clazz.superclass
+            }
+        }
 
-                is Set<*> -> {
-                    element.asJsonArray.mapTo(
-                        TreeSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-
-                else -> {
-                    var clazz: Class<*>? = currValue.javaClass
-                    var r: T? = null
-
-                    while (clazz != null && clazz != Any::class.java) {
-                        try {
-                            r = gson.fromJson(element, clazz) as T?
-                            break
-                        } catch (@Suppress("SwallowedException") e: ClassCastException) {
-                            clazz = clazz.superclass
-                        }
-                    }
-
-                    r ?: error("Failed to deserialize value")
-                }
-            })
+        set(r ?: error("Failed to deserialize value"))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -438,35 +413,41 @@ enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
     val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter
 ) {
+
+    // Primitive Types
     BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
     FLOAT(HumanInputDeserializer.floatDeserializer), FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
     INT(HumanInputDeserializer.intDeserializer), INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
-    TEXT(HumanInputDeserializer.textDeserializer), TEXT_ARRAY(HumanInputDeserializer.textArrayDeserializer),
+    TEXT(HumanInputDeserializer.textDeserializer),
     COLOR(HumanInputDeserializer.colorDeserializer),
-    BLOCK(HumanInputDeserializer.blockDeserializer), BLOCKS(HumanInputDeserializer.blockListDeserializer),
-    ITEM(HumanInputDeserializer.itemDeserializer), ITEMS(HumanInputDeserializer.itemListDeserializer),
+    BLOCK(HumanInputDeserializer.blockDeserializer),
+    ITEM(HumanInputDeserializer.itemDeserializer),
+    SOUND(HumanInputDeserializer.soundDeserializer),
+    STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
+    CLIENT_PACKET,
+    SERVER_PACKET,
     KEY(HumanInputDeserializer.keyDeserializer),
     BIND,
     VECTOR_I,
     VECTOR_D,
+
+    // Configuration Types
     CHOICE(completer = AutoCompletionProvider.choiceCompleter),
     CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
     MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
-    INVALID,
-    PROXY,
+    LIST,
+    MUTABLE_LIST,
+    ITEM_LIST,
+    REGISTRY_LIST,
+
     CONFIGURABLE,
     TOGGLEABLE,
-    ALIGNMENT,
-    WALLPAPER,
-}
 
-enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java),
-    String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java),
-    Proxy(net.ccbluex.liquidbounce.features.misc.proxy.Proxy::class.java),
-    Account(MinecraftAccount::class.java),
-    Enums(Enum::class.java),
-    None(null)
+    // Client Types
+    FRIEND,
+    PROXY,
+    ACCOUNT,
+
+    // Invalid type
+    INVALID;
 }

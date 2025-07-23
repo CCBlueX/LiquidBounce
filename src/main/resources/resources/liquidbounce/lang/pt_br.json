@@ -245,6 +245,7 @@
   "liquidbounce.module.zoot.description": "Remove efeitos ruins.",
   "liquidbounce.module.inventoryCleaner.description": "Automaticamente joga items inuteis fora.",
   "liquidbounce.module.blockEsp.description": "Deixa você ver certos blocos pela parede.",
+  "liquidbounce.module.potionSpoof.description": "Permite que o jogador tenha efeitos de poção sem realmente ter a poção.",
   "liquidbounce.module.ESP.description": "Deixa você ver pessoas pela parede.",
   "liquidbounce.module.freeCam.description": "Deixa mover fora do seu corpo.",
   "liquidbounce.module.holeEsp.description": "Mostra lugares seguros para crystal pvp.",

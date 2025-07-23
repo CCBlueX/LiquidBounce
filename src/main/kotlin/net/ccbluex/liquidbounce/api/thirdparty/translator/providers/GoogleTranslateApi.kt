@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorChoice
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()

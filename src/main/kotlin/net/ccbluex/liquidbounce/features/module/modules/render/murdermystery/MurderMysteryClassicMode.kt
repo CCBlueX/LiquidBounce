@@ -1,7 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.util.Identifier

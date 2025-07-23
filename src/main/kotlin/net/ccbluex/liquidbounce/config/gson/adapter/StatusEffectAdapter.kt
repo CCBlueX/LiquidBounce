@@ -17,24 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.serializer
+package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.types.Value
-import java.lang.reflect.Type
+import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.registry.Registries
 
-object ValueSerializer : JsonSerializer<Value<*>> {
-
-    override fun serialize(src: Value<*>, typeOfSrc: Type?, context: JsonSerializationContext): JsonElement {
-        val obj = JsonObject()
-
-        obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.inner))
-
-        return obj
-    }
-
-}
+object StatusEffectAdapter : IdentifierAsStringAdapter<StatusEffect>(Registries.STATUS_EFFECT)

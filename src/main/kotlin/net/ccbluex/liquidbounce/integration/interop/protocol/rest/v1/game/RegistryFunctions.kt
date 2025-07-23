@@ -23,16 +23,20 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.item.BlockItem
+import net.minecraft.item.Items
+import net.minecraft.network.NetworkSide
 import net.minecraft.registry.DefaultedRegistry
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.BlockTags
@@ -40,6 +44,7 @@ import net.minecraft.registry.tag.ItemTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 private val ACCEPTED_ITEM_TAGS =
@@ -163,81 +168,150 @@ private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagK
     return map
 }
 
-// GET /api/v1/client/registries
+// GET /api/v1/client/registry/:name
 @Suppress("UNUSED_PARAMETER")
-fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val parentMap = hashMapOf<Identifier, Identifier>()
-    val world = mc.world ?: return httpForbidden("No world")
+fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    fun iconUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
 
-    Registries.BLOCK.forEach {
-        val pickStack = it.getPickStack(world, BlockPos.ORIGIN, it.defaultState, false)
-        val id = Registries.BLOCK.getId(it)
-
-        when (val item = pickStack.item) {
-            is BlockItem -> {
-                if (item.block != it) {
-                    parentMap[id] = Registries.BLOCK.getId(item.block)
-                }
-            }
-            else -> {
-                if (!pickStack.isNothing()) {
-                    logger.warn("Invalid pick stack for $id: $pickStack")
-                }
+    val registryName = requestObject.params["name"]
+        ?: return httpForbidden("Missing registry name parameter")
+    when (registryName.lowercase(Locale.ENGLISH)) {
+        "blocks" -> {
+            Registries.BLOCK.forEach { block ->
+                val id = Registries.BLOCK.getId(block)
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", block.name.convertToString())
+                    addProperty("icon", iconUrl(id))
+                })
             }
         }
+
+        "items" -> {
+            Registries.ITEM.forEach { item ->
+                val id = Registries.ITEM.getId(item)
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", item.name.convertToString())
+                    addProperty("icon", iconUrl(id))
+                })
+            }
+        }
+
+        "sounds" -> {
+            val soundDiscId = Registries.ITEM.getId(Items.MUSIC_DISC_13)
+
+            Registries.SOUND_EVENT.forEach { soundEvent ->
+                val id = Registries.SOUND_EVENT.getId(soundEvent)
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", soundEvent.id.toName())
+                    addProperty("icon", iconUrl(soundDiscId))
+                })
+            }
+        }
+
+        "statuseffects" -> {
+            val potionId = Registries.ITEM.getId(Items.POTION)
+
+            Registries.STATUS_EFFECT.forEach { effect ->
+                val id = Registries.STATUS_EFFECT.getId(effect)
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", effect.name.convertToString())
+                    addProperty("icon", iconUrl(potionId))
+                })
+            }
+        }
+
+        "clientpackets" -> {
+            val iconId = Registries.ITEM.getId(Items.PAPER)
+
+            packetRegistry[NetworkSide.SERVERBOUND]?.forEach { packetId ->
+                add(packetId.toString(), JsonObject().apply {
+                    addProperty("name", packetId.toName())
+                    addProperty("icon", iconUrl(iconId))
+                })
+            }
+        }
+
+        "serverpackets" -> {
+            val iconId = Registries.ITEM.getId(Items.PAPER)
+
+            packetRegistry[NetworkSide.CLIENTBOUND]?.forEach { packetId ->
+                add(packetId.toString(), JsonObject().apply {
+                    addProperty("name", packetId.toName())
+                    addProperty("icon", iconUrl(iconId))
+                })
+            }
+        }
+
+        else -> return httpForbidden("Invalid registry name: $registryName")
     }
-
-    add("blocks", JsonArray().apply {
-        Registries.BLOCK.forEach { block ->
-            val jsonObject = JsonObject().apply {
-                addProperty("identifier", Registries.BLOCK.getId(block).toString())
-                addProperty("name", block.name.convertToString())
-            }
-            add(jsonObject)
-        }
-    })
-    add("items", JsonArray().apply {
-        Registries.ITEM.forEach { item ->
-            val jsonObject = JsonObject().apply {
-                addProperty("identifier", Registries.ITEM.getId(item).toString())
-                addProperty("name", item.name.convertToString())
-            }
-            add(jsonObject)
-        }
-    })
-    add("itemGroups", JsonObject().apply {
-        for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
-            add(
-                k.toString(),
-                JsonObject().apply {
-                    addProperty("relation", "group")
-                    addProperty("relative", v.toString())
-                }
-            )
-        }
-    })
-    add("blockGroups", JsonObject().apply {
-        val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
-
-        Registries.BLOCK.forEach { block ->
-            val id = Registries.BLOCK.getId(block)
-
-            val obj = when (id) {
-                in parentMap -> JsonObject().apply {
-                    addProperty("relation", "parent")
-                    addProperty("relative", parentMap[id]!!.toString())
-                }
-
-                in constructedMap -> JsonObject().apply {
-                    addProperty("relation", "group")
-                    addProperty("relative", constructedMap[id]!!.toString())
-                }
-
-                else -> return@forEach
-            }
-
-            add(id.toString(), obj)
-        }
-    })
 })
 
+
+// GET /api/v1/client/registry/:name/groups
+@Suppress("UNUSED_PARAMETER", "CognitiveComplexMethod")
+fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    val registryName = requestObject.params["name"]
+        ?: return httpForbidden("Missing registry name parameter")
+    when (registryName.lowercase(Locale.ENGLISH)) {
+        "items" -> {
+            for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
+                add(
+                    k.toString(),
+                    JsonObject().apply {
+                        addProperty("relation", "group")
+                        addProperty("relative", v.toString())
+                    }
+                )
+            }
+        }
+
+        "blocks" -> {
+            val parentMap = hashMapOf<Identifier, Identifier>()
+            val world = mc.world ?: return httpForbidden("No world")
+
+            Registries.BLOCK.forEach { block ->
+                val pickStack = block.getPickStack(world, BlockPos.ORIGIN, block.defaultState, false)
+                val id = Registries.BLOCK.getId(block)
+
+                when (val item = pickStack.item) {
+                    is BlockItem -> {
+                        if (item.block != block) {
+                            parentMap[id] = Registries.BLOCK.getId(item.block)
+                        }
+                    }
+
+                    else -> {
+                        if (!pickStack.isNothing()) {
+                            logger.warn("Invalid pick stack for $id: $pickStack")
+                        }
+                    }
+                }
+            }
+
+            val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
+
+            Registries.BLOCK.forEach { block ->
+                val id = Registries.BLOCK.getId(block)
+
+                val obj = when (id) {
+                    in parentMap -> JsonObject().apply {
+                        addProperty("relation", "parent")
+                        addProperty("relative", parentMap[id]!!.toString())
+                    }
+
+                    in constructedMap -> JsonObject().apply {
+                        addProperty("relation", "group")
+                        addProperty("relative", constructedMap[id]!!.toString())
+                    }
+
+                    else -> return@forEach
+                }
+
+                add(id.toString(), obj)
+            }
+        }
+
+        else -> return httpForbidden("Invalid registry name: $registryName")
+    }
+})

@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.NoneChoice
+import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18

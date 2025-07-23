@@ -47,6 +47,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
+    internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
+
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
@@ -90,11 +92,19 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
+        
+        drawnEnchantmentAreas.clear()
+        
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
         val filteredNameTags = nametagsToRender.filter { it.position != null }
         val nametagsCount = filteredNameTags.size.toFloat()
+        
+       
+        val sortedTags = filteredNameTags.sortedBy { tag -> 
+            tag.entity.squaredDistanceTo(mc.cameraEntity)
+        }
 
-        filteredNameTags.forEachIndexed { index, nametagInfo ->
+        sortedTags.forEachIndexed { index, nametagInfo ->
             val pos = nametagInfo.position!!
 
             // We want nametags that are closer to the player to be rendered above nametags that are further away.

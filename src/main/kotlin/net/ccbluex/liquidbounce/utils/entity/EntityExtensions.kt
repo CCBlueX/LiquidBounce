@@ -196,22 +196,25 @@ fun ClientPlayerEntity.canStep(height: Double = 1.0): Boolean {
 
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
+    val forwards = input.forwards && !input.backwards
+    val backwards = input.backwards && !input.forwards
+    val left = input.left && !input.right
+    val right = input.right && !input.left
+
     var actualYaw = facingYaw
     var forward = 1f
 
-    // Check if client-user tries to walk backwards (+180 to turn around)
-    if (input.backwards) {
+    if (backwards) {
         actualYaw += 180f
         forward = -0.5f
-    } else if (input.forwards) {
+    } else if (forwards) {
         forward = 0.5f
     }
 
-    // Check which direction the client-user tries to walk sideways
-    if (input.left) {
+    if (left) {
         actualYaw -= 90f * forward
     }
-    if (input.right) {
+    if (right) {
         actualYaw += 90f * forward
     }
 

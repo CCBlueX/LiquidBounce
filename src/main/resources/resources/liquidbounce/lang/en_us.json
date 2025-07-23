@@ -416,6 +416,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Sending",
   "liquidbounce.module.packetLogger.messages.receive": "Receiving",
   "liquidbounce.module.packetLogger.messages.canceled": "canceled",
+  "liquidbounce.module.potionSpoof.description": "Allows the player to have potion effects without actually having the potion.",
   "liquidbounce.module.ESP.description": "Allows you to see targets through walls.",
   "liquidbounce.module.logoffSpot.description": "Allows you to see where other players logged off.",
   "liquidbounce.module.logoffSpot.messages.disappeared": "%s disappeared at X: %s, Y: %s, Z: %s.",

@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
