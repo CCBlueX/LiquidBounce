@@ -369,7 +369,11 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
 
     val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
     baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder?.listFiles()?.filter { it.extension.equals("json", ignoreCase = true) } ?: emptyList())
+    files.from(
+        languageFolder.listFiles()?.filter {
+            it.extension.equals("json", ignoreCase = true)
+        } ?: emptyList<File>()
+    )
     consoleOutputCount.set(5)
 }
 
