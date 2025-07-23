@@ -25,6 +25,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 plugins {
     id("fabric-loom")
     kotlin("jvm")
+    id("com.google.devtools.ksp")
     id("com.gorylenko.gradle-git-properties") version "2.5.2"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
@@ -93,40 +94,42 @@ configurations.include.get().extendsFrom(includeModDependency)
 configurations.modApi.get().extendsFrom(includeModDependency)
 configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        name = "CCBlueX"
-        url = uri("https://maven.ccbluex.net/releases")
-    }
-    maven {
-        name = "Fabric"
-        url = uri("https://maven.fabricmc.net/")
-    }
-    maven {
-        name = "Jitpack"
-        url = uri("https://jitpack.io")
-    }
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-    }
-    maven {
-        name = "ViaVersion"
-        url = uri("https://repo.viaversion.com/")
-    }
-    maven {
-        name = "modrinth"
-        url = uri("https://api.modrinth.com/maven")
-    }
-    maven {
-        name = "OpenCollab Snapshots"
-        url = uri("https://repo.opencollab.dev/maven-snapshots/")
-    }
-    maven {
-        name = "Lenni0451"
-        url = uri("https://maven.lenni0451.net/everything")
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            name = "CCBlueX"
+            url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "Jitpack"
+            url = uri("https://jitpack.io")
+        }
+        maven {
+            name = "TerraformersMC"
+            url = uri("https://maven.terraformersmc.com/")
+        }
+        maven {
+            name = "ViaVersion"
+            url = uri("https://repo.viaversion.com/")
+        }
+        maven {
+            name = "modrinth"
+            url = uri("https://api.modrinth.com/maven")
+        }
+        maven {
+            name = "OpenCollab Snapshots"
+            url = uri("https://repo.opencollab.dev/maven-snapshots/")
+        }
+        maven {
+            name = "Lenni0451"
+            url = uri("https://maven.lenni0451.net/everything")
+        }
     }
 }
 
@@ -154,6 +157,10 @@ dependencies {
     // ViaFabricPlus
     modApi("com.viaversion:viafabricplus-api:${viafabricplus_version}")
     modRuntimeOnly("com.viaversion:viafabricplus:${viafabricplus_version}")
+
+    // KSP
+    compileOnly(project(":liquid-inbuilt-annotations"))
+    ksp(project(":liquid-ksp"))
 
     // Minecraft Authlib
     includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
