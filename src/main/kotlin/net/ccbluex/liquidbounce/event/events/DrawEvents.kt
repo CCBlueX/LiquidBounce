@@ -21,18 +21,18 @@
 package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.Camera
 import net.minecraft.client.util.math.MatrixStack
 
-@Nameable("gameRender")
+@InbuiltEvent("gameRender")
 object GameRenderEvent : Event()
 
-@Nameable("screenRender")
+@InbuiltEvent("screenRender")
 class ScreenRenderEvent(val context: DrawContext, val partialTicks: Float) : Event()
 
-@Nameable("worldRender")
+@InbuiltEvent("worldRender")
 class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
 
 /**
@@ -41,7 +41,7 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  *
  * Note: After writing to the outline framebuffer [markDirty] must be called.
  */
-@Nameable("drawOutlines")
+@InbuiltEvent("drawOutlines")
 class DrawOutlinesEvent(
     val matrixStack: MatrixStack,
     val camera: Camera,
@@ -64,5 +64,5 @@ class DrawOutlinesEvent(
     }
 }
 
-@Nameable("overlayRender")
+@InbuiltEvent("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()

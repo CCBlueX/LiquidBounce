@@ -16,6 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-annotation class Nameable(val name: String)
+package net.ccbluex.liquidbounce.ksp
+
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import net.ccbluex.liquidbounce.ksp.processor.ClientModuleProcessor
+import net.ccbluex.liquidbounce.ksp.processor.EventClassProcessor
+
+class ClientModuleProcessorProvider : SymbolProcessorProvider {
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return ClientModuleProcessor(environment)
+    }
+}
+
+class EventClassProcessorProvider : SymbolProcessorProvider {
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return EventClassProcessor(environment)
+    }
+}

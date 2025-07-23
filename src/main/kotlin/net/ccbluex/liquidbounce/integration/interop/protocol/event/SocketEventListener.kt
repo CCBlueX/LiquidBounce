@@ -25,18 +25,17 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
-import kotlin.reflect.KClass
 
 class SocketEventListener : EventListener {
 
-    private val events = ALL_EVENT_CLASSES
-        .filter { it.java.isAnnotationPresent(WebSocketEvent::class.java) }
+    private val events = EventManager.allEventClasses
+        .filter { it.isAnnotationPresent(WebSocketEvent::class.java) }
         .associateBy { it.eventName }
 
     /**
      * Contains all events that are registered in the current context
      */
-    private val registeredEvents = hashMapOf<KClass<out Event>, EventHook<in Event>>()
+    private val registeredEvents = hashMapOf<Class<out Event>, EventHook<in Event>>()
 
     fun registerAll() {
         events.keys.forEach { register(it) }
@@ -53,7 +52,7 @@ class SocketEventListener : EventListener {
         val eventHook = EventHook(this, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
-        EventManager.registerEventHook(eventClass.java, eventHook)
+        EventManager.registerEventHook(eventClass, eventHook)
     }
 
     fun unregister(name: String) {
@@ -62,7 +61,7 @@ class SocketEventListener : EventListener {
         val eventHook = registeredEvents[eventClass] ?:
             throw IllegalArgumentException("No EventHook for event: $eventClass")
 
-        EventManager.unregisterEventHook(eventClass.java, eventHook)
+        EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
     private fun writeToSockets(event: Event) = withScope {
@@ -72,7 +71,7 @@ class SocketEventListener : EventListener {
             val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
             interopGson.toJson(
                 WSEventData(
-                    name = event::class.eventName,
+                    name = event.javaClass.eventName,
                     event = webSocketAnnotation.serializer.gson.toJsonTree(event)
                 )
             )

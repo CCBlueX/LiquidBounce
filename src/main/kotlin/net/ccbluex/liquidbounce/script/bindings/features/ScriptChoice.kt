@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
-import kotlin.reflect.KClass
 
 class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable<Choice>) : Choice(
     name = choiceObject["name"] as String,
@@ -77,10 +76,10 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
      */
     private fun hookHandler(eventName: String) {
         // Get event case-insensitive
-        val clazz = LOWERCASE_NAME_EVENT_MAP[eventName.lowercase()] ?: return
+        val clazz = EVENT_NAME_CLASS_LOOKUP[eventName] ?: return
 
         EventManager.registerEventHook(
-            clazz.java,
+            clazz,
             EventHook(
                 this,
                 {
@@ -90,11 +89,4 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
         )
     }
 
-    companion object {
-        /**
-         * Maps the lowercase name of the event to the event's kotlin class
-         */
-        private val LOWERCASE_NAME_EVENT_MAP: Map<String, KClass<out Event>> =
-            ALL_EVENT_CLASSES.associateBy { it.eventName.lowercase() }
-    }
 }

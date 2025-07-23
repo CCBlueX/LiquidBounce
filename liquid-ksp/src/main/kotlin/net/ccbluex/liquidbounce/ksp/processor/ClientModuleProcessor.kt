@@ -1,23 +1,4 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
-
-package net.ccbluex.liquidbounce.ksp
+package net.ccbluex.liquidbounce.ksp.processor
 
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.Resolver
@@ -33,8 +14,6 @@ class ClientModuleProcessor(private val environment: SymbolProcessorEnvironment)
     lateinit var modules: Sequence<KSClassDeclaration>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        // val clientModules = resolver.getSymbolsWithAnnotation(ClientModule::class).toList()
-
         modules = resolver.getSymbolsWithAnnotation(InbuiltModule::class.qualifiedName!!)
             .filterIsInstance<KSClassDeclaration>()
             .filter {
@@ -49,8 +28,8 @@ class ClientModuleProcessor(private val environment: SymbolProcessorEnvironment)
             packageName = "net.ccbluex.liquidbounce.features.module",
             fileName = "ClientModules",
             itemType = "net.ccbluex.liquidbounce.features.module.ClientModule",
-            receiverName = "net.ccbluex.liquidbounce.LiquidBounce",
-            extensionName = "ClientModules",
+            receiverName = "net.ccbluex.liquidbounce.features.module.ModuleManager",
+            extensionName = "allClientModules",
             objects = modules,
         )
     }

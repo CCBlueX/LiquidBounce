@@ -18,9 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 
 /**
  * A callable event
@@ -55,10 +53,19 @@ enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }
 
-fun KClass<out Event>.name(): String = this.findAnnotation<Nameable>()!!.name
+private val EVENT_CLASS_NAME_LOOKUP = EventManager.allEventClasses.associateWith {
+    it.getAnnotation(InbuiltEvent::class.java)!!.name
+}
+
+/** Uses [String.Companion.CASE_INSENSITIVE_ORDER] */
+internal val EVENT_NAME_CLASS_LOOKUP = EventManager.allEventClasses.associateByTo(
+    sortedMapOf(String.CASE_INSENSITIVE_ORDER)
+) {
+    it.getAnnotation(InbuiltEvent::class.java)!!.name
+}
 
 /**
  * Retrieves the name that the event is supposed to be associated with in JavaScript.
  */
-val KClass<out Event>.eventName: String
-    get() = this.findAnnotation<Nameable>()!!.name
+val Class<out Event>.eventName: String
+    get() = EVENT_CLASS_NAME_LOOKUP[this]!!

@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
@@ -33,43 +33,43 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.shape.VoxelShape
 
-@Nameable("worldChange")
+@InbuiltEvent("worldChange")
 class WorldChangeEvent(val world: ClientWorld?) : Event()
 
-@Nameable("chunkUnload")
+@InbuiltEvent("chunkUnload")
 class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
 
-@Nameable("chunkLoad")
+@InbuiltEvent("chunkLoad")
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
-@Nameable("chunkDeltaUpdate")
+@InbuiltEvent("chunkDeltaUpdate")
 class ChunkDeltaUpdateEvent(val x: Int, val z: Int) : Event()
 
-@Nameable("blockChange")
+@InbuiltEvent("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
 
-@Nameable("blockShape")
+@InbuiltEvent("blockShape")
 class BlockShapeEvent(var state: BlockState, var pos: BlockPos, var shape: VoxelShape) : Event()
 
-@Nameable("blockBreakingProgress")
+@InbuiltEvent("blockBreakingProgress")
 class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
-@Nameable("blockBreakingProgress")
+@InbuiltEvent("blockBreakingProgress")
 class BlockAttackEvent(val pos: BlockPos) : CancellableEvent()
 
-@Nameable("blockVelocityMultiplier")
+@InbuiltEvent("blockVelocityMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
 
-@Nameable("blockSlipperinessMultiplier")
+@InbuiltEvent("blockSlipperinessMultiplier")
 class BlockSlipperinessMultiplierEvent(val block: Block, var slipperiness: Float) : Event()
 
-@Nameable("entityEquipmentChange")
+@InbuiltEvent("entityEquipmentChange")
 class PlayerEquipmentChangeEvent(
     val player: PlayerEntity, val equipmentSlot: EquipmentSlot, val itemStack: ItemStack
 ) : Event()
 
-@Nameable("fluidPush")
+@InbuiltEvent("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
-@Nameable("worldEntityRemove")
+@InbuiltEvent("worldEntityRemove")
 class WorldEntityRemoveEvent(val entity: Entity) : Event()

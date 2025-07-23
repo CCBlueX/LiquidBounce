@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
@@ -38,7 +38,7 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 
-@Nameable("gameTick")
+@InbuiltEvent("gameTick")
 object GameTickEvent : Event()
 
 /**
@@ -46,13 +46,13 @@ object GameTickEvent : Event()
  * executed in the same frame. This is useful for more responsive task execution
  * and allows to also schedule tasks off-schedule.
  */
-@Nameable("gameRenderTaskQueue")
+@InbuiltEvent("gameRenderTaskQueue")
 object GameRenderTaskQueueEvent : Event()
 
-@Nameable("tickPacketProcess")
+@InbuiltEvent("tickPacketProcess")
 object TickPacketProcessEvent : Event()
 
-@Nameable("key")
+@InbuiltEvent("key")
 @WebSocketEvent
 class KeyEvent(
     val key: InputUtil.Key,
@@ -60,17 +60,17 @@ class KeyEvent(
 ) : Event()
 
 // Input events
-@Nameable("inputHandle")
+@InbuiltEvent("inputHandle")
 object InputHandleEvent : Event()
 
-@Nameable("movementInput")
+@InbuiltEvent("movementInput")
 class MovementInputEvent(
     var directionalInput: DirectionalInput,
     var jump: Boolean,
     var sneak: Boolean,
 ) : Event()
 
-@Nameable("sprint")
+@InbuiltEvent("sprint")
 class SprintEvent(
     val directionalInput: DirectionalInput,
     var sprint: Boolean,
@@ -83,37 +83,37 @@ class SprintEvent(
     }
 }
 
-@Nameable("sneakNetwork")
+@InbuiltEvent("sneakNetwork")
 class SneakNetworkEvent(
     val directionalInput: DirectionalInput,
     var sneak: Boolean,
 ) : Event()
 
-@Nameable("mouseRotation")
+@InbuiltEvent("mouseRotation")
 class MouseRotationEvent(
     var cursorDeltaX: Double,
     var cursorDeltaY: Double,
 ) : CancellableEvent()
 
-@Nameable("keybindChange")
+@InbuiltEvent("keybindChange")
 @WebSocketEvent
 object KeybindChangeEvent : Event()
 
-@Nameable("keybindIsPressed")
+@InbuiltEvent("keybindIsPressed")
 class KeybindIsPressedEvent(
     val keyBinding: KeyBinding,
     var isPressed: Boolean,
 ) : Event()
 
-@Nameable("useCooldown")
+@InbuiltEvent("useCooldown")
 class UseCooldownEvent(
     var cooldown: Int,
 ) : Event()
 
-@Nameable("cancelBlockBreaking")
+@InbuiltEvent("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("autoJump")
+@InbuiltEvent("autoJump")
 class MinecraftAutoJumpEvent(
     var autoJump: Boolean,
 ) : Event()
@@ -122,24 +122,24 @@ class MinecraftAutoJumpEvent(
  * All events which are related to the minecraft client
  */
 
-@Nameable("session")
+@InbuiltEvent("session")
 @WebSocketEvent
 class SessionEvent(
     val session: Session,
 ) : Event()
 
-@Nameable("screen")
+@InbuiltEvent("screen")
 class ScreenEvent(
     val screen: Screen?,
 ) : CancellableEvent()
 
-@Nameable("chatSend")
+@InbuiltEvent("chatSend")
 @WebSocketEvent
 class ChatSendEvent(
     val message: String,
 ) : CancellableEvent()
 
-@Nameable("chatReceive")
+@InbuiltEvent("chatReceive")
 @WebSocketEvent
 class ChatReceiveEvent(
     val message: String,
@@ -154,7 +154,7 @@ class ChatReceiveEvent(
     }
 }
 
-@Nameable("serverConnect")
+@InbuiltEvent("serverConnect")
 class ServerConnectEvent(
     val connectScreen: ConnectScreen,
     val address: ServerAddress,
@@ -162,23 +162,23 @@ class ServerConnectEvent(
     val cookieStorage: CookieStorage?,
 ) : CancellableEvent()
 
-@Nameable("disconnect")
+@InbuiltEvent("disconnect")
 @WebSocketEvent
 object DisconnectEvent : Event()
 
-@Nameable("overlayMessage")
+@InbuiltEvent("overlayMessage")
 @WebSocketEvent
 class OverlayMessageEvent(
     val text: Text,
     val tinted: Boolean,
 ) : Event()
 
-@Nameable("perspective")
+@InbuiltEvent("perspective")
 class PerspectiveEvent(
     var perspective: Perspective,
 ) : Event()
 
-@Nameable("itemLoreQuery")
+@InbuiltEvent("itemLoreQuery")
 class ItemLoreQueryEvent(
     val itemStack: ItemStack,
     val lore: ArrayList<Text>,
