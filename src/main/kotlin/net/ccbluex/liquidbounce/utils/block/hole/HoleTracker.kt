@@ -29,7 +29,9 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Direction
+import net.minecraft.world.chunk.WorldChunk
 import java.util.concurrent.ConcurrentSkipListSet
 
 private const val INDESTRUCTIBLE = (-2).toByte()
@@ -206,8 +208,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         return checkSameXZ(blockPos) && checkSurroundings(blockPos, directions)
     }
 
-    override fun chunkUpdate(x: Int, z: Int) {
-        val chunk = mc.world?.getChunk(x, z) ?: return
+    override fun chunkUpdate(chunk: WorldChunk) {
         val region = Region.from(chunk)
         if (region.intersects(HoleManager.movableRegionScanner.currentRegion)) {
             invalidate(region)
@@ -215,8 +216,8 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         }
     }
 
-    override fun clearChunk(x: Int, z: Int) {
-        invalidate(Region.fromChunkPos(x, z))
+    override fun clearChunk(pos: ChunkPos) {
+        invalidate(Region.from(pos))
     }
 
     override fun clearAllChunks() {
