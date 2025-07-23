@@ -25,7 +25,6 @@ import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
@@ -47,14 +46,15 @@ import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.logger
 
 val ipcConfiguration by AsyncLazy {
     runCatching {
         ClientCdn.requestDiscordConfiguration()
     }.onSuccess {
-        LiquidBounce.logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
+        logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
     }.onFailure {
-        LiquidBounce.logger.error("Failed to load Discord IPC configuration.", it)
+        logger.error("Failed to load Discord IPC configuration.", it)
     }.getOrNull()
 }
 

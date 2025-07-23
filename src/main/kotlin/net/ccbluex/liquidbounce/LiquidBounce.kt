@@ -118,7 +118,7 @@ object LiquidBounce : EventListener {
                 runCatching {
                     ConfigSystem.backup("automatic_${previousVersion}-${version.inner}")
                 }.onFailure {
-                    logger.error("Unable to create backup", it)
+                    clientLogger.error("Unable to create backup", it)
                 }
 
                 previousVersion
@@ -141,6 +141,7 @@ object LiquidBounce : EventListener {
     /**
      * Client logger to print out console messages
      */
+    @Deprecated("Please use ClientUtils.logger")
     val logger get() = clientLogger
 
     var taskManager: TaskManager? = null
@@ -174,9 +175,11 @@ object LiquidBounce : EventListener {
 
         // Check for AMD Vega iGPU
         if (HAS_AMD_VEGA_APU) {
-            logger.info("AMD Vega iGPU detected, enabling different line smooth handling. " +
-                "If you believe this is a mistake, please create an issue at " +
-                "https://github.com/CCBlueX/LiquidBounce/issues.")
+            clientLogger.info(
+                "AMD Vega iGPU detected, enabling different line smooth handling. " +
+                    "If you believe this is a mistake, please create an issue at " +
+                    "https://github.com/CCBlueX/LiquidBounce/issues."
+            )
         }
 
         // Do backup before loading configs
@@ -184,7 +187,7 @@ object LiquidBounce : EventListener {
             runCatching {
                 ConfigSystem.backup("automatic_${Client.version.inner}")
             }.onFailure {
-                logger.error("Unable to create backup", it)
+                clientLogger.error("Unable to create backup", it)
             }
         }
 
@@ -215,7 +218,7 @@ object LiquidBounce : EventListener {
         // Script system
         EnvironmentRemapper
         runCatching(ScriptManager::initializeEngine).onFailure { error ->
-            logger.error("[ScriptAPI] Failed to initialize script engine.", error)
+            clientLogger.error("[ScriptAPI] Failed to initialize script engine.", error)
         }
 
         // Utility managers
@@ -247,7 +250,7 @@ object LiquidBounce : EventListener {
 
         // Load user scripts
         runCatching(ScriptManager::loadAll).onFailure { error ->
-            logger.error("ScriptManager was unable to load scripts.", error)
+            clientLogger.error("ScriptManager was unable to load scripts.", error)
         }
     }
 
@@ -257,7 +260,7 @@ object LiquidBounce : EventListener {
      * which do not rely on the main thread.
      */
     private fun initializeResources() = runBlocking {
-        logger.info("Initializing API...")
+        clientLogger.info("Initializing API...")
         // Lookup API config
         ApiConfig.config
 
@@ -268,12 +271,12 @@ object LiquidBounce : EventListener {
             },
             scope.async {
                 val update = update ?: return@async
-                logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
+                clientLogger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             },
             scope.async {
                 // Load cosmetics
                 CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
+                    clientLogger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
             },
             scope.async {
@@ -296,10 +299,10 @@ object LiquidBounce : EventListener {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
                     }.onFailure {
-                        logger.error("Failed to renew client account token.", it)
+                        clientLogger.error("Failed to renew client account token.", it)
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
-                        logger.info("Successfully renewed client account token.")
+                        clientLogger.info("Successfully renewed client account token.")
                         ConfigSystem.storeConfigurable(ClientAccountManager)
                     }
                 }
@@ -316,7 +319,7 @@ object LiquidBounce : EventListener {
 
                             FontManager.queueFolder(assetsFolder)
                         }.onFailure {
-                            logger.error("Failed to queue fonts from theme '${file.name}'.", it)
+                            clientLogger.error("Failed to queue fonts from theme '${file.name}'.", it)
                         }
                     }
             }
@@ -352,7 +355,7 @@ object LiquidBounce : EventListener {
 
                     // LiquidBounce can still run without deep learning,
                     // and we don't want to crash the client if it fails.
-                    logger.info("Failed to initialize deep learning.", exception)
+                    clientLogger.info("Failed to initialize deep learning.", exception)
                 }
             }
         }
@@ -361,8 +364,8 @@ object LiquidBounce : EventListener {
         val duration = measureTime {
             FontManager.createGlyphManager()
         }
-        logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
-        logger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
+        clientLogger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
+        clientLogger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
 
         // Insert default components on HUD
         ComponentOverlay.insertDefaultComponents()
@@ -376,7 +379,7 @@ object LiquidBounce : EventListener {
             return
         }
         isInitialized = false
-        logger.info("Shutting down client...")
+        clientLogger.info("Shutting down client...")
 
         // Unregister all event listener and stop all running tasks
         ChunkScanner.ChunkScannerThread.stopThread()
@@ -395,14 +398,14 @@ object LiquidBounce : EventListener {
     @Suppress("unused")
     private val startHandler = handler<ClientStartEvent> {
         runCatching {
-            logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
+            clientLogger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             // Print client information
-            logger.info("Client Version: $clientVersion ($clientCommit)")
-            logger.info("Client Branch: $clientBranch")
-            logger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
-            logger.info("Java Version: ${System.getProperty("java.version")}")
-            logger.info("Screen Resolution: ${mc.window.width}x${mc.window.height}")
-            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+            clientLogger.info("Client Version: $clientVersion ($clientCommit)")
+            clientLogger.info("Client Branch: $clientBranch")
+            clientLogger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
+            clientLogger.info("Java Version: ${System.getProperty("java.version")}")
+            clientLogger.info("Screen Resolution: ${mc.window.width}x${mc.window.height}")
+            clientLogger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
 
             // Initialize event manager
             EventManager
@@ -413,7 +416,7 @@ object LiquidBounce : EventListener {
             if (resourceManager is ReloadableResourceManagerImpl) {
                 resourceManager.registerReloader(clientInitializer)
             } else {
-                logger.warn("Failed to register resource reloader!")
+                clientLogger.warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
                 clientInitializer.reload(resourceManager)
@@ -445,7 +448,7 @@ object LiquidBounce : EventListener {
     class ClientInitializer : SynchronousResourceReloader {
         override fun reload(manager: ResourceManager) {
             runCatching(::initializeClient).onSuccess {
-                logger.info("$CLIENT_NAME has been successfully initialized.")
+                clientLogger.info("$CLIENT_NAME has been successfully initialized.")
             }.onFailure {
                 ErrorHandler.fatal(it, additionalMessage = "Client resource reloader")
             }

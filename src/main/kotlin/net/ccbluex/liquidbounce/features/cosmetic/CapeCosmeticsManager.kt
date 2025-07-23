@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.cosmetic
 import com.mojang.authlib.GameProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Identifier
+import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * A cape cosmetic manager
@@ -73,7 +73,7 @@ object CapeCosmeticsManager : EventListener {
 
                     // Check if the cape is cached
                     if (cachedCapes.containsKey(name)) {
-                        LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
+                        logger.info("Successfully loaded cached cape for ${player.name}")
                         response.response(cachedCapes[name]!!)
                         return@fetchCosmetic
                     }
@@ -85,7 +85,7 @@ object CapeCosmeticsManager : EventListener {
                         }
                     }.getOrNull() ?: return@fetchCosmetic
 
-                    LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
+                    logger.info("Successfully loaded cape for ${player.name}")
 
                     val id = Identifier.of("liquidbounce", "cape-$name")
 

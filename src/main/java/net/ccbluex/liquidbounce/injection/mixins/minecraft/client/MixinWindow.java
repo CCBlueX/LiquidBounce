@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.FrameBufferResizeEvent;
 import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
@@ -58,7 +59,7 @@ public class MixinWindow {
             return instance.getIcons(resourcePack);
         }
 
-        LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
+        ClientUtilsKt.getLogger().debug("Loading client icons");
 
         // Find client icons
         final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/resources/liquidbounce/icon_16x16.png");
@@ -66,7 +67,7 @@ public class MixinWindow {
 
         // In case one of the icons was not found
         if (stream16 == null || stream32 == null) {
-            LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
+            ClientUtilsKt.getLogger().error("Unable to find client icons.");
 
             // Load default icons
             return instance.getIcons(resourcePack);

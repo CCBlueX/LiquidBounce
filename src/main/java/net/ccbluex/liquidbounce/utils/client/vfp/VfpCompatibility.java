@@ -24,8 +24,8 @@ package net.ccbluex.liquidbounce.utils.client.vfp;
 import com.viaversion.viafabricplus.ViaFabricPlus;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.protocol.version.VersionType;
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.utils.client.ClientProtocolVersion;
+import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
 import org.apache.commons.lang3.ArrayUtils;
@@ -44,7 +44,7 @@ public enum VfpCompatibility {
             ProtocolVersion version = ViaFabricPlus.getImpl().getTargetVersion();
             return new ClientProtocolVersion(version.getName(), version.getVersion());
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to get protocol version", throwable);
+            ClientUtilsKt.getLogger().error("Failed to get protocol version", throwable);
             return null;
         }
     }
@@ -60,7 +60,7 @@ public enum VfpCompatibility {
             ArrayUtils.reverse(protocols);
             return protocols;
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to get protocol versions", throwable);
+            ClientUtilsKt.getLogger().error("Failed to get protocol versions", throwable);
             return new ClientProtocolVersion[0];
         }
     }
@@ -74,7 +74,7 @@ public enum VfpCompatibility {
 
             ViaFabricPlus.getImpl().openProtocolSelectionScreen(currentScreen);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to open ViaFabricPlus screen", throwable);
+            ClientUtilsKt.getLogger().error("Failed to open ViaFabricPlus screen", throwable);
         }
     }
 
@@ -87,7 +87,7 @@ public enum VfpCompatibility {
             ProtocolVersion version = ProtocolVersion.getProtocol(protocolId);
             ViaFabricPlus.getImpl().setTargetVersion(version);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to select protocol version", throwable);
+            ClientUtilsKt.getLogger().error("Failed to select protocol version", throwable);
         }
     }
 
@@ -98,7 +98,7 @@ public enum VfpCompatibility {
             // Check if the version is equal to 1.8
             return version.equalTo(ProtocolVersion.v1_8);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            ClientUtilsKt.getLogger().error("Failed to check if old combat", throwable);
             return false;
         }
     }
@@ -110,7 +110,7 @@ public enum VfpCompatibility {
             // Check if the version is older or equal than 1.8
             return version.olderThanOrEqualTo(ProtocolVersion.v1_8);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            ClientUtilsKt.getLogger().error("Failed to check if old combat", throwable);
             return false;
         }
     }
@@ -122,7 +122,7 @@ public enum VfpCompatibility {
             // Check if the version is older or equal than 1.7.10
             return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            ClientUtilsKt.getLogger().error("Failed to check if old combat", throwable);
             return false;
         }
     }
@@ -134,7 +134,7 @@ public enum VfpCompatibility {
             // Check if the version is older or equal than 1.12.2
             return version.newerThanOrEqualTo(ProtocolVersion.v1_16);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.16", throwable);
+            ClientUtilsKt.getLogger().error("Failed to check if 1.16", throwable);
             return false;
         }
     }
@@ -146,7 +146,7 @@ public enum VfpCompatibility {
             // Check if the version is older or equal than 1.11.1
             return version.olderThanOrEqualTo(ProtocolVersion.v1_11_1);
         } catch (Throwable throwable) {
-            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.11.1", throwable);
+            ClientUtilsKt.getLogger().error("Failed to check if 1.11.1", throwable);
             return false;
         }
     }
