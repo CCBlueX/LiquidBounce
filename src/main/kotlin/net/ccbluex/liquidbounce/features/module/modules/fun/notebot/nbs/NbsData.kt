@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
 
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
+import net.minecraft.block.enums.NoteBlockInstrument
 
 data class NbsHeader(
     val version: Byte = 0,
     val vanillaInstrumentCount: Byte = 0,
-    val songLength: Short = 0 ,
+    val songLength: Short = 0,
     val layerCount: Short = 0,
     val songName: String? = null,
     val songAuthor: String? = null,
@@ -55,7 +55,24 @@ data class NbsNoteBlock(
 )
 
 data class InstrumentNote(val instrument: Int, val noteValue: Int) {
-    val instrumentEnum = ModuleNotebot.instrumentFromNbs(instrument)
+    val instrumentEnum = when (instrument) {
+        1 -> NoteBlockInstrument.BASS
+        2 -> NoteBlockInstrument.BASEDRUM
+        3 -> NoteBlockInstrument.SNARE
+        4 -> NoteBlockInstrument.HAT
+        5 -> NoteBlockInstrument.GUITAR
+        6 -> NoteBlockInstrument.FLUTE
+        7 -> NoteBlockInstrument.BELL
+        8 -> NoteBlockInstrument.CHIME
+        9 -> NoteBlockInstrument.XYLOPHONE
+        10 -> NoteBlockInstrument.IRON_XYLOPHONE
+        11 -> NoteBlockInstrument.COW_BELL
+        12 -> NoteBlockInstrument.DIDGERIDOO
+        13 -> NoteBlockInstrument.BIT
+        14 -> NoteBlockInstrument.BANJO
+        15 -> NoteBlockInstrument.PLING
+        else -> NoteBlockInstrument.HARP // 0
+    }
 }
 
 data class SongData(

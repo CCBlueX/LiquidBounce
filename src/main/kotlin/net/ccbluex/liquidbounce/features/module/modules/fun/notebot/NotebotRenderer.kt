@@ -18,62 +18,54 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStage
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 
-// TODO animate transition
 object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
+    private const val TRANSITION_TIME = 300L
 
-    private val testColor by color("TestColor", Color4b.RED.with(a = 90))
-    private val outlineTestColor by color("TestOutlineColor", Color4b.RED)
-    private val tuneColor by color("TuneColor", Color4b.YELLOW.with(a = 90))
-    private val outlineTuneColor by color("TuneOutlineColor", Color4b.YELLOW)
+    val testColor by color("TestColor", Color4b.RED.with(a = 90))
+    val outlineTestColor by color("TestOutlineColor", Color4b.RED)
+    val tuneColor by color("TuneColor", Color4b.YELLOW.with(a = 90))
+    val outlineTuneColor by color("TuneOutlineColor", Color4b.YELLOW)
 
-    private val chronometer = Chronometer()
+    private val stageChangeChronometer = Chronometer()
+
+    private var currentStage = NotebotStage.TEST
+    private var lastStage = NotebotStage.TEST
 
     override fun getColor(id: Int): Color4b {
-        val state = getState()
-        return when (state) {
-            NotebotState.TEST -> testColor
-            NotebotState.TUNE -> testColor.interpolateTo(tuneColor, getTransitionProgress())
-            NotebotState.PLAY -> {
-                if (ModuleNotebot.previousState == NotebotState.TEST) {
-                    testColor
-                } else {
-                    tuneColor
-                }.interpolateTo(super.getColor(id), getTransitionProgress())
-            }
-        }
+        return lastStage.blockColor().interpolateTo(currentStage.blockColor(), getTransitionProgress())
     }
 
     override fun getOutlineColor(id: Int): Color4b {
-        val state = getState()
-        return when (state) {
-            NotebotState.TEST -> outlineTestColor
-            NotebotState.TUNE -> testColor.interpolateTo(outlineTuneColor, getTransitionProgress())
-            NotebotState.PLAY -> {
-                if (ModuleNotebot.previousState == NotebotState.TEST) {
-                    outlineTestColor
-                } else {
-                    outlineTuneColor
-                }.interpolateTo(super.getOutlineColor(id), getTransitionProgress())
-            }
+        return lastStage.blockOutlineColor().interpolateTo(currentStage.blockOutlineColor(), getTransitionProgress())
+    }
+
+    fun onStateChange(stage: NotebotStage) {
+        // Only change the target color if the animation was not finished to prevent sudden color changes.
+        if (!stageChangeChronometer.hasElapsed(TRANSITION_TIME)) {
+            this.currentStage = stage
+
+            return
         }
+
+        this.lastStage = this.currentStage
+        this.currentStage = stage
+
+        stageChangeChronometer.reset()
     }
 
-    fun indicateStateChange() {
-        chronometer.reset()
+    private fun getTransitionProgress(): Double {
+        return (stageChangeChronometer.elapsed / TRANSITION_TIME.toDouble()).coerceAtMost(1.0)
     }
 
-    private fun getTransitionProgress() = (chronometer.elapsed / 300.0).coerceAtMost(1.0)
+    fun reset() {
+        this.currentStage = NotebotStage.TEST
+        this.lastStage = NotebotStage.TEST
 
-    private fun getState(): NotebotState {
-        return if (ModuleNotebot.enabled) {
-            ModuleNotebot.state
-        } else {
-            ModuleNotebot.previousState
-        }
+        this.clearSilently()
     }
-
 }

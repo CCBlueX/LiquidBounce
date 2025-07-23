@@ -21,15 +21,23 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoader
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNoteBlock
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.enums.NoteBlockInstrument
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.util.Formatting
+import net.minecraft.util.math.MathHelper
 
 /**
  * Notebot Module
@@ -58,71 +66,94 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     val renderer = tree(NotebotRenderer)
 
-    var previousState = NotebotState.TEST
-        private set
-
-    var state = NotebotState.TEST
-        internal set(value) {
-            ticksToWait = when (value) {
-                NotebotState.TEST -> StartDelay.test
-                NotebotState.TUNE -> StartDelay.tune
-                NotebotState.PLAY -> StartDelay.play
-            }
-            previousState = field
-            renderer.indicateStateChange()
-            field = value
-        }
-
-    internal var ticksToWait = 0
-        get() {
-            val original = field
-            field = 0
-            return original
-        }
-        private set
-
-    val noteBlocks = mutableListOf<NoteBlock>()
-    var songData: SongData? = null
-        private set
-
-    private var packetMineState = false
-
-    internal var readyToStart = false
-        private set
-
-    init {
-        NotebotEngine
+    private val tickHandler = tickHandler {
+        engine?.onTick(this)
     }
 
-    override suspend fun enabledEffect() {
-        if (!inGame) {
-            chat("You must be in game to use this module.", this)
-            this.enabled = false
-            return
-        }
+    var engine: NotebotEngine? = null
+        private set
 
+    override suspend fun enabledEffect() {
         val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
         mc.inGameHud.chatHud.removeMessage(messageMetadata.id)
 
-        if (player.isCreative) {
-            chat("You can't use this module in creative mode!", this)
+
+        val songData = loadSongData()
+
+        if (songData == null) {
             this.enabled = false
             return
         }
 
+        val blocksAndRequirements = NotebotScanner.scanBlocksAndCheckRequirements(songData)
+
+        if (!blocksAndRequirements.validateRequirements()) {
+            blocksAndRequirements.printRequirements()
+
+            this.enabled = false
+            return
+        }
+
+
+        if (!checkRequirements()) {
+            this.enabled = false
+
+            return
+        }
+
+        this.setRenderedBlocks(blocksAndRequirements.availableBlocks.flatMap { it.value })
+
+        showSongInfo(songData, messageMetadata)
+
+        this.engine = NotebotEngine(songData, blocksAndRequirements)
+        chat("Starting testing...".asText().formatted(Formatting.GREEN), this)
+    }
+
+    fun setRenderedBlocks(blocks: List<NoteBlockTracker>) {
+        renderer.clearSilently()
+
+        blocks.forEach {
+            renderer.addBlock(it.pos, false)
+        }
+
+        renderer.updateAll()
+    }
+
+    private suspend fun loadSongData(): SongData? {
         chat("Starting loading song...", this)
+
         val songData = withContext(Dispatchers.IO) {
             NbsLoader.load(song)
-        } ?: run {
-            this.enabled = false
-            return
         }
 
-        if (!NotebotScanner.scanAndAssignNotes(songData)) {
-            this.enabled = false
-            return
-        }
+        return songData
+    }
 
+    private fun checkRequirements(): Boolean {
+        return when {
+            !inGame -> {
+                chat("You must be in game to use this module.", this)
+                false
+            }
+
+            player.isCreative -> {
+                chat("You can't use this module in creative mode!", this)
+                false
+            }
+
+            ModulePacketMine.enabled -> {
+                chat("The Notebot Module is incompatible with PacketMine!", this)
+                false
+            }
+
+            else -> true
+        }
+    }
+
+    private fun showSongInfo(
+        songData: SongData,
+        messageMetadata: MessageMetadata
+    ) {
         chat(
             regular("Loaded song '")
                 .append(variable(songData.name))
@@ -144,50 +175,66 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
                 .append(variable(songData.nbs.noteBlocks.size.toString())),
             messageMetadata
         )
+    }
 
-        this.songData = songData
-        packetMineState = ModulePacketMine.enabled
-        ModulePacketMine.enabled = false
-        chat("Starting testing...".asText().formatted(Formatting.GREEN), this)
-        readyToStart = true
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet is PlaySoundS2CPacket) {
+            this.engine?.handleSoundPacket(event.packet)
+        }
     }
 
     override fun disable() {
-        noteBlocks.clear()
-        readyToStart = false
-        songData = null
+        removeProgressMessage()
 
-        previousState = state
-        state = NotebotState.TEST
-        NotebotEngine.reset()
-
-        if (packetMineState) {
-            ModulePacketMine.enabled = true
-        }
-
-        renderer.clearSilently()
+        renderer.reset()
     }
 
-    fun instrumentFromNbs(id: Int): NoteBlockInstrument = when {
-        pianoOnly -> NoteBlockInstrument.HARP
-        else -> when (id) {
-            1 -> NoteBlockInstrument.BASS
-            2 -> NoteBlockInstrument.BASEDRUM
-            3 -> NoteBlockInstrument.SNARE
-            4 -> NoteBlockInstrument.HAT
-            5 -> NoteBlockInstrument.GUITAR
-            6 -> NoteBlockInstrument.FLUTE
-            7 -> NoteBlockInstrument.BELL
-            8 -> NoteBlockInstrument.CHIME
-            9 -> NoteBlockInstrument.XYLOPHONE
-            10 -> NoteBlockInstrument.IRON_XYLOPHONE
-            11 -> NoteBlockInstrument.COW_BELL
-            12 -> NoteBlockInstrument.DIDGERIDOO
-            13 -> NoteBlockInstrument.BIT
-            14 -> NoteBlockInstrument.BANJO
-            15 -> NoteBlockInstrument.PLING
-            else -> NoteBlockInstrument.HARP // 0
-        }
+    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress", remove = false)
+
+    private fun removeProgressMessage() {
+        net.ccbluex.liquidbounce.utils.client.mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
     }
 
+    fun sendNewProgressMessage(name: String, progress: Int, total: Int) {
+        removeProgressMessage()
+
+        val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
+        chat(
+            variable(name)
+                .append(regular(" ["))
+                .append(textLoadingBar(percent))
+                .append(regular("] "))
+                .append(variable(percent.toString()))
+                .append(regular("%")),
+            metadata = progressMessageMetadata
+        )
+    }
+
+    fun getPlayedNote(note: NbsNoteBlock): InstrumentNote {
+        val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
+        val instrument = if (!this.pianoOnly) {
+            note.instrument.toInt()
+        } else {
+            0
+        }
+
+        return InstrumentNote(instrument, noteValue)
+    }
+
+    enum class NotebotStage(
+        val stageStartDelay: () -> Int,
+        val blockColor: () -> Color4b,
+        val blockOutlineColor: () -> Color4b
+    ) {
+        TEST(StartDelay::test, NotebotRenderer::testColor, NotebotRenderer::outlineTestColor),
+        TUNE(StartDelay::tune, NotebotRenderer::tuneColor, NotebotRenderer::outlineTuneColor),
+        PLAY(StartDelay::play, NotebotRenderer::colorSetting, NotebotRenderer::outlineColorSetting)
+    }
+
+    interface NotebotStageHandler {
+        val handledStage: NotebotStage
+
+        fun onTick(engine: NotebotEngine)
+    }
 }

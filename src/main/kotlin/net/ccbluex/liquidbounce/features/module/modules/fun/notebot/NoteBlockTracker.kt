@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.block.enums.NoteBlockInstrument
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
@@ -32,48 +32,38 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
-class NoteBlock(
-    val blockPos: BlockPos,
-    val instrument: NoteBlockInstrument,
-    val noteValue: Int
-) : MinecraftShortcuts {
+class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
+    var currentNote: Int? = null
+        private set
 
-    var tuned = false
-    var deliveredCurrent = false
-    var tested = false
-    var verified = false
-    var currentNote = 0
+    private val tuneTimeout = Chronometer()
+    private val testTimeout = Chronometer()
 
-    fun test(): Boolean {
-        if (!tested) {
-            click()
-            tested = true
-        }
-
-        return deliveredCurrent
+    fun canTuneRightNow(): Boolean {
+        return currentNote != null || tuneTimeout.hasElapsed(2000)
+    }
+    fun canTestRightNow(): Boolean {
+        return testTimeout.hasElapsed(2000)
     }
 
-    fun tune(): Boolean {
-        if (!verified) {
-            return false
-        }
+    fun tuneOnce() {
+        this.interact()
 
-        if (currentNote != noteValue) {
-            interact()
-            verified = false
-            return false
-        }
+        this.tuneTimeout.reset()
+    }
 
-        tuned = true
-        return true
+    fun testOnce() {
+        this.click()
+
+        this.testTimeout.reset()
     }
 
     // TODO switch to empty slot?
     private fun interact() {
-        val blockState = blockPos.getState()!!
+        val blockState = this.pos.getState()!!
         val raytrace = raytraceBlockRotation(
             player.eyePos,
-            blockPos,
+            this.pos,
             blockState,
             range = ModuleNotebot.range.toDouble(),
             wallsRange = ModuleNotebot.range.toDouble()
@@ -82,7 +72,7 @@ class NoteBlock(
         val blockHitResult: BlockHitResult = raytraceBlock(
             ModuleNotebot.range.toDouble(),
             raytrace.rotation,
-            blockPos,
+            this.pos,
             blockState,
         ) ?: return
 
@@ -102,13 +92,16 @@ class NoteBlock(
                 sequence
             )
         }
+
+        // We don't know what the current note is after interacting
+        this.currentNote = null
     }
 
     fun click() {
         interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
-                blockPos,
+                this.pos,
                 Direction.UP,
                 sequence
             )
@@ -126,8 +119,11 @@ class NoteBlock(
 //        }
     }
 
-    override fun equals(other: Any?) = other is NoteBlock && blockPos == other.blockPos
+    override fun equals(other: Any?) = other is NoteBlockTracker && pos == other.pos
+    override fun hashCode() = pos.hashCode()
 
-    override fun hashCode() = blockPos.hashCode()
+    fun setObservedNote(note: Int) {
+        this.currentNote = note
+    }
 
 }

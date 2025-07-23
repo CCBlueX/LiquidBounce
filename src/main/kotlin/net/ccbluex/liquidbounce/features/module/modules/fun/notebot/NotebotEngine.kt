@@ -18,168 +18,64 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStage
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStageHandler
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.renderer
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages.NotebotTestStageHandler
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundCategory
-import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
 import kotlin.math.ln
 import kotlin.math.round
 
-object NotebotEngine : EventListener {
+class NotebotEngine(
+    val songData: SongData,
+    val blocksAndRequirements: NotebotScanner.BlocksAndRequirements
+) {
+    private var currentStageHandler: NotebotStageHandler = NotebotTestStageHandler(this)
+    private var ticksToWait: Int? = null
 
-    private var songTickAccumulator = 0f
-    private var currentSongTick = 0
+    private val notebotTrackerMap: Map<BlockPos, NoteBlockTracker> = blocksAndRequirements.availableBlocks
+        .flatMap { it.value }
+        .associateBy { it.pos }
 
-    override fun parent() = ModuleNotebot
+    fun handleSoundPacket(packet: PlaySoundS2CPacket) {
+        if (currentStageHandler.handledStage == NotebotStage.PLAY) {
+            return
+        }
 
-    override val running: Boolean
-        get() = super.running && ModuleNotebot.readyToStart
+        val soundKey = packet.sound.key.get()
 
-    fun reset() {
-        songTickAccumulator = 0f
-        currentSongTick = 0
-        removeProgressMessage()
-    }
-
-    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress", remove = false)
-
-    private fun removeProgressMessage() {
-        mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
-    }
-
-    private fun sendNewProgressMessage(name: String, progress: Int, total: Int) {
-        removeProgressMessage()
-
-        val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
-        chat(
-            variable(name)
-                .append(regular(" ["))
-                .append(textLoadingBar(percent))
-                .append(regular("] "))
-                .append(variable(percent.toString()))
-                .append(regular("%")),
-            metadata = progressMessageMetadata
-        )
-    }
-
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-        if (packet !is PlaySoundS2CPacket ||
-            ModuleNotebot.state == NotebotState.PLAY ||
-            packet.category != SoundCategory.RECORDS ||
-            !packet.sound.key.get().value.path.contains("note_block")
-        ) {
-            return@handler
+        if (packet.category != SoundCategory.RECORDS || !soundKey.value.path.contains("note_block")) {
+            return
         }
 
         val pos = BlockPos((packet.x - 0.5).toInt(), (packet.y - 0.5).toInt(), (packet.z - 0.5).toInt())
-        ModuleNotebot.noteBlocks
-            .firstOrNull { it.blockPos == pos && (!it.deliveredCurrent || !it.verified) }
-            ?.apply {
-                currentNote = round(12f + 12f * (ln(packet.pitch) / ln(2.0)).toFloat()).toInt()
-                deliveredCurrent = true
-                verified = true
-            }
+        val causingNoteblock = this.notebotTrackerMap[pos] ?: return
+
+        causingNoteblock.setObservedNote(round(12f + 12f * (ln(packet.pitch) / ln(2.0)).toFloat()).toInt())
     }
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        waitTicks(ModuleNotebot.ticksToWait)
-        when (ModuleNotebot.state) {
-            NotebotState.TEST -> handleTestState()
-            NotebotState.TUNE -> handleTuneState()
-            NotebotState.PLAY -> handlePlayState()
+    suspend fun onTick(sequence: Sequence) {
+        val ticks = ticksToWait
+
+        if (ticks != null) {
+            sequence.waitTicks(ticks)
+
+            ticksToWait = null
         }
+
+        currentStageHandler.onTick(this)
     }
 
-    private fun handleTestState() {
-        var progress = 0
-        // `all` so it just calls a maximum of one click a tick
-        ModuleNotebot.noteBlocks.all {
-            progress++
-            it.test()  // loops until it finds a noteblock that hasn't been tested, clicks it and then exits the loop
-        }
+    fun changeStage(handler: NotebotStageHandler) {
+        ticksToWait = handler.handledStage.stageStartDelay()
 
-        val total = ModuleNotebot.noteBlocks.size
-        sendNewProgressMessage("Test", progress, total)
-        if (progress == total) {
-            if (ModuleNotebot.noteBlocks.all { it.currentNote == it.noteValue }) {
-                transitionToPlayState()
-            } else {
-                transitionToTuneState()
-            }
-        }
-    }
+        renderer.onStateChange(handler.handledStage)
 
-    private fun handleTuneState() {
-        var progress = 0
-        // `all` so it just calls a maximum of one interaction a tick
-        ModuleNotebot.noteBlocks.all {
-            progress++
-            it.tune() // function -> read comment above in handleTestState
-        }
-
-        val total = ModuleNotebot.noteBlocks.size
-        sendNewProgressMessage("Tune", progress, total)
-        if (progress == total) {
-            transitionToPlayState()
-        }
-    }
-
-    private fun handlePlayState() {
-        val songData = ModuleNotebot.songData ?: error("No song data!")
-        songTickAccumulator += songData.songTicksPerGameTick
-
-        while (songTickAccumulator >= 1f) {
-            songTickAccumulator -= 1f
-            currentSongTick++
-
-            sendNewProgressMessage("Play", currentSongTick, songData.songTickLength)
-
-            if (currentSongTick > songData.songTickLength) {
-                chat("Finished song!".asText().formatted(Formatting.GREEN), ModuleNotebot)
-                ModuleNotebot.enabled = false
-                return
-            }
-
-            playNotesAtTick(currentSongTick, songData)
-        }
-    }
-
-    private fun playNotesAtTick(tick: Int, songData: SongData) {
-        val notes = songData.notesByTick[tick] ?: return
-        val usedBlocks = hashSetOf<NoteBlock>()
-
-        notes.forEach { note ->
-            val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
-            val instrument = ModuleNotebot.instrumentFromNbs(note.instrument.toInt())
-
-            ModuleNotebot.noteBlocks
-                .firstOrNull {
-                    it.noteValue == noteValue && it.instrument == instrument && usedBlocks.add(it)
-                }?.apply {
-                    click()
-                }
-        }
-    }
-
-    private fun transitionToPlayState() {
-        chat("All blocks tested, starting playing...".asText().formatted(Formatting.GREEN), ModuleNotebot)
-        ModuleNotebot.state = NotebotState.PLAY
-        ModuleNotebot.noteBlocks.forEach { it.tuned = true }
-    }
-
-    private fun transitionToTuneState() {
-        chat("All blocks tested, starting tuning...".asText().formatted(Formatting.GREEN), ModuleNotebot)
-        ModuleNotebot.state = NotebotState.TUNE
+        this.currentStageHandler = handler
     }
 
 }

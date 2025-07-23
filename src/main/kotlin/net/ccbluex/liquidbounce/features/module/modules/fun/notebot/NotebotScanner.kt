@@ -29,35 +29,24 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
 import java.util.*
 import kotlin.collections.ArrayDeque
 
 object NotebotScanner : MinecraftShortcuts {
-
-    fun scanAndAssignNotes(songData: SongData): Boolean {
-        val noteBlocks = scanSurroundingNoteBlocks()
-        val requirements = calculateRequirements(songData)
-
-        if (!validateRequirements(requirements, noteBlocks)) {
-            printRequirements(requirements, noteBlocks)
-            return false
-        }
-
-        assignNoteBlocks(requirements, noteBlocks)
-        ModuleNotebot.renderer.updateAll()
-
-        return true
+    fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {
+        return BlocksAndRequirements(
+            availableBlocks = scanSurroundingNoteBlocks(),
+            requirements = calculateRequirements(songData)
+        )
     }
 
-    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<BlockPos>> {
-        val result = EnumMap<_, ArrayDeque<BlockPos>>(NoteBlockInstrument::class.java)
+    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
+        val result = EnumMap<_, ArrayDeque<NoteBlockTracker>>(NoteBlockInstrument::class.java)
 
         player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
             pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
         }.forEach { pos ->
-            result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(pos)
+            result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
         }
 
         return result
@@ -69,11 +58,7 @@ object NotebotScanner : MinecraftShortcuts {
         for (notes in songData.notesByTick.values) {
             countsInTick.clear()
             for (note in notes) {
-                val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
-                val instrumentNote = InstrumentNote(
-                    instrument = note.instrument.toInt(),
-                    noteValue = noteValue
-                )
+                val instrumentNote = ModuleNotebot.getPlayedNote(note)
 
                 countsInTick.inlineMerge(instrumentNote, 1, Int::plus)
             }
@@ -86,77 +71,56 @@ object NotebotScanner : MinecraftShortcuts {
         return maxConcurrentCounts
     }
 
-    private fun validateRequirements(
-        requirements: Map<InstrumentNote, Int>,
-        available: Map<NoteBlockInstrument, List<BlockPos>>
-    ): Boolean {
-        val totalRequired = requirements.values.sum()
-        val totalAvailable = available.values.sumOf { it.size }
-        if (totalAvailable < totalRequired) {
-            return false
-        }
-
-        val requirementByInstrument = EnumMap<_, Int>(NoteBlockInstrument::class.java)
-
-        requirements.forEach { (key, value) ->
-            requirementByInstrument.inlineMerge(key.instrumentEnum, value, Int::plus)
-        }
-
-        return requirementByInstrument.all { (instrument, required) ->
-            available[instrument].let { it != null && it.size >= required }
-        }
-    }
-
-    private fun assignNoteBlocks(
-        requirements: Map<InstrumentNote, Int>,
-        available: Map<NoteBlockInstrument, MutableList<BlockPos>>
+    class BlocksAndRequirements(
+        val availableBlocks: Map<NoteBlockInstrument, List<NoteBlockTracker>>,
+        val requirements: Map<InstrumentNote, Int>
     ) {
-        requirements.forEach { (instrumentNote, count) ->
-            val instrument = ModuleNotebot.instrumentFromNbs(instrumentNote.instrument)
-            val blockPosList = available[instrument]!!
-            repeat(count) {
-                val pos = blockPosList.removeFirst()
-                ModuleNotebot.noteBlocks.add(NoteBlock(pos, instrument, instrumentNote.noteValue))
-                ModuleNotebot.renderer.addBlock(pos, false)
-            }
-        }
-    }
-
-    private fun printRequirements(
-        requirements: Map<InstrumentNote, Int>,
-        available: Map<NoteBlockInstrument, List<BlockPos>>
-    ) {
-        val aggregatedRequirements = EnumMap<_, Int>(NoteBlockInstrument::class.java)
-        for ((key1, count) in requirements) {
-            val instrument = ModuleNotebot.instrumentFromNbs(key1.instrument)
-            aggregatedRequirements.inlineMerge(instrument, count, Int::plus)
-        }
-
-        val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
-        aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
-            val availableCount = if (available.containsKey(instrument)) {
-                minOf(available[instrument]!!.size, requiredCount)
-            } else {
-                0
+        fun validateRequirements(): Boolean {
+            val totalRequired = requirements.values.sum()
+            val totalAvailable = this.availableBlocks.values.sumOf { it.size }
+            if (totalAvailable < totalRequired) {
+                return false
             }
 
-            val messageLine = "\n - ${instrument.name} ($availableCount/$requiredCount)"
-            if (availableCount >= requiredCount) {
-                text.append(messageLine.asText().formatted(Formatting.GREEN))
-            } else if (availableCount == 0) {
-                text.append(messageLine.asText().formatted(Formatting.RED))
-            } else {
-                text.append(messageLine.asText().formatted(Formatting.YELLOW))
+            val requirementByInstrument = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+
+            requirements.forEach { (key, value) ->
+                requirementByInstrument.inlineMerge(key.instrumentEnum, value, Int::plus)
+            }
+
+            return requirementByInstrument.all { (instrument, required) ->
+                this.availableBlocks[instrument].let { it != null && it.size >= required }
             }
         }
 
-        chat(text, ModuleNotebot)
-    }
+        fun printRequirements() {
+            val aggregatedRequirements = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+            for ((key1, count) in requirements) {
+                aggregatedRequirements.inlineMerge(key1.instrumentEnum, count, Int::plus)
+            }
 
-    private inline fun <K> MutableMap<K, Int>.inlineMerge(key: K, value: Int, remappingFunction: (Int, Int) -> Int) {
-        get(key)?.let {
-            put(key, remappingFunction(it, value))
-        } ?: put(key, value)
-    }
+            val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
+            aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
+                val availableCount = this.availableBlocks[instrument]?.size ?: 0
 
+                val messageLine = "\n - ${instrument.name} ($availableCount/$requiredCount)"
+
+                if (availableCount >= requiredCount) {
+                    text.append(messageLine.asText().formatted(Formatting.GREEN))
+                } else if (availableCount == 0) {
+                    text.append(messageLine.asText().formatted(Formatting.RED))
+                } else {
+                    text.append(messageLine.asText().formatted(Formatting.YELLOW))
+                }
+            }
+
+            chat(text, ModuleNotebot)
+        }
+    }
+}
+
+private inline fun <K> MutableMap<K, Int>.inlineMerge(key: K, value: Int, remappingFunction: (Int, Int) -> Int) {
+    get(key)?.let {
+        put(key, remappingFunction(it, value))
+    } ?: put(key, value)
 }
