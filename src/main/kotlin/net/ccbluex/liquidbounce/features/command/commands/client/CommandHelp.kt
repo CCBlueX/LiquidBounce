@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -35,6 +36,7 @@ import net.minecraft.util.Formatting
  *
  * Provides a help page for displaying other commands.
  */
+@InbuiltCommandFactory
 object CommandHelp : CommandFactory {
 
     override fun createCommand(): Command {

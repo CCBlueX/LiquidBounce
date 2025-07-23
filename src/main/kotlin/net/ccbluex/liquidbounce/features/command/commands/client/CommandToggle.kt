@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to enable or disable a specific module.
  */
+@InbuiltCommandFactory
 object CommandToggle : CommandFactory {
 
     override fun createCommand(): Command {

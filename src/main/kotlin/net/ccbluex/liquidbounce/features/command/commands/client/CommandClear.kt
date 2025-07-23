@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
  *
  * Allow clears the chat history in the game.
  */
+@InbuiltCommandFactory
 object CommandClear : CommandFactory {
 
     override fun createCommand(): Command {

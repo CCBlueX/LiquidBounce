@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils
  *
  * Copies your coordinates to your clipboard.
  */
+@InbuiltCommandFactory
 object CommandCoordinates : CommandFactory {
 
     override fun createCommand(): Command {

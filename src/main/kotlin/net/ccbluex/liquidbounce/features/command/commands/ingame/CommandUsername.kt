@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -30,6 +31,7 @@ import org.lwjgl.glfw.GLFW
  *
  * Displays the current username.
  */
+@InbuiltCommandFactory
 object CommandUsername : CommandFactory, MinecraftShortcuts {
 
     override fun createCommand(): Command {

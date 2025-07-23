@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -35,6 +36,7 @@ import java.awt.datatransfer.StringSelection
  *
  * Module: [ModuleTeleport]
  */
+@InbuiltCommandFactory
 object CommandPlayerTeleport : CommandFactory, MinecraftShortcuts {
 
     override fun createCommand(): Command {

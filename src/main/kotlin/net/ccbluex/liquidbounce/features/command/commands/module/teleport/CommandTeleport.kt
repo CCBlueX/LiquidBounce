@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.player
  *
  * Module: [ModuleTeleport]
  */
+@InbuiltCommandFactory
 object CommandTeleport : CommandFactory {
 
     override fun createCommand(): Command {

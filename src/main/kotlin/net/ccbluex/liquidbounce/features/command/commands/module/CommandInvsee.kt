@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.module
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -38,6 +39,7 @@ import java.util.*
  *
  * Module: [ModuleInventoryTracker]
  */
+@InbuiltCommandFactory
 object CommandInvsee : CommandFactory {
 
     var viewedPlayer: UUID? = null

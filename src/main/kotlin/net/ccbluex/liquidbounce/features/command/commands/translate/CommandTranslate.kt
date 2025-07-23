@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.asLanguage
 import net.ccbluex.liquidbounce.features.command.Command
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
+@InbuiltCommandFactory
 object CommandTranslate : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("translate")

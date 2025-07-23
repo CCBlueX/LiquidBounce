@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -40,6 +41,7 @@ import net.minecraft.util.Formatting
  * Allows you to manage the bindings of modules to keys.
  * It provides subcommands to add, remove, list and clear bindings.
  */
+@InbuiltCommandFactory
 object CommandBinds : CommandFactory {
 
     override fun createCommand(): Command {

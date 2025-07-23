@@ -26,6 +26,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
@@ -58,6 +59,7 @@ import java.util.EnumSet
  * This command will create a JSON file with all the information
  * and send it to the CCBlueX Paste API.
  */
+@InbuiltCommandFactory
 object CommandDebug : CommandFactory {
 
     private val gson = GsonBuilder()

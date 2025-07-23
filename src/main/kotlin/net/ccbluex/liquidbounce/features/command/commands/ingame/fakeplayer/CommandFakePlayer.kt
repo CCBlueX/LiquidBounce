@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -46,6 +47,7 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
+@InbuiltCommandFactory
 object CommandFakePlayer : CommandFactory, EventListener {
 
     /**

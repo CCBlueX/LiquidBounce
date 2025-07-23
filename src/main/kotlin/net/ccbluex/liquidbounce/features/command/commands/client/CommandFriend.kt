@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -39,6 +40,7 @@ private const val MESSAGE_ID = "CFriend#info"
  *
  * Provides subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
  */
+@InbuiltCommandFactory
 object CommandFriend : CommandFactory {
 
     override fun createCommand(): Command {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
@@ -44,6 +45,7 @@ import java.io.Reader
  * such as loading configuration from an external source or an API
  * and listing available configurations.
  */
+@InbuiltCommandFactory
 object CommandConfig : CommandFactory {
 
     private const val CONFIGS_URL = "https://github.com/CCBlueX/LiquidCloud/tree/main/LiquidBounce/settings/nextgen"

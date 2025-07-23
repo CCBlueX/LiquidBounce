@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
+@InbuiltCommandFactory
 object CommandItemStack : CommandFactory, MinecraftShortcuts {
 
     private val amountParameter = ParameterBuilder

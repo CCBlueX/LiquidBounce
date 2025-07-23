@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -46,6 +47,7 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
+@InbuiltCommandFactory
 object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
 
     private val levelParameter = ParameterBuilder

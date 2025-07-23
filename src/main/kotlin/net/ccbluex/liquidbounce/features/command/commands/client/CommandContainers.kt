@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.nbt.StringNbtReader
 import net.minecraft.util.Formatting
 
+@InbuiltCommandFactory
 object CommandContainers : CommandFactory {
 
     override fun createCommand(): Command {

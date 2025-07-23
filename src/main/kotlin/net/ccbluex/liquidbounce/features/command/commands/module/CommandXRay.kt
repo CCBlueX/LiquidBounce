@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -37,6 +38,7 @@ import net.minecraft.util.Formatting
  *
  * Module: [ModuleXRay]
  */
+@InbuiltCommandFactory
 object CommandXRay : CommandFactory {
 
     override fun createCommand(): Command {

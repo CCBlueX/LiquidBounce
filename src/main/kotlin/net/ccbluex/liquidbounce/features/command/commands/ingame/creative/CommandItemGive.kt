@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -33,6 +34,7 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
  *
  * Allows you to give items to the player.
  */
+@InbuiltCommandFactory
 object CommandItemGive : CommandFactory {
 
     override fun createCommand(): Command {

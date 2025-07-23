@@ -38,21 +38,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
-import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
-import net.ccbluex.liquidbounce.features.command.commands.ingame.*
-import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.*
-import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
-import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
-import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
-import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
-import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
-import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
-import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
@@ -267,51 +252,7 @@ object CommandManager : Iterable<Command> by commands {
     }
 
     fun registerInbuilt() {
-        val commands = arrayOf(
-            CommandClient,
-            CommandFriend,
-            CommandToggle,
-            CommandBind,
-            CommandCenter,
-            CommandHelp,
-            CommandBinds,
-            CommandClear,
-            CommandHide,
-            CommandInvsee,
-            CommandItems,
-            CommandPanic,
-            CommandValue,
-            CommandPing,
-            CommandRemoteView,
-            CommandXRay,
-            CommandTargets,
-            CommandConfig,
-            CommandLocalConfig,
-            CommandAutoDisable,
-            CommandScript,
-            CommandContainers,
-            CommandSay,
-            CommandFakePlayer,
-            CommandAutoAccount,
-            CommandDebug,
-            CommandItemRename,
-            CommandItemGive,
-            CommandItemSkull,
-            CommandItemStack,
-            CommandItemEnchant,
-            CommandUsername,
-            CommandCoordinates,
-            CommandVClip,
-            CommandTeleport,
-            CommandPlayerTeleport,
-            CommandTps,
-            CommandServerInfo,
-            CommandModels,
-            CommandTranslate,
-            CommandAutoTranslate,
-        )
-
-        commands.forEach {
+        allCommandFactories.forEach {
             addCommand(it.createCommand())
         }
     }

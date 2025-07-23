@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to view from the perspective of another player in the game.
  */
+@InbuiltCommandFactory
 object CommandRemoteView : CommandFactory, MinecraftShortcuts {
 
     private var pName: String? = null

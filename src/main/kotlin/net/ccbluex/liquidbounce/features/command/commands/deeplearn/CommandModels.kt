@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
@@ -46,6 +47,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
+@InbuiltCommandFactory
 object CommandModels : CommandFactory {
 
     override fun createCommand(): Command {

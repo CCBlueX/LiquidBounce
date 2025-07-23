@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -33,6 +34,7 @@ import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket
  *
  * @author ccetl
  */
+@InbuiltCommandFactory
 object CommandTps : CommandFactory {
 
     override fun createCommand(): Command {

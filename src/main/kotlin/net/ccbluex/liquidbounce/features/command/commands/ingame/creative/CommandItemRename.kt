@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -35,6 +36,7 @@ import net.minecraft.util.Hand
  *
  * Allows you to rename an item held in the player's hand.
  */
+@InbuiltCommandFactory
 object CommandItemRename : CommandFactory {
 
     override fun createCommand(): Command {

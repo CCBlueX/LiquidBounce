@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Sequence
@@ -50,6 +51,7 @@ import net.minecraft.text.HoverEvent
  *
  * The command supports active detection modes for more thorough analysis.
  */
+@InbuiltCommandFactory
 object CommandServerInfo : CommandFactory, EventListener {
 
     override fun createCommand(): Command {

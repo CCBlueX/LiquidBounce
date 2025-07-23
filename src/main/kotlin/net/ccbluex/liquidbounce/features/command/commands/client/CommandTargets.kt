@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.combat.Targets
  *
  * Provides subcommands for enemy configuration.
  */
+@InbuiltCommandFactory
 object CommandTargets : CommandFactory {
 
     override fun createCommand() = CommandBuilder

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -39,6 +40,7 @@ import net.minecraft.util.Formatting
  *
  * Module: [ModuleAutoDisable]
  */
+@InbuiltCommandFactory
 object CommandAutoDisable : CommandFactory {
 
     override fun createCommand(): Command {

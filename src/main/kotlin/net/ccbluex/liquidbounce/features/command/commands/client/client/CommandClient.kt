@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
  *
  * Provides subcommands for client management.
  */
+@InbuiltCommandFactory
 object CommandClient : CommandFactory {
 
     /**

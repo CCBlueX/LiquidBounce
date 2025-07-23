@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
 import java.io.File
 
+@InbuiltCommandFactory
 object CommandScript : CommandFactory {
 
     private val listScriptFiles = AutoCompletionProvider { prefix: String, _ ->

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -34,6 +35,7 @@ import net.minecraft.util.Formatting
  *
  * Allows you to hide specific modules.
  */
+@InbuiltCommandFactory
 object CommandHide : CommandFactory {
 
     override fun createCommand(): Command {

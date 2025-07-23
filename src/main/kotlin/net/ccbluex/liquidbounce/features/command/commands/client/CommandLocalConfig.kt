@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -36,6 +37,7 @@ import net.minecraft.util.Util
  *
  * Allows you to load, list, and create local configurations.
  */
+@InbuiltCommandFactory
 object CommandLocalConfig : CommandFactory {
 
     override fun createCommand(): Command {

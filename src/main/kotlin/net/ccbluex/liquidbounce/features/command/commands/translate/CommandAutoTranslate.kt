@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 
+@InbuiltCommandFactory
 object CommandAutoTranslate : Configurable("AutoTranslate"), CommandFactory {
 
     init {

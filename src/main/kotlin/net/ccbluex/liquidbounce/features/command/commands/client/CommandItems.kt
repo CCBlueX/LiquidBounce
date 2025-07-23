@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -40,6 +41,7 @@ import net.minecraft.util.Formatting
  *
  * Allows you to add, remove, list, and clear blocks from the disallowed list.
  */
+@InbuiltCommandFactory
 object CommandItems : CommandFactory {
 
     override fun createCommand(): Command {
