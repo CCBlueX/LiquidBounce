@@ -24,7 +24,7 @@ class CommandFactoryProcessor(private val environment: SymbolProcessorEnvironmen
     }
 
     override fun finish() {
-        environment.codeGenerator.writeObjectListFile(
+        val count = environment.codeGenerator.writeObjectListFile(
             packageName = "net.ccbluex.liquidbounce.features.command",
             fileName = "CommandFactories",
             itemType = "net.ccbluex.liquidbounce.features.command.CommandFactory",
@@ -32,6 +32,8 @@ class CommandFactoryProcessor(private val environment: SymbolProcessorEnvironmen
             extensionName = "allCommandFactories",
             objects = commands,
         )
+
+        environment.logger.info("[KSP] Collected $count command factories.")
     }
 
 }

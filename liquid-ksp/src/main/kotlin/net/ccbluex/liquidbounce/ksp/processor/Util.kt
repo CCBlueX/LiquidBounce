@@ -35,8 +35,9 @@ internal inline fun CodeGenerator.writeObjectListFile(
     objects: Sequence<KSClassDeclaration>,
     mapper: (KSClassDeclaration) -> CharSequence = KSClassDeclaration::normalizedQualifierName,
 //    extraContent: BufferedWriter.() -> Unit = {},
-) {
+): Int {
     val listName = "list_" + itemType.hashCode().toUInt()
+    var count = 0
 
     createNewFile(
         dependencies = Dependencies.ALL_FILES,
@@ -56,6 +57,7 @@ internal inline fun CodeGenerator.writeObjectListFile(
             .apply {
                 objects.forEach {
                     append("        ").append(mapper(it)).append(",\n")
+                    count++
                 }
             }
             .appendLine("    )")
@@ -67,4 +69,6 @@ internal inline fun CodeGenerator.writeObjectListFile(
 
 //        writer.extraContent()
     }
+
+    return count
 }

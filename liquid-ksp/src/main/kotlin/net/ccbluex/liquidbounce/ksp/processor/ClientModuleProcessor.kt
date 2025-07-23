@@ -24,7 +24,7 @@ class ClientModuleProcessor(private val environment: SymbolProcessorEnvironment)
     }
 
     override fun finish() {
-        environment.codeGenerator.writeObjectListFile(
+        val count = environment.codeGenerator.writeObjectListFile(
             packageName = "net.ccbluex.liquidbounce.features.module",
             fileName = "ClientModules",
             itemType = "net.ccbluex.liquidbounce.features.module.ClientModule",
@@ -32,6 +32,8 @@ class ClientModuleProcessor(private val environment: SymbolProcessorEnvironment)
             extensionName = "allClientModules",
             objects = modules,
         )
+
+        environment.logger.info("[KSP] Collected $count client modules.")
     }
 
 }

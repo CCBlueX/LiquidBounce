@@ -397,15 +397,15 @@ object LiquidBounce : EventListener {
      */
     @Suppress("unused")
     private val startHandler = handler<ClientStartEvent> {
-        runCatching {
-            clientLogger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
+        clientLogger.runCatching {
+            info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             // Print client information
-            clientLogger.info("Client Version: $clientVersion ($clientCommit)")
-            clientLogger.info("Client Branch: $clientBranch")
-            clientLogger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
-            clientLogger.info("Java Version: ${System.getProperty("java.version")}")
-            clientLogger.info("Screen Resolution: ${mc.window.width}x${mc.window.height}")
-            clientLogger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+            info("Client Version: $clientVersion ($clientCommit)")
+            info("Client Branch: $clientBranch")
+            info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
+            info("Java Version: ${System.getProperty("java.version")}")
+            info("Screen Resolution: ${mc.window.width}x${mc.window.height}")
+            info("Refresh Rate: ${mc.window.refreshRate} Hz")
 
             // Initialize event manager
             EventManager
@@ -416,7 +416,7 @@ object LiquidBounce : EventListener {
             if (resourceManager is ReloadableResourceManagerImpl) {
                 resourceManager.registerReloader(clientInitializer)
             } else {
-                clientLogger.warn("Failed to register resource reloader!")
+                warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
                 clientInitializer.reload(resourceManager)

@@ -167,7 +167,6 @@ dependencies {
     api(project(":liquid-inbuilt-annotations"))
     include(project(":liquid-inbuilt-annotations")) // use `include` because it has no extra dependency
     ksp(project(":liquid-ksp"))
-    kspTest(project(":liquid-ksp"))
 
     // Minecraft Authlib
     includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
@@ -388,6 +387,13 @@ java {
 }
 
 kotlin {
+    sourceSets {
+        test {
+            // task kspKotlin
+            kotlin.srcDir("build/generated/ksp/main/kotlin")
+        }
+    }
+
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)

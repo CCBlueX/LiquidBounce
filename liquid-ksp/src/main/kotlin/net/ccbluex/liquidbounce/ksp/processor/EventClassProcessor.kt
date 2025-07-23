@@ -23,7 +23,7 @@ class EventClassProcessor(private val environment: SymbolProcessorEnvironment) :
     }
 
     override fun finish() {
-        environment.codeGenerator.writeObjectListFile(
+        val count = environment.codeGenerator.writeObjectListFile(
             packageName = "net.ccbluex.liquidbounce.event",
             fileName = "EventClasses",
             itemType = "java.lang.Class<out net.ccbluex.liquidbounce.event.Event>",
@@ -32,6 +32,8 @@ class EventClassProcessor(private val environment: SymbolProcessorEnvironment) :
             objects = eventClasses,
             mapper = { it.normalizedQualifierName() + "::class.java" }
         )
+
+        environment.logger.info("[KSP] Collected $count event classes.")
     }
 
 }
