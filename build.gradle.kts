@@ -90,9 +90,14 @@ fun Configuration.excludeProvidedLibs() = apply {
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
-configurations.include.get().extendsFrom(includeModDependency)
-configurations.modApi.get().extendsFrom(includeModDependency)
-configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
+configurations {
+    include {
+        extendsFrom(includeModDependency)
+    }
+    modApi {
+        extendsFrom(includeModDependency)
+    }
+}
 
 allprojects {
     repositories {
@@ -159,8 +164,10 @@ dependencies {
     modRuntimeOnly("com.viaversion:viafabricplus:${viafabricplus_version}")
 
     // KSP
-    compileOnly(project(":liquid-inbuilt-annotations"))
+    api(project(":liquid-inbuilt-annotations"))
+    include(project(":liquid-inbuilt-annotations")) // use `include` because it has no extra dependency
     ksp(project(":liquid-ksp"))
+    kspTest(project(":liquid-ksp"))
 
     // Minecraft Authlib
     includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
@@ -210,10 +217,9 @@ dependencies {
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
+            val apiDependency = dependencies.api(it.requested.toString()) {
                 isTransitive = false
             }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
 
             dependencies.include(apiDependency)
         }
@@ -363,7 +369,7 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
 
     val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
     baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
+    files.from(languageFolder?.listFiles()?.filter { it.extension.equals("json", ignoreCase = true) } ?: emptyList())
     consoleOutputCount.set(5)
 }
 

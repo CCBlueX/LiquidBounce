@@ -40,7 +40,7 @@ object EventManager {
      */
     fun <T : Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>): EventHook<T> {
         val handlers = registry[eventClass]
-            ?: error("The event '${eventClass.name}' is not registered in Events.kt::ALL_EVENT_CLASSES.")
+            ?: error("The event '${eventClass.name}' is not registered. Add @InbuiltEvent to the event class.")
 
         @Suppress("UNCHECKED_CAST")
         val hook = eventHook as EventHook<in Event>
