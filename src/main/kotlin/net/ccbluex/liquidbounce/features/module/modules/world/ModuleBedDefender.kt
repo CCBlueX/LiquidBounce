@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.ints.IntObjectPair
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -43,6 +44,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.util.math.BlockPos
 
+@InbuiltModule
 object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD) {
 
     private val maxLayers by int("MaxLayers", 1, 1..5)

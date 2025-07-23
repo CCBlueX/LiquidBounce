@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Automatically adjusts breaking speed when in negatively affecting situations.
  */
+@InbuiltModule
 object ModuleNoSlowBreak : ClientModule("NoSlowBreak", Category.WORLD) {
     @Suppress("ObjectPropertyNaming")
     private val `when` by multiEnumChoice("When",

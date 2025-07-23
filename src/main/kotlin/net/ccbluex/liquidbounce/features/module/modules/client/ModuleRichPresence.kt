@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.json
@@ -57,6 +58,7 @@ val ipcConfiguration by AsyncLazy {
     }.getOrNull()
 }
 
+@InbuiltModule
 object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state = true, hide = true,
     aliases = arrayOf("DiscordPresence")) {
 

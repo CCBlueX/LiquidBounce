@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
+@InbuiltModule
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
     category = Category.PLAYER,

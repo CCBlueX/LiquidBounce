@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTransl
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
+@InbuiltModule
 object ModuleTranslation : ClientModule(
     name = "Translation",
     category = Category.CLIENT,

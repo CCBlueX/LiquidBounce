@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -44,6 +45,7 @@ import net.minecraft.util.math.Box
  * Allows you to see server-sided rotations.
  */
 
+@InbuiltModule
 object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
 
     /**

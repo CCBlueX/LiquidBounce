@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -37,6 +38,7 @@ import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket
  *
  * Switches your main hand.
  */
+@InbuiltModule
 object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
 
 

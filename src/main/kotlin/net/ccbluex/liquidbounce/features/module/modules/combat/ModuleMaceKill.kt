@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -34,6 +35,7 @@ import kotlin.math.ceil
 /**
  * Makes the mace powerful by faking fall height.
  */
+@InbuiltModule
 object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
 
     private val fallHeight by int("FallHeight", 22, 1..170).apply { tagBy(this) }

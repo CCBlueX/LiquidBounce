@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
@@ -51,6 +52,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * Allows you to fly.
  */
 
+@InbuiltModule
 object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
 
     init {

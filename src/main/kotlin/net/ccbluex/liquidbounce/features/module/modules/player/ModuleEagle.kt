@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Legit trick to build faster.
  */
+@InbuiltModule
 object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
     aliases = arrayOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {

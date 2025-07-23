@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
@@ -43,6 +44,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  *
  * Allows you to freeze yourself without the server knowing.
  */
+@InbuiltModule
 object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
 
     private val modes = choices("Mode", Queue, arrayOf(Queue, Cancel, Stationary))

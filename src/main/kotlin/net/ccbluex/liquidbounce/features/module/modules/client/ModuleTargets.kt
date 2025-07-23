@@ -21,11 +21,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.Targets
 import java.util.*
 
+@InbuiltModule
 object ModuleTargets : ClientModule(
     name = "Targets",
     category = Category.CLIENT,

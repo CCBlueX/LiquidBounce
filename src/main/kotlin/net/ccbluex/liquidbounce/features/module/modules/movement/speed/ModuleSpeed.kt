@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -59,6 +60,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
  *
  * Allows you to move faster.
  */
+@InbuiltModule
 object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
 
     init {

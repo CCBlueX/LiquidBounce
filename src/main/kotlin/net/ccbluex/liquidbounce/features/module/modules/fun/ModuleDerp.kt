@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Makes it look as if you were derping around.
  */
+@InbuiltModule
 object ModuleDerp : ClientModule("Derp", Category.FUN) {
 
     private val yawMode = choices("Yaw", YawRandom,

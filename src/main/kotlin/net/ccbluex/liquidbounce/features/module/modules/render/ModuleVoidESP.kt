@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.longs.LongSets
@@ -39,6 +40,7 @@ import net.minecraft.world.chunk.Chunk
  * Highlight all surrounding positions that may be void.
  */
 
+@InbuiltModule
 object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
 
     override val baseKey: String

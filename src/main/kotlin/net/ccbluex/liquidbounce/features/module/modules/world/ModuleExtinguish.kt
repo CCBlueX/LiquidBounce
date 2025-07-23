@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -49,6 +50,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Automatically extinguishes yourself when you're burning.
  */
+@InbuiltModule
 object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
 
     private val cooldown by float("Cooldown", 1.0F, 0.0F..20.0F, "s")

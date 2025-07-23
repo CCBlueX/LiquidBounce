@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -32,6 +33,7 @@ import net.minecraft.util.hit.HitResult
  *
  * Automatically breaks blocks.
  */
+@InbuiltModule
 object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
 
     @Suppress("unused")

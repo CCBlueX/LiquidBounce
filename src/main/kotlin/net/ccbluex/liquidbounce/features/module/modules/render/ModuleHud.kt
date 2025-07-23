@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.EventManager
@@ -52,6 +53,7 @@ import net.minecraft.client.gui.screen.DownloadingTerrainScreen
  * The client in-game dashboard.
  */
 
+@InbuiltModule
 object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
 
     override val running

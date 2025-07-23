@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -37,6 +38,7 @@ import net.minecraft.util.math.Direction
  *
  * Disables web slowdown.
  */
+@InbuiltModule
 object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
 
     init {

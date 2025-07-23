@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -26,4 +27,5 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
+@InbuiltModule
 object ModuleAntiBounce : ClientModule("AntiBounce", Category.MOVEMENT)

@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -44,6 +45,7 @@ import kotlin.math.max
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     val particleSize by float("Size", 1f, 0.5f..2f)

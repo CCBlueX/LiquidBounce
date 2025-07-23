@@ -19,6 +19,7 @@
 @file:Suppress("WildcardImport")
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -43,6 +44,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)

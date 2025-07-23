@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
@@ -39,6 +40,7 @@ import net.minecraft.client.gui.screen.DeathScreen
  *
  * Quality of life improvements to the in-game chat.
  */
+@InbuiltModule
 object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = arrayOf("AntiSpam")) {
     private val features by multiEnumChoice("Features",
         Features.INFINITE,

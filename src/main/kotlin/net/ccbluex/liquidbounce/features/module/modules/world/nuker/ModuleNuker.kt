@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNukerArea
@@ -35,6 +36,7 @@ import net.minecraft.util.math.BlockPos
  *
  * Destroys blocks around you.
  */
+@InbuiltModule
 object ModuleNuker : ClientModule("Nuker", Category.WORLD, disableOnQuit = true) {
 
     val mode =

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Sequence
@@ -55,6 +56,7 @@ import java.awt.Color
  * Allows you to see server-sided rotations.
  */
 
+@InbuiltModule
 object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     private val parameters by boolean("Parameters", true).onChanged { _ ->

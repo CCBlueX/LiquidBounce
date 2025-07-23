@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.withScope
@@ -17,6 +18,7 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 /**
  * Notifies you about staff actions.
  */
+@InbuiltModule
 object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
 
     private val showInTabList by boolean("ShowInTabList", true)

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
@@ -38,6 +39,7 @@ import org.lwjgl.glfw.GLFW
  *
  * @author 1zun4, sqlerrorthing
  */
+@InbuiltModule
 object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
     private val cameraDistance = float("CameraDistance", 4f, 1f..48f)
 

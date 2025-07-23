@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
@@ -39,6 +40,7 @@ import kotlin.math.pow
  * Locks on to a target and prevents targeting other entities,
  * either [Temporary]ly on attack or by [Filter]ing by username.
  */
+@InbuiltModule
 object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
     init {

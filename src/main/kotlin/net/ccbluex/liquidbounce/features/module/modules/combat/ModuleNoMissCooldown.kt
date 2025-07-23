@@ -3,6 +3,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
+@InbuiltModule
 object ModuleNoMissCooldown : ClientModule("NoMissCooldown", Category.COMBAT) {
 
     /**

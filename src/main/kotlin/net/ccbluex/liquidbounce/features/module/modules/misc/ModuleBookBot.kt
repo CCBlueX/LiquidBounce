@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -51,6 +52,7 @@ private const val MAX_LINE_WIDTH: Float = 114f
  * @author sqlerrorthing
  * @since 12/28/2024
  **/
+@InbuiltModule
 object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 

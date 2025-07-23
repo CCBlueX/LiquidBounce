@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
@@ -32,6 +33,7 @@ import net.minecraft.entity.effect.StatusEffects
  *
  * Allows you to see in the dark.
  */
+@InbuiltModule
 object ModuleFullBright : ClientModule("FullBright", Category.RENDER) {
 
     private val modes = choices(

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,6 +35,7 @@ import net.minecraft.util.Language
  *
  * Allows the player to have potion effects without actually having the potion.
  */
+@InbuiltModule
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     private class StatusEffectConfigurable(

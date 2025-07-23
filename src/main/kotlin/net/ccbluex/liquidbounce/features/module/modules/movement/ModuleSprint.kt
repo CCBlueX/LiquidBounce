@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -42,6 +43,7 @@ import net.minecraft.util.math.MathHelper
  * Sprints automatically.
  */
 
+@InbuiltModule
 object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
     private enum class SprintMode(override val choiceName: String) : NamedChoice {

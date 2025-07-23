@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -38,6 +39,7 @@ import net.minecraft.util.math.Box
  * Allows you to see dropped items through walls.
  */
 
+@InbuiltModule
 object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
     override val baseKey: String

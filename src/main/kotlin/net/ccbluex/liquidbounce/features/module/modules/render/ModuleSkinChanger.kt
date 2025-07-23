@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import com.mojang.authlib.GameProfile
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -35,6 +36,7 @@ import net.minecraft.client.util.SkinTextures
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
+@InbuiltModule
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     private val username = text("Username", "LiquidBounce")

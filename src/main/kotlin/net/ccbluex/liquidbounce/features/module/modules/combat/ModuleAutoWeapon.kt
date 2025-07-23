@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -47,6 +48,7 @@ import net.minecraft.util.Hand
  *
  * Automatically selects the best weapon in your hotbar
  */
+@InbuiltModule
 object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     /**

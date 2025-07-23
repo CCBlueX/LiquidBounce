@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
@@ -56,6 +57,7 @@ private const val BACKGROUND_PADDING: Int = 2
  *
  * Show the names and quantities of items in several boxes.
  */
+@InbuiltModule
 object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     override val baseKey: String

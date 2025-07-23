@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
@@ -35,6 +36,7 @@ import net.minecraft.util.math.Direction
  *
  * Command: [CommandXRay]
  */
+@InbuiltModule
 object ModuleXRay : ClientModule("XRay", Category.RENDER) {
 
     // Lighting of blocks through walls

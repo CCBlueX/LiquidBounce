@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -31,6 +32,7 @@ import net.minecraft.client.gui.hud.InGameHud
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
+@InbuiltModule
 object ModuleBetterTitle : ClientModule(
     "BetterTitle", Category.RENDER, aliases = arrayOf("BetterSubtitle")
 ) {

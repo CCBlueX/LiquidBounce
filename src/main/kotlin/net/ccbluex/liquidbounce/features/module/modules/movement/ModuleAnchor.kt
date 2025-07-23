@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -41,6 +42,7 @@ import kotlin.math.max
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModuleAnchor : ClientModule(
     "Anchor",
     Category.MOVEMENT,

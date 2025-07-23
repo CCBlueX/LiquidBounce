@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
@@ -30,6 +31,7 @@ import net.minecraft.client.option.Perspective
 import net.minecraft.client.option.Perspective.THIRD_PERSON_BACK
 import net.minecraft.client.option.Perspective.THIRD_PERSON_FRONT
 
+@InbuiltModule
 object ModuleFreeLook : ClientModule(
     "FreeLook", Category.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
 ) {

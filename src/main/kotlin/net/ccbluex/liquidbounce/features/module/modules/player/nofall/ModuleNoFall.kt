@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -30,6 +31,7 @@ import net.minecraft.item.Items
  *
  * Protects you from taking fall damage.
  */
+@InbuiltModule
 object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
     internal val modes = choices(
         "Mode", NoFallSpoofGround, arrayOf(

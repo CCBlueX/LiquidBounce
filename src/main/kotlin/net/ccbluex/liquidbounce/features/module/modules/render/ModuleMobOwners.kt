@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.thirdparty.MojangApi
@@ -39,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Shows you from which player a tamable entity or projectile belongs to.
  */
 
+@InbuiltModule
 object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
 
     private val projectiles by boolean("Projectiles", false)

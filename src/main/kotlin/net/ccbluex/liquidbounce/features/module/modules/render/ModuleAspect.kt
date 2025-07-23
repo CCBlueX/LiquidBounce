@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -9,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleAspect : ClientModule("Aspect", Category.RENDER) {
     private val ratioPercentage by int("Ratio", 100, 1..300, suffix = "%")
 

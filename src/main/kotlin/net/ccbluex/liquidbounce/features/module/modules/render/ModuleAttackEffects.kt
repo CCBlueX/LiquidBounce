@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,6 +32,7 @@ import net.minecraft.sound.SoundEvent
 import net.minecraft.sound.SoundEvents
 
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
 
     enum class Particle(override val choiceName: String) : NamedChoice {

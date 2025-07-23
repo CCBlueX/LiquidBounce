@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -29,6 +30,7 @@ import net.minecraft.entity.FallingBlockEntity
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 
+@InbuiltModule
 object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     aliases = arrayOf("BlockUpdateDetector", "FallingBlockESP")) {
 

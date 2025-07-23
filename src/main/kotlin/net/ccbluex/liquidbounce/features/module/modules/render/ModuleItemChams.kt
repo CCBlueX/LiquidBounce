@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShaderData
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
 
     private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186))

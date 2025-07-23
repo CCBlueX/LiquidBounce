@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -34,6 +35,7 @@ import net.minecraft.text.Text
  * @since 12/28/2024
  **/
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
 
     val sorting by enumChoice("Sorting", Sorting.VANILLA)

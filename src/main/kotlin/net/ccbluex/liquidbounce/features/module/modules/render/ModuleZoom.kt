@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -38,6 +39,7 @@ import kotlin.math.round
  *
  * The mouse is slowed down with the help of mixins in [MixinMouse].
  */
+@InbuiltModule
 object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind.BindAction.HOLD) {
 
     val zoom by int("Zoom", 30, 10..150)

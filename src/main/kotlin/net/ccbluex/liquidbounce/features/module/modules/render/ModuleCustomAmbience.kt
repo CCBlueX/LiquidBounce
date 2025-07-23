@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.GlStateManager
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -41,6 +42,7 @@ import org.lwjgl.opengl.GL13
  *
  * Override the ambience of the game
  */
+@InbuiltModule
 object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = arrayOf("FogChanger")) {
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  *
  * Automatically jumps at the very edge of a block.
  */
+@InbuiltModule
 object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
 
     @Suppress("unused")

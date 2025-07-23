@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -26,6 +27,7 @@ import kotlin.math.*
  *
  * TODO: Implement visuals
  */
+@InbuiltModule
 object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
 
     // Configuration options

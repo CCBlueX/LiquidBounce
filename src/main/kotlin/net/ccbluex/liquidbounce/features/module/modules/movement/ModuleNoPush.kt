@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Disables pushing from other players and some other situations where someone/something can push.
  */
+@InbuiltModule
 object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
     private val noPushBy = multiEnumChoice("PushBy",
         NoPushBy.ENTITIES,

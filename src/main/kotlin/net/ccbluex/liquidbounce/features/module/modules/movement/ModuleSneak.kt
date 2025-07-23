@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
@@ -35,6 +36,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Automatically sneaks all the time.
  */
+@InbuiltModule
 object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
     var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }

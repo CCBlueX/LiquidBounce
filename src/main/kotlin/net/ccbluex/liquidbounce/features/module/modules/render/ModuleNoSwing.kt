@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Disables the swing effect.
  */
+@InbuiltModule
 object ModuleNoSwing : ClientModule("NoSwing", Category.RENDER) {
     private val hideFor by multiEnumChoice("HideFor", HideFor.entries)
 

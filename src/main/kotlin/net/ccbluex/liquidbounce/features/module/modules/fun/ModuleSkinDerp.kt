@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -31,6 +32,7 @@ import kotlin.random.Random
  * Makes your skin blink (Requires multi-layer skin).
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
     private val sync by boolean("Sync", false)
     private val delay by int("Delay", 0, 0..20, "ticks")

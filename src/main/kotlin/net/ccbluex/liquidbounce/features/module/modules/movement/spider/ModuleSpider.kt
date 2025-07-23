@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderPolar29thMarch2025
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVulcan288
 
+@InbuiltModule
 object ModuleSpider : ClientModule("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
     init {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -39,6 +40,7 @@ import net.minecraft.item.equipment.EquipmentType
  * @author sqlerrorthing
  * @since 2/13/2025
  **/
+@InbuiltModule
 object ModuleElytraSwap : ClientModule(
     "ElytraSwap",
     Category.PLAYER,

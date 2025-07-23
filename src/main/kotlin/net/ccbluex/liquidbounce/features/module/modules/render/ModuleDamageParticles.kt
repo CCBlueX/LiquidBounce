@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -41,6 +42,7 @@ import kotlin.math.abs
  *
  * Show health changes of entities
  */
+@InbuiltModule
 object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) {
 
     private val scale by float("Scale", 1.5F, 0.25F..4F)

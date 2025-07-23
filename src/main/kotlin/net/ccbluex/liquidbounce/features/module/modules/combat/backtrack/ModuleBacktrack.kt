@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
 import com.google.common.collect.Queues
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -54,6 +55,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
+@InbuiltModule
 object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..10f)

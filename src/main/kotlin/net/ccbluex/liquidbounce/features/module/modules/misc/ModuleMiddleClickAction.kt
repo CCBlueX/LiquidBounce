@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -42,6 +43,7 @@ import net.minecraft.item.Items
  *
  * Allows you to perform actions with middle clicks.
  */
+@InbuiltModule
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
     Category.MISC,

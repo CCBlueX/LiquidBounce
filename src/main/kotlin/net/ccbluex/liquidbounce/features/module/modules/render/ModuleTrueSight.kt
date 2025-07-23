@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -33,6 +34,7 @@ import net.minecraft.entity.LivingEntity
  * Allows you to see invisible objects and entities.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
     private val sight by multiEnumChoice("Sight", Sight.entries)
 

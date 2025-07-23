@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -32,6 +33,7 @@ import kotlin.random.Random
  *
  * Spams the chat with a given message.
  */
+@InbuiltModule
 object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = true) {
 
     init {

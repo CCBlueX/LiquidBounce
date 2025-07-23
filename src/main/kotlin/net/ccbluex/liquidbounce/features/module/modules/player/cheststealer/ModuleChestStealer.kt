@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
@@ -39,6 +40,7 @@ import kotlin.math.ceil
  * Automatically steals all items from a chest.
  */
 
+@InbuiltModule
 object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
     private val inventoryConstrains = tree(InventoryConstraints())

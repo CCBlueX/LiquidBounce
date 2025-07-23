@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.api.thirdparty.OPENAI_BASE_URL
 import net.ccbluex.liquidbounce.api.thirdparty.OpenAiApi
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 /**
  * Automatically solves chat game riddles.
  */
+@InbuiltModule
 object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
 
     init {

@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -65,6 +66,7 @@ import net.minecraft.item.Items
  *
  * @author 1zuna
  */
+@InbuiltModule
 object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
 
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)

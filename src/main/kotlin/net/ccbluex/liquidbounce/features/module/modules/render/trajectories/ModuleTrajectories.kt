@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,6 +40,7 @@ import net.minecraft.util.math.Vec3d
  * Allows you to see where projectile items will land.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val show by multiEnumChoice("Show",

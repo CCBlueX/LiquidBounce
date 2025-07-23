@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.Matri
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 
+@InbuiltModule
 object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(

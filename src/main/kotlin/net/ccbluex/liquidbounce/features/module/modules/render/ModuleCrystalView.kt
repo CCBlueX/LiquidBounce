@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalEntityModel
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrysta
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModuleCrystalView : ClientModule("CrystalView", Category.RENDER) {
 
     val size by float("Size", 0.3f, 0.1f..1.5f)

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -55,6 +56,7 @@ import org.lwjgl.glfw.GLFW
  *
  * Manages your offhand.
  */
+@InbuiltModule
 object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())

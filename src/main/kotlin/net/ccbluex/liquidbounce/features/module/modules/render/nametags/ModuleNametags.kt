@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -42,6 +43,7 @@ import kotlin.math.abs
  * Makes player name tags more visible and adds useful information.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
@@ -92,15 +94,15 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
-        
+
         drawnEnchantmentAreas.clear()
-        
+
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
         val filteredNameTags = nametagsToRender.filter { it.position != null }
         val nametagsCount = filteredNameTags.size.toFloat()
-        
-       
-        val sortedTags = filteredNameTags.sortedBy { tag -> 
+
+
+        val sortedTags = filteredNameTags.sortedBy { tag ->
             tag.entity.squaredDistanceTo(mc.cameraEntity)
         }
 

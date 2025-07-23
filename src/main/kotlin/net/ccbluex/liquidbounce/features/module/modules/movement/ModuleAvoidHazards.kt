@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,6 +36,7 @@ import net.minecraft.util.shape.VoxelShapes
  *
  * Prevents you walking into blocks that might be malicious for you.
  */
+@InbuiltModule
 object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 

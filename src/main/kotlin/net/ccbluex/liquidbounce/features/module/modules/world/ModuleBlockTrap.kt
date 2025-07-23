@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -50,6 +51,7 @@ import kotlin.math.min
  * @author ccetl
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
     private val doublePlace by multiEnumChoice<DoublePlace>("DoublePlace")

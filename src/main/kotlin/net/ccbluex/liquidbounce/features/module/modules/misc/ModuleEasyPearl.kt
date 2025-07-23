@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -55,6 +56,7 @@ import net.minecraft.util.math.Vec3d
  * Throw pearl to where you are looking at.
  **/
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleEasyPearl :
     ClientModule("EasyPearl", Category.MISC, aliases = arrayOf("PearlHelper", "PearlAssist", "PearlTP")) {
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)

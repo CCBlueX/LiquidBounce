@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Control rideable entities without a saddle
  */
+@InbuiltModule
 object ModuleEntityControl : ClientModule("EntityControl", Category.MOVEMENT) {
     private val enforce by multiEnumChoice("Enforce", Enforce.entries)
 

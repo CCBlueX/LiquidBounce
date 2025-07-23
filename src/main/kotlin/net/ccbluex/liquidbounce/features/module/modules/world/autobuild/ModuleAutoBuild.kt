@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  *
  * Builds structures.
  */
+@InbuiltModule
 object ModuleAutoBuild : ClientModule("AutoBuild", Category.WORLD, aliases = arrayOf("Platform", "AutoPortal")) {
 
     private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode)).apply { tagBy(this) }

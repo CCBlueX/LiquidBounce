@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
@@ -43,6 +44,7 @@ import java.util.*
  * Makes it look as if you were teleporting to other players.
  */
 
+@InbuiltModule
 object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
 
     private val dummy by boolean("Dummy", false)

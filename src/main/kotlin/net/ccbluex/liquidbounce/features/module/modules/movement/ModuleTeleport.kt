@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -24,6 +25,7 @@ import kotlin.math.floor
  *
  * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
  */
+@InbuiltModule
 object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = arrayOf("tp")) {
 
     private val allFull by boolean("AllFullPacket", false)

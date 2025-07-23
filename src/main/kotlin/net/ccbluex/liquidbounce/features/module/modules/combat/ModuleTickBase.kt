@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -48,6 +49,7 @@ import kotlin.math.min
  *
  * Calls tick function to speed up, when needed
  */
+@InbuiltModule
 internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
     private val mode by enumChoice("Mode", TickBaseMode.PAST)

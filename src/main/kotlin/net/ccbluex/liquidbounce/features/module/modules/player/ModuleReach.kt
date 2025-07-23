@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Increases your reach.
  */
 
+@InbuiltModule
 object ModuleReach : ClientModule("Reach", Category.PLAYER) {
     val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
     val blockReach by float("BlockReach", 5f, 4.5f..8f)

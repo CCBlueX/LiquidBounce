@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -13,6 +14,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Vec3d
 
+@InbuiltModule
 object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
 
     private val rotationsConfigurable = tree(RotationsConfigurable(this))

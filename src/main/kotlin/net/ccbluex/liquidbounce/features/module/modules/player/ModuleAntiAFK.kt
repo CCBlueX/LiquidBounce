@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -46,6 +47,7 @@ import kotlin.random.Random
  * Prevents you from being kicked for AFK.
  */
 
+@InbuiltModule
 object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
     private val modes = choices(
         "Mode", RandomInteraction, arrayOf(

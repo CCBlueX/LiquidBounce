@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
@@ -56,6 +57,7 @@ import kotlin.math.floor
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit = true) {
 
     /**

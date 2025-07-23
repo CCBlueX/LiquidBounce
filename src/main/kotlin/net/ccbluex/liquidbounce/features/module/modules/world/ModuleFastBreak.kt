@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
@@ -34,6 +35,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
  *
  * Allows you to break blocks faster.
  */
+@InbuiltModule
 object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)

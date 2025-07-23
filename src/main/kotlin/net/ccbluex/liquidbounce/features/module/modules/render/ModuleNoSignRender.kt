@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -27,4 +28,5 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Prevents the sign text from being rendered.
  */
 
+@InbuiltModule
 object ModuleNoSignRender : ClientModule("NoSignRender", Category.RENDER)

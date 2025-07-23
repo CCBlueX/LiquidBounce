@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -42,6 +43,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * Allows you to use items faster.
  */
 
+@InbuiltModule
 object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = arrayOf("FastEat")) {
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }

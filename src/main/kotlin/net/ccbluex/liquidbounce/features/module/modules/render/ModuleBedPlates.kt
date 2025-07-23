@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.event.computedOn
@@ -45,6 +46,7 @@ import kotlin.math.sqrt
 private const val ITEM_SIZE: Int = 16
 private const val BACKGROUND_PADDING: Int = 2
 
+@InbuiltModule
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V")
 

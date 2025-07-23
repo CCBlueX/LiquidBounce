@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -40,6 +41,7 @@ import kotlin.math.ceil
  *
  * Changes the speed of the entire game.
  */
+@InbuiltModule
 object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true) {
 
     val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost)).apply { tagBy(this) }

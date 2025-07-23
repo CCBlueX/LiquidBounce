@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
  *
  * Prevents the server from rotating your head.
  */
+@InbuiltModule
 object ModuleNoRotateSet : ClientModule("NoRotateSet", Category.PLAYER) {
     val mode = choices(
         "Mode", SilentAccept, arrayOf(

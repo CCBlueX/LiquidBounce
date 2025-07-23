@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.PlayerEquipmentChangeEvent
@@ -47,6 +48,7 @@ import java.util.UUID
  *
  * Command: [CommandInvsee]
  */
+@InbuiltModule
 object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD) {
 
     /** Saves the non-persistent player object associated with the uuid.

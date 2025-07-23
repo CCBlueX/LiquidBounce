@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,6 +40,7 @@ import net.minecraft.util.math.Vec3d
  * Automatically catches fish when using a rod.
  */
 
+@InbuiltModule
 object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
 
     private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")

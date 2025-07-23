@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -45,6 +46,7 @@ import org.lwjgl.glfw.GLFW
  * Allows you to walk while an inventory is opened.
  */
 
+@InbuiltModule
 object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL)

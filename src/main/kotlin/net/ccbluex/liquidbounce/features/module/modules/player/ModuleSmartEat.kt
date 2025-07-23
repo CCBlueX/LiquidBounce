@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -51,6 +52,7 @@ import kotlin.math.absoluteValue
  * Makes it easier to eat
  */
 
+@InbuiltModule
 object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.of("hud/hotbar_offhand_left")

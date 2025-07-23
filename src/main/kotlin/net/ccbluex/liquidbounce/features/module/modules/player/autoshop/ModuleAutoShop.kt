@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.config.ShopConfigPreset
@@ -48,6 +49,7 @@ import kotlin.math.min
  * Automatically buys specific items in a BedWars shop.
  */
 @Suppress("TooManyFunctions")
+@InbuiltModule
 object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
 
     private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {

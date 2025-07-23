@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Attempts to detect the anti-cheat used by the server.
  */
+@InbuiltModule
 object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", Category.MISC) {
 
     init {

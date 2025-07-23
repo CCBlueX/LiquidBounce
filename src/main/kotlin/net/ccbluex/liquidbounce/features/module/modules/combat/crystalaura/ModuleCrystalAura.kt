@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModuleCrystalAura : ClientModule(
     "CrystalAura",
     Category.COMBAT,

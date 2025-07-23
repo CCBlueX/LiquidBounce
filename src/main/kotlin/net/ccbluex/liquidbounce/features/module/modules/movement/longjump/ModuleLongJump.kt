@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBow
 import net.ccbluex.liquidbounce.utils.entity.moving
 
+@InbuiltModule
 object ModuleLongJump : ClientModule("LongJump", Category.MOVEMENT) {
 
     init {

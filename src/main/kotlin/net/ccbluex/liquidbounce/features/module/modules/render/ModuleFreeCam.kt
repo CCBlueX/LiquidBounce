@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
@@ -52,6 +53,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Allows you to move out of your body.
  */
+@InbuiltModule
 object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)

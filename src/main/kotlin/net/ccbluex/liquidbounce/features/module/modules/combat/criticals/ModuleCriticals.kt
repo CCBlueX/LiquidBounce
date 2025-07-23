@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -45,6 +46,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Automatically crits every time you attack someone.
  */
+@InbuiltModule
 object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
 
     init {

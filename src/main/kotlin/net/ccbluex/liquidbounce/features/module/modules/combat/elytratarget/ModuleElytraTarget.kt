@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -19,6 +20,7 @@ import net.minecraft.entity.LivingEntity
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
     private val targetTracker = tree(TargetTracker())
 

@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -42,6 +43,7 @@ import net.minecraft.util.Hand
  *
  * Move with your vehicle however you want.
  */
+@InbuiltModule
 object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, aliases = arrayOf("BoatFly")) {
 
     init {

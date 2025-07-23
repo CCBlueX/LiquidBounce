@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -57,6 +58,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
+@InbuiltModule
 object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker", "IdNuker")) {
 
     private val range by float("Range", 5F, 1F..6F)

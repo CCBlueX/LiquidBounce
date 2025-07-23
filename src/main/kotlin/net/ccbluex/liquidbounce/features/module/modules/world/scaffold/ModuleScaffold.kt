@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.ints.IntObjectPair
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -86,6 +87,7 @@ import kotlin.math.abs
  * Places blocks under you.
  */
 @Suppress("TooManyFunctions")
+@InbuiltModule
 object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private var delay by intRange("Delay", 0..0, 0..40, "ticks")

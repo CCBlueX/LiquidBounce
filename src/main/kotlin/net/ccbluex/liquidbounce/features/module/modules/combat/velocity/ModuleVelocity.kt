@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -39,6 +40,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * Modifies the amount of velocity you take.
  */
 
+@InbuiltModule
 object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arrayOf("AntiKnockBack")) {
 
     init {

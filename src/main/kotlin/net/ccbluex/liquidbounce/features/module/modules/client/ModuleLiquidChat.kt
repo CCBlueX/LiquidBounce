@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -39,6 +40,7 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
+@InbuiltModule
 object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
     aliases = arrayOf("GlobalChat", "IRC")) {
 

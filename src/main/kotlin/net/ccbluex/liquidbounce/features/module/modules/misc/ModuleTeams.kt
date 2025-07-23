@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,6 +38,7 @@ import java.awt.Color
  *
  * Prevents KillAura from attacking teammates.
  */
+@InbuiltModule
 object ModuleTeams : ClientModule("Teams", Category.MISC) {
 
     private val matches by multiEnumChoice("Matches",

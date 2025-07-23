@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -41,6 +42,7 @@ import net.minecraft.util.shape.VoxelShapes
  * Allows you to step down blocks faster.
  */
 
+@InbuiltModule
 object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
 
     private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator)).apply { tagBy(this) }

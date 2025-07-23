@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,6 +35,7 @@ import java.util.function.Predicate
  *
  * Allows you to place blocks faster.
  */
+@InbuiltModule
 object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
 
     private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")

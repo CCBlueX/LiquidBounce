@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -16,6 +17,7 @@ private typealias ClickAction = (handler: ScreenHandler, slot: Slot, callback: M
  *
  * @author sqlerrorthing
  */
+@InbuiltModule
 object ModuleItemScroller : ClientModule("ItemScroller", Category.MISC) {
     @JvmStatic
     val clickMode by enumChoice("ClickMode", ClickMode.QUICK_MOVE)

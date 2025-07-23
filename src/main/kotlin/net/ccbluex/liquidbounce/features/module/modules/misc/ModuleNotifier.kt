@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,6 +36,7 @@ import java.util.*
  *
  * Notifies you about all kinds of events.
  */
+@InbuiltModule
 object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
 
     init {

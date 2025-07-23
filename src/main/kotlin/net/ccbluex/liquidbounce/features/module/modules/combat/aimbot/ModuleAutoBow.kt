@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.*
@@ -31,6 +32,7 @@ import java.util.*
  * Automatically shoots with your bow when it's fully charged
  *  + and make it possible to shoot faster
  */
+@InbuiltModule
 object ModuleAutoBow : ClientModule("AutoBow", Category.COMBAT, aliases = arrayOf("BowAssist", "BowAimbot")) {
     val random = Random()
 

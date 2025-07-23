@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
@@ -45,6 +46,7 @@ import net.minecraft.stat.Stats
  * Allows you to step up blocks.
  */
 
+@InbuiltModule
 object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
     var modes = choices("Mode", Instant, arrayOf(

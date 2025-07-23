@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -38,6 +39,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Makes elytra flying easier to control.
  */
+@InbuiltModule
 object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
 
     private val instant by multiEnumChoice("Instant", Instant.STOP)

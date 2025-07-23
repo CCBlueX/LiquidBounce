@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -46,6 +47,7 @@ import net.minecraft.util.math.MathHelper
  *
  * Shoots back incoming projectiles around you.
  */
+@InbuiltModule
 object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, false))

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -44,6 +45,7 @@ import kotlin.contracts.contract
  *
  * @author ccetl
  */
+@InbuiltModule
 object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)

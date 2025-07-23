@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
 import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -61,6 +62,7 @@ import kotlin.math.max
  * @author ccetl
  */
 @Suppress("TooManyFunctions")
+@InbuiltModule
 object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
     val mode = choices(

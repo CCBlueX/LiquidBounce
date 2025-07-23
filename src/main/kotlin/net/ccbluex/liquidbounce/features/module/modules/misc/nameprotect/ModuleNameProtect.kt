@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -43,6 +44,7 @@ import net.minecraft.text.Text
  * Changes players names clientside.
  */
 
+@InbuiltModule
 object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
     private val replacement by text("Replacement", "You")

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -41,6 +42,7 @@ import net.minecraft.util.math.RotationAxis
  * If they are not willing to contribute, please do not add the animation to this module.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = arrayOf("ViewModel")) {
 
     init {

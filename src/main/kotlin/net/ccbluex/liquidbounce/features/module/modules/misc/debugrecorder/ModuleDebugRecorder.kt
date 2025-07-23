@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -33,6 +34,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.time.LocalDateTime
 
+@InbuiltModule
 object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC, disableOnQuit = true) {
 
     init {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
  *
  * Command: [CommandAutoAccount]
  */
+@InbuiltModule
 object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
 
     private val password by text("Password", "a1b2c3d4")

@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -32,6 +33,7 @@ import kotlin.math.sin
  *
  * Boosts you when leaving a vehicle.
  */
+@InbuiltModule
 object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
 
     init {

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
@@ -44,6 +45,7 @@ import net.minecraft.util.hit.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
+@InbuiltModule
 object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {

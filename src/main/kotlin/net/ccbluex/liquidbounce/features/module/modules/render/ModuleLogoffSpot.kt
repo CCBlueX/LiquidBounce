@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -43,6 +44,7 @@ import java.util.*
  *
  * Creates a fake player entity when a player logs off.
  */
+@InbuiltModule
 object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
 
     private data class LoggedOffPlayer(

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Protects you from potentially annoying screen effects that block your view.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = arrayOf("NoRender")) {
     private val render = multiEnumChoice("DoRender",
         DoRender.ARMOR,

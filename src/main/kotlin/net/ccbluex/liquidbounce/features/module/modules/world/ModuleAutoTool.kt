@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
@@ -40,6 +41,7 @@ import net.minecraft.util.math.BlockPos
  *
  * Automatically chooses the best tool in your inventory to mine a block.
  */
+@InbuiltModule
 object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     val toolSelector =
         choices(

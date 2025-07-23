@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.Expiring
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.Vec3d
 
+@InbuiltModule
 object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)

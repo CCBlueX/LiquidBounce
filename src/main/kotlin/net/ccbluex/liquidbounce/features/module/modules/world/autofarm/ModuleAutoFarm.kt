@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -53,6 +54,7 @@ import net.minecraft.world.RaycastContext
  *
  * Automatically farms stuff for you.
  */
+@InbuiltModule
 object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)

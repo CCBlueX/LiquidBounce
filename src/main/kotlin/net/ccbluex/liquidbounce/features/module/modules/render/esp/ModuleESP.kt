@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -40,6 +41,7 @@ import net.minecraft.entity.player.PlayerEntity
  *
  * Allows you to see targets through walls.
  */
+@InbuiltModule
 object ModuleESP : ClientModule("ESP", Category.RENDER) {
 
     override val baseKey: String

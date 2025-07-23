@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -37,6 +38,7 @@ import kotlin.random.Random
  * Automatically speeds up when you are near an enemy.
  */
 
+@InbuiltModule
 object ModuleTimerRange : ClientModule("TimerRange", Category.COMBAT) {
 
     private val chance by int("Chance", 100, 0..100, "%")

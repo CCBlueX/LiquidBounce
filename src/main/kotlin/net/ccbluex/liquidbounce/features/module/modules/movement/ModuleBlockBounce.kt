@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -33,6 +34,7 @@ import net.minecraft.block.SlimeBlock
  *
  * Allows you to bounce higher on bouncy blocks.
  */
+@InbuiltModule
 object ModuleBlockBounce : ClientModule("BlockBounce", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.42f, 0.2f..2f)

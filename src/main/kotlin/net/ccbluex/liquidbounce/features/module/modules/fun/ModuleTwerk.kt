@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  *
  * Automatically sneaks and unsneaks.
  */
+@InbuiltModule
 object ModuleTwerk : ClientModule("Twerk", Category.FUN) {
 
     /**

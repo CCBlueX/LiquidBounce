@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -40,6 +41,7 @@ import kotlin.math.sin
  *
  * Highlight the active TNTs.
  */
+@InbuiltModule
 object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
 
     override val baseKey: String

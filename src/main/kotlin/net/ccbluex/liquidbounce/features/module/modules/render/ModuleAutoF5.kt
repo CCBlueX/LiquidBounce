@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,6 +30,7 @@ import net.minecraft.client.option.Perspective
 /**
  * Automatically goes into F5 mode when opening the inventory
  */
+@InbuiltModule
 object ModuleAutoF5 : ClientModule("AutoF5", Category.RENDER) {
 
     @Suppress("unused")

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -39,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.util.math.Vec3d
 
+@InbuiltModule
 object ModuleTpAura : ClientModule("TpAura", Category.COMBAT, disableOnQuit = true) {
 
     private val attackRange by float("AttackRange", 4.2f, 3f..5f)

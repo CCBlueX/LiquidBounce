@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -41,6 +42,7 @@ import net.minecraft.util.shape.VoxelShapes
  * AntiVoid module protects the player from falling into the void by simulating
  * future movements and taking action if necessary.
  */
+@InbuiltModule
 object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
 
     val mode = choices(

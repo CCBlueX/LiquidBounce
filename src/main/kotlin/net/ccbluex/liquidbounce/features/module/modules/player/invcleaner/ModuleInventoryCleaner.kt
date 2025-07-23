@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -35,10 +36,11 @@ import net.minecraft.screen.slot.SlotActionType
  *
  * Automatically throws away useless items and sorts them.
  */
+@InbuiltModule
 object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
     aliases = arrayOf("InventoryManager")
 ) {
-  
+
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)

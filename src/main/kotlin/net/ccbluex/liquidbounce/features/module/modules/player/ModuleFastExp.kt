@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.annotations.InbuiltModule
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -40,6 +41,7 @@ import net.minecraft.item.Items
  * Automatically repairs your armor.
  */
 @Suppress("MagicNumber")
+@InbuiltModule
 object ModuleFastExp : ClientModule(
     "FastExp",
     Category.PLAYER,
