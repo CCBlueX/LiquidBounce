@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.annotations
 /**
  * Marks a ClientModule `object` which should be included in ModuleManager.
  *
+ * Visibility should be `public`.
+ *
  * It should be like:
  * ```kotlin
  * @InbuiltModule

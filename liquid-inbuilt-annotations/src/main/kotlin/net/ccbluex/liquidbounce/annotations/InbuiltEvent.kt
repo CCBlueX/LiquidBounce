@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.annotations
 /**
  * Marks a class of Event implementation which should be included in EventManager.
  *
+ * Visibility should be `public`.
+ *
  * It should be like:
  * ```kotlin
  * @InbuiltEvent("example")

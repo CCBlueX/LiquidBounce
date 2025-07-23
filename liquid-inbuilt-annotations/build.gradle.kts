@@ -20,3 +20,5 @@
 plugins {
     kotlin("jvm")
 }
+
+version = "0.0.0"

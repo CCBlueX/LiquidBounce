@@ -21,6 +21,8 @@ plugins {
     kotlin("jvm")
 }
 
+version = "0.0.0"
+
 dependencies {
     implementation("com.google.devtools.ksp:symbol-processing-api:${rootProject.property("ksp_version")}")
     implementation(project(":liquid-inbuilt-annotations"))

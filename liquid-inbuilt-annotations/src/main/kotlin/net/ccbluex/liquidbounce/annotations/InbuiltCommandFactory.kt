@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.annotations
 /**
  * Marks a CommandFactory `object` which should be included in CommandManager.
  *
+ * Visibility should be `public`.
+ *
  * It should be like:
  * ```kotlin
  * @InbuiltCommandFactory
