@@ -23,6 +23,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import net.ccbluex.liquidbounce.ksp.processor.ClientModuleProcessor
+import net.ccbluex.liquidbounce.ksp.processor.CommandFactoryProcessor
 import net.ccbluex.liquidbounce.ksp.processor.EventClassProcessor
 
 class ClientModuleProcessorProvider : SymbolProcessorProvider {
@@ -34,5 +35,11 @@ class ClientModuleProcessorProvider : SymbolProcessorProvider {
 class EventClassProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return EventClassProcessor(environment)
+    }
+}
+
+class CommandFactoryProcessorProvider : SymbolProcessorProvider {
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return CommandFactoryProcessor(environment)
     }
 }

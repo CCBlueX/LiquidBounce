@@ -1,2 +1,3 @@
 net.ccbluex.liquidbounce.ksp.ClientModuleProcessorProvider
 net.ccbluex.liquidbounce.ksp.EventClassProcessorProvider
+net.ccbluex.liquidbounce.ksp.CommandFactoryProcessorProvider
