@@ -85,7 +85,7 @@
                 <IconButton title="Forum" icon="nodebb" on:click={() => browse("MAINTAINER_FORUM")}/>
                 <IconButton title="GitHub" icon="github" on:click={() => browse("MAINTAINER_GITHUB")}/>
                 <IconButton title="Discord" icon="discord" on:click={() => browse("MAINTAINER_DISCORD")}/>
-                <IconButton title="Twitter" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
+                <IconButton title="X" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
                 <IconButton title="YouTube" icon="youtube" on:click={() => browse("MAINTAINER_YOUTUBE")}/>
                 <IconTextButton title="liquidbounce.net" icon="icon-liquidbounce.net.svg"
                                 on:click={() => browse("CLIENT_WEBSITE")}/>
