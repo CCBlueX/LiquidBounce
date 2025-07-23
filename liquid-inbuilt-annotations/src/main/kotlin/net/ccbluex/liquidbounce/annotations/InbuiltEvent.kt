@@ -19,6 +19,22 @@
 
 package net.ccbluex.liquidbounce.annotations
 
+/**
+ * Marks a class of Event implementation which should be included in EventManager.
+ *
+ * It should be like:
+ * ```kotlin
+ * @InbuiltEvent("example")
+ * class ExampleEvent : Event/CancellableEvent
+ * ```
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class InbuiltEvent(val name: String)
+annotation class InbuiltEvent(
+    /**
+     * In lower camel case. Used for:
+     * - Script
+     * - Web-based event flow
+     */
+    val name: String
+)

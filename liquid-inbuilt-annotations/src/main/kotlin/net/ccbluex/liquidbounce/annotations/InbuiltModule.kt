@@ -19,6 +19,15 @@
 
 package net.ccbluex.liquidbounce.annotations
 
+/**
+ * Marks a ClientModule `object` which should be included in ModuleManager.
+ *
+ * It should be like:
+ * ```kotlin
+ * @InbuiltModule
+ * object ModuleExample : ClientModule("Example", ...) { ... }
+ * ```
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class InbuiltModule
