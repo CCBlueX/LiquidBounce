@@ -311,10 +311,9 @@ open class Configurable(
         default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null
-    ) =
-        FileConfigurable(name, default, dialogMode, supportedExtensions).apply {
-            this@Configurable.inner.add(this)
-        }
+    ) = OptionalFileValue(name, default, dialogMode, supportedExtensions).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> multiEnumChoice(
         name: String,
