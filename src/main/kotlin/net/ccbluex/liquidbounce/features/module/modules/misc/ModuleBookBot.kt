@@ -286,13 +286,13 @@ internal sealed class GenerationMode(
     object File : GenerationMode("File") {
         private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
         private val cyclic by boolean("Cyclic", true)
-        private val source by file("Source")
+        private val source = file("Source")
 
         /**
          * @author sqlerrorthing
          */
         override fun generate(): IntStream {
-            val file = source.takeIf {
+            val file = source.absoluteFile.takeIf {
                 it.exists() && it.isFile && it.canRead() && it.length() != 0L
             } ?: return IntStream.empty()
 

@@ -83,7 +83,7 @@ fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 @Suppress("UNUSED_PARAMETER")
 fun postExit(requestObject: RequestObject): FullHttpResponse {
     mc.scheduleStop()
-    return httpOk(JsonObject())
+    return httpNoContent()
 }
 
 // GET /api/v1/client/window

@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.config.types.FileDialogMode.*
 import java.io.File
 
 /**
- * A configurable file input that supports different file dialog modes and optional file type filtering.
+ * A value file input that supports different file dialog modes and optional file type filtering.
+ * It will be treated as a relative path if it starts with [ConfigSystem.rootFolder].
  *
  * @param name The name of the configuration option.
  * @param default The default selected file. The default value is [ConfigSystem.rootFolder].
@@ -44,6 +45,13 @@ class FileValue(
     init {
         onChange(::normalizeToClientFolder)
     }
+
+    /**
+     * The absolute file path.
+     *
+     * If the file is not absolute, it is resolved relative to the [ConfigSystem.rootFolder].
+     */
+    val absoluteFile: File get() = if (inner.isAbsolute) inner else ConfigSystem.rootFolder.resolve(inner)
 
     companion object {
         @JvmStatic
