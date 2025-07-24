@@ -15,17 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
 
-package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
+package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import net.minecraft.util.Identifier
-import java.lang.reflect.Type
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
 
-object IdentifierSerializer : JsonSerializer<Identifier> {
-    override fun serialize(src: Identifier?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.toString()) }
-}
+abstract class TranslatorChoice(
+    name: String
+) : Choice(name), TranslatorApi

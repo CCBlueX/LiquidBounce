@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
@@ -146,10 +147,10 @@ class ChatReceiveEvent(
     val type: ChatType,
     val applyChatDecoration: (Text) -> Text,
 ) : CancellableEvent() {
-    enum class ChatType {
-        CHAT_MESSAGE,
-        DISGUISED_CHAT_MESSAGE,
-        GAME_MESSAGE,
+    enum class ChatType(override val choiceName: String) : NamedChoice {
+        CHAT_MESSAGE("ChatMessage"),
+        DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
+        GAME_MESSAGE("GameMessage"),
     }
 }
 

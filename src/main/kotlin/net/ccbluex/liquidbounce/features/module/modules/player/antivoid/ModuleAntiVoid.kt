@@ -21,9 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -31,9 +29,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.Ant
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidFlagMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
 
@@ -43,18 +43,21 @@ import net.minecraft.util.shape.VoxelShapes
  */
 object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
 
-    val mode = choices("Mode", AntiVoidGhostBlockMode, arrayOf(
-        AntiVoidGhostBlockMode,
-        AntiVoidFlagMode,
-        AntiVoidBlinkMode
-    ))
+    val mode = choices(
+        "Mode", AntiVoidGhostBlockMode, arrayOf(
+            AntiVoidGhostBlockMode,
+            AntiVoidFlagMode,
+            AntiVoidBlinkMode
+        )
+    )
 
     // The height at which the void is deemed to begin.
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
     // Flags indicating if an action has been already taken or needs to be taken.
     var isLikelyFalling = false
-    var nonFallingPosition: Vec3d = Vec3d.ZERO
+    var rescuePosition: Vec3d? = null
+        private set
 
     // How many future ticks to simulate to ensure safety.
     private const val SAFE_TICKS_THRESHOLD = 10
@@ -65,72 +68,32 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
     }
 
     /**
-     * Handles movement input by simulating future movements of a player to detect potential falling into the void.
-     */
-    @Suppress("unused")
-    val movementInputHandler = handler<MovementInputEvent> {
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
-        )
-
-        // Analyzes if the player might be falling into the void soon.
-        try {
-            ShapeFlag.noShapeChange = true
-            isLikelyFalling = isLikelyFalling(simulatedPlayer)
-            if (!isLikelyFalling) {
-                nonFallingPosition = player.pos
-            }
-        } finally {
-            ShapeFlag.noShapeChange = false
-        }
-    }
-
-
-    /**
-     * Simulates a player's future movement to determine if falling into the void is likely.
-     * @param simulatedPlayer The simulated player instance.
-     * @return True if a simulated fall into the void is likely.
-     */
-    private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
-        var ticksPassed = 0
-        repeat(SAFE_TICKS_THRESHOLD) {
-            simulatedPlayer.tick()
-            ticksPassed++
-
-            if (simulatedPlayer.fallDistance > 0.0) {
-                val distanceToVoid = simulatedPlayer.pos.y - voidThreshold
-                ModuleDebug.debugParameter(this, "DistanceToVoid", distanceToVoid)
-                val ticksToVoid = (distanceToVoid * 1.4 / 0.98).toInt()
-                ModuleDebug.debugParameter(this, "TicksToVoid", ticksToVoid)
-
-                // Simulate additional ticks to project further movement.
-                repeat(ticksToVoid) {
-                    if (simulatedPlayer.fallDistance > 0.0) {
-                        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
-                            DirectionalInput.NONE,
-                            jumping = false,
-                            sprinting = false,
-                            sneaking = false
-                        )
-                    }
-
-                    simulatedPlayer.tick()
-                    ticksPassed++
-                }
-
-                return simulatedPlayer.pos.y < voidThreshold
-            }
-        }
-
-        return false
-    }
-
-    /**
      * Executes periodically to check if an anti-void action is required, and triggers it if necessary.
      */
     @Suppress("unused")
-    private val antiVoidListener = tickHandler {
+    private val voidHandler = tickHandler {
+        // Analyzes if the player might be falling into the void soon.
+        try {
+            ShapeFlag.noShapeChange = true
+            isLikelyFalling = isPredictingFall()
+        } finally {
+            ShapeFlag.noShapeChange = false
+        }
+
+        val rescuePosition = mode.activeChoice.discoverRescuePosition()
+        if (rescuePosition != null) {
+            this@ModuleAntiVoid.rescuePosition = rescuePosition
+        }
+
+        debugParameter("IsExempt") { mode.activeChoice.isExempt }
+        debugParameter("IsLikelyFalling") { isLikelyFalling }
+        debugParameter("SafePosition") { ModuleAntiVoid.rescuePosition }
+
         if (mode.activeChoice.isExempt || !isLikelyFalling) {
+            return@tickHandler
+        }
+
+        if (ModuleAntiVoid.rescuePosition == null) {
             return@tickHandler
         }
 
@@ -141,12 +104,50 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
         val collisions = world.getBlockCollisions(player, boundingBox)
 
         if (collisions.none() || collisions.all { shape -> shape == VoxelShapes.empty() }) {
-            if (mode.activeChoice.fix()) {
+            if (mode.activeChoice.rescue()) {
                 notification(
-                    "AntiVoid", "Action taken to prevent void fall", NotificationEvent.Severity.INFO
+                    "AntiVoid", "Action taken to prevent void fall",
+                    NotificationEvent.Severity.INFO
                 )
+                ModuleAntiVoid.rescuePosition = null
             }
         }
+    }
+
+    /**
+     * Checks if the player is likely to fall into the void within a certain threshold.
+     */
+    private fun isPredictingFall(): Boolean {
+        for (tick in 0 until SAFE_TICKS_THRESHOLD) {
+            val snapshot = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(tick)
+            if (snapshot.fallDistance > 0.0) {
+                return isSafeForRescue(snapshot.pos)
+            }
+        }
+        return false
+    }
+
+    fun isSafeForRescue(pos: Vec3d): Boolean {
+        val boundingBox = player.boundingBox
+            // Change position to the snapshot position
+            .offset(pos.subtract(player.pos))
+            .withMinY(voidThreshold.toDouble())
+
+        // If no collision is detected within a threshold beyond which falling
+        // into void is likely, take the necessary action.
+        val collisions = world.getBlockCollisions(player, boundingBox)
+        val hasCollision = collisions.none() || collisions.all { shape -> shape == VoxelShapes.empty() }
+        debugGeometry("BoundingBox") {
+            ModuleDebug.DebuggedBox(
+                boundingBox, if (hasCollision) {
+                    Color4b.RED
+                } else {
+                    Color4b.GREEN
+                }.alpha(150)
+            )
+        }
+
+        return hasCollision
     }
 
 }

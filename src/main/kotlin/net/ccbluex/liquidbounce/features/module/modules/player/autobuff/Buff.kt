@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot

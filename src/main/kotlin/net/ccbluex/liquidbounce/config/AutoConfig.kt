@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -68,6 +68,7 @@ object AutoConfig {
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
+    @Volatile
     var configs: Array<AutoSettings>? = null
         private set
 
@@ -102,7 +103,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         reader: Reader,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         JsonParser.parseReader(publicGson.newJsonReader(reader))?.let { jsonElement ->
             loadAutoConfig(jsonElement.asJsonObject, modules)
@@ -118,7 +119,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
         chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
@@ -270,10 +271,11 @@ object AutoConfig {
 
         val author = mc.session.username
 
+        val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
-        val date = dateFormatter.format(Date())
-        val time = timeFormatter.format(Date())
+        val date = dateFormatter.format(now)
+        val time = timeFormatter.format(now)
 
         val (protocolName, protocolVersion) = protocolVersion
 
@@ -303,7 +305,7 @@ object AutoConfig {
      */
     private fun deserializeModuleConfigurable(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         // Deserialize full module configurable
         if (modules.isEmpty()) {

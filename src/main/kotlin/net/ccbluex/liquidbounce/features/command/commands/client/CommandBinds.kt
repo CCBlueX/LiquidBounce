@@ -23,8 +23,9 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
@@ -32,8 +33,6 @@ import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Formatting
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 /**
  * Binds Command
@@ -64,87 +63,58 @@ object CommandBinds : CommandFactory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .parameter(
-            pageParameter()
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .optional()
-                .build()
+        .pagedQuery(
+            pageSize = 8,
+            header = {
+                result("bindings").withColor(Formatting.RED).bold(true)
+            },
+            items = {
+                ModuleManager.filter { !it.bind.isUnbound }
+            },
+            eachRow = { _, module ->
+                "\u2B25 ".asText()
+                    .formatted(Formatting.BLUE)
+                    .append(variable(module.name).copyable())
+                    .append(regular(": "))
+                    .append(regular(module.bind.keyName).copyable())
+                    .append(regular("("))
+                    .append(variable(module.bind.action.choiceName))
+                    .append(regular(")"))
+            }
         )
-        .handler { command, args ->
-            val page = (args.firstOrNull() as? Int ?: 1).coerceAtLeast(1)
 
-            val bindings = ModuleManager.filter { !it.bind.isUnbound }
-
-            if (bindings.isEmpty()) {
-                throw CommandException(command.result("noBindings"))
-            }
-
-            // Max page
-            val maxPage = ceil(bindings.size / 8.0).roundToInt()
-            if (page > maxPage) {
-                throw CommandException(command.result("pageNumberTooLarge", maxPage))
-            }
-
-            mc.inGameHud.chatHud.removeMessage("Binds#global")
-            val data = MessageMetadata(id = "Binds#global", remove = false)
-
-            // Print out bindings
-            chat(
-                command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) },
-                metadata = data
-            )
-            chat(
-                regular(command.result("page", variable("$page / $maxPage"))),
-                metadata = data
-            )
-
-            val iterPage = 8 * page
-            for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
-                chat(
-                    "> ".asText()
-                        .styled { it.withColor(Formatting.GOLD) }
-                        .append(module.name + " (")
-                        .styled { it.withColor(Formatting.GRAY) }
-                        .append(
-                            module.bind.keyName.asText().formatted(Formatting.DARK_GRAY).bold(true)
-                        )
-                        .append(")")
-                        .styled { it.withColor(Formatting.GRAY) },
-                    metadata = data
-                )
-            }
-        }
-        .build()
 
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            moduleParameter { mod -> !mod.bind.isUnbound }
+            Parameters.modules { mod -> !mod.bind.isUnbound }
                 .required()
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
-            val module = ModuleManager.find { it.name.equals(name, true) }
-                ?: throw CommandException(command.result("moduleNotFound", name))
+            val modules = args[0] as Set<ClientModule>
 
-            if (module.bind.isUnbound) {
-                throw CommandException(command.result("moduleNotBound"))
+            modules.forEach { module ->
+                if (module.bind.isUnbound) {
+                    throw CommandException(command.result("moduleNotBound"))
+                }
+
+                module.bind.unbind()
+
+                chat(
+                    regular(command.result("bindRemoved", variable(module.name))),
+                    metadata = MessageMetadata(id = "Binds#${module.name}")
+                )
             }
 
-            module.bind.unbind()
             ModuleClickGui.reload()
-            chat(
-                regular(command.result("bindRemoved", variable(module.name))),
-                metadata = MessageMetadata(id = "Binds#${module.name}")
-            )
         }
         .build()
 
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            moduleParameter()
+            Parameters.module()
                 .required()
                 .build()
         ).parameter(
@@ -156,10 +126,8 @@ object CommandBinds : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            val name = args[0] as String
+            val module = args[0] as ClientModule
             val keyName = args[1] as String
-            val module = ModuleManager.find { it.name.equals(name, true) }
-                ?: throw CommandException(command.result("moduleNotFound", name))
 
             val bindKey = inputByName(keyName)
             if (bindKey == InputUtil.UNKNOWN_KEY) {

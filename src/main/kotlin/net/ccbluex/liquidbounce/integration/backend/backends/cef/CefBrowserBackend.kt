@@ -217,16 +217,14 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             // On Intel GPU (Intel ARC), it does not work as well and is reported:
             // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
 
-            // Disable support for NVIDIA until we can get the dirty rects
-            // rendering to work properly.
-            // vendor.contains("nvidia", true) || renderer.contains("geforce", true) ||
-            // renderer.contains("quadro", true)
-
-            val isSupportedGpu = vendor.contains("amd", true) ||
-                                 renderer.contains("radeon", true)
+            val isSupportedGpu =
+                vendor.contains("nvidia", true) ||
+                    renderer.contains("geforce", true) ||
+                    renderer.contains("quadro", true) ||
+                    vendor.contains("amd", true) ||
+                    renderer.contains("radeon", true)
             if (!isSupportedGpu) {
-                logger.warn("GPU acceleration only supported on AMD GPUs")
-//                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
+                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
                 logger.info("Falling back to software rendering for browser")
                 return false
             }

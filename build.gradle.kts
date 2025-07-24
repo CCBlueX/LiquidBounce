@@ -25,7 +25,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.0"
+    id("com.gorylenko.gradle-git-properties") version "2.5.2"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "1.9.10"

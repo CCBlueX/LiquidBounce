@@ -58,6 +58,9 @@ mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround
 mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
 mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
 
+accessible field net/minecraft/client/gui/hud/InGameHud title Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/hud/InGameHud subtitle Lnet/minecraft/text/Text;
+
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager gameMode Lnet/minecraft/world/GameMode;
@@ -192,3 +195,4 @@ accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen conn
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V
 
 accessible method net/minecraft/client/network/PlayerListEntry texturesSupplier (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;
+accessible method net/minecraft/client/network/AbstractClientPlayerEntity getPlayerListEntry ()Lnet/minecraft/client/network/PlayerListEntry;
