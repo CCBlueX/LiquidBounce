@@ -27,13 +27,14 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages.Not
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundCategory
 import net.minecraft.util.math.BlockPos
-import kotlin.math.ln
-import kotlin.math.round
+import kotlin.math.log2
+import kotlin.math.roundToInt
 
 class NotebotEngine(
     val songData: SongData,
     val blocksAndRequirements: NotebotScanner.BlocksAndRequirements
 ) {
+
     private var currentStageHandler: NotebotStageHandler = NotebotTestStageHandler(this)
     private var ticksToWait: Int? = null
 
@@ -53,9 +54,9 @@ class NotebotEngine(
         }
 
         val pos = BlockPos((packet.x - 0.5).toInt(), (packet.y - 0.5).toInt(), (packet.z - 0.5).toInt())
-        val causingNoteblock = this.notebotTrackerMap[pos] ?: return
+        val causingNoteBlock = this.notebotTrackerMap[pos] ?: return
 
-        causingNoteblock.setObservedNote(round(12f + 12f * (ln(packet.pitch) / ln(2.0)).toFloat()).toInt())
+        causingNoteBlock.setObservedNote((12f + 12f * log2(packet.pitch)).roundToInt())
     }
 
     suspend fun onTick(sequence: Sequence) {
