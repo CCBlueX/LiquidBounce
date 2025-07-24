@@ -23,13 +23,14 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockT
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEngine
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.util.Formatting
 
 class NotebotPlayStageHandler(
     private val availableBlocksForNote: Map<InstrumentNote, List<NoteBlockTracker>>
 ) : ModuleNotebot.NotebotStageHandler {
+
+    private val progressName = ModuleNotebot.message("Play")
     private var songTickAccumulator = 0f
     private var currentSongTick = 0
 
@@ -45,10 +46,10 @@ class NotebotPlayStageHandler(
             songTickAccumulator -= 1f
             currentSongTick++
 
-            ModuleNotebot.sendNewProgressMessage("Play", currentSongTick, songData.songTickLength)
+            ModuleNotebot.sendNewProgressMessage(progressName, currentSongTick, songData.songTickLength)
 
             if (currentSongTick > songData.songTickLength) {
-                chat("Finished song!".asText().formatted(Formatting.GREEN), ModuleNotebot)
+                chat(ModuleNotebot.message("finished").formatted(Formatting.GREEN), ModuleNotebot)
                 ModuleNotebot.enabled = false
                 return
             }

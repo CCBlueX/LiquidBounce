@@ -43,12 +43,12 @@ object NotebotScanner : MinecraftShortcuts {
     private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
         val result = EnumMap<_, ArrayDeque<NoteBlockTracker>>(NoteBlockInstrument::class.java)
 
-        val noteblocks = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
+        val noteBlocks = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
             pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
         }
 
         val requiredInstruments = ModuleNotebot.getRequiredInstruments(songData)
-        noteblocks.forEach { pos ->
+        noteBlocks.forEach { pos ->
             val instrument = pos.down().getState()!!.instrument
             if (instrument in requiredInstruments) {
                 result.getOrPut(instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
@@ -110,7 +110,7 @@ object NotebotScanner : MinecraftShortcuts {
                 aggregatedRequirements.inlineMerge(key1.instrumentEnum, count, Int::plus)
             }
 
-            val text = "Not enough note blocks in range, required are:".asText().formatted(Formatting.RED)
+            val text = ModuleNotebot.message("notEnoughNoteBlocks").formatted(Formatting.RED)
             aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
                 val availableCount = this.availableBlocks[instrument]?.size ?: 0
 

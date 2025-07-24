@@ -35,7 +35,7 @@ object NbsLoader {
     fun load(songName: String): SongData? {
         val nbsFile = root.resolve("$songName.nbs")
         if (!nbsFile.exists()) {
-            chat(markAsError("No NBS found at ${nbsFile.absolutePath}!"), ModuleNotebot)
+            chat(markAsError(ModuleNotebot.message("noNbs", nbsFile.absolutePath)), ModuleNotebot)
             return null
         }
 
@@ -48,7 +48,7 @@ object NbsLoader {
             SongData(songName, nbs, notesByTick, songTickLength, songTicksPerGameTick)
         } catch (e: IOException) {
             logger.error("Failed to load NBS data from ${nbsFile.absolutePath}", e)
-            chat(markAsError("Could not parse the NoteBlockSong!"), ModuleNotebot)
+            chat(markAsError(ModuleNotebot.message("CouldNotParse")), ModuleNotebot)
             null
         }
     }

@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockTracker
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEngine
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.util.Formatting
 
-class NotebotTestStageHandler(
-    engine: NotebotEngine
-): ModuleNotebot.NotebotStageHandler {
+class NotebotTestStageHandler(engine: NotebotEngine): ModuleNotebot.NotebotStageHandler {
+
+    private val progressName = ModuleNotebot.message("Test")
     private val allBlocks = engine.blocksAndRequirements.availableBlocks.flatMap { it.value }
     private val remainingNoteBlocks = ArrayDeque(allBlocks)
 
@@ -38,7 +37,7 @@ class NotebotTestStageHandler(
         val untestedBlock = getNextBlockToTest()
 
         if (untestedBlock == null) {
-            chat("All blocks tested, starting tuning...".asText().formatted(Formatting.GREEN), ModuleNotebot)
+            chat(ModuleNotebot.message("startTuning").formatted(Formatting.GREEN), ModuleNotebot)
             engine.changeStage(NotebotTuneStageHandler(engine))
 
             return
@@ -57,7 +56,7 @@ class NotebotTestStageHandler(
 
         val total = this.allBlocks.size
 
-        ModuleNotebot.sendNewProgressMessage("Test", total - notTestedBlocks, total)
+        ModuleNotebot.sendNewProgressMessage(progressName, total - notTestedBlocks, total)
     }
 
     private fun getNextBlockToTest(): NoteBlockTracker? {

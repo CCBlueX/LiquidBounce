@@ -22,18 +22,19 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockTracker
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEngine
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.util.Formatting
 
 class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStageHandler {
-    override val handledStage: ModuleNotebot.NotebotStage
-        get() = ModuleNotebot.NotebotStage.TUNE
 
+    private val progressName = ModuleNotebot.message("Tune")
     private val assignments: Map<InstrumentNote, List<NoteBlockTracker>> = this.assignBlocks(engine)
     private val blocks: List<Pair<NoteBlockTracker, InstrumentNote>> = assignments.flatMap { note ->
         note.value.map { block -> block to note.key }
     }
+
+    override val handledStage: ModuleNotebot.NotebotStage
+        get() = ModuleNotebot.NotebotStage.TUNE
 
     init {
         ModuleNotebot.setRenderedBlocks(blocks.map { it.first })
@@ -43,7 +44,7 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
         val untunedBlocks = blocks.filter { (block, note) -> block.currentNote != note.noteValue }
 
         if (untunedBlocks.isEmpty()) {
-            chat("All blocks tuned, starting playing...".asText().formatted(Formatting.GREEN), ModuleNotebot)
+            chat(ModuleNotebot.message("startPlaying").formatted(Formatting.GREEN), ModuleNotebot)
             engine.changeStage(NotebotPlayStageHandler(this.assignments))
 
             return
@@ -53,7 +54,7 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
 
         blockToTune?.first?.tuneOnce()
 
-        ModuleNotebot.sendNewProgressMessage("Tune", this.blocks.size - untunedBlocks.size, this.blocks.size)
+        ModuleNotebot.sendNewProgressMessage(progressName, this.blocks.size - untunedBlocks.size, this.blocks.size)
     }
 
     private fun assignBlocks(engine: NotebotEngine): Map<InstrumentNote, List<NoteBlockTracker>> {

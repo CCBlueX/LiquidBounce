@@ -31,11 +31,13 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoa
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNoteBlock
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
+import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.MathHelper
 import java.util.*
@@ -43,7 +45,7 @@ import java.util.*
 /**
  * Notebot Module
  *
- * Automatically plays noteblock songs from NBS files.
+ * Automatically plays note block songs from NBS files.
  *
  * @author ccetl
  */
@@ -111,7 +113,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         showSongInfo(songData, messageMetadata)
 
         this.engine = NotebotEngine(songData, blocksAndRequirements)
-        chat("Starting testing...".asText().formatted(Formatting.GREEN), this)
+        chat(message("startTesting").formatted(Formatting.GREEN), this)
     }
 
     fun setRenderedBlocks(blocks: List<NoteBlockTracker>) {
@@ -125,7 +127,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     private suspend fun loadSongData(): SongData? {
-        chat("Starting loading song...", this)
+        chat(translation("startLoading").formatted(Formatting.GREEN), this)
 
         val songData = withContext(Dispatchers.IO) {
             NbsLoader.load(song)
@@ -137,17 +139,17 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     private fun checkRequirements(): Boolean {
         return when {
             !inGame -> {
-                chat("You must be in game to use this module.", this)
+                chat(markAsError(translation("notInGame")), this)
                 false
             }
 
             player.isCreative -> {
-                chat("You can't use this module in creative mode!", this)
+                chat(markAsError(translation("inCreative")), this)
                 false
             }
 
             ModulePacketMine.enabled -> {
-                chat("The Notebot Module is incompatible with PacketMine!", this)
+                chat(markAsError(translation("packetMineEnabled")), this)
                 false
             }
 
@@ -160,24 +162,19 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         messageMetadata: MessageMetadata
     ) {
         chat(
-            regular("Loaded song '")
-                .append(variable(songData.name))
-                .append(regular("'.")),
+            regular(translation("songInfoName", variable(songData.name))),
             messageMetadata
         )
         chat(
-            regular("Ticks per game tick: ")
-                .append(variable(songData.songTicksPerGameTick.toString())),
+            regular(translation("songInfoTicksPerGameTick", variable(songData.songTicksPerGameTick.toString()))),
             messageMetadata
         )
         chat(
-            regular("Tick length: ")
-                .append(variable(songData.songTickLength.toString())),
+            regular(translation("songInfoTickLength", variable(songData.songTickLength.toString()))),
             messageMetadata
         )
         chat(
-            regular("Total notes: ")
-                .append(variable(songData.nbs.noteBlocks.size.toString())),
+            regular(translation("songInfoTotalNotes", variable(songData.nbs.noteBlocks.size.toString()))),
             messageMetadata
         )
     }
@@ -194,7 +191,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         net.ccbluex.liquidbounce.utils.client.mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
     }
 
-    fun sendNewProgressMessage(name: String, progress: Int, total: Int) {
+    fun sendNewProgressMessage(name: MutableText, progress: Int, total: Int) {
         removeProgressMessage()
 
         val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
@@ -225,8 +222,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
             return EnumSet.of(NoteBlockInstrument.HARP)
         }
 
-        return songData.notesByTick.values
-            .flatten()
+        return songData.nbs.noteBlocks
             .mapTo(EnumSet.noneOf(NoteBlockInstrument::class.java)) {
                 InstrumentNote.getInstrumentEnumFromId(it.instrument.toInt())
             }
