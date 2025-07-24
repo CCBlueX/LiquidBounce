@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEng
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.util.Formatting
 
+// we could also read the note property from blocks, but I've found this unreliable
+// this design also seems more future-proof if minecraft should stop sending this data to the client in future versions
 class NotebotTestStageHandler(engine: NotebotEngine): ModuleNotebot.NotebotStageHandler {
 
-    private val progressName = ModuleNotebot.message("Test")
+    private val progressName = ModuleNotebot.message("test")
     private val allBlocks = engine.blocksAndRequirements.availableBlocks.flatMap { it.value }
     private val remainingNoteBlocks = ArrayDeque(allBlocks)
 

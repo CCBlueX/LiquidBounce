@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoa
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNoteBlock
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.*
@@ -127,7 +126,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     private suspend fun loadSongData(): SongData? {
-        chat(translation("startLoading").formatted(Formatting.GREEN), this)
+        chat(message("startLoading").formatted(Formatting.GREEN), this)
 
         val songData = withContext(Dispatchers.IO) {
             NbsLoader.load(song)
@@ -139,17 +138,17 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     private fun checkRequirements(): Boolean {
         return when {
             !inGame -> {
-                chat(markAsError(translation("notInGame")), this)
+                chat(markAsError(message("notInGame")), this)
                 false
             }
 
             player.isCreative -> {
-                chat(markAsError(translation("inCreative")), this)
+                chat(markAsError(message("inCreative")), this)
                 false
             }
 
             ModulePacketMine.enabled -> {
-                chat(markAsError(translation("packetMineEnabled")), this)
+                chat(markAsError(message("packetMineEnabled")), this)
                 false
             }
 
@@ -162,19 +161,19 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         messageMetadata: MessageMetadata
     ) {
         chat(
-            regular(translation("songInfoName", variable(songData.name))),
+            regular(message("songInfoName", variable(songData.name))),
             messageMetadata
         )
         chat(
-            regular(translation("songInfoTicksPerGameTick", variable(songData.songTicksPerGameTick.toString()))),
+            regular(message("songInfoTicksPerGameTick", variable(songData.songTicksPerGameTick.toString()))),
             messageMetadata
         )
         chat(
-            regular(translation("songInfoTickLength", variable(songData.songTickLength.toString()))),
+            regular(message("songInfoTickLength", variable(songData.songTickLength.toString()))),
             messageMetadata
         )
         chat(
-            regular(translation("songInfoTotalNotes", variable(songData.nbs.noteBlocks.size.toString()))),
+            regular(message("songInfoTotalNotes", variable(songData.nbs.noteBlocks.size.toString()))),
             messageMetadata
         )
     }
@@ -196,7 +195,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
         val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
         chat(
-            variable(name)
+            variable(name.copy())
                 .append(regular(" ["))
                 .append(textLoadingBar(percent))
                 .append(regular("] "))
