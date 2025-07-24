@@ -311,7 +311,7 @@ open class Configurable(
         default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null
-    ) = OptionalFileValue(name, default, dialogMode, supportedExtensions).apply {
+    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
         this@Configurable.inner.add(this)
     }
 

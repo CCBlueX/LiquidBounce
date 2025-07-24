@@ -45,7 +45,6 @@ export interface FileSelectDialog {
 }
 
 export interface FileSelectResult {
-    cancelled: boolean;
     file: File | undefined;
 }
 
@@ -54,7 +53,7 @@ export interface FileSetting {
     name: string;
     dialogMode: FileDialogMode;
     supportedExtensions: string[] | undefined;
-    value: File | undefined;
+    value: File;
 }
 
 export interface BlocksSetting {
@@ -404,7 +403,8 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;

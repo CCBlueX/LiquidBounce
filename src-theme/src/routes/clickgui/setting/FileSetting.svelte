@@ -2,12 +2,14 @@
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
     import {createEventDispatcher, onMount, tick} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {browseFile, openFileDialog} from "../../../integration/rest";
+    import {browseFile, getClientInfo, openFileDialog} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as FileSetting;
     let selecting = false;
+
+    let clientDir: string;
 
     const dispatch = createEventDispatcher();
 
@@ -17,7 +19,7 @@
     }
 
     function removeSelected() {
-        cSetting.value = undefined;
+        cSetting.value = '';
         handleChange();
     }
 
@@ -35,22 +37,23 @@
         })
 
         selecting = false;
-        if (!file.cancelled) {
+        if (file.file !== undefined) {
             cSetting.value = file.file;
             handleChange();
-        }
-    }
-
-    async function osBrowseFile() {
-        if (cSetting.value) {
-            await browseFile(cSetting.value);
         }
     }
 
     let pathEl: HTMLSpanElement;
     let fullPathText = '';
 
-    $: fullPathText = cSetting.value ?? 'Nothing';
+    const removePrefix = (str: string, prefix: string) => {
+        if (str.startsWith(prefix)) {
+            return str.substring(prefix.length);
+        }
+        return str;
+    }
+
+    $: fullPathText = removePrefix(cSetting.value, clientDir) || '<ClientFolder>';
 
     let inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -93,14 +96,17 @@
     }
 
     function handlePointerUp(e: PointerEvent) {
+        if (!canScroll) { // Short name
+            browseFile(cSetting.value);
+            return;
+        }
         if (!isDragging || !pathEl || !canScroll) return;
 
         isDragging = false;
         pathEl.releasePointerCapture(e.pointerId);
         handleScrollActivity();
-
         if (!dragDetected) {
-            osBrowseFile();
+            browseFile(cSetting.value);
         }
     }
 
@@ -144,6 +150,13 @@
     }
 
     onMount(() => {
+        getClientInfo().then(clientInfo => {
+            clientDir = clientInfo.clientDir;
+            if (!clientDir.endsWith('/')) {
+                clientDir += '/';
+            }
+        });
+
         adjustScrollAlignment();
 
         pathEl?.addEventListener('pointerdown', handlePointerDown);
@@ -208,7 +221,7 @@
             </span>
         </div>
         <div class="buttons">
-            <button class="button" onclick={removeSelected} disabled={cSetting.value === undefined}>
+            <button class="button" onclick={removeSelected} disabled={cSetting.value === ''}>
                 <img src="img/menu/icon-remove-file.svg" alt="remove-file" />
             </button>
             <button class="button" onclick={selectFile}>

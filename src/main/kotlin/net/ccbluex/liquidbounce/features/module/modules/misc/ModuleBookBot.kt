@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import net.ccbluex.liquidbounce.config.types.FileConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -287,13 +286,13 @@ internal sealed class GenerationMode(
     object File : GenerationMode("File") {
         private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
         private val cyclic by boolean("Cyclic", true)
-        private val source = FileConfigurable("Source").also { tree(it) }
+        private val source by file("Source")
 
         /**
          * @author sqlerrorthing
          */
         override fun generate(): IntStream {
-            val file = source.file?.takeIf {
+            val file = source.takeIf {
                 it.exists() && it.isFile && it.canRead() && it.length() != 0L
             } ?: return IntStream.empty()
 

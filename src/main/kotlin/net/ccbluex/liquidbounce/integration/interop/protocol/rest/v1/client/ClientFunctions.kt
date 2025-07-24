@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -39,7 +40,6 @@ import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.io.File
 import java.net.URI
-import java.text.SimpleDateFormat
 import java.util.*
 
 // GET /api/v1/client/info
@@ -51,6 +51,7 @@ fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
     addProperty("development", LiquidBounce.IN_DEVELOPMENT)
     addProperty("fps", mc.currentFps)
     addProperty("gameDir", mc.runDirectory.path)
+    addProperty("clientDir", ConfigSystem.rootFolder.path)
     addProperty("inGame", inGame)
     addProperty("viaFabricPlus", usesViaFabricPlus)
     addProperty("hasProtocolHack", usesViaFabricPlus)
@@ -112,7 +113,9 @@ fun postBrowseFile(requestObject: RequestObject): FullHttpResponse {
     val jsonObj = requestObject.asJson<JsonObject>()
     val f = jsonObj["file"]?.asString ?: return httpForbidden("No file specified")
 
-    val file = File(f).takeIf(File::exists) ?: return httpNotFound(f, "File not exists")
+    val file = File(f).let {
+        if (it.isAbsolute) it else ConfigSystem.rootFolder.resolve(it)
+    }.takeIf(File::exists) ?: return httpNotFound(f, "File not exists")
 
     Util.getOperatingSystem().open(file)
     return httpNoContent()
@@ -149,7 +152,10 @@ fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
                 filterPatterns,
                 null
             )
-            FileDialogMode.OPEN_DIRECTORY -> TinyFileDialogs.tinyfd_selectFolderDialog(mode.title, null)
+            FileDialogMode.OPEN_DIRECTORY -> TinyFileDialogs.tinyfd_selectFolderDialog(
+                mode.title,
+                ConfigSystem.rootFolder.path,
+            )
         }
     }
 
@@ -158,8 +164,6 @@ fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
             val file = it.substringBefore('|')
             addProperty("file", file)
         }
-
-        addProperty("cancelled", files == null)
     })
 }
 
