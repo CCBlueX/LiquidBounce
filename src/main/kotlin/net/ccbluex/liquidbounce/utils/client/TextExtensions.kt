@@ -208,25 +208,30 @@ fun String.hideSensitiveAddress(): String {
     }
 }
 
+data class ColoredChar(val char: Char, val color: Formatting) {
+    init {
+        requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
+    }
+}
+
+fun Char.colored(color: Formatting) = ColoredChar(this, color)
+
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
  */
-@Suppress("LongParameterList")
 fun textLoadingBar(
     percent: Int,
-    progress: Char = '█',
-    progressColor: Formatting = Formatting.WHITE,
-    remaining: Char = '░',
-    remainingColor: Formatting = Formatting.DARK_GRAY,
+    progress: ColoredChar = '█'.colored(Formatting.WHITE),
+    remaining: ColoredChar = '░'.colored(Formatting.DARK_GRAY),
     length: Int = 10
 ): Text {
     val clampedPercent = percent.coerceIn(0, 100)
     val filledBars = clampedPercent * length / 100
 
-    val progressPart = progress.toString().repeat(filledBars)
-    val remainingPart = remaining.toString().repeat(length - filledBars)
+    val progressPart = progress.char.toString().repeat(filledBars)
+    val remainingPart = remaining.char.toString().repeat(length - filledBars)
 
     return Text.empty()
-        .append(progressPart.asText().formatted(progressColor))
-        .append(remainingPart.asText().formatted(remainingColor))
+        .append(progressPart.asText().formatted(progress.color))
+        .append(remainingPart.asText().formatted(remaining.color))
 }
