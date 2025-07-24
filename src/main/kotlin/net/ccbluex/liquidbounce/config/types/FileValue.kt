@@ -20,6 +20,9 @@ package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.*
+import org.lwjgl.PointerBuffer
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.io.File
 
 /**
@@ -68,6 +71,8 @@ class FileValue(
 /**
  * Defines the mode of the file dialog used in a [FileValue].
  *
+ * TODO: i18n
+ *
  * This controls how the file chooser behaves in the UI (e.g., ClickGUI or similar):
  *
  * - [OPEN_FILE]: Opens a dialog to select an existing file.
@@ -75,7 +80,49 @@ class FileValue(
  * - [OPEN_DIRECTORY]: Opens a dialog to select an existing directory. File extension filters are ignored in this mode.
  */
 enum class FileDialogMode(val title: String) {
-    OPEN_FILE("Open File"),
-    SAVE_FILE("Save File As"),
-    OPEN_DIRECTORY("Select Folder")
+    OPEN_FILE("Open File") {
+        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_openFileDialog(
+            title,
+            null,
+            getFilterPatterns(extensions),
+            null,
+            false
+        )
+    },
+    SAVE_FILE("Save File As") {
+        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_saveFileDialog(
+            title,
+            null,
+            getFilterPatterns(extensions),
+            null
+        )
+    },
+    OPEN_DIRECTORY("Select Folder") {
+        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_selectFolderDialog(
+            title,
+            ConfigSystem.rootFolder.path,
+        )
+    };
+
+    protected abstract fun selectFilesRaw(extensions: Iterable<String>?): String?
+
+    fun selectFiles(extensions: Iterable<String>? = null): List<String> {
+        // using `|` as a separator because tinyfd separate multiple file selection
+        return selectFilesRaw(extensions)?.split('|') ?: emptyList()
+    }
+
+    companion object {
+        @JvmStatic
+        private fun getFilterPatterns(extensions: Iterable<String>?): PointerBuffer? {
+            extensions ?: return null
+            return MemoryStack.stackPush().use { stack ->
+                val patternList = extensions.map { ext -> "*.$ext" }
+                val buffer = stack.mallocPointer(patternList.size)
+                patternList.forEach { pattern ->
+                    buffer.put(stack.ASCII(pattern))
+                }
+                buffer.flip()
+            }
+        }
+    }
 }

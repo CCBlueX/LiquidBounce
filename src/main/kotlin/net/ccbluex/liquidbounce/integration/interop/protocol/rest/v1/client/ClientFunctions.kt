@@ -35,9 +35,6 @@ import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpNotFound
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
-import org.lwjgl.PointerBuffer
-import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.io.File
 import java.net.URI
 import java.util.*
@@ -128,42 +125,10 @@ fun postFileDialog(requestObject: RequestObject): FullHttpResponse {
         requestObject.asJson<RequestBody>()
     }.getOrNull() ?: return httpBadRequest("No dialog mode provided")
 
-    val files = MemoryStack.stackPush().use { stack ->
-        val filterPatterns: PointerBuffer? = supportedExtensions?.let {
-            val patternList = it.map { ext -> "*.$ext" }
-            val buffer = stack.mallocPointer(patternList.size)
-            patternList.forEach { pattern ->
-                buffer.put(stack.ASCII(pattern))
-            }
-            buffer.flip()
-        }
-
-        when (mode) {
-            FileDialogMode.OPEN_FILE -> TinyFileDialogs.tinyfd_openFileDialog(
-                mode.title,
-                null,
-                filterPatterns,
-                null,
-                false
-            )
-            FileDialogMode.SAVE_FILE -> TinyFileDialogs.tinyfd_saveFileDialog(
-                mode.title,
-                null,
-                filterPatterns,
-                null
-            )
-            FileDialogMode.OPEN_DIRECTORY -> TinyFileDialogs.tinyfd_selectFolderDialog(
-                mode.title,
-                ConfigSystem.rootFolder.path,
-            )
-        }
-    }
+    val files = mode.selectFiles(supportedExtensions)
 
     return httpOk(JsonObject().apply {
-        files?.let {
-            val file = it.substringBefore('|')
-            addProperty("file", file)
-        }
+        files.firstOrNull()?.let { addProperty("file", it) }
     })
 }
 
