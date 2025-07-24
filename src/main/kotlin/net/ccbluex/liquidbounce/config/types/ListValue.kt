@@ -74,8 +74,7 @@ open class ListValue<T : MutableCollection<E>, E>(
         currValue.clear()
         element.mapTo(currValue) { gson.fromJson(it, this.innerType) }
 
-        // Trigger listener callbacks
-        set(currValue)
+        set(currValue) { /** Trigger listener callbacks */ }
     }
 
 }
