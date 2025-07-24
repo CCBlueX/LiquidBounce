@@ -290,6 +290,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleLongJump,
             ModuleNoClip,
             ModuleNoJumpDelay,
+            ModuleNoPoseChange,
             ModuleNoPush,
             ModuleNoSlow,
             ModuleNoWeb,
