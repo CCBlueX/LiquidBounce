@@ -91,7 +91,6 @@ object HumanInputDeserializer {
 
     val pathDeserializer: StringDeserializer<Path> = StringDeserializer(::Path)
 
-    private fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
     fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
     }

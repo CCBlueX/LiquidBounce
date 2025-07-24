@@ -167,7 +167,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
         .registerTypeAdapter(GameMode::class.javaObjectType, GameModeSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
-        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierSerializer)
+        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
         .registerTypeAdapterFactory(OptionalAdapter)
