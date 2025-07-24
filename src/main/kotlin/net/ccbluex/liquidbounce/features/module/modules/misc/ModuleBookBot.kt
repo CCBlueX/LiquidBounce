@@ -289,7 +289,7 @@ internal sealed class GenerationMode(
         private val source = file("Source")
 
         /**
-         * @author sqlerrorthing
+         * @author sqlerrorthing, MukjepScarlet
          */
         override fun generate(): IntStream {
             val file = source.absoluteFile.takeIf {
