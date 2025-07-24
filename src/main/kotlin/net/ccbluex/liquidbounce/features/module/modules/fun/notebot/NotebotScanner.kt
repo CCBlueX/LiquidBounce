@@ -35,23 +35,34 @@ import kotlin.collections.ArrayDeque
 object NotebotScanner : MinecraftShortcuts {
     fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {
         return BlocksAndRequirements(
-            availableBlocks = scanSurroundingNoteBlocks(),
+            availableBlocks = scanSurroundingNoteBlocks(songData),
             requirements = calculateRequirements(songData)
         )
     }
 
-    private fun scanSurroundingNoteBlocks(): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
+    private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
         val result = EnumMap<_, ArrayDeque<NoteBlockTracker>>(NoteBlockInstrument::class.java)
 
-        player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
+        val noteblocks = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
             pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
-        }.forEach { pos ->
-            result.getOrPut(pos.down().getState()!!.instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
+        }
+
+        val requiredInstruments = ModuleNotebot.getRequiredInstruments(songData)
+        noteblocks.forEach { pos ->
+            val instrument = pos.down().getState()!!.instrument
+            if (instrument in requiredInstruments) {
+                result.getOrPut(instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
+            }
         }
 
         return result
     }
 
+    // technically we'd need even more blocks than returned by this function
+    // since a song tick != a game tick thus this is technically incorrect but works well enough
+    // it has the advantage that we don't get super huge requirements for very fast songs -
+    // and well playing the same sound multiple times a tick due to minecraft's limitations
+    // would sound weird anyways
     private fun calculateRequirements(songData: SongData): Map<InstrumentNote, Int> {
         val maxConcurrentCounts = hashMapOf<InstrumentNote, Int>()
         val countsInTick = hashMapOf<InstrumentNote, Int>()

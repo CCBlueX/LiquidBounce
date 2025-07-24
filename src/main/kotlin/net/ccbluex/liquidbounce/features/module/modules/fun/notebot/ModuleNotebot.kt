@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -38,6 +38,7 @@ import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.MathHelper
+import java.util.*
 
 /**
  * Notebot Module
@@ -66,17 +67,29 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     val renderer = tree(NotebotRenderer)
 
+    var engine: NotebotEngine? = null
+        private set
+
+    @Suppress("unused")
     private val tickHandler = tickHandler {
         engine?.onTick(this)
     }
 
-    var engine: NotebotEngine? = null
-        private set
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet is PlaySoundS2CPacket) {
+            this.engine?.handleSoundPacket(event.packet)
+        }
+    }
 
     override suspend fun enabledEffect() {
         val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
         mc.inGameHud.chatHud.removeMessage(messageMetadata.id)
 
+        if (!checkRequirements()) {
+            this.enabled = false
+            return
+        }
 
         val songData = loadSongData()
 
@@ -89,15 +102,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
         if (!blocksAndRequirements.validateRequirements()) {
             blocksAndRequirements.printRequirements()
-
             this.enabled = false
-            return
-        }
-
-
-        if (!checkRequirements()) {
-            this.enabled = false
-
             return
         }
 
@@ -177,13 +182,6 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         )
     }
 
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlaySoundS2CPacket) {
-            this.engine?.handleSoundPacket(event.packet)
-        }
-    }
-
     override fun disable() {
         removeProgressMessage()
 
@@ -220,6 +218,18 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         }
 
         return InstrumentNote(instrument, noteValue)
+    }
+
+    fun getRequiredInstruments(songData: SongData): EnumSet<NoteBlockInstrument> {
+        if (pianoOnly) {
+            return EnumSet.of(NoteBlockInstrument.HARP)
+        }
+
+        return songData.notesByTick.values
+            .flatten()
+            .mapTo(EnumSet.noneOf(NoteBlockInstrument::class.java)) {
+                InstrumentNote.getInstrumentEnumFromId(it.instrument.toInt())
+            }
     }
 
     enum class NotebotStage(
