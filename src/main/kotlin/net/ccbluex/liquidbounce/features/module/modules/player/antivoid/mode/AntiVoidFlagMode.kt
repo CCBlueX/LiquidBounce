@@ -20,19 +20,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 
 object AntiVoidFlagMode : AntiVoidMode("Flag") {
 
     private val fallDistance by float("FallDistance", 0.5f, 0.0f..6.0f)
+    private val height by float("Height", 0.42f, 0.01f..10.0f)
+    private val silent by boolean("Silent", false)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiVoid.mode
 
     override fun rescue(): Boolean {
         if (player.fallDistance >= fallDistance) {
-            player.setPosition(player.pos.add(0.0, 0.42, 0.0))
+            if (silent) {
+                once<PlayerNetworkMovementTickEvent> {
+                    it.y += height
+                }
+            } else {
+                player.setPosition(player.pos.add(0.0, height.toDouble(), 0.0))
+            }
             return true
         }
 

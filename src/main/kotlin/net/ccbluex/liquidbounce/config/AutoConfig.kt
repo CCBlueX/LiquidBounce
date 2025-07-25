@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -271,10 +271,11 @@ object AutoConfig {
 
         val author = mc.session.username
 
+        val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
-        val date = dateFormatter.format(Date())
-        val time = timeFormatter.format(Date())
+        val date = dateFormatter.format(now)
+        val time = timeFormatter.format(now)
 
         val (protocolName, protocolVersion) = protocolVersion
 

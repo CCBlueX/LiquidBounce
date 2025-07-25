@@ -16,8 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.nesting
 
+import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -27,7 +28,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
+import net.minecraft.sound.SoundEvent
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.glfw.GLFW
@@ -185,16 +189,52 @@ open class Configurable(
         name: String,
         defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
-        listType: ListValueType = ListValueType.None
-    ) = Value(name, defaultValue = defaultValue, valueType = valueType, listType = listType).apply {
+    ) = Value(name, defaultValue = defaultValue, valueType = valueType).apply {
         this@Configurable.inner.add(this)
     }
 
-    fun <T : Any> rangedValue(name: String, defaultValue: T, range: ClosedRange<*>, suffix: String,
-                              valueType: ValueType) =
-        RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
-            this@Configurable.inner.add(this)
-        }
+    internal inline fun <T : MutableCollection<E>, reified E> list(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType
+    ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    internal inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType
+    ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    internal inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType
+    ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    internal inline fun <T : MutableSet<E>, reified E> registryList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType
+    ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    fun <T : Any> rangedValue(
+        name: String,
+        defaultValue: T,
+        range: ClosedRange<*>,
+        suffix: String,
+        valueType: ValueType
+    ) = RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
+        this@Configurable.inner.add(this)
+    }
 
     // Fixed data types
 
@@ -232,8 +272,8 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
-    fun <C : MutableCollection<String>> textArray(name: String, default: C) =
-        value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
+    fun <C : MutableCollection<String>> textList(name: String, default: C) =
+        mutableList<C, String>(name, default, ValueType.TEXT)
 
     fun curve(name: String, default: Easing) = enumChoice(name, default)
 
@@ -245,13 +285,25 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
 
-    fun <C : MutableCollection<Block>> blocks(name: String, default: C) =
-        value(name, default, ValueType.BLOCKS, ListValueType.Block)
+    fun <C : MutableSet<Block>> blocks(name: String, default: C) =
+        registryList(name, default, ValueType.BLOCK)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun <C : MutableCollection<Item>> items(name: String, default: C) =
-        value(name, default, ValueType.ITEMS, ListValueType.Item)
+    fun <C : MutableSet<Item>> items(name: String, default: C) =
+        registryList(name, default, ValueType.ITEM)
+
+    fun <C : MutableSet<SoundEvent>> sounds(name: String, default: C) =
+        registryList(name, default, ValueType.SOUND)
+
+    fun <C : MutableSet<StatusEffect>> statusEffects(name: String, default: C) =
+        registryList(name, default, ValueType.STATUS_EFFECT)
+
+    fun <C : MutableSet<Identifier>> clientPackets(name: String, default: C) =
+        registryList(name, default, ValueType.CLIENT_PACKET)
+
+    fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
+        registryList(name, default, ValueType.SERVER_PACKET)
 
     inline fun <reified T> multiEnumChoice(
         name: String,

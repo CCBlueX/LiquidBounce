@@ -71,6 +71,8 @@ public abstract class MixinEntity {
     @Shadow
     public abstract double getZ();
 
+    @Shadow public abstract float getYaw();
+
     @ModifyExpressionValue(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
     private boolean hookAntiBounce(boolean original) {
         return ModuleAntiBounce.INSTANCE.getRunning() || original;

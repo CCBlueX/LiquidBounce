@@ -21,8 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawVerticalLine
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.fill
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.DrawContext
@@ -32,7 +37,10 @@ import net.minecraft.util.math.Vec3d
 object Esp2DMode : EspMode("2D") {
 
     private val outline by boolean("Outline", true)
+    private val border by boolean("Border", true)
     private val expand by float("Expand", 0.05f, 0f..0.5f)
+    private val fill by boolean("Fill", true)
+    private val healthBar by boolean("HealthBar", true)
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
@@ -48,8 +56,9 @@ object Esp2DMode : EspMode("2D") {
         renderEnvironmentForGUI {
             for ((entity, box) in entitiesWithBoxes) {
                 val color = getColor(entity)
-                val baseColor = color.with(a = 50)
-                val outlineColor = color.with(a = 100)
+                val baseColor = color.with(a = 50).toARGB()
+                val outlineColor = color.with(a = 255).toARGB()
+                val black = Color4b.BLACK.toARGB()
 
                 val corners = listOf(
                     Vec3d(box.minX, box.minY, box.minZ),
@@ -72,18 +81,53 @@ object Esp2DMode : EspMode("2D") {
                 val minY = projected.minOf { it.y }
                 val maxY = projected.maxOf { it.y }
                 val minZ = projected.minOf { it.z } // TODO: Handle Z-index correctly
-                val rectWidth = (maxX - minX).toInt()
-                val rectHeight = (maxY - minY).toInt()
+                var rectWidth = (maxX - minX)
+                var rectHeight = (maxY - minY)
 
                 with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
                     with(matrices) {
                         translate(minX, minY, minZ)
-                        fill(0, 0, rectWidth, rectHeight, baseColor.toARGB())
+
+                        if (fill) {
+                            fill(0f, 0f, rectWidth, rectHeight, 0f, baseColor)
+                        }
+
                         if (outline) {
-                            drawHorizontalLine(0, rectWidth, 0, outlineColor.toARGB())
-                            drawHorizontalLine(0, rectWidth, rectHeight, outlineColor.toARGB())
-                            drawVerticalLine(0, 0, rectHeight, outlineColor.toARGB())
-                            drawVerticalLine(rectWidth, 0, rectHeight, outlineColor.toARGB())
+                            if (border) {
+                                drawHorizontalLine(0.0f, rectWidth, 0.0f, 1.5f, black)
+                                drawVerticalLine(0.0f, 0.0f, rectHeight, 1.5f, black)
+                                drawHorizontalLine(0.0f, rectWidth, rectHeight, 1.5f, black)
+                                drawVerticalLine(rectWidth, 0.0f, rectHeight + 1.5f, 1.5f, black)
+
+                                translate(0.5f, 0.5f, 0.0f)
+                            }
+
+                            drawHorizontalLine(0.0f, rectWidth, 0.0f, 0.5f, outlineColor)
+                            drawHorizontalLine(0.0f, rectWidth, rectHeight, 0.5f, outlineColor)
+                            drawVerticalLine(0.0f, 0.0f, rectHeight, 0.5f, outlineColor)
+                            drawVerticalLine(rectWidth, 0.0f, rectHeight + 0.5f, 0.5f, outlineColor)
+
+                            if (border) {
+                                translate(-0.5f, -0.5f, 0.0f)
+                            }
+                        }
+
+                        if (healthBar) {
+                            val actualHealth = entity.getActualHealth()
+                            val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
+                            val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
+
+                            val healthColor = Color4b.RED
+                                .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
+                                .toARGB()
+                            val healthHeight = rectHeight * healthPercentage
+
+                            translate(-3.0f, 0.0f, 0.0f)
+
+                            if (border) {
+                                drawVerticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
+                            }
+                            drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
                         }
                     }
                 }

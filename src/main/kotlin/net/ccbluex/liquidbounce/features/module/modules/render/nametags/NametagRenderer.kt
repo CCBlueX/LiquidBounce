@@ -90,11 +90,15 @@ class NametagRenderer {
 
         // Draw enchantments directly for the entity (regardless of whether items are shown)
         if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
+            val entityPos = nametag.entity.pos
+            val worldX = entityPos.x.toFloat()
+            val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
+            
             NametagEnchantmentRenderer.drawEntityEnchantments(
                 env,
                 nametag.entity,
-                pos.x,
-                pos.y,
+                worldX,
+                worldY,
                 fontBuffers
             )
         }

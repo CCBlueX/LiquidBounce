@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 

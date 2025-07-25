@@ -23,11 +23,13 @@ export type ModuleSetting =
     | ChoiceSetting
     | ChooseSetting
     | MultiChooseSetting
+    | ListSetting
+    | RegistryListSetting
+    | ItemListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting
     | BindSetting
     | VectorSetting
     | KeySetting;
@@ -67,12 +69,6 @@ export interface VectorSetting {
     valueType: string;
     name: string;
     value: Vec3;
-}
-
-export interface TextArraySetting {
-    valueType: string;
-    name: string;
-    value: string[];
 }
 
 export interface ColorSetting {
@@ -158,6 +154,27 @@ export interface MultiChooseSetting {
     choices: string[];
     value: string[];
     canBeNone: boolean;
+}
+
+export interface ListSetting {
+    valueType: string;
+    name: string;
+    value: string[];
+    innerValueType: string;
+}
+
+export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface ItemListSetting extends ListSetting {
+    items: NamedItem[];
+}
+
+export interface NamedItem {
+    name: string;
+    value: string;
+    icon: string | undefined;
 }
 
 export interface ConfigurableSetting {
@@ -253,17 +270,6 @@ export interface PrintableKey {
 export interface MinecraftKeybind {
     bindName: string;
     key: PrintableKey;
-}
-
-export interface Registries {
-    blocks: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
-    items: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
 }
 
 export interface Session {
@@ -425,4 +431,9 @@ export interface GeneratorResult {
 export interface Screen {
     class: string,
     title: string,
+}
+
+export interface RegistryItem {
+    name: string;
+    icon: string | undefined;
 }

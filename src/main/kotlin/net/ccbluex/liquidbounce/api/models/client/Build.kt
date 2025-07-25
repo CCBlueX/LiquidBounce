@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.api.models.client
 
 import com.google.gson.annotations.SerializedName
 
+import java.time.OffsetDateTime
+
 data class Build(
     @SerializedName("build_id") val buildId: Int,
     @SerializedName("commit_id") val commitId: String,
@@ -27,7 +29,7 @@ data class Build(
     @SerializedName("lb_version") val lbVersion: String,
     @SerializedName("mc_version") val mcVersion: String,
     val release: Boolean,
-    val date: String,
+    val date: OffsetDateTime,
     val message: String,
     val url: String
 )

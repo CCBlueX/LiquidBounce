@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.deeplearn.ModelHolster.list
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
@@ -125,7 +126,7 @@ object ScriptSetting {
         val name = value.getMember("name").asString()
         val default = value.getMember("default").asArray<String>()
 
-        return value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
+        return list(name, default.toMutableList(), ValueType.TEXT)
     }
 
     @JvmName("choose")
@@ -168,8 +169,7 @@ object ScriptSetting {
         name: String,
         default: T,
         valueType: ValueType = ValueType.INVALID,
-        listType: ListValueType = ListValueType.None
-    ) = Value(name, defaultValue = default, valueType = valueType, listType = listType)
+    ) = Value(name, defaultValue = default, valueType = valueType)
 
     private fun <T : Any> rangedValue(
         name: String, default: T, range: ClosedRange<*>, suffix: String,
