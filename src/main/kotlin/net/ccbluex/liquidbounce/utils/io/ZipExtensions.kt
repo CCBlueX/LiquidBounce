@@ -35,16 +35,13 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
     }
 
     while (true) {
-        val entry = try {
-            ais.nextEntry
-        } catch (_: NoSuchMethodError) {
+        val entry = if (ais is TarArchiveInputStream) {
             // Lunar Client uses a stone age version of Apache Commons Compress that
             // does not have the nextEntry method.
-            if (ais is TarArchiveInputStream) {
-                ais.nextTarEntry
-            } else {
-                error("Unsupported ArchiveInputStream type for [ais.nextTarEntry]: ${ais::class.java.name}")
-            }
+            @Suppress("DEPRECATION")
+            ais.nextTarEntry
+        } else {
+            ais.nextEntry
         } ?: break
 
         if (entry.isDirectory) continue
