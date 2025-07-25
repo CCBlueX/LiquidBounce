@@ -82,5 +82,4 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         })
     }
 
-
 }
