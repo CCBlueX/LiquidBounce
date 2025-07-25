@@ -68,10 +68,10 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         TOWERING("Towering", {
             ModuleScaffold.isTowering
         }),
-        SNEAKING("Sneak", {
+        SNEAKING("Sneaking", {
             player.isSneaking
         }),
-        NOT_SNEAKING("NotSneak", {
+        NOT_SNEAKING("NotSneaking", {
             !player.isSneaking
         }),
         ON_GROUND("OnGround", {
