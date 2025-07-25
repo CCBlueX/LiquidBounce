@@ -45,14 +45,14 @@ abstract class ToggleableConfigurable(
     }
 
     fun newState(parentState: Boolean, selfState: Boolean = enabled) {
-        if (parentState && enabled) {
+        if (parentState && selfState) {
             enable()
         } else if (!parentState) {
             disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
+        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(parentState) }
+        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(parentState) }
     }
 
     open fun enable() {}
