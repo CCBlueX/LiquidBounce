@@ -34,7 +34,6 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
     private val fallCancel by boolean("FallCancel", true)
     private val flushOnPlace by boolean("Flush on place", false)
 
-
     private var pulseTime = 0L
     private val pulseTimer = Chronometer()
 
