@@ -35,19 +35,17 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
     }
 
     while (true) {
-        val entry = if (ais is TarArchiveInputStream) {
-            // Lunar Client uses a stone age version of Apache Commons Compress that
-            // does not have the nextEntry method.
-            @Suppress("DEPRECATION")
-            ais.nextTarEntry
-        } else if (ais is ZipArchiveInputStream) {
-            // Same reason as above
-            ais.nextZipEntry
-        } else {
-            ais.nextEntry
-        } ?: break
+        // Lunar Client uses a stone age version of Apache Commons Compress that does not have the nextEntry method.
+        @Suppress("DEPRECATION")
+        val entry = when (ais) {
+            is TarArchiveInputStream -> ais.nextTarEntry
+            is ZipArchiveInputStream -> ais.nextZipEntry
+            else -> ais.nextEntry
+        }  ?: break
 
-        if (entry.isDirectory) continue
+        if (entry.isDirectory) {
+            continue
+        }
 
         val newFile = File(folder, entry.name).apply {
             parentFile?.mkdirs()
