@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
@@ -34,7 +35,17 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
     }
 
     while (true) {
-        val entry = ais.nextEntry ?: break
+        val entry = try {
+            ais.nextEntry
+        } catch (_: NoSuchMethodError) {
+            // Lunar Client uses a stone age version of Apache Commons Compress that
+            // does not have the nextEntry method.
+            if (ais is TarArchiveInputStream) {
+                ais.nextTarEntry
+            } else {
+                error("Unsupported ArchiveInputStream type for [ais.nextTarEntry]: ${ais::class.java.name}")
+            }
+        } ?: break
 
         if (entry.isDirectory) continue
 
