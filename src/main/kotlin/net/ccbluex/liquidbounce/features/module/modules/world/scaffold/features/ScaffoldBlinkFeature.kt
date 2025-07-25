@@ -47,11 +47,7 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
             return@handler
         }
 
-        if (pulseTimer.hasElapsed(pulseTime)) {
-            pulseTimer.reset()
-        }
-
-        if (flushOn.any { it.cond(event.packet) }) {
+        if (pulseTimer.hasElapsed(pulseTime) || flushOn.any { it.cond(event.packet) }) {
             pulseTimer.reset()
             return@handler
         }
