@@ -28,5 +28,5 @@ import net.minecraft.entity.EntityPose
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
 object ModuleNoSwim : ClientModule("NoSwim", Category.MOVEMENT) {
-    fun EntityPose.shouldCancel() = running && this === EntityPose.SWIMMING
+    fun shouldCancel(pose: EntityPose) = running && pose === EntityPose.SWIMMING
 }
