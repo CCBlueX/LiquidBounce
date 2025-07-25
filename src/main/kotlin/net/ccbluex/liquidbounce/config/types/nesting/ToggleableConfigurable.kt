@@ -40,23 +40,45 @@ abstract class ToggleableConfigurable(
 ) : EventListener, Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), MinecraftShortcuts {
 
     var enabled by boolean("Enabled", enabled).onChange { newValue ->
-        newState(parent()?.running ?: true, newValue)
+        if (parent == null || parent.running) {
+            if (newValue) {
+                enable()
+            } else {
+                disable()
+            }
+            passParentNewState(newValue)
+        }
+
         newValue
     }
 
-    fun newState(parentState: Boolean, selfState: Boolean = enabled) {
-        if (parentState && selfState) {
+    private fun passParentNewState(state: Boolean) {
+        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
+        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
+    }
+
+    fun newState(state: Boolean) {
+        if (!enabled) {
+            return
+        }
+
+        if (state) {
             enable()
-        } else if (!parentState) {
+        } else {
             disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(parentState) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(parentState) }
+        passParentNewState(state)
     }
 
+    /**
+     * Will be called when parent enables while self enabled, or self enables while parent enabled.
+     */
     open fun enable() {}
 
+    /**
+     * Will be called when parent disables while self enabled, or self disables while parent enabled.
+     */
     open fun disable() {}
 
     /**
