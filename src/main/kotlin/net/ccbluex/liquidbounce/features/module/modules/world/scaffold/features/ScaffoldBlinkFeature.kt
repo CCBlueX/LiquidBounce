@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -26,11 +26,15 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 
 object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", false) {
 
     private val time by intRange("Time", 50..250, 0..3000, "ms")
     private val fallCancel by boolean("FallCancel", true)
+    private val flushOnPlace by boolean("Flush on place", false)
+
 
     private var pulseTime = 0L
     private val pulseTimer = Chronometer()
@@ -54,6 +58,11 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING) {
+            return@handler
+        }
+
+        if(flushOnPlace && event.packet is PlayerInteractBlockC2SPacket) {
+            pulseTimer.reset()
             return@handler
         }
 
