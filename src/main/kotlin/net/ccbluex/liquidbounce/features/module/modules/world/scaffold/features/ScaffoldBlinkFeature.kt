@@ -60,7 +60,7 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
             return@handler
         }
 
-        if(flushOnPlace && event.packet is PlayerInteractBlockC2SPacket) {
+        if (flushOnPlace && event.packet is PlayerInteractBlockC2SPacket) {
             pulseTimer.reset()
             return@handler
         }
