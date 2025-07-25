@@ -69,6 +69,9 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         PLACE("Place", { packet ->
             packet is PlayerInteractBlockC2SPacket
         }),
+        TOWERING("Towering", {
+            ModuleScaffold.isTowering
+        }),
         SNEAKING("Sneak", {
             player.isSneaking
         }),
