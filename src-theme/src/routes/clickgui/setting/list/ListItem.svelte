@@ -1,20 +1,22 @@
 <script lang="ts">
-    import {REST_BASE} from "../../../../integration/host";
     import {createEventDispatcher} from "svelte";
 
     const dispatch = createEventDispatcher<{
-        toggle: { identifier: string, enabled: boolean }
+        toggle: { value: string, enabled: boolean }
     }>();
 
-    export let identifier: string;
+    export let value: string;
     export let name: string;
+    export let icon: string | undefined;
     export let enabled: boolean;
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="block" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
-    <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={identifier}" alt={identifier}/>
+<div class="item" class:has-icon={icon !== undefined} on:click={() => dispatch("toggle", {enabled: !enabled, value:value})}>
+    {#if icon}
+        <img class="icon" src="{icon}" alt={value}/>
+    {/if}
     <div class="name">{name}</div>
     <div class="tick">
         {#if enabled}
@@ -28,20 +30,23 @@
 <style lang="scss">
   @use "../../../../colors.scss" as *;
 
-  .block {
+  .item {
     display: grid;
-    grid-template-columns: max-content 1fr max-content;
+    grid-template-columns: 1fr max-content;
     align-items: center;
     column-gap: 5px;
     cursor: pointer;
     margin: 2px 5px 2px 0;
+
+    &.has-icon {
+      grid-template-columns: max-content 1fr max-content;
+    }
   }
 
   .icon {
     height: 25px;
     width: 25px;
   }
-
   .name {
     font-size: 12px;
     color: $clickgui-text-color;

@@ -16,16 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types
 
-import com.google.gson.JsonObject
+package net.ccbluex.liquidbounce.config.gson.adapter
 
-/**
- * A dynamic configurable that can create instances of values that are not yet present.
- */
-open class DynamicConfigurable(
-    name: String,
-    value: MutableList<Value<*>> = mutableListOf(),
-    val factory: (String, JsonObject) -> Value<*>,
-    valueType: ValueType = ValueType.CONFIGURABLE
-) : Configurable(name, value = value, valueType = valueType)
+import net.minecraft.registry.Registries
+import net.minecraft.sound.SoundEvent
+
+object SoundEventAdapter : IdentifierAsStringAdapter<SoundEvent>(Registries.SOUND_EVENT)

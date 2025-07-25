@@ -16,16 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.config.types.nesting
 
-package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
+import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import net.minecraft.util.Identifier
-import java.lang.reflect.Type
-
-object IdentifierSerializer : JsonSerializer<Identifier> {
-    override fun serialize(src: Identifier?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.toString()) }
-}
+/**
+ * A dynamic configurable that can create instances of values that are not yet present.
+ */
+open class DynamicConfigurable(
+    name: String,
+    value: MutableList<Value<*>> = mutableListOf(),
+    val factory: (String, JsonObject) -> Value<*>,
+    valueType: ValueType = ValueType.CONFIGURABLE
+) : Configurable(name, value = value, valueType = valueType)

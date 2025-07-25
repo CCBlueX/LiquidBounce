@@ -86,6 +86,7 @@
     "minecraft.network.MixinHandshakeC2SPacket",
     "minecraft.network.MixinMultiplayerServerListPinger",
     "minecraft.network.MixinPacketByteBuf",
+    "minecraft.network.MixinPacketType",
     "minecraft.network.MixinPacketWrapper",
     "minecraft.network.MixinPlayerInteractBlockC2SPacket",
     "minecraft.network.MixinPlayerInteractItemC2SPacket",

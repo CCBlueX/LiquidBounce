@@ -187,7 +187,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      */
     @Suppress("LongMethod")
     fun registerInbuilt() {
-        var builtin = arrayOf(
+        val builtin = arrayOf(
             // Combat
             ModuleAimbot,
             ModuleAutoArmor,
@@ -331,6 +331,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoQueue,
             ModuleSmartEat,
             ModuleReplenish,
+            ModulePotionSpoof,
 
             // Render
             ModuleAnimations,

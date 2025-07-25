@@ -18,7 +18,6 @@ class MultiChooseEnumListValue<T>(
     value = value,
     choices = choices,
     canBeNone = canBeNone,
-    listType = ListValueType.Enums,
     autoSorting = true // EnumSet is ordered
 ) where T : Enum<T>, T : NamedChoice {
     override val T.elementName: String
@@ -35,7 +34,6 @@ class MultiChooseStringListValue(
     value = value,
     choices = choices,
     canBeNone = canBeNone,
-    listType = ListValueType.String,
     autoSorting = false
 )
 
@@ -54,7 +52,6 @@ sealed class MultiChooseListValue<T>(
      * Can deselect all values or enable at least one
      */
     @Exclude val canBeNone: Boolean = true,
-    listType: ListValueType,
 
     /**
      * If the [value] automatically implements sorting and guarantees order,
@@ -66,8 +63,7 @@ sealed class MultiChooseListValue<T>(
 ) : Value<MutableSet<T>>(
     name,
     defaultValue = value,
-    valueType = ValueType.MULTI_CHOOSE,
-    listType = listType
+    valueType = ValueType.MULTI_CHOOSE
 ) {
     init {
         if (!canBeNone) {
