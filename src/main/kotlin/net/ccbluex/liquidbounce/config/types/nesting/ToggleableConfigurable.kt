@@ -39,14 +39,18 @@ abstract class ToggleableConfigurable(
     aliases: Array<String> = emptyArray(),
 ) : EventListener, Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), MinecraftShortcuts {
 
-    // TODO: Make enabled change also call newState
-    internal var enabled by boolean("Enabled", enabled)
+    internal var enabled by boolean("Enabled", enabled).onChange { newValue ->
+        triggerNewState(newValue)
+        newValue
+    }
 
     fun newState(state: Boolean) {
-        if (!enabled) {
-            return
+        if (enabled) {
+            triggerNewState(state)
         }
+    }
 
+    private fun triggerNewState(state: Boolean) {
         if (state) {
             enable()
         } else {
