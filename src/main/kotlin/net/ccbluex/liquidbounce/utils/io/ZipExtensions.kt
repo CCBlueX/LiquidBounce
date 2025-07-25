@@ -40,6 +40,9 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
             // does not have the nextEntry method.
             @Suppress("DEPRECATION")
             ais.nextTarEntry
+        } else if (ais is ZipArchiveInputStream) {
+            // Same reason as above
+            ais.nextZipEntry
         } else {
             ais.nextEntry
         } ?: break
