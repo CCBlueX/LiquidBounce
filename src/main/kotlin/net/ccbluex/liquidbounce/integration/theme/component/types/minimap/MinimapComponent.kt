@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -61,6 +62,17 @@ object MinimapComponent : Component("Minimap", true) {
     init {
         ChunkRenderer
         registerComponentListen()
+    }
+
+    override fun enable() {
+        RenderedEntities.subscribe(this)
+        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+    }
+
+    override fun disable() {
+        RenderedEntities.unsubscribe(this)
+        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        ChunkRenderer.unloadEverything()
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
