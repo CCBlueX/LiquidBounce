@@ -35,7 +35,8 @@ import java.util.function.Predicate
  * Allows you to place blocks faster.
  */
 object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
-    private val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
+
+    private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")
     private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
     private val startDelay by int("StartDelay", 0, 0..1000, "ms")
 
@@ -47,7 +48,7 @@ object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
         if (applyTo.any {
                 it.condition.test(mainHandItem) || it.condition.test(offHandItem)
             } && (startDelay <= 0 || mc.options.useKey.timeSinceLastPress >= startDelay)) {
-            event.cooldown = cooldown
+            event.cooldown = cooldown.random()
         }
     }
 

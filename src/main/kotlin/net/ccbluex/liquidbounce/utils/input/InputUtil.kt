@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.input
 
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.util.InputUtil
 import net.minecraft.util.ActionResult
 
@@ -51,6 +52,17 @@ fun inputByName(name: String): InputUtil.Key {
         }
     return InputUtil.fromTranslationKey(translationKey)
 }
+
+/**
+ * Checks whether this key is currently pressed.
+ *
+ * This extension property uses the current window handle to determine if
+ * the key represented by this [InputUtil.Key] is being pressed.
+ *
+ * @return `true` if the key is pressed; otherwise, `false`.
+ */
+val InputUtil.Key.isPressed get() =
+    InputUtil.isKeyPressed(mc.window.handle, this.code)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").

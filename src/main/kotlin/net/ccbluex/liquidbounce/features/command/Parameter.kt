@@ -21,28 +21,20 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.lang.translation
 import net.minecraft.text.MutableText
 
-sealed class ParameterValidationResult<T: Any> {
+sealed interface ParameterValidationResult<T : Any> {
 
     companion object {
-        fun <T: Any> ok(value: T): ParameterValidationResult<T> = Ok(value)
-        fun <T: Any> error(errorMessage: String): ParameterValidationResult<T> = Error(errorMessage)
+        @JvmStatic
+        fun <T : Any> ok(value: T) = Ok(value)
+        @JvmStatic
+        fun error(errorMessage: String) = Error(errorMessage)
+        @JvmStatic
+        inline fun <T : Any> ofNullable(value: T?, errorMessage: () -> String) =
+            value?.let { Ok(it) } ?: error(errorMessage())
     }
 
-    class Ok<T: Any>(val mappedResult: T) : ParameterValidationResult<T>()
-    class Error<T: Any>(val errorMessage: String) : ParameterValidationResult<T>()
-}
-
-fun interface ParameterVerificator<T: Any> {
-    /**
-     * Verifies and parses parameter.
-     *
-     * This function must not have any side effects since this function may be called while the command is still being
-     * written!
-     *
-     * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
-     * [ParameterValidationResult.ok] with the parsed content is returned.
-     */
-    fun verifyAndParse(sourceText: String): ParameterValidationResult<T>
+    class Ok<T : Any>(val mappedResult: T) : ParameterValidationResult<T>
+    class Error(val errorMessage: String) : ParameterValidationResult<Nothing>
 }
 
 /**
@@ -68,7 +60,7 @@ class Parameter<T: Any>(
     val name: String,
     val required: Boolean,
     val vararg: Boolean,
-    val verifier: ParameterVerificator<T>?,
+    val verifier: Verificator<T>?,
     val autocompletionHandler: AutoCompletionProvider?,
     var command: Command? = null
 ) {
@@ -77,4 +69,17 @@ class Parameter<T: Any>(
 
     val description: MutableText
         get() = translation("$translationBaseKey.description")
+
+    fun interface Verificator<T: Any> {
+        /**
+         * Verifies and parses parameter.
+         *
+         * This function must not have any side effects since this function may be called
+         * while the command is still being written!
+         *
+         * @return the text is not valid, this function returns [ParameterValidationResult.error], otherwise
+         * [ParameterValidationResult.ok] with the parsed content is returned.
+         */
+        fun verifyAndParse(sourceText: String): ParameterValidationResult<out T>
+    }
 }

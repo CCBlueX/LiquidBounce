@@ -22,6 +22,10 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SequenceManager.cancelAllSequences
@@ -29,6 +33,7 @@ import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
+import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -97,8 +102,10 @@ open class ClientModule(
             if (new) {
                 enable()
             } else {
-                // Cancel all sequences when module is disabled, maybe disable first and then cancel?
+                // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
                 cancelAllSequences(this)
+                // Remove and cancel coroutine scope
+                removeEventListenerScope()
                 disable()
             }
         }.onSuccess {
@@ -238,5 +245,7 @@ open class ClientModule(
     ) = choices(this, name, activeIndex, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$baseKey.messages.$key", args = args)
+
+    override fun toString(): String = "Module$name"
 
 }

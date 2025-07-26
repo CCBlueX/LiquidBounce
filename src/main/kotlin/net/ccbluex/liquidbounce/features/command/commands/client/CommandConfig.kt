@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -55,6 +55,7 @@ object CommandConfig : CommandFactory {
             .subcommand(loadSubcommand())
             .subcommand(listSubcommand())
             .subcommand(browseSubcommand())
+            .subcommand(reloadSubcommand())
             .build()
     }
 
@@ -65,6 +66,16 @@ object CommandConfig : CommandFactory {
         }
         .build()
 
+    private fun reloadSubcommand() = CommandBuilder
+        .begin("reload")
+        .suspendHandler { command, _ ->
+            if (AutoConfig.reloadConfigs()) {
+                chat(regular("Reloaded ${configs?.size} settings info from API"))
+            } else {
+                chat(markAsError("Failed to load settings list from API"))
+            }
+        }.build()
+
     private fun listSubcommand() = CommandBuilder
         .begin("list")
         .handler { command, _ ->
@@ -72,13 +83,13 @@ object CommandConfig : CommandFactory {
                 chat(regular(command.result("loading")))
                 val widthOfSpace = mc.textRenderer.getWidth(" ")
                 val configs = configs ?: run {
-                    chat(regular("§cFailed to load settings list from API"))
+                    chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
                 val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
 
                 // In the case of the chat, we want to show the newest config at the bottom for visibility
-                configs.sortedBy { it.javaDate }.forEach {
+                configs.sortedBy { it.date }.forEach {
                     val settingName = it.settingId // there is also .name, but we use it for GUI instead
 
                     // Append spaces to the setting name to align the date and status
@@ -120,7 +131,7 @@ object CommandConfig : CommandFactory {
                     )
                 }
             }.onFailure {
-                chat(regular("§cFailed to load settings list from API"))
+                chat(markAsError("Failed to load settings list from API"))
             }
         }
         .build()
@@ -136,14 +147,13 @@ object CommandConfig : CommandFactory {
                 .build()
         )
         .parameter(
-            moduleParameter()
+            Parameters.modules()
                 .optional()
                 .build()
         )
         .suspendHandler { command, args ->
             val name = args[0] as String
-            val moduleNames = args.getOrNull(1) as String?
-            val modules = ModuleManager.parseModulesFromParameter(moduleNames)
+            val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
             runCatching {
                 if (name.startsWith("http")) {
@@ -172,6 +182,5 @@ object CommandConfig : CommandFactory {
     private fun autocompleteConfigs(begin: String): List<String> {
         return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
-
 
 }

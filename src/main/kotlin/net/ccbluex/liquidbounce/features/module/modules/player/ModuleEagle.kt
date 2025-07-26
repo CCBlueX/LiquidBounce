@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -55,7 +55,7 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
         fun shouldSneak(event: MovementInputEvent) =
-            enabled && player.pitch in pitch && conditions.all { it.meetsCondition(event) }
+            !enabled || player.pitch in pitch && conditions.all { it.meetsCondition(event) }
 
         @Suppress("unused")
         private enum class Conditions(

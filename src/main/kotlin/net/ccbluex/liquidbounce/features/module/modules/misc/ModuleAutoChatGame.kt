@@ -49,6 +49,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
     private val triggerSentence by text("TriggerSentence", "Chat Game")
     private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
+    private val answerTemplate by text("AnswerTemplate", "%s")
 
     /**
      * Default prompt for the AI.
@@ -175,7 +176,11 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         waitTicks(delay / 50)
 
         // Send answer
-        network.sendChatMessage(answer)
+        val formattedAnswer = answerTemplate.format(answer)
+        if (formattedAnswer.startsWith("/")) {
+            network.sendCommand(formattedAnswer.substring(1))
+        } else {
+            network.sendChatMessage(formattedAnswer)
+        }
     }
-
 }

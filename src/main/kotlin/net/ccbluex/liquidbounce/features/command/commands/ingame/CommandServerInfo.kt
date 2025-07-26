@@ -24,8 +24,7 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enumsParameter
-import net.ccbluex.liquidbounce.features.command.builder.parseEnumsFromParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
 
@@ -58,14 +57,14 @@ object CommandServerInfo : CommandFactory, EventListener {
             .begin("serverinfo")
             .requiresIngame()
             .parameter(
-                enumsParameter<DetectionType>("detect")
+                Parameters.enumChoices<DetectionType>("detect")
                     .optional()
                     .build()
             )
             .handler { command, args ->
-                val detectionTypes = parseEnumsFromParameter<DetectionType>(args.getOrNull(0) as? String)
+                val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
 
-                if (detectionTypes.isNotEmpty()) {
+                if (!detectionTypes.isNullOrEmpty()) {
                     runActiveDetection(command, detectionTypes)
                 } else {
                     printInformation(command)
@@ -78,9 +77,9 @@ object CommandServerInfo : CommandFactory, EventListener {
      * Runs active detection for specified detection types
      *
      * @param command The command instance
-     * @param detectionTypes List of detection types to run
+     * @param detectionTypes Collection of detection types to run
      */
-    private fun runActiveDetection(command: Command, detectionTypes: List<DetectionType>) {
+    private fun runActiveDetection(command: Command, detectionTypes: Collection<DetectionType>) {
         Sequence(this) {
             chat(regular(command.result("detecting")))
 
@@ -110,7 +109,7 @@ object CommandServerInfo : CommandFactory, EventListener {
      * @param command The command instance
      * @param detections Optional list of active detections that were run
      */
-    private fun printInformation(command: Command, detections: List<DetectionType> = emptyList()) {
+    private fun printInformation(command: Command, detections: Collection<DetectionType> = emptyList()) {
         // Gather basic server information
         val serverInfo = network.serverInfo
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()
