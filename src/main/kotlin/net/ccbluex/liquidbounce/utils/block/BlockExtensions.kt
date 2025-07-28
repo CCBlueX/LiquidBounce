@@ -499,7 +499,7 @@ fun doPlacement(
     onItemUseSuccess: () -> Boolean = { true },
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE
 ) {
-    val stack = player.mainHandStack
+    val stack = player.getStackInHand(hand)
     val count = stack.count
 
     val interactionResult = interaction.interactBlock(player, hand, rayTraceResult)
