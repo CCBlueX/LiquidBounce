@@ -56,7 +56,11 @@ val EventListener.eventListenerScope: CoroutineScope
         CoroutineScope(
             SupervisorJob() // Prevent exception canceling
             + CoroutineExceptionHandler { ctx, throwable -> // logging
-                logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                if (throwable is EventListenerNotListeningException) {
+                    logger.debug("{} is not listening, job cancelled", throwable.eventListener)
+                } else {
+                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                }
             }
             + CoroutineName(it.toString()) // Name
             // Render thread + Auto cancel on not listening
