@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
@@ -27,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.waitMatches
+import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.client.gui.screen.TitleScreen
@@ -158,11 +157,11 @@ object ServerObserver : EventListener {
          * Server sends a command suggestions packet with a list of commands.
          * These commands are usually prefixed with the plugin name and a colon.
          */
-        val packet = withTimeoutOrNull(timeout) {
-            waitMatches<PacketEvent>(priority = FIRST_PRIORITY) {
-                it.packet is CommandSuggestionsS2CPacket && it.packet.id == completionId
-            }.packet as CommandSuggestionsS2CPacket
-        } ?: return false
+        val packet = waitMatchesWithTimeout<PacketEvent>(timeout, priority = FIRST_PRIORITY) {
+            it.packet is CommandSuggestionsS2CPacket && it.packet.id == completionId
+        }?.packet ?: return false
+
+        packet as CommandSuggestionsS2CPacket
 
         this.plugins = packet.suggestions.list.mapNotNullTo(sortedSetOf()) { cmd ->
             val command = cmd.text.split(":")

@@ -28,6 +28,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
@@ -36,6 +37,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.Duration
 
 private val RenderThreadDispatcher = mc.asCoroutineDispatcher()
 
@@ -113,6 +115,21 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
     }
     EventManager.registerEventHook(T::class.java, eventHook)
 }
+
+/**
+ * Wait an event of type [T] which matches given [predicate].
+ * If the timeout is exceeded, return null.
+ *
+ * @param timeout The timeout duration.
+ * @param priority The priority of the event hook.
+ * @param predicate The predicate to match the event.
+ * If it throws a [Throwable], the continuation will be resumed with [Result.failure].
+ */
+suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
+    timeout: Duration,
+    priority: Short = 0,
+    crossinline predicate: (T) -> Boolean,
+): T? = withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
 
 /**
  * Wrap the [original] interceptor and make it auto-detect
