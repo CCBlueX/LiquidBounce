@@ -21,12 +21,18 @@ package net.ccbluex.liquidbounce.event
 import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 
 /**
- * A callable event
+ * A callable event.
+ *
+ * All implementations should have annotation [InbuiltEvent].
+ *
+ * @see net.ccbluex.liquidbounce.annotations.InbuiltEvent
  */
 abstract class Event
 
 /**
- * A cancellable event
+ * A cancellable event. Always with state so implementations shouldn't be singleton (`object`).
+ *
+ * @see net.ccbluex.liquidbounce.annotations.InbuiltEvent
  */
 abstract class CancellableEvent : Event() {
     /**

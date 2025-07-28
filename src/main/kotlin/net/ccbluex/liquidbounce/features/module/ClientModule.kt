@@ -47,6 +47,10 @@ import net.minecraft.client.util.InputUtil
 
 /**
  * A module also called 'hack' can be enabled and handle events
+ *
+ * Add annotation [net.ccbluex.liquidbounce.annotations.InbuiltModule] to auto-register it in [ModuleManager].
+ *
+ * @see net.ccbluex.liquidbounce.annotations.InbuiltModule
  */
 @Suppress("LongParameterList")
 open class ClientModule(
