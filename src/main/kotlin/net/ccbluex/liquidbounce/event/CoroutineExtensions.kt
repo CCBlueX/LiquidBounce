@@ -86,6 +86,10 @@ inline fun <reified T : Event> EventListener.suspendHandler(
 /**
  * Wait an event of type [T] which matches given [predicate].
  *
+ * The continuation resumes on the event handler thread. For example:
+ * - [net.ccbluex.liquidbounce.event.events.PacketEvent]:  client Netty IO (EventLoopGroup)
+ * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
+ *
  * @param priority The priority of the event hook.
  * @param predicate The predicate to match the event.
  * If it throws a [Throwable], the continuation will be resumed with [Result.failure].
@@ -119,6 +123,11 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
 /**
  * Wait an event of type [T] which matches given [predicate].
  * If the timeout is exceeded, return null.
+ *
+ * This is exactly a shortcut of:
+ * ```kotlin
+ * withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
+ * ```
  *
  * @param timeout The timeout duration.
  * @param priority The priority of the event hook.
