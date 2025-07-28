@@ -68,7 +68,8 @@ object CommandExecutor : EventListener {
     private var isShuttingDown: Boolean = false
 
     /**
-     * Add a wrapped suspend handler to [net.ccbluex.liquidbounce.features.command.builder.CommandBuilder] if you don't want to block the render thread.
+     * Add a wrapped suspend handler to [net.ccbluex.liquidbounce.features.command.builder.CommandBuilder]
+     * if you don't want to block the render thread.
      *
      * @param allowParallel allow or prevent duplicated executions
      * @author MukjepScarlet
