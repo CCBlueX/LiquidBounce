@@ -29,6 +29,14 @@ package net.ccbluex.liquidbounce.annotations
  * @InbuiltCommandFactory
  * object CommandExample : CommandFactory { ... }
  * ```
+ *
+ * Run Gradle task `kspKotlin` to generate.
+ * It will be auto-executed when you run `compileKotlin` task.
+ * Generated files could be found at `<rootProject>/build/generated/ksp/main/kotlin/`.
+ *
+ * All `CommandFactory` objects will be collected as an array.
+ * You can get the array by `CommandManager.allCommandFactories`. Don't modify it.
+ * This extension will be defined in the same package of `CommandManager`.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)

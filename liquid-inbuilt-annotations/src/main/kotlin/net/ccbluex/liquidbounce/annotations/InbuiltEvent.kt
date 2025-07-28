@@ -27,8 +27,17 @@ package net.ccbluex.liquidbounce.annotations
  * It should be like:
  * ```kotlin
  * @InbuiltEvent("example")
- * class ExampleEvent : Event/CancellableEvent
+ * class/object ExampleEvent : Event/CancellableEvent
  * ```
+ * An Event can be singleton, which means it is stateless and immutable.
+ *
+ * Run Gradle task `kspKotlin` to generate.
+ * It will be auto-executed when you run `compileKotlin` task.
+ * Generated files could be found at `<rootProject>/build/generated/ksp/main/kotlin/`.
+ *
+ * All `Event` objects will be collected as an array.
+ * You can get the array by `EventManager.allEventClasses`. Don't modify it.
+ * This extension will be defined in the same package of `EventManager`.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
@@ -37,6 +46,18 @@ annotation class InbuiltEvent(
      * In lower camel case. Used for:
      * - Script
      * - Web-based event flow
+     *
+     * This property should be unique in project-wide.
+     * Generally it can be represented by the class name (Upper-Camel) as:
+     * ```kotlin
+     * className.removeSuffix("Event").replaceFirstChar { it.lowercaseChar() }
+     * ```
+     *
+     * Example:
+     * ```kotlin
+     * @InbuiltEvent("myNew")
+     * class MyNewEvent
+     * ```
      */
     val name: String
 )

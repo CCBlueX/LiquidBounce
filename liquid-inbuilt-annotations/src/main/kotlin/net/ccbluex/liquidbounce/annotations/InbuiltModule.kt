@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.annotations
 
 /**
- * Marks a ClientModule `object` which should be included in ModuleManager.
+ * Marks a ClientModule `object` which should be included in `ModuleManager`.
  *
  * Visibility should be `public`.
  *
@@ -29,6 +29,15 @@ package net.ccbluex.liquidbounce.annotations
  * @InbuiltModule
  * object ModuleExample : ClientModule("Example", ...) { ... }
  * ```
+ * All modules should have unique name.
+ *
+ * Run Gradle task `kspKotlin` to generate.
+ * It will be auto-executed when you run `compileKotlin` task.
+ * Generated files could be found at `<rootProject>/build/generated/ksp/main/kotlin/`.
+ *
+ * All `ClientModule` objects will be collected as an array.
+ * You can get the array by `ModuleManager.allClientModules`. Don't modify it.
+ * This extension will be defined in the same package of `ModuleManager`.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
