@@ -152,7 +152,7 @@ object CommandExecutor : EventListener {
     /**
      * Render thread scope
      */
-    private val commandCoroutineScope = CoroutineScope(
+    internal val commandCoroutineScope = CoroutineScope(
         mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
     )
 
