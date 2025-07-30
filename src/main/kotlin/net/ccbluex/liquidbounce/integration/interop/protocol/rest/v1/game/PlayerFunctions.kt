@@ -104,7 +104,7 @@ data class PlayerData(
             player.blockPos,
             player.velocity,
             player.inventory.selectedSlot,
-            if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
+            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
@@ -133,6 +133,7 @@ data class PlayerInventoryData(
 ) {
 
     companion object {
+        @JvmStatic
         fun fromPlayer(player: PlayerEntity) = PlayerInventoryData(
             armor = player.inventory.armor.map(ItemStack::copy),
             main = player.inventory.main.map(ItemStack::copy),
@@ -191,8 +192,10 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          *
          * Taken from the Minecraft source code
          */
+        @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
-            if (scoreboard == null) return null
+            scoreboard ?: return null
+            val player = mc.player ?: return null
 
             val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
 
