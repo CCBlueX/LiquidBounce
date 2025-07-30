@@ -165,7 +165,7 @@ object CriticalsJump : Choice("Jump") {
     }
 
     private fun calculateTicksUntilNextCrit(): Float {
-        val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
+        val durationToWait = player.attackCooldownProgressPerTick - 1.5F
         val waitedDuration = player.lastAttackedTicks.toFloat()
 
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
