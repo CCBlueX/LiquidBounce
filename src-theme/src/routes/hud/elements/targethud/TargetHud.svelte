@@ -38,7 +38,7 @@
             <div class="name">{target.username}</div>
             <div class="health-stats">
                 <div class="stat">
-                    <div class="value">{Math.floor(target.actualHealth + target.absorption)}</div>
+                    <div class="value">{Math.floor(target.actualHealth)}</div>
                     <img
                             class="icon"
                             src="img/hud/targethud/icon-health.svg"
@@ -70,7 +70,7 @@
             </div>
         </div>    
         
-        <HealthProgress maxHealth={target.maxHealth + target.absorption} health={target.actualHealth + target.absorption} />
+        <HealthProgress maxHealth={target.maxHealth} health={target.actualHealth} />
     </div>
 {/if}
 
