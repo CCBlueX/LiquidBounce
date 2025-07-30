@@ -167,12 +167,14 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
 
         SMART("Smart"),
         IGNORE("Ignore"),
+        SIMPLESMART("SimpleSmart"),
         ALWAYS("Always");
 
         fun isCriticalHit(target: Entity): Boolean {
             return when (this) {
                 IGNORE -> true
                 SMART -> !shouldWaitForCrit(target, ignoreState = true)
+                SIMPLESMART -> !allowsCriticalHit() or wouldDoCriticalHit()
                 ALWAYS -> wouldDoCriticalHit()
             }
         }
@@ -184,8 +186,8 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             }
 
             // On ground, we cannot do critical hits anyway.
-            if (player.isOnGround) {
-                return false
+            if (!allowsCriticalHit()) {
+                 return false
             }
 
             // If we are about to do a critical hit, we should stop sprinting.
@@ -223,7 +225,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
     }
 
     fun canDoCriticalHit(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        allowsCriticalHit(ignoreOnGround) && player.getAttackCooldownProgress(0.5f) > 0.9f &&
+        allowsCriticalHit(ignoreOnGround) && player.getAttackCooldownProgress(1.5f) > 0.85f &&
             (!player.isSprinting || ignoreSprint)
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =
