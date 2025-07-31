@@ -24,7 +24,6 @@
     }
 
     async function selectFile() {
-        console.log("lol");
         if (selecting) {
             return;
         }
