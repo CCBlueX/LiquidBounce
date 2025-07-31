@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -45,20 +45,23 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        world.entities.filterIsInstance<FallingBlockEntity>().forEach {
-            renderer.addBlock(it.blockPos)
+    private val tickHandler = handler<GameTickEvent> {
+        for (entity in world.entities) {
+            if (entity is FallingBlockEntity) {
+                renderer.addBlock(entity.blockPos, update = false)
+            }
         }
+        renderer.updateAll()
     }
 
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is BlockUpdateS2CPacket -> mc.renderTaskQueue.add {
-                renderer.addBlock(packet.pos)
+            is BlockUpdateS2CPacket -> mc.execute {
+                renderer.addBlock(packet.pos, update = false)
             }
-            is ChunkDeltaUpdateS2CPacket -> mc.renderTaskQueue.add {
-                packet.visitUpdates { pos, _ -> renderer.addBlock(pos.toImmutable()) }
+            is ChunkDeltaUpdateS2CPacket -> mc.execute {
+                packet.visitUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }
     }
