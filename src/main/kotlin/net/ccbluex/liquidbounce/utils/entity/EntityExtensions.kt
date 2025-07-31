@@ -577,7 +577,7 @@ private fun LivingEntity.getHealthFromScoreboard(): Float? {
 
     val displayName = objective.displayName
 
-    if (!(displayName?.string?.let { name -> listOf("❤", "HP", "Health", "Здоровья", "Здоровье").any { name.contains(it) } } ?: false)) {
+    if (displayName?.string?.let { name -> listOf("❤", "HP", "Health", "Здоровья", "Здоровье").any { name.contains(it) } }) {
         return null
     }
 
