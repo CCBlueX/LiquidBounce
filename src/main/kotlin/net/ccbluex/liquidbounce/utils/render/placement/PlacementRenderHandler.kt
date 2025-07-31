@@ -155,13 +155,15 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         pos.searchBlocksInCuboid(2).forEach {
             val longValue = it.asLong()
 
-            if (inList.containsKey(longValue)) {
-                inList.put(longValue, inList.get(longValue).copy(cullData = this.culler.getCullData(longValue)))
+            val inValue = inList[longValue]
+            if (inValue != null) {
+                inList.put(longValue, inValue.copy(cullData = this.culler.getCullData(longValue)))
                 return@forEach
             }
 
-            if (currentList.containsKey(longValue)) {
-                currentList.put(longValue, currentList.get(longValue).copy(cullData = this.culler.getCullData(longValue)))
+            val currentValue = currentList[longValue]
+            if (currentValue != null) {
+                currentList.put(longValue, currentValue.copy(cullData = this.culler.getCullData(longValue)))
                 return@forEach
             }
         }
