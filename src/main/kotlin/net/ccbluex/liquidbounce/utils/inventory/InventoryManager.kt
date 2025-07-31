@@ -498,8 +498,9 @@ data class InventoryActionChain(
 
     override fun compareTo(other: InventoryActionChain): Int {
         // inventoryOpen asc (false -> true)
-        if (requiresInventoryOpen() != other.requiresInventoryOpen()) {
-            return if (requiresInventoryOpen()) 1 else -1
+        val thisOpenInv = requiresInventoryOpen()
+        if (thisOpenInv != other.requiresInventoryOpen()) {
+            return if (thisOpenInv) 1 else -1
         }
 
         // priority desc
