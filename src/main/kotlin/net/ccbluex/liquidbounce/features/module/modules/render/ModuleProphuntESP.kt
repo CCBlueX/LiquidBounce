@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,6 +37,14 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
         defaultColor = Color4b(255, 179, 72, 90), keep = false
     )
 
+    private val tracking by multiEnumChoice("Tracking", Tracking.entries, canBeNone = false)
+
+    private enum class Tracking(override val choiceName: String): NamedChoice {
+        FALLING_BLOCKS("FallingBlocks"),
+        BLOCK_UPDATES("BlockUpdates"),
+        CHUNK_DELTA_UPDATES("ChunkDeltaUpdates"),
+    }
+
     init {
         tree(renderer)
     }
@@ -46,9 +55,11 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        for (entity in world.entities) {
-            if (entity is FallingBlockEntity) {
-                renderer.addBlock(entity.blockPos, update = false)
+        if (Tracking.FALLING_BLOCKS in tracking) {
+            for (entity in world.entities) {
+                if (entity is FallingBlockEntity) {
+                    renderer.addBlock(entity.blockPos, update = false)
+                }
             }
         }
         renderer.updateAll()
@@ -56,11 +67,12 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
 
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
-        when (val packet = event.packet) {
-            is BlockUpdateS2CPacket -> mc.execute {
+        val packet = event.packet
+        when {
+            packet is BlockUpdateS2CPacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
                 renderer.addBlock(packet.pos, update = false)
             }
-            is ChunkDeltaUpdateS2CPacket -> mc.execute {
+            packet is ChunkDeltaUpdateS2CPacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
                 packet.visitUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }
