@@ -284,7 +284,7 @@ object InventoryManager : EventListener {
 
 }
 
-interface InventoryAction {
+sealed interface InventoryAction {
     fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean
     fun performAction(): Boolean
     fun requiresPlayerInventoryOpen(): Boolean
@@ -494,7 +494,7 @@ data class InventoryActionChain(
         return actions.all { action -> action.canPerformAction(inventoryConstraints) }
     }
 
-    fun requiresInventoryOpen() = actions.filterIsInstance<ClickInventoryAction>().any { it.screen == null }
+    fun requiresInventoryOpen() = actions.any { it is ClickInventoryAction && it.screen == null }
 
     override fun compareTo(other: InventoryActionChain): Int {
         // inventoryOpen asc (false -> true)
