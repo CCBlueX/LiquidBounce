@@ -181,7 +181,7 @@ dependencies {
     includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.2.3.Final")
+    includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
