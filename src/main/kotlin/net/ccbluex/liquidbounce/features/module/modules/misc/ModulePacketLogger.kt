@@ -90,8 +90,15 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
         text.append(" ")
 
+        val packetClassName = classNames.computeIfAbsent(packet.javaClass, EnvironmentRemapper::remapClass)
+            .substringAfterLast('.')
+        text.append(highlight(packetClassName).copyable(copyContent = packetClassName))
+
         val packetName = packetId.toName()
-        text.append(highlight(packetName).copyable(copyContent = packetName))
+
+        text.append(regular(" (ID: "))
+        text.append(variable(packetName).copyable(copyContent = packetName))
+        text.append(regular(")"))
 
         if (clazz.isRecord) {
             text.append(" (Record)".asText().formatted(Formatting.DARK_GRAY))
