@@ -21,6 +21,7 @@ import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
 import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
     id("fabric-loom")
@@ -89,9 +90,14 @@ fun Configuration.excludeProvidedLibs() = apply {
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
-configurations.include.get().extendsFrom(includeModDependency)
-configurations.modApi.get().extendsFrom(includeModDependency)
-configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
+configurations {
+    include.configure {
+        extendsFrom(includeModDependency)
+    }
+    modApi.configure {
+        extendsFrom(includeModDependency)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -186,7 +192,7 @@ dependencies {
     includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
+    includeDependency("io.netty:netty-handler-proxy:4.2.3.Final")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
@@ -195,18 +201,17 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // Test libraries
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.1")
+    testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fix nullable annotations
-    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    compileOnlyApi("com.google.code.findbugs:jsr305:3.0.2")
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
+            val apiDependency = dependencies.api(it.requested.toString()) {
                 isTransitive = false
             }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
 
             dependencies.include(apiDependency)
         }
@@ -356,7 +361,7 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
 
     val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
     baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
+    files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
     consoleOutputCount.set(5)
 }
 
