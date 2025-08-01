@@ -218,9 +218,11 @@ tasks.processResources {
     val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version")
     val viafabricplusVersion = providers.gradleProperty("viafabricplus_version")
 
-    val contributors = JsonOutput.prettyPrint(
-        JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-    )
+    val contributors = provider {
+        JsonOutput.prettyPrint(
+            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
+        )
+    }
 
     inputs.property("version", modVersion)
     inputs.property("minecraft_version", minecraftVersion)
@@ -239,7 +241,7 @@ tasks.processResources {
                 "fabric_version" to fabricVersion.get(),
                 "loader_version" to loaderVersion.get(),
                 "min_loader_version" to minLoaderVersion.get(),
-                "contributors" to contributors,
+                "contributors" to contributors.get(),
                 "fabric_kotlin_version" to fabricKotlinVersion.get(),
                 "viafabricplus_version" to viafabricplusVersion.get()
             )
@@ -380,7 +382,9 @@ kotlin {
 
 tasks.jar {
     val archivesBaseName = providers.gradleProperty("archives_base_name")
-    val mappingFiles = rootProject.configurations.mappings.get().map(::zipTree)
+    val mappingFiles = provider {
+        rootProject.configurations.mappings.get().map(::zipTree)
+    }
 
     inputs.property("archives_base_name", archivesBaseName)
     inputs.files(mappingFiles).withPropertyName("mappingFiles")
@@ -392,7 +396,7 @@ tasks.jar {
         }
     }
 
-    from(files(mappingFiles)) {
+    from(files(mappingFiles.get())) {
         include("mappings/mappings.tiny")
     }
 }
