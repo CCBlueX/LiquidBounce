@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -29,10 +30,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -55,7 +58,7 @@ import java.awt.Color
 
 object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
-    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
+    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow, Tracers))
 
     private val chestColor by color("Chest", Color4b(0, 100, 255))
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
@@ -189,6 +192,35 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                         }
 
                         event.markDirty()
+                    }
+                }
+            }
+        }
+    }
+
+    private object Tracers : Choice("Tracers") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (StorageScanner.isEmpty()) {
+                return@handler
+            }
+
+            renderEnvironmentForWorld(event.matrixStack) {
+                val eyeVector = Vec3(0.0, 0.0, 1.0)
+                    .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+                    .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+
+                longLines {
+                    for ((blockPos, type) in StorageScanner.iterate()) {
+                        val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
+
+                        withColor(type.color) {
+                            drawLines(eyeVector, pos, pos)
+                        }
                     }
                 }
             }
