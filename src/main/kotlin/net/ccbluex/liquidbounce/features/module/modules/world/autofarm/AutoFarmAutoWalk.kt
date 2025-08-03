@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -30,8 +31,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.ItemEntity
+import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
 import java.util.EnumSet
 
@@ -83,28 +86,31 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }
     }
 
-    private fun findWalkToItem() = world.entities.filter {
+    private fun findWalkToItem(): Vec3d? = world.entities.filter {
         it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
     private fun findWalkToBlock(): Vec3d? {
         if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_DESTROYED)
+        val allowedStates = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_DESTROYED)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
         if (toPlace) {
             for (item in Slots.OffhandWithHotbar.items) {
                 when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.FARMLAND)
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.SOUL_SAND)
+                    in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedStates.FARMLAND)
+                    in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedStates.SOUL_SAND)
+                    Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                        allowedStates.add(AutoFarmTrackedStates.CAN_USE_BONE_MEAL)
+                    }
                 }
             }
         }
 
         val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
-            if (state in allowedItems) pos.toCenterPos() else null
+            if (state in allowedStates) pos.toCenterPos() else null
         }.minByOrNull(player::squaredDistanceTo)
 
         return closestBlockPos
@@ -120,6 +126,12 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         invHadSpace = invHasSpace
 
         val target = findWalkTarget(invHasSpace).also { walkTarget = it } ?: return false
+
+        debugParameter("Target") { target }
+        debugParameter("Target Type") {
+            val targetAsBlockPos = target.toBlockPos()
+            AutoFarmBlockTracker.iterate().firstOrNull { it.key == targetAsBlockPos }?.value
+        }
 
         RotationManager.setRotationTarget(
             Rotation.lookingAt(point = target, from = player.eyePos),

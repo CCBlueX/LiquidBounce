@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.*
@@ -72,12 +73,17 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20, "ticks")
     }
 
+    internal object AutoUseBoneMeal : ToggleableConfigurable(this, "AutoUseBoneMeal", false) {
+        // TODO
+    }
+
     private val fortune by boolean("UseFortune", true)
 
     private val autoWalk = tree(AutoFarmAutoWalk)
 
     init {
         tree(AutoPlaceCrops)
+        tree(AutoUseBoneMeal)
         tree(AutoFarmVisualizer)
     }
 
@@ -159,6 +165,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 // Only wait if the block is completely broken
                 waitTicks(interactDelay.random())
             }
+        } else if (AutoUseBoneMeal.enabled && canUseBoneMeal(state, blockPos)) {
+            val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot(Items.BONE_MEAL) ?: return@tickHandler
+
+            doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
+            waitTicks(interactDelay.random())
         } else {
             val pos = blockPos.offset(rayTraceResult.side).down()
             val blockState = pos.getState() ?: return@tickHandler

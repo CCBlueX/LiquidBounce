@@ -41,8 +41,8 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
         }
 
         val cache = BlockPos.Mutable()
-        // If this position is air, check placeable position below
         if (state.isAir) {
+            // If this position is air, check placeable position below
             val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block ?: return null
 
             when (blockBelow) {
