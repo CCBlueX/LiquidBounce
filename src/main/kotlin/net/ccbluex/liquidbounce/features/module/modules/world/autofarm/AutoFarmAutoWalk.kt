@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -42,6 +43,13 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private val toItems = object : ToggleableConfigurable(this, "ToItems", true) {
         private val range by float("Range", 20f, 8f..64f).onChanged {
             rangeSquared = it.sq()
+        }
+
+        private val items by items("Items", hashSetOf())
+        private val filter by enumChoice("Filter", Filter.BLACKLIST)
+
+        fun shouldPickUp(itemEntity: ItemEntity): Boolean {
+            return filter(itemEntity.stack.item, items)
         }
 
         var rangeSquared: Float = range.sq()
@@ -74,7 +82,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     }
 
     private fun findWalkToItem() = world.entities.filter {
-        it is ItemEntity && it.squaredDistanceTo(player) < toItems.rangeSquared
+        it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
     private fun findWalkToBlock(): Vec3d? {
