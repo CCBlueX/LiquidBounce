@@ -156,7 +156,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val blockPos = rayTraceResult.blockPos
 
         val state = blockPos.getState() ?: return@tickHandler
-        if (shouldBeDestroyed(state, blockPos)) {
+        if (blockPos.readyForHarvest(state)) {
             swapToSlotWithFortune()
 
             doBreak(rayTraceResult)
@@ -165,7 +165,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 // Only wait if the block is completely broken
                 waitTicks(interactDelay.random())
             }
-        } else if (AutoUseBoneMeal.enabled && canUseBoneMeal(state, blockPos)) {
+        } else if (AutoUseBoneMeal.enabled && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot(Items.BONE_MEAL) ?: return@tickHandler
 
             doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
@@ -188,7 +188,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
     private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && shouldBeDestroyed(state, pos) &&
+            !state.isAir && pos.readyForHarvest(state) &&
                     getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
@@ -262,7 +262,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }
 
         val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && canUseBoneMeal(state, pos) &&
+            !state.isAir && pos.canUseBoneMeal(state) &&
                 getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
@@ -315,39 +315,6 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }
     }
 
-    private const val NETHER_WART_MAX_AGE = 3
-    private const val COCOA_MAX_AGE = 2
-//    private const val SWEET_BERRY_BUSH_MAX_AGE = 3 TODO: right click it
-
-    /**
-     * Check if [pos] with [state] should be destroyed.
-     */
-    fun shouldBeDestroyed(state: BlockState, pos: BlockPos): Boolean {
-        return when (val block = state.block) {
-            is PumpkinBlock -> true
-            Blocks.MELON -> true
-            is CropBlock -> block.isMature(state)
-            is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= NETHER_WART_MAX_AGE
-            is CocoaBlock -> state.get(CocoaBlock.AGE) >= COCOA_MAX_AGE
-            is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(pos)
-            is CactusBlock -> isAboveLast<CactusBlock>(pos)
-            is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(pos)
-            is BambooBlock -> isAboveLast<BambooBlock>(pos)
-            else -> false
-        }
-    }
-
-    /**
-     * @see Fertilizable
-     */
-    fun canUseBoneMeal(state: BlockState, pos: BlockPos): Boolean {
-        return when (val block = state.block) {
-            is CropBlock, is StemBlock, is CocoaBlock, is SweetBerryBushBlock ->
-                block.isFertilizable(world, pos, state)
-            else -> false
-        }
-    }
-
     /**
      * checks if the block is either a farmland or soulsand block and has air above it
      */
@@ -366,10 +333,6 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             is SoulSandBlock -> allowSoulsand
             else -> false
         }
-    }
-
-    private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
-        return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
 
     override fun enable() {

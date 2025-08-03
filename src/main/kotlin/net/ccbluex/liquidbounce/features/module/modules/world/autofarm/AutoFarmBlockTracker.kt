@@ -36,7 +36,7 @@ enum class AutoFarmTrackedStates {
 object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedStates>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
         // Should be destroyed? e.g. Melon block, Pumpkin block
-        if (ModuleAutoFarm.shouldBeDestroyed(state, pos)) {
+        if (pos.readyForHarvest(state)) {
             return AutoFarmTrackedStates.SHOULD_BE_DESTROYED
         }
 
@@ -52,7 +52,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
 
             // Air itself should be untracked
             return null
-        } else if (ModuleAutoFarm.canUseBoneMeal(state, pos)) {
+        } else if (pos.canUseBoneMeal(state)) {
             return AutoFarmTrackedStates.CAN_USE_BONE_MEAL
         } else {
             val block = state.block

@@ -90,24 +90,29 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
-    private fun findWalkToBlock(): Vec3d? {
-        if (AutoFarmBlockTracker.isEmpty()) return null
-
+    private fun collectAllowedStates(): Set<AutoFarmTrackedStates> {
+        // we should always walk to blocks we want to destroy because we can do so even without any items
         val allowedStates = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_DESTROYED)
-        // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
-        // 2. false: we should only walk to farmland blocks if we got the needed items
-        // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
-        if (toPlace) {
-            for (item in Slots.OffhandWithHotbar.items) {
-                when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedStates.FARMLAND)
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedStates.SOUL_SAND)
-                    Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
-                        allowedStates.add(AutoFarmTrackedStates.CAN_USE_BONE_MEAL)
-                    }
+
+        // we should only walk to farmland/soulsand blocks if we have plantable items
+        if (!toPlace) return allowedStates
+
+        for (item in Slots.OffhandWithHotbar.items) {
+            when (item) {
+                in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedStates.FARMLAND)
+                in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedStates.SOUL_SAND)
+                Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                    allowedStates.add(AutoFarmTrackedStates.CAN_USE_BONE_MEAL)
                 }
             }
         }
+        return allowedStates
+    }
+
+    private fun findWalkToBlock(): Vec3d? {
+        if (AutoFarmBlockTracker.isEmpty()) return null
+
+        val allowedStates = collectAllowedStates()
 
         val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
             if (state in allowedStates) pos.toCenterPos() else null
