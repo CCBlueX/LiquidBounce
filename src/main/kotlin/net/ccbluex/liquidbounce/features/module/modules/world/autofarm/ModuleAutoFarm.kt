@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.inventory.hasItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.*
@@ -256,6 +256,40 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         return false
     }
 
+    private fun updateTargetToFertilizable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
+        if (!Slots.OffhandWithHotbar.hasItem(Items.BONE_MEAL)) {
+            return false
+        }
+
+        val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
+            !state.isAir && canUseBoneMeal(state, pos) &&
+                getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
+        }.sortedBy { it.first.getCenterDistanceSquared() }
+
+        for ((pos, state) in blocksToFertile) {
+            val (rotation, _) = raytraceBlock(
+                player.eyePos,
+                pos,
+                state,
+                range = range.toDouble() - 0.1,
+                wallsRange = wallRange.toDouble() - 0.1
+            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
+
+            // set currentTarget to the new target
+            currentTarget = pos
+            // aim at target
+            RotationManager.setRotationTarget(
+                rotation,
+                configurable = rotations,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = this@ModuleAutoFarm
+            )
+
+            return true // We got a free angle at the block? No need to see more of them.
+        }
+        return false
+    }
+
     // Finds either a breakable target (such as crops, cactus, etc.)
     // or a placeable target (such as a farmblock or soulsand with air above).
     // It will prefer a breakable target
@@ -273,6 +307,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         // Can we find a placeable target?
         if (AutoPlaceCrops.enabled && updateTargetToPlaceable(radius, radiusSquared, eyesPos)) {
+            return
+        }
+
+        if (AutoUseBoneMeal.enabled && updateTargetToFertilizable(radius, radiusSquared, eyesPos)) {
             return
         }
     }
