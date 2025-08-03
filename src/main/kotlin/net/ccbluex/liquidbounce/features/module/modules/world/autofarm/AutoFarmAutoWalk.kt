@@ -80,15 +80,15 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private fun findWalkToBlock(): Vec3d? {
         if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = EnumSet.of(AutoFarmTrackedStates.Destroy)
+        val allowedItems = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_BROKEN)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
         if (toPlace) {
             for (item in Slots.OffhandWithHotbar.items) {
                 when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.Farmland)
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.Soulsand)
+                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.FARMLAND)
+                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.SOULSAND)
                 }
             }
         }

@@ -21,55 +21,52 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.block.FarmlandBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 enum class AutoFarmTrackedStates {
-    Destroy,
-    Farmland,
-    Soulsand
+    SHOULD_BE_BROKEN,
+    FARMLAND,
+    SOULSAND,
 }
 
 object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedStates>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
+        // Should be broken? e.g. Melon block, Pumpkin block
         if (ModuleAutoFarm.isTargeted(state, pos)) {
-            return AutoFarmTrackedStates.Destroy
+            return AutoFarmTrackedStates.SHOULD_BE_BROKEN
         }
 
-        val stateBellow = pos.down().getState() ?: return null
+        val cache = BlockPos.Mutable()
+        // If this position is air, check placeable position below
+        if (state.isAir) {
+            val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block ?: Blocks.AIR
 
-        if (stateBellow.isAir) return null
+            when (blockBelow) {
+                is FarmlandBlock -> track(cache, AutoFarmTrackedStates.FARMLAND)
+                is SoulSandBlock -> track(cache, AutoFarmTrackedStates.SOULSAND)
+            }
 
-        val blockBellow = stateBellow.block
+            // Air itself should be untracked
+            return null
+        } else {
+            val block = state.block
 
-        when (blockBellow) {
-            is FarmlandBlock -> handlePlaceableBlock(pos, state, AutoFarmTrackedStates.Farmland)
-            is SoulSandBlock -> handlePlaceableBlock(pos, state, AutoFarmTrackedStates.Soulsand)
-        }
-
-        val block = state.block
-
-        if (ModuleAutoFarm.hasAirAbove(pos)) {
-            return when (block) {
-                is FarmlandBlock -> AutoFarmTrackedStates.Farmland
-                is SoulSandBlock -> AutoFarmTrackedStates.Soulsand
-                else -> null
+            // Check if air above
+            return if (cache.set(pos, Direction.UP).getState()?.isAir == true) {
+                when (block) {
+                    is FarmlandBlock -> AutoFarmTrackedStates.FARMLAND
+                    is SoulSandBlock -> AutoFarmTrackedStates.SOULSAND
+                    else -> null
+                }
+            } else {
+                null
             }
         }
-        return null
     }
 
-
-    private fun handlePlaceableBlock(pos: BlockPos, state: BlockState, trackedState: AutoFarmTrackedStates) {
-        val targetBlockPos = pos.down()
-        if (state.isAir) {
-            // If there is no air above, add it
-            track(targetBlockPos, trackedState)
-        } else {
-            // If there is no air above, we want to remove it
-            untrack(targetBlockPos)
-        }
-    }
 }
 
