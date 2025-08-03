@@ -85,10 +85,24 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
     val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
-    private val itemForFarmland
-        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
-    private val itemForSoulSand
-        get() = Slots.Hotbar.findClosestSlot(items = itemsForFarmland)
+    private fun getAvailableSlotForBlock(blockState: BlockState) =
+        when (blockState.block) {
+            is FarmlandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
+            is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulsand)
+            else -> null
+        }
+
+    private fun swapToSlotWithFortune() {
+        if (!fortune) {
+            return
+        }
+        // Swap to a fortune item to increase drops
+        Slots.Hotbar.maxByOrNull { it.itemStack.getEnchantment(Enchantments.FORTUNE) }
+            ?.takeIf { it.itemStack.getEnchantment(Enchantments.FORTUNE) >= 1 }
+            ?.let {
+                SilentHotbar.selectSlotSilently(this, it, 2)
+            }
+    }
 
     var currentTarget: BlockPos? = null
 
@@ -139,16 +153,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         val blockPos = rayTraceResult.blockPos
 
-        var state = blockPos.getState() ?: return@tickHandler
+        val state = blockPos.getState() ?: return@tickHandler
         if (isTargeted(state, blockPos)) {
-            if (fortune) {
-                // Swap to a fortune item to increase drops
-                Slots.Hotbar.maxByOrNull { it.itemStack.getEnchantment(Enchantments.FORTUNE) }
-                    ?.takeIf { it.itemStack.getEnchantment(Enchantments.FORTUNE) >= 1 }
-                    ?.let {
-                        SilentHotbar.selectSlotSilently(this, it, 2)
-                    }
-            }
+            swapToSlotWithFortune()
 
             val direction = rayTraceResult.side
 
@@ -162,20 +169,13 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             }
         } else {
             val pos = blockPos.offset(rayTraceResult.side).down()
+            val blockState = pos.getState() ?: return@tickHandler
 
-            state = pos.getState() ?: return@tickHandler
-
-            if (isFarmBlockWithAir(state, pos)) {
-                val item = if (state.block is FarmlandBlock) {
-                    itemForFarmland
-                } else {
-                    itemForSoulSand
-                }
-
-                item ?: return@tickHandler
+            if (isFarmBlockWithAir(blockState, pos)) {
+                val item = getAvailableSlotForBlock(blockState) ?: return@tickHandler
 
                 SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
-                doPlacement(rayTraceResult)
+                doPlacement(rayTraceResult, hand = item.useHand)
 
                 waitTicks(interactDelay.random())
             }
