@@ -45,6 +45,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }
 
         var rangeSquared: Float = range.sq()
+            private set
     }
 
     private val autoJump by boolean("AutoJump", false)
@@ -56,38 +57,25 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private var invHadSpace = true
 
     var walkTarget: Vec3d? = null
+        private set
+
+    private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
+        val blockTarget = findWalkToBlock()
+
+        if (toItems.enabled && invHasSpace) {
+            val playerPos = player.pos
+            val itemTarget = findWalkToItem()
+            val blockTargetDistSq = blockTarget?.squaredDistanceTo(playerPos) ?: return itemTarget
+            val itemTargetDistSq = itemTarget?.squaredDistanceTo(playerPos) ?: return blockTarget
+            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
+        } else {
+            return blockTarget
+        }
+    }
 
     private fun findWalkToItem() = world.entities.filter {
         it is ItemEntity && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
-
-    fun updateWalkTarget(): Boolean {
-        if (!enabled) return false
-
-        val invHasSpace = hasInventorySpace()
-        if (!invHasSpace && invHadSpace && toItems.enabled) {
-            notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
-        }
-        invHadSpace = invHasSpace
-
-        walkTarget = if (toItems.enabled && invHasSpace) {
-            arrayOf(findWalkToBlock(), findWalkToItem()).minByOrNull {
-                it?.squaredDistanceTo(player.pos) ?: Double.MAX_VALUE
-            }
-        } else {
-            findWalkToBlock()
-        }
-
-        val target = walkTarget ?: return false
-
-        RotationManager.setRotationTarget(
-            Rotation.lookingAt(point = target, from = player.eyePos),
-            configurable = ModuleAutoFarm.rotations,
-            priority = Priority.IMPORTANT_FOR_USAGE_1,
-            provider = ModuleAutoFarm
-        )
-        return true
-    }
 
     private fun findWalkToBlock(): Vec3d? {
         if (AutoFarmBlockTracker.isEmpty()) return null
@@ -110,6 +98,26 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }.minByOrNull(player::squaredDistanceTo)
 
         return closestBlock
+    }
+
+    fun updateWalkTarget(): Boolean {
+        if (!enabled) return false
+
+        val invHasSpace = hasInventorySpace()
+        if (!invHasSpace && invHadSpace && toItems.enabled) {
+            notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
+        }
+        invHadSpace = invHasSpace
+
+        val target = findWalkTarget(invHasSpace).also { walkTarget = it } ?: return false
+
+        RotationManager.setRotationTarget(
+            Rotation.lookingAt(point = target, from = player.eyePos),
+            configurable = ModuleAutoFarm.rotations,
+            priority = Priority.IMPORTANT_FOR_USAGE_1,
+            provider = ModuleAutoFarm
+        )
+        return true
     }
 
     fun stopWalk() {
