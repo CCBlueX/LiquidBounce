@@ -94,18 +94,23 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
 
                     withPositionRelativeToCamera(pos.toVec3d()) {
-                        if (type == AutoFarmTrackedStates.SHOULD_BE_BROKEN) {
-                            withColor(fillColor) {
-                                drawSolidBox(FULL_BOX)
+                        when (type) {
+                            AutoFarmTrackedStates.SHOULD_BE_DESTROYED -> {
+                                withColor(fillColor) {
+                                    drawSolidBox(FULL_BOX)
+                                }
                             }
-                        } else {
-                            withColor(placeColor) {
-                                drawSideBox(FULL_BOX, Direction.UP)
+                            AutoFarmTrackedStates.SOUL_SAND, AutoFarmTrackedStates.FARMLAND -> {
+                                withColor(placeColor) {
+                                    drawSideBox(FULL_BOX, Direction.UP)
+                                }
                             }
-
+                            AutoFarmTrackedStates.CAN_USE_BONE_MEAL -> {
+                                // NOOP
+                            }
                         }
 
-                        if (outline && type == AutoFarmTrackedStates.SHOULD_BE_BROKEN) {
+                        if (outline && type == AutoFarmTrackedStates.SHOULD_BE_DESTROYED) {
                             withColor(outlineColor) {
                                 drawOutlinedBox(FULL_BOX)
                             }

@@ -72,9 +72,11 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
         if (toItems.enabled && invHasSpace) {
             val playerPos = player.pos
-            val itemTarget = findWalkToItem()
-            val blockTargetDistSq = blockTarget?.squaredDistanceTo(playerPos) ?: return itemTarget
-            val itemTargetDistSq = itemTarget?.squaredDistanceTo(playerPos) ?: return blockTarget
+            val itemTarget = findWalkToItem() ?: return blockTarget
+            blockTarget ?: return itemTarget
+
+            val blockTargetDistSq = blockTarget.squaredDistanceTo(playerPos)
+            val itemTargetDistSq = itemTarget.squaredDistanceTo(playerPos)
             return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
         } else {
             return blockTarget
@@ -88,7 +90,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private fun findWalkToBlock(): Vec3d? {
         if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_BROKEN)
+        val allowedItems = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_DESTROYED)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
@@ -96,16 +98,16 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             for (item in Slots.OffhandWithHotbar.items) {
                 when (item) {
                     in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.FARMLAND)
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.SOULSAND)
+                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.SOUL_SAND)
                 }
             }
         }
 
-        val closestBlock = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
+        val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
             if (state in allowedItems) pos.toCenterPos() else null
         }.minByOrNull(player::squaredDistanceTo)
 
-        return closestBlock
+        return closestBlockPos
     }
 
     fun updateWalkTarget(): Boolean {

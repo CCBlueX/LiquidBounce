@@ -26,12 +26,15 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
@@ -41,12 +44,10 @@ import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.Items
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
 
 /**
  * AutoFarm module
@@ -80,10 +81,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    val rotations = tree(RotationsConfigurable(this))
+    internal val rotations = tree(RotationsConfigurable(this))
 
-    val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-    val itemsForSoulsand = arrayOf(Items.NETHER_WART)
+    internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
+    internal val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private fun getAvailableSlotForBlock(blockState: BlockState) =
         when (blockState.block) {
@@ -105,6 +106,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     }
 
     var currentTarget: BlockPos? = null
+        private set
 
     val repeatable = tickHandler {
         // Return if the user is inside a screen like the inventory
@@ -135,18 +137,12 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         autoWalk.stopWalk() // Stop walking if we found a target close enough to interact with it
 
-        val currentRotation = RotationManager.serverRotation
-
-        val rayTraceResult = world.raycast(
-            RaycastContext(
-                player.eyePos,
-                player.eyePos.add(currentRotation.directionVector.multiply(range.toDouble())),
-                RaycastContext.ShapeType.OUTLINE,
-                RaycastContext.FluidHandling.NONE,
-                player
-            )
-        ) ?: return@tickHandler
-
+        val rayTraceResult = raycast(
+            range = range.toDouble(),
+            start = player.eyePos,
+            direction = (RotationManager.currentRotation ?: player.rotation).directionVector,
+            entity = player,
+        )
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return@tickHandler
         }
@@ -154,14 +150,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val blockPos = rayTraceResult.blockPos
 
         val state = blockPos.getState() ?: return@tickHandler
-        if (isTargeted(state, blockPos)) {
+        if (shouldBeDestroyed(state, blockPos)) {
             swapToSlotWithFortune()
 
-            val direction = rayTraceResult.side
-
-            if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
-                player.swingHand(Hand.MAIN_HAND)
-            }
+            doBreak(rayTraceResult)
 
             if (interaction.blockBreakingProgress == -1) {
                 // Only wait if the block is completely broken
@@ -172,10 +164,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             val blockState = pos.getState() ?: return@tickHandler
 
             if (isFarmBlockWithAir(blockState, pos)) {
-                val item = getAvailableSlotForBlock(blockState) ?: return@tickHandler
+                val slot = getAvailableSlotForBlock(blockState) ?: return@tickHandler
 
-                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
-                doPlacement(rayTraceResult, hand = item.useHand)
+                SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
+                doPlacement(rayTraceResult, hand = slot.useHand)
 
                 waitTicks(interactDelay.random())
             }
@@ -185,7 +177,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
     private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && isTargeted(state, pos) &&
+            !state.isAir && shouldBeDestroyed(state, pos) &&
                     getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
@@ -216,7 +208,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     // Searches for any blocks suitable for placing crops or nether wart on
     // returns ture if it found a target
     private fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
-        val hotbarItems = Slots.Hotbar.items
+        val hotbarItems = Slots.OffhandWithHotbar.items
 
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
         val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
@@ -274,17 +266,35 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }
     }
 
-    fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
+    private const val NETHER_WART_MAX_AGE = 3
+    private const val COCOA_MAX_AGE = 2
+//    private const val SWEET_BERRY_BUSH_MAX_AGE = 3 TODO: right click it
+
+    /**
+     * Check if [pos] with [state] should be destroyed.
+     */
+    fun shouldBeDestroyed(state: BlockState, pos: BlockPos): Boolean {
         return when (val block = state.block) {
             is PumpkinBlock -> true
             Blocks.MELON -> true
             is CropBlock -> block.isMature(state)
-            is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
-            is CocoaBlock -> state.get(CocoaBlock.AGE) >= 2
+            is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= NETHER_WART_MAX_AGE
+            is CocoaBlock -> state.get(CocoaBlock.AGE) >= COCOA_MAX_AGE
             is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(pos)
             is CactusBlock -> isAboveLast<CactusBlock>(pos)
             is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(pos)
             is BambooBlock -> isAboveLast<BambooBlock>(pos)
+            else -> false
+        }
+    }
+
+    /**
+     * @see Fertilizable
+     */
+    fun canUseBoneMeal(state: BlockState, pos: BlockPos): Boolean {
+        return when (val block = state.block) {
+            is CropBlock, is StemBlock, is CocoaBlock, is SweetBerryBushBlock ->
+                block.isFertilizable(world, pos, state)
             else -> false
         }
     }
@@ -298,10 +308,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         allowFarmland: Boolean = true,
         allowSoulsand: Boolean = true
     ): Boolean {
-        return isFarmBlock(state, allowFarmland, allowSoulsand) && hasAirAbove(pos)
+        return isFarmBlock(state, allowFarmland, allowSoulsand) && pos.up().getState()?.isAir == true
     }
-
-    fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
 
     private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
         return when (state.block) {
