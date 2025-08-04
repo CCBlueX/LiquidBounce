@@ -35,7 +35,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * @author XeContrast
  */
-internal object NoFallGrim : Choice("Grim19") {
+internal object NoFallGrim : Choice("Grim2371") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
