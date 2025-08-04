@@ -50,7 +50,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
-import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
@@ -296,12 +295,14 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
                 // Any of boxes raycast the line is not null -> need to break
                 val collisionShape = pos.collisionShape
-                var rc = Optional.empty<Vec3d>()
+                var rc: Vec3d? = null
                 collisionShape.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
-                    rc = rc.or { Box.raycast(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint) }
+                    if (rc == null) {
+                        rc = Box.raycast(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint).getOrNull()
+                    }
                 }
 
-                rc.getOrNull() ?: continue
+                rc ?: continue
 
                 result.add(pos.toImmutable())
                 visited.add(pos.asLong())
