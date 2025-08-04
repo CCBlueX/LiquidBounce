@@ -201,23 +201,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     }
 
     private fun updateTarget() {
-        val eyesPos = player.eyePos
-
-        val rangeSq = range.sq()
-
-        val possibleBlocks = eyesPos.searchBlocksInCuboid(range + 1) { pos, state ->
-            val block = state.block
-            when {
-                block !in targets -> false
-                block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox.offset(pos))
-                    .squaredDistanceTo(eyesPos) <= rangeSq
-            }
-        }.mapTo(mutableListOf()) { it.first }
-
-        if (possibleBlocks.isEmpty()) return
-
-        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
+        val possibleBlocks = searchPossibleTargetPositions() ?: return
 
         validateCurrentTarget(possibleBlocks)
 
@@ -244,9 +228,31 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
     }
 
+    private fun searchPossibleTargetPositions(): List<BlockPos>? {
+        val eyesPos = player.eyePos
+
+        val rangeSq = range.sq()
+
+        val possibleBlocks = eyesPos.searchBlocksInCuboid(range + 1) { pos, state ->
+            val block = state.block
+            when {
+                block !in targets -> false
+                block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
+                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox.offset(pos))
+                    .squaredDistanceTo(eyesPos) <= rangeSq
+            }
+        }.mapTo(mutableListOf()) { it.first }
+
+        if (possibleBlocks.isEmpty()) return null
+
+        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
+
+        return possibleBlocks
+    }
+
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
         val possibleBlocks = possibleBlocks.let {
-            if (it is Set || it.size <= 4) it else it.toHashSet()
+            if (it is Set || it.size <= 4) it else it.toHashSet() // for performance of contains
         }
         val currentTarget = currentTarget ?: return
 
