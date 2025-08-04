@@ -105,20 +105,19 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     )
 
     private var currentTarget: DestroyerTarget? = null
-        set(value) {
-            field?.let { targetRenderer.removeBlock(it.pos) }
-            value?.let { targetRenderer.addBlock(it.pos) }
-
-            field = value
-        }
-    private var wasTarget: DestroyerTarget? = null
-
-    override fun disable() {
-        if (currentTarget != null) {
+    private fun clearCurrentTarget() {
+        currentTarget?.let {
             interaction.cancelBlockBreaking()
+            targetRenderer.removeBlock(it.pos)
         }
 
         currentTarget = null
+    }
+
+    private var wasTarget: DestroyerTarget? = null
+
+    override fun disable() {
+        clearCurrentTarget()
         wasTarget = null
         targetRenderer.clearSilently()
     }
@@ -146,8 +145,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
             if (currentTarget == null || delay > 0) {
-                currentTarget = null
-                interaction.cancelBlockBreaking()
+                clearCurrentTarget()
             }
 
             waitTicks(delay)
@@ -212,54 +210,62 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             when {
                 block !in targets -> false
                 block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox)
+                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox.offset(pos))
                     .squaredDistanceTo(eyesPos) <= rangeSq
             }
-        }.mapTo(hashSetOf()) { it.first }
+        }.mapTo(mutableListOf()) { it.first }
+
+        if (possibleBlocks.isEmpty()) return
+
+        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
 
         validateCurrentTarget(possibleBlocks)
 
-        // Find the nearest block
-        val pos = possibleBlocks.minByOrNull { pos -> pos.getCenterDistanceSquared() } ?: return
-
         val range = range.toDouble()
-        var wallRange = wallRange.toDouble()
 
-        // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
-        if (FuckerEntrance.enabled && pos.hasEntrance) {
-            wallRange = range
-        }
+        possibleBlocks.forEach { pos ->
+            // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
+            val wallRange = if (FuckerEntrance.enabled && pos.hasEntrance) range else wallRange.toDouble()
 
-        if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
-            // Is there any block in the way?
-            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                val weakBlock = pos.weakestNeighbor ?: return
+            if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
+                // Is there any block in the way?
+                if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
+                    val weakBlock = pos.weakestNeighbor ?: return@forEach
 
-                considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
-            } else if (surroundings) {
-                updateSurroundings(pos)
+                    considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
+                } else if (surroundings) {
+                    updateSurroundings(pos)
+                }
             }
         }
+
+        targetRenderer.updateAll()
     }
 
-    private fun validateCurrentTarget(possibleBlocks: Set<BlockPos>) {
-        val currentTarget = currentTarget
+    private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
+        val possibleBlocks = possibleBlocks.let {
+            if (it is Set || it.size <= 4) it else it.toHashSet()
+        }
+        val currentTarget = currentTarget ?: return
 
-        if (currentTarget != null) {
-            if (currentTarget.pos !in possibleBlocks) {
-                ModuleFucker.currentTarget = null
-            }
-            if (currentTarget.isTarget && currentTarget.action != action) {
-                ModuleFucker.currentTarget = null
-            }
+        var removed = false
+        if (currentTarget.pos !in possibleBlocks) {
+            removed = true
+        }
+        if (currentTarget.isTarget && currentTarget.action != action) {
+            removed = true
+        }
 
-            // Stick with the current target because it's still valid.
-            val validationResult =
-                considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
+        // Stick with the current target because it's still valid.
+        val validationResult =
+            considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
 
-            if (validationResult == false) {
-                ModuleFucker.currentTarget = null
-            }
+        if (validationResult == false) {
+            removed = true
+        }
+
+        if (removed) {
+            clearCurrentTarget()
         }
     }
 
@@ -331,7 +337,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         val raytrace = raytraceBlock(
             player.eyePos,
             target.pos,
-            target.pos.getState()!!,
+            state,
             range = range,
             wallsRange = throughWallsRange
         ) ?: return false
@@ -354,6 +360,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
 
         ModuleFucker.currentTarget = target
+        targetRenderer.addBlock(target.pos, update = false)
 
         return true
     }
