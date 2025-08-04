@@ -27,13 +27,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
@@ -42,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
@@ -90,9 +86,6 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
-
     private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
         initialValue = emptyMap()
     ) { _, _ ->
@@ -116,34 +109,26 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
-            fontRenderer.withBuffers { buf ->
-                itemEntities.mapNotNull { (center, items) ->
-                    val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
-                        ?: return@mapNotNull null
-                    renderPos to items
-                }.forEachWithSelf { (center, items), i, self ->
-                    withMatrixStack {
-                        val z = 1000.0F * i / self.size
-                        drawItemTags(items, Vec3(center.x, center.y, z), buf)
-                    }
-                }
+            itemEntities.mapNotNull { (center, items) ->
+                val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
+                    ?: return@mapNotNull null
+                renderPos to items
+            }.forEachWithSelf { (center, items), i, self ->
+                val z = 1000.0F * i / self.size
+                drawItemTags(items, center.copy(z = z))
             }
         }
     }
 
     @JvmStatic
-    private fun GUIRenderEnvironment.drawItemTags(
+    private fun drawItemTags(
         items: List<ItemStack>,
         pos: Vec3,
-        fontBuffers: FontRendererBuffers,
     ) {
         val width = items.size * ITEM_SIZE
         val height = ITEM_SIZE
 
-        val dc = DrawContext(
-            mc,
-            mc.bufferBuilders.entityVertexConsumers
-        )
+        val dc = newDrawContext()
 
         val itemScale = ITEM_SCALE * scale
         dc.matrices.translate(pos.x, pos.y, 0.0F)
@@ -159,17 +144,6 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             Color4b(0, 0, 0, 128).toARGB()
         )
 
-        val c = fontRenderer.size
-        val fontScale = 1.0F / (c * 0.15F) * scale
-
-        // sync x pos between item and count
-        fun scale(f: Int) = f * itemScale / fontScale
-
-        matrixStack.push()
-        matrixStack.translate(pos.x, pos.y, pos.z)
-        matrixStack.scale(fontScale, fontScale, 1.0F)
-        matrixStack.translate(-scale(width) / 2f, -scale(height) / 2f, 1000.0F)
-
         // render stacks
         items.forEachIndexed { index, stack ->
             val leftX = index * ITEM_SIZE
@@ -178,21 +152,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 leftX,
                 0,
             )
-
-            if (stack.count > 1) {
-                val text = fontRenderer.process(stack.count.toString().asText())
-
-                fontRenderer.draw(
-                    text,
-                    scale(leftX + ITEM_SIZE) - fontRenderer.getStringWidth(text),
-                    scale(ITEM_SIZE) - fontRenderer.height,
-                    shadow = true,
-                )
-            }
+            dc.drawStackOverlay(mc.textRenderer, stack, leftX, 0)
         }
-
-        fontRenderer.commit(fontBuffers)
-        matrixStack.pop()
     }
 
     @JvmStatic
