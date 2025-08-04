@@ -158,7 +158,7 @@ val BlockPos.hasEntrance: Boolean
         return positionsAround.any { it.getState()?.isAir == true && it.getBlock() != block }
     }
 
-val BlockPos.weakestBlock: BlockPos?
+val BlockPos.weakestNeighbor: BlockPos?
     get() {
         val positionsAround = arrayOf(
             this.offset(Direction.NORTH),

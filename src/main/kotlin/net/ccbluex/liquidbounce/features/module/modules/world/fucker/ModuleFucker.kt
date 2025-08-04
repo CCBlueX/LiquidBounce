@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -49,6 +50,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
@@ -210,7 +212,8 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             when {
                 block !in targets -> false
                 block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= rangeSq
+                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox)
+                    .squaredDistanceTo(eyesPos) <= rangeSq
             }
         }.mapTo(hashSetOf()) { it.first }
 
@@ -230,7 +233,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
             // Is there any block in the way?
             if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                val weakBlock = pos.weakestBlock ?: return
+                val weakBlock = pos.weakestNeighbor ?: return
 
                 considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
             } else if (surroundings) {
@@ -260,34 +263,41 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
     }
 
-    fun traceWayToTarget(
+    private fun traceWayToTarget(
         target: BlockPos,
-        eyePos: Vec3d,
-        currBlock: BlockPos,
-        visited: HashSet<BlockPos>,
-        out: MutableList<Pair<BlockPos, Vec3d>>
-    ) {
-        val nextPos = arrayOf(
-            currBlock.offset(Direction.NORTH),
-            currBlock.offset(Direction.SOUTH),
-            currBlock.offset(Direction.EAST),
-            currBlock.offset(Direction.WEST),
-            currBlock.offset(Direction.UP),
-            currBlock.offset(Direction.DOWN),
-        )
+        startPos: BlockPos,
+    ): List<BlockPos> {
+        val eyePos = player.eyePos
+        val visited = LongOpenHashSet()
+        val pos = BlockPos.Mutable()
+        val result = mutableListOf<BlockPos>()
+        val targetPoint = getNearestPoint(eyePos, target.collisionShape.boundingBox)
 
-        for (pos in nextPos) {
-            if (pos == target || pos in visited) {
-                continue
+        fun trace0(currBlock: BlockPos) {
+            for (direction in Direction.entries) {
+                pos.set(currBlock, direction)
+                if (pos == target || pos.asLong() in visited) {
+                    continue
+                }
+
+                // Any of boxes raycast the line is not null -> need to break
+                val collisionShape = pos.collisionShape
+                var rc = Optional.empty<Vec3d>()
+                collisionShape.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+                    rc = rc.or { Box.raycast(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint) }
+                }
+
+                rc.getOrNull() ?: continue
+
+                result.add(pos.toImmutable())
+                visited.add(pos.asLong())
+
+                trace0(pos)
             }
-
-            val rc = Box(pos).raycast(eyePos, target.toCenterPos()).getOrNull() ?: continue
-
-            out.add(pos to rc)
-            visited.add(pos)
-
-            traceWayToTarget(target, eyePos, pos, visited, out)
         }
+        trace0(startPos)
+
+        return result
     }
 
     private fun isBetterTarget(otherTarget: DestroyerTarget, currentTarget: DestroyerTarget): Boolean {
@@ -365,13 +375,11 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
         val blockPos = raytraceResult.blockPos
 
-        val arr = ArrayList<Pair<BlockPos, Vec3d>>()
-
-        traceWayToTarget(initialPosition, player.eyePos, blockPos, HashSet(), arr)
+        val arr = traceWayToTarget(initialPosition, blockPos)
 
         val hotbarItems = Slots.Hotbar.map { it.itemStack }
 
-        val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
+        val resistance = arr.mapNotNull { it.getState()?.takeUnless { state -> state.isAir } }
             .sumOf {
                 val bestMiningSpeed = hotbarItems.maxOfOrNull { item -> item.getMiningSpeedMultiplier(it) } ?: 1.0F
 
@@ -385,7 +393,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         )
     }
 
-    data class DestroyerTarget(
+    private data class DestroyerTarget(
         val pos: BlockPos,
         val action: DestroyAction,
         val surroundingInfo: SurroundingInfo? = null,
@@ -396,12 +404,12 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
      * @param actualTargetPos the parent DestroyerTarget is surrounding this block
      * @param resistance proportional to the time it will take until the actual target is reached
      */
-    data class SurroundingInfo(
+    private data class SurroundingInfo(
         val actualTargetPos: BlockPos,
         val resistance: Double
     )
 
-    enum class DestroyAction(override val choiceName: String) : NamedChoice {
+    private enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")
     }
 
