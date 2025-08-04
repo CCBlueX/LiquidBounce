@@ -52,6 +52,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     private val song by text("SongName", "")
     private val pianoOnly by boolean("PianoOnly", false)
+    val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)
     val rotationsConfigurable = RotationsConfigurable(this)
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -184,7 +185,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         renderer.reset()
     }
 
-    private val progressMessageMetadata = MessageMetadata(id = "M${ModuleNotebot.name}#progress", remove = false)
+    private val progressMessageMetadata = MessageMetadata(id = "M$name#progress", remove = false)
 
     private fun removeProgressMessage() {
         net.ccbluex.liquidbounce.utils.client.mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)

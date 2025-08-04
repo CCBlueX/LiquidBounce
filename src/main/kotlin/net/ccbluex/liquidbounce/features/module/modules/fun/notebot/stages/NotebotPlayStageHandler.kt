@@ -70,7 +70,9 @@ class NotebotPlayStageHandler(
             if (blockToPlayWith != null) {
                 blockToPlayWith.click()
 
-                usedBlocks.add(blockToPlayWith)
+                if (!ModuleNotebot.reuseBlocks) {
+                    usedBlocks.add(blockToPlayWith)
+                }
             }
         }
     }

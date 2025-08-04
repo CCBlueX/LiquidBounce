@@ -71,7 +71,15 @@ object NotebotScanner : MinecraftShortcuts {
             for (note in notes) {
                 val instrumentNote = ModuleNotebot.getPlayedNote(note)
 
-                countsInTick.inlineMerge(instrumentNote, 1, Int::plus)
+                if (ModuleNotebot.reuseBlocks) {
+                    maxConcurrentCounts.put(instrumentNote, 1)
+                } else {
+                    countsInTick.inlineMerge(instrumentNote, 1, Int::plus)
+                }
+            }
+
+            if (ModuleNotebot.reuseBlocks) {
+                continue
             }
 
             for ((instrumentNote, count) in countsInTick) {
