@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.ccbluex.liquidbounce.utils.kotlin.isEmpty
 import net.minecraft.block.BedBlock
 import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -137,7 +136,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             pos.toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
         }
 
-        if (placementPositions.isEmpty()) {
+        if (placementPositions.none()) {
             return@handler
         }
 
