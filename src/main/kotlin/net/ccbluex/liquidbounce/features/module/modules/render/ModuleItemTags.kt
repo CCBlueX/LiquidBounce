@@ -40,8 +40,12 @@ import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.ItemEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
+import java.util.IdentityHashMap
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 private const val ITEM_SIZE: Int = 16
 private const val ITEM_SCALE: Float = 1.0F
@@ -158,11 +162,11 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     @JvmStatic
     private fun List<ItemEntity>.cluster(): Map<Vec3d, List<ItemStack>> {
-        if (isEmpty()) {
+        if (this.isEmpty()) {
             return emptyMap()
         }
 
-        val groups = arrayListOf<Set<ItemEntity>>()
+        val groups = mutableListOf<Set<ItemEntity>>()
         val visited = hashSetOf<ItemEntity>()
 
         for (entity in this) {
@@ -183,16 +187,30 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             Pair(
                 // Get the center pos of all entities
                 entities.map { it.box.center }.average(),
-                // Merge stacks with same item, order by count desc
-                entities.groupBy {
-                    it.stack.item
-                }.map { (item, entities) ->
-                    ItemStack(item, entities.sumOf { it.stack.count })
-                }.sortedByDescending {
-                    it.count
-                },
+                entities.mergeStacks(),
             )
         }
+    }
+
+    /**
+     * Merge stacks with same item, order by count desc
+     */
+    @JvmStatic
+    private fun Set<ItemEntity>.mergeStacks(): List<ItemStack> {
+        val map = IdentityHashMap<Item, MutableList<ItemStack>>()
+        for (itemEntity in this) {
+            map.getOrPut(itemEntity.stack.item, ::mutableListOf).add(itemEntity.stack)
+        }
+        val result = ArrayList<ItemStack>(map.size)
+        map.values.forEach { stacks ->
+            if (stacks.size == 1) {
+                result.add(stacks[0])
+            } else {
+                result.add(ItemStack(stacks[0].item, stacks.sumOf { it.count }))
+            }
+        }
+        result.sortByDescending { it.count }
+        return result
     }
 
 }
