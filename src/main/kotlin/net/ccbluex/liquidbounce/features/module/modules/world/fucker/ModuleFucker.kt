@@ -223,14 +223,14 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
         val range = range.toDouble()
 
-        possibleBlocks.forEach { pos ->
+        for (pos in possibleBlocks) {
             // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
             val wallRange = if (FuckerEntrance.enabled && pos.hasEntrance) range else wallRange.toDouble()
 
             if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
                 // Is there any block in the way?
                 if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                    val weakBlock = pos.weakestNeighbor ?: return@forEach
+                    val weakBlock = pos.weakestNeighbor ?: continue
 
                     considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
                 } else if (surroundings) {
@@ -239,7 +239,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             }
         }
 
-        targetRenderer.updateAll()
+        currentTarget?.let {
+            targetRenderer.addBlock(it.pos)
+        }
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
@@ -349,9 +351,8 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
 
         if (!ModulePacketMine.running) {
-            val (rotation, _) = raytrace
             RotationManager.setRotationTarget(
-                rotation,
+                raytrace.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
                 if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
@@ -359,8 +360,8 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             )
         }
 
+        clearCurrentTarget()
         ModuleFucker.currentTarget = target
-        targetRenderer.addBlock(target.pos, update = false)
 
         return true
     }
