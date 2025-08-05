@@ -58,7 +58,8 @@ import java.awt.Color
 
 object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
-    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow, Tracers))
+    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
+    private val tracers by multiEnumChoice<ChestType>("Tracers")
 
     private val chestColor by color("Chest", Color4b(0, 100, 255))
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
@@ -198,29 +199,24 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
     }
 
-    private object Tracers : Choice("Tracers") {
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        if (StorageScanner.isEmpty() || tracers.isEmpty()) {
+            return@handler
+        }
 
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
+        renderEnvironmentForWorld(event.matrixStack) {
+            val eyeVector = Vec3(0.0, 0.0, 1.0)
+                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (StorageScanner.isEmpty()) {
-                return@handler
-            }
+            longLines {
+                for ((blockPos, type) in StorageScanner.iterate()) {
+                    if (type !in tracers) continue
+                    val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
 
-            renderEnvironmentForWorld(event.matrixStack) {
-                val eyeVector = Vec3(0.0, 0.0, 1.0)
-                    .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                    .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
-
-                longLines {
-                    for ((blockPos, type) in StorageScanner.iterate()) {
-                        val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
-
-                        withColor(type.color) {
-                            drawLines(eyeVector, pos, pos)
-                        }
+                    withColor(type.color) {
+                        drawLines(eyeVector, pos, pos)
                     }
                 }
             }
@@ -254,32 +250,32 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
     }
 
-    enum class ChestType {
-        CHEST {
+    enum class ChestType(override val choiceName: String) : NamedChoice {
+        CHEST("Chest") {
             override val color get() = chestColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        ENDER_CHEST {
+        ENDER_CHEST("EnderChest") {
             override val color get() = enderChestColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        FURNACE {
+        FURNACE("Furnace") {
             override val color get() = furnaceColor
         },
-        DISPENSER {
+        DISPENSER("Dispenser") {
             override val color get() = dispenserColor
         },
-        HOPPER {
+        HOPPER("Hopper") {
             override val color get() = hopperColor
         },
-        SHULKER_BOX {
+        SHULKER_BOX("ShulkerBox") {
             override val color get() = shulkerColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        POT {
+        POT("Pot") {
             override val color get() = potColor
         };
 
