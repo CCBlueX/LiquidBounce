@@ -18,25 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.minecraft.util.math.MathHelper
-import kotlin.math.max
-import kotlin.math.min
 
 internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") {
 
     private val minSpeed by float("MinSpeed", 25f, 10f..70f)
     private val maxSpeed by float("MaxSpeed", 150f, 50f..170f)
     private val maxHeight by int("MaxHeight", 200, 50..360)
+    private val pitchIncrement by float("PitchIncrement", 3f, 1f..10f)
+    
     private var infinitePitch = 0f
     private var infiniteFlag = false
+    
+    // Speed conversion constant (m/s to km/h approximately)
+    private const val SPEED_CONVERSION_FACTOR = 72f
+    private const val MIN_PITCH = -40f
+    private const val MAX_PITCH = 40f
 
     override fun enable() {
-        infinitePitch = 0f
-        infiniteFlag = false
+        resetState()
+        
+        // Warning if player is too low
         if (player.y < maxHeight) {
-            // Can disable module or show warning
-            // For example: ModuleElytraFly.disable("Go above $maxHeight height!")
+            // TODO: Add notification to user about recommended height
         }
     }
 
@@ -45,21 +49,49 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
             return
         }
 
-        val speed = player.velocity.horizontalLength() * 72f
-        if (player.y < maxHeight) {
-            if (speed < minSpeed && !infiniteFlag) {
-                infiniteFlag = true
-            }
-            if (speed > maxSpeed && infiniteFlag) {
-                infiniteFlag = false
-            }
-        } else {
-            infiniteFlag = true
+        val currentSpeed = calculateCurrentSpeed()
+        updateInfiniteFlag(currentSpeed)
+        updatePitch()
+    }
+    
+    /**
+     * Resets the mode state to initial values
+     */
+    private fun resetState() {
+        infinitePitch = 0f
+        infiniteFlag = false
+    }
+    
+    /**
+     * Calculates the current player speed in km/h
+     */
+    private fun calculateCurrentSpeed(): Float {
+        return (player.velocity.horizontalLength() * SPEED_CONVERSION_FACTOR).toFloat()
+    }
+    
+    /**
+     * Updates the infinite flag based on speed and height
+     */
+    private fun updateInfiniteFlag(speed: Float) {
+        infiniteFlag = when {
+            player.y >= maxHeight -> true
+            speed < minSpeed && !infiniteFlag -> true
+            speed > maxSpeed && infiniteFlag -> false
+            else -> infiniteFlag
         }
-
-        infinitePitch += if (infiniteFlag) 3f else -3f
-        infinitePitch = MathHelper.clamp(infinitePitch, -40f, 40f)
-
+    }
+    
+    /**
+     * Updates the pitch value with smooth changes
+     */
+    private fun updatePitch() {
+        val pitchDelta = if (infiniteFlag) pitchIncrement else -pitchIncrement
+        infinitePitch = MathHelper.clamp(
+            infinitePitch + pitchDelta,
+            MIN_PITCH,
+            MAX_PITCH
+        )
+        
         player.pitch = infinitePitch
     }
 } 
