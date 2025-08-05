@@ -31,28 +31,6 @@ import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
-const val FACE_DOWN = (1 shl 0) or (1 shl 1) or (1 shl 2) or (1 shl 3)
-const val FACE_UP = (1 shl 4) or (1 shl 5) or (1 shl 6) or (1 shl 7)
-const val FACE_NORTH = (1 shl 8) or (1 shl 9) or (1 shl 10) or (1 shl 11)
-const val FACE_EAST = (1 shl 12) or (1 shl 13) or (1 shl 14) or (1 shl 15)
-const val FACE_SOUTH = (1 shl 16) or (1 shl 17) or (1 shl 18) or (1 shl 19)
-const val FACE_WEST = (1 shl 20) or (1 shl 21) or (1 shl 22) or (1 shl 23)
-
-const val EDGE_NORTH_DOWN = ((1 shl 0) or (1 shl (1)))
-const val EDGE_EAST_DOWN = ((1 shl 2) or (1 shl (3)))
-const val EDGE_SOUTH_DOWN = ((1 shl 4) or (1 shl (5)))
-const val EDGE_WEST_DOWN = ((1 shl 6) or (1 shl (7)))
-
-const val EDGE_NORTH_WEST = ((1 shl 8) or (1 shl (9)))
-const val EDGE_NORTH_EAST = ((1 shl 10) or (1 shl (11)))
-const val EDGE_SOUTH_EAST = ((1 shl 12) or (1 shl (13)))
-const val EDGE_SOUTH_WEST = ((1 shl 14) or (1 shl (15)))
-
-const val EDGE_NORTH_UP = ((1 shl 16) or (1 shl (17)))
-const val EDGE_EAST_UP = ((1 shl 18) or (1 shl (19)))
-const val EDGE_SOUTH_UP = ((1 shl 20) or (1 shl (21)))
-const val EDGE_WEST_UP = ((1 shl 22) or (1 shl (23)))
-
 
 /**
  * A utility class for drawing shapes in batches.

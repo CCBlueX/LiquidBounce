@@ -21,8 +21,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.once
+import net.ccbluex.liquidbounce.event.until
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 
 object AntiVoidFlagMode : AntiVoidMode("Flag") {
@@ -37,8 +39,11 @@ object AntiVoidFlagMode : AntiVoidMode("Flag") {
     override fun rescue(): Boolean {
         if (player.fallDistance >= fallDistance) {
             if (silent) {
-                once<PlayerNetworkMovementTickEvent> {
-                    it.y += height
+                until<PlayerNetworkMovementTickEvent> { event ->
+                    event.y += height
+
+                    // The code above does nothing on POST
+                    event.state == EventState.PRE
                 }
             } else {
                 player.setPosition(player.pos.add(0.0, height.toDouble(), 0.0))

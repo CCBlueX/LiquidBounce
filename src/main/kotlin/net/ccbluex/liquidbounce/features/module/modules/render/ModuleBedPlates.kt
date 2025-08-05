@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.*
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import java.util.*
@@ -117,7 +117,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                     val rectHeight = ITEM_SIZE
 
                     // draw items and background
-                    with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
+                    with(newDrawContext()) {
                         with(matrices) {
                             translate(screenPos.x, screenPos.y, z)
                             scale(scale, scale, 1.0F)
