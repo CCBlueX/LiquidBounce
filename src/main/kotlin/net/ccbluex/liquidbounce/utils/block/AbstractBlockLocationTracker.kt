@@ -189,8 +189,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         final override fun isEmpty() = positionAndState.isEmpty()
 
         final override fun track(pos: BlockPos, state: T) {
-            val targetBlockPos = if (pos is BlockPos.Mutable) pos.toImmutable() else pos
-            positionAndState[targetBlockPos] = state
+            positionAndState[pos.immutable] = state
         }
 
         final override fun untrack(pos: BlockPos): Boolean {

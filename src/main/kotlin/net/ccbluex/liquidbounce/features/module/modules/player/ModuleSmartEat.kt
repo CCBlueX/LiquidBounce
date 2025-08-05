@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -34,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
@@ -134,7 +134,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                     // MC-Rendering code for off-hand
 
                     val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
-                    val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
+                    val dc = newDrawContext()
                     val scaledWidth = dc.scaledWindowWidth
                     val scaledHeight = dc.scaledWindowHeight
                     val i: Int = scaledWidth / 2
