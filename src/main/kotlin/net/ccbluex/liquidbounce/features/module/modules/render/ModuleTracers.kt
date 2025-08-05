@@ -28,10 +28,9 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.MathHelper
@@ -63,7 +62,19 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
         override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
     }
 
+    override fun enable() {
+        RenderedEntities.subscribe(this)
+    }
+
+    override fun disable() {
+        RenderedEntities.unsubscribe(this)
+    }
+
     val renderHandler = handler<WorldRenderEvent> { event ->
+        if (RenderedEntities.isEmpty()) {
+            return@handler
+        }
+
         val matrixStack = event.matrixStack
 
         val useDistanceColor = DistanceColor.isSelected
@@ -74,12 +85,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
             } else {
                 DistanceColor.customViewDistance
             })
-        val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
-
-        if (filteredEntities.isEmpty()) {
-            return@handler
-        }
 
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3(0.0, 0.0, 1.0)
@@ -87,14 +93,9 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
             longLines {
-                for (entity in filteredEntities) {
-                    if (entity !is LivingEntity) {
-                        continue
-                    }
-
-                    val dist = player.distanceTo(entity) * 2.0F
-
+                for (entity in RenderedEntities) {
                     val color = if (useDistanceColor) {
+                        val dist = player.distanceTo(entity) * 2.0F
                         Color4b(
                             Color.getHSBColor(
                                 (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
@@ -118,7 +119,4 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
         }
 
     }
-
-    @JvmStatic
-    fun shouldRenderTrace(entity: Entity) = entity.shouldBeShown()
 }
