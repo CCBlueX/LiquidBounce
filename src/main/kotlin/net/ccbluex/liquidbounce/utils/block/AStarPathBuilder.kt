@@ -152,11 +152,9 @@ interface AStarPathBuilder {
         ObjectPool.MutableBlockPos.use { pos ->
             for (direction in diagonalDirections) {
                 val adjacentPosition = pos.set(node.position, direction)
-                if (!adjacentPosition.isPassable) {
-                    continue
-                }
-
-                if (node.position.add(direction.x, 0, 0).isPassable && node.position.add(0, 0, direction.z).isPassable) {
+                if (adjacentPosition.isPassable &&
+                        node.position.add(direction.x, 0, 0).isPassable &&
+                        node.position.add(0, 0, direction.z).isPassable) {
                     add(Node(adjacentPosition.toImmutable(), node))
                 }
             }
