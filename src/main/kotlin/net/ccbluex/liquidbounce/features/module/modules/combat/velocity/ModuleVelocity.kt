@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.*
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -62,7 +63,8 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
             // Anti cheat modes
             VelocityAAC442,
             VelocityExemptGrim117,
-            VelocityIntave
+            VelocityIntave,
+            VelocityGrimFull
         )
     ).apply(::tagBy)
 
