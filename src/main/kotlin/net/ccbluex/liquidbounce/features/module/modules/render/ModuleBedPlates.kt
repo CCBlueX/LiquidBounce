@@ -48,9 +48,11 @@ private const val BACKGROUND_PADDING: Int = 2
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V")
 
+    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+
     private val maxLayers by int("MaxLayers", 5, 1..5)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    private val renderY by float("RenderY", 0.0F, -2.0F..2.0F)
+    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
@@ -105,7 +107,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 bedStatesWithSquaredDistance.forEachWithSelf { (distSq, bedState), i, self ->
-                    val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(0.0, renderY.toDouble(), 0.0))
+                    val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset))
                         ?: return@forEachWithSelf
                     val distance = sqrt(distSq)
                     val surrounding = bedState.surroundingBlocks
@@ -128,7 +130,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
                                 -BACKGROUND_PADDING,
                                 rectWidth + BACKGROUND_PADDING,
                                 rectHeight + BACKGROUND_PADDING,
-                                Color4b(0, 0, 0, 128).toARGB()
+                                backgroundColor.toARGB()
                             )
 
                             var itemX = 0
@@ -262,7 +264,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {
-        val bedDirection = headState.get(BedBlock.FACING)
+        val bedDirection = headState[BedBlock.FACING]
 
         val bedBlock = headState.block
         val renderPos = Vec3d(
