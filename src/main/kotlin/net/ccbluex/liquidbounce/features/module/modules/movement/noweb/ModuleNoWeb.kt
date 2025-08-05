@@ -38,7 +38,11 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    val modes = choices("Mode", NoWebAir, arrayOf(NoWebAir, NoWebGrimBreak, NoWebIntave14, NoWebStrafe)).apply { tagBy(this) }
+    val modes = choices("Mode", NoWebAir, arrayOf(NoWebAir, 
+                                                  NoWebGrimBreak, 
+                                                  NoWebIntave14, 
+                                                  NoWebStrafe
+                                                 )).apply { tagBy(this) }
 
     val repeatable = tickHandler {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
