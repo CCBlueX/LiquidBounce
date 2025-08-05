@@ -191,6 +191,7 @@ dependencies {
 
     // Test libraries
     testImplementation(kotlin("test"))
+    testImplementation("net.fabricmc:fabric-loader-junit:${project.property("loader_version")}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fix nullable annotations
