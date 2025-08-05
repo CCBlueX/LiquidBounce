@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
@@ -175,7 +174,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
     /**
      * Returns a set of y levels the  base place can be placed in.
      */
-    fun getBasePlaceLayers(targetY: Double): IntOpenHashSet {
+    fun getBasePlaceLayers(targetY: Double): IntRange {
         var down = 3
         var maxY = if (targetY % 1 > 0.2) {
             down++
@@ -189,13 +188,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
             down--
         }
 
-        val result = IntOpenHashSet(down)
-        repeat(down) {
-            result.add(maxY)
-            maxY--
-        }
-
-        return result
+        return maxY - down + 1..maxY
     }
 
     /**
@@ -203,8 +196,8 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
      */
     fun canBasePlace(
         running: Boolean,
-        pos: BlockPos.Mutable,
-        layers: IntOpenHashSet,
+        pos: BlockPos,
+        layers: IntRange,
         state: BlockState
     ): Boolean {
         return running &&

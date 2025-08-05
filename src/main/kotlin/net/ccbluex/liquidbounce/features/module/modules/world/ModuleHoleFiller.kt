@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.booleans.BooleanDoubleImmutablePair
-import it.unimi.dsi.fastutil.objects.ObjectDoubleImmutablePair
+import it.unimi.dsi.fastutil.doubles.DoubleLongPair
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -168,7 +168,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
                 return@forEach
             }
 
-            val found = hashSetOf<ObjectDoubleImmutablePair<BlockPos>>()
+            val found = hashSetOf<DoubleLongPair>()
             remainingItems = iterateHoles(
                 holeContext,
                 checkedHoles,
@@ -177,7 +177,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
                 found
             )
 
-            found.sortedByDescending { it.rightDouble() }.mapTo(holeContext.blocks) { it.left() }
+            found.sortedByDescending { it.leftDouble() }
+                .mapTo(holeContext.blocks) { BlockPos.fromLong(it.rightLong()) }
             if (remainingItems <= 0) {
                 return
             }
@@ -189,7 +190,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         checkedHoles: MutableSet<Hole>,
         entity: Entity,
         remainingItems: Int,
-        found: MutableSet<ObjectDoubleImmutablePair<BlockPos>>
+        found: MutableSet<DoubleLongPair>
     ): Int {
         var remainingItems1 = remainingItems
         val region = Region.quadAround(entity.blockPos, fillArea, fillArea)
@@ -213,7 +214,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
 
             checkedHoles += hole
             hole.positions.mapTo(found) {
-                ObjectDoubleImmutablePair(it.toImmutable(), valid.rightDouble())
+                DoubleLongPair.of(valid.rightDouble(), it.asLong())
             }
 
             if (remainingItems1 == 0 && !player.abilities.creativeMode) {
