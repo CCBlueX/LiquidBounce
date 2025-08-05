@@ -86,12 +86,12 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
     private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<DoubleObjectPair<BedState>>>(
         initialValue = mutableListOf()
     ) { _, list ->
-        val playerPos = player.blockPos
+        val cameraPos = (mc.cameraEntity ?: player).blockPos
         val maxDistanceSquared = maxDistance.sq()
         list.clear()
 
         BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
-            DoubleObjectPair.of(pos.getSquaredDistance(playerPos), bedState)
+            DoubleObjectPair.of(pos.getSquaredDistance(cameraPos), bedState)
         }
 
         list.removeIf { it.firstDouble() > maxDistanceSquared } // filter items out of range

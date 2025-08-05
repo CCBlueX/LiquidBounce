@@ -99,11 +99,12 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
         initialValue = emptyMap()
     ) { _, _ ->
+        val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
 
         @Suppress("UNCHECKED_CAST")
         (world.entities.filter {
-            it is ItemEntity && it.squaredDistanceTo(mc.cameraEntity) < maxDistSquared && filter(it.stack.item, items)
+            it is ItemEntity && it.squaredDistanceTo(cameraPos) < maxDistSquared && filter(it.stack.item, items)
         } as List<ItemEntity>).cluster()
     }
 
