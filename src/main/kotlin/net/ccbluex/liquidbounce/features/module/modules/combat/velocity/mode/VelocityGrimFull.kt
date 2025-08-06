@@ -78,8 +78,9 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             event.cancelEvent()
         }
 
-        if (event.isCancelled || event.origin == TransferOrigin.OUTGOING)
+        if (event.isCancelled || event.origin == TransferOrigin.OUTGOING) {
             return@sequenceHandler
+        }
 
         if (packet is BlockUpdateS2CPacket && packet.pos.equals(player.blockPos)) {
             waitTicks(1)
@@ -88,9 +89,9 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             return@sequenceHandler
         }
 
-        if (waitForUpdate)
+        if (waitForUpdate) {
             return@sequenceHandler
-
+        }
         // Delay all the packets.
         if (delay) {
             delayedPacketQueue.add(PacketSnapshot(packet, event.origin, System.currentTimeMillis()))
@@ -104,7 +105,8 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             canCancel = true
         }
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) && canCancel) {
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
+            && canCancel) {
             event.cancelEvent()
             delay = true
             canCancel = false
