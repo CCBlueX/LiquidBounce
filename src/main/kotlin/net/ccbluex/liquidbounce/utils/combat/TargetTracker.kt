@@ -84,49 +84,55 @@ open class TargetSelector(
         this(defaultPriority, DummyRangedValueProvider(range))
 
     var closestSquaredEnemyDistance: Double = 0.0
+        private set
 
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
     private val priority by enumChoice("Priority", defaultPriority)
 
+    private val targetComparator: Comparator<LivingEntity> = compareBy<LivingEntity> {
+        when (priority) {
+            // Lowest health first
+            TargetPriority.HEALTH -> it.getActualHealth()
+            // Closest to your crosshair first
+            TargetPriority.DIRECTION -> RotationUtil.crosshairAngleToEntity(it)
+            // Oldest entity first
+            TargetPriority.AGE -> -it.age
+            // With the lowest hurt time first
+            TargetPriority.HURT_TIME -> it.hurtTime
+            // Closest to you first
+            else -> 0 // Do nothing because we will compare by distance later
+        }
+    }.thenComparingInt { entity ->
+        // Sort by entity type (player first, then hostile, then other)
+        when (entity) {
+            is PlayerEntity -> 0
+            is HostileEntity -> 1
+            else -> 2
+        }
+    }.thenComparingDouble {
+        // Sort by distance (closest first) - in case of tie at priority level
+        it.squaredBoxedDistanceTo(player.eyePos)
+    }
+
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun targets(): MutableList<LivingEntity> {
-        val entities = world.entities
-            .asSequence()
-            .filterIsInstance<LivingEntity>()
-            .filter(::validate)
-            // Sort by distance (closest first) - in case of tie at priority level
-            .sortedBy { it.squaredBoxedDistanceTo(player) }
-            .toMutableList()
+    fun targets(): List<LivingEntity> {
+        val entities = mutableListOf<LivingEntity>()
+
+        for (entity in world.entities) {
+            if (entity is LivingEntity && validate(entity)) {
+                entities.add(entity)
+            }
+        }
 
         if (entities.isEmpty()) {
             return entities
         }
 
-        // Sort by entity type
-        entities.sortWith(Comparator.comparingInt { entity ->
-            when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                else -> 2
-            }
-        })
-
-        when (priority) {
-            // Lowest health first
-            TargetPriority.HEALTH -> entities.sortBy { it.getActualHealth() }
-            // Closest to your crosshair first
-            TargetPriority.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
-            // Oldest entity first
-            TargetPriority.AGE -> entities.sortByDescending { it.age }
-            // With the lowest hurt time first
-            TargetPriority.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
-            // Closest to you first
-            else -> {} // Do nothing
-        }
+        entities.sortWith(targetComparator)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
