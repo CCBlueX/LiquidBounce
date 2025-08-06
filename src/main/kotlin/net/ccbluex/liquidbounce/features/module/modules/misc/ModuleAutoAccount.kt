@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -49,6 +52,14 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
     }
     private val loginRegexString: String by text("LoginRegex", "/login").onChanged {
         loginRegex = Regex(it)
+    }
+
+    private val detections by multiEnumChoice("Detections", Detection.entries, canBeNone = false)
+
+    private enum class Detection(override val choiceName: String) : NamedChoice {
+        CHAT("Chat"),
+        TITLE("Title"),
+        SUBTITLE("Subtitle"),
     }
 
     private var registerRegex = Regex(registerRegexString)
@@ -83,13 +94,14 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         network.sendCommand("$registerCommand $password $password")
     }
 
-    @Suppress("unused")
-    val onChat = sequenceHandler<ChatReceiveEvent> { event ->
-        if (sending) {
+    private inline fun <reified T : Event> createDetectionHandler(
+        detection: Detection, crossinline textProvider: (T) -> String?
+    ) = sequenceHandler<T> { event ->
+        if (sending || detection !in detections) {
             return@sequenceHandler
         }
 
-        val msg = event.message
+        val msg = textProvider(event) ?: return@sequenceHandler
 
         when {
             registerRegex.containsMatchIn(msg) -> {
@@ -99,6 +111,12 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
                 action(::login)
             }
         }
+    }
+
+    init {
+        createDetectionHandler<ChatReceiveEvent>(Detection.CHAT) { it.message }
+        createDetectionHandler<TitleEvent.Title>(Detection.TITLE) { it.text?.literalString }
+        createDetectionHandler<TitleEvent.Subtitle>(Detection.SUBTITLE) { it.text?.literalString }
     }
 
 }
