@@ -17,7 +17,7 @@
     import Avatar from "./Avatar.svelte";
     import {notification} from "../notification_store";
     import RippleLoader from "../../RippleLoader.svelte";
-    import {IS_LOGGING_IN} from "../../../../../util/global_states";
+    import {isLoggingIn} from "../../../altmanager/altmanager_store";
 
     let username = "";
     let avatar = "";
@@ -104,7 +104,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
-        {#if $IS_LOGGING_IN}
+        {#if $isLoggingIn}
             <div class="avatar" transition:fade={{ duration: 200 }}>
                 <RippleLoader size={68} />
             </div>
