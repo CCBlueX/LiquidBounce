@@ -23,6 +23,7 @@ import type {
     World
 } from "./types";
 import type {PlayerInventory} from "./events";
+import {IS_LOGGING_IN} from "../util/global_states";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -379,12 +380,15 @@ export async function removeAccount(id: number) {
 }
 
 export async function loginToAccount(id: number) {
+    IS_LOGGING_IN.set(true);
     await fetch(`${API_BASE}/client/account/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    }).finally(() => {
+        IS_LOGGING_IN.set(false);
     });
 }
 

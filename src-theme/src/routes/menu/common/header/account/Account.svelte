@@ -17,6 +17,7 @@
     import Avatar from "./Avatar.svelte";
     import {notification} from "../notification_store";
     import RippleLoader from "../../RippleLoader.svelte";
+    import {IS_LOGGING_IN} from "../../../../../util/global_states";
 
     let username = "";
     let avatar = "";
@@ -28,10 +29,6 @@
 
     let searchQuery = "";
     let accounts: Account[] = [];
-
-    let isLoggingIn = false;
-
-    listen("accountManagerLogin", () => isLoggingIn = false);
 
     $: renderedAccounts = accounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()) || searchQuery === "");
 
@@ -86,7 +83,6 @@
     }
 
     async function login(account: Account) {
-        isLoggingIn = true;
         notification.set({
             title: "AltManager",
             message: "Logging in...",
@@ -108,7 +104,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
-        {#if isLoggingIn}
+        {#if $IS_LOGGING_IN}
             <div class="avatar" transition:fade={{ duration: 200 }}>
                 <RippleLoader size={68} />
             </div>
