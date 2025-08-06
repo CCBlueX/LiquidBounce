@@ -16,6 +16,7 @@
     import type {Account} from "../../../../../integration/types";
     import Avatar from "./Avatar.svelte";
     import {notification} from "../notification_store";
+    import RippleLoader from "../../RippleLoader.svelte";
 
     let username = "";
     let avatar = "";
@@ -108,10 +109,8 @@
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
         {#if isLoggingIn}
-            <div class="avatar loader" transition:fade={{ duration: 200 }}>
-                {#each Array.from({ length: 8 }) as _, i (i)}
-                    <div class="dot"></div>
-                {/each}
+            <div class="avatar" transition:fade={{ duration: 200 }}>
+                <RippleLoader size={68} />
             </div>
         {:else}
             <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
@@ -172,8 +171,6 @@
 <style lang="scss">
   @use "../../../../../colors" as *;
 
-  $loader-dot-transition: 20px;
-
   .account {
     width: 488px;
     position: relative;
@@ -204,31 +201,6 @@
       width: 68px;
       border-radius: 50%;
       grid-area: a;
-
-      &.loader {
-        position: relative;
-
-        .dot {
-          width: 8px;
-          height: 8px;
-          background-color: $accent-color;
-          border-radius: 50%;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          animation: rotate 2s linear infinite;
-          transform-origin: 0 0;
-
-          @for $i from 0 through 7 {
-            &:nth-child(#{$i + 1}) {
-              transform: rotate(#{($i * 45)}deg) translate(0, -30px);
-              animation-delay: #{-($i * 0.125)}s;
-              opacity: #{1 - ($i * 0.1)};
-            }
-          }
-        }
-      }
     }
 
     .username {
