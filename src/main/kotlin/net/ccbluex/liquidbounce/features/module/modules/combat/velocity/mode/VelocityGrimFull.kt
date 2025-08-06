@@ -30,6 +30,9 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
 import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.minecraft.network.handler.PacketInflater
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
@@ -45,6 +48,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private var needClick = false
     private var waitForUpdate = false
     private var hitResult : BlockHitResult? = null
+    private var shouldSkip = false
     private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
 
     override fun enable() {
@@ -53,6 +57,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         needClick = false
         waitForUpdate = false
         hitResult = null
+        shouldSkip = false
         delayedPacketQueue.clear()
     }
 
@@ -65,6 +70,10 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
+        if (packet is PlayerInteractEntityC2SPacket || packet is PlayerInteractBlockC2SPacket) {
+            shouldSkip = true
+        }
+
         if (packet is PlayerMoveC2SPacket && packet.changePosition && waitForUpdate) {
             event.cancelEvent()
         }
@@ -73,6 +82,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             return@sequenceHandler
 
         if (packet is BlockUpdateS2CPacket && packet.pos.equals(player.blockPos)) {
+            waitTicks(1)
             waitForUpdate = false
             needClick = false
             return@sequenceHandler
@@ -107,7 +117,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         if (needClick) {
             hitResult = raycast(rotation = Rotation(player.yaw,90f));
             val pos = hitResult!!.blockPos.offset(hitResult!!.side)
-            if (!pos.equals(player.blockPos)) {
+            if (!pos.equals(player.blockPos) || shouldSkip) {
                 hitResult = null
             }
         }
@@ -145,5 +155,6 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         if (waitForUpdate) {
             event.cancelEvent()
         }
+        shouldSkip = false
     }
 }
