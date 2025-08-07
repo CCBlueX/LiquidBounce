@@ -214,7 +214,7 @@ object CommandExecutor : EventListener {
 
         commandHistoryFile.appendingSink().buffer().use { sink ->
             sink.writeUtf8(commandBody)
-                .writeByte(10) // new line
+                .writeByte('\n'.code)
         }
     }
 }
