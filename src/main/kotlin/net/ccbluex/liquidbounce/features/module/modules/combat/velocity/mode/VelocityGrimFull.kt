@@ -88,7 +88,6 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
         if (packet is CommonPongC2SPacket && waitForPing) {
             waitTicks(1)
-            System.out.println(packet.parameter)
             waitForUpdate = false
             waitForPing = false
             return@sequenceHandler
