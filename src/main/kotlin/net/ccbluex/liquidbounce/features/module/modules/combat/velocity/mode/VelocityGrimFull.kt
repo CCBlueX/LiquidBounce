@@ -25,12 +25,14 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrimFull.freezeTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.minecraft.network.handler.PacketInflater
+import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -46,10 +48,16 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private var canCancel = false
     private var delay = false
     private var needClick = false
+
+    private var waitForPing = false;
     private var waitForUpdate = false
+
     private var hitResult : BlockHitResult? = null
     private var shouldSkip = false
     private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
+
+    private var freezeTicks = 0;
+    private const val MAX_FREEZE_TICKS = 20; // To prevent freezing
 
     override fun enable() {
         canCancel = false
@@ -74,17 +82,25 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             shouldSkip = true
         }
 
-        if (packet is PlayerMoveC2SPacket && packet.changePosition && waitForUpdate) {
+        if (packet is PlayerMoveC2SPacket && packet.changesPosition() && waitForUpdate) {
             event.cancelEvent()
+        }
+
+        if (packet is CommonPongC2SPacket && waitForPing) {
+            waitTicks(1)
+            System.out.println(packet.parameter)
+            waitForUpdate = false
+            waitForPing = false
+            return@sequenceHandler
         }
 
         if (event.isCancelled || event.origin == TransferOrigin.OUTGOING) {
             return@sequenceHandler
         }
 
-        if (packet is BlockUpdateS2CPacket && packet.pos.equals(player.blockPos)) {
+        if (waitForUpdate && packet is BlockUpdateS2CPacket && packet.pos.equals(player.blockPos)) {
             waitTicks(1)
-            waitForUpdate = false
+            waitForPing = true
             needClick = false
             return@sequenceHandler
         }
@@ -119,12 +135,14 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         if (needClick) {
             hitResult = raycast(rotation = Rotation(player.yaw,90f));
             val pos = hitResult!!.blockPos.offset(hitResult!!.side)
-            if (!pos.equals(player.blockPos) || shouldSkip) {
+            if (!pos.equals(player.blockPos) || shouldSkip || player.isUsingItem) {
                 hitResult = null
             }
         }
+
         if (hitResult != null) {
             delay = false
+
             delayedPacketQueue.forEach { handlePacket(it.packet) }
             delayedPacketQueue.clear()
 
@@ -150,13 +168,22 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
                 )
             }
 
+            freezeTicks = 0
             waitForUpdate = true
             hitResult = null
             needClick = false
         }
+
         if (waitForUpdate) {
             event.cancelEvent()
+            freezeTicks++
+            if (freezeTicks > MAX_FREEZE_TICKS) {
+                waitForUpdate = false
+                waitForPing = false
+                needClick = false
+            }
         }
+
         shouldSkip = false
     }
 }
