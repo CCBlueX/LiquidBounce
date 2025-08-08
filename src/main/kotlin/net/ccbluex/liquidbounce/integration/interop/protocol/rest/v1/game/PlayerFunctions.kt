@@ -160,7 +160,8 @@ data class PlayerInventoryData(
 
         other as PlayerInventoryData
 
-        return armor eq other.armor && main eq other.main && crafting eq other.crafting && enderChest eq other.enderChest
+        return armor eq other.armor && main eq other.main &&
+            crafting eq other.crafting && enderChest eq other.enderChest
     }
 
 }
