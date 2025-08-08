@@ -33,7 +33,7 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
     val repeatable = tickHandler {
         working = false
 
-        for (i in 0..1) {
+        repeat(2) {
             waitTicks(1)
             working = true
             val hand: Hand = Hand.MAIN_HAND.takeIf { player.getActiveHand() == Hand.MAIN_HAND } ?: Hand.OFF_HAND
