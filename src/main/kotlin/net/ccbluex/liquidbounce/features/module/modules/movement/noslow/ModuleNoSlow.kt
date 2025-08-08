@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
+import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -66,7 +67,7 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
     }
 
     private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> NoSlowUseActionHandler.DEFAULT_USE_MUL
+        UseAction.NONE -> FloatFloatImmutablePair(0.2f, 0.2f)
         UseAction.EAT, UseAction.DRINK -> NoSlowConsume.getMultiplier()
         UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> NoSlowBlock.getMultiplier()
         UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier()
