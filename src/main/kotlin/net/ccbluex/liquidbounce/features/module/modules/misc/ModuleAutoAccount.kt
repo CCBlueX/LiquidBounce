@@ -95,20 +95,23 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
     }
 
     private inline fun <reified T : Event> createDetectionHandler(
-        detection: Detection, crossinline textProvider: (T) -> String?
-    ) = sequenceHandler<T> { event ->
-        if (sending || detection !in detections) {
-            return@sequenceHandler
-        }
-
-        val msg = textProvider(event) ?: return@sequenceHandler
-
-        when {
-            registerRegex.containsMatchIn(msg) -> {
-                action(::register)
+        detection: Detection,
+        crossinline textProvider: (T) -> String?,
+    ) {
+        sequenceHandler<T> { event ->
+            if (sending || detection !in detections) {
+                return@sequenceHandler
             }
-            loginRegex.containsMatchIn(msg) -> {
-                action(::login)
+    
+            val msg = textProvider(event) ?: return@sequenceHandler
+    
+            when {
+                registerRegex.containsMatchIn(msg) -> {
+                    action(::register)
+                }
+                loginRegex.containsMatchIn(msg) -> {
+                    action(::login)
+                }
             }
         }
     }
