@@ -52,21 +52,28 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
 
             // Air itself should be untracked
             return null
-        } else if (pos.canUseBoneMeal(state)) {
-            return AutoFarmTrackedStates.CAN_USE_BONE_MEAL
-        } else {
-            val block = state.block
+        }
 
-            // Check if air above
-            return if (cache.set(pos, Direction.UP).getState()?.isAir == true) {
-                when (block) {
-                    is FarmlandBlock -> AutoFarmTrackedStates.FARMLAND
-                    is SoulSandBlock -> AutoFarmTrackedStates.SOUL_SAND
-                    else -> null
-                }
-            } else {
-                null
+        if (pos.canUseBoneMeal(state)) {
+            return AutoFarmTrackedStates.CAN_USE_BONE_MEAL
+        }
+
+        val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block
+        if (blockBelow is SoulSandBlock || blockBelow is FarmlandBlock) {
+            untrack(cache)
+        }
+
+        val block = state.block
+
+        // Check if air above
+        return if (cache.set(pos, Direction.UP).getState()?.isAir == true) {
+            when (block) {
+                is FarmlandBlock -> AutoFarmTrackedStates.FARMLAND
+                is SoulSandBlock -> AutoFarmTrackedStates.SOUL_SAND
+                else -> null
             }
+        } else {
+            null
         }
     }
 
