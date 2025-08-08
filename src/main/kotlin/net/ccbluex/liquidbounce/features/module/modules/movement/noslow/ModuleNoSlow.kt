@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
-import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
