@@ -43,9 +43,9 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
             NoSlowBlockingInteract,
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
+            NoSlowSharedGrim2371(it),
             NoSlowSharedInvalidHand(it),
             NoSlowBlockIntave14(it),
-            NoSlowSharedGrim2371(it)
         )
     }
 

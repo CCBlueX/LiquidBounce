@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 
 internal open class NoSlowMode(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
     companion object {

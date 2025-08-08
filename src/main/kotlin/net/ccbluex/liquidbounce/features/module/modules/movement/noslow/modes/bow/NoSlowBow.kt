@@ -35,8 +35,8 @@ internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
             NoneChoice(it),
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
+            NoSlowSharedGrim2371(it),
             NoSlowSharedInvalidHand(it),
-            NoSlowSharedGrim2371(it)
         )
     }
 
