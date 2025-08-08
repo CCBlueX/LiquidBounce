@@ -33,21 +33,16 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
     val repeatable = tickHandler {
         working = false
 
-        waitTicks(2)
-        for (i in 0..3) {
+        for (i in 0..1) {
             waitTicks(1)
-            if (i > 1) {
-                working = true
-                val hand: Hand = Hand.MAIN_HAND.takeIf { player.getActiveHand() == Hand.MAIN_HAND } ?: Hand.OFF_HAND
-                interaction.sendSequencedPacket(world) { sequence ->
-                    // This time we use a new sequence
-                    PlayerInteractItemC2SPacket(
-                        hand, sequence,
-                        player.yaw, player.pitch
-                    )
-                }
-            } else {
-                working = false
+            working = true
+            val hand: Hand = Hand.MAIN_HAND.takeIf { player.getActiveHand() == Hand.MAIN_HAND } ?: Hand.OFF_HAND
+            interaction.sendSequencedPacket(world) { sequence ->
+                // This time we use a new sequence
+                PlayerInteractItemC2SPacket(
+                    hand, sequence,
+                    player.yaw, player.pitch
+                )
             }
         }
         working = false

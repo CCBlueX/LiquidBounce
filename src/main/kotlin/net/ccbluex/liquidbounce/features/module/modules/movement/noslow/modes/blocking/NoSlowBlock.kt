@@ -51,7 +51,7 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
 
     override fun getMultiplier(): FloatFloatPair {
         if (onlySlowOnServerSide && isBlocking) {
-            return FloatFloatImmutablePair(0.2f, 0.2f)
+            return DEFAULT_USE_MUL
         }
 
         return super.getMultiplier()
