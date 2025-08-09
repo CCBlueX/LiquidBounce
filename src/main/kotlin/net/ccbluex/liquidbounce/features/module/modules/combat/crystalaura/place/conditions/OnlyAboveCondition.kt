@@ -30,7 +30,7 @@ import net.minecraft.util.math.BlockPos
  */
 object OnlyAboveCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         return !SubmoduleCrystalPlacer.onlyAbove || canSeeUpperBlockSide(
             context.eyePos,
             candidate,

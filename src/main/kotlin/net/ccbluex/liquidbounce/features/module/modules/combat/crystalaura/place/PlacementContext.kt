@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.block.Blocks
@@ -29,7 +28,7 @@ import net.minecraft.util.math.Vec3d
 
 class PlacementContext(
     val basePlace: Boolean,
-    val basePlaceLayers: IntOpenHashSet,
+    val basePlaceLayers: IntRange,
     val expectedCrystal: Box,
     val target: LivingEntity
 ) {
@@ -40,7 +39,7 @@ class PlacementContext(
 
 }
 
-class CandidateCache(private val candidate: BlockPos.Mutable) {
+class CandidateCache(private val candidate: BlockPos) {
 
     val state by lazy {
         candidate.getState()!!
@@ -56,6 +55,6 @@ class CandidateCache(private val candidate: BlockPos.Mutable) {
 
 }
 
-interface PlacementCondition {
-    fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean
+fun interface PlacementCondition {
+    fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean
 }

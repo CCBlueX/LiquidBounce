@@ -98,6 +98,7 @@ open class PlacementRenderer(
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
+     * @param pos The position, can be [BlockPos.Mutable].
      * @param handlerId To which handler the block should be added.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = pos.outlineBox, handlerId: Int = 0) {
@@ -113,6 +114,7 @@ open class PlacementRenderer(
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
+     * @param pos The position, can be [BlockPos.Mutable].
      * @param handlerId From which handler the block should be removed.
      */
     fun removeBlock(pos: BlockPos, handlerId: Int = 0) {
