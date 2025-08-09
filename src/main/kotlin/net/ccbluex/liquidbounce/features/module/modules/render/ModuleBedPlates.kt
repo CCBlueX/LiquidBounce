@@ -32,7 +32,10 @@ import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.*
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
+import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
@@ -274,11 +277,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER) {
         return BedState(bedBlock, renderPos, getBedSurroundingBlocks(headState))
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(BedBlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(BedBlockTracker)
         bedStatesWithSquaredDistance.clear()
     }

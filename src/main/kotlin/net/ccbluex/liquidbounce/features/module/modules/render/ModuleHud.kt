@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -84,7 +84,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         if (isHidingNow) {
             chat(markAsError(message("hidingAppearance")))
         }
@@ -98,7 +98,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Closes tab entirely
         browserBrowser?.close()
         browserBrowser = null

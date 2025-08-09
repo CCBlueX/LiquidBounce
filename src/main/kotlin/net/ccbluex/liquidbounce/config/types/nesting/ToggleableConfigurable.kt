@@ -24,62 +24,60 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.SequenceManager.cancelAllSequences
+import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.inGame
 
 /**
- * A [ToggleableConfigurable] has a state that can be toggled on and off. It also allows
+ * A [ToggleableConfigurable] has a state that can be toggled on and off. It also allows you
  * to register event handlers that are only active when the state is on,
- * it also features [enable] and [disable] which are called when the state is toggled.
+ * it also features [onEnabled] and [onDisabled] which are called when the state is toggled.
  */
 abstract class ToggleableConfigurable(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
     enabled: Boolean,
-    aliases: Array<String> = emptyArray(),
-) : EventListener, Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), MinecraftShortcuts {
+    aliases: Array<out String> = emptyArray(),
+) : Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
+    MinecraftShortcuts {
 
-    var enabled by boolean("Enabled", enabled).onChange { newValue ->
-        if (parent == null || parent.running) {
-            if (newValue) {
-                enable()
-            } else {
-                disable()
-            }
-            passParentNewState(newValue)
-        }
+    @ScriptApiRequired
+    override var enabled by boolean("Enabled", enabled)
+        .also(::onEnabledValueRegistration)
+        .onChange(::onToggled)
 
-        newValue
+    open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
+        return value
     }
 
-    private fun passParentNewState(state: Boolean) {
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
-    }
-
-    fun newState(state: Boolean) {
-        if (!enabled) {
-            return
+    override fun onToggled(state: Boolean): Boolean {
+        if (!inGame) {
+            return state
         }
 
-        if (state) {
-            enable()
-        } else {
-            disable()
-        }
-
-        passParentNewState(state)
+        return onToggled(state, false)
     }
 
-    /**
-     * Will be called when parent enables while self enabled, or self enables while parent enabled.
-     */
-    open fun enable() {}
+    fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
+        // We cannot use [parent.running] because we are interested in the state of the parent,
+        // not if it is running. We do not care if we are the root.
+        if (!isParentUpdate && parent is Toggleable && !parent.enabled) {
+            return state
+        }
 
-    /**
-     * Will be called when parent disables while self enabled, or self disables while parent enabled.
-     */
-    open fun disable() {}
+        if (!state) {
+            // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
+            cancelAllSequences(this)
+            // Remove and cancel coroutine scope
+            removeEventListenerScope()
+        }
+
+        val state = super.onToggled(state)
+        updateChildState(state)
+        return state
+    }
 
     /**
      * Because we pass the parent to the Listenable, we can simply
@@ -93,4 +91,13 @@ abstract class ToggleableConfigurable(
     @ScriptApiRequired
     @Suppress("unused")
     fun getEnabledValue(): Value<*> = this.inner[0]
+}
+
+/**
+ * Updates the state of all child [ChoiceConfigurable]s and [Toggleable]s
+ */
+fun <T> T.updateChildState(state: Boolean)
+    where T : Configurable, T : EventListener {
+    inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.onToggled(state) }
+    inner.filterIsInstance<ToggleableConfigurable>().forEach { it.onToggled(state, true) }
 }

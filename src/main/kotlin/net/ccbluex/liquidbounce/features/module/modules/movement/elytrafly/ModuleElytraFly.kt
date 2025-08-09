@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeStatic
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
-import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.minecraft.entity.EquipmentSlot
@@ -71,11 +71,11 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
 
     private var needsToRestart = false
 
-    override fun enable() {
+    override fun onEnabled() {
         needsToRestart = false
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         needsToRestart = true
     }
 

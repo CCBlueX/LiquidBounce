@@ -43,9 +43,7 @@ import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
-import java.util.IdentityHashMap
-import kotlin.collections.component1
-import kotlin.collections.component2
+import java.util.*
 
 private const val ITEM_SIZE: Int = 16
 private const val ITEM_SCALE: Float = 1.0F
@@ -101,7 +99,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         } as List<ItemEntity>).cluster()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         itemEntities = emptyMap()
     }
 

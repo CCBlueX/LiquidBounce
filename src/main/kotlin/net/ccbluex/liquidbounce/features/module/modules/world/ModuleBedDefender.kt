@@ -161,7 +161,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         placer.update(updatePositions.mapTo(linkedSetOf()) { it.value() })
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         placer.disable()
     }
 

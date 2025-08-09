@@ -54,12 +54,12 @@ object ModuleAnchor : ClientModule(
 
     var goal: Vec3d? = null
 
-    override fun enable() {
+    override fun onEnabled() {
         HoleManager.subscribe(this)
         goal = null
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         HoleManager.unsubscribe(this)
     }
 

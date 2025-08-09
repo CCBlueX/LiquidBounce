@@ -210,11 +210,11 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
         blocks.addAll(defaultBlocks)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         mc.worldRenderer.reload()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         mc.worldRenderer.reload()
     }
 

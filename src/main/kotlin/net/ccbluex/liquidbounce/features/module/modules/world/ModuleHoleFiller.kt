@@ -92,11 +92,11 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     override fun horizontalDistance(): Int = range
     override fun verticalDistance(): Int = range
 
-    override fun enable() {
+    override fun onEnabled() {
         HoleManager.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         HoleManager.unsubscribe(this)
         placer.disable()
     }

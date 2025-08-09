@@ -59,7 +59,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         doNotIncludeAlways()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         classNames.clear()
         fieldNames.clear()
     }

@@ -65,12 +65,12 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         nametagsToRender.clear()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
         nametagsToRender.clear()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
 
@@ -92,15 +92,15 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
-        
+
         drawnEnchantmentAreas.clear()
-        
+
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
         val filteredNameTags = nametagsToRender.filter { it.position != null }
         val nametagsCount = filteredNameTags.size.toFloat()
-        
-       
-        val sortedTags = filteredNameTags.sortedBy { tag -> 
+
+
+        val sortedTags = filteredNameTags.sortedBy { tag ->
             tag.entity.squaredDistanceTo(mc.cameraEntity)
         }
 

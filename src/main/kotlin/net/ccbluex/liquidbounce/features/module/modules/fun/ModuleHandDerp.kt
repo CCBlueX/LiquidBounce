@@ -85,7 +85,7 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (mc.options.mainArm.value != originalHand) {
             switchHand()
         }

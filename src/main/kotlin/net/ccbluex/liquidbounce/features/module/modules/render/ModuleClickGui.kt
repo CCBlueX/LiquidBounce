@@ -66,7 +66,7 @@ object ModuleClickGui :
             }
 
             if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
-                enable()
+                onEnabled()
             }
         }
     }
@@ -100,7 +100,7 @@ object ModuleClickGui :
         tree(Snapping)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         // Pretty sure we are not in a game, so we can't open the clickgui
         if (!inGame) {
             return
@@ -113,7 +113,7 @@ object ModuleClickGui :
                 ClickScreen()
             }
         )
-        super.enable()
+        super.onEnabled()
     }
 
     private fun open() {

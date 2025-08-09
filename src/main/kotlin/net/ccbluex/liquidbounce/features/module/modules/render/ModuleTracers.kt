@@ -62,11 +62,11 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
         override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
     }
 
