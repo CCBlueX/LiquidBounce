@@ -99,8 +99,8 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
         for (item in Slots.OffhandWithHotbar.items) {
             when (item) {
-                in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.FARMLAND)
-                in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedState.SOUL_SAND)
+                in itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.FARMLAND)
+                in itemsForSoulSand -> allowedStates.add(AutoFarmTrackedState.SOUL_SAND)
                 Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
                     allowedStates.add(AutoFarmTrackedState.CAN_USE_BONE_MEAL)
                 }

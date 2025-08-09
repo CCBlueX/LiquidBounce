@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.minecraft.block.BambooBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -28,13 +30,16 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.CactusBlock
 import net.minecraft.block.CocoaBlock
 import net.minecraft.block.CropBlock
+import net.minecraft.block.FarmlandBlock
 import net.minecraft.block.Fertilizable
 import net.minecraft.block.KelpPlantBlock
 import net.minecraft.block.NetherWartBlock
 import net.minecraft.block.PumpkinBlock
+import net.minecraft.block.SoulSandBlock
 import net.minecraft.block.StemBlock
 import net.minecraft.block.SugarCaneBlock
 import net.minecraft.block.SweetBerryBushBlock
+import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 
 private const val NETHER_WART_MAX_AGE = 3
@@ -73,3 +78,13 @@ internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         else -> false
     }
 }
+
+internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
+internal val itemsForSoulSand = arrayOf(Items.NETHER_WART)
+
+internal fun getAvailableSlotForBlock(blockState: BlockState) =
+    when (blockState.block) {
+        is FarmlandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
+        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulSand)
+        else -> null
+    }

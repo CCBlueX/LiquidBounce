@@ -89,16 +89,6 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     internal val rotations = tree(RotationsConfigurable(this))
 
-    internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-    internal val itemsForSoulsand = arrayOf(Items.NETHER_WART)
-
-    private fun getAvailableSlotForBlock(blockState: BlockState) =
-        when (blockState.block) {
-            is FarmlandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
-            is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulsand)
-            else -> null
-        }
-
     private fun swapToSlotWithFortune() {
         if (!fortune) {
             return
@@ -227,7 +217,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val hotbarItems = Slots.OffhandWithHotbar.items
 
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
-        val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
+        val allowSoulsand = hotbarItems.any { it in itemsForSoulSand }
 
         if (!allowFarmland && !allowSoulsand) return false
 
