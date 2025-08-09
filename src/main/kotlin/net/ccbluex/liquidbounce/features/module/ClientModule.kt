@@ -61,10 +61,13 @@ open class ClientModule(
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     /**
-     * If the module is running and in game. Can be overridden to add additional checks.
+     * If a module is running or not is seperated from the enabled state. A module can be paused even when
+     * it is enabled, or it can be running when it is not enabled.
+     *
+     * Note: This overwrites [ToggleableConfigurable] declaration of [running].
      */
     override val running: Boolean
-        get() = super<ToggleableConfigurable>.running && inGame && (enabled || notActivatable)
+        get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
     val bind by bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
