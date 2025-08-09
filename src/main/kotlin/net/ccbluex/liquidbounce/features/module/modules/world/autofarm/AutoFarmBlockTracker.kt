@@ -26,18 +26,18 @@ import net.minecraft.block.SoulSandBlock
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
-enum class AutoFarmTrackedStates {
+enum class AutoFarmTrackedState {
     SHOULD_BE_DESTROYED,
     CAN_USE_BONE_MEAL,
     FARMLAND,
     SOUL_SAND,
 }
 
-object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedStates>() {
-    override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
-        // Should be destroyed? e.g. Melon block, Pumpkin block
+object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>() {
+    override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {
+        // Should be destroyed? e.g., Melon block, Pumpkin block
         if (pos.readyForHarvest(state)) {
-            return AutoFarmTrackedStates.SHOULD_BE_DESTROYED
+            return AutoFarmTrackedState.SHOULD_BE_DESTROYED
         }
 
         val cache = BlockPos.Mutable()
@@ -46,16 +46,12 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block ?: return null
 
             when (blockBelow) {
-                is FarmlandBlock -> track(cache, AutoFarmTrackedStates.FARMLAND)
-                is SoulSandBlock -> track(cache, AutoFarmTrackedStates.SOUL_SAND)
+                is FarmlandBlock -> track(cache, AutoFarmTrackedState.FARMLAND)
+                is SoulSandBlock -> track(cache, AutoFarmTrackedState.SOUL_SAND)
             }
 
             // Air itself should be untracked
             return null
-        }
-
-        if (pos.canUseBoneMeal(state)) {
-            return AutoFarmTrackedStates.CAN_USE_BONE_MEAL
         }
 
         val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block
@@ -63,13 +59,17 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             untrack(cache)
         }
 
+        if (pos.canUseBoneMeal(state)) {
+            return AutoFarmTrackedState.CAN_USE_BONE_MEAL
+        }
+
         val block = state.block
 
         // Check if air above
         return if (cache.set(pos, Direction.UP).getState()?.isAir == true) {
             when (block) {
-                is FarmlandBlock -> AutoFarmTrackedStates.FARMLAND
-                is SoulSandBlock -> AutoFarmTrackedStates.SOUL_SAND
+                is FarmlandBlock -> AutoFarmTrackedState.FARMLAND
+                is SoulSandBlock -> AutoFarmTrackedState.SOUL_SAND
                 else -> null
             }
         } else {

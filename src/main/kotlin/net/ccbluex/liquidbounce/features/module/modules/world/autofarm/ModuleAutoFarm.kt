@@ -185,14 +185,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }
     }
 
-    // Searches for any blocks within the radius that need to be destroyed, such as crops.
-    private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
-        val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            !state.isAir && pos.readyForHarvest(state) &&
-                    getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
-
-        for ((pos, state) in blocksToBreak) {
+    private fun updateTarget(possible: Sequence<Pair<BlockPos, BlockState>>): Boolean {
+        for ((pos, state) in possible) {
             val (rotation, _) = raytraceBlock(
                 player.eyePos,
                 pos,
@@ -214,6 +208,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             return true // We got a free angle at the block? No need to see more of them.
         }
         return false
+    }
+
+    // Searches for any blocks within the radius that need to be destroyed, such as crops.
+    private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
+        val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
+            !state.isAir && pos.readyForHarvest(state) &&
+                    getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
+        }.sortedBy { it.first.getCenterDistanceSquared() }
+
+        return updateTarget(blocksToBreak)
     }
 
     // Searches for any blocks suitable for placing crops or nether wart on
@@ -266,28 +270,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 getNearestPoint(eyesPos, Box(pos)).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
-        for ((pos, state) in blocksToFertile) {
-            val (rotation, _) = raytraceBlock(
-                player.eyePos,
-                pos,
-                state,
-                range = range.toDouble() - 0.1,
-                wallsRange = wallRange.toDouble() - 0.1
-            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
-
-            // set currentTarget to the new target
-            currentTarget = pos
-            // aim at target
-            RotationManager.setRotationTarget(
-                rotation,
-                configurable = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider = this@ModuleAutoFarm
-            )
-
-            return true // We got a free angle at the block? No need to see more of them.
-        }
-        return false
+        return updateTarget(blocksToFertile)
     }
 
     // Finds either a breakable target (such as crops, cactus, etc.)

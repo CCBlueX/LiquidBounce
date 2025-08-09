@@ -80,7 +80,6 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             }
         }
 
-
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
@@ -95,22 +94,22 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
                     withPositionRelativeToCamera(pos.toVec3d()) {
                         when (type) {
-                            AutoFarmTrackedStates.SHOULD_BE_DESTROYED -> {
+                            AutoFarmTrackedState.SHOULD_BE_DESTROYED -> {
                                 withColor(fillColor) {
                                     drawSolidBox(FULL_BOX)
                                 }
                             }
-                            AutoFarmTrackedStates.SOUL_SAND, AutoFarmTrackedStates.FARMLAND -> {
+                            AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
                                 withColor(placeColor) {
                                     drawSideBox(FULL_BOX, Direction.UP)
                                 }
                             }
-                            AutoFarmTrackedStates.CAN_USE_BONE_MEAL -> {
+                            AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
                                 // NOOP
                             }
                         }
 
-                        if (outline && type == AutoFarmTrackedStates.SHOULD_BE_DESTROYED) {
+                        if (outline && type == AutoFarmTrackedState.SHOULD_BE_DESTROYED) {
                             withColor(outlineColor) {
                                 drawOutlinedBox(FULL_BOX)
                             }

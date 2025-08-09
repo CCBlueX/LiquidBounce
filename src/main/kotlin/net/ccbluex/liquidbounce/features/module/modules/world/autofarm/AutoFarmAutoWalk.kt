@@ -90,19 +90,19 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
-    private fun collectAllowedStates(): Set<AutoFarmTrackedStates> {
+    private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
         // we should always walk to blocks we want to destroy because we can do so even without any items
-        val allowedStates = EnumSet.of(AutoFarmTrackedStates.SHOULD_BE_DESTROYED)
+        val allowedStates = EnumSet.of(AutoFarmTrackedState.SHOULD_BE_DESTROYED)
 
         // we should only walk to farmland/soulsand blocks if we have plantable items
         if (!toPlace) return allowedStates
 
         for (item in Slots.OffhandWithHotbar.items) {
             when (item) {
-                in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedStates.FARMLAND)
-                in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedStates.SOUL_SAND)
+                in ModuleAutoFarm.itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.FARMLAND)
+                in ModuleAutoFarm.itemsForSoulsand -> allowedStates.add(AutoFarmTrackedState.SOUL_SAND)
                 Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
-                    allowedStates.add(AutoFarmTrackedStates.CAN_USE_BONE_MEAL)
+                    allowedStates.add(AutoFarmTrackedState.CAN_USE_BONE_MEAL)
                 }
             }
         }
