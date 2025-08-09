@@ -168,6 +168,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         } else if (AutoUseBoneMeal.enabled && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot(Items.BONE_MEAL) ?: return@tickHandler
 
+            SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoPlaceCrops.swapBackDelay.random())
             doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
             waitTicks(interactDelay.random())
         } else {
