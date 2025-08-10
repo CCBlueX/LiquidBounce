@@ -83,11 +83,9 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
-        check(newSubscriber !in this.subscribers) {
-            "Subscriber ${newSubscriber.javaClass.simpleName} already registered"
+        if (!this.subscribers.addIfAbsent(newSubscriber)) {
+            error("Subscriber ${newSubscriber.javaClass.simpleName} already registered")
         }
-
-        subscribers.add(newSubscriber)
 
         val world = mc.world ?: return
 

@@ -40,6 +40,7 @@ class ChoiceConfigurable<T : Choice>(
     var choices: MutableList<T> = choicesCallback(this).toMutableList()
     private var defaultChoice: T = choices[activeChoiceIndexCallback(choices)]
     var activeChoice: T = defaultChoice
+        private set
 
     init {
         for (choice in choices) {
@@ -47,15 +48,14 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    fun onToggled(state: Boolean) {
-        if (state) {
+    internal fun onParentNewState(parentState: Boolean) {
+        if (parentState) {
             this.activeChoice.enable()
         } else {
             this.activeChoice.disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.onToggled(state) }
-        inner.filterIsInstance<Toggleable>().forEach { it.onToggled(state) }
+        updateChildState(parentState)
     }
 
     override fun setByString(name: String) {
@@ -114,7 +114,7 @@ class ChoiceConfigurable<T : Choice>(
  */
 abstract class Choice(name: String) : Configurable(name), EventListener, NamedChoice, MinecraftShortcuts {
 
-    override val choiceName: String
+    final override val choiceName: String
         get() = this.name
 
     abstract val parent: ChoiceConfigurable<*>

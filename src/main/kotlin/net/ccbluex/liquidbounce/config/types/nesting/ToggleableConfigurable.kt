@@ -86,7 +86,7 @@ abstract class ToggleableConfigurable(
     override val running: Boolean
         get() = super.running && enabled
 
-    override fun parent() = parent
+    final override fun parent() = parent
 
     @ScriptApiRequired
     @Suppress("unused")
@@ -94,10 +94,18 @@ abstract class ToggleableConfigurable(
 }
 
 /**
- * Updates the state of all child [ChoiceConfigurable]s and [Toggleable]s
+ * Updates the state of all child [Configurable]s.
+ *
+ * All implementations of [Toggleable] with super class [Configurable]
+ * should call this function in [Toggleable.onToggled].
  */
-fun <T> T.updateChildState(state: Boolean)
-    where T : Configurable, T : EventListener {
-    inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.onToggled(state) }
-    inner.filterIsInstance<ToggleableConfigurable>().forEach { it.onToggled(state, true) }
+internal fun Configurable.updateChildState(state: Boolean) {
+    for (value in inner) {
+        when (value) {
+            is ChoiceConfigurable<*> -> value.onParentNewState(state)
+            is ToggleableConfigurable -> value.onToggled(state, false)
+            is Configurable -> value.updateChildState(state)
+            is Toggleable -> value.onToggled(state)
+        }
+    }
 }

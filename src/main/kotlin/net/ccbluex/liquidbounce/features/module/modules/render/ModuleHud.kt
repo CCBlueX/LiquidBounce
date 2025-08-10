@@ -77,7 +77,9 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     var browserSettings: BrowserSettings? = null
 
     init {
+        @Suppress("UNCHECKED_CAST")
         tree(Configurable("In-built", value = components as MutableList<Value<*>>))
+        @Suppress("UNCHECKED_CAST")
         tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
     }
 
