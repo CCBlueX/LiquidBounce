@@ -30,7 +30,8 @@ import net.minecraft.util.Hand
  * @from https://github.com/GrimAnticheat/Grim/issues/2216
  */
 internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : NoSlowMode("Grim2371",parent) {
-    val repeatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         working = false
 
         repeat(2) {
