@@ -113,11 +113,11 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         currentTarget = null
     }
 
-    private var wasTarget: DestroyerTarget? = null
+    private var oldTarget: DestroyerTarget? = null
 
     override fun onDisabled() {
         clearCurrentTarget()
-        wasTarget = null
+        oldTarget = null
         targetRenderer.clearSilently()
     }
 
@@ -131,8 +131,11 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             return@handler
         }
 
-        wasTarget = currentTarget
-        updateTarget()
+        oldTarget = currentTarget
+        updateCurrentTarget()
+        currentTarget?.let {
+            targetRenderer.addBlock(it.pos)
+        }
     }
 
     @Suppress("unused")
@@ -142,7 +145,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
 
         // Delay if the target changed - this also includes when introducing a new target from null.
-        if (wasTarget != currentTarget) {
+        if (oldTarget != currentTarget) {
             if (currentTarget == null || delay > 0) {
                 clearCurrentTarget()
             }
@@ -199,10 +202,14 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
     }
 
-    private fun updateTarget() {
-        val possibleBlocks = searchPossibleTargetPositions() ?: return
+    private fun updateCurrentTarget() {
+        val possibleBlocks = searchPossibleTargetPositions()
 
         validateCurrentTarget(possibleBlocks)
+
+        if (possibleBlocks.isEmpty()) {
+            return
+        }
 
         val range = range.toDouble()
 
@@ -221,13 +228,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
                 }
             }
         }
-
-        currentTarget?.let {
-            targetRenderer.addBlock(it.pos)
-        }
     }
 
-    private fun searchPossibleTargetPositions(): List<BlockPos>? {
+    private fun searchPossibleTargetPositions(): List<BlockPos> {
         val eyesPos = player.eyePos
 
         val rangeSq = range.sq()
@@ -242,7 +245,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             }
         }.mapTo(mutableListOf()) { it.first }
 
-        if (possibleBlocks.isEmpty()) return null
+        if (possibleBlocks.isEmpty()) return emptyList()
 
         possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
 
