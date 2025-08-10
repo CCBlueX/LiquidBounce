@@ -44,9 +44,12 @@ open class TargetTracker(
 
     var target: LivingEntity? = null
 
-    fun selectFirst(predicate: ((LivingEntity) -> Boolean)? = null): LivingEntity? {
-        val enemies = targets()
-        return (if (predicate != null) enemies.firstOrNull(predicate) else enemies.firstOrNull()).also { target = it }
+    inline fun selectFirst(predicate: (LivingEntity) -> Boolean): LivingEntity? {
+        return targets().firstOrNull(predicate).also { target = it }
+    }
+
+    fun selectFirst(): LivingEntity? {
+        return targets().firstOrNull().also { target = it }
     }
 
     fun <R> select(evaluator: (LivingEntity) -> R): R? {
@@ -91,7 +94,14 @@ open class TargetSelector(
     private val hurtTime by int("HurtTime", 10, 0..10)
     private val priority by enumChoice("Priority", defaultPriority)
 
-    private val targetComparator: Comparator<LivingEntity> = compareBy<LivingEntity> {
+    private val targetComparator: Comparator<LivingEntity> = Comparator.comparingInt<LivingEntity> { entity ->
+        // Sort by entity type (player first, then hostile, then other)
+        when (entity) {
+            is PlayerEntity -> 0
+            is HostileEntity -> 1
+            else -> 2
+        }
+    }.thenBy {
         when (priority) {
             // Lowest health first
             TargetPriority.HEALTH -> it.getActualHealth()
@@ -103,13 +113,6 @@ open class TargetSelector(
             TargetPriority.HURT_TIME -> it.hurtTime
             // Closest to you first
             else -> 0 // Do nothing because we will compare by distance later
-        }
-    }.thenComparingInt { entity ->
-        // Sort by entity type (player first, then hostile, then other)
-        when (entity) {
-            is PlayerEntity -> 0
-            is HostileEntity -> 1
-            else -> 2
         }
     }.thenComparingDouble {
         // Sort by distance (closest first) - in case of tie at priority level
@@ -142,11 +145,11 @@ open class TargetSelector(
 
     open fun validate(entity: LivingEntity) =
         entity != player
-        && !entity.isRemoved
-        && entity.shouldBeAttacked()
-        && fov >= RotationUtil.crosshairAngleToEntity(entity)
-        && entity.hurtTime <= hurtTime
-        && validateRange(entity)
+            && !entity.isRemoved
+            && entity.shouldBeAttacked()
+            && fov >= RotationUtil.crosshairAngleToEntity(entity)
+            && entity.hurtTime <= hurtTime
+            && validateRange(entity)
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true
@@ -159,7 +162,7 @@ open class TargetSelector(
             FLOAT -> distanceSq <= (range as Float).sq()
             FLOAT_RANGE ->
                 distanceSq >= (range as ClosedFloatingPointRange<Float>).start.sq()
-                && distanceSq <= range.endInclusive.sq()
+                    && distanceSq <= range.endInclusive.sq()
             INT -> distanceSq <= (range as Int).sq()
             INT_RANGE -> distanceSq >= (range as IntRange).first.sq() && distanceSq <= range.last.sq()
             else -> true
