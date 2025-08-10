@@ -24,5 +24,5 @@
 <Tab>
     <IconTextInput icon="user" title="Token" bind:value={token}/>
     <ButtonSetting {disabled} title="Add Account" on:click={addAccount} listenForEnter={true} inset={true} {loading}/>
-    <ButtonSetting title="Get Account Token" on:click={() => browse("ALTENING_FREE")} secondary={true}/>
+    <ButtonSetting title="Get Account Token" on:click={() => browse("THE_ALTENING")} secondary={true}/>
 </Tab>

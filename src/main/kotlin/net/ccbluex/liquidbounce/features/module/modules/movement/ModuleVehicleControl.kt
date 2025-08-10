@@ -68,9 +68,9 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
     private var wasInVehicle = false
 
-    override fun enable() {
+    override fun onEnabled() {
         chat(warning(message("quitHelp")))
-        super.enable()
+        super.onEnabled()
     }
 
     @Suppress("unused")

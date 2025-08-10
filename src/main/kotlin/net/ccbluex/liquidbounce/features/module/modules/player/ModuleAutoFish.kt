@@ -77,7 +77,7 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
 
     private var caughtFish = false
 
-    override fun disable() {
+    override fun onDisabled() {
         caughtFish = false
     }
 

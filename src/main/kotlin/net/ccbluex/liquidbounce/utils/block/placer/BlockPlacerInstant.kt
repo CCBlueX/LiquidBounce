@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.block.isInteractable
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
@@ -21,13 +22,12 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
     when (val packet = event.packet) {
         is BlockUpdateS2CPacket -> placeInstant(packet.pos, packet.state)
         is ChunkDeltaUpdateS2CPacket -> {
-            packet.visitUpdates { pos, state -> placeInstant(null, state, pos as BlockPos.Mutable) }
+            packet.visitUpdates { pos, state -> placeInstant(pos, state) }
         }
     }
 }
 
-private fun BlockPlacer.placeInstant(blockPos: BlockPos?, state: BlockState, blockPos1: BlockPos.Mutable? = null) {
-    val pos = blockPos ?: blockPos1!!
+private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     val irrelevantPacket = !state.isReplaceable || pos !in blocks
 
     val rotationMode = rotationMode.activeChoice
@@ -67,5 +67,5 @@ private fun BlockPlacer.placeInstant(blockPos: BlockPos?, state: BlockState, blo
         )
     }
 
-    doPlacement(false, blockPos ?: blockPos1!!.toImmutable(), placementTarget)
+    doPlacement(false, pos.immutable, placementTarget)
 }
