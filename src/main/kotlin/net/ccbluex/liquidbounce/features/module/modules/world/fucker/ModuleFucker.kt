@@ -115,7 +115,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
     private var wasTarget: DestroyerTarget? = null
 
-    override fun disable() {
+    override fun onDisabled() {
         clearCurrentTarget()
         wasTarget = null
         targetRenderer.clearSilently()

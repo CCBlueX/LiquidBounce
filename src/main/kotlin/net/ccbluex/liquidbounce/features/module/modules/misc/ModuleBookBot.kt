@@ -75,7 +75,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
     internal var random: Random = Random()
         private set
 
-    override fun enable() {
+    override fun onEnabled() {
         bookCount = 0
         random = Random()
         chronometer.reset()

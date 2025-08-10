@@ -61,7 +61,7 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
 
     private var sending = false
 
-    override fun disable() {
+    override fun onDisabled() {
         sending = false
     }
 

@@ -78,7 +78,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
         doNotIncludeAlways()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         doNotTryToConnect = false
     }
 
@@ -128,7 +128,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
         }.onSuccess {
             logger.info("Successfully closed Discord RPC.")
         }
-        super.disable()
+        super.onDisabled()
     }
 
     @Suppress("unused")
