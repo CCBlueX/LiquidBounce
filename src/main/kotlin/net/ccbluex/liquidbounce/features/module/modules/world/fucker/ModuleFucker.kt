@@ -213,19 +213,23 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
         val range = range.toDouble()
 
-        for (pos in possibleBlocks) {
+        // Find direct targets first
+        if (possibleBlocks.any { pos ->
             // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
             val wallRange = if (FuckerEntrance.enabled && pos.hasEntrance) range else wallRange.toDouble()
+            considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) == true
+        } || currentTarget != null) {
+            return
+        }
 
-            if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
-                // Is there any block in the way?
-                if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                    val weakBlock = pos.weakestNeighbor ?: continue
-
-                    considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
-                } else if (surroundings) {
-                    updateSurroundings(pos)
-                }
+        // Surrounding / Entrance
+        for (pos in possibleBlocks) {
+            // Is there any block in the way?
+            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
+                val weakBlock = pos.weakestNeighbor ?: continue
+                considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
+            } else if (surroundings) {
+                updateSurroundings(pos)
             }
         }
     }
@@ -413,8 +417,8 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
                 other.isTarget -> 1
                 currentSurrounding == null -> -1
                 otherSurrounding == null -> 1
-                currentSurrounding.resistance == otherSurrounding.resistance ->
-                    this.pos.getCenterDistanceSquaredEyes().compareTo(other.pos.getCenterDistanceSquaredEyes())
+//                currentSurrounding.resistance == otherSurrounding.resistance ->
+//                    this.pos.getCenterDistanceSquaredEyes().compareTo(other.pos.getCenterDistanceSquaredEyes())
                 else -> currentSurrounding.resistance.compareTo(otherSurrounding.resistance)
             }
         }
