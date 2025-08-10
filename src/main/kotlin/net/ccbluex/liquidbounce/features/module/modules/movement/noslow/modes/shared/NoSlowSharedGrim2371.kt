@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.NoSlowMode
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
 
 /**
  * Bypassing Grim 2.3.71
@@ -36,11 +35,9 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
         repeat(2) {
             waitTicks(1)
             working = true
-            val hand: Hand = Hand.MAIN_HAND.takeIf { player.getActiveHand() == Hand.MAIN_HAND } ?: Hand.OFF_HAND
             interaction.sendSequencedPacket(world) { sequence ->
-                // This time we use a new sequence
                 PlayerInteractItemC2SPacket(
-                    hand, sequence,
+                    player.getActiveHand(), sequence,
                     player.yaw, player.pitch
                 )
             }
