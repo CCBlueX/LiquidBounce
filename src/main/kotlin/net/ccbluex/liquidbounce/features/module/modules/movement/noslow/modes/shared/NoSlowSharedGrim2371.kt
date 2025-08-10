@@ -29,7 +29,8 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
  * @from https://github.com/GrimAnticheat/Grim/issues/2216
  */
 internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : NoSlowMode("Grim2371",parent) {
-    val repeatable = tickHandler {
+    @Suppress("unused")
+    private val repeatable = tickHandler {
         working = false
 
         repeat(2) {
