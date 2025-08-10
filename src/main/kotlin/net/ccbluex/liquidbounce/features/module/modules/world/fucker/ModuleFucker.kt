@@ -318,19 +318,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         return result
     }
 
-    private fun isBetterTarget(otherTarget: DestroyerTarget, currentTarget: DestroyerTarget): Boolean {
-        val currentSurrounding = currentTarget.surroundingInfo
-        val otherSurrounding = otherTarget.surroundingInfo
-
-        return when {
-            currentTarget.isTarget -> false
-            otherTarget.isTarget -> true
-            otherSurrounding == null -> true
-            currentSurrounding == null -> false
-            else -> currentSurrounding.resistance > otherSurrounding.resistance
-        }
-    }
-
     /**
      * @return true if it is the best target, false if it's invalid and null if it's not better than the current target
      */
@@ -356,7 +343,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
 
         val currentTarget = currentTarget
 
-        if (!isCurrentTarget && currentTarget != null && !isBetterTarget(target, currentTarget)) {
+        if (!isCurrentTarget && currentTarget != null && target <= currentTarget) {
             return null
         }
 
@@ -416,7 +403,22 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         val action: DestroyAction,
         val surroundingInfo: SurroundingInfo? = null,
         val isTarget: Boolean = false
-    )
+    ) : Comparable<DestroyerTarget> {
+        override fun compareTo(other: DestroyerTarget): Int {
+            val currentSurrounding = this.surroundingInfo
+            val otherSurrounding = other.surroundingInfo
+
+            return when {
+                this.isTarget -> -1
+                other.isTarget -> 1
+                currentSurrounding == null -> -1
+                otherSurrounding == null -> 1
+                currentSurrounding.resistance == otherSurrounding.resistance ->
+                    this.pos.getCenterDistanceSquaredEyes().compareTo(other.pos.getCenterDistanceSquaredEyes())
+                else -> currentSurrounding.resistance.compareTo(otherSurrounding.resistance)
+            }
+        }
+    }
 
     /**
      * @param actualTargetPos the parent DestroyerTarget is surrounding this block
