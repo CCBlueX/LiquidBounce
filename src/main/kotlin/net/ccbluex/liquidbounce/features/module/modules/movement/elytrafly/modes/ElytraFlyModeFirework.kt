@@ -27,7 +27,7 @@ import kotlin.math.hypot
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private val minSpeed by float("MinSpeed", 0.8f, 0.1f..2.0f)
-    private val fireDelay by float("FireDelay", 1.5f, 0.5f..3.0f)
+    private val fireDelay by float("FireDelay", 1.5f, 0.5f..3.0f, "seconds")
 
     private var lastFireworkTime = 0L
 
