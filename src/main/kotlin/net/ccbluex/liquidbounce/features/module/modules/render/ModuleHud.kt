@@ -74,7 +74,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     val isBlurEffectActive
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
 
-    var browserSettings: BrowserSettings? = null
+    private var browserSettings: BrowserSettings? = null
 
     init {
         @Suppress("UNCHECKED_CAST")
@@ -95,8 +95,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     override fun onDisabled() {
         // Closes tab entirely
-        browserBrowser?.close()
-        browserBrowser = null
+        close()
     }
 
     @Suppress("unused")
