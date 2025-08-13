@@ -48,16 +48,32 @@ import org.lwjgl.glfw.GLFW
 object ModuleClickGui :
     ClientModule("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
-    override val running = true
+    override val running get() = true
 
     private object LimitGameFps : ToggleableConfigurable(this, "LimitGameFps", true) {
-        val limitation by int("Limitation", 60, 1..240, "fps")
+        private val limitation by int("Limitation", 60, 1..240, "fps")
+        private var maxFpsValueCache: Int = -1
+        fun applyMaxFps() {
+            if (!enabled) return
+
+            maxFpsValueCache = mc.options.maxFps.value
+            mc.options.maxFps.value = limitation
+        }
+
+        fun restoreMaxFps() {
+            if (maxFpsValueCache != -1) {
+                mc.options.maxFps.value = maxFpsValueCache
+                maxFpsValueCache = -1
+            }
+        }
     }
-    private var maxFpsValueCache: Int = -1
 
     init {
         tree(LimitGameFps)
     }
+
+    @Suppress("unused")
+    private val shutdownHandler = handler<ClientShutdownEvent> { LimitGameFps.restoreMaxFps() }
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
@@ -119,7 +135,7 @@ object ModuleClickGui :
             if (clickGuiBrowser == null) {
                 VirtualDisplayScreen(VirtualScreenType.CLICK_GUI)
             } else {
-                ClickScreen()
+                ClickScreen
             }
         )
         super.onEnabled()
@@ -138,22 +154,13 @@ object ModuleClickGui :
         ) {
             mc.currentScreen is ClickScreen
         }
-
-        if (LimitGameFps.enabled) {
-            maxFpsValueCache = mc.options.maxFps.value
-            mc.options.maxFps.value = LimitGameFps.limitation
-        }
     }
 
     private fun close() {
         clickGuiBrowser?.let {
             it.close()
-            if (maxFpsValueCache != -1) {
-                mc.options.maxFps.value = maxFpsValueCache
-                maxFpsValueCache = -1
-            }
+            clickGuiBrowser = null
         }
-        clickGuiBrowser = null
     }
 
     fun reload(restart: Boolean = false) {
@@ -201,9 +208,15 @@ object ModuleClickGui :
     /**
      * An empty screen that acts as a hint when to draw the clickgui
      */
-    class ClickScreen : Screen("ClickGUI".asText()) {
+    object ClickScreen : Screen("ClickGUI".asText()) {
+
+        override fun init() {
+            super.init()
+            LimitGameFps.applyMaxFps()
+        }
 
         override fun close() {
+            LimitGameFps.restoreMaxFps()
             mc.mouse.lockCursor()
             super.close()
         }
