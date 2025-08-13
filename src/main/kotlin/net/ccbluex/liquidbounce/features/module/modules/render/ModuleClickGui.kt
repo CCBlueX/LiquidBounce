@@ -135,7 +135,7 @@ object ModuleClickGui :
             if (clickGuiBrowser == null) {
                 VirtualDisplayScreen(VirtualScreenType.CLICK_GUI)
             } else {
-                ClickScreen
+                ClickScreen()
             }
         )
         super.onEnabled()
@@ -208,7 +208,7 @@ object ModuleClickGui :
     /**
      * An empty screen that acts as a hint when to draw the clickgui
      */
-    object ClickScreen : Screen("ClickGUI".asText()) {
+    class ClickScreen : Screen("ClickGUI".asText()) {
 
         override fun init() {
             super.init()
