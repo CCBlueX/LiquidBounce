@@ -165,7 +165,7 @@ object CommandConfig : CommandFactory {
                         HttpClient.request(name, HttpMethod.GET).parse<String>()
                     } else {
                         // Get online config from API
-                        ClientApi.requestSettingsScript(name).readText()
+                        ClientApi.requestSettingsScript(name).use { it.readText() }
                     }
                 }
             }.onSuccess { source ->
