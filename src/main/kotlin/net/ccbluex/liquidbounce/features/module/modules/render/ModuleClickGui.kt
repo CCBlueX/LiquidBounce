@@ -50,6 +50,15 @@ object ModuleClickGui :
 
     override val running = true
 
+    private object LimitGameFps : ToggleableConfigurable(this, "LimitGameFps", true) {
+        val limitation by int("Limitation", 60, 1..240, "fps")
+    }
+    private var maxFpsValueCache: Int = -1
+
+    init {
+        tree(LimitGameFps)
+    }
+
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
         EventManager.callEvent(ClickGuiScaleChangeEvent(it))
@@ -66,7 +75,7 @@ object ModuleClickGui :
             }
 
             if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
-                onEnabled()
+                enable()
             }
         }
     }
@@ -100,7 +109,7 @@ object ModuleClickGui :
         tree(Snapping)
     }
 
-    override fun onEnabled() {
+    override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui
         if (!inGame) {
             return
@@ -113,7 +122,7 @@ object ModuleClickGui :
                 ClickScreen()
             }
         )
-        super.onEnabled()
+        super.enable()
     }
 
     private fun open() {
@@ -129,10 +138,21 @@ object ModuleClickGui :
         ) {
             mc.currentScreen is ClickScreen
         }
+
+        if (LimitGameFps.enabled) {
+            maxFpsValueCache = mc.options.maxFps.value
+            mc.options.maxFps.value = LimitGameFps.limitation
+        }
     }
 
     private fun close() {
-        clickGuiBrowser?.close()
+        clickGuiBrowser?.let {
+            it.close()
+            if (maxFpsValueCache != -1) {
+                mc.options.maxFps.value = maxFpsValueCache
+                maxFpsValueCache = -1
+            }
+        }
         clickGuiBrowser = null
     }
 
