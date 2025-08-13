@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -51,39 +50,35 @@ object ModuleClickGui :
 
     override val running get() = true
 
-    private object LimitGameFps : ToggleableConfigurable(this, "LimitGameFps", true) {
-        private val limitation by int("Limitation", 60, 1..240, "fps")
-        private var maxFpsValueCache: Int = -1
-        fun applyMaxFps() {
-            if (!enabled) return
+    private val vsync by boolean("VSync", true)
 
-            maxFpsValueCache = mc.options.maxFps.value
-            mc.options.maxFps.value = limitation
-        }
+    private var vsyncEnabledCache: Boolean? = null
 
-        fun restoreMaxFps() {
-            if (maxFpsValueCache != -1) {
-                mc.options.maxFps.value = maxFpsValueCache
-                maxFpsValueCache = -1
-            }
-        }
+    private fun applyVsync() {
+        if (!vsync) return
+
+        vsyncEnabledCache = mc.options.enableVsync.value
+        mc.options.enableVsync.value = true
     }
 
-    init {
-        tree(LimitGameFps)
+    private fun restoreVsync() {
+        if (vsyncEnabledCache == null) return
+
+        mc.options.enableVsync.value = vsyncEnabledCache
+        vsyncEnabledCache = null
     }
 
     @Suppress("unused")
     private val shutdownHandler = handler<ClientShutdownEvent> {
-        LimitGameFps.restoreMaxFps()
+        restoreVsync()
     }
 
     @Suppress("unused")
     private val virtualScreenHandler = handler<VirtualScreenEvent> {
         if (it.type === VirtualScreenType.CLICK_GUI) {
             when (it.action) {
-                VirtualScreenEvent.Action.OPEN -> LimitGameFps.applyMaxFps()
-                VirtualScreenEvent.Action.CLOSE -> LimitGameFps.restoreMaxFps()
+                VirtualScreenEvent.Action.OPEN -> applyVsync()
+                VirtualScreenEvent.Action.CLOSE -> restoreVsync()
             }
         }
     }
@@ -225,11 +220,11 @@ object ModuleClickGui :
 
         override fun init() {
             super.init()
-            LimitGameFps.applyMaxFps()
+            applyVsync()
         }
 
         override fun close() {
-            LimitGameFps.restoreMaxFps()
+            restoreVsync()
             mc.mouse.lockCursor()
             super.close()
         }
