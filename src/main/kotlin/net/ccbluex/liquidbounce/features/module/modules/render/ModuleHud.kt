@@ -124,9 +124,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     private fun open(): Browser {
-        if (browserBrowser != null) {
-            return browserBrowser!!
-        }
+        browserBrowser?.let { return it }
 
         return ThemeManager.openImmediate(
             VirtualScreenType.HUD,
@@ -138,8 +136,10 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     private fun close() {
-        browserBrowser?.close()
-        browserBrowser = null
+        browserBrowser?.let {
+            it.close()
+            browserBrowser = null
+        }
     }
 
     fun reopen() {
