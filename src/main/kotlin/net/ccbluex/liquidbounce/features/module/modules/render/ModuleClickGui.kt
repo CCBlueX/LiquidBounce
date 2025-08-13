@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -73,7 +74,19 @@ object ModuleClickGui :
     }
 
     @Suppress("unused")
-    private val shutdownHandler = handler<ClientShutdownEvent> { LimitGameFps.restoreMaxFps() }
+    private val shutdownHandler = handler<ClientShutdownEvent> {
+        LimitGameFps.restoreMaxFps()
+    }
+
+    @Suppress("unused")
+    private val virtualScreenHandler = handler<VirtualScreenEvent> {
+        if (it.type === VirtualScreenType.CLICK_GUI) {
+            when (it.action) {
+                VirtualScreenEvent.Action.OPEN -> LimitGameFps.applyMaxFps()
+                VirtualScreenEvent.Action.CLOSE -> LimitGameFps.restoreMaxFps()
+            }
+        }
+    }
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {

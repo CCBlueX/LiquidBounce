@@ -131,8 +131,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
@@ -144,8 +144,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.CLOSE
             )
         )
     }
