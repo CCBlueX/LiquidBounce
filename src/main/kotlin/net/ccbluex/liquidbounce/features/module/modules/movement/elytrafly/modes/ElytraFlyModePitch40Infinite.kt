@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.util.math.MathHelper
 
 internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") {
@@ -40,7 +43,11 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
         
         // Warning if player is too low
         if (player.y < maxHeight) {
-            // TODO: Add notification to user about recommended height
+            notification(
+                "ElytraFly",
+                ModuleElytraFly.message("altitudeTooLow", maxHeight),
+                NotificationEvent.Severity.INFO
+            )
         }
     }
 
