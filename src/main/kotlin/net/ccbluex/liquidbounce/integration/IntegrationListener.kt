@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
+import kotlin.math.min
 
 object IntegrationListener : EventListener {
 
@@ -224,18 +225,11 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (!browserSettings.syncGameFps) {
+        if (!browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
             return@handler
         }
 
-        if (isClientScreen(mc.currentScreen)) {
-            val rendererFps = browserSettings.currentFps
-
-            // Only lower FPS if the event FPS is higher than the renderer FPS.
-            if (event.fps > rendererFps) {
-                event.fps = rendererFps
-            }
-        }
+        event.fps = min(event.fps, browserSettings.currentFps)
     }
 
     @Suppress("unused")
