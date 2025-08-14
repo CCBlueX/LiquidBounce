@@ -223,6 +223,22 @@ object IntegrationListener : EventListener {
     }
 
     @Suppress("unused")
+    private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
+        if (!browserSettings.syncGameFps) {
+            return@handler
+        }
+
+        if (isClientScreen(mc.currentScreen)) {
+            val rendererFps = browserSettings.currentFps
+
+            // Only lower FPS if the event FPS is higher than the renderer FPS.
+            if (event.fps > rendererFps) {
+                event.fps = rendererFps
+            }
+        }
+    }
+
+    @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
         val keyCode = event.keyCode
         val modifier = event.mods
@@ -307,5 +323,12 @@ object IntegrationListener : EventListener {
             }
         }
     }
+
+    /**
+     * Checks if the given screen is an active client screen.
+     */
+    @JvmStatic
+    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is BrowserScreen
 
 }

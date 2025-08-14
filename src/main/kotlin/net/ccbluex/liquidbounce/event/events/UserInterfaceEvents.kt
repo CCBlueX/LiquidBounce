@@ -33,6 +33,10 @@ import net.minecraft.text.Text
 @Suppress("unused")
 class FpsChangeEvent(val fps: Int) : Event()
 
+@Nameable("fpsLimit")
+@Suppress("unused")
+class FpsLimitEvent(var fps: Int) : Event()
+
 @Nameable("clientPlayerData")
 @WebSocketEvent
 @Suppress("unused")

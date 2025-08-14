@@ -50,39 +50,6 @@ object ModuleClickGui :
 
     override val running get() = true
 
-    private val limitGameFps by boolean("LimitGameFPS", true)
-
-    private var maxFpsCache: Int? = null
-
-    private fun applyVsync() {
-        if (!limitGameFps) return
-
-        maxFpsCache = mc.options.maxFps.value
-        mc.options.maxFps.value = minOf(IntegrationListener.browserSettings.currentFps, mc.options.maxFps.value)
-    }
-
-    private fun restoreVsync() {
-        if (maxFpsCache == null) return
-
-        mc.options.maxFps.value = maxFpsCache
-        maxFpsCache = null
-    }
-
-    @Suppress("unused")
-    private val shutdownHandler = handler<ClientShutdownEvent> {
-        restoreVsync()
-    }
-
-    @Suppress("unused")
-    private val virtualScreenHandler = handler<VirtualScreenEvent> {
-        if (it.type === VirtualScreenType.CLICK_GUI) {
-            when (it.action) {
-                VirtualScreenEvent.Action.OPEN -> applyVsync()
-                VirtualScreenEvent.Action.CLOSE -> restoreVsync()
-            }
-        }
-    }
-
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
         EventManager.callEvent(ClickGuiScaleChangeEvent(it))
@@ -220,11 +187,9 @@ object ModuleClickGui :
 
         override fun init() {
             super.init()
-            applyVsync()
         }
 
         override fun close() {
-            restoreVsync()
             mc.mouse.lockCursor()
             super.close()
         }
