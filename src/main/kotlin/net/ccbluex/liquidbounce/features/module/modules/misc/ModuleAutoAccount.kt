@@ -54,9 +54,9 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         loginRegex = Regex(it)
     }
 
-    private val detections by multiEnumChoice("Detections", Detection.entries, canBeNone = false)
+    private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
 
-    private enum class Detection(override val choiceName: String) : NamedChoice {
+    private enum class MessageSource(override val choiceName: String) : NamedChoice {
         CHAT("Chat"),
         TITLE("Title"),
         SUBTITLE("Subtitle"),
@@ -94,12 +94,12 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         network.sendCommand("$registerCommand $password $password")
     }
 
-    private inline fun <reified T : Event> createDetectionHandler(
-        detection: Detection,
+    private inline fun <reified T : Event> createMessageHandler(
+        messageSource: MessageSource,
         crossinline textProvider: (T) -> String?,
     ) {
         sequenceHandler<T> { event ->
-            if (sending || detection !in detections) {
+            if (sending || messageSource !in messageSources) {
                 return@sequenceHandler
             }
     
@@ -117,9 +117,9 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
     }
 
     init {
-        createDetectionHandler<ChatReceiveEvent>(Detection.CHAT) { it.message }
-        createDetectionHandler<TitleEvent.Title>(Detection.TITLE) { it.text?.literalString }
-        createDetectionHandler<TitleEvent.Subtitle>(Detection.SUBTITLE) { it.text?.literalString }
+        createMessageHandler<ChatReceiveEvent>(MessageSource.CHAT) { it.message }
+        createMessageHandler<TitleEvent.Title>(MessageSource.TITLE) { it.text?.literalString }
+        createMessageHandler<TitleEvent.Subtitle>(MessageSource.SUBTITLE) { it.text?.literalString }
     }
 
 }
