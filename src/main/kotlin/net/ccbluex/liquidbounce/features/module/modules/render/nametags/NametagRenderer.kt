@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
@@ -90,11 +89,15 @@ class NametagRenderer {
 
         // Draw enchantments directly for the entity (regardless of whether items are shown)
         if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
+            val entityPos = nametag.entity.pos
+            val worldX = entityPos.x.toFloat()
+            val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
+
             NametagEnchantmentRenderer.drawEntityEnchantments(
                 env,
                 nametag.entity,
-                pos.x,
-                pos.y,
+                worldX,
+                worldY,
                 fontBuffers
             )
         }
@@ -103,7 +106,7 @@ class NametagRenderer {
     }
 
     private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack?>) {
-        val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
+        val dc = newDrawContext()
 
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
         dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)

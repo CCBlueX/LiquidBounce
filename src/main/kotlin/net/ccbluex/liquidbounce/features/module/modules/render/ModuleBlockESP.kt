@@ -51,8 +51,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
     ).onChange {
         if (running) {
-            disable()
-            enable()
+            onDisabled()
+            onEnabled()
         }
         it
     }
@@ -177,11 +177,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(BlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 

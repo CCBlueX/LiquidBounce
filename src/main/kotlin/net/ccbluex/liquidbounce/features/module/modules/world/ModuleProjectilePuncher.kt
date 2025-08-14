@@ -60,7 +60,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
 
-    override fun disable() {
+    override fun onDisabled() {
         target = null
     }
 

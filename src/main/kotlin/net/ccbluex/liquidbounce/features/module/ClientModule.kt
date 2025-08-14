@@ -21,19 +21,17 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
-import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.SequenceManager.cancelAllSequences
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
-import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -60,94 +58,16 @@ open class ClientModule(
     hide: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
     aliases: Array<out String> = emptyArray() // additional names under which the module is known
-) : EventListener, Configurable(name, aliases = aliases), MinecraftShortcuts {
+) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     /**
-     * Option to enable or disable the module, this DOES NOT mean the module is running. This
-     * should be checked with [running] instead. Only use this for toggling the module!
-     */
-    @ScriptApiRequired
-    var enabled by boolean("Enabled", state).also {
-        // Might not include the enabled state of the module depending on the category
-        if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
-            if (this is ModuleAntiBot) {
-                return@also
-            }
-
-            it.doNotIncludeAlways()
-        }
-    }.notAnOption().onChange { new ->
-        // Check if the module is locked
-        locked?.let { locked ->
-            if (locked.get()) {
-                notification(
-                    this.name,
-                    translation("liquidbounce.generic.locked"),
-                    NotificationEvent.Severity.ERROR
-                )
-
-                // Keeps it turned off
-                return@onChange false
-            }
-        }
-
-        runCatching {
-            if (!inGame) {
-                return@runCatching
-            }
-
-            calledSinceStartup = true
-
-            // Call enable or disable function
-            if (new) {
-                enable()
-            } else {
-                // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
-                cancelAllSequences(this)
-                // Remove and cancel coroutine scope
-                removeEventListenerScope()
-                disable()
-            }
-        }.onSuccess {
-            // Notify everyone about module activation
-            EventManager.callEvent(ModuleActivationEvent(name))
-
-            // Save new module state when module activation is enabled
-            if (disableActivation) {
-                return@onChange false
-            }
-
-            if (!loadingNow) {
-                val (title, severity) = if (new) {
-                    translation("liquidbounce.generic.enabled") to NotificationEvent.Severity.ENABLED
-                } else {
-                    translation("liquidbounce.generic.disabled") to NotificationEvent.Severity.DISABLED
-                }
-
-                notification(title, this.name, severity)
-            }
-
-            // Notify everyone about module state
-            EventManager.callEvent(ModuleToggleEvent(name, hidden, new))
-
-            // Call to state-aware sub-configurables
-            inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(new) }
-            inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(new) }
-        }.onFailure {
-            // Log error
-            logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
-            // In case of an error, module should stay disabled
-            throw it
-        }
-
-        new
-    }
-
-    /**
-     * If the module is running and in game. Can be overridden to add additional checks.
+     * If a module is running or not is seperated from the enabled state. A module can be paused even when
+     * it is enabled, or it can be running when it is not enabled.
+     *
+     * Note: This overwrites [ToggleableConfigurable] declaration of [running].
      */
     override val running: Boolean
-        get() = super.running && inGame && (enabled || notActivatable)
+        get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
     val bind by bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
@@ -191,19 +111,62 @@ open class ClientModule(
     internal var calledSinceStartup = false
 
     /**
-     * Called when module is turned on
+     * Called when the module is registered in the module manager.
      */
-    open fun enable() {}
+    open fun onRegistration() {}
 
-    /**
-     * Called when module is turned off
-     */
-    open fun disable() {}
+    override fun onEnabledValueRegistration(value: Value<Boolean>) =
+        super.onEnabledValueRegistration(value).also { value ->
+            // Might not include the enabled state of the module depending on the category
+            if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
+                if (this is ModuleAntiBot) {
+                    return@also
+                }
 
-    /**
-     * Called when the module is added to the module manager
-     */
-    open fun init() {}
+                value.doNotIncludeAlways()
+            }
+        }.notAnOption()
+
+    override fun onToggled(state: Boolean): Boolean {
+        // Check if the module is locked and cannot be enabled
+        locked?.let { locked ->
+            if (locked.get()) {
+                notification(
+                    this.name,
+                    translation("liquidbounce.generic.locked"),
+                    NotificationEvent.Severity.ERROR
+                )
+
+                return false
+            }
+        }
+
+        if (!inGame) {
+            return state
+        }
+        calledSinceStartup = true
+
+        val state = super.onToggled(state)
+
+        EventManager.callEvent(ModuleActivationEvent(name))
+
+        // If the module is not activatable, we do not want to change state
+        if (disableActivation) {
+            return false
+        }
+
+        if (!loadingNow) {
+            val (title, severity) = if (state) {
+                translation("liquidbounce.generic.enabled") to NotificationEvent.Severity.ENABLED
+            } else {
+                translation("liquidbounce.generic.disabled") to NotificationEvent.Severity.DISABLED
+            }
+            notification(title, this.name, severity)
+        }
+
+        EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
+        return state
+    }
 
     /**
      * If we want a module to have the requires bypass option, we specifically call it

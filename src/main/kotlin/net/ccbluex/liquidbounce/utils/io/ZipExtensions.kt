@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
@@ -34,9 +35,17 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
     }
 
     while (true) {
-        val entry = ais.nextEntry ?: break
+        // Lunar Client uses a stone age version of Apache Commons Compress that does not have the nextEntry method.
+        @Suppress("DEPRECATION")
+        val entry = when (ais) {
+            is TarArchiveInputStream -> ais.nextTarEntry
+            is ZipArchiveInputStream -> ais.nextZipEntry
+            else -> ais.nextEntry
+        }  ?: break
 
-        if (entry.isDirectory) continue
+        if (entry.isDirectory) {
+            continue
+        }
 
         val newFile = File(folder, entry.name).apply {
             parentFile?.mkdirs()
