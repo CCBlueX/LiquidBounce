@@ -102,7 +102,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
-        (entity is ArrowEntity || entity is SpectralArrowEntity || (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
+        (entity is ArrowEntity || entity is SpectralArrowEntity ||
+                (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(
