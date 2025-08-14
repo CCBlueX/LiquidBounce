@@ -158,10 +158,10 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
         tB: Double,
         tA: Double
     ): Color4b = Color4b(
-        ((r + (other.r - r) * tR)).toInt().coerceIn(0, 255),
-        ((g + (other.g - g) * tG)).toInt().coerceIn(0, 255),
-        ((b + (other.b - b) * tB)).toInt().coerceIn(0, 255),
-        ((a + (other.a - a) * tA)).toInt().coerceIn(0, 255)
+        (r + (other.r - r) * tR).toInt().coerceIn(0, 255),
+        (g + (other.g - g) * tG).toInt().coerceIn(0, 255),
+        (b + (other.b - b) * tB).toInt().coerceIn(0, 255),
+        (a + (other.a - a) * tA).toInt().coerceIn(0, 255)
     )
 
     /**
