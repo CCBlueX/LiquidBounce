@@ -50,22 +50,22 @@ object ModuleClickGui :
 
     override val running get() = true
 
-    private val vsync by boolean("VSync", true)
+    private val limitGameFps by boolean("LimitGameFPS", true)
 
-    private var vsyncEnabledCache: Boolean? = null
+    private var maxFpsCache: Int? = null
 
     private fun applyVsync() {
-        if (!vsync) return
+        if (!limitGameFps) return
 
-        vsyncEnabledCache = mc.options.enableVsync.value
-        mc.options.enableVsync.value = true
+        maxFpsCache = mc.options.maxFps.value
+        mc.options.maxFps.value = minOf(IntegrationListener.browserSettings.currentFps, mc.options.maxFps.value)
     }
 
     private fun restoreVsync() {
-        if (vsyncEnabledCache == null) return
+        if (maxFpsCache == null) return
 
-        mc.options.enableVsync.value = vsyncEnabledCache
-        vsyncEnabledCache = null
+        mc.options.maxFps.value = maxFpsCache
+        maxFpsCache = null
     }
 
     @Suppress("unused")
@@ -188,7 +188,7 @@ object ModuleClickGui :
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {
-        tree(IntegrationListener.browserSettings!!)
+        tree(IntegrationListener.browserSettings)
         open()
     }
 
