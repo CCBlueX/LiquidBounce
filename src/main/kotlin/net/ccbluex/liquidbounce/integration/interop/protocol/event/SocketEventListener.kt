@@ -27,6 +27,12 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.io.output.StringBuilderWriter
 import kotlin.reflect.KClass
 
+/**
+ * Empty event:
+ * `{"name":"","event":{}}`
+ */
+private const val EVENT_JSON_BYTE_COUNT = 64
+
 class SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
@@ -67,7 +73,7 @@ class SocketEventListener : EventListener {
 
     private fun writeToSockets(event: Event) = withScope {
         val json = runCatching {
-            StringBuilderWriter(64).use {
+            StringBuilderWriter(EVENT_JSON_BYTE_COUNT).use {
                 JsonWriter(it).use { writer ->
                     writer.beginObject()
                     writer.name("name").value(event::class.eventName)
@@ -81,7 +87,7 @@ class SocketEventListener : EventListener {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@withScope
 
-        httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
+        httpServer.webSocketController.broadcast(json) { _, t ->
             logger.error("WebSocket event broadcast failed", t)
         }
     }
