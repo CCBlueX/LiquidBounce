@@ -94,11 +94,11 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     ), BedBlockTracker.Subscriber {
         override val maxLayers: Int get() = 1
 
-        override fun enable() {
+        override fun onEnabled() {
             BedBlockTracker.subscribe(this)
         }
 
-        override fun disable() {
+        override fun onDisabled() {
             BedBlockTracker.unsubscribe(this)
         }
 
