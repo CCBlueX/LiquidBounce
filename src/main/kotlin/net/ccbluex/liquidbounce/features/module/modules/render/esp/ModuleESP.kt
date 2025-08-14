@@ -61,11 +61,11 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
     private val friendColor by color("Friends", Color4b.Companion.GREEN)
 
-    override fun enable() {
+    override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
     }
 

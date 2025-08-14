@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeFirework
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeStatic
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -64,16 +66,18 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
     internal val modes = choices("Mode", ElytraFlyModeStatic, arrayOf(
         ElytraFlyModeStatic,
         ElytraFlyModeVanilla,
-        ElytraFlyModeBoost
+        ElytraFlyModeBoost,
+        ElytraFlyModeFirework,
+        ElytraFlyModePitch40Infinite
     ))
 
     private var needsToRestart = false
 
-    override fun enable() {
+    override fun onEnabled() {
         needsToRestart = false
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         needsToRestart = true
     }
 

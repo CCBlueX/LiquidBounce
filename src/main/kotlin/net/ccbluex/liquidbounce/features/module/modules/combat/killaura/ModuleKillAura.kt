@@ -131,7 +131,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         tree(KillAuraFightBot)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetTracker.reset()
         failedHits.clear()
         KillAuraAutoBlock.stopBlocking()

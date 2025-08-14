@@ -47,7 +47,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         doNotIncludeAlways()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         val currentServerEntry = mc.currentServerEntry
 
         if (currentServerEntry == null) {
@@ -61,7 +61,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         withScope {
             loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
         }
-        super.enable()
+        super.onEnabled()
     }
 
     @Suppress("unused")

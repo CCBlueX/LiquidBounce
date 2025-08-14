@@ -42,11 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
@@ -163,7 +159,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         )
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetTracker.reset()
     }
 

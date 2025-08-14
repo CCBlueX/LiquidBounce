@@ -67,7 +67,7 @@ object ModuleNuker : ClientModule("Nuker", Category.WORLD, disableOnQuit = true)
         return filter.invoke(blockState.block, blocks)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         wasTarget = null
         targetRenderer.clearSilently()
     }

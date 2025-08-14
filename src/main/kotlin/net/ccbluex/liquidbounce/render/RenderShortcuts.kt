@@ -105,6 +105,8 @@ class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : Ren
     }
 }
 
+fun newDrawContext(): DrawContext = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
+
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
  *

@@ -44,7 +44,7 @@ object ModuleFreeLook : ClientModule(
     @get:JvmName("isInvertedView")
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT
 
-    override fun enable() {
+    override fun onEnabled() {
         cameraYaw = player.yaw
         cameraPitch = player.pitch
     }

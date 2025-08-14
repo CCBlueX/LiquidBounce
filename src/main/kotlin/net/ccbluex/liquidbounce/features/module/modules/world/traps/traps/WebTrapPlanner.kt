@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
-import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
+import it.unimi.dsi.fastutil.doubles.DoubleLongPair
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
@@ -135,7 +134,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
-        val offsets = mutableListOf<DoubleObjectPair<BlockPos>>()
+        val offsets = mutableListOf<DoubleLongPair>()
 
         startBox.collidingRegion.forEach { offset ->
             val bp = offsetPos.add(offset)
@@ -158,12 +157,12 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
 
             val intersect = startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
 
-            offsets.add(DoubleObjectImmutablePair(intersect, offset.toImmutable()))
+            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
         }
 
-        offsets.sortByDescending { it.keyDouble() }
+        offsets.sortByDescending { it.leftDouble() }
 
-        return offsets.map { it.value() }
+        return offsets.map { BlockPos.fromLong(it.rightLong()) }
     }
 
     override fun validate(plan: BlockChangeIntent<WebIntentData>, raycast: BlockHitResult): Boolean {

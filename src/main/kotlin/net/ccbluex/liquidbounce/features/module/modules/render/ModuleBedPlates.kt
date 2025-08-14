@@ -27,14 +27,21 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.*
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
+import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.block.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
+import java.util.*
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -44,11 +51,13 @@ private const val BACKGROUND_PADDING: Int = 2
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V")
 
+    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
     }
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    private val renderY by float("RenderY", 0.0F, -2.0F..2.0F)
+    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
@@ -60,12 +69,12 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<DoubleObjectPair<BedState>>>(
         initialValue = mutableListOf()
     ) { _, list ->
-        val playerPos = player.blockPos
+        val cameraPos = (mc.cameraEntity ?: player).blockPos
         val maxDistanceSquared = maxDistance.sq()
         list.clear()
 
         BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
-            DoubleObjectPair.of(pos.getSquaredDistance(playerPos), bedState)
+            DoubleObjectPair.of(pos.getSquaredDistance(cameraPos), bedState)
         }
 
         list.removeIf { it.firstDouble() > maxDistanceSquared } // filter items out of range
@@ -81,7 +90,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 bedStatesWithSquaredDistance.forEachWithSelf { (distSq, bedState), i, self ->
-                    val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(0.0, renderY.toDouble(), 0.0))
+                    val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset))
                         ?: return@forEachWithSelf
                     val distance = sqrt(distSq)
                     val surrounding = if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks
@@ -93,7 +102,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                     val rectHeight = ITEM_SIZE
 
                     // draw items and background
-                    with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
+                    with(newDrawContext()) {
                         with(matrices) {
                             translate(screenPos.x, screenPos.y, z)
                             scale(scale, scale, 1.0F)
@@ -104,7 +113,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                                 -BACKGROUND_PADDING,
                                 rectWidth + BACKGROUND_PADDING,
                                 rectHeight + BACKGROUND_PADDING,
-                                Color4b(0, 0, 0, 128).toARGB()
+                                backgroundColor.toARGB()
                             )
 
                             var itemX = 0
@@ -177,13 +186,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
     }
 
-
-
-    override fun enable() {
+    override fun onEnabled() {
         BedBlockTracker.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         BedBlockTracker.unsubscribe(this)
         bedStatesWithSquaredDistance.clear()
     }

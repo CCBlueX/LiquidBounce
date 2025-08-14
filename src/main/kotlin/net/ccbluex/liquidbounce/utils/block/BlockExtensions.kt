@@ -69,6 +69,11 @@ val BlockState.isBed: Boolean
     get() = block is BedBlock
 
 /**
+ * Converts this [BlockPos] to an immutable one if needed.
+ */
+val BlockPos.immutable: BlockPos get() = if (this is BlockPos.Mutable) this.toImmutable() else this
+
+/**
  * Returns the block box outline of the block at the position. If the block is air, it will return an empty box.
  * Outline Box should be used for rendering purposes only.
  *
@@ -489,7 +494,7 @@ fun doPlacement(
     onItemUseSuccess: () -> Boolean = { true },
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE
 ) {
-    val stack = player.mainHandStack
+    val stack = player.getStackInHand(hand)
     val count = stack.count
 
     val interactionResult = interaction.interactBlock(player, hand, rayTraceResult)
