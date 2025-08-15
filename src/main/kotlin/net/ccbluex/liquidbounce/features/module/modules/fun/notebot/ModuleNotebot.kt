@@ -178,7 +178,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         )
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         removeProgressMessage()
 
         renderer.reset()
