@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
+import kotlin.math.min
 
 object IntegrationListener : EventListener {
 
@@ -131,8 +132,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
@@ -144,8 +145,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.CLOSE
             )
         )
     }
@@ -220,6 +221,15 @@ object IntegrationListener : EventListener {
     @Suppress("unused")
     private val worldChangeEvent = handler<WorldChangeEvent> {
         update()
+    }
+
+    @Suppress("unused")
+    private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
+        if (!browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+            return@handler
+        }
+
+        event.fps = min(event.fps, browserSettings.currentFps)
     }
 
     @Suppress("unused")
@@ -307,5 +317,12 @@ object IntegrationListener : EventListener {
             }
         }
     }
+
+    /**
+     * Checks if the given screen is an active client screen.
+     */
+    @JvmStatic
+    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is BrowserScreen
 
 }

@@ -142,13 +142,13 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     private var rotateClockwise = false
     private var blockList = emptySet<BlockPos>()
 
-    override fun disable() {
+    override fun onDisabled() {
         startPos.set(BlockPos.ORIGIN)
         blockList = emptySet()
         blockPlacer.disable()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         startPos.set(player.blockPos)
         rotateClockwise = Random.nextBoolean()
         getPositions()

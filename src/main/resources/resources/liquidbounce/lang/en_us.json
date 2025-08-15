@@ -510,6 +510,7 @@
   "liquidbounce.module.easyPearl.messages.noInReachWarning": "You are aiming more than the ender pearl can reach, and this has helped you cancel the throw",
   "liquidbounce.module.elytraRecast.description": "Recasts elytra while holding jump key.",
   "liquidbounce.module.elytraFly.description": "Makes controlling an elytra easier.",
+  "liquidbounce.module.elytraFly.messages.altitudeTooLow": "Warning: Altitude too low for optimal performance. Recommended height: %sY",
   "liquidbounce.module.elytraTarget.description": "Following the target on elytra.",
   "liquidbounce.module.targets.description": "Allows you to manage which entities are considered to be your target.",
   "liquidbounce.module.extendedFirework.description": "Extends the velocity of firework rocket boost.",

@@ -48,7 +48,7 @@ import org.lwjgl.glfw.GLFW
 object ModuleClickGui :
     ClientModule("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
-    override val running = true
+    override val running get() = true
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
@@ -66,7 +66,7 @@ object ModuleClickGui :
             }
 
             if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
-                enable()
+                onEnabled()
             }
         }
     }
@@ -100,7 +100,7 @@ object ModuleClickGui :
         tree(Snapping)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         // Pretty sure we are not in a game, so we can't open the clickgui
         if (!inGame) {
             return
@@ -113,7 +113,7 @@ object ModuleClickGui :
                 ClickScreen()
             }
         )
-        super.enable()
+        super.onEnabled()
     }
 
     private fun open() {
@@ -132,8 +132,10 @@ object ModuleClickGui :
     }
 
     private fun close() {
-        clickGuiBrowser?.close()
-        clickGuiBrowser = null
+        clickGuiBrowser?.let {
+            it.close()
+            clickGuiBrowser = null
+        }
     }
 
     fun reload(restart: Boolean = false) {
@@ -153,7 +155,7 @@ object ModuleClickGui :
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {
-        tree(IntegrationListener.browserSettings!!)
+        tree(IntegrationListener.browserSettings)
         open()
     }
 
@@ -182,6 +184,10 @@ object ModuleClickGui :
      * An empty screen that acts as a hint when to draw the clickgui
      */
     class ClickScreen : Screen("ClickGUI".asText()) {
+
+        override fun init() {
+            super.init()
+        }
 
         override fun close() {
             mc.mouse.lockCursor()

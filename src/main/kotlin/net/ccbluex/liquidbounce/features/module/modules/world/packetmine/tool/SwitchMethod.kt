@@ -89,7 +89,7 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
         override fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget) {
             if (!usesViaFabricPlus) {
                 chat(warning(ModulePacketMine.message("noVfp")))
-                ModulePacketMine.disable()
+                ModulePacketMine.onDisabled()
                 return
             }
 
