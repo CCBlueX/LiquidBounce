@@ -27,20 +27,37 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int = 255) {
 
     companion object {
 
+        @JvmField
+        val LIQUID_BOUNCE = Color4b(0x00, 0x80, 0xFF, 0xFF)
+        @JvmField
         val WHITE = Color4b(255, 255, 255, 255)
+        @JvmField
         val BLACK = Color4b(0, 0, 0, 255)
+        @JvmField
         val RED = Color4b(255, 0, 0, 255)
+        @JvmField
         val GREEN = Color4b(0, 255, 0, 255)
+        @JvmField
         val BLUE = Color4b(0, 0, 255, 255)
+        @JvmField
         val CYAN = Color4b(0, 255, 255, 255)
+        @JvmField
         val MAGENTA = Color4b(255, 0, 255, 255)
+        @JvmField
         val YELLOW = Color4b(255, 255, 0, 255)
+        @JvmField
         val ORANGE = Color4b(255, 165, 0, 255)
+        @JvmField
         val PURPLE = Color4b(128, 0, 128, 255)
+        @JvmField
         val PINK = Color4b(255, 192, 203, 255)
+        @JvmField
         val GRAY = Color4b(128, 128, 128, 255)
+        @JvmField
         val LIGHT_GRAY = Color4b(192, 192, 192, 255)
+        @JvmField
         val DARK_GRAY = Color4b(64, 64, 64, 255)
+        @JvmField
         val TRANSPARENT = Color4b(0, 0, 0, 0)
 
         @Throws(IllegalArgumentException::class)

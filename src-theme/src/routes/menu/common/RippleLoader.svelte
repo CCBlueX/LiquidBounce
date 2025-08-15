@@ -1,4 +1,8 @@
-<div class="lds-ripple"><div></div><div></div></div>
+<script lang="ts">
+  const { size = 80 } = $props();
+</script>
+
+<div class="lds-ripple" style="--size: {size}px; --position: calc(var(--size) * 9 / 20); --small-size: calc(var(--size) / 10);"><div></div><div></div></div>
 
 <style lang="scss">
   /*
@@ -19,8 +23,8 @@
   .lds-ripple {
     display: inline-block;
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: var(--size);
+    height: var(--size);
   }
 
   .lds-ripple div {
@@ -37,31 +41,31 @@
 
   @keyframes lds-ripple {
     0% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
+      top: var(--position);
+      left: var(--position);
+      width: var(--small-size);
+      height: var(--small-size);
       opacity: 0;
     }
     4.9% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
+      top: var(--position);
+      left: var(--position);
+      width: var(--small-size);
+      height: var(--small-size);
       opacity: 0;
     }
     5% {
-      top: 36px;
-      left: 36px;
-      width: 8px;
-      height: 8px;
+      top: var(--position);
+      left: var(--position);
+      width: var(--small-size);
+      height: var(--small-size);
       opacity: 1;
     }
     100% {
       top: 0;
       left: 0;
-      width: 80px;
-      height: 80px;
+      width: var(--size);
+      height: var(--size);
       opacity: 0;
     }
   }

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
-import net.ccbluex.liquidbounce.utils.kotlin.isEmpty
 import net.minecraft.util.math.BlockPos
 
 object HoleManager : EventListener, MinecraftShortcuts {
@@ -76,7 +75,7 @@ object HoleManager : EventListener, MinecraftShortcuts {
             )
         )
 
-        if (changedAreas.isEmpty()) {
+        if (changedAreas.none()) {
             return
         }
 

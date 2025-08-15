@@ -61,9 +61,9 @@ object AutoShopConfig {
                 val shopConfig = autoShopGson.fromJson(inputStream.reader(), ShopConfig::class.java)
 
                 // add items to AutoShop
-                ModuleAutoShop.disable()
+                ModuleAutoShop.onDisabled()
                 ModuleAutoShop.currentConfig = shopConfig
-                ModuleAutoShop.enable()
+                ModuleAutoShop.onEnabled()
             }
         }.onFailure {
             logger.error("Failed to load items for AutoShop.", it)

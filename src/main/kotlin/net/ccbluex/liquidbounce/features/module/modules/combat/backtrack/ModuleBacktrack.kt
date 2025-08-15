@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
 import com.google.common.collect.Queues
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
@@ -313,11 +313,11 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         target = enemy
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         clear(false)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         clear(true)
     }
 

@@ -80,7 +80,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private var bookCount = 0
 
-    override fun enable() {
+    override fun onEnabled() {
         bookCount = 0
         chronometer.reset()
     }

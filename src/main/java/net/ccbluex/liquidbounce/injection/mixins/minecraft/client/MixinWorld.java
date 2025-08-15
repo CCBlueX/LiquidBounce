@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.utils.block.BlockExtensionsKt;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -42,7 +43,7 @@ public class MixinWorld {
         }
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
-        EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos.toImmutable(), state));
+        EventManager.INSTANCE.callEvent(new BlockChangeEvent(BlockExtensionsKt.getImmutable(pos), state));
     }
 
     @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))

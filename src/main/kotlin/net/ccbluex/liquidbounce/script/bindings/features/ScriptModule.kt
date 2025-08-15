@@ -85,9 +85,9 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
         hookHandler(eventName)
     }
 
-    override fun enable() = callEvent("enable")
+    override fun onEnabled() = callEvent("enable")
 
-    override fun disable() = callEvent("disable")
+    override fun onDisabled() = callEvent("disable")
 
     /**
      * Calls the function of the [event] with the [payload] of the event.
