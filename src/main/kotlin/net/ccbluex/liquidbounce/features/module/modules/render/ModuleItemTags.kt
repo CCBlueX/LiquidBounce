@@ -60,11 +60,12 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val items by items("Items", hashSetOf())
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val scale by float("Scale", 1.5F, 0.25F..4F)
+    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+    private val rowLength by int("RowLength", 100, 1..100)
 
     private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
         arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
-    private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..256F)
 
     private sealed class ClusterSizeMode(name: String) : Choice(name) {
@@ -127,7 +128,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                     centerPos = center.copy(z = z),
                     backgroundColor = backgroundColor.toARGB(),
                     scale = scale,
-                    rowLength = Int.MAX_VALUE, // single row
+                    rowLength = rowLength
                 )
             }
         }
