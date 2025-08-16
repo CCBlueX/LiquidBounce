@@ -125,6 +125,8 @@ fun DrawContext.drawItemTags(
     scale: Float = 1.0F,
     rowLength: Int = 9,
 ) {
+    if (stacks.isEmpty()) return
+
     val width = ITEM_SIZE * minOf(stacks.size, rowLength)
     val height = ITEM_SIZE * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
 
