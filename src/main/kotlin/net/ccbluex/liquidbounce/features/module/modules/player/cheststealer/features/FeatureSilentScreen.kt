@@ -51,6 +51,8 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             doNotIncludeAlways()
         }
 
+        private val drawContext = newDrawContext()
+
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
@@ -63,7 +65,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             val containerScreen = mc.currentScreen as GenericContainerScreen
 
             renderEnvironmentForGUI {
-                newDrawContext().drawItemTags(
+                drawContext.drawItemTags(
                     stacks = getSlotsInContainer(containerScreen).map { it.itemStack },
                     centerPos = pos,
                     backgroundColor = backgroundColor.toARGB(),

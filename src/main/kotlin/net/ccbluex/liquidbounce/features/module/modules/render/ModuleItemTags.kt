@@ -91,6 +91,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
+    private val drawContext = newDrawContext()
+
     private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
         initialValue = emptyMap()
     ) { _, _ ->
@@ -115,15 +117,13 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
-            val dc = newDrawContext()
-
             itemEntities.mapNotNull { (center, items) ->
                 val renderPos = WorldToScreen.calculateScreenPos(center.add(renderOffset))
                     ?: return@mapNotNull null
                 renderPos to items
             }.forEachWithSelf { (center, stacks), i, self ->
                 val z = 1000.0F * i / self.size
-                dc.drawItemTags(
+                drawContext.drawItemTags(
                     stacks = stacks,
                     centerPos = center.copy(z = z),
                     backgroundColor = backgroundColor.toARGB(),
