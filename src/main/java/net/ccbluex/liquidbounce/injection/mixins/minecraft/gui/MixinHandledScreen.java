@@ -66,6 +66,10 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         if ((Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();
         }
+
+        if (FeatureSilentScreen.getShouldHide()) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)

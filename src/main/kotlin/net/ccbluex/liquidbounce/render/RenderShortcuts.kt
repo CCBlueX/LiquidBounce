@@ -116,6 +116,7 @@ private const val ITEM_SIZE = 16
  * @param centerPos The render position, also the center of the whole tag.
  * @param rowLength The maximum count of stack which can be placed in one row.
  */
+@Suppress("LongParameterList")
 fun DrawContext.drawItemTags(
     stacks: List<ItemStack>,
     centerPos: Vec3,
