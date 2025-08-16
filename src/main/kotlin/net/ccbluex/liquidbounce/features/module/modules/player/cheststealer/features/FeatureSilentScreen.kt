@@ -28,9 +28,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
+import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
@@ -55,16 +59,29 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             doNotIncludeAlways()
         }
 
+        private fun getRenderPos(): Vec3? {
+            val pos = lastInteractedBlock ?: return null
+            val state = pos.getState() ?: return null
+            val anotherPartDirection = state.anotherChestPartDirection()
+
+            // Double chest
+            val centerPos = anotherPartDirection?.let {
+                pos.toVec3d(
+                    0.5 + anotherPartDirection.offsetX * 0.5,
+                    0.5 + anotherPartDirection.offsetY * 0.5,
+                    0.5 + anotherPartDirection.offsetZ * 0.5,
+                )
+            } ?: pos.toCenterPos()
+
+            return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
+        }
+
         private val drawContext = newDrawContext()
 
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
-            val blockEntity = lastInteractedBlock?.let { world.getBlockEntity(it) } ?: return@handler
-
-            val pos = WorldToScreen.calculateScreenPos(
-                blockEntity.pos.toCenterPos().add(renderOffset)
-            ) ?: return@handler
+            val pos = getRenderPos() ?: return@handler
 
             val containerScreen = mc.currentScreen as GenericContainerScreen
 
