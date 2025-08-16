@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -45,10 +45,6 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
 import java.util.*
-
-private const val ITEM_SIZE: Int = 16
-private const val ITEM_SCALE: Float = 1.0F
-private const val BACKGROUND_PADDING: Int = 2
 
 /**
  * ItemTags module
@@ -118,50 +114,22 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
+            val dc = newDrawContext()
+
             itemEntities.mapNotNull { (center, items) ->
                 val renderPos = WorldToScreen.calculateScreenPos(center.add(renderOffset))
                     ?: return@mapNotNull null
                 renderPos to items
-            }.forEachWithSelf { (center, items), i, self ->
+            }.forEachWithSelf { (center, stacks), i, self ->
                 val z = 1000.0F * i / self.size
-                drawItemTags(items, center.copy(z = z))
+                dc.drawItemTags(
+                    stacks = stacks,
+                    centerPos = center.copy(z = z),
+                    backgroundColor = backgroundColor.toARGB(),
+                    scale = scale,
+                    rowLength = Int.MAX_VALUE, // single row
+                )
             }
-        }
-    }
-
-    @JvmStatic
-    private fun drawItemTags(
-        items: List<ItemStack>,
-        pos: Vec3,
-    ) {
-        val width = items.size * ITEM_SIZE
-        val height = ITEM_SIZE
-
-        val dc = newDrawContext()
-
-        val itemScale = ITEM_SCALE * scale
-        dc.matrices.translate(pos.x, pos.y, 0.0F)
-        dc.matrices.scale(itemScale, itemScale, 1.0F)
-        dc.matrices.translate(-width / 2f, -height / 2f, pos.z)
-
-        // draw background
-        dc.fill(
-            -BACKGROUND_PADDING,
-            -BACKGROUND_PADDING,
-            width + BACKGROUND_PADDING,
-            height + BACKGROUND_PADDING,
-            backgroundColor.toARGB()
-        )
-
-        // render stacks
-        items.forEachIndexed { index, stack ->
-            val leftX = index * ITEM_SIZE
-            dc.drawItem(
-                stack,
-                leftX,
-                0,
-            )
-            dc.drawStackOverlay(mc.textRenderer, stack, leftX, 0)
         }
     }
 
