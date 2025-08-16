@@ -5,6 +5,7 @@ import kotlin.random.Random;
 import kotlin.random.RandomKt;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.utils.client.Chronometer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -63,6 +64,13 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
     private void cancelMouseClick(Slot slot, int slotId, int button, SlotActionType actionType, CallbackInfo ci) {
         var inventoryMove = ModuleInventoryMove.INSTANCE;
         if ((Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void cancelRenderByChestStealer(CallbackInfo ci) {
+        if (FeatureSilentScreen.getShouldHide()) {
             ci.cancel();
         }
     }
