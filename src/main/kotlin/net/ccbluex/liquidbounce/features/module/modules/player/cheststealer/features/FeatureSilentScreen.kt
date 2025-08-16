@@ -48,6 +48,9 @@ import net.minecraft.util.math.Vec3d
  */
 object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
 
+    @get:JvmStatic
+    val unlockCursor by boolean("UnlockCursor", false)
+
     private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
 
         private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))

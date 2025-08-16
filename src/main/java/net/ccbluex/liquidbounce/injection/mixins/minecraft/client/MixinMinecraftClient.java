@@ -291,7 +291,7 @@ public abstract class MixinMinecraftClient {
     @Redirect(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Mouse;unlockCursor()V"))
     private void cancelScreenMouseForChestStealer(Mouse instance) {
         // Allows rotation.
-        if (!LiquidBounce.INSTANCE.isInitialized() || !FeatureSilentScreen.getShouldHide()) {
+        if (!LiquidBounce.INSTANCE.isInitialized() || !FeatureSilentScreen.getShouldHide() || FeatureSilentScreen.getUnlockCursor()) {
             instance.unlockCursor();
         }
     }
