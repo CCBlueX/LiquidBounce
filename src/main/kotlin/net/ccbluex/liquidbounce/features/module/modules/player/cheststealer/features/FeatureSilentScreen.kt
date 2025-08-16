@@ -38,6 +38,10 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
+/**
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraftClient
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHandledScreen
+ */
 object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
 
     private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
