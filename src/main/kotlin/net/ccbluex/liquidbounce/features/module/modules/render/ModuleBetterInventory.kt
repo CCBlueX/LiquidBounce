@@ -24,28 +24,49 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.render.RenderLayer
 import net.minecraft.screen.slot.Slot
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
     private object HighlightClicked : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
-        val mode = choices("Mode", Mode.Border, arrayOf(Mode.Border))
+        val mode = choices("Mode", Mode.Border, arrayOf(Mode.Border, Mode.Texture))
 
         sealed class Mode(choiceName: String) : Choice(choiceName) {
             final override val parent: ChoiceConfigurable<*>
                 get() = mode
 
-            abstract fun drawHighlightSlot(drawContext: DrawContext, slot: Slot)
+            abstract fun drawHighlightSlot(context: DrawContext, slot: Slot)
 
             object Border : Mode("Border") {
                 private const val STACK_SIZE = 16
                 val color by color("Color", Color4b.GREEN)
 
-                override fun drawHighlightSlot(drawContext: DrawContext, slot: Slot) {
-                    drawContext.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
+                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                }
+            }
+
+            object Texture : Mode("Texture") {
+                /**
+                 * @see net.minecraft.client.gui.hud.InGameHud.renderHotbar
+                 */
+                override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
+                    context.matrices.push()
+                    context.matrices.translate(0f, 0f, 1000f)
+                    context.drawGuiTexture(
+                        RenderLayer::getGuiTextured,
+                        MixinInGameHudAccessor.getHotbarSelectionTexture(),
+                        slot.x - 3,
+                        slot.y - 3,
+                        22,
+                        21,
+                    )
+                    context.matrices.pop()
                 }
             }
         }
@@ -55,10 +76,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         tree(HighlightClicked)
     }
 
-    fun drawHighlightSlot(drawContext: DrawContext, slot: Slot) {
-        if (!running) return
+    fun drawHighlightSlot(context: DrawContext, slot: Slot) {
+        if (!running || slot.id != InventoryManager.lastClickedSlot) return
 
-        HighlightClicked.mode.activeChoice.drawHighlightSlot(drawContext, slot)
+        HighlightClicked.mode.activeChoice.drawHighlightSlot(context, slot)
     }
 
 }
