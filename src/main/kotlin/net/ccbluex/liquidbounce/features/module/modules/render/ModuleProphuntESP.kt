@@ -49,7 +49,7 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
         tree(renderer)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         renderer.clearSilently()
     }
 

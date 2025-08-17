@@ -38,8 +38,7 @@ import net.minecraft.util.math.Vec3d
 class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
 @Nameable("death")
-@WebSocketEvent
-object DeathEvent : Event()
+object DeathEvent : Event(), WebSocketEvent
 
 @Nameable("playerTick")
 class PlayerTickEvent : CancellableEvent()
@@ -57,7 +56,7 @@ class PlayerNetworkMovementTickEvent(
     var y: Double,
     var z: Double,
     var ground: Boolean
-) : Event()
+) : CancellableEvent()
 
 @Nameable("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()

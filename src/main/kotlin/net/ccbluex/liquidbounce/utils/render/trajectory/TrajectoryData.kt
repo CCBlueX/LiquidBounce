@@ -89,16 +89,27 @@ data class TrajectoryInfo(
     val copiesPlayerVelocity: Boolean = true,
 ) {
     companion object {
+        @JvmField
         val GENERIC = TrajectoryInfo(0.03, 0.25)
-        private val PERSISTENT = TrajectoryInfo(0.05, 0.5)
+        @JvmField
+        val PERSISTENT = TrajectoryInfo(0.05, 0.5)
+        @JvmField
         val POTION = GENERIC.copy(gravity = 0.05, initialVelocity = 0.5, roll = -20.0F)
+        @JvmField
         val EXP_BOTTLE = POTION.copy(initialVelocity = 0.7)
+        @JvmField
         val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
+        @JvmField
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
+        @JvmField
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
+        @JvmField
         val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
+        @JvmField
         val WIND_CHARGE = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0, copiesPlayerVelocity = false)
 
+        @JvmStatic
+        @JvmOverloads
         fun bowWithUsageDuration(usageDuration: Int = player.itemUseTime): TrajectoryInfo? {
             // Calculate the power of bow
             var power = usageDuration / 20f

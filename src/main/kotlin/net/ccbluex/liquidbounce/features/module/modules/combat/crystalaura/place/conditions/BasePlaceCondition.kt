@@ -33,7 +33,7 @@ import net.minecraft.util.math.BlockPos
  */
 object BasePlaceCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         return cache.canPlace || SubmoduleBasePlace.canBasePlace(
             context.basePlace,
             candidate,
