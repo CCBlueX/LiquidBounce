@@ -32,7 +32,7 @@ import net.minecraft.text.Text
 @Suppress("unused")
 class FpsChangeEvent(val fps: Int) : Event(), WebSocketEvent
 
-@Nameable("fpsLimit")
+@InbuiltEvent("fpsLimit")
 @Suppress("unused")
 class FpsLimitEvent(var fps: Int) : Event()
 
