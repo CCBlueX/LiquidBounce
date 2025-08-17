@@ -334,11 +334,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
-        super.disable()
+        super.onDisabled()
     }
 
 }

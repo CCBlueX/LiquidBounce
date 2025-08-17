@@ -32,10 +32,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.ccbluex.liquidbounce.integration.BrowserScreen;
-import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
+import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -43,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Mouse;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Overlay;
@@ -68,6 +68,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -287,6 +288,14 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    @Redirect(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Mouse;unlockCursor()V"))
+    private void cancelScreenMouseForChestStealer(Mouse instance) {
+        // Allows rotation.
+        if (!LiquidBounce.INSTANCE.isInitialized() || !FeatureSilentScreen.getShouldHide() || FeatureSilentScreen.getUnlockCursor()) {
+            instance.unlockCursor();
+        }
+    }
+
     /**
      * Hook game tick event at HEAD
      */
@@ -410,7 +419,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local Profiler profiler) {
-        if (this.overlay == null && this.player != null && this.world != null && isAClientScreen(this.currentScreen)) {
+        if (this.overlay == null && this.player != null && this.world != null && IntegrationListener.isClientScreen(this.currentScreen)) {
             profiler.swap("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -441,13 +450,7 @@ public abstract class MixinMinecraftClient {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(MinecraftClient instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !isAClientScreen(this.currentScreen);
-    }
-
-    @Unique
-    private boolean isAClientScreen(Screen screen) {
-        return screen instanceof BrowserScreen || screen instanceof VirtualDisplayScreen ||
-                screen instanceof ModuleClickGui.ClickScreen;
+        return !IntegrationListener.isClientScreen(this.currentScreen);
     }
 
     @Inject(method = "getFramebuffer", at = @At("HEAD"), cancellable = true)

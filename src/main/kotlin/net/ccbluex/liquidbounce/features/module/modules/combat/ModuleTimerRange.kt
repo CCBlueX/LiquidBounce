@@ -57,9 +57,9 @@ object ModuleTimerRange : ClientModule("TimerRange", Category.COMBAT) {
     private var reachedTheLimit = false
     private var balanceTimer = 0f
 
-    override fun enable() {
+    override fun onEnabled() {
         balanceTimer = timerBalanceLimit
-        super.enable()
+        super.onEnabled()
     }
 
     val repeatable = tickHandler {

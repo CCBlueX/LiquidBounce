@@ -2,7 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CognitiveComplexMethod:AStarMode.kt$AStarMode$private fun findPath(start: Vec3i, end: Vec3i, maxCost: Int, maxIterations: Int = 500): List&lt;Vec3i></ID>
+    <ID>CognitiveComplexMethod:AStarPathBuilder.kt$AStarPathBuilder$fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List&lt;Vec3i></ID>
     <ID>CognitiveComplexMethod:BlockExtensions.kt$fun Block?.isInteractable(blockState: BlockState?): Boolean</ID>
     <ID>CognitiveComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
@@ -25,7 +25,7 @@
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MaxLineLength:ModuleBookBot.kt$ModuleBookBot.BookBuilder$*</ID>
     <ID>MaxLineLength:ModuleBookBot.kt$ModuleBookBot.GenerationMode.Random$*</ID>
-    <ID>NestedBlockDepth:AStarMode.kt$AStarMode$private fun findPath(start: Vec3i, end: Vec3i, maxCost: Int, maxIterations: Int = 500): List&lt;Vec3i></ID>
+    <ID>NestedBlockDepth:AStarPathBuilder.kt$AStarPathBuilder$fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List&lt;Vec3i></ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApiRequired @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>UnusedPrivateMember:HumanInputDeserializer.kt$HumanInputDeserializer$private fun fail(s: String): Boolean</ID>

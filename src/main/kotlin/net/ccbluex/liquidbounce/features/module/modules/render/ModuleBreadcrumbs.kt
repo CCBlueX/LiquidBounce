@@ -70,7 +70,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     private val trails = IdentityHashMap<Entity, Trail>()
     private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
 
-    override fun disable() {
+    override fun onDisabled() {
         clear()
     }
 

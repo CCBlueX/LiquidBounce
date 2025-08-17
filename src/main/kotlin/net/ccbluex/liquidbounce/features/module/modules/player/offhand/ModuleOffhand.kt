@@ -30,9 +30,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
@@ -111,7 +108,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
     override val tag: String
         get() = activeMode.modeName
 
-    override fun enable() {
+    override fun onEnabled() {
         staticMode = when {
             Crystal.enabled && Mode.CRYSTAL.canCycleTo() -> Mode.CRYSTAL
             Gapple.enabled -> Mode.GAPPLE
