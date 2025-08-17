@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -29,29 +31,34 @@ import net.minecraft.screen.slot.Slot
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
-    private val highlightClicked = object : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
-//        private val mode by choices()
+    private object HighlightClicked : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
+        val mode = choices("Mode", Mode.Border, arrayOf(Mode.Border))
 
-        val color by color("Color", Color4b.GREEN)
+        sealed class Mode(choiceName: String) : Choice(choiceName) {
+            final override val parent: ChoiceConfigurable<*>
+                get() = mode
+
+            abstract fun drawHighlightSlot(drawContext: DrawContext, slot: Slot)
+
+            object Border : Mode("Border") {
+                private const val STACK_SIZE = 16
+                val color by color("Color", Color4b.GREEN)
+
+                override fun drawHighlightSlot(drawContext: DrawContext, slot: Slot) {
+                    drawContext.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                }
+            }
+        }
     }
 
     init {
-        tree(highlightClicked)
+        tree(HighlightClicked)
     }
 
     fun drawHighlightSlot(drawContext: DrawContext, slot: Slot) {
         if (!running) return
 
-        val highlightColor = if (running && highlightClicked.enabled && slot.id == InventoryManager.lastClickedSlot) {
-            highlightClicked.color
-        } else {
-            null
-        }
-
-        if (highlightColor != null) {
-            val slotSize = 16
-            drawContext.drawBorder(slot.x, slot.y, slotSize, slotSize, highlightColor.toARGB())
-        }
+        HighlightClicked.mode.activeChoice.drawHighlightSlot(drawContext, slot)
     }
 
 }
