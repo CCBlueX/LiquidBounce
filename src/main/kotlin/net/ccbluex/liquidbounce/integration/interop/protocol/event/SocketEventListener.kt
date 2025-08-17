@@ -35,7 +35,7 @@ private const val EVENT_JSON_BYTE_COUNT = 64
 class SocketEventListener : EventListener {
 
     private val events = EventManager.allEventClasses
-        .filter { it.isAnnotationPresent(WebSocketEvent::class.java) }
+        .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
         .associateBy { it.eventName }
 
     /**
