@@ -19,23 +19,27 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.NoSlowMode
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 
 /**
  * Bypassing Grim 2.3.71
  * @from https://github.com/GrimAnticheat/Grim/issues/2216
  */
-internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : NoSlowMode("Grim2371",parent) {
+internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : Choice("Grim2371") {
+
+    companion object {
+        var doNotSlow = false
+            private set
+    }
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        working = false
-
         repeat(2) {
             waitTicks(1)
-            working = true
+            doNotSlow = true
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(
                     player.getActiveHand(), sequence,
@@ -43,6 +47,13 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
                 )
             }
         }
-        working = false
+
+        doNotSlow = false
     }
+
+    override fun disable() {
+        doNotSlow = false
+        super.disable()
+    }
+
 }
