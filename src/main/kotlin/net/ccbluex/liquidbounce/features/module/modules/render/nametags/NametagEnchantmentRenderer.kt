@@ -28,23 +28,12 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 
-/**
- * Main renderer object that orchestrates enchantment display functionality.
- * This serves as the primary interface for rendering enchantments on nametags.
- */
+// In simple terms, the main module
+
 object NametagEnchantmentRenderer {
     private const val FIXED_SCALE = 0.6f
     private const val PADDING = 3f
 
-    /**
-     * Draws enchantments for a single item stack
-     * 
-     * @param env Render environment
-     * @param itemStack The item stack to render enchantments for
-     * @param x X coordinate for rendering
-     * @param y Y coordinate for rendering  
-     * @param fontRenderer Font renderer for text drawing
-     */
     fun drawEnchantments(
         env: RenderEnvironment,
         itemStack: ItemStack,
@@ -66,13 +55,6 @@ object NametagEnchantmentRenderer {
         EnchantmentRenderer.renderEnchantmentColumn(env, cells, x, y, fontRenderer)
     }
 
-    /**
-     * Draws enchantments for all equipped items on an entity
-     * 
-     * @param env Render environment
-     * @param entity The living entity to render enchantments for
-     * @param fontRenderer Font renderer for text drawing
-     */
     fun drawEntityEnchantments(
         env: RenderEnvironment,
         entity: LivingEntity,
@@ -106,15 +88,7 @@ object NametagEnchantmentRenderer {
             EnchantmentRenderer.drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
         }
     }
-    
-    /**
-     * Checks if a position would be occluded by another enchantment panel
-     * This prevents overlapping enchantment displays
-     * 
-     * @param x X coordinate to check
-     * @param y Y coordinate to check
-     * @return true if the position would be occluded
-     */
+
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
         val OCCLUSION_THRESHOLD = 2f
         

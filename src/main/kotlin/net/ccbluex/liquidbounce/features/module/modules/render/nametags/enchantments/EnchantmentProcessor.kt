@@ -28,9 +28,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Formatting
 
-/**
- * Handles processing of enchantments from items and entities
- */
+// Auxiliary Processing Class
+
 object EnchantmentProcessor {
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
 
@@ -38,9 +37,6 @@ object EnchantmentProcessor {
         mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
     }
 
-    /**
-     * Processes enchantments from an item stack and returns list of cells to display
-     */
     fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantmentList = mutableListOf<Pair<EnchantmentInfo, Int>>()
         
@@ -68,9 +64,6 @@ object EnchantmentProcessor {
         return cells
     }
 
-    /**
-     * Gets all equipped items with enchantments from an entity
-     */
     fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(
         entity.mainHandStack,
         entity.offHandStack,
@@ -80,9 +73,6 @@ object EnchantmentProcessor {
         entity.getEquippedStack(EquipmentSlot.FEET)
     ).filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
 
-    /**
-     * Creates an enchantment cell with proper formatting and text processing
-     */
     fun createCell(
         info: EnchantmentInfo? = null,
         level: Int = 0,

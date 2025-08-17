@@ -24,17 +24,13 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.registry.RegistryKey
 
-/**
- * Data class containing display information for an enchantment
- */
+// Auxiliary Information Class
+
 data class EnchantmentInfo(
     val displayName: String,
     val isCurse: Boolean = false
 )
 
-/**
- * Helper object for processing enchantment names and generating display information
- */
 object EnchantmentDisplayHelper {
     private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
     
@@ -42,36 +38,25 @@ object EnchantmentDisplayHelper {
         Enchantments.BINDING_CURSE,
         Enchantments.VANISHING_CURSE
     )
-    
-    /**
-     * Gets display information for an enchantment including abbreviated name and curse status
-     */
+
     fun getEnchantmentInfo(enchantment: RegistryKey<Enchantment>): EnchantmentInfo {
         return EnchantmentInfo(
             displayName = getAbbreviation(enchantment),
             isCurse = isCurse(enchantment)
         )
     }
-    
-    /**
-     * Gets the translated name of an enchantment
-     */
+
     private fun getEnchantmentName(enchantment: RegistryKey<Enchantment>): String {
         val idPath = enchantment.value.toString().substringAfter(':')
         val translationKey = "enchantment.minecraft.$idPath"
         return I18n.translate(translationKey)
     }
     
-     // Creates abbreviation for a single word by taking first 3 characters
     private fun getSingleWordAbbreviation(word: String): String = word.take(3)
     
-     // Creates abbreviation from multiple words by taking first character of each word
     private fun getInitialsAbbreviation(words: List<String>): String = 
         words.joinToString("") { it.first().toString() }
-    
-    /**
-     * Creates compound abbreviation from multiple words
-     */
+
     private fun getCompoundAbbreviation(words: List<String>): String {
         val firstWord = words[0]
         
@@ -82,10 +67,7 @@ object EnchantmentDisplayHelper {
         val remainingChars = 3 - firstWord.length
         return firstWord + words.getOrNull(1)?.take(remainingChars).orEmpty()
     }
-    
-    /**
-     * Processes multiple words to create optimal abbreviation
-     */
+
     private fun processMultiWordName(words: List<String>): String {
         val initials = getInitialsAbbreviation(words)
         
@@ -117,6 +99,5 @@ object EnchantmentDisplayHelper {
         }
     }
     
-     // Determines if an enchantment is a curse
     private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
 }

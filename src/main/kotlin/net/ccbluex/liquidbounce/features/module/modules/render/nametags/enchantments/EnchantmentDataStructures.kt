@@ -20,14 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags.enchant
 
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
 
- // Represents a single enchantment cell in the display grid
+// Rendering Helper Class
+
 data class EnchantCell(
     val processedText: ProcessedText,
     val textWidth: Float,
     val isCurse: Boolean
 )
 
- // Represents a column of enchantment cells
 data class EnchantColumn(
     val cells: List<EnchantCell>,
     val width: Float

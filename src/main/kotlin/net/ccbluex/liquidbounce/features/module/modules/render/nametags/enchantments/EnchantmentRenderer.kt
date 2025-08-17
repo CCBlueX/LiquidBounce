@@ -29,9 +29,8 @@ import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 
-/**
- * Handles all rendering operations for enchantment displays
- */
+// The auxiliary class renders
+
 object EnchantmentRenderer {
     private const val FIXED_SCALE = 0.6f
     private const val LINE_HEIGHT = 14f
@@ -43,9 +42,6 @@ object EnchantmentRenderer {
     private val BG_COLOR_NORMAL = Color4b.BLACK.with(a = 200)
     private val BG_COLOR_CURSE = Color4b.RED.darker().with(a = 200)
 
-    /**
-     * Renders a single column of enchantment cells
-     */
     fun renderEnchantmentColumn(
         env: RenderEnvironment,
         cells: List<EnchantCell>,
@@ -86,9 +82,6 @@ object EnchantmentRenderer {
         ModuleNametags.fontRenderer.commit(env, fontRenderer)
     }
 
-    /**
-     * Draws multiple enchantment columns with proper spacing and background
-     */
     fun drawEnchantmentColumns(
         env: RenderEnvironment,
         x: Float,
@@ -125,9 +118,6 @@ object EnchantmentRenderer {
         }
     }
 
-    /**
-     * Draws the background for a single enchantment cell
-     */
     private fun drawCellBackground(
         env: RenderEnvironment,
         rect: Rect,
@@ -146,11 +136,7 @@ object EnchantmentRenderer {
         }
     }
 
-    /**
-     * Draws the border and background for a group of enchantment columns
-     */
     private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
-        // Drawing a semi-transparent background instead of just lines for better visibility
         env.drawCustomMesh(
             DrawMode.QUADS,
             VertexFormats.POSITION_COLOR,
@@ -164,7 +150,6 @@ object EnchantmentRenderer {
             vertex(matrix, rect.x2, rect.y1, 0.0f).color(bgColor)
         }
         
-        // Still drawing the border lines
         env.drawCustomMesh(
             DrawMode.DEBUG_LINES,
             VertexFormats.POSITION_COLOR,
