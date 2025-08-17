@@ -84,7 +84,7 @@ class InputListener(
         val scancode = event.scanCode
         val modifiers = event.mods
         
-        if (action == GLFW.GLFW_PRESS && key == GLFW.GLFW_KEY_V) {
+        if (action == GLFW.GLFW_PRESS && key == GLFW.GLFW_KEY_V && System.getProperty("os.name").contains("Mac")) {
             val isCtrlV = (modifiers and GLFW.GLFW_MOD_CONTROL) != 0
             val isCmdV = (modifiers and GLFW.GLFW_MOD_SUPER) != 0
 
