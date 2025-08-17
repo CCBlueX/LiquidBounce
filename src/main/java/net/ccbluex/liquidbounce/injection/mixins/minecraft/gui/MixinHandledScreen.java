@@ -5,6 +5,8 @@ import kotlin.random.Random;
 import kotlin.random.RandomKt;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.client.Chronometer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -64,6 +66,15 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         var inventoryMove = ModuleInventoryMove.INSTANCE;
         if ((Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V", shift = At.Shift.AFTER))
+    private void drawSlotOutline(DrawContext context, Slot slot, CallbackInfo ci) {
+        Color4b highlightColor = ModuleBetterInventory.INSTANCE.highlightColor(slot);
+        if (highlightColor != null) {
+            int slotSize = 16;
+            context.drawBorder(slot.x, slot.y, slotSize, slotSize, highlightColor.toARGB());
         }
     }
 
