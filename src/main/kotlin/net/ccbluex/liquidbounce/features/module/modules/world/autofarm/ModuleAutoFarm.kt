@@ -74,7 +74,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     }
 
     internal object AutoUseBoneMeal : ToggleableConfigurable(this, "AutoUseBoneMeal", false) {
-        // TODO
+        // TODO Use delay, Use filter (wheat/potato/...)
     }
 
     private val fortune by boolean("UseFortune", true)
