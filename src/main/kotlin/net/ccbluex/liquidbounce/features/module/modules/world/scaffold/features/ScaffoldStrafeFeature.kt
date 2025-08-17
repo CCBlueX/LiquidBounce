@@ -33,12 +33,12 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
 
     private var moveTicks = 0
 
-    override fun enable() {
+    override fun onEnabled() {
         moveTicks = 0
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (!hypixel) {
             return
         }
@@ -47,7 +47,7 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
             1.0,
             0.5
         )
-        super.disable()
+        super.onDisabled()
     }
 
     @Suppress("unused")

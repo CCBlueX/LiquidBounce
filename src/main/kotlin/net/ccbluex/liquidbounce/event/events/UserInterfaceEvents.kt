@@ -29,46 +29,43 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.text.Text
 
 @Nameable("fps")
-@WebSocketEvent
 @Suppress("unused")
-class FpsChangeEvent(val fps: Int) : Event()
+class FpsChangeEvent(val fps: Int) : Event(), WebSocketEvent
+
+@Nameable("fpsLimit")
+@Suppress("unused")
+class FpsLimitEvent(var fps: Int) : Event()
 
 @Nameable("clientPlayerData")
-@WebSocketEvent
 @Suppress("unused")
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event() {
+class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent {
     companion object {
         fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
     }
 }
 
 @Nameable("clientPlayerInventory")
-@WebSocketEvent
 @Suppress("unused")
-class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event() {
+class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent {
     companion object {
         fun fromPlayerInventory(inventory: PlayerInventoryData) = ClientPlayerInventoryEvent(inventory)
     }
 }
 
-sealed class TitleEvent : CancellableEvent() {
+sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     sealed class TextContent : TitleEvent() {
         abstract var text: Text?
     }
 
     @Nameable("title")
-    @WebSocketEvent
     class Title(override var text: Text?) : TextContent()
 
     @Nameable("subtitle")
-    @WebSocketEvent
     class Subtitle(override var text: Text?) : TextContent()
 
     @Nameable("titleFade")
-    @WebSocketEvent
     class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()
 
     @Nameable("clearTitle")
-    @WebSocketEvent
     class Clear(var reset: Boolean) : TitleEvent()
 }

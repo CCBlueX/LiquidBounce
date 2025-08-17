@@ -60,11 +60,11 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
     override fun horizontalDistance(): Int = horizontalDistance
     override fun verticalDistance(): Int = verticalDistance
 
-    override fun enable() {
+    override fun onEnabled() {
         HoleManager.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         HoleManager.unsubscribe(this)
     }
 

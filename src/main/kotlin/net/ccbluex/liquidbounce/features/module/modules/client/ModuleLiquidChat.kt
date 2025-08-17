@@ -110,14 +110,14 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         chatClient.connectAsync()
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         chatClient.disconnect()
-        super.disable()
+        super.onDisabled()
     }
 
     @Suppress("unused")

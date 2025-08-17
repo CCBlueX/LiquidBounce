@@ -34,14 +34,13 @@ class WindowResizeEvent(val width: Int, val height: Int) : Event()
 class FrameBufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("mouseButton")
-@WebSocketEvent
 class MouseButtonEvent(
     val key: InputUtil.Key,
     val button: Int,
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event()
+) : Event(), WebSocketEvent
 
 @Nameable("mouseScroll")
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
@@ -53,7 +52,6 @@ class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
-@WebSocketEvent
 class KeyboardKeyEvent(
     val key: InputUtil.Key,
     val keyCode: Int,
@@ -61,8 +59,7 @@ class KeyboardKeyEvent(
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event()
+) : Event(), WebSocketEvent
 
 @Nameable("keyboardChar")
-@WebSocketEvent
-class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event()
+class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent

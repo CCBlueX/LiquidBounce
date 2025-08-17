@@ -167,14 +167,14 @@ open class PlacementRenderer(
      */
     fun clearSilently() {
         if (!enabled) {
-            disable()
+            onDisabled()
         }
 
         placementRenderHandlers.values.forEach { it.clearSilently() }
         outAnimationsFinished = false
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (!enabled) {
             placementRenderHandlers.values.forEach { it.clear() }
         }
