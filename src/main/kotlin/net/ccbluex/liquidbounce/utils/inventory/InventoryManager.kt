@@ -53,8 +53,6 @@ import kotlin.random.Random
  */
 object InventoryManager : EventListener {
 
-    var targetSlotId: Int = -1
-
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
