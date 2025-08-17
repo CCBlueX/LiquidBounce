@@ -24,11 +24,14 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.screen.slot.Slot
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
     private val highlightClicked = object : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
+//        private val mode by choices()
+
         val color by color("Color", Color4b.GREEN)
     }
 
@@ -36,11 +39,19 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         tree(highlightClicked)
     }
 
-    fun Slot.highlightColor(): Color4b? =
-        if (running && highlightClicked.enabled && id == InventoryManager.lastClickedSlot) {
+    fun drawHighlightSlot(drawContext: DrawContext, slot: Slot) {
+        if (!running) return
+
+        val highlightColor = if (running && highlightClicked.enabled && slot.id == InventoryManager.lastClickedSlot) {
             highlightClicked.color
         } else {
             null
         }
+
+        if (highlightColor != null) {
+            val slotSize = 16
+            drawContext.drawBorder(slot.x, slot.y, slotSize, slotSize, highlightColor.toARGB())
+        }
+    }
 
 }

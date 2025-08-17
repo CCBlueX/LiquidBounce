@@ -83,11 +83,7 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
 
     @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V", shift = At.Shift.AFTER))
     private void drawSlotOutline(DrawContext context, Slot slot, CallbackInfo ci) {
-        Color4b highlightColor = ModuleBetterInventory.INSTANCE.highlightColor(slot);
-        if (highlightColor != null) {
-            int slotSize = 16;
-            context.drawBorder(slot.x, slot.y, slotSize, slotSize, highlightColor.toARGB());
-        }
+        ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawSlots(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
