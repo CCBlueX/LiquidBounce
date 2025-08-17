@@ -59,7 +59,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         doNotIncludeAlways()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         classNames.clear()
         fieldNames.clear()
     }
@@ -175,7 +175,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
     private fun Field.fullTypeString(): String {
         fun Type.parse(): String =
             when (this) {
-                is Class<*> -> this.simpleName
+                is Class<*> -> EnvironmentRemapper.remapClass(this).substringAfterLast('.')
                 is ParameterizedType -> {
                     val rawType = rawType.parse()
                     val args = actualTypeArguments

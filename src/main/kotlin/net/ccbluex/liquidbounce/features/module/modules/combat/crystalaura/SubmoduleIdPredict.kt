@@ -110,7 +110,7 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
             ModuleDebug.debugParameter(ModuleCrystalAura, "Highest ID", highestId)
         }
 
-    override fun enable() {
+    override fun onEnabled() {
         reset()
     }
 

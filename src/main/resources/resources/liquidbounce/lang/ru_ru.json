@@ -518,6 +518,7 @@
   "liquidbounce.module.dupe.messages.singleplayer": "Дюпы работают только на серверах, в одиночке используй креатив.",
   "liquidbounce.module.eagle.description": "Автоматически приседает на краю блока.",
   "liquidbounce.module.elytraFly.description": "Позволяет быстрее лететь с элитрами.",
+  "liquidbounce.module.elytraFly.messages.altitudeTooLow": "Предупреждение: Высота слишком мала для оптимальной работы. Рекомендуемая высота: %sY",
   "liquidbounce.module.elytraRecast.description": "Повторно активирует элитры при удерживании клавиши прыжка.",
   "liquidbounce.module.elytraSwap.description": "Позволяет быстро заменять нагрудник элитрой и наоборот.",
   "liquidbounce.module.elytraTarget.description": "Преследует цель на элитре.",

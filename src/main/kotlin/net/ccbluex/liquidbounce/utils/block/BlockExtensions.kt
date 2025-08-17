@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
-import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
 import it.unimi.dsi.fastutil.ints.IntObjectPair
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue
@@ -32,8 +31,8 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.rangeTo
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.decoration.EndCrystalEntity
@@ -54,6 +53,7 @@ import net.minecraft.world.RaycastContext
 import kotlin.math.ceil
 import kotlin.math.floor
 
+@JvmField
 val DEFAULT_BLOCK_STATE: BlockState = Blocks.AIR.defaultState
 
 fun Vec3i.toBlockPos() = BlockPos(this)
@@ -68,6 +68,11 @@ fun BlockPos.getCenterDistanceSquaredEyes() = player.eyePos.squaredDistanceTo(th
 
 val BlockState.isBed: Boolean
     get() = block is BedBlock
+
+/**
+ * Converts this [BlockPos] to an immutable one if needed.
+ */
+val BlockPos.immutable: BlockPos get() = if (this is BlockPos.Mutable) this.toImmutable() else this
 
 /**
  * Returns the block box outline of the block at the position. If the block is air, it will return an empty box.
@@ -307,22 +312,13 @@ fun BlockPos.searchLayer(layers: Int, vararg directions: Direction): Sequence<In
         }
     }
 
-/**
- * **Squared Distance** to **BlockPos**
- */
-fun BlockPos.getSphere(radius: Float): Sequence<DoubleObjectPair<BlockPos>> = sequence {
-    val radiusSq = radius * radius
-
-    searchBlocksInCuboid(MathHelper.ceil(radius)).forEach {
-        val distanceSq = getSquaredDistance(it)
-        if (distanceSq <= radiusSq) {
-            yield(DoubleObjectPair.of(distanceSq, it.toImmutable()))
-        }
-    }
-}
-
 fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
-    return getSphere(radius).toList().sortedBy { it.firstDouble() }.mapArray { it.second() }
+    val longs = CachedBlockPosSpheres.rangeLong(0, ceil(radius).toInt())
+    val mutable = BlockPos.Mutable()
+    return Array(longs.size) {
+        mutable.set(longs.getLong(it))
+        this.add(mutable)
+    }
 }
 
 /**
@@ -395,6 +391,16 @@ fun BlockView.raycast(
 
 fun BlockPos.canStandOn(): Boolean {
     return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
+}
+
+fun BlockState?.anotherChestPartDirection(): Direction? {
+    if (this?.block !is ChestBlock) return null
+
+    if (ChestBlock.getDoubleBlockType(this) === DoubleBlockProperties.Type.SINGLE) {
+        return null
+    }
+
+    return ChestBlock.getFacing(this)
 }
 
 /**

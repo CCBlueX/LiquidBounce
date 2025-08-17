@@ -108,7 +108,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         for (loggedOffPlayer in lastSeenPlayers.values) {
             val playerEntity = loggedOffPlayer.entity
             // Use [mc.world] instead of [world] to prevent NPE when the module is disabled
@@ -117,7 +117,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         }
 
         lastSeenPlayers.clear()
-        super.disable()
+        super.onDisabled()
     }
 
     fun isLogoffEntity(state: LivingEntityRenderState) =

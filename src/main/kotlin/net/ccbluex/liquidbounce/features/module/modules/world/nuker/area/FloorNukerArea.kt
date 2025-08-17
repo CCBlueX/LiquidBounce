@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.isNotEmpty
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
@@ -99,7 +98,7 @@ object FloorNukerArea : NukerArea("Floor") {
             }
 
             // Return when not empty
-            if (m.isNotEmpty()) {
+            if (m.any()) {
                 return if (count != null) {
                     m.take(count)
                 } else {
