@@ -31,6 +31,7 @@ class Alignment(
 ) : Configurable("Alignment") {
 
     companion object {
+        @JvmStatic
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
     }
 

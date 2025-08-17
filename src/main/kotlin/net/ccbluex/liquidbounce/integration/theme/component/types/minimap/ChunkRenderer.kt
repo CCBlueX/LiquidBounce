@@ -29,6 +29,7 @@ import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
+import net.minecraft.world.chunk.WorldChunk
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
@@ -148,11 +149,10 @@ object ChunkRenderer {
             }
         }
 
-        override fun chunkUpdate(
-            x: Int,
-            z: Int,
-        ) {
-            val chunkPos = ChunkPos(x, z)
+        override fun chunkUpdate(chunk: WorldChunk) {
+            val chunkPos = chunk.pos
+            val x = chunkPos.x
+            val z = chunkPos.z
 
             val chunkBordersToUpdate =
                 arrayOf(
@@ -191,14 +191,9 @@ object ChunkRenderer {
             }
         }
 
-        override fun clearChunk(
-            x: Int,
-            z: Int,
-        ) {
-            val chunkPos = ChunkPos(x, z)
-
-            heightmapManager.unloadChunk(chunkPos)
-            textureAtlasManager.deallocate(chunkPos)
+        override fun clearChunk(pos: ChunkPos) {
+            heightmapManager.unloadChunk(pos)
+            textureAtlasManager.deallocate(pos)
         }
 
         override fun clearAllChunks() {

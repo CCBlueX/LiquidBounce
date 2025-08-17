@@ -75,7 +75,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arra
         var creationTime = 0L
         var finished = true
 
-        override fun enable() {
+        override fun onEnabled() {
             finished = true
         }
 

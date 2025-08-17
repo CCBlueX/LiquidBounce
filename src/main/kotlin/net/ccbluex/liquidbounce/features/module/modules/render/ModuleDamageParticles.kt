@@ -61,7 +61,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    override fun disable() {
+    override fun onDisabled() {
         healthMap.clear()
         particles.clear()
     }

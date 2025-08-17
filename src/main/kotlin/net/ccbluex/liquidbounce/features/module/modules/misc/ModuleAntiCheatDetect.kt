@@ -36,9 +36,9 @@ object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", Category.MISC) {
         doNotIncludeAlways()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         alertAboutAntiCheat()
-        super.enable()
+        super.onEnabled()
     }
 
     /**

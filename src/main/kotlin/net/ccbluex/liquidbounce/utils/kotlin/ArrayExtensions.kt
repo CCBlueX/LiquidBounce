@@ -157,14 +157,6 @@ inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self
     }
 }
 
-inline fun Sequence<*>.isNotEmpty(): Boolean {
-    return iterator().hasNext()
-}
-
-inline fun Sequence<*>.isEmpty(): Boolean {
-    return !isNotEmpty()
-}
-
 inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =
     emptyEnumSet<T>().apply { addAll(this@toEnumSet) }
 

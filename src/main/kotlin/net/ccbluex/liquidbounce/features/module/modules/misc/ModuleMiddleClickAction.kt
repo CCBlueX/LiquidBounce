@@ -54,7 +54,7 @@ object ModuleMiddleClickAction : ClientModule(
 
     private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
-    override fun disable() {
+    override fun onDisabled() {
         Pearl.disable()
     }
 
