@@ -109,7 +109,12 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
             return@suspendHandler
         }
 
-        val result = ModuleTranslation.translate(text = event.message.stripMinecraftColorCodes())
+        val plainMessage = event.message.stripMinecraftColorCodes()
+        if (plainMessage.isBlank()) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = plainMessage)
         if (result.isValid) {
             chat(
                 result.toResultText(),
