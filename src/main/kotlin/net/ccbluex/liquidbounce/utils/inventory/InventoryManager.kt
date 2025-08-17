@@ -285,7 +285,7 @@ object InventoryManager : EventListener {
     private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryActionChain> =
         compareBy<InventoryActionChain> {
             it.requiresInventoryOpen()
-        }.thenBy {
+        }.thenByDescending {
             it.priority
         }
     
