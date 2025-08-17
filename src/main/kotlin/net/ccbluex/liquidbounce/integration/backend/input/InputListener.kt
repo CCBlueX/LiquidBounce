@@ -83,6 +83,21 @@ class InputListener(
         val key = event.keyCode
         val scancode = event.scanCode
         val modifiers = event.mods
+        
+        if (action == GLFW.GLFW_PRESS && key == GLFW.GLFW_KEY_V) {
+            val isCtrlV = (modifiers and GLFW.GLFW_MOD_CONTROL) != 0
+            val isCmdV = (modifiers and GLFW.GLFW_MOD_SUPER) != 0
+
+            if (isCtrlV || isCmdV) {
+                val clipboardContent = mc.keyboard.clipboard
+                if (clipboardContent.isNotEmpty()) {
+                    clipboardContent.forEach { char ->
+                        inputHandler.charTyped(char, 0)
+                    }
+                    return@handler
+                }
+            }
+        }
 
         if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
             inputHandler.keyPressed(key, scancode, modifiers)
