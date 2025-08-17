@@ -225,7 +225,7 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (!browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
             return@handler
         }
 
