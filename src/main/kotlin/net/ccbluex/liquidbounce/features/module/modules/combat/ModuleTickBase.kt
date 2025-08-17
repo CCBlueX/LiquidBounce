@@ -80,7 +80,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
     private val tickBuffer = mutableListOf<TickData>()
 
-    override fun disable() {
+    override fun onDisabled() {
         tickBuffer.clear()
     }
 

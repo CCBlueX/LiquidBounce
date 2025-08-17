@@ -61,7 +61,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         doNotIncludeAlways()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         classNames.clear()
         fieldNames.clear()
     }
@@ -92,8 +92,15 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
         text.append(" ")
 
+        val packetClassName = classNames.computeIfAbsent(packet.javaClass, EnvironmentRemapper::remapClass)
+            .substringAfterLast('.')
+        text.append(highlight(packetClassName).copyable(copyContent = packetClassName))
+
         val packetName = packetId.toName()
-        text.append(highlight(packetName).copyable(copyContent = packetName))
+
+        text.append(regular(" (ID: "))
+        text.append(variable(packetName).copyable(copyContent = packetName))
+        text.append(regular(")"))
 
         if (clazz.isRecord) {
             text.append(" (Record)".asText().formatted(Formatting.DARK_GRAY))
@@ -170,7 +177,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
     private fun Field.fullTypeString(): String {
         fun Type.parse(): String =
             when (this) {
-                is Class<*> -> this.simpleName
+                is Class<*> -> EnvironmentRemapper.remapClass(this).substringAfterLast('.')
                 is ParameterizedType -> {
                     val rawType = rawType.parse()
                     val args = actualTypeArguments

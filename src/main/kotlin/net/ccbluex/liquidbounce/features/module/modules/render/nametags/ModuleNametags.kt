@@ -67,12 +67,12 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         nametagsToRender.clear()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
         nametagsToRender.clear()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
 

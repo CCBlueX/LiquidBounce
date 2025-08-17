@@ -19,12 +19,18 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.JsonElement
+import com.google.gson.stream.JsonWriter
 import net.ccbluex.liquidbounce.api.core.withScope
-import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
+import org.apache.commons.io.output.StringBuilderWriter
+
+/**
+ * Empty event:
+ * `{"name":"","event":{}}`
+ */
+private const val EVENT_JSON_BYTE_COUNT = 64
 
 class SocketEventListener : EventListener {
 
@@ -65,21 +71,22 @@ class SocketEventListener : EventListener {
     }
 
     private fun writeToSockets(event: Event) = withScope {
-        data class WSEventData(val name: String, val event: JsonElement)
-
         val json = runCatching {
-            val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
-            interopGson.toJson(
-                WSEventData(
-                    name = event.javaClass.eventName,
-                    event = webSocketAnnotation.serializer.gson.toJsonTree(event)
-                )
-            )
+            StringBuilderWriter(EVENT_JSON_BYTE_COUNT).use {
+                JsonWriter(it).use { writer ->
+                    writer.beginObject()
+                    writer.name("name").value(event::class.java.eventName)
+                    writer.name("event")
+                    (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
+                    writer.endObject()
+                }
+                it.toString()
+            }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@withScope
 
-        httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
+        httpServer.webSocketController.broadcast(json) { _, t ->
             logger.error("WebSocket event broadcast failed", t)
         }
     }

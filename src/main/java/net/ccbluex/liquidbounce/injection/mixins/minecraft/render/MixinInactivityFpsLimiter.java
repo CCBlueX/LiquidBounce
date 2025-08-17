@@ -18,9 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.FpsLimitEvent;
 import net.ccbluex.liquidbounce.utils.render.RefreshRateKt;
 import net.minecraft.client.option.InactivityFpsLimiter;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
@@ -33,6 +37,11 @@ public abstract class MixinInactivityFpsLimiter {
     @ModifyConstant(method = "update", constant = @Constant(intValue = 60))
     private int getFramerateLimit(int original) {
         return RefreshRateKt.getRefreshRate();
+    }
+
+    @ModifyReturnValue(method = "update", at = @At("RETURN"))
+    private int hookFpsLimit(int original) {
+        return EventManager.INSTANCE.callEvent(new FpsLimitEvent(original)).getFps();
     }
 
 }

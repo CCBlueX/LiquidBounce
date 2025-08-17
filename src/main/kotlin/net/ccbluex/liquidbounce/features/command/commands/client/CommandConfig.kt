@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.annotations.InbuiltCommandFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
@@ -36,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
-import java.io.Reader
+import org.apache.commons.io.input.CharSequenceReader
 
 /**
  * Config Command
@@ -158,17 +160,20 @@ object CommandConfig : CommandFactory {
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
             runCatching {
-                if (name.startsWith("http")) {
-                    // Load the config from the specified URL
-                    HttpClient.request(name, HttpMethod.GET).parse<Reader>()
-                } else {
-                    // Get online config from API
-                    ClientApi.requestSettingsScript(name)
+                withContext(Dispatchers.IO) {
+                    // Read full response to prevent blocking of Reader
+                    if (name.startsWith("http")) {
+                        // Load the config from the specified URL
+                        HttpClient.request(name, HttpMethod.GET).parse<String>()
+                    } else {
+                        // Get online config from API
+                        ClientApi.requestSettingsScript(name).use { it.readText() }
+                    }
                 }
-            }.onSuccess { sourceReader ->
+            }.onSuccess { source ->
                 AutoConfig.withLoading {
                     runCatching {
-                        AutoConfig.loadAutoConfig(sourceReader, modules)
+                        AutoConfig.loadAutoConfig(CharSequenceReader(source), modules)
                     }.onFailure {
                         chat(markAsError(command.result("failedToLoad", variable(name))))
                     }.onSuccess {
@@ -177,6 +182,7 @@ object CommandConfig : CommandFactory {
                 }
             }.onFailure { exception ->
                 chat(markAsError(command.result("failedToLoad", variable(name))))
+                logger.error("Failed to load config $name", exception)
             }
         }
         .build()

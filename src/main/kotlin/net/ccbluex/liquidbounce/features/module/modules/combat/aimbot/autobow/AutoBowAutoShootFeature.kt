@@ -158,9 +158,9 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         forceUncharged = false
-        super.disable()
+        super.onDisabled()
     }
 
 }

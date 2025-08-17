@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.chunk.Chunk
@@ -54,6 +55,13 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
             return Region(
                 BlockPos(pos.x shl 4, chunk.bottomY, pos.z shl 4),
                 BlockPos(pos.x shl 4 or 15, chunk.topYInclusive, pos.z shl 4 or 15)
+            )
+        }
+
+        fun from(pos: ChunkPos): Region {
+            return Region(
+                BlockPos(pos.x shl 4, mc.world!!.bottomY, pos.z shl 4),
+                BlockPos(pos.x shl 4 or 15, mc.world!!.topYInclusive, pos.z shl 4 or 15)
             )
         }
 

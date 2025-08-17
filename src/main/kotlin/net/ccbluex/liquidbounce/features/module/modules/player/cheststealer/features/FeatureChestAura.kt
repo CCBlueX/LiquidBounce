@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
@@ -36,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BlockState
-import net.minecraft.block.ChestBlock
-import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.ActionResult
@@ -210,16 +209,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     private fun BlockPos.recordAnotherChestPart(state: BlockState?) {
-        if (state?.block !is ChestBlock) {
-            return
-        }
-
-        val another = when (ChestBlock.getDoubleBlockType(state)) {
-            DoubleBlockProperties.Type.FIRST, DoubleBlockProperties.Type.SECOND -> offset(ChestBlock.getFacing(state))
-            else -> return
-        }
-
-        interactedBlocksSet.add(another)
+        interactedBlocksSet.add(offset(state.anotherChestPartDirection() ?: return))
     }
 
 }

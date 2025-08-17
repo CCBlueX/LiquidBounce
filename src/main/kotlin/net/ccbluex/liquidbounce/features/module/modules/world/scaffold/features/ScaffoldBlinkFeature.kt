@@ -18,19 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 
 object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", false) {
 
     private val time by intRange("Time", 50..250, 0..3000, "ms")
-    private val fallCancel by boolean("FallCancel", true)
+    private val flushOn by multiEnumChoice<FlushOn>("FlushOn")
 
     private var pulseTime = 0L
     private val pulseTimer = Chronometer()
@@ -40,20 +42,13 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        if (fallCancel && player.fallDistance > 0.5f) {
-            PacketQueueManager.cancel()
-            onBlockPlacement()
-        }
-
-        if (pulseTimer.hasElapsed(pulseTime)) {
-            pulseTimer.reset()
-        }
-    }
-
-    @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING) {
+            return@handler
+        }
+
+        if (pulseTimer.hasElapsed(pulseTime) || flushOn.any { it.cond(event.packet) }) {
+            pulseTimer.reset()
             return@handler
         }
 
@@ -62,5 +57,29 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         }
     }
 
+    @Suppress("unused")
+    private enum class FlushOn(
+        override val choiceName: String,
+        val cond: (packet: Packet<*>?) -> Boolean
+    ) : NamedChoice {
+        PLACE("Place", { packet ->
+            packet is PlayerInteractBlockC2SPacket
+        }),
+        TOWERING("Towering", {
+            ModuleScaffold.isTowering
+        }),
+        SNEAKING("Sneaking", {
+            player.isSneaking
+        }),
+        NOT_SNEAKING("NotSneaking", {
+            !player.isSneaking
+        }),
+        ON_GROUND("OnGround", {
+            player.isOnGround
+        }),
+        IN_AIR("InAir", {
+            !player.isOnGround
+        })
+    }
 
 }

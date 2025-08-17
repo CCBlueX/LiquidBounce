@@ -28,13 +28,11 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
@@ -43,14 +41,11 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.ItemEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
-
-private const val ITEM_SIZE: Int = 16
-private const val ITEM_SCALE: Float = 1.0F
-private const val BACKGROUND_PADDING: Int = 2
+import java.util.*
 
 /**
  * ItemTags module
@@ -63,10 +58,16 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     override val baseKey: String
         get() = "liquidbounce.module.itemTags"
 
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val items by items("Items", hashSetOf())
+
+    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val scale by float("Scale", 1.5F, 0.25F..4F)
+    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+    private val rowLength by int("RowLength", 100, 1..100)
+
     private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
         arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
-    private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val renderY by float("RenderY", 0F, -2F..2F)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..256F)
 
     private sealed class ClusterSizeMode(name: String) : Choice(name) {
@@ -92,21 +93,21 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
+    private val drawContext = newDrawContext()
 
     private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
         initialValue = emptyMap()
     ) { _, _ ->
+        val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
 
         @Suppress("UNCHECKED_CAST")
         (world.entities.filter {
-            it is ItemEntity && it.squaredDistanceTo(player) < maxDistSquared
+            it is ItemEntity && it.squaredDistanceTo(cameraPos) < maxDistSquared && filter(it.stack.item, items)
         } as List<ItemEntity>).cluster()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         itemEntities = emptyMap()
     }
 
@@ -118,92 +119,30 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
         renderEnvironmentForGUI {
-            fontRenderer.withBuffers { buf ->
-                itemEntities.mapNotNull { (center, items) ->
-                    val renderPos = WorldToScreen.calculateScreenPos(center.add(0.0, renderY.toDouble(), 0.0))
-                        ?: return@mapNotNull null
-                    renderPos to items
-                }.forEachWithSelf { (center, items), i, self ->
-                    withMatrixStack {
-                        val z = 1000.0F * i / self.size
-                        drawItemTags(items, Vec3(center.x, center.y, z), buf)
-                    }
-                }
-            }
-        }
-    }
-
-    @JvmStatic
-    private fun GUIRenderEnvironment.drawItemTags(
-        items: List<ItemStack>,
-        pos: Vec3,
-        fontBuffers: FontRendererBuffers,
-    ) {
-        val width = items.size * ITEM_SIZE
-        val height = ITEM_SIZE
-
-        val dc = DrawContext(
-            mc,
-            mc.bufferBuilders.entityVertexConsumers
-        )
-
-        val itemScale = ITEM_SCALE * scale
-        dc.matrices.translate(pos.x, pos.y, 0.0F)
-        dc.matrices.scale(itemScale, itemScale, 1.0F)
-        dc.matrices.translate(-width / 2f, -height / 2f, pos.z)
-
-        // draw background
-        dc.fill(
-            -BACKGROUND_PADDING,
-            -BACKGROUND_PADDING,
-            width + BACKGROUND_PADDING,
-            height + BACKGROUND_PADDING,
-            Color4b(0, 0, 0, 128).toARGB()
-        )
-
-        val c = fontRenderer.size
-        val fontScale = 1.0F / (c * 0.15F) * scale
-
-        // sync x pos between item and count
-        fun scale(f: Int) = f * itemScale / fontScale
-
-        matrixStack.push()
-        matrixStack.translate(pos.x, pos.y, pos.z)
-        matrixStack.scale(fontScale, fontScale, 1.0F)
-        matrixStack.translate(-scale(width) / 2f, -scale(height) / 2f, 1000.0F)
-
-        // render stacks
-        items.forEachIndexed { index, stack ->
-            val leftX = index * ITEM_SIZE
-            dc.drawItem(
-                stack,
-                leftX,
-                0,
-            )
-
-            if (stack.count > 1) {
-                val text = fontRenderer.process(stack.count.toString().asText())
-
-                fontRenderer.draw(
-                    text,
-                    scale(leftX + ITEM_SIZE) - fontRenderer.getStringWidth(text),
-                    scale(ITEM_SIZE) - fontRenderer.height,
-                    shadow = true,
+            itemEntities.mapNotNull { (center, items) ->
+                val renderPos = WorldToScreen.calculateScreenPos(center.add(renderOffset))
+                    ?: return@mapNotNull null
+                renderPos to items
+            }.forEachWithSelf { (center, stacks), i, self ->
+                val z = 1000.0F * i / self.size
+                drawContext.drawItemTags(
+                    stacks = stacks,
+                    centerPos = center.copy(z = z),
+                    backgroundColor = backgroundColor.toARGB(),
+                    scale = scale,
+                    rowLength = rowLength
                 )
             }
         }
-
-        fontRenderer.commit(fontBuffers)
-        matrixStack.pop()
     }
 
     @JvmStatic
     private fun List<ItemEntity>.cluster(): Map<Vec3d, List<ItemStack>> {
-        if (isEmpty()) {
+        if (this.isEmpty()) {
             return emptyMap()
         }
 
-        val groups = arrayListOf<Set<ItemEntity>>()
+        val groups = mutableListOf<Set<ItemEntity>>()
         val visited = hashSetOf<ItemEntity>()
 
         for (entity in this) {
@@ -224,16 +163,30 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             Pair(
                 // Get the center pos of all entities
                 entities.map { it.box.center }.average(),
-                // Merge stacks with same item, order by count desc
-                entities.groupBy {
-                    it.stack.item
-                }.map { (item, entities) ->
-                    ItemStack(item, entities.sumOf { it.stack.count })
-                }.sortedByDescending {
-                    it.count
-                },
+                entities.mergeStacks(),
             )
         }
+    }
+
+    /**
+     * Merge stacks with same item, order by count desc
+     */
+    @JvmStatic
+    private fun Set<ItemEntity>.mergeStacks(): List<ItemStack> {
+        val map = IdentityHashMap<Item, MutableList<ItemStack>>()
+        for (itemEntity in this) {
+            map.getOrPut(itemEntity.stack.item, ::mutableListOf).add(itemEntity.stack)
+        }
+        val result = ArrayList<ItemStack>(map.size)
+        map.values.forEach { stacks ->
+            if (stacks.size == 1) {
+                result.add(stacks[0])
+            } else {
+                result.add(ItemStack(stacks[0].item, stacks.sumOf { it.count }))
+            }
+        }
+        result.sortByDescending { it.count }
+        return result
     }
 
 }

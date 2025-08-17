@@ -104,7 +104,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
             }
         }
 
-        override fun enable() {
+        override fun onEnabled() {
             reset()
         }
     }

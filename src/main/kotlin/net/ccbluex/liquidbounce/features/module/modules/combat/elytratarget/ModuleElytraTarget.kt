@@ -79,7 +79,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetTracker.reset()
     }
 }

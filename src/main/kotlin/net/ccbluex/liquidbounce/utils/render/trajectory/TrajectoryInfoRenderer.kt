@@ -38,6 +38,7 @@ class TrajectoryInfoRenderer(
     private val renderOffset: Vec3d
 ) {
     companion object {
+        @JvmStatic
         fun getHypotheticalTrajectory(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,

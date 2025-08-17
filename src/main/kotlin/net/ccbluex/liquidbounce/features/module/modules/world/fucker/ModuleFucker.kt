@@ -113,7 +113,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
     private var wasTarget: DestroyerTarget? = null
 
-    override fun disable() {
+    override fun onDisabled() {
         if (currentTarget != null) {
             interaction.cancelBlockBreaking()
         }

@@ -40,6 +40,14 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
 import java.util.Locale
 import java.util.UUID
+import kotlin.collections.ArrayDeque
+import kotlin.collections.associateBy
+import kotlin.collections.forEach
+import kotlin.collections.get
+import kotlin.collections.getOrNull
+import kotlin.collections.getOrPut
+import kotlin.collections.hashMapOf
+import kotlin.collections.set
 
 /**
  * Module InventoryTracker
@@ -98,7 +106,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
         }
     }
 
-    override fun disable() = reset()
+    override fun onDisabled() = reset()
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> { reset() }

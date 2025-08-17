@@ -58,7 +58,7 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
 
     private var lastTickPositions: LongSet = LongSets.EMPTY_SET
 
-    override fun disable() {
+    override fun onDisabled() {
         lastTickPositions = LongSets.EMPTY_SET
         renderer.clearSilently()
     }

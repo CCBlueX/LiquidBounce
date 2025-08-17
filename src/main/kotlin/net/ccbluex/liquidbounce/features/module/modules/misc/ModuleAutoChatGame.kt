@@ -81,7 +81,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         """.trimIndent().replace('\n', ' ')
     private val prompt by text("Prompt", defaultPrompt)
 
-    override fun enable() {
+    override fun onEnabled() {
         if (openAiKey.isBlank()) {
             chat("§cPlease enter your OpenAI key in the module settings.")
             enabled = false

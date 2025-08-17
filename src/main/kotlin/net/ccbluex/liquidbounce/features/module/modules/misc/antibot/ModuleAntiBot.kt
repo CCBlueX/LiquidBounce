@@ -55,7 +55,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
         (it as IAntiBotMode).reset()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         reset()
     }
 

@@ -62,7 +62,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
         tree(AutoResetOption)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         if (dummy) {
             val clone = OtherClientPlayerEntity(world, player.gameProfile)
 
@@ -79,7 +79,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
         removeClone()
     }

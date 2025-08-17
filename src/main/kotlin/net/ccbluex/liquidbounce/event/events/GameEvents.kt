@@ -53,11 +53,10 @@ object GameRenderTaskQueueEvent : Event()
 object TickPacketProcessEvent : Event()
 
 @InbuiltEvent("key")
-@WebSocketEvent
 class KeyEvent(
     val key: InputUtil.Key,
     val action: Int,
-) : Event()
+) : Event(), WebSocketEvent
 
 // Input events
 @InbuiltEvent("inputHandle")
@@ -96,8 +95,7 @@ class MouseRotationEvent(
 ) : CancellableEvent()
 
 @InbuiltEvent("keybindChange")
-@WebSocketEvent
-object KeybindChangeEvent : Event()
+object KeybindChangeEvent : Event(), WebSocketEvent
 
 @InbuiltEvent("keybindIsPressed")
 class KeybindIsPressedEvent(
@@ -123,10 +121,9 @@ class MinecraftAutoJumpEvent(
  */
 
 @InbuiltEvent("session")
-@WebSocketEvent
 class SessionEvent(
     val session: Session,
-) : Event()
+) : Event(), WebSocketEvent
 
 @InbuiltEvent("screen")
 class ScreenEvent(
@@ -134,19 +131,17 @@ class ScreenEvent(
 ) : CancellableEvent()
 
 @InbuiltEvent("chatSend")
-@WebSocketEvent
 class ChatSendEvent(
     val message: String,
-) : CancellableEvent()
+) : CancellableEvent(), WebSocketEvent
 
 @InbuiltEvent("chatReceive")
-@WebSocketEvent
 class ChatReceiveEvent(
     val message: String,
     val textData: Text,
     val type: ChatType,
     val applyChatDecoration: (Text) -> Text,
-) : CancellableEvent() {
+) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val choiceName: String) : NamedChoice {
         CHAT_MESSAGE("ChatMessage"),
         DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
@@ -163,15 +158,13 @@ class ServerConnectEvent(
 ) : CancellableEvent()
 
 @InbuiltEvent("disconnect")
-@WebSocketEvent
-object DisconnectEvent : Event()
+object DisconnectEvent : Event(), WebSocketEvent
 
 @InbuiltEvent("overlayMessage")
-@WebSocketEvent
 class OverlayMessageEvent(
     val text: Text,
     val tinted: Boolean,
-) : Event()
+) : Event(), WebSocketEvent
 
 @InbuiltEvent("perspective")
 class PerspectiveEvent(

@@ -24,7 +24,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     private val showInTabList by boolean("ShowInTabList", true)
     private val serverStaffList = hashMapOf<String, Set<String>>()
 
-    override fun enable() {
+    override fun onEnabled() {
         val serverEntry = mc.currentServerEntry ?: return
         val address = serverEntry.address.dropPort().rootDomain()
 
@@ -36,7 +36,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
         withScope {
             loadStaffList(address)
         }
-        super.enable()
+        super.onEnabled()
     }
 
     @Suppress("unused")

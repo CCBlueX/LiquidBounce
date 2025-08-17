@@ -241,9 +241,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         isEnemyNearby = false
-        super.disable()
+        super.onDisabled()
     }
 
 }
