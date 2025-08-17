@@ -31,7 +31,7 @@ import net.minecraft.util.math.BlockPos
  */
 object ValidHeightCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         return candidate.y.toDouble() + 1.0 < context.target.boundingBox.maxY
     }
 

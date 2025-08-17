@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAimbotFeature
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAutoShootFeature
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowFastChargeFeature
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.item.BowItem
 import java.util.*
@@ -46,7 +48,7 @@ object ModuleAutoBow : ClientModule("AutoBow", Category.COMBAT, aliases = arrayO
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         AutoBowAimbotFeature.targetTracker.reset()
     }
 

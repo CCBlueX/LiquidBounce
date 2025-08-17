@@ -110,7 +110,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
         ModuleAutoWeapon.prepare(targetTracker.target)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetTracker.reset()
     }
 

@@ -133,7 +133,9 @@ enum class VirtualScreenType(
     fun open() = RenderSystem.recordRenderCall(open)
 
     companion object {
+        @JvmStatic
         fun byName(name: String) = entries.find { it.routeName == name }
+        @JvmStatic
         fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 

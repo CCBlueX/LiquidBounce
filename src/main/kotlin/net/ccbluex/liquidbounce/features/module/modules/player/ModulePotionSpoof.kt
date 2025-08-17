@@ -66,7 +66,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         }.toList()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         for (spoofedEffect in statusEffectValues) {
             if (spoofedEffect.enabled && player.getStatusEffect(spoofedEffect.registryEntry)?.duration == 0) {
                 player.removeStatusEffect(spoofedEffect.registryEntry)

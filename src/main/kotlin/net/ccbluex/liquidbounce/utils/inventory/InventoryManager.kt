@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -104,28 +105,26 @@ object InventoryManager : EventListener {
             requiresUpdate = false
 
             val event = EventManager.callEvent(ScheduleInventoryActionEvent())
-
-            // Schedule of actions that have to be executed
-            // The schedule is sorted by
-            // 1. With Non-inventory open required actions
-            // 2. With inventory open required actions
             val schedule = event.schedule
-                .filter { actionChain -> actionChain.canPerformAction() && actionChain.actions.isNotEmpty() }
-                .groupBy(InventoryActionChain::requiresInventoryOpen)
-                .map { it.value.sortedByDescending { actionChain -> actionChain.priority } }
-                .reduceOrNull { acc, inventoryActionChains ->
-                    acc + inventoryActionChains
-                } ?: break
-
-            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+                .filterTo(mutableListOf()) { actionChain ->
+                    actionChain.canPerformAction() && actionChain.actions.isNotEmpty()
+                }
 
             // If the schedule is empty, we can break the loop
             if (schedule.isEmpty()) {
                 break
             }
 
+            // Schedule of actions that have to be executed
+            // The schedule is sorted by
+            // 1. With Non-inventory open required actions
+            // 2. With inventory open required actions
+            schedule.sortWith(COMPARATOR_ACTION_CHAIN)
+
+            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+
             // Handle non-inventory open actions first
-            for (chained in schedule) {
+            for ((scheduleIndex, chained) in schedule.withIndex()) {
                 // Do not continue if we need to update the schedule
                 if (requiresUpdate) {
                     break
@@ -133,7 +132,10 @@ object InventoryManager : EventListener {
 
                 // These are chained actions that have to be executed in order
                 // We cannot interrupt them
+                debugParameter("Schedule Index") { scheduleIndex }
+                debugParameter("Action Size") { chained.actions.size }
                 for ((index, action) in chained.actions.withIndex()) {
+                    debugParameter("Action Index") { index }
                     val constraints = chained.inventoryConstraints
 
                     // Update close delay maximum
@@ -280,9 +282,16 @@ object InventoryManager : EventListener {
         isInventoryOpenServerSide = false
     }
 
+    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryActionChain> =
+        compareBy<InventoryActionChain> {
+            it.requiresInventoryOpen()
+        }.thenByDescending {
+            it.priority
+        }
+    
 }
 
-interface InventoryAction {
+sealed interface InventoryAction {
     fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean
     fun performAction(): Boolean
     fun requiresPlayerInventoryOpen(): Boolean
@@ -492,6 +501,6 @@ data class InventoryActionChain(
         return actions.all { action -> action.canPerformAction(inventoryConstraints) }
     }
 
-    fun requiresInventoryOpen() = actions.filterIsInstance<ClickInventoryAction>().any { it.screen == null }
+    fun requiresInventoryOpen() = actions.any { it is ClickInventoryAction && it.screen == null }
 
 }

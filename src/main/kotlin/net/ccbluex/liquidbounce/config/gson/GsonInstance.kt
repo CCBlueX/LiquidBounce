@@ -57,42 +57,6 @@ import java.time.OffsetDateTime
 import java.util.function.Supplier
 
 /**
- * An enumeration of all GSON instances used in LiquidBounce. Each instance has its own configuration,
- * which is optimized for the specific use case. This enum can be used on e.g. @WebSocketEvent to specify
- * the GSON instance.
- *
- * @param gson The GSON instance.
- */
-enum class GsonInstance(
-    val gson: Gson
-) {
-
-    /**
-     * A GSON instance which is used for local files.
-     */
-    @Suppress("unused")
-    FILE(fileGson),
-
-    /**
-     * A GSON instance which is used for JSON that is distributed to other players.
-     */
-    @Suppress("unused")
-    PUBLIC(publicGson),
-
-    /**
-     * This GSON instance is used for interop communication.
-     */
-    INTEROP(interopGson),
-
-    /**
-     * This GSON instance is used for serializing objects as accessible JSON which means it is READ-ONLY (!)
-     * and often comes with an easier syntax to use in other programming languages like JavaScript.
-     */
-    ACCESSIBLE_INTEROP(accessibleInteropGson),
-}
-
-
-/**
  * A GSON instance which is used for local files.
  */
 val fileGson: Gson = GsonBuilder()

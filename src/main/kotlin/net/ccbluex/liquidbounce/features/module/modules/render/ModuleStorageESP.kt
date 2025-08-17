@@ -67,11 +67,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(StorageScanner)
     }
 
