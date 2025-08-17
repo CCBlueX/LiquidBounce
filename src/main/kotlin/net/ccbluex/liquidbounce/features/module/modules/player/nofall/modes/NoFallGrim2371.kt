@@ -21,51 +21,47 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.until
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
- * Bypassing GrimAC Anti Cheat(8/3/2025,Loyisa Server)
+ * Bypassing GrimAC Anti Cheat (8/3/2025, Loyisa Server)
  * Minecraft Version 1.9+
  *
  * @author XeContrast
  */
-internal object NoFallGrim : Choice("Grim2371HighVersion") {
+internal object NoFallGrim2371 : Choice("Grim2371-1.9+") {
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
-    private var start = false
-
     @Suppress("unused")
-    val playerNetworkMovementTickEvent = handler<PlayerNetworkMovementTickEvent> {
-        if (start && player.isOnGround) {
-            it.cancelEvent()
-            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true,player.horizontalCollision))
+    private val tickHandler = tickHandler {
+        if (player.isOnGround || player.fallDistance < 2.5) {
+            return@tickHandler
         }
-    }
 
-    val repeatable = tickHandler {
-        if (player.fallDistance > 2.5) {
-            start = true
+        until<PlayerNetworkMovementTickEvent> { event ->
+            if (!player.isOnGround || event.state != EventState.PRE) {
+                return@until false
+            }
+
+            event.cancelEvent()
+            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true, player.horizontalCollision))
+            true
         }
-    }
 
-    @Suppress("unused")
-    val movementInputEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        if (start && player.isOnGround) {
-            it.jump = true
-            player.onLanding()
-            start = false
+        until<MovementInputEvent> { event ->
+            event.jump = true
+            player.isOnGround
         }
-    }
 
-    override fun enable() {
-        start = false
+        waitUntil { player.isOnGround }
     }
 
 }
