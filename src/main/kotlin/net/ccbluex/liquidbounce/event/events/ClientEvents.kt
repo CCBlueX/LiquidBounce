@@ -50,11 +50,9 @@ import net.minecraft.world.GameMode
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @InbuiltEvent("clickGuiValueChange")
-@WebSocketEvent
 class ClickGuiValueChangeEvent(val configurable: Configurable) : Event(), WebSocketEvent
 
 @InbuiltEvent("spaceSeperatedNamesChange")
-@WebSocketEvent
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
 
 @InbuiltEvent("clientStart")
