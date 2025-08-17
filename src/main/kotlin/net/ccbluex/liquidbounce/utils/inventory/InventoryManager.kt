@@ -119,7 +119,7 @@ object InventoryManager : EventListener {
             // The schedule is sorted by
             // 1. With Non-inventory open required actions
             // 2. With inventory open required actions
-            schedule.sort()
+            schedule.sortWith(COMPARATOR_ACTION_CHAIN)
 
             ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
 
@@ -282,6 +282,13 @@ object InventoryManager : EventListener {
         isInventoryOpenServerSide = false
     }
 
+    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryActionChain> =
+        compareBy<InventoryActionChain> {
+            it.requiresInventoryOpen()
+        }.thenBy {
+            it.priority
+        }
+    
 }
 
 sealed interface InventoryAction {
@@ -488,23 +495,12 @@ data class InventoryActionChain(
     val inventoryConstraints: InventoryConstraints,
     val actions: Array<out InventoryAction>,
     val priority: Priority
-) : Comparable<InventoryActionChain> {
+) {
 
     fun canPerformAction(): Boolean {
         return actions.all { action -> action.canPerformAction(inventoryConstraints) }
     }
 
     fun requiresInventoryOpen() = actions.any { it is ClickInventoryAction && it.screen == null }
-
-    override fun compareTo(other: InventoryActionChain): Int {
-        // inventoryOpen asc (false -> true)
-        val thisOpenInv = requiresInventoryOpen()
-        if (thisOpenInv != other.requiresInventoryOpen()) {
-            return if (thisOpenInv) 1 else -1
-        }
-
-        // priority desc
-        return other.priority.compareTo(priority)
-    }
 
 }
