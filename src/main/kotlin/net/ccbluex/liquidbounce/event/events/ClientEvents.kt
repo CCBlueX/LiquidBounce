@@ -140,7 +140,10 @@ class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @InbuiltEvent("accountManagerAddition")
-class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
+class AccountManagerAdditionResultEvent(
+    val username: String? = null,
+    val error: String? = null,
+) : Event(), WebSocketEvent
 
 @InbuiltEvent("accountManagerRemoval")
 class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
