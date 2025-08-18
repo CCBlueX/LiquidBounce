@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -44,13 +46,26 @@ import net.minecraft.util.math.MathHelper
 
 object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
-    private enum class SprintMode(override val choiceName: String) : NamedChoice {
-        LEGIT("Legit"),
-        OMNIDIRECTIONAL("Omnidirectional"),
-        OMNIROTATIONAL("Omnirotational"),
+    private object Legit : SprintMode("Legit")
+    private object Omnidirectional : SprintMode("Omnidirectional") {
+        val jumpDirectionFix by boolean("JumpDirectionFix", true)
+
+        @Suppress("unused")
+        private val jumpHandler = handler<PlayerJumpEvent> { event ->
+            if (jumpDirectionFix) {
+                // Allows us to sprint boost in every direction
+                event.yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+            }
+        }
+    }
+    private object Omnirotational : SprintMode("Omnirotational")
+
+    private open class SprintMode(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*>
+            get() = sprintMode
     }
 
-    private val sprintMode by enumChoice("Mode", SprintMode.LEGIT)
+    private val sprintMode = choices("Mode", Legit, arrayOf(Legit, Omnidirectional, Omnirotational))
 
     private val ignore by multiEnumChoice<Ignore>("Ignore")
 
@@ -61,7 +76,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private val stopOn by multiEnumChoice("StopOn", StopOn.entries)
 
     val shouldSprintOmnidirectional: Boolean
-        get() = running && sprintMode == SprintMode.OMNIDIRECTIONAL ||
+        get() = running && sprintMode.activeChoice == Omnidirectional ||
             ScaffoldSprintControlFeature.allowOmnidirectionalSprint
 
     val shouldIgnoreBlindness
@@ -93,21 +108,13 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
         }
     }
 
-    @Suppress("unused")
-    private val jumpHandler = handler<PlayerJumpEvent> { event ->
-        if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
-            // Allows us to sprint boost in every direction
-            event.yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
-        }
-    }
-
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
     private val rotationsConfigurable = RotationsConfigurable(this)
 
     @Suppress("unused")
     private val omniRotationalHandler = handler<GameTickEvent> {
         // Check if omnirotational sprint is enabled
-        if (sprintMode != SprintMode.OMNIROTATIONAL) {
+        if (sprintMode.activeChoice != Omnirotational) {
             return@handler
         }
 
@@ -127,7 +134,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
             MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-        val preventSprint = (if (player.isOnGround) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
+        val preventSprint = (if (player.isOnGround) StopOn.GROUND else StopOn.AIR) in stopOn
             && !shouldSprintOmnidirectional
             && RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.OFF
             && !hasForwardMovement
