@@ -32,6 +32,7 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
 
     companion object {
         var shouldPreventNoSlow = false
+            private set
     }
 
     @Suppress("unused")
