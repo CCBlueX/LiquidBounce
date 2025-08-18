@@ -188,7 +188,6 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
         return true
     }
 
-
     fun findItemsToThrowOut(
         cleanupPlan: InventoryCleanupPlan,
         itemsInInv: List<ItemSlot>,
