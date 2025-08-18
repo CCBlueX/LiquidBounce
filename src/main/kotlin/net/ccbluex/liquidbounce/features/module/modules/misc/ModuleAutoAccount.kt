@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -49,6 +52,14 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
     }
     private val loginRegexString: String by text("LoginRegex", "/login").onChanged {
         loginRegex = Regex(it)
+    }
+
+    private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
+
+    private enum class MessageSource(override val choiceName: String) : NamedChoice {
+        CHAT("Chat"),
+        TITLE("Title"),
+        SUBTITLE("Subtitle"),
     }
 
     private var registerRegex = Regex(registerRegexString)
@@ -83,22 +94,32 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         network.sendCommand("$registerCommand $password $password")
     }
 
-    @Suppress("unused")
-    val onChat = sequenceHandler<ChatReceiveEvent> { event ->
-        if (sending) {
-            return@sequenceHandler
-        }
-
-        val msg = event.message
-
-        when {
-            registerRegex.containsMatchIn(msg) -> {
-                action(::register)
+    private inline fun <reified T : Event> createMessageHandler(
+        messageSource: MessageSource,
+        crossinline textProvider: (T) -> String?,
+    ) {
+        sequenceHandler<T> { event ->
+            if (sending || messageSource !in messageSources) {
+                return@sequenceHandler
             }
-            loginRegex.containsMatchIn(msg) -> {
-                action(::login)
+    
+            val msg = textProvider(event) ?: return@sequenceHandler
+    
+            when {
+                registerRegex.containsMatchIn(msg) -> {
+                    action(::register)
+                }
+                loginRegex.containsMatchIn(msg) -> {
+                    action(::login)
+                }
             }
         }
+    }
+
+    init {
+        createMessageHandler<ChatReceiveEvent>(MessageSource.CHAT) { it.message }
+        createMessageHandler<TitleEvent.Title>(MessageSource.TITLE) { it.text?.literalString }
+        createMessageHandler<TitleEvent.Subtitle>(MessageSource.SUBTITLE) { it.text?.literalString }
     }
 
 }

@@ -56,7 +56,7 @@ class PlayerNetworkMovementTickEvent(
     var y: Double,
     var z: Double,
     var ground: Boolean
-) : Event()
+) : CancellableEvent()
 
 @Nameable("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()

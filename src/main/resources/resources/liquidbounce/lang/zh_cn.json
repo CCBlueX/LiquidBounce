@@ -616,6 +616,7 @@
   "liquidbounce.module.noSignRender.description": "不渲染告示牌上的字。",
   "liquidbounce.module.noSlow.description": "取消灵魂沙或物品导致的缓慢效果。",
   "liquidbounce.module.noSlowBreak.description": "消除负面影响造成的破坏减速。",
+  "liquidbounce.module.noSwim.description": "阻止玩家姿态切换为游泳，适用于低版本服务器。",
   "liquidbounce.module.noSwing.description": "禁用挥手动画。",
   "liquidbounce.module.noWeather.description": "禁用天气效果。",
   "liquidbounce.module.noWeb.description": "避免被蜘蛛网减速。",

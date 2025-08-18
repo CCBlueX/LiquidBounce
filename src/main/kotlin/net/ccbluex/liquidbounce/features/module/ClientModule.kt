@@ -126,15 +126,16 @@ open class ClientModule(
                 }
                 value.doNotIncludeAlways()
             }
-
-            value.onChanged { newValue ->
-                if (newValue) {
-                    eventListenerScope.launch {
-                        enabledEffect()
-                    }
-                }
+        }.notAnOption().onChanged { newState ->
+            if (newState) {
+                eventListenerScope.launch { enabledEffect() }
             }
-        }.notAnOption()
+        }
+
+    /**
+     * Launches an async task on [eventListenerScope] when module is turned on.
+     */
+    open suspend fun enabledEffect() {}
 
     /**
      * Launches an async task on [eventListenerScope] when module is turned on.
