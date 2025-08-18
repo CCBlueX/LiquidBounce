@@ -61,9 +61,9 @@ public final class LiquidInstruction {
   }
 
   public static void main(String[] args) {
-    String[] buttons = new String[]{"Download LiquidLauncher", "Open GitHub", "Open Discord", "Close"};
+    var buttons = new String[]{"Manual installation guide", "Download LiquidLauncher", "Open GitHub", "Open Discord", "Close"};
 
-    int result = JOptionPane.showOptionDialog(
+    var result = JOptionPane.showOptionDialog(
         null,
         String.format("""
             Welcome to %s!
@@ -82,9 +82,10 @@ public final class LiquidInstruction {
     );
 
     switch (result) {
-      case 0 -> browse(URI.create("https://liquidbounce.net/download"));
-      case 1 -> browse(URI.create("https://github.com/CCBlueX/LiquidBounce"));
-      case 2 -> browse(URI.create("https://liquidbounce.net/discord"));
+      case 0 -> browse(URI.create("https://liquidbounce.net/docs/get-started/manual-installation"));
+      case 1 -> browse(URI.create("https://liquidbounce.net/download"));
+      case 2 -> browse(URI.create("https://github.com/CCBlueX/LiquidBounce"));
+      case 3 -> browse(URI.create("https://liquidbounce.net/discord"));
       default -> System.exit(0);
     }
   }
