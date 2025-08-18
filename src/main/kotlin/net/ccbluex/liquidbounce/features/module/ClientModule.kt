@@ -137,11 +137,6 @@ open class ClientModule(
      */
     open suspend fun enabledEffect() {}
 
-    /**
-     * Launches an async task on [eventListenerScope] when module is turned on.
-     */
-    open suspend fun enabledEffect() {}
-
     final override fun onToggled(state: Boolean): Boolean {
         // Check if the module is locked and cannot be enabled
         locked?.let { locked ->
