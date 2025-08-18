@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -27,8 +28,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.item.getCooldown
+import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
@@ -74,6 +78,53 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
     init {
         tree(HighlightClicked)
+    }
+
+
+    private object TextCooldownProgress : ToggleableConfigurable(this, "TextCooldownProgress", enabled = true) {
+        val mode by enumChoice("Mode", CooldownProgressMode.PERCENTAGE)
+
+        val scale by float("Scale", 1F, 0.25F..4F)
+        val color by color("Color", Color4b.WHITE)
+    }
+
+    init {
+        tree(TextCooldownProgress)
+    }
+
+    private enum class CooldownProgressMode(override val choiceName: String): NamedChoice {
+        PERCENTAGE("Percentage"),
+        DURATION_TICKS("DurationTicks"),
+        DURATION_SECONDS("DurationSeconds"),
+    }
+
+    fun DrawContext.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
+        if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
+
+        val player = mc.player ?: return
+
+        val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickDelta(true))
+
+        if (progress > 0.0F) {
+            this.matrices.push()
+            this.matrices.translate(0.0, 0.0, 200.0)
+            this.matrices.scale(TextCooldownProgress.scale, TextCooldownProgress.scale, 1f)
+            val text = when (TextCooldownProgress.mode) {
+                CooldownProgressMode.PERCENTAGE -> "${(progress * 100f).toInt()}%"
+                CooldownProgressMode.DURATION_TICKS -> {
+                    val entry = player.itemCooldownManager.getCooldown(stack)!!
+                    val ticks = entry.endTick - entry.currentTick
+                    ticks.toString()
+                }
+                CooldownProgressMode.DURATION_SECONDS -> {
+                    val entry = player.itemCooldownManager.getCooldown(stack)!!
+                    val seconds = (entry.endTick - entry.currentTick) * 0.05f
+                    if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
+                }
+            }
+            this.drawCenteredTextWithShadow(mc.textRenderer, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
+            this.matrices.pop()
+        }
     }
 
     fun drawHighlightSlot(context: DrawContext, slot: Slot) {

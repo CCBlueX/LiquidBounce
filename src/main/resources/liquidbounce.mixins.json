@@ -45,6 +45,7 @@
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinEntityRenderer",
     "minecraft.entity.MixinHeadFeatureRenderer",
+    "minecraft.entity.MixinItemCooldownManager",
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinLivingEntityCompatibility",
     "minecraft.entity.MixinMobSpawnerBlockEntityRenderer",
