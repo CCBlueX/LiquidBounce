@@ -65,14 +65,15 @@ public final class LiquidInstruction {
 
     var result = JOptionPane.showOptionDialog(
         null,
-        String.format("""
+        """
             Welcome to %s!
             
             This file is a Fabric mod, you should use it with a launcher and Fabric.
             
-            We recommend to use LiquidLauncher, it simplifies the installation of the client and automatically keeps it up to date.
-            You can also use a launcher of your choice, but we cannot guarantee that the client will work.
-            """, LiquidBounce.CLIENT_NAME),
+            You can click the button below to open the manual installation guide, or download the LiquidLauncher.
+            If you need help, you can join our Discord server for support.
+            If you found any bugs or have any feature requests, please report them on our GitHub repository.
+            """.formatted(LiquidBounce.CLIENT_NAME),
         LiquidBounce.CLIENT_NAME + " by " + LiquidBounce.CLIENT_AUTHOR + " (" + GitInfo.version() + ")",
         JOptionPane.DEFAULT_OPTION,
         JOptionPane.INFORMATION_MESSAGE,
