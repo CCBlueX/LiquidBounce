@@ -264,10 +264,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             }
 
             unblockMode == UnblockMode.NONE && !pauses -> {
-                interaction.stopUsingItem(player)
-
                 blockingStateEnforced = false
-                true
+                false
             }
             else -> false
         }
