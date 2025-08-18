@@ -11,14 +11,14 @@
     import TogglableSetting from "../TogglableSetting.svelte";
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
-    import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
-    import {onMount} from "svelte";
-    import TextArraySetting from "../TextArraySetting.svelte";
     import BindSetting from "../BindSetting.svelte";
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";
+    import MutableListSetting from "../list/MutableListSetting.svelte";
+    import ItemListSetting from "../list/ItemListSetting.svelte";
+    import RegistryListSetting from "../list/RegistryListSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -50,10 +50,12 @@
         <ColorSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "TEXT"}
         <TextSetting bind:setting={setting} on:change/>
-    {:else if setting.valueType === "BLOCKS"}
-        <BlocksSetting {path} bind:setting={setting} on:change/>
-    {:else if setting.valueType === "TEXT_ARRAY"}
-        <TextArraySetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "MUTABLE_LIST" }
+        <MutableListSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "ITEM_LIST" }
+        <ItemListSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "REGISTRY_LIST" }
+        <RegistryListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "VECTOR_I" || setting.valueType === "VECTOR_D" }

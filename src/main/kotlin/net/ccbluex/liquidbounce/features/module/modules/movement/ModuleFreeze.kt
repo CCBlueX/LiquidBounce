@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -55,12 +55,12 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
     private var missedOutTick = 0
     private var warpInProgress = false
 
-    override fun enable() {
+    override fun onEnabled() {
         missedOutTick = 0
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (balance) {
             warpInProgress = true
             while (missedOutTick > 0) {
@@ -72,7 +72,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
         }
 
         missedOutTick = 0
-        super.disable()
+        super.onDisabled()
     }
 
     /**

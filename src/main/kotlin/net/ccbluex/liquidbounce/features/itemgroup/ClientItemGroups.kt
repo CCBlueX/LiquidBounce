@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.itemgroup
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ContainerItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
@@ -39,7 +39,7 @@ import net.minecraft.nbt.NbtCompound
 object ClientItemGroups : Configurable("tabs") {
 
     private var beenSetup = false
-    val containers by textArray("Containers", mutableListOf())
+    val containers by textList("Containers", mutableListOf())
 
     fun storeAsContainerItem(compound: NbtCompound) {
         val compoundString = compound.toString()

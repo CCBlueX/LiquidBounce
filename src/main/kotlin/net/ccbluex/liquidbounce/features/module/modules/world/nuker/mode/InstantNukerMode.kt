@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.swingMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
-import net.ccbluex.liquidbounce.utils.kotlin.isEmpty
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.Hand
@@ -55,7 +54,7 @@ object InstantNukerMode : Choice("Instant") {
 
         val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random())
 
-        if (targets.isEmpty()) {
+        if (targets.none()) {
             wasTarget = null
             waitTicks(1)
             return@tickHandler

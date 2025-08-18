@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.fluid
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.FluidPushEvent
 import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.handler

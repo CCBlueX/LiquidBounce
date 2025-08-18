@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -42,7 +43,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
-    val listOfModules = arrayListOf(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura)
+    val listOfModules = sortedSetOf(VALUE_NAME_ORDER, ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura)
     private val disableOn by multiEnumChoice<DisableOn>("On")
 
     @Suppress("unused")

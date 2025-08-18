@@ -103,6 +103,7 @@ export interface PlayerInventory {
     armor: ItemStack[];
     main: ItemStack[];
     crafting: ItemStack[];
+    enderChest: ItemStack[];
 }
 
 export interface ProxyAdditionResultEvent {

@@ -48,16 +48,22 @@ public abstract class MixinPlayerListEntry {
     private Identifier capeTexture = null;
 
     @ModifyReturnValue(method = "getSkinTextures", at = @At("RETURN"))
+    @SuppressWarnings({"ConstantConditions", "EqualsBetweenInconvertibleTypes", "RedundantCast"})
     private SkinTextures liquid_bounce$skin(SkinTextures original) {
         if (HideAppearance.INSTANCE.isDestructed()) {
             return original;
         }
 
-        if (ModuleSkinChanger.INSTANCE.getRunning() &&
-                MinecraftClient.getInstance().getGameProfile().equals(this.profile)) {
-            var customSkinTextures = ModuleSkinChanger.INSTANCE.getSkinTextures();
-            if (customSkinTextures != null) {
-                original = customSkinTextures.get();
+        if (ModuleSkinChanger.INSTANCE.getRunning()) {
+            var player = MinecraftClient.getInstance().player;
+            if (player != null) {
+                var playerListEntry = player.getPlayerListEntry();
+                if (playerListEntry != null && playerListEntry.equals((PlayerListEntry) (Object) this)) {
+                    var customSkinTextures = ModuleSkinChanger.INSTANCE.getSkinTextures();
+                    if (customSkinTextures != null) {
+                        original = customSkinTextures.get();
+                    }
+                }
             }
         }
 

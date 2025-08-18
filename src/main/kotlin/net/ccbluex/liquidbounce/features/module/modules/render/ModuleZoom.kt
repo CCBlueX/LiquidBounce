@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -69,13 +69,13 @@ object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind
     private var scaledDifference = 0.0
     private var disableAnimationFinished = true
 
-    override fun enable() {
+    override fun onEnabled() {
         targetFov = zoom
         previousFov = getDefaultFov()
         reset()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         previousFov = getFov(true)
         chronometer.reset()
         targetFov = getDefaultFov()

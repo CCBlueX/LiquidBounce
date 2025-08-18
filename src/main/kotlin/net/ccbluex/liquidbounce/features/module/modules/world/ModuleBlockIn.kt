@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -142,13 +142,13 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     private var rotateClockwise = false
     private var blockList = emptySet<BlockPos>()
 
-    override fun disable() {
+    override fun onDisabled() {
         startPos.set(BlockPos.ORIGIN)
         blockList = emptySet()
         blockPlacer.disable()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         startPos.set(player.blockPos)
         rotateClockwise = Random.nextBoolean()
         getPositions()

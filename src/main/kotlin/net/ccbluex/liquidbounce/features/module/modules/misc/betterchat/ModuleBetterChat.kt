@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -109,7 +109,12 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
             return@suspendHandler
         }
 
-        val result = ModuleTranslation.translate(text = event.message.stripMinecraftColorCodes())
+        val plainMessage = event.message.stripMinecraftColorCodes()
+        if (plainMessage.isBlank()) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = plainMessage)
         if (result.isValid) {
             chat(
                 result.toResultText(),

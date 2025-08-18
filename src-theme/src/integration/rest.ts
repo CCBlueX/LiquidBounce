@@ -10,19 +10,20 @@ import type {
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
+    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
-    Registries,
     Server,
     Session,
     VirtualScreen,
     World
 } from "./types";
 import type {PlayerInventory} from "./events";
+import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -162,9 +163,9 @@ export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
     return data;
 }
 
-export async function getRegistries(): Promise<Registries> {
-    const response = await fetch(`${API_BASE}/client/registries`);
-    const data: Registries = await response.json();
+export async function getRegistryItems(name: string): Promise<Record<string, RegistryItem>> {
+    const response = await fetch(`${API_BASE}/client/registry/${name}`);
+    const data: Record<string, RegistryItem> = await response.json();
 
     return data;
 }
@@ -379,12 +380,15 @@ export async function removeAccount(id: number) {
 }
 
 export async function loginToAccount(id: number) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    }).finally(() => {
+        isLoggingIn.set(false);
     });
 }
 

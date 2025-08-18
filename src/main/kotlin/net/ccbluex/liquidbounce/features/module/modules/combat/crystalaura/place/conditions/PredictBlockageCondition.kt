@@ -29,7 +29,7 @@ import net.minecraft.util.math.BlockPos
  */
 object PredictBlockageCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         val up = cache.up
         return !PredictFeature.willBeBlocked(
             context.expectedCrystal.offset(up.x.toDouble(), up.y.toDouble(), up.z.toDouble()),

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -66,7 +66,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         }.toList()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         for (spoofedEffect in statusEffectValues) {
             if (spoofedEffect.enabled && player.getStatusEffect(spoofedEffect.registryEntry)?.duration == 0) {
                 player.removeStatusEffect(spoofedEffect.registryEntry)

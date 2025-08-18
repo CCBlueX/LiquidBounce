@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -111,7 +111,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
         }
     private var wasTarget: DestroyerTarget? = null
 
-    override fun disable() {
+    override fun onDisabled() {
         if (currentTarget != null) {
             interaction.cancelBlockBreaking()
         }

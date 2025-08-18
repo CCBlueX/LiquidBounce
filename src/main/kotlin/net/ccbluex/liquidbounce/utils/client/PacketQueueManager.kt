@@ -169,11 +169,9 @@ object PacketQueueManager : EventListener {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        // Use LiquidBounce accent color
-        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
-
         renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
+            // Use LiquidBounce accent color
+            withColor(Color4b.LIQUID_BOUNCE) {
                 drawLineStrip(positions = positions.mapArray { vec3d -> Vec3(relativeToCamera(vec3d)) })
             }
         }

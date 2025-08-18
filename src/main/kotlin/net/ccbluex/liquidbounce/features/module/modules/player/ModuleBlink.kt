@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -60,7 +60,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
         tree(AutoResetOption)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         if (dummy) {
             val clone = OtherClientPlayerEntity(world, player.gameProfile)
 
@@ -77,7 +77,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
         removeClone()
     }

@@ -16,9 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:OptIn(FlowPreview::class)
+
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -39,9 +42,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     init {
         withScope {
-            username.asStateFlow().debounce { 2.seconds }.collectLatest {
+            username.asStateFlow().debounce { 2.seconds }.collectLatest { username ->
                 while (mc.player == null) { delay(1.seconds) }
-                skinTextures = textureSupplier(it)
+                skinTextures = textureSupplier(username)
             }
         }
     }

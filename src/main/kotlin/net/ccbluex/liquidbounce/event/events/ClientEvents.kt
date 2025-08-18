@@ -21,15 +21,15 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.config.gson.GsonInstance
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
+import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.theme.component.Component
@@ -47,16 +47,13 @@ import net.minecraft.world.GameMode
     DeprecationLevel.WARNING
 )
 @Nameable("clickGuiScaleChange")
-@WebSocketEvent
-class ClickGuiScaleChangeEvent(val value: Float) : Event()
+class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @Nameable("clickGuiValueChange")
-@WebSocketEvent
-class ClickGuiValueChangeEvent(val configurable: Configurable) : Event()
+class ClickGuiValueChangeEvent(val configurable: Configurable) : Event(), WebSocketEvent
 
 @Nameable("spaceSeperatedNamesChange")
-@WebSocketEvent
-class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
 
 @Nameable("clientStart")
 object ClientStartEvent : Event()
@@ -65,48 +62,38 @@ object ClientStartEvent : Event()
 object ClientShutdownEvent : Event()
 
 @Nameable("clientLanguageChanged")
-@WebSocketEvent
-class ClientLanguageChangedEvent : Event()
+class ClientLanguageChangedEvent : Event(), WebSocketEvent
 
 @Nameable("valueChanged")
-@WebSocketEvent
-class ValueChangedEvent(val value: Value<*>) : Event()
+class ValueChangedEvent(val value: Value<*>) : Event(), WebSocketEvent
 
 @Nameable("moduleActivation")
-@WebSocketEvent
-class ModuleActivationEvent(val moduleName: String) : Event()
+class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 
 @Nameable("moduleToggle")
-@WebSocketEvent
-class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event()
+class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
 @Nameable("refreshArrayList")
-@WebSocketEvent
 object RefreshArrayListEvent : Event()
 
 @Nameable("notification")
-@WebSocketEvent
-class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
+class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
 
 @Nameable("gameModeChange")
-@WebSocketEvent
-class GameModeChangeEvent(val gameMode: GameMode) : Event()
+class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent
 
 @Nameable("targetChange")
-@WebSocketEvent
-class TargetChangeEvent(val target: PlayerData?) : Event()
+class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
-@WebSocketEvent
-class BlockCountChangeEvent(val count: Int?) : Event()
+class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
 
 @Nameable("clientChatStateChange")
-@WebSocketEvent
-class ClientChatStateChange(val state: State) : Event() {
+class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
     enum class State {
         @SerializedName("connecting")
         CONNECTING,
@@ -129,8 +116,7 @@ class ClientChatStateChange(val state: State) : Event() {
 }
 
 @Nameable("clientChatMessage")
-@WebSocketEvent
-class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
+class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event(), WebSocketEvent {
     enum class ChatGroup(override val choiceName: String) : NamedChoice {
         @SerializedName("public")
         PUBLIC_CHAT("PublicChat"),
@@ -141,47 +127,44 @@ class ClientChatMessageEvent(val user: User, val message: String, val chatGroup:
 }
 
 @Nameable("clientChatError")
-@WebSocketEvent
-class ClientChatErrorEvent(val error: String) : Event()
+class ClientChatErrorEvent(val error: String) : Event(), WebSocketEvent
 
 @Nameable("clientChatJwtToken")
 // Do not define as WebSocket event, because it contains sensitive data
 class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
 @Nameable("accountManagerMessage")
-@WebSocketEvent
-class AccountManagerMessageEvent(val message: String) : Event()
+class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 
 @Nameable("accountManagerLogin")
-@WebSocketEvent
-class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event()
+class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("accountManagerAddition")
-@WebSocketEvent
-class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
+class AccountManagerAdditionResultEvent(
+    val username: String? = null, val error: String? = null
+) : Event(), WebSocketEvent
 
 @Nameable("accountManagerRemoval")
-@WebSocketEvent
-class AccountManagerRemovalResultEvent(val username: String?) : Event()
+class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
 
 @Nameable("proxyAdditionResult")
-@WebSocketEvent
-class ProxyAdditionResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event()
+class ProxyAdditionResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("proxyCheckResult")
-@WebSocketEvent
-class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event()
+class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("proxyEditResult")
-@WebSocketEvent
-class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event()
+class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("browserReady")
 object BrowserReadyEvent : Event()
 
 @Nameable("virtualScreen")
-@WebSocketEvent
-class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
+class VirtualScreenEvent(
+    val type: VirtualScreenType,
+    @Deprecated("Use `type` instead") val screenName: String = type.routeName,
+    val action: Action
+) : Event(), WebSocketEvent {
 
     enum class Action {
         @SerializedName("open")
@@ -194,12 +177,12 @@ class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
 }
 
 @Nameable("serverPinged")
-@WebSocketEvent
-class ServerPingedEvent(val server: ServerInfo) : Event()
+class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-@WebSocketEvent(serializer = GsonInstance.ACCESSIBLE_INTEROP)
-class ComponentsUpdate(val components: List<Component>) : Event()
+class ComponentsUpdate(val components: List<Component>) : Event(), WebSocketEvent {
+    override val serializer get() = accessibleInteropGson
+}
 
 @Nameable("rotationUpdate")
 object RotationUpdateEvent : Event()
@@ -208,8 +191,7 @@ object RotationUpdateEvent : Event()
 object ResourceReloadEvent : Event()
 
 @Nameable("scaleFactorChange")
-@WebSocketEvent
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
+class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChain> = mutableListOf()) : Event() {
@@ -243,5 +225,4 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
 class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()
 
 @Nameable("browserUrlChange")
-@WebSocketEvent
-class BrowserUrlChangeEvent(val index: Int, val url: String) : Event()
+class BrowserUrlChangeEvent(val index: Int, val url: String) : Event(), WebSocketEvent

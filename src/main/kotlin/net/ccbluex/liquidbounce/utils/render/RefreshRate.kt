@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.math.max
 import kotlin.math.min
 
-const val CHROME_MAX_REFRESH_RATE = 240
-const val LOWEST_REFRESH_RATE = 60
+private const val CHROME_MAX_REFRESH_RATE = 240
+private const val LOWEST_REFRESH_RATE = 60
 
 val refreshRate: Int
     get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))

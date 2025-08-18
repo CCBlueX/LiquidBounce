@@ -18,19 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
@@ -38,17 +32,10 @@ import net.minecraft.network.packet.Packet
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import java.lang.reflect.Field
-import java.lang.reflect.GenericArrayType
-import java.lang.reflect.Modifier
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
-import java.lang.reflect.TypeVariable
-import java.lang.reflect.WildcardType
+import java.lang.reflect.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.math.max
 
 /**
  * Module PacketLogger
@@ -59,9 +46,9 @@ import kotlin.math.max
  */
 object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
-    private val bound by multiEnumChoice("Bound", PacketBound.SERVER)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val packets by textArray("Packets", sortedSetOf())
+    private val clientPackets by clientPackets("ClientPackets", sortedSetOf())
+    private val serverPackets by serverPackets("ServerPackets", sortedSetOf())
     private val showFieldType by boolean("ShowFieldType", true)
 
     private val classNames = ConcurrentHashMap<Class<out Packet<*>>, String>()
@@ -72,7 +59,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         doNotIncludeAlways()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         classNames.clear()
         fieldNames.clear()
     }
@@ -83,9 +70,16 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
     }
 
     fun onPacket(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean = false) {
-        if (!running || bound.none { it.origin == origin }) {
+        if (!running) {
             return
         }
+
+        val packetId = packet.packetType.id
+        if (!filter(packetId, if (origin == TransferOrigin.INCOMING) serverPackets else clientPackets)) {
+            return
+        }
+
+        val clazz = packet::class.java
 
         val text = Text.empty()
         if (origin == TransferOrigin.INCOMING) {
@@ -94,15 +88,17 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             text.append(message("send").formatted(Formatting.GRAY).bold(true))
         }
 
-        val clazz = packet::class.java
-
         text.append(" ")
-        val packetName = getPacketName(clazz)
-        if (!filter(packetName, packets)) {
-            return
-        }
 
-        text.append(highlight(packetName).copyable(copyContent = packetName))
+        val packetClassName = classNames.computeIfAbsent(packet.javaClass, EnvironmentRemapper::remapClass)
+            .substringAfterLast('.')
+        text.append(highlight(packetClassName).copyable(copyContent = packetClassName))
+
+        val packetName = packetId.toName()
+
+        text.append(regular(" (ID: "))
+        text.append(variable(packetName).copyable(copyContent = packetName))
+        text.append(regular(")"))
 
         if (clazz.isRecord) {
             text.append(" (Record)".asText().formatted(Formatting.DARK_GRAY))
@@ -117,28 +113,6 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         text.appendFields(clazz, packet)
 
         chat(text, metadata = MessageMetadata(prefix = false))
-    }
-
-    private fun getPacketName(clazz: Class<out Packet<*>>): String {
-        fun getClassName(clazz: Class<*>): CharSequence {
-            val remapClassName = EnvironmentRemapper.remapClass(clazz)
-            val lastDotIndex = remapClassName.lastIndexOf('.')
-            val lastDollarIndex = remapClassName.lastIndexOf('$')
-            return remapClassName.subSequence(max(lastDotIndex, lastDollarIndex) + 1, remapClassName.length)
-        }
-
-        return classNames.computeIfAbsent(clazz) {
-            val classNames = mutableListOf<CharSequence>()
-            classNames.add(getClassName(clazz))
-
-            var superclass: Class<*>? = clazz.superclass
-            while (superclass.isNotRoot()) {
-                classNames.add(getClassName(superclass))
-                superclass = superclass.superclass
-            }
-            classNames.reverse()
-            classNames.joinToString(".")
-        }
     }
 
     private fun MutableText.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
@@ -198,19 +172,10 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
     override val running: Boolean
         get() = !isDestructed && enabled
 
-    @Suppress("unused")
-    private enum class PacketBound(
-        override val choiceName: String,
-        val origin: TransferOrigin,
-    ) : NamedChoice {
-        CLIENT("Client", TransferOrigin.INCOMING),
-        SERVER("Server", TransferOrigin.OUTGOING)
-    }
-
     private fun Field.fullTypeString(): String {
         fun Type.parse(): String =
             when (this) {
-                is Class<*> -> this.simpleName
+                is Class<*> -> EnvironmentRemapper.remapClass(this).substringAfterLast('.')
                 is ParameterizedType -> {
                     val rawType = rawType.parse()
                     val args = actualTypeArguments

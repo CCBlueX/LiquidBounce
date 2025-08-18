@@ -24,8 +24,8 @@ import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.ListValueType
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Suppress("TooManyFunctions")
 object AccountManager : Configurable("Accounts"), EventListener {
 
-    val accounts by value(name, mutableListOf<MinecraftAccount>(), listType = ListValueType.Account)
+    val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 
     private var initialSession: SessionData
 
