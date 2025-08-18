@@ -38,7 +38,9 @@ import net.minecraft.screen.slot.Slot
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
     private object HighlightClicked : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
-        val mode = choices("Mode", Mode.Border, arrayOf(Mode.Border, Mode.Texture))
+        val mode = choices(this, "Mode", 0) {
+            arrayOf(Mode.Border, Mode.Texture)
+        }
 
         sealed class Mode(choiceName: String) : Choice(choiceName) {
             final override val parent: ChoiceConfigurable<*>
@@ -60,8 +62,6 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                  * @see net.minecraft.client.gui.hud.InGameHud.renderHotbar
                  */
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
-                    context.matrices.push()
-                    context.matrices.translate(0f, 0f, 1000f)
                     context.drawGuiTexture(
                         RenderLayer::getGuiTextured,
                         MixinInGameHudAccessor.getHotbarSelectionTexture(),
@@ -70,7 +70,6 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                         22,
                         21,
                     )
-                    context.matrices.pop()
                 }
             }
         }
@@ -127,10 +126,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         }
     }
 
-    fun drawHighlightSlot(context: DrawContext, slot: Slot) {
+    fun DrawContext.drawHighlightSlot(slot: Slot) {
         if (!running || slot.id != InventoryManager.lastClickedSlot) return
 
-        HighlightClicked.mode.activeChoice.drawHighlightSlot(context, slot)
+        HighlightClicked.mode.activeChoice.drawHighlightSlot(this, slot)
     }
 
 }
