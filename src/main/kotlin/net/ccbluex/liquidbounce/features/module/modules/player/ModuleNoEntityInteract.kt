@@ -28,12 +28,11 @@ import net.minecraft.item.Items
 import net.minecraft.item.MiningToolItem
 import net.minecraft.registry.Registries
 import net.minecraft.util.hit.EntityHitResult
-import java.util.function.Predicate
 
 /**
  * Skip crosshair entity targets.
  */
-object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER), Predicate<EntityHitResult> {
+object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
 
     private fun defaultEntityTypes(): MutableSet<EntityType<*>> {
         return hashSetOf(EntityType.VILLAGER, EntityType.ARMOR_STAND)
@@ -51,7 +50,7 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER
     private val holdingItemFilter by enumChoice("HoldingItemFilter", Filter.WHITELIST)
     private val holdingItems by items("HoldingItems", defaultHoldingItems())
 
-    override fun test(entity: EntityHitResult): Boolean {
+    fun test(entity: EntityHitResult): Boolean {
         return !running ||
             entityTypeFilter(entity.entity, entityTypes) &&
             holdingItemFilter(player.mainHandStack.item, holdingItems)
