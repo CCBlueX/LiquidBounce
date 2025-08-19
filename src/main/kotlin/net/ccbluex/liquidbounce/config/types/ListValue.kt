@@ -143,13 +143,14 @@ open class RegistryListValue<T : MutableSet<E>, E>(
     /**
      * This is used to determine the registry endpoint for the API.
      */
-    @Exclude var registry: String = when (innerValueType) {
+    @Exclude val registry: String = when (innerValueType) {
         ValueType.BLOCK -> "blocks"
         ValueType.ITEM -> "items"
         ValueType.SOUND -> "sounds"
         ValueType.STATUS_EFFECT -> "statuseffects"
         ValueType.CLIENT_PACKET -> "clientpackets"
         ValueType.SERVER_PACKET -> "serverpackets"
+        ValueType.ENTITY_TYPE -> "entity_type"
         else -> error("Unsupported registry type: $innerValueType")
     }
 
