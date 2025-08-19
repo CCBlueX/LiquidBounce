@@ -20,6 +20,7 @@
         "/clickgui": ClickGui,
         "/hud": Hud,
         "/inventory": Inventory,
+        "/container": Inventory,
         "/title": Title,
         "/multiplayer": Multiplayer,
         "/altmanager": AltManager,
