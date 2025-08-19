@@ -92,6 +92,9 @@ class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 @Nameable("blockCountChange")
 class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
 
+@Nameable("inventoryManagerProgress")
+class InventoryManagerProgressEvent(val count: Int, val remaining: Int) : Event(), WebSocketEvent
+
 @Nameable("clientChatStateChange")
 class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
     enum class State {

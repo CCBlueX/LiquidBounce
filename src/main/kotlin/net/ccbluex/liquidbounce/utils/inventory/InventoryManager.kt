@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.InventoryManagerProgressEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -67,6 +68,9 @@ object InventoryManager : EventListener {
 
     var lastClickedSlot: Int = -1
         internal set
+
+    private var recentRemaining = 0
+    private var recentCount = 0
 
     private var recentInventoryOpen = false
 
@@ -122,6 +126,7 @@ object InventoryManager : EventListener {
             schedule.sortWith(COMPARATOR_ACTION_CHAIN)
 
             ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+            callProgressEvent(schedule.size)
 
             // Handle non-inventory open actions first
             for ((scheduleIndex, chained) in schedule.withIndex()) {
@@ -206,6 +211,14 @@ object InventoryManager : EventListener {
         }
 
         lastClickedSlot = -1
+        recentCount = 0
+        recentRemaining = 0
+    }
+
+    private fun callProgressEvent(scheduleSize: Int) {
+        recentCount = maxOf(recentCount, scheduleSize)
+        recentRemaining = minOf(recentCount, scheduleSize)
+        EventManager.callEvent(InventoryManagerProgressEvent(recentCount, recentRemaining))
     }
 
     /**
@@ -288,7 +301,7 @@ object InventoryManager : EventListener {
         }.thenByDescending {
             it.priority
         }
-    
+
 }
 
 sealed interface InventoryAction {

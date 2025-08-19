@@ -147,6 +147,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     TitleEvent.Subtitle::class,
     TitleEvent.Fade::class,
     TitleEvent.Clear::class,
+    InventoryManagerProgressEvent::class,
 )
 
 /**
