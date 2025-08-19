@@ -132,3 +132,8 @@ export interface ClickGuiScaleChangeEvent {
 export interface BrowserUrlChangeEvent {
     url: string;
 }
+
+export interface InventoryManagerProgressEvent {
+    count: number;
+    remaining: number;
+}
