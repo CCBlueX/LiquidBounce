@@ -144,7 +144,8 @@ class RegistryListValue<T : MutableSet<E>, E>(
     /**
      * This is used to determine the registry endpoint for the API.
      */
-    @Exclude val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
+    @Exclude
+    val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
 
     companion object {
         @JvmField
