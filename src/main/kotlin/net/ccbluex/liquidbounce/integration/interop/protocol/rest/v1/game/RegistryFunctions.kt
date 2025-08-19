@@ -243,6 +243,16 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
+        "entity_type" -> {
+            Registries.ENTITY_TYPE.forEach { entityType ->
+                val id = Registries.ENTITY_TYPE.getId(entityType)
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", entityType.name.convertToString())
+                    addProperty("icon", iconUrl(id)) // TODO: fix icon
+                })
+            }
+        }
+
         else -> return httpForbidden("Invalid registry name: $registryName")
     }
 })
