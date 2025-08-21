@@ -39,6 +39,7 @@ class TrajectoryInfoRenderer(
 ) {
     companion object {
         @JvmStatic
+        @JvmOverloads
         fun getHypotheticalTrajectory(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
@@ -91,28 +92,27 @@ class TrajectoryInfoRenderer(
         maxTicks: Int,
         color: Color4b,
         matrixStack: MatrixStack
-    ): HitResult? {
+    ): SimulationResult {
         // Start drawing of path
-        val positions = mutableListOf<Vec3d>()
-
-        val hitResult = runSimulation(maxTicks, positions)
+        val simulationResult = runSimulation(maxTicks)
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(color) {
-                drawLineStrip(positions.map { relativeToCamera(it + renderOffset).toVec3() })
+                drawLineStrip(simulationResult.positions.map { relativeToCamera(it + renderOffset).toVec3() })
             }
         }
 
-        return hitResult
+        return simulationResult
     }
 
     fun runSimulation(
         maxTicks: Int,
-        outPositions: MutableList<Vec3d> = mutableListOf(),
-    ): HitResult? {
+    ): SimulationResult {
+        val mutableBlockPos = BlockPos.Mutable()
+        val positions = mutableListOf<Vec3d>()
         var currTicks = 0
 
-        for (ignored in 0 until maxTicks) {
+        while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
                 break
             }
@@ -125,13 +125,13 @@ class TrajectoryInfoRenderer(
 
             if (hitResult != null) {
                 hitResult.second?.let {
-                    outPositions += it
+                    positions += it
                 }
 
-                return hitResult.first
+                return SimulationResult(hitResult.first, positions)
             }
 
-            val blockState = world.getBlockState(BlockPos.ofFloored(pos))
+            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
 
             // Check is next position water
             val drag = if (!blockState.fluidState.isEmpty) {
@@ -144,12 +144,12 @@ class TrajectoryInfoRenderer(
             velocity -= Vec3d(0.0, trajectoryInfo.gravity, 0.0)
 
             // Draw path
-            outPositions += pos
+            positions += pos
 
             currTicks++
         }
 
-        return null
+        return SimulationResult(null, positions)
     }
 
     private fun checkForHits(
@@ -190,4 +190,10 @@ class TrajectoryInfoRenderer(
             null
         }
     }
+
+    @JvmRecord
+    data class SimulationResult(
+        val hitResult: HitResult?,
+        val positions: List<Vec3d>,
+    )
 }

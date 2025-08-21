@@ -41,7 +41,8 @@ import net.minecraft.util.math.Vec3d
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
-    private val show by multiEnumChoice("Show",
+    private val show by multiEnumChoice(
+        "Show",
         Show.OTHER_PLAYERS,
         Show.ACTIVE_TRAJECTORY_ARROW
     )
@@ -71,7 +72,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
             val color = TrajectoryData.getColorForEntity(it)
 
-            val hitResult = trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, color, matrixStack)
+            val hitResult =
+                trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, color, matrixStack).hitResult
 
             if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity == player)) {
                 drawLandingPos(hitResult, trajectoryInfo, event, color, color)
@@ -115,7 +117,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             partialTicks = event.partialTicks
         )
 
-        val hitResult = renderer.drawTrajectoryForProjectile(maxSimulatedTicks, Color4b.WHITE, event.matrixStack)
+        val hitResult =
+            renderer.drawTrajectoryForProjectile(maxSimulatedTicks, Color4b.WHITE, event.matrixStack).hitResult
 
         drawLandingPos(
             hitResult,
