@@ -33,7 +33,7 @@ abstract class NoSlowUseActionHandler(name: String) : ToggleableConfigurable(Mod
     }
 
     open fun getMultiplier() : FloatFloatPair {
-        if (!this.enabled || !NoSlowSharedGrim2371.doNotSlow) {
+        if (!this.enabled || NoSlowSharedGrim2371.shouldPreventNoSlow) {
             return DEFAULT_USE_MUL
         }
 
