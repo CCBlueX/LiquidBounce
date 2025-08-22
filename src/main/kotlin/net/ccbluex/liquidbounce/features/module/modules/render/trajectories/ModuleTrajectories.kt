@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -52,9 +55,25 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    private val simulationResults: MutableList<TrajectoryInfoRenderer.SimulationResult> = ObjectArrayList()
 
+    override fun onDisabled() {
+        simulationResults.clear()
+    }
+
+    val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+        debugParameter("TrajectoryCount") { simulationResults.size }
+        /**
+         * TODO:
+         * draw owner name (bool)
+         * draw landing duration (none ticks seconds)
+         * draw at (owner, entity, landing pos)
+         * draw offset
+         */
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        simulationResults.clear()
         world.entities.forEach {
             val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
                 it,
@@ -72,7 +91,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
             val color = TrajectoryData.getColorForEntity(it)
 
-            trajectoryRenderer.drawTrajectoryForProjectile(
+            simulationResults += trajectoryRenderer.drawTrajectoryForProjectile(
                 maxSimulatedTicks,
                 event,
                 trajectoryColor = color,
@@ -84,20 +103,23 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         if (otherPlayers) {
             for (otherPlayer in world.players) {
                 // Including the user
-                drawHypotheticalTrajectory(otherPlayer, event)
+                drawHypotheticalTrajectory(otherPlayer, event)?.let { simulationResults += it }
             }
         } else {
-            drawHypotheticalTrajectory(player, event)
+            drawHypotheticalTrajectory(player, event)?.let { simulationResults += it }
         }
     }
 
     /**
      * Draws the trajectory for an item in the player's hand
      */
-    private fun drawHypotheticalTrajectory(otherPlayer: PlayerEntity, event: WorldRenderEvent) {
+    private fun drawHypotheticalTrajectory(
+        otherPlayer: PlayerEntity,
+        event: WorldRenderEvent
+    ): TrajectoryInfoRenderer.SimulationResult? {
         val trajectoryInfo = otherPlayer.handItems.firstNotNullOfOrNull {
             TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
-        } ?: return
+        } ?: return null
 
         val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
@@ -117,7 +139,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             partialTicks = event.partialTicks
         )
 
-        renderer.drawTrajectoryForProjectile(
+        return renderer.drawTrajectoryForProjectile(
             maxSimulatedTicks,
             event,
             trajectoryColor = Color4b.WHITE,

@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -86,34 +87,12 @@ class TrajectoryInfoRenderer(
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
-                renderOffset = interpolatedOffset + Vec3d(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
+                renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
         }
     }
 
-    private val hitbox = Box.of(
-        Vec3d.ZERO,
-        trajectoryInfo.hitboxRadius * 2.0,
-        trajectoryInfo.hitboxRadius * 2.0,
-        trajectoryInfo.hitboxRadius * 2.0
-    )
-
-    private fun drawTrajectoryForProjectile(
-        maxTicks: Int,
-        color: Color4b,
-        matrixStack: MatrixStack,
-    ): SimulationResult {
-        // Start drawing of path
-        val simulationResult = runSimulation(maxTicks)
-
-        renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
-                drawLineStrip(simulationResult.positions.map { relativeToCamera(it + renderOffset).toVec3() })
-            }
-        }
-
-        return simulationResult
-    }
+    private val hitbox = trajectoryInfo.hitbox()
 
     fun runSimulation(
         maxTicks: Int,
@@ -208,9 +187,11 @@ class TrajectoryInfoRenderer(
         blockHitColor: Color4b?,
         entityHitColor: Color4b?,
     ): SimulationResult {
-        val simulationResult = drawTrajectoryForProjectile(maxTicks, trajectoryColor, event.matrixStack)
+        val simulationResult = runSimulation(maxTicks)
 
         val (landingPosition, positions) = simulationResult
+
+        drawTrajectoryForProjectile(positions, trajectoryColor, event.matrixStack)
 
         when (landingPosition) {
             null -> return simulationResult
@@ -226,10 +207,22 @@ class TrajectoryInfoRenderer(
         }
 
         if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            drawSplashPotionTargets(landingPosition, trajectoryInfo, event, entityHitColor)
+            drawSplashPotionTargets(landingPosition.pos, trajectoryInfo, event, entityHitColor)
         }
 
         return simulationResult
+    }
+
+    private fun drawTrajectoryForProjectile(
+        positions: List<Vec3d>,
+        color: Color4b,
+        matrixStack: MatrixStack,
+    ) {
+        renderEnvironmentForWorld(matrixStack) {
+            withColor(color) {
+                drawLineStrip(positions = positions.mapArray { relativeToCamera(it + renderOffset).toVec3() })
+            }
+        }
     }
 
     @JvmRecord
@@ -240,21 +233,16 @@ class TrajectoryInfoRenderer(
 }
 
 private fun drawSplashPotionTargets(
-    landingPosition: HitResult,
+    landingPosition: Vec3d,
     trajectoryInfo: TrajectoryInfo,
     event: WorldRenderEvent,
     entityHitColor: Color4b,
 ) {
-    val box: Box = Box.of(
-        landingPosition.pos,
-        trajectoryInfo.hitboxRadius * 2.0,
-        trajectoryInfo.hitboxRadius * 2.0,
-        trajectoryInfo.hitboxRadius * 2.0
-    ).expand(4.0, 2.0, 4.0)
+    val box: Box = trajectoryInfo.hitbox(landingPosition).expand(4.0, 2.0, 4.0)
 
     val hitTargets =
         world.getNonSpectatingEntities(LivingEntity::class.java, box)
-            .takeWhile { it.squaredDistanceTo(landingPosition.pos) <= 16.0 }
+            .takeWhile { it.squaredDistanceTo(landingPosition) <= 16.0 }
             .filter { it.isAffectedBySplashPotions }
 
     drawHitEntities(event.matrixStack, entityHitColor, hitTargets, event.partialTicks)

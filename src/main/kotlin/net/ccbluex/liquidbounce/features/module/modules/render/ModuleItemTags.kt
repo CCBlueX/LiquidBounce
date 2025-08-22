@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -91,8 +90,6 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private val drawContext = newDrawContext()
-
     private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
         initialValue = emptyMap()
     ) { _, _ ->
@@ -116,6 +113,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
+        val drawContext = it.context
         renderEnvironmentForGUI {
             itemEntities.mapNotNull { (center, items) ->
                 val renderPos = WorldToScreen.calculateScreenPos(center.add(renderOffset))
