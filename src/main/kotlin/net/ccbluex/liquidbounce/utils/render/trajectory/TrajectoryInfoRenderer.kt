@@ -38,10 +38,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class TrajectoryInfoRenderer(
-    private val owner: Entity,
+    val owner: Entity,
     private var velocity: Vec3d,
     private var pos: Vec3d,
-    private val trajectoryInfo: TrajectoryInfo,
+    val trajectoryInfo: TrajectoryInfo,
     /**
      * The visualization should be what-you-see-is-what-you-get, so we use the actual current position of the player
      * for simulation. Since the trajectory line should follow the player smoothly, we offset it by some amount.
