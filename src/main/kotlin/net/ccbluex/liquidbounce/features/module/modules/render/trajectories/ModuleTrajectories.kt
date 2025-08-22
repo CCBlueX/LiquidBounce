@@ -29,9 +29,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.minecraft.entity.Ownable
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.projectile.ProjectileEntity
-import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.math.Vec3d
 
 /**
@@ -64,7 +63,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             ) ?: return@forEach
 
             val trajectoryRenderer = TrajectoryInfoRenderer(
-                owner = it,
+                owner = (it as? Ownable)?.owner ?: it,
                 velocity = it.velocity,
                 pos = it.pos,
                 trajectoryInfo = trajectoryInfo,
@@ -73,14 +72,13 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
             val color = TrajectoryData.getColorForEntity(it)
 
-            val hitResult =
-                trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, color, matrixStack).hitResult
-
-
-
-            if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity === player)) {
-                drawLandingPos((it as? ProjectileEntity)?.owner, hitResult, trajectoryInfo, event, color, color)
-            }
+            trajectoryRenderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                event,
+                trajectoryColor = color,
+                blockHitColor = color,
+                entityHitColor = color,
+            )
         }
 
         if (otherPlayers) {
@@ -119,16 +117,12 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             partialTicks = event.partialTicks
         )
 
-        val hitResult =
-            renderer.drawTrajectoryForProjectile(maxSimulatedTicks, Color4b.WHITE, event.matrixStack).hitResult
-
-        drawLandingPos(
-            otherPlayer,
-            hitResult,
-            trajectoryInfo,
+        renderer.drawTrajectoryForProjectile(
+            maxSimulatedTicks,
             event,
-            Color4b(0, 160, 255, 150),
-            Color4b(255, 0, 0, 100)
+            trajectoryColor = Color4b.WHITE,
+            blockHitColor = Color4b(0, 160, 255, 150),
+            entityHitColor = Color4b(255, 0, 0, 100),
         )
     }
 
