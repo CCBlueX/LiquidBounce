@@ -49,6 +49,8 @@ class NametagRenderer {
             RenderBufferBuilder.TESSELATOR_B,
         )
 
+    private val dc = newDrawContext()
+
     private val fontBuffers = FontRendererBuffers()
 
     fun drawNametag(env: RenderEnvironment, nametag: Nametag, pos: Vec3) = with(env) {
@@ -106,8 +108,7 @@ class NametagRenderer {
     }
 
     private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack?>) {
-        val dc = newDrawContext()
-
+        dc.matrices.push()
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
         dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
         dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
@@ -133,6 +134,8 @@ class NametagRenderer {
                 dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
             }
         }
+
+        dc.matrices.pop()
     }
 
     fun commit(env: RenderEnvironment) {
