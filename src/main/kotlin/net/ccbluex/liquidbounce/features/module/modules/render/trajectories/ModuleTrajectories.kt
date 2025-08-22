@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.math.Vec3d
 
@@ -75,20 +76,21 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             val hitResult =
                 trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, color, matrixStack).hitResult
 
-            if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity == player)) {
-                drawLandingPos(hitResult, trajectoryInfo, event, color, color)
+
+
+            if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity === player)) {
+                drawLandingPos((it as? ProjectileEntity)?.owner, hitResult, trajectoryInfo, event, color, color)
             }
         }
 
         if (otherPlayers) {
             for (otherPlayer in world.players) {
-                if (otherPlayer != player) {
-                    drawHypotheticalTrajectory(otherPlayer, event)
-                }
+                // Including the user
+                drawHypotheticalTrajectory(otherPlayer, event)
             }
+        } else {
+            drawHypotheticalTrajectory(player, event)
         }
-
-        drawHypotheticalTrajectory(player, event)
     }
 
     /**
@@ -99,7 +101,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
         } ?: return
 
-        val rotation = if (otherPlayer == player) {
+        val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
                 RotationManager.serverRotation
             } else {
@@ -121,6 +123,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             renderer.drawTrajectoryForProjectile(maxSimulatedTicks, Color4b.WHITE, event.matrixStack).hitResult
 
         drawLandingPos(
+            otherPlayer,
             hitResult,
             trajectoryInfo,
             event,

@@ -18,29 +18,37 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
+@Suppress("LongParameterList")
 fun drawLandingPos(
+    owner: Entity?,
     landingPosition: HitResult?,
     trajectoryInfo: TrajectoryInfo,
     event: WorldRenderEvent,
     blockHitColor: Color4b,
-    entityHitColor: Color4b
+    entityHitColor: Color4b,
 ) {
-    if (landingPosition == null) {
-        return
+    when (landingPosition) {
+        null -> return
+        is BlockHitResult -> renderHitBlockFace(event.matrixStack, landingPosition, blockHitColor)
+        is EntityHitResult -> {
+            val entities = listOf(landingPosition.entity)
+
+            drawHitEntities(event.matrixStack, entityHitColor, entities, event.partialTicks)
+        }
+        else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
     }
 
-    if (landingPosition is BlockHitResult) {
-        renderHitBlockFace(event.matrixStack, landingPosition, blockHitColor)
-    } else if (landingPosition is EntityHitResult) {
-        val entities = listOf(landingPosition.entity)
-
-        drawHitEntities(event.matrixStack, entityHitColor, entities, event.partialTicks)
+    if (trajectoryInfo == TrajectoryInfo.POTION) {
+        drawSplashPotionTargets(landingPosition, trajectoryInfo, event, entityHitColor)
     }
+}
 
-    if (trajectoryInfo != TrajectoryInfo.POTION) {
-        return
-    }
-
+private fun drawSplashPotionTargets(
+    landingPosition: HitResult,
+    trajectoryInfo: TrajectoryInfo,
+    event: WorldRenderEvent,
+    entityHitColor: Color4b,
+) {
     val box: Box = Box.of(
         landingPosition.pos,
         trajectoryInfo.hitboxRadius * 2.0,
@@ -84,7 +92,7 @@ private fun drawHitEntities(
     }
 }
 
-fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
+private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
     val currState = currPos.getState()!!
 
