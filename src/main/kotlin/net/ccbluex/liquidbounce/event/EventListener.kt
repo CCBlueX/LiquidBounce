@@ -74,9 +74,7 @@ inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
     noinline handler: Handler<T>
 ): EventHook<T> {
-    return EventManager.registerEventHook(T::class.java,
-        EventHook(this, handler, priority)
-    )
+    return EventManager.registerEventHook(T::class.java, EventHook(this, handler, priority))
 }
 
 inline fun <reified T : Event> EventListener.until(
