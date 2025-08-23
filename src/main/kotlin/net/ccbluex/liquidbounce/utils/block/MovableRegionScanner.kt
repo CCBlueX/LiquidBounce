@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.utils.math.contains
 import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
-import kotlin.math.max
-import kotlin.math.min
 
 private val ORIGIN = BlockBox(BlockPos.ORIGIN)
 
@@ -43,38 +41,58 @@ class MovableRegionScanner {
             lastRegion == region || lastRegion.contains(region) -> emptyList()
             // All blocks are new
             !lastRegion.intersects(region) -> listOf(region)
-            // Some of the blocks are new, we have to check...
-            else -> overlaps(region, lastRegion)
+            // Some blocks are new, we have to check...
+            else -> computeDifference(region, lastRegion)
         }
     }
 
-    private fun overlaps(region: BlockBox, lastRegion: BlockBox): List<BlockBox> {
-        return listOf(
-            BlockBox.create(
-                BlockPos(min(region.maxX, lastRegion.maxX), region.minY, region.minZ),
-                BlockPos(max(region.maxX, lastRegion.maxX), region.maxY, region.maxZ)
-            ),
-            BlockBox.create(
-                BlockPos(min(region.minX, lastRegion.minX), region.minY, region.minZ),
-                BlockPos(max(region.minX, lastRegion.minX), region.maxY, region.maxZ)
-            ),
-            BlockBox.create(
-                BlockPos(region.minX, min(region.maxY, lastRegion.maxY), region.minZ),
-                BlockPos(region.maxX, max(region.maxY, lastRegion.maxY), region.maxZ)
-            ),
-            BlockBox.create(
-                BlockPos(region.minX, min(region.minY, lastRegion.minY), region.minZ),
-                BlockPos(region.maxX, max(region.minY, lastRegion.minY), region.maxZ)
-            ),
-            BlockBox.create(
-                BlockPos(region.minX, region.minY, min(region.maxZ, lastRegion.maxZ)),
-                BlockPos(region.maxX, region.maxY, max(region.maxZ, lastRegion.maxZ))
-            ),
-            BlockBox.create(
-                BlockPos(region.minX, region.minY, min(region.minZ, lastRegion.minZ)),
-                BlockPos(region.maxX, region.maxY, max(region.minZ, lastRegion.minZ))
+    private fun computeDifference(region: BlockBox, lastRegion: BlockBox): List<BlockBox> {
+        val result = ArrayList<BlockBox>(6)
+
+        // Along +X
+        if (region.maxX > lastRegion.maxX) {
+            result += BlockBox(
+                lastRegion.maxX + 1, region.minY, region.minZ,
+                region.maxX, region.maxY, region.maxZ
             )
-        )
+        }
+        // Along -X
+        if (region.minX < lastRegion.minX) {
+            result += BlockBox(
+                region.minX, region.minY, region.minZ,
+                lastRegion.minX - 1, region.maxY, region.maxZ
+            )
+        }
+        // Along +Y
+        if (region.maxY > lastRegion.maxY) {
+            result += BlockBox(
+                region.minX, lastRegion.maxY + 1, region.minZ,
+                region.maxX, region.maxY, region.maxZ
+            )
+        }
+        // Along -Y
+        if (region.minY < lastRegion.minY) {
+            result += BlockBox(
+                region.minX, region.minY, region.minZ,
+                region.maxX, lastRegion.minY - 1, region.maxZ
+            )
+        }
+        // Along +Z
+        if (region.maxZ > lastRegion.maxZ) {
+            result += BlockBox(
+                region.minX, region.minY, lastRegion.maxZ + 1,
+                region.maxX, region.maxY, region.maxZ
+            )
+        }
+        // Along -Z
+        if (region.minZ < lastRegion.minZ) {
+            result += BlockBox(
+                region.minX, region.minY, region.minZ,
+                region.maxX, region.maxY, lastRegion.minZ - 1
+            )
+        }
+
+        return result
     }
 
     fun clearRegion() {

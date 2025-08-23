@@ -82,7 +82,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         holes.removeIf { it.positions.intersects(region) }
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "LoopWithTooManyJumpStatements")
     fun BlockBox.cachedUpdate() {
         val buffer = BlockStateBuffer(size)
 

@@ -84,7 +84,8 @@ fun BlockBox.centerPointOf(side: Direction): Vec3d =
     }
 
 @JvmSynthetic
-fun BlockBox.copy(
+@Suppress("LongParameterList", "NOTHING_TO_INLINE")
+inline fun BlockBox.copy(
     minX: Int = this.minX,
     minY: Int = this.minY,
     minZ: Int = this.minZ,
