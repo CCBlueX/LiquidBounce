@@ -19,137 +19,134 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.contains
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 import net.minecraft.world.chunk.Chunk
 import kotlin.math.max
 import kotlin.math.min
 
 @Suppress("detekt:TooManyFunctions")
-class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<BlockPos> by BlockPos.iterate(from, to) {
+class Region private constructor(
+    fromX: Int,
+    fromY: Int,
+    fromZ: Int,
+    toX: Int,
+    toY: Int,
+    toZ: Int,
+) : ClosedRange<BlockPos>,
+    Iterable<BlockPos> by BlockPos.iterate(fromX, fromY, fromZ, toX, toY, toZ) {
 
-    override val endInclusive: BlockPos
-        get() = this.to
+    constructor(from: BlockPos, to: BlockPos) : this(
+        min(from.x, to.x),
+        min(from.y, to.y),
+        min(from.z, to.z),
+        max(from.x, to.x),
+        max(from.y, to.y),
+        max(from.z, to.z),
+    )
 
     override val start: BlockPos
         get() = this.from
 
-    companion object {
-        // the Region is a closed range so this is not empty actually
-        val EMPTY: Region = Region(BlockPos.ORIGIN, BlockPos.ORIGIN)
+    override val endInclusive: BlockPos
+        get() = this.to
 
-        fun quadAround(pos: BlockPos, xz: Int, y: Int): Region {
-            return Region(pos.add(-xz, -y, -xz), pos.add(xz, y, xz))
-        }
+    val from: BlockPos = BlockPos(fromX, fromY, fromZ)
+    val to: BlockPos = BlockPos(toX, toY, toZ)
 
-        fun from(blockPos: BlockPos): Region {
-            return Region(blockPos, blockPos)
-        }
+    private val lengthX: Long = toX.toLong() - fromX.toLong() + 1L
+    private val lengthY: Long = toY.toLong() - fromY.toLong() + 1L
+    private val lengthZ: Long = toZ.toLong() - fromZ.toLong() + 1L
 
-        fun from(chunk: Chunk): Region {
-            val pos = chunk.pos
-            return Region(
-                BlockPos(pos.x shl 4, chunk.bottomY, pos.z shl 4),
-                BlockPos(pos.x shl 4 or 15, chunk.topYInclusive, pos.z shl 4 or 15)
-            )
-        }
+    /**
+     * Always false.
+     */
+    override fun isEmpty(): Boolean = lengthX == 0L && lengthY == 0L && lengthZ == 0L
 
-        fun from(pos: ChunkPos): Region {
-            return Region(
-                BlockPos(pos.x shl 4, mc.world!!.bottomY, pos.z shl 4),
-                BlockPos(pos.x shl 4 or 15, mc.world!!.topYInclusive, pos.z shl 4 or 15)
-            )
-        }
-
-        fun fromChunkPos(x: Int, z: Int): Region {
-            return Region(
-                BlockPos(x shl 4, mc.world!!.bottomY, z shl 4),
-                BlockPos(x shl 4 or 15, mc.world!!.topYInclusive, z shl 4 or 15)
-            )
-        }
-
-        fun Region.getBox(): Box {
-            return Box(
-                0.0, 0.0, 0.0,
-                to.x - from.x + 1.0,
-                to.y - from.y + 1.0,
-                to.z - from.z + 1.0,
-            )
-        }
-    }
-
-    val from: BlockPos
-    val to: BlockPos
-
-    val volume: Int
-
-    init {
-        val fixedFrom = BlockPos(
-            min(from.x, to.x),
-            min(from.y, to.y),
-            min(from.z, to.z)
-        )
-        val fixedTo = BlockPos(
-            max(from.x, to.x),
-            max(from.y, to.y),
-            max(from.z, to.z)
-        )
-
-        this.from = fixedFrom
-        this.to = fixedTo
-        this.volume = (fixedTo.x - fixedFrom.x) * (fixedTo.y - fixedFrom.y) * (fixedTo.z - fixedFrom.z)
-    }
-
-    private inline val xRange: IntRange
-        get() = this.from.x..this.to.x
-
-    private inline val yRange: IntRange
-        get() = this.from.y..this.to.y
-
-    private inline val zRange: IntRange
-        get() = this.from.z..this.to.z
-
-    override fun isEmpty(): Boolean = this.volume == 0
-
-    operator fun contains(pos: Region): Boolean {
-        return pos.xRange in xRange && pos.yRange in yRange && pos.zRange in zRange
-    }
+    operator fun contains(pos: Region): Boolean =
+        pos.from.x >= this.from.x && pos.from.y >= this.from.y && pos.from.z >= this.from.z &&
+            pos.to.x <= this.to.x && pos.to.y <= this.to.y && pos.to.z <= this.to.z
 
     override operator fun contains(value: BlockPos): Boolean {
-        return value.x in xRange && value.y in yRange && value.z in zRange
-    }
-
-    fun intersects(other: Region): Boolean {
-        return this.intersects(
-            min = Vec3i(other.from.x, other.from.y, other.from.z),
-            max = Vec3i(other.to.x, other.to.y, other.to.z)
-        )
-    }
-
-    private fun intersects(min: Vec3i, max: Vec3i): Boolean {
-        return !(this.to.x <= min.x || this.from.x >= max.x ||
-            this.to.y <= min.y || this.from.y >= max.y ||
-            this.to.z <= min.z || this.from.z >= max.z)
+        return value.x in from.x..to.x && value.y in from.y..to.y && value.z in from.z..to.z
     }
 
     fun getBottomFaceCenter() = Vec3d(
-        (from.x + to.x + 1).toDouble() / 2.0,
+        (from.x + to.x + 1).toDouble() * 0.5,
         from.y.toDouble(),
-        (from.z + to.z + 1).toDouble() / 2.0
+        (from.z + to.z + 1).toDouble() * 0.5,
     )
 
-    fun getBoundingBox() = Box(
-        from.x.toDouble(),
-        from.y.toDouble(),
-        from.z.toDouble(),
-        to.x + 1.0,
-        to.y + 1.0,
-        to.z + 1.0
-    )
+    /**
+     * [Box] with offset
+     */
+    val boundingBox: Box
+        get() = Box(
+            from.x.toDouble(),
+            from.y.toDouble(),
+            from.z.toDouble(),
+            to.x + 1.0,
+            to.y + 1.0,
+            to.z + 1.0
+        )
+
+    /**
+     * [Box] with no offset (starts at [Vec3d.ZERO])
+     */
+    val box: Box
+        get() = Box(
+            0.0, 0.0, 0.0,
+            lengthX.toDouble(),
+            lengthY.toDouble(),
+            lengthZ.toDouble(),
+        )
+
+    // operators
+
+    infix fun intersects(other: Region): Boolean {
+        return this.intersects(min = other.from, max = other.to)
+    }
+
+    private fun intersects(min: Vec3i, max: Vec3i): Boolean {
+        return !(this.to.x < min.x || this.from.x > max.x ||
+            this.to.y < min.y || this.from.y > max.y ||
+            this.to.z < min.z || this.from.z > max.z)
+    }
+
+    /**
+     * AND operator.
+     *
+     * **IMPORTANT**: Assumes that both regions intersect
+     */
+    infix fun intersection(currentRegion: Region): Region {
+        return Region(
+            BlockPos(
+                max(this.from.x, currentRegion.from.x),
+                max(this.from.y, currentRegion.from.y),
+                max(this.from.z, currentRegion.from.z),
+            ),
+            BlockPos(
+                min(this.to.x, currentRegion.to.x),
+                min(this.to.y, currentRegion.to.y),
+                min(this.to.z, currentRegion.to.z),
+            )
+        )
+    }
+
+    /**
+     * OR operator.
+     */
+    infix fun union(currentRegion: Region): Region {
+        return Region(
+            fromX = min(this.from.x, currentRegion.from.x),
+            fromY = min(this.from.y, currentRegion.from.y),
+            fromZ = min(this.from.z, currentRegion.from.z),
+            toX = max(this.to.x, currentRegion.to.x),
+            toY = max(this.to.y, currentRegion.to.y),
+            toZ = max(this.to.z, currentRegion.to.z),
+        )
+    }
+
+    // from Object
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -160,49 +157,48 @@ class Region(from: BlockPos, to: BlockPos) : ClosedRange<BlockPos>, Iterable<Blo
         return from == other.from && to == other.to
     }
 
-    override fun hashCode(): Int {
-        var result = from.hashCode()
-        result = 31 * result + to.hashCode()
-        return result
-    }
-
-    /**
-     * AND operator.
-     *
-     * **IMPORTANT:** Assumes that both regions intersect
-     */
-    fun intersection(currentRegion: Region): Region {
-        return Region(
-            BlockPos(
-                max(this.from.x, currentRegion.from.x),
-                max(this.from.y, currentRegion.from.y),
-                max(this.from.z, currentRegion.from.z)
-            ),
-            BlockPos(
-                min(this.to.x, currentRegion.to.x),
-                min(this.to.y, currentRegion.to.y),
-                min(this.to.z, currentRegion.to.z)
-            )
-        )
-    }
-
-    fun union(currentRegion: Region): Region {
-        return Region(
-            BlockPos(
-                min(this.from.x, currentRegion.from.x),
-                min(this.from.y, currentRegion.from.y),
-                min(this.from.z, currentRegion.from.z)
-            ),
-            BlockPos(
-                max(this.to.x, currentRegion.to.x),
-                max(this.to.y, currentRegion.to.y),
-                max(this.to.z, currentRegion.to.z)
-            )
-        )
-    }
+    override fun hashCode(): Int = from.hashCode() xor to.hashCode()
 
     override fun toString(): String {
         return "[${this.from.x},${this.from.y},${this.from.z}] -> [${this.to.x},${this.to.y},${this.to.z}]"
+    }
+
+    companion object {
+        /**
+         * A [Region] only containing [BlockPos.ORIGIN]
+         */
+        @JvmField
+        val ORIGIN: Region = of(BlockPos.ORIGIN)
+
+        @JvmStatic
+        fun quadAround(pos: BlockPos, xz: Int, y: Int): Region =
+            centered(pos, dx = xz, dy = y, dz = xz)
+
+        @JvmStatic
+        fun of(blockPos: BlockPos): Region =
+            Region(blockPos, blockPos)
+
+        @JvmStatic
+        fun centered(pos: BlockPos, dx: Int, dy: Int, dz: Int): Region =
+            Region(pos.add(-dx, -dy, -dz), pos.add(dx, dy, dz))
+
+        @JvmStatic
+        fun of(chunk: Chunk): Region {
+            val pos = chunk.pos
+            return Region(
+                BlockPos(pos.x shl 4, chunk.bottomY, pos.z shl 4),
+                BlockPos(pos.x shl 4 or 15, chunk.topYInclusive, pos.z shl 4 or 15)
+            )
+        }
+
+        @JvmStatic
+        fun of(pos: ChunkPos): Region {
+            return Region(
+                BlockPos(pos.x shl 4, mc.world!!.bottomY, pos.z shl 4),
+                BlockPos(pos.x shl 4 or 15, mc.world!!.topYInclusive, pos.z shl 4 or 15)
+            )
+        }
+
     }
 
 }

@@ -18,63 +18,67 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.liquidbounce.utils.math.contains
+import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import kotlin.math.max
 import kotlin.math.min
 
+private val ORIGIN = BlockBox(BlockPos.ORIGIN)
+
 class MovableRegionScanner {
-    var currentRegion = Region.EMPTY
+    var currentRegion = ORIGIN
         private set
 
     /**
      * Moves the current region; returns regions that have been newly covered
      */
-    fun moveTo(region: Region): Sequence<Region> {
+    fun moveTo(region: BlockBox): List<BlockBox> {
         val lastRegion = this.currentRegion
 
         this.currentRegion = region
 
         return when {
             // No new blocks where covered
-            lastRegion == region || region in lastRegion -> emptySequence()
+            lastRegion == region || lastRegion.contains(region) -> emptyList()
             // All blocks are new
-            !lastRegion.intersects(region) -> sequenceOf(region)
+            !lastRegion.intersects(region) -> listOf(region)
             // Some of the blocks are new, we have to check...
-            else -> overlaps(region, lastRegion).filter { !it.isEmpty() }
+            else -> overlaps(region, lastRegion)
         }
     }
 
-    private fun overlaps(region: Region, lastRegion: Region): Sequence<Region> {
-        return sequenceOf(
-            Region(
-                BlockPos(min(region.to.x, lastRegion.to.x), region.from.y, region.from.z),
-                BlockPos(max(region.to.x, lastRegion.to.x), region.to.y, region.to.z)
+    private fun overlaps(region: BlockBox, lastRegion: BlockBox): List<BlockBox> {
+        return listOf(
+            BlockBox.create(
+                BlockPos(min(region.maxX, lastRegion.maxX), region.minY, region.minZ),
+                BlockPos(max(region.maxX, lastRegion.maxX), region.maxY, region.maxZ)
             ),
-            Region(
-                BlockPos(min(region.from.x, lastRegion.from.x), region.from.y, region.from.z),
-                BlockPos(max(region.from.x, lastRegion.from.x), region.to.y, region.to.z)
+            BlockBox.create(
+                BlockPos(min(region.minX, lastRegion.minX), region.minY, region.minZ),
+                BlockPos(max(region.minX, lastRegion.minX), region.maxY, region.maxZ)
             ),
-            Region(
-                BlockPos(region.from.x, min(region.to.y, lastRegion.to.y), region.from.z),
-                BlockPos(region.to.x, max(region.to.y, lastRegion.to.y), region.to.z)
+            BlockBox.create(
+                BlockPos(region.minX, min(region.maxY, lastRegion.maxY), region.minZ),
+                BlockPos(region.maxX, max(region.maxY, lastRegion.maxY), region.maxZ)
             ),
-            Region(
-                BlockPos(region.from.x, min(region.from.y, lastRegion.from.y), region.from.z),
-                BlockPos(region.to.x, max(region.from.y, lastRegion.from.y), region.to.z)
+            BlockBox.create(
+                BlockPos(region.minX, min(region.minY, lastRegion.minY), region.minZ),
+                BlockPos(region.maxX, max(region.minY, lastRegion.minY), region.maxZ)
             ),
-            Region(
-                BlockPos(region.from.x, region.from.y, min(region.to.z, lastRegion.to.z)),
-                BlockPos(region.to.x, region.to.y, max(region.to.z, lastRegion.to.z))
+            BlockBox.create(
+                BlockPos(region.minX, region.minY, min(region.maxZ, lastRegion.maxZ)),
+                BlockPos(region.maxX, region.maxY, max(region.maxZ, lastRegion.maxZ))
             ),
-            Region(
-                BlockPos(region.from.x, region.from.y, min(region.from.z, lastRegion.from.z)),
-                BlockPos(region.to.x, region.to.y, max(region.from.z, lastRegion.from.z))
+            BlockBox.create(
+                BlockPos(region.minX, region.minY, min(region.minZ, lastRegion.minZ)),
+                BlockPos(region.maxX, region.maxY, max(region.minZ, lastRegion.minZ))
             )
         )
     }
 
     fun clearRegion() {
-        this.currentRegion = Region.EMPTY
+        this.currentRegion = ORIGIN
     }
 
 }
