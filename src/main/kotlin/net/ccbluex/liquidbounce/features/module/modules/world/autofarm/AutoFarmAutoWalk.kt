@@ -19,26 +19,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
-import java.util.EnumSet
+import java.util.*
 
-object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", false) {
+object AutoFarmAutoWalk : NavigationBaseConfigurable<Unit>(ModuleAutoFarm, "AutoWalk", false) {
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlace by boolean("ToPlace", true)
@@ -59,8 +54,6 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             private set
     }
 
-    private val autoJump by boolean("AutoJump", false)
-
     init {
         tree(toItems)
     }
@@ -69,26 +62,6 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     var walkTarget: Vec3d? = null
         private set
-
-    private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
-        val blockTarget = findWalkToBlock()
-
-        if (toItems.enabled && invHasSpace) {
-            val playerPos = player.pos
-            val itemTarget = findWalkToItem() ?: return blockTarget
-            blockTarget ?: return itemTarget
-
-            val blockTargetDistSq = blockTarget.squaredDistanceTo(playerPos)
-            val itemTargetDistSq = itemTarget.squaredDistanceTo(playerPos)
-            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
-        } else {
-            return blockTarget
-        }
-    }
-
-    private fun findWalkToItem(): Vec3d? = world.entities.filter {
-        it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
-    }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
         // we should always walk to blocks we want to destroy because we can do so even without any items
@@ -122,7 +95,9 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     }
 
     fun updateWalkTarget(): Boolean {
-        if (!enabled) return false
+        if (!enabled) {
+            return false
+        }
 
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && toItems.enabled) {
@@ -137,44 +112,37 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             val targetAsBlockPos = target.toBlockPos()
             AutoFarmBlockTracker.iterate().firstOrNull { it.key == targetAsBlockPos }?.value
         }
-
-        RotationManager.setRotationTarget(
-            Rotation.lookingAt(point = target, from = player.eyePos),
-            configurable = ModuleAutoFarm.rotations,
-            priority = Priority.IMPORTANT_FOR_USAGE_1,
-            provider = ModuleAutoFarm
-        )
         return true
     }
+
+    private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
+        val blockTarget = findWalkToBlock()
+
+        if (toItems.enabled && invHasSpace) {
+            val playerPos = player.pos
+            val itemTarget = findWalkToItem() ?: return blockTarget
+            blockTarget ?: return itemTarget
+
+            val blockTargetDistSq = blockTarget.squaredDistanceTo(playerPos)
+            val itemTargetDistSq = itemTarget.squaredDistanceTo(playerPos)
+            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
+        } else {
+            return blockTarget
+        }
+    }
+
+    private fun findWalkToItem(): Vec3d? = world.entities.filter {
+        it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
+    }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
     fun stopWalk() {
         walkTarget = null
     }
 
-    private fun shouldWalk() = (walkTarget != null && mc.currentScreen !is HandledScreen<*>)
+    override fun createNavigationContext() { }
 
-    @Suppress("unused")
-    private val horizontalMovementHandling = handler<MovementInputEvent> { event ->
-        if (!shouldWalk()) {
-            return@handler
-        }
-
-        event.directionalInput = event.directionalInput.copy(forwards = true)
-        player.isSprinting = true
+    override fun calculateGoalPosition(context: Unit): Vec3d? {
+        return walkTarget
     }
 
-    @Suppress("unused")
-    private val verticalMovementHandling = handler<MovementInputEvent> { event ->
-        if (!shouldWalk()) return@handler
-
-        // We want to swim up in water, so we don't drown and can move onwards
-        if (player.isTouchingWater) {
-            event.jump = true
-        }
-
-        // Auto jump
-        if (autoJump && player.horizontalCollision && walkTarget!!.y > player.y) {
-            event.jump = true
-        }
-    }
 }

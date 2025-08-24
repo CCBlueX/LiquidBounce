@@ -35,7 +35,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
     private object Path : ToggleableConfigurable(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(color) {
                     AutoFarmAutoWalk.walkTarget?.let { target ->
@@ -80,7 +81,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             }
         }
 
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
