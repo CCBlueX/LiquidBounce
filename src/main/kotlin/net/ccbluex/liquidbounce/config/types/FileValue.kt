@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.config.types
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.*
 import org.lwjgl.PointerBuffer
@@ -47,6 +49,10 @@ class FileValue(
 ) {
     init {
         onChange(::normalizeToClientFolder)
+    }
+
+    override fun deserializeFrom(gson: Gson, element: JsonElement) {
+        // File value is not allowed to be deserialized from AutoConfig.
     }
 
     /**
