@@ -29,11 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpNotFound
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.util.*
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
@@ -114,7 +110,7 @@ fun postBrowseFile(requestObject: RequestObject): FullHttpResponse {
         if (it.isAbsolute) it else ConfigSystem.rootFolder.resolve(it)
     }.takeIf(File::exists) ?: return httpNotFound(f, "File not exists")
 
-    Util.getOperatingSystem().open(file)
+    Util.getOperatingSystem().open(file.parentFile ?: file) // parentFile is null -> file is root
     return httpNoContent()
 }
 
