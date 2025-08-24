@@ -45,7 +45,7 @@
         await addProxyRest(host, parseInt(port), username, password, proxyType, forwardAuthentication);
     }
 
-    listen("proxyAdditionResult", () => {
+    listen("proxyCheckResult", () => {
         loading = false;
         visible = false;
         cleanup();

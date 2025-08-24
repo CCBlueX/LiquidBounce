@@ -97,7 +97,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     delete("/proxy", ::deleteProxy)
     get("/proxies", ::getProxies).apply {
         post("/add", ::postAddProxy)
-        post("/clipboard", ::postClipboardProxy)
+        post("/add/clipboard", ::postClipboardProxy)
         post("/edit", ::postEditProxy)
         post("/check", ::postCheckProxy)
         delete("/remove", ::deleteRemoveProxy)
