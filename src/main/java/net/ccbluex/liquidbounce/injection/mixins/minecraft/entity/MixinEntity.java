@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSwim;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
@@ -205,6 +207,13 @@ public abstract class MixinEntity {
         }
 
         return original;
+    }
+
+    @Inject(method = "setPose", at = @At("HEAD"), cancellable = true)
+    private void setPose(EntityPose pose, CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player && ModuleNoSwim.INSTANCE.shouldCancel(pose)) {
+            ci.cancel();
+        }
     }
 
 }

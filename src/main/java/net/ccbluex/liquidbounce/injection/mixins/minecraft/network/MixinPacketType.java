@@ -28,10 +28,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.TreeSet;
+
 @Mixin(PacketType.class)
 public class MixinPacketType {
+
+    /**
+     * Registers a packet type for the given [networkSide] with the specified [id].
+     *
+     * @param networkSide The side of the network.
+     * @param identifier The identifier of the packet type to register defined in {@link PacketType}
+     */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookPacketRegistry(NetworkSide networkSide, Identifier identifier, CallbackInfo ci) {
-        PacketRegistryKt.register(networkSide, identifier);
+        PacketRegistryKt.getPacketRegistry().computeIfAbsent(networkSide, k -> new TreeSet<>())
+                .add(identifier);
     }
 }

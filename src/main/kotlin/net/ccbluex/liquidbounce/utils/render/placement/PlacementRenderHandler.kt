@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -30,6 +31,8 @@ import net.minecraft.util.math.MathHelper
 /**
  * A renderer instance that can be added to a [PlacementRenderer], it contains the core logic.
  * Culling is handled in each handler for its boxes individually.
+ *
+ * This class is not thread-safe. You can use it on the render thread. (the most recommended way)
  */
 @Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
@@ -150,35 +153,35 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         }
 
         // TODO in theory a one block radius should be enough
-        pos.searchBlocksInCuboid(2).forEach {
-            val longValue = it.asLong()
+        for (mutable in pos.searchBlocksInCuboid(2)) {
+            val longValue = mutable.asLong()
 
-            if (inList.containsKey(longValue)) {
-                inList.put(longValue, inList.get(longValue).copy(cullData = this.culler.getCullData(it)))
-                return@forEach
+            val inValue = inList[longValue]
+            if (inValue != null) {
+                inList.put(longValue, inValue.copy(cullData = this.culler.getCullData(longValue)))
+                continue
             }
 
-            if (currentList.containsKey(longValue)) {
-                currentList.put(longValue, currentList.get(longValue).copy(cullData = this.culler.getCullData(it)))
-                return@forEach
+            val currentValue = currentList[longValue]
+            if (currentValue != null) {
+                currentList.put(longValue, currentValue.copy(cullData = this.culler.getCullData(longValue)))
+                continue
             }
         }
     }
 
-
-
     /**
-     * Checks whether the position is rendered.
+     * Checks whether the position (in long value) is rendered.
      */
-    internal fun contains(pos: BlockPos): Boolean {
-        val longValue = pos.asLong()
-        return inList.containsKey(longValue) || currentList.containsKey(longValue) || outList.containsKey(longValue)
+    internal operator fun contains(pos: Long): Boolean {
+        return inList.containsKey(pos) || currentList.containsKey(pos) || outList.containsKey(pos)
     }
-
 
     /**
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
+     *
+     * @param pos The position, can be [BlockPos.Mutable].
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
         val longValue = pos.asLong()
@@ -194,6 +197,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
     /**
      * Removes a block from the rendering, it will get an out animation tho.
+     *
+     * @param pos The position, can be [BlockPos.Mutable].
      */
     fun removeBlock(pos: BlockPos) {
         val longValue = pos.asLong()
@@ -223,13 +228,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         inList.long2ObjectEntrySet().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
-            inList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
+            entry.setValue(value.copy(cullData = this.culler.getCullData(key)))
         }
 
         currentList.long2ObjectEntrySet().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
-            currentList.put(key, value.copy(cullData = this.culler.getCullData(blockPosCache.set(key))))
+            entry.setValue(value.copy(cullData = this.culler.getCullData(key)))
         }
     }
 

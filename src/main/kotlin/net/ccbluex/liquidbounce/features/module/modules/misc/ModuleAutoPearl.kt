@@ -226,7 +226,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS)
 
-    override fun disable() {
+    override fun onDisabled() {
         queue.clear()
     }
 

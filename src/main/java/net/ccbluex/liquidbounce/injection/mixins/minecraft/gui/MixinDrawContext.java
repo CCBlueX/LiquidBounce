@@ -23,17 +23,22 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.ccbluex.liquidbounce.interfaces.DrawContextAddition;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
 import net.minecraft.client.texture.GuiAtlasManager;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Function;
 
@@ -51,6 +56,11 @@ public abstract class MixinDrawContext implements DrawContextAddition {
     @Shadow
     @Final
     private GuiAtlasManager guiAtlasManager;
+
+    @Inject(method = "drawCooldownProgress", at = @At("TAIL"))
+    private void drawCooldownProgress(ItemStack stack, int x, int y, CallbackInfo ci) {
+        ModuleBetterInventory.INSTANCE.drawTextCooldownProgress((DrawContext) (Object) this, stack, x, y);
+    }
 
     @Override
     public void liquid_bounce$drawTexture(Function<Identifier, RenderLayer> renderLayers, Identifier texture, float x, float y, int width, int height) {

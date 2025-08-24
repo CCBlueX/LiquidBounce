@@ -89,16 +89,18 @@ object Parameters {
 
     fun module(
         name: String = "module",
+        all: Iterable<ClientModule> = ModuleManager,
         predicate: (ClientModule) -> Boolean = { true }
     ) = value<ClientModule>(
-        paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate
+        paramName = name, typeName = "Module", all = all, predicate = predicate
     )
 
     fun modules(
         name: String = "modules",
+        all: Iterable<ClientModule> = ModuleManager,
         predicate: (ClientModule) -> Boolean = { true }
     ) = values<ClientModule>(
-        paramName = name, typeName = "Module", all = ModuleManager, predicate = predicate
+        paramName = name, typeName = "Module", all = all, predicate = predicate
     )
 
     fun rootConfigurables(

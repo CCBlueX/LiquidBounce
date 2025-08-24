@@ -3,7 +3,7 @@
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import {addProxy as addProxyRest} from "../../../integration/rest";
+    import {addProxy as addProxyRest, browse} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
 
@@ -45,7 +45,7 @@
         await addProxyRest(host, parseInt(port), username, password, proxyType, forwardAuthentication);
     }
 
-    listen("proxyAdditionResult", () => {
+    listen("proxyCheckResult", () => {
         loading = false;
         visible = false;
         cleanup();
@@ -71,4 +71,5 @@
     {/if}
     <SwitchSetting title="Forward Microsoft Authentication" bind:value={forwardAuthentication}/>
     <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy} listenForEnter={true} {loading}/>
+    <ButtonSetting title="Get Proxy" on:click={() => browse("PROXY_WEBSITE")} secondary={true}/>
 </Modal>

@@ -185,7 +185,7 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
 
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimer)
     }
 

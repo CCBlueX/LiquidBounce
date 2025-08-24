@@ -165,7 +165,6 @@ object FontManager {
          * The file of the font. If the font is a system font, this will be null.
          */
         val file: File? = null,
-        @Suppress("ArrayInDataClass")
         /**
          * Style of the font. If an element is null, fall back to `[0]`
          *
@@ -180,7 +179,8 @@ object FontManager {
         val styles: Array<FontId?> = arrayOfNulls(4)
     ) {
 
-        val renderer: FontRenderer by lazy {
+        // We only access it on the main thread so don't do synchronized
+        val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
             FontRenderer(this, glyphManager!!)
         }
 
@@ -195,9 +195,30 @@ object FontManager {
             styles[index] = FontId(index, font, metrics.height.toFloat(), metrics.ascent.toFloat())
         }
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is FontFace) return false
+
+            if (size != other.size) return false
+            if (name != other.name) return false
+            if (file != other.file) return false
+            if (!styles.contentEquals(other.styles)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = size.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + (file?.absolutePath?.hashCode() ?: 0)
+            result = 31 * result + styles.contentHashCode()
+            return result
+        }
+
     }
 
-    class FontId(
+    @JvmRecord
+    data class FontId(
         val style: Int,
         val awtFont: Font,
         val height: Float,
