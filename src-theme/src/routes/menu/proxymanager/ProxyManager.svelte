@@ -126,10 +126,16 @@
     }
 
     listen("proxyCheckResult", async (e: ProxyCheckResultEvent) => {
-        if (e.error) {
+        if (e.error && e.proxy) {
             notification.set({
                 title: "ProxyManager",
                 message: "The proxy is not working: " + e.error,
+                error: true
+            });
+        } else if (e.error) {
+            notification.set({
+                title: "ProxyManager",
+                message: e.error,
                 error: true
             });
         } else if (e.proxy) {
