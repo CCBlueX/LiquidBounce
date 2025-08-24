@@ -20,8 +20,8 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
 import net.ccbluex.liquidbounce.deeplearn.data.TrainingData

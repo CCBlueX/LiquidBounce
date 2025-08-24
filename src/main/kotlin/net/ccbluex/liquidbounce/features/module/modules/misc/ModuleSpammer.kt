@@ -40,7 +40,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
 
     private val delay by intRange("Delay", 2..4, 0..300, "secs")
     private val mps by intRange("MPS", 1..1, 1..500, "messages")
-    private val message by textArray("Message", mutableListOf(
+    private val message by textList("Message", mutableListOf(
         "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
         "I'm using LiquidBounce Nextgen and you should too!",
         "Check out LiquidBounce Nextgen - the best Minecraft client!",

@@ -137,7 +137,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     get("/input", ::getInputInfo)
     get("/keybinds", ::getKeybinds)
     post("/typing", ::isTyping)
-    get("/typing", ::isTyping)
+    get("/typing", ::getIsTyping)
 
     // Player Functions
     get("/player", ::getPlayerData)
@@ -145,7 +145,8 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     get("/crosshair", ::getCrosshairData)
 
     // Registry Functions
-    get("/registries", ::getRegistries)
+    get("/registry/:name", ::getRegistry)
+    get("/registry/:name/groups", ::getRegistryGroups)
 
     // ServerList Functions
     get("/servers", ::getServers).apply {

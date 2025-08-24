@@ -50,7 +50,7 @@ public class MixinUtils {
     private static final ThreadLocal<String> CURRENT_URL = new ThreadLocal<>();
 
     @Unique
-    private static final OkHttpClient CLIENT = HttpClient.newBuilder()
+    private static final OkHttpClient CLIENT = HttpClient.getClient().newBuilder()
             .addNetworkInterceptor(new OkHttpProgressInterceptor((bytesRead, contentLength, done) -> {
                 var url = CURRENT_URL.get();
                 var mainTask = DeepLearningEngine.getTask();
@@ -94,11 +94,6 @@ public class MixinUtils {
                     .build();
             CURRENT_URL.set(url.toString());
             var response = CLIENT.newCall(request).execute();
-
-            if (!response.isSuccessful()) {
-                throw new IOException("HTTP request failed with code: " + response.code());
-            }
-
             cir.setReturnValue(response.body().byteStream());
         }
     }

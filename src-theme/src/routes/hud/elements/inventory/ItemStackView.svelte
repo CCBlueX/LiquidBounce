@@ -5,7 +5,7 @@
 
     export let stack: ItemStack;
 
-    const {count, damage, identifier, maxDamage, hasEnchantment} = stack;
+    const {count, damage, identifier, maxDamage, enchantments} = stack;
 
     const countColor = count <= 0 ? "red" : "white";
 
@@ -14,7 +14,7 @@
 </script>
 
 <div class="item-stack">
-    {#if hasEnchantment}
+    {#if enchantments}
         <div class="mask" style="mask-image: url({itemIconUrl})"></div>
     {/if}
     <img class="item-icon" src={itemIconUrl} alt={identifier}/>
@@ -31,7 +31,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .hidden {
     display: none;

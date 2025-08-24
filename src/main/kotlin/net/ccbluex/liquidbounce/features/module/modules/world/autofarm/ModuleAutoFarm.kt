@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -108,7 +108,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         // Disable the module and return if the inventory is full, and the setting for disabling the module is enabled
         if (disableOnFullInventory && !hasInventorySpace()) {
             notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
-            disable()
+            onDisabled()
             enabled = false
             return@tickHandler
         }
@@ -315,11 +315,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(AutoFarmBlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
         currentTarget = null
     }

@@ -63,7 +63,7 @@ object SequenceManager : EventListener {
      * This is called when a module is disabled to ensure no sequences continue running.
      */
     fun cancelAllSequences(owner: EventListener) {
-        sequences.removeAll { sequence ->
+        sequences.removeIf { sequence ->
             if (sequence.owner == owner) {
                 sequence.cancel()
                 true
@@ -96,6 +96,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
         // overwritten by the initialization of the `totalTicks` field
         // which results in one or fewer ticks of actual wait time.
+        @OptIn(DelicateCoroutinesApi::class)
         this.coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
             SequenceManager.sequences += this@Sequence
             coroutineRun()
@@ -142,11 +143,12 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
 
     /**
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
+     * Returns true when we passed the time of [ticks] without breaking the loop.
      */
     suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier = BooleanSupplier { false }): Boolean {
         // Don't wait if ticks is 0
         if (ticks == 0) {
-            return true
+            return !breakLoop.asBoolean
         }
 
         wait { if (breakLoop.asBoolean) 0 else ticks }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -82,7 +82,10 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
             // Check if the player is taking fall damage
             // We set this on every packet, because if the player gets hit afterward,
             // we will know that from the velocity.
-            isFallDamage = velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375
+            isFallDamage = velocityX == 0.0 && velocityZ == 0.0 && velocityY < 0
+            ModuleDebug.debugParameter(this, "VelocityX", velocityX)
+            ModuleDebug.debugParameter(this, "VelocityY", velocityY)
+            ModuleDebug.debugParameter(this, "VelocityZ", velocityZ)
             ModuleDebug.debugParameter(this, "IsFallDamage", isFallDamage)
         }
     }

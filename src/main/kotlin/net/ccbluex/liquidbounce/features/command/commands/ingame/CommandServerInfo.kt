@@ -20,14 +20,14 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enumsParameter
-import net.ccbluex.liquidbounce.features.command.builder.parseEnumsFromParameter
+import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * ServerInfo Command
@@ -58,14 +58,14 @@ object CommandServerInfo : CommandFactory, EventListener {
             .begin("serverinfo")
             .requiresIngame()
             .parameter(
-                enumsParameter<DetectionType>("detect")
+                Parameters.enumChoices<DetectionType>("detect")
                     .optional()
                     .build()
             )
-            .handler { command, args ->
-                val detectionTypes = parseEnumsFromParameter<DetectionType>(args.getOrNull(0) as? String)
+            .suspendHandler { command, args ->
+                val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
 
-                if (detectionTypes.isNotEmpty()) {
+                if (!detectionTypes.isNullOrEmpty()) {
                     runActiveDetection(command, detectionTypes)
                 } else {
                     printInformation(command)
@@ -78,30 +78,24 @@ object CommandServerInfo : CommandFactory, EventListener {
      * Runs active detection for specified detection types
      *
      * @param command The command instance
-     * @param detectionTypes List of detection types to run
+     * @param detectionTypes Collection of detection types to run
      */
-    private fun runActiveDetection(command: Command, detectionTypes: List<DetectionType>) {
-        Sequence(this) {
-            chat(regular(command.result("detecting")))
+    private suspend fun runActiveDetection(command: Command, detectionTypes: Collection<DetectionType>) {
+        chat(regular(command.result("detecting")))
 
-            // Run plugin detection if requested
-            if (DetectionType.PLUGINS in detectionTypes) {
-                ServerObserver.captureCommandSuggestions()
-                // Timeout after 5 seconds
-                waitConditional(20 * 5) { ServerObserver.plugins != null }
-
-                if (ServerObserver.plugins == null) {
-                    chat(markAsError(command.result("pluginsDetectionTimeout")))
-                }
+        // Run plugin detection if requested
+        if (DetectionType.PLUGINS in detectionTypes) {
+            if (!ServerObserver.captureCommandSuggestions(10.seconds)) {
+                chat(markAsError(command.result("pluginsDetectionTimeout")))
             }
-
-            // Request hosting information if requested
-            if (DetectionType.HOSTING in detectionTypes) {
-                ServerObserver.requestHostingInformation()
-            }
-
-            printInformation(command, detectionTypes)
         }
+
+        // Request hosting information if requested
+        if (DetectionType.HOSTING in detectionTypes) {
+            ServerObserver.requestHostingInformation()
+        }
+
+        printInformation(command, detectionTypes)
     }
 
     /**
@@ -110,7 +104,7 @@ object CommandServerInfo : CommandFactory, EventListener {
      * @param command The command instance
      * @param detections Optional list of active detections that were run
      */
-    private fun printInformation(command: Command, detections: List<DetectionType> = emptyList()) {
+    private fun printInformation(command: Command, detections: Collection<DetectionType> = emptyList()) {
         // Gather basic server information
         val serverInfo = network.serverInfo
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()

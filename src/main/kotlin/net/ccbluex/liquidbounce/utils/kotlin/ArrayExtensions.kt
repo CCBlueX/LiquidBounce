@@ -144,6 +144,10 @@ fun <T> List<T>.subList(fromIndex: Int): List<T> {
     return this.subList(fromIndex, this.size)
 }
 
+fun <T> MutableList<T>.removeRange(fromInclusive: Int = 0, endExclusive: Int = this.size) {
+    this.subList(fromInclusive, endExclusive).clear()
+}
+
 /**
  * A JavaScript-styled forEach
  */
@@ -151,14 +155,6 @@ inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self
     forEachIndexed { i, item ->
         action(item, i, this)
     }
-}
-
-inline fun Sequence<*>.isNotEmpty(): Boolean {
-    return iterator().hasNext()
-}
-
-inline fun Sequence<*>.isEmpty(): Boolean {
-    return !isNotEmpty()
 }
 
 inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =

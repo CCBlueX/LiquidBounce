@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.*
@@ -88,11 +88,9 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val fillColor = baseColor.with(a = 50)
             val outlineColor = baseColor.with(a = 100)
 
-            val markedBlocks = AutoFarmBlockTracker.trackedBlockMap
-
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
-                for ((pos, type) in markedBlocks) {
+                for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                     if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
 
                     withPositionRelativeToCamera(pos.toVec3d()) {

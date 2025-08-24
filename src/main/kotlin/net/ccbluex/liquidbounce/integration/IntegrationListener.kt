@@ -24,16 +24,24 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
+import kotlin.math.min
 
 object IntegrationListener : EventListener {
 
@@ -44,9 +52,10 @@ object IntegrationListener : EventListener {
      *
      * The client tab will be initialized when the browser is ready.
      */
-    val clientJcef by lazy {
-        ThemeManager.openInputAwareImmediate().preferOnTop()
-    }
+    lateinit var browser: Browser
+        private set
+    lateinit var browserSettings: BrowserSettings
+        private set
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
@@ -93,11 +102,12 @@ object IntegrationListener : EventListener {
     private var browserIsReady = false
 
     @Suppress("unused")
-    val handleBrowserReady = handler<BrowserReadyEvent> {
+    val handleBrowserReady = handler<BrowserReadyEvent>(priority = FIRST_PRIORITY) {
         logger.info("Browser is ready.")
 
         // Fires up the client tab
-        clientJcef
+        browserSettings = BrowserSettings(0, ::restart)
+        browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         browserIsReady = true
     }
 
@@ -115,15 +125,15 @@ object IntegrationListener : EventListener {
 
         if (runningTheme != theme) {
             runningTheme = theme
-            ThemeManager.updateImmediate(clientJcef, type)
+            ThemeManager.updateImmediate(browser, type)
         }
 
         val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
@@ -135,22 +145,47 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.CLOSE
             )
         )
     }
 
-    fun updateIntegrationBrowser() {
-        if (!browserIsReady || BrowserManager.browser?.isInitialized() != true) {
+    fun restart() {
+        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
+            return
+        }
+
+        try {
+            browser.close()
+            browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+        } catch (e: Exception) {
+            logger.error("Failed to restart browser backend for screen integration.", e)
+        }
+
+        try {
+            ModuleClickGui.reload(true)
+        } catch (e: Exception) {
+            logger.error("Failed to restart ClickGUI browser integration.", e)
+        }
+
+        try {
+            ModuleHud.reopen()
+        } catch (e: Exception) {
+            logger.error("Failed to restart HUD browser integration.", e)
+        }
+    }
+
+    fun update() {
+        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
             return
         }
 
         logger.info(
-            "Reloading integration browser ${clientJcef.javaClass.simpleName} " +
+            "Reloading integration browser ${browser.javaClass.simpleName} " +
                 "to ${ThemeManager.route()}"
         )
-        ThemeManager.updateImmediate(clientJcef, momentaryVirtualScreen?.type)
+        ThemeManager.updateImmediate(browser, momentaryVirtualScreen?.type)
     }
 
     fun restoreOriginalScreen() {
@@ -184,8 +219,39 @@ object IntegrationListener : EventListener {
      * and go back to the main menu.
      */
     @Suppress("unused")
-    val worldChangeEvent = handler<WorldChangeEvent> {
-        updateIntegrationBrowser()
+    private val worldChangeEvent = handler<WorldChangeEvent> {
+        update()
+    }
+
+    @Suppress("unused")
+    private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
+        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+            return@handler
+        }
+
+        event.fps = min(event.fps, browserSettings.currentFps)
+    }
+
+    @Suppress("unused")
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        val keyCode = event.keyCode
+        val modifier = event.mods
+
+        if (inGame) {
+            return@handler
+        }
+
+        // F12 to toggle GPU acceleration
+        if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
+            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+                logger.warn("GPU acceleration is not supported by the current browser backend.")
+                return@handler
+            }
+
+            val accelerated = GlobalBrowserSettings.accelerated ?: return@handler
+            accelerated.set(!accelerated.get())
+            logger.info("GPU acceleration is now ${if (accelerated.get()) "enabled" else "disabled"}.")
+        }
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
@@ -251,5 +317,12 @@ object IntegrationListener : EventListener {
             }
         }
     }
+
+    /**
+     * Checks if the given screen is an active client screen.
+     */
+    @JvmStatic
+    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is BrowserScreen
 
 }

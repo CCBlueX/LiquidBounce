@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -128,11 +128,11 @@ object ModuleAutoBuff : ClientModule(
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         SilentHotbar.resetSlot(ModuleAutoBuff)
 
-        features.forEach { it.disable() }
-        super.disable()
+        features.forEach { it.onDisabled() }
+        super.onDisabled()
     }
 
 }

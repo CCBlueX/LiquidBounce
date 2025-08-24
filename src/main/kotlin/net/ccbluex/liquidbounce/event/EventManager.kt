@@ -51,6 +51,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     InputHandleEvent::class,
     MovementInputEvent::class,
     SprintEvent::class,
+    SneakNetworkEvent::class,
     KeyEvent::class,
     MouseRotationEvent::class,
     KeybindChangeEvent::class,
@@ -77,7 +78,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerJumpEvent::class,
     PlayerAfterJumpEvent::class,
     PlayerUseMultiplier::class,
-    PlayerInteractedItem::class,
+    PlayerInteractItemEvent::class,
+    PlayerInteractedItemEvent::class,
     ClientPlayerInventoryEvent::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
@@ -106,6 +108,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     AccountManagerLoginResultEvent::class,
     VirtualScreenEvent::class,
     FpsChangeEvent::class,
+    FpsLimitEvent::class,
     ClientPlayerDataEvent::class,
     RotationUpdateEvent::class,
     RefreshArrayListEvent::class,
@@ -138,6 +141,10 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     QueuePacketEvent::class,
     MinecraftAutoJumpEvent::class,
     WorldEntityRemoveEvent::class,
+    TitleEvent.Title::class,
+    TitleEvent.Subtitle::class,
+    TitleEvent.Fade::class,
+    TitleEvent.Clear::class,
 )
 
 /**
@@ -174,6 +181,7 @@ object EventManager {
      * Unregisters a handler.
      */
     fun <T : Event> unregisterEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
+        @Suppress("UNCHECKED_CAST")
         registry[eventClass]?.remove(eventHook as EventHook<in Event>)
     }
 

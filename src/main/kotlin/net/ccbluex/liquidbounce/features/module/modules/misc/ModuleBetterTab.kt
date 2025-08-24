@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -93,7 +93,7 @@ class PlayerFilter: Configurable("Filter") {
     private val filterBy by multiEnumChoice("FilterBy", Filter.entries)
 
     @Suppress("unused")
-    private val names by textArray("Names", mutableListOf()).onChanged { newValue ->
+    private val names by textList("Names", mutableListOf()).onChanged { newValue ->
         filters = newValue.mapTo(HashSet(newValue.size, 1.0F)) {
             val regexPattern = it
                 .replace("*", ".*")

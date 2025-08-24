@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
@@ -16,7 +16,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
     private var regexFilters = emptySet<Regex>()
 
     private val stack by boolean("StackMessages", false)
-    private val filters by textArray("Filters", mutableListOf()).onChanged {
+    private val filters by textList("Filters", mutableListOf()).onChanged {
         compileFilters()
     }
 

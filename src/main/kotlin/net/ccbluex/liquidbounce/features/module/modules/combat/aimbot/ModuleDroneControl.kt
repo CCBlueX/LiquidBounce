@@ -19,13 +19,13 @@ object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
 
     var screen: DroneControlScreen? = null
 
-    override fun enable() {
+    override fun onEnabled() {
         screen = DroneControlScreen()
 
         mc.setScreen(screen)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (mc.currentScreen == screen) {
             mc.setScreen(null)
         }

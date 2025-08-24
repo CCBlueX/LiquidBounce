@@ -61,7 +61,7 @@ data class ClientAccount(
     }
 
     suspend fun renew() = withContext(Dispatchers.IO) {
-        session = OAuthClient.renewToken(takeSession())
+        session = OAuthClient.renewToken(session ?: error("No session"))
     }
 
     suspend fun updateProxySubscription() = withContext(Dispatchers.IO) {

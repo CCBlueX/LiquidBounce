@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos

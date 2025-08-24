@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -264,7 +264,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
     }
 
-    inline fun Any.debugParameter(name: String, lazyValue: () -> Any) {
+    inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
         if (!ModuleDebug.running) {
             return
         }
@@ -334,11 +334,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
-        super.disable()
+        super.onDisabled()
     }
 
 }
