@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextSanitizer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
-import net.ccbluex.liquidbounce.utils.kotlin.mapString
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
@@ -101,7 +100,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             emptyList()
         }
 
-        val playerName = player.gameProfile?.name
+        val playerName = player.gameProfile?.name ?: mc.session.username
 
         val otherPlayers = if (ReplaceOthers.enabled) {
             network.playerList?.mapNotNull { playerListEntry ->
@@ -112,7 +111,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         } else { null } ?: emptyList()
 
         this.replacementMappings.update(
-            mc.session.username to this.replacement,
+            playerName to this.replacement,
             friendMappings,
             otherPlayers,
             coloringInfo
@@ -173,8 +172,8 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
                 true
             }
 
-            val text = originalCharacters.mapString {
-                it.codePoint.toChar()
+            val text = buildString(originalCharacters.size) {
+                originalCharacters.forEach { appendCodePoint(it.codePoint) }
             }
             val replacements = replacementMappings.findReplacements(text)
 

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.api.core
 import com.google.gson.JsonElement
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.gson.GsonInstance
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
@@ -155,7 +155,7 @@ fun Response.toFile(file: File) = use { response ->
 }
 
 fun JsonElement.toRequestBody(): RequestBody {
-    return GsonInstance.ACCESSIBLE_INTEROP.gson.toJson(this)
+    return accessibleInteropGson.toJson(this)
         .toRequestBody(HttpClient.JSON_MEDIA_TYPE)
 }
 

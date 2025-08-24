@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 202 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.utils.block.bed
 
 import net.minecraft.block.Block
-import net.minecraft.registry.Registries
 
-object BlockAdapter : IdentifierAsStringAdapter<Block>(Registries.BLOCK)
+@JvmRecord
+data class SurroundingBlock(
+    val block: Block,
+    val count: Int,
+    val layer: Int,
+) : Comparable<SurroundingBlock> {
+    override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
+        this, other,
+        { it.layer }, { -it.count }, { -it.block.hardness }, { it.block.translationKey })
+}

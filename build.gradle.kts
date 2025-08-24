@@ -360,6 +360,14 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
     consoleOutputCount.set(5)
 }
 
+tasks.register<JavaExec>("liquidInstruction") {
+    group = "other"
+    description = "Run LiquidInstruction class."
+
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.ccbluex.liquidbounce.LiquidInstruction")
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.
@@ -378,6 +386,13 @@ kotlin {
 }
 
 tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+        attributes["Implementation-Title"] = archives_base_name
+        attributes["Implementation-Version"] = mod_version
+        attributes["Implementation-Vendor"] = maven_group
+    }
+
     // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
         rename {

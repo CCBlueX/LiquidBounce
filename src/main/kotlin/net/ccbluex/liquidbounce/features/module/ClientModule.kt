@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -46,7 +48,7 @@ import net.minecraft.client.util.InputUtil
 /**
  * A module also called 'hack' can be enabled and handle events
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "detekt:TooManyFunctions")
 open class ClientModule(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
@@ -125,7 +127,16 @@ open class ClientModule(
 
                 value.doNotIncludeAlways()
             }
-        }.notAnOption()
+        }.notAnOption().onChanged { newState ->
+            if (newState) {
+                eventListenerScope.launch { enabledEffect() }
+            }
+        }
+
+    /**
+     * Launches an async task on [eventListenerScope] when module is turned on.
+     */
+    open suspend fun enabledEffect() {}
 
     override fun onToggled(state: Boolean): Boolean {
         // Check if the module is locked and cannot be enabled

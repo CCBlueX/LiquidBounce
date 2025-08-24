@@ -25,6 +25,7 @@ import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
+import java.util.EnumMap
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -127,7 +128,7 @@ open class ItemListValue<T : MutableSet<E>, E>(
 
 }
 
-open class RegistryListValue<T : MutableSet<E>, E>(
+class RegistryListValue<T : MutableSet<E>, E>(
     name: String,
     value: T,
     innerValueType: ValueType = ValueType.INVALID,
@@ -143,14 +144,20 @@ open class RegistryListValue<T : MutableSet<E>, E>(
     /**
      * This is used to determine the registry endpoint for the API.
      */
-    @Exclude var registry: String = when (innerValueType) {
-        ValueType.BLOCK -> "blocks"
-        ValueType.ITEM -> "items"
-        ValueType.SOUND -> "sounds"
-        ValueType.STATUS_EFFECT -> "statuseffects"
-        ValueType.CLIENT_PACKET -> "clientpackets"
-        ValueType.SERVER_PACKET -> "serverpackets"
-        else -> error("Unsupported registry type: $innerValueType")
+    @Exclude
+    val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
+
+    companion object {
+        @JvmField
+        internal val TYPE_TO_REGISTRY_NAME = EnumMap<_, String>(ValueType::class.java).apply {
+            put(ValueType.BLOCK, "blocks")
+            put(ValueType.ITEM, "items")
+            put(ValueType.SOUND, "sounds")
+            put(ValueType.STATUS_EFFECT, "statuseffects")
+            put(ValueType.CLIENT_PACKET, "clientpackets")
+            put(ValueType.SERVER_PACKET, "serverpackets")
+            put(ValueType.ENTITY_TYPE, "entity_type")
+        }
     }
 
 }

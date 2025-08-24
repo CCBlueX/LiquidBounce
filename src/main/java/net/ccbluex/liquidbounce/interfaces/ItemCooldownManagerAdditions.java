@@ -17,9 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
+import net.minecraft.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-object ItemAdapter : IdentifierAsStringAdapter<Item>(Registries.ITEM)
+public interface ItemCooldownManagerAdditions {
+
+    @Nullable Entry liquidBounce$getCooldown(@NotNull ItemStack stack);
+
+    record Entry(int currentTick, int startTick, int endTick) {
+    }
+}
