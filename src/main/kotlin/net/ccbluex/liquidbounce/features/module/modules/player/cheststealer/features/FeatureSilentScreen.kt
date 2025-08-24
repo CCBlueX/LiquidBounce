@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -79,8 +78,6 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
         }
 
-        private val drawContext = newDrawContext()
-
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
@@ -89,7 +86,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             val containerScreen = mc.currentScreen as GenericContainerScreen
 
             renderEnvironmentForGUI {
-                drawContext.drawItemTags(
+                event.context.drawItemTags(
                     stacks = getSlotsInContainer(containerScreen).map { it.itemStack },
                     centerPos = pos,
                     backgroundColor = backgroundColor.toARGB(),

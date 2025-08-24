@@ -40,6 +40,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.Item
@@ -110,14 +111,15 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
-        .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, SoundEventAdapter)
-        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, StatusEffectAdapter)
+        .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
+        .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
+        .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
+        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
         .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockAdapter)
+        .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
