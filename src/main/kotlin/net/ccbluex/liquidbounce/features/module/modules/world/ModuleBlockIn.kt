@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -26,7 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.MathHelper
 import kotlin.random.Random
 
 /**
@@ -44,10 +46,12 @@ import kotlin.random.Random
  * Builds blocks to cover yourself.
  */
 object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = true) {
+
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val autoDisable by boolean("AutoDisable", true)
-    private val placeOrder = choices("PlaceOrder", Order.Normal,
-        arrayOf(Order.Normal, Order.Random, Order.BottomTop, Order.TopBottom))
+    private val placeOrder = choices("PlaceOrder", 0) {
+        arrayOf(Order.Normal, Order.Random, Order.BottomTop, Order.TopBottom)
+    }
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", hashSetOf())
 
@@ -55,84 +59,46 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
         override val parent: ChoiceConfigurable<*>
             get() = placeOrder
 
-        fun positions(): Set<BlockPos> = generatePositions().apply {
-            removeIf { !it.getState()!!.isReplaceable }
-        }
-
-        /**
-         * @return an ordered set, contains 9 elements
-         */
-        protected abstract fun generatePositions(): MutableSet<BlockPos>
+        abstract fun positions(): MutableSet<BlockPos>
 
         object Normal : Order("Normal") {
-            override fun generatePositions(): MutableSet<BlockPos> {
-                val result = linkedSetOf<BlockPos>()
+            override fun positions(): ObjectArraySet<BlockPos> {
+                val playerHeight = MathHelper.ceil(player.height)
+                val result = ObjectArraySet<BlockPos>(10)
+                result += startPos.down()
                 rotateSurroundings {
                     val value = startPos.offset(it)
-                    result += value
-                    result += value.up()
+                    repeat(playerHeight) { i ->
+                        result += value.up(i)
+                    }
                 }
-                result += startPos.up(2)
+                result += startPos.up(playerHeight)
 
                 return result
             }
         }
 
         object Random : Order("Random") {
-            override fun generatePositions(): MutableSet<BlockPos> {
-                val list = ArrayList<BlockPos>(9)
-                val center = startPos.mutableCopy()
-                Direction.HORIZONTAL.forEach {
-                    list += center.offset(it)
-                }
-                center.move(0, 1, 0)
-                Direction.HORIZONTAL.forEach {
-                    list += center.offset(it)
-                }
-                list += center.move(0, 1, 0)
-                list.shuffle()
-                return LinkedHashSet(list)
+            override fun positions(): ObjectArraySet<BlockPos> {
+                val array = Normal.positions().toArray()
+                array.shuffle()
+                return ObjectArraySet(array)
             }
         }
 
         object BottomTop : Order("BottomTop") {
-            override fun generatePositions(): MutableSet<BlockPos> {
-                val result = linkedSetOf<BlockPos>()
-
-                val center = startPos.mutableCopy() // Player legs
-                rotateSurroundings {
-                    val value = center.offset(it)
-                    result += value
-                }
-                center.move(0, 1, 0) // Player chest
-                rotateSurroundings {
-                    val value = center.offset(it)
-                    result += value
-                }
-                result += center.move(0, 1, 0)
-
-                return result
+            override fun positions(): MutableSet<BlockPos> {
+                val array = Normal.positions().toArray()
+                array.sortBy { (it as BlockPos).y }
+                return ObjectArraySet(array)
             }
         }
 
         object TopBottom : Order("TopBottom") {
-            override fun generatePositions(): MutableSet<BlockPos> {
-                val result = linkedSetOf<BlockPos>()
-
-                val center = startPos.mutableCopy()
-                center.move(0, 1, 0) // Player chest
-                rotateSurroundings {
-                    val value = center.offset(it)
-                    result += value
-                }
-                center.move(0, -1, 0) // Player legs
-                rotateSurroundings {
-                    val value = center.offset(it)
-                    result += value
-                }
-                result.addFirst(center.set(startPos, 0, 2, 0))
-
-                return result
+            override fun positions(): MutableSet<BlockPos> {
+                val array = Normal.positions().toArray()
+                array.sortByDescending { (it as BlockPos).y }
+                return ObjectArraySet(array)
             }
         }
 
@@ -169,6 +135,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
 
     private fun getPositions() {
         blockList = placeOrder.activeChoice.positions()
+        debugParameter("Place Count") { blockList.size }
     }
 
     @Suppress("unused")
@@ -193,6 +160,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
         }
     }
 
+    @JvmStatic
     private fun slotFinder(pos: BlockPos?): HotbarItemSlot? {
         val blockSlots = Slots.OffhandWithHotbar.mapNotNull {
             it to (it.itemStack.getBlock()?.takeIf { b -> filter(b, blocks) } ?: return@mapNotNull null)

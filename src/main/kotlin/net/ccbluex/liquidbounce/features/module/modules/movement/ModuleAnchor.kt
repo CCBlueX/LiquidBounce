@@ -27,7 +27,10 @@ import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.math.boundingBox
+import net.ccbluex.liquidbounce.utils.math.centerPointOf
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -67,8 +70,8 @@ object ModuleAnchor : ClientModule(
     private val tickHandler = tickHandler {
         // if we're already in a hole, we should just center us in that
         val playerBB = player.boundingBox
-        HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.getBoundingBox()) }?.let { hole ->
-            goal = hole.positions.getBottomFaceCenter()
+        HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.boundingBox) }?.let { hole ->
+            goal = hole.positions.centerPointOf(Direction.DOWN)
             return@tickHandler
         }
 
@@ -84,8 +87,8 @@ object ModuleAnchor : ClientModule(
 
         // not in a hole and no valid goal means we need to search one
         goal = HoleTracker.holes
-            .filter { hole -> hole.positions.to.y + 1.0 <= playerPos.y }
-            .map { hole -> hole.positions.getBottomFaceCenter() }
+            .filter { hole -> hole.positions.maxY + 1 <= playerPos.y }
+            .map { hole -> hole.positions.centerPointOf(Direction.DOWN) }
             .filter { vec3d -> vec3d.squaredDistanceTo(playerPos) <= maxDistanceSq }
             .minByOrNull { vec3d -> vec3d.squaredDistanceTo(playerPos) }
     }
