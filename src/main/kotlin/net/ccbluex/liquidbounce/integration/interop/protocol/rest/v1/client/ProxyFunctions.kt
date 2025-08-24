@@ -152,7 +152,8 @@ fun postEditProxy(requestObject: RequestObject): FullHttpResponse {
         return httpForbidden("Illegal port")
     }
 
-    ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication), index = id)
+    val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
+    ProxyManager.validateProxy(proxy, index = id)
     return httpOk(emptyJsonObject())
 }
 
