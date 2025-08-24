@@ -46,9 +46,9 @@ import kotlin.random.Random
  * Builds blocks to cover yourself.
  */
 object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = true) {
+
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val autoDisable by boolean("AutoDisable", true)
-    private val fillUnderfoot by boolean("FillUnderfoot", false)
     private val placeOrder = choices("PlaceOrder", 0) {
         arrayOf(Order.Normal, Order.Random, Order.BottomTop, Order.TopBottom)
     }
@@ -65,9 +65,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
             override fun positions(): ObjectArraySet<BlockPos> {
                 val playerHeight = MathHelper.ceil(player.height)
                 val result = ObjectArraySet<BlockPos>(10)
-                if (fillUnderfoot) {
-                    result += startPos.down()
-                }
+                result += startPos.down()
                 rotateSurroundings {
                     val value = startPos.offset(it)
                     repeat(playerHeight) { i ->
