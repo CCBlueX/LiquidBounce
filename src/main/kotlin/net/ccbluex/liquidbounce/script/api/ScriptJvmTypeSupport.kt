@@ -28,6 +28,6 @@ object ScriptJvmTypeSupport {
     /**
      * The prefix used for JVM type imports in scripts
      */
-    const val JVM_TYPES_PREFIX = "jvm-types/"
+    const val JVM_TYPES_PREFIX = "@ccbluex/liquidbounce-script-api/"
 
 }
