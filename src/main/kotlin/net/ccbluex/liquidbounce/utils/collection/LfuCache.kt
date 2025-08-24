@@ -24,6 +24,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 
+/**
+ * A simple least frequency used cache. Non-thread-safe.
+ */
 class LfuCache<K : Any, V : Any>(
     @get:JvmName("capacity")
     val capacity: Int,
@@ -32,30 +35,57 @@ class LfuCache<K : Any, V : Any>(
         require(capacity > 0) { "capacity should be positive" }
     }
 
+    /**
+     * [Map] backend.
+     */
     private val cache = Object2ObjectOpenHashMap<K, V>()
+
+    /**
+     * Access count of each key.
+     *
+     * The key set of [counts] is same as [cache]:
+     * `counts.keys == cache.keys`
+     */
     private val counts = Object2IntOpenHashMap<K>()
-    private val countTable = Int2ObjectRBTreeMap<MutableSet<K>>() // small value first
 
-    private val usedSets = ArrayDeque<MutableSet<K>>(8)
+    /**
+     * The access count and keys with this count. Sorted ascending for discarding the least used ones.
+     *
+     * This matches:
+     * `countTable.values.flatten() == counts.keys`
+     * `countTable.keys == counts.values`
+     */
+    private val countTable = Int2ObjectRBTreeMap<MutableSet<K>>()
 
-    private fun newSet() = if (usedSets.isEmpty()) ObjectOpenHashSet() else usedSets.removeFirst()
+    private val setPool = ArrayDeque<MutableSet<K>>(8)
+
+    /**
+     * Creates a [MutableSet] (or get from the pool) for [countTable].
+     */
+    private fun newSet() = if (setPool.isEmpty()) ObjectOpenHashSet() else setPool.removeFirst()
 
     @get:JvmName("size")
     val size: Int get() = cache.size
 
+    /**
+     * Increases the access count of [key].
+     */
     private fun incr(key: K) {
         val oldCount = counts.addTo(key, 1)
         val setOfOldCount = countTable.get(oldCount)
         if (setOfOldCount.size == 1) {
             countTable.remove(oldCount)
             setOfOldCount.clear()
-            usedSets.add(setOfOldCount)
+            setPool.add(setOfOldCount)
         } else {
             setOfOldCount.remove(key)
         }
         countTable.computeIfAbsent(oldCount + 1) { newSet() }.add(key)
     }
 
+    /**
+     * Discards one of the least-used keys.
+     */
     private fun discard() {
         val entryIter = countTable.int2ObjectEntrySet().iterator()
         while (entryIter.hasNext()) {
@@ -68,7 +98,7 @@ class LfuCache<K : Any, V : Any>(
                 cache.remove(toRemove)
                 counts.removeInt(toRemove)
                 if (!iter.hasNext()) {
-                    usedSets.add(set)
+                    setPool.add(set)
                     entryIter.remove()
                 }
 
@@ -77,10 +107,16 @@ class LfuCache<K : Any, V : Any>(
         }
     }
 
+    /**
+     * Gets the key and corresponding value (if exists), and increases its access count.
+     */
     operator fun get(key: K): V? {
         return cache[key]?.also { incr(key) }
     }
 
+    /**
+     * Sets the key and corresponding value, and discards one of the least-used keys if full.
+     */
     operator fun set(key: K, value: V): V {
         cache.computeIfPresent(key) { k, oldV ->
             incr(k)
