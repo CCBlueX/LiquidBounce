@@ -21,9 +21,8 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.ListValueType
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
@@ -40,7 +39,7 @@ object ProxyManager : Configurable("proxy"), EventListener {
     var proxy by value("selectedProxy", Proxy.NONE, valueType = ValueType.PROXY).onChanged {
         ConfigSystem.storeConfigurable(this)
     }
-    internal val proxies by value(name, mutableListOf<Proxy>(), listType = ListValueType.Proxy)
+    internal val proxies by list(name, mutableListOf<Proxy>(), valueType = ValueType.PROXY)
 
     /**
      * The proxy that is set in the current session and used for all server connections
