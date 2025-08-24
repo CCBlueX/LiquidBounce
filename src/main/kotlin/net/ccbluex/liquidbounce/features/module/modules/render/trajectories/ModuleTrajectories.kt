@@ -57,7 +57,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
-    private val simulationResults: MutableList<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>> = ObjectArrayList()
+    private val simulationResults: MutableList<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>> =
+        ObjectArrayList()
 
     override fun onDisabled() {
         simulationResults.clear()
