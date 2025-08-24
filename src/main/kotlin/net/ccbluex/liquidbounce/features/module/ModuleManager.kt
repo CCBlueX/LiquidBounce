@@ -155,7 +155,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
 
                 try {
                     module.calledSinceStartup = true
-                    module.enable()
+                    module.onEnabled()
                 } catch (e: Exception) {
                     logger.error("Failed to enable module ${module.name}", e)
                 }
@@ -290,6 +290,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleLongJump,
             ModuleNoClip,
             ModuleNoJumpDelay,
+            ModuleNoSwim,
             ModuleNoPush,
             ModuleNoSlow,
             ModuleNoWeb,
@@ -325,6 +326,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleFastExp,
             ModuleFastUse,
             ModuleInventoryCleaner,
+            ModuleNoEntityInteract,
             ModuleNoFall,
             ModuleNoRotateSet,
             ModuleReach,
@@ -336,6 +338,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Render
             ModuleAnimations,
             ModuleAntiBlind,
+            ModuleBetterInventory,
             ModuleBlockESP,
             ModuleBlockOutline,
             ModuleBreadcrumbs,
@@ -426,13 +429,13 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
 
     fun addModule(module: ClientModule) {
         module.initConfigurable()
-        module.init()
+        module.onRegistration()
         modules.sortedInsert(module, ClientModule::name)
     }
 
     fun removeModule(module: ClientModule) {
         if (module.running) {
-            module.disable()
+            module.onDisabled()
         }
         module.unregister()
         modules -= module

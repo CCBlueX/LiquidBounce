@@ -16,6 +16,8 @@
     import type {Account} from "../../../../../integration/types";
     import Avatar from "./Avatar.svelte";
     import {notification} from "../notification_store";
+    import RippleLoader from "../../RippleLoader.svelte";
+    import {isLoggingIn} from "../../../altmanager/altmanager_store";
 
     let username = "";
     let avatar = "";
@@ -102,9 +104,15 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="account" class:expanded bind:this={accountElement} on:click={handleSelectClick}>
     <div class="header" bind:this={headerElement}>
-        <object data={avatar} type="image/png" class="avatar" aria-label="avatar">
-            <img src="img/steve.png" alt=avatar class="avatar">
-        </object>
+        {#if $isLoggingIn}
+            <div class="avatar" transition:fade={{ duration: 200 }}>
+                <RippleLoader size={68} />
+            </div>
+        {:else}
+            <object data={avatar} type="image/png" class="avatar" aria-label="avatar" in:fade={{ duration: 200, delay: 200 }}>
+                <img src="img/steve.png" alt=avatar class="avatar">
+            </object>
+        {/if}
         <div class="username">{username}</div>
         <div class="account-type">
             {#if premium}

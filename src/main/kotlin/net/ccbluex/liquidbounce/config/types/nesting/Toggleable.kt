@@ -17,9 +17,34 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.config.types.nesting
 
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
+interface Toggleable {
 
-object ItemAdapter : IdentifierAsStringAdapter<Item>(Registries.ITEM)
+    var enabled: Boolean
+
+    /**
+     * The listener that will be called when the state is toggled. By default it will
+     * simply call [onEnabled] or [onDisabled] depending on the state.
+     */
+    fun onToggled(state: Boolean): Boolean {
+        if (state) {
+            onEnabled()
+        } else {
+            onDisabled()
+        }
+
+        return state
+    }
+
+    /**
+     * Will be called when the state is toggled on.
+     */
+    fun onEnabled() { }
+
+    /**
+     * Will be called when the state is toggled off.
+     */
+    fun onDisabled() { }
+
+}

@@ -22,6 +22,8 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.ChunkPos
+import net.minecraft.world.chunk.WorldChunk
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -84,7 +86,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
     }
 
-    final override fun chunkUpdate(x: Int, z: Int) {
+    final override fun chunkUpdate(chunk: WorldChunk) {
         // NOP
     }
 
@@ -158,13 +160,13 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             }
         }
 
-        final override fun clearChunk(x: Int, z: Int) {
-            val pos = BlockPos.Mutable()
+        final override fun clearChunk(pos: ChunkPos) {
+            val blockPos = BlockPos.Mutable()
             lock.write {
                 stateAndPositions.values.forEach { set ->
                     set.removeIf {
-                        pos.set(it)
-                        pos.x shr 4 == x && pos.z shr 4 == z
+                        blockPos.set(it)
+                        blockPos.x shr 4 == pos.x && blockPos.z shr 4 == pos.z
                     }
                 }
             }
@@ -200,8 +202,8 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             positionAndState.clear()
         }
 
-        final override fun clearChunk(x: Int, z: Int) {
-            positionAndState.keys.removeIf { it.x shr 4 == x && it.z shr 4 == z }
+        final override fun clearChunk(pos: ChunkPos) {
+            positionAndState.keys.removeIf { it.x shr 4 == pos.x && it.z shr 4 == pos.z }
         }
     }
 }

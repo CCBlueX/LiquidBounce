@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 202 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.utils.block.bed
 
 import net.minecraft.block.Block
-import net.minecraft.registry.Registries
+import net.minecraft.util.math.Vec3d
 
-object BlockAdapter : IdentifierAsStringAdapter<Block>(Registries.BLOCK)
+/**
+ * Represents a bed state.
+ */
+data class BedState(
+    val block: Block,
+    val pos: Vec3d,
+    val surroundingBlocks: Collection<SurroundingBlock>,
+) {
+    val compactSurroundingBlocks: Collection<SurroundingBlock> by lazy {
+        surroundingBlocks.groupBy { surrounding ->
+            surrounding.block
+        }.map { (block, group) ->
+            group.reduce { acc, item ->
+                SurroundingBlock(
+                    block = block,
+                    count = acc.count + item.count,
+                    layer = minOf(acc.layer, item.layer)
+                )
+            }
+        }
+    }
+}

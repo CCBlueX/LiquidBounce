@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config.types.nesting
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -48,15 +47,15 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    fun newState(state: Boolean) {
+    fun onToggled(state: Boolean) {
         if (state) {
             this.activeChoice.enable()
         } else {
             this.activeChoice.disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
+        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.onToggled(state) }
+        inner.filterIsInstance<Toggleable>().forEach { it.onToggled(state) }
     }
 
     override fun setByString(name: String) {

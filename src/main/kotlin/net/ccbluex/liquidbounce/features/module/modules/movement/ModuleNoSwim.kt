@@ -16,10 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.entity.EntityPose
 
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.registry.Registries
-
-object StatusEffectAdapter : IdentifierAsStringAdapter<StatusEffect>(Registries.STATUS_EFFECT)
+/**
+ * Prevents pose changes of swimming, for low version of server protocol
+ *
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
+ */
+object ModuleNoSwim : ClientModule("NoSwim", Category.MOVEMENT) {
+    fun shouldCancel(pose: EntityPose) = running && pose === EntityPose.SWIMMING
+}

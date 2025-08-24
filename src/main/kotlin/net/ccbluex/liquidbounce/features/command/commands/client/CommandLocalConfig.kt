@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -29,7 +30,13 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.Parameters
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.Util
+import java.time.Instant
+import java.time.ZoneId
 
 /**
  * LocalConfig Command
@@ -87,7 +94,9 @@ object CommandLocalConfig : CommandFactory {
                 }
 
                 createNewFile()
-                serializeAutoConfig(bufferedWriter(), includeConfiguration)
+                bufferedWriter().use {
+                    serializeAutoConfig(it, includeConfiguration)
+                }
             }.onFailure {
                 chat(regular(command.result("failedToCreate", variable(name))))
             }.onSuccess {
@@ -111,9 +120,41 @@ object CommandLocalConfig : CommandFactory {
                 .build()
         )
         .handler { command, args ->
-            chat("§cSettings:")
-            for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
-                chat(regular(files.name))
+            val configFiles = ConfigSystem.userConfigsFolder.listFiles { file, name ->
+                name.endsWith(".json", ignoreCase = true)
+            }
+
+            if (configFiles.isNullOrEmpty()) {
+                chat("No local config!".asText().formatted(Formatting.RED))
+            } else {
+                chat("Settings:".asText().formatted(Formatting.AQUA))
+                for (file in configFiles) {
+                    val fileNameWithoutSuffix = file.name.removeSuffix(".json")
+
+                    chat(
+                        variable(file.name)
+                            .onClick(
+                                ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                    ".localconfig load $fileNameWithoutSuffix"
+                                )
+                            )
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of("§7Click to load ${file.name}")
+                                )
+                            ),
+                        regular(" ("),
+                        regular(
+                            Instant.ofEpochMilli(file.lastModified())
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                                .format(AutoSettings.FORMATTER)
+                        ),
+                        regular(")"),
+                    )
+                }
             }
         }
         .build()
