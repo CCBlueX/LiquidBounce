@@ -35,6 +35,9 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
     private object Path : ToggleableConfigurable(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
+        override val running: Boolean
+            get() = super.running && AutoFarmAutoWalk.running
+
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {

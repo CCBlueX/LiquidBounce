@@ -20,20 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
 import java.util.*
 
-object AutoFarmAutoWalk : NavigationBaseConfigurable<Unit>(ModuleAutoFarm, "AutoWalk", false) {
+object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "AutoWalk", false) {
+
+    private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlace by boolean("ToPlace", true)
@@ -94,27 +94,6 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Unit>(ModuleAutoFarm, "Auto
         return closestBlockPos
     }
 
-    fun updateWalkTarget(): Boolean {
-        if (!enabled) {
-            return false
-        }
-
-        val invHasSpace = hasInventorySpace()
-        if (!invHasSpace && invHadSpace && toItems.enabled) {
-            notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
-        }
-        invHadSpace = invHasSpace
-
-        val target = findWalkTarget(invHasSpace).also { walkTarget = it } ?: return false
-
-        debugParameter("Target") { target }
-        debugParameter("Target Type") {
-            val targetAsBlockPos = target.toBlockPos()
-            AutoFarmBlockTracker.iterate().firstOrNull { it.key == targetAsBlockPos }?.value
-        }
-        return true
-    }
-
     private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
         val blockTarget = findWalkToBlock()
 
@@ -135,14 +114,26 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Unit>(ModuleAutoFarm, "Auto
         it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
     }.minByOrNull { it.squaredDistanceTo(player) }?.pos
 
-    fun stopWalk() {
-        walkTarget = null
+    @Suppress("EmptyFunctionBlock")
+    override fun createNavigationContext(): Vec3d? {
+        val invHasSpace = hasInventorySpace()
+        if (!invHasSpace && invHadSpace && toItems.enabled) {
+            notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
+            return null
+        }
+        invHadSpace = invHasSpace
+
+        return findWalkTarget(invHasSpace)
     }
 
-    override fun createNavigationContext() { }
+    override fun calculateGoalPosition(context: Vec3d?): Vec3d? {
+        val target = ModuleAutoFarm.currentTarget?.toCenterPos() ?: context
+        if (target != null && player.squaredDistanceTo(target) < minimumDistance.sq()) {
+            this.walkTarget = null
+            return null
+        }
 
-    override fun calculateGoalPosition(context: Unit): Vec3d? {
-        return walkTarget
+        return target.also { this.walkTarget = it }
     }
 
 }

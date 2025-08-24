@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -41,7 +40,9 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.inventory.hasItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.*
+import net.minecraft.block.BlockState
+import net.minecraft.block.FarmlandBlock
+import net.minecraft.block.SoulSandBlock
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.Items
@@ -56,7 +57,7 @@ import net.minecraft.util.math.Vec3d
  * Automatically farms stuff for you.
  */
 object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
-    // TODO Fix this entire module-
+
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         minOf(it, range)
@@ -64,8 +65,6 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     // The ticks to wait after interacting with something
     private val interactDelay by intRange("InteractDelay", 2..3, 1..15, "ticks")
-
-//    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
@@ -79,9 +78,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     private val fortune by boolean("UseFortune", true)
 
-    private val autoWalk = tree(AutoFarmAutoWalk)
-
     init {
+        tree(AutoFarmAutoWalk)
         tree(AutoPlaceCrops)
         tree(AutoUseBoneMeal)
         tree(AutoFarmVisualizer)
@@ -104,7 +102,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     var currentTarget: BlockPos? = null
         private set
 
-    val repeatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         // Return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
             return@tickHandler
@@ -125,13 +124,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             return@tickHandler
         }
 
-        // If there is no currentTarget (a block close enough to be interacted with) walk if wanted
-        currentTarget ?: run {
-            autoWalk.updateWalkTarget()
-            return@tickHandler
-        }
-
-        autoWalk.stopWalk() // Stop walking if we found a target close enough to interact with it
+        // Return if we don't have a target
+        currentTarget ?: return@tickHandler
 
         val rayTraceResult = raycast(
             range = range.toDouble(),
