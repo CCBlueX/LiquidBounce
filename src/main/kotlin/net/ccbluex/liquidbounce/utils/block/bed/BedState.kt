@@ -16,10 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.utils.block.bed
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+import net.minecraft.block.Block
+import net.minecraft.util.math.Vec3d
 
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.registry.Registries
-
-object StatusEffectAdapter : IdentifierAsStringAdapter<StatusEffect>(Registries.STATUS_EFFECT)
+/**
+ * Represents a bed state.
+ */
+data class BedState(
+    val block: Block,
+    val pos: Vec3d,
+    val surroundingBlocks: Collection<SurroundingBlock>,
+) {
+    val compactSurroundingBlocks: Collection<SurroundingBlock> by lazy {
+        surroundingBlocks.groupBy { surrounding ->
+            surrounding.block
+        }.map { (block, group) ->
+            group.reduce { acc, item ->
+                SurroundingBlock(
+                    block = block,
+                    count = acc.count + item.count,
+                    layer = minOf(acc.layer, item.layer)
+                )
+            }
+        }
+    }
+}

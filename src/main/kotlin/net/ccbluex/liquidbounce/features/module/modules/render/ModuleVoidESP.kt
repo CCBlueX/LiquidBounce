@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.BlockPos
@@ -101,7 +100,7 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
         val to = posEnd.set(startPos)
             .move(facing.opposite, rangeFacing).move(side, rangeSide)
 
-        Region(from, to).forEach {
+        BlockPos.iterate(from, to).forEach {
             chunk = world.getChunk(it)
 
             if (chunk.canBlockStandOn(it)) {
