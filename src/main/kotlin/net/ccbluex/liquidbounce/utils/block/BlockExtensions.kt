@@ -153,33 +153,29 @@ val Block.mustBePlacedOnUpperSide: Boolean
 
 val BlockPos.hasEntrance: Boolean
     get() {
-        val positionsAround = arrayOf(
-            this.offset(Direction.NORTH),
-            this.offset(Direction.SOUTH),
-            this.offset(Direction.EAST),
-            this.offset(Direction.WEST),
-            this.offset(Direction.UP)
-        )
-
         val block = this.getBlock()
-        return positionsAround.any { it.getState()?.isAir == true && it.getBlock() != block }
+        val cache = BlockPos.Mutable()
+        return DIRECTIONS_EXCLUDING_DOWN.any {
+            val neighbor = cache.set(this, it)
+            neighbor.collisionShape == VoxelShapes.empty() && neighbor.getBlock() !== block
+        }
     }
 
-val BlockPos.weakestBlock: BlockPos?
+val BlockPos.weakestNeighbor: BlockPos?
     get() {
-        val positionsAround = arrayOf(
-            this.offset(Direction.NORTH),
-            this.offset(Direction.SOUTH),
-            this.offset(Direction.EAST),
-            this.offset(Direction.WEST),
-            this.offset(Direction.UP)
-        )
-
         val block = this.getBlock()
-        return positionsAround
-            .filter { it.getBlock() != block && it.getState()?.isAir == false }
-            .sortedBy { player.pos.squaredDistanceTo(it.toCenterPos()) }
-            .minByOrNull { it.getBlock()?.hardness ?: 0f }
+        val cache = BlockPos.Mutable()
+        val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
+            val neighbor = cache.set(this, it)
+            val state = neighbor.getState() ?: return@mapNotNullTo null
+            if (state.block !== block && !state.isAir) neighbor.toImmutable() else null
+        }
+
+        if (neighbors.isEmpty()) return null
+
+        val comparator = compareBy<BlockPos> { it.getBlock()?.hardness ?: 0f }
+            .thenBy { it.getCenterDistanceSquaredEyes() }
+        return neighbors.minWith(comparator)
     }
 
 /**
