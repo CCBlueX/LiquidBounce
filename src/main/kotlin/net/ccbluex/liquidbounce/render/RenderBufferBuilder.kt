@@ -52,6 +52,7 @@ class RenderBufferBuilder<I : VertexInputType>(
      *
      * @param box The bounding box of the box.
      */
+    @Suppress("CognitiveComplexMethod")
     @JvmOverloads
     fun drawBox(
         env: RenderEnvironment,
