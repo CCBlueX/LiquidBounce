@@ -17,9 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.registry.Registries
+import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.util.Identifier;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-object StatusEffectAdapter : IdentifierAsStringAdapter<StatusEffect>(Registries.STATUS_EFFECT)
+@Mixin(InGameHud.class)
+public interface MixinInGameHudAccessor {
+
+    @Accessor("HOTBAR_SELECTION_TEXTURE")
+    static Identifier getHotbarSelectionTexture() {
+        throw new AssertionError();
+    }
+
+}

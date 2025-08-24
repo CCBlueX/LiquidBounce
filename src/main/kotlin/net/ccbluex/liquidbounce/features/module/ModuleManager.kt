@@ -290,6 +290,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleLongJump,
             ModuleNoClip,
             ModuleNoJumpDelay,
+            ModuleNoSwim,
             ModuleNoPush,
             ModuleNoSlow,
             ModuleNoWeb,
@@ -325,6 +326,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleFastExp,
             ModuleFastUse,
             ModuleInventoryCleaner,
+            ModuleNoEntityInteract,
             ModuleNoFall,
             ModuleNoRotateSet,
             ModuleReach,
@@ -336,6 +338,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Render
             ModuleAnimations,
             ModuleAntiBlind,
+            ModuleBetterInventory,
             ModuleBlockESP,
             ModuleBlockOutline,
             ModuleBreadcrumbs,
