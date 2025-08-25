@@ -223,6 +223,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
+            type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult
 

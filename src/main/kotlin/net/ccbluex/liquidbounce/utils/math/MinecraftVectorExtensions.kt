@@ -73,14 +73,14 @@ inline operator fun Vec3d.component1(): Double = this.x
 inline operator fun Vec3d.component2(): Double = this.y
 inline operator fun Vec3d.component3(): Double = this.z
 
-fun Collection<Vec3d>.average(): Vec3d {
-    val result = doubleArrayOf(0.0, 0.0, 0.0)
+fun Iterable<Vec3d>.average(): Vec3d {
+    val result = Vec3d(0.0, 0.0, 0.0)
+    var i = 0
     for (vec in this) {
-        result[0] += vec.x
-        result[1] += vec.y
-        result[2] += vec.z
+        result.move(vec)
+        i++
     }
-    return Vec3d(result[0] / size, result[1] / size, result[2] / size)
+    return result.scale(1.0 / i)
 }
 
 inline fun forEach3D(v0: Vec3d, v1: Vec3d, step: Double, fn: (Double, Double, Double) -> Unit) {

@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
@@ -120,30 +120,28 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        renderEnvironmentForGUI {
-            itemEntities.mapNotNull { result ->
-                val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
-                val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset))
-                    ?: return@mapNotNull null
-                renderPos to result.stacks
-            }.forEachWithSelf { (center, stacks), i, self ->
-                val z = 1000.0F * i / self.size
-                event.context.drawItemTags(
-                    stacks = stacks,
-                    centerPos = center.copy(z = z),
-                    backgroundColor = backgroundColor.toARGB(),
-                    scale = scale,
-                    rowLength = rowLength
-                )
-            }
+        itemEntities.mapNotNull { result ->
+            val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
+            val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset))
+                ?: return@mapNotNull null
+            renderPos to result.stacks
+        }.forEachWithSelf { (center, stacks), i, self ->
+            val z = 1000.0F * i / self.size
+            event.context.drawItemTags(
+                stacks = stacks,
+                centerPos = center.copy(z = z),
+                backgroundColor = backgroundColor.toARGB(),
+                scale = scale,
+                rowLength = rowLength
+            )
         }
     }
 
     private class ClusteredEntities(val entities: List<Entity>, val stacks: List<ItemStack>) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
-            return entities.fold(Vec3d.ZERO) { acc, entity ->
-                acc.add(entity.interpolateCurrentPosition(tickDelta))
-            }.multiply(1.0 / entities.size)
+            return entities.map { entity ->
+                entity.interpolateCurrentPosition(tickDelta)
+            }.average()
         }
     }
 

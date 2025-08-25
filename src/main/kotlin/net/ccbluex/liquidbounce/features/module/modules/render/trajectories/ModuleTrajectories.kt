@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -89,57 +88,55 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         }
 
 //        private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
-        private val scale by float("Scale", 1.5F, 0.25F..4F)
+        private val scale by float("Scale", 1F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
 
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             val context = event.context
 
-            renderEnvironmentForGUI {
-                simulationResults.mapNotNull { (renderer, result) ->
-                    val screenPos = WorldToScreen.calculateScreenPos(showAt.getPosition(renderer, result).add(renderOffset))
-                        ?: return@mapNotNull null
-                    Triple(screenPos, renderer, result)
-                }.forEach { (screenPos, renderer, result) ->
-                    context.matrices.push()
-                    context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                    context.matrices.scale(scale, scale, 1.0F)
+            simulationResults.mapNotNull { (renderer, result) ->
+                val screenPos = WorldToScreen.calculateScreenPos(showAt.getPosition(renderer, result).add(renderOffset))
+                    ?: return@mapNotNull null
+                Triple(screenPos, renderer, result)
+            }.forEach { (screenPos, renderer, result) ->
+                context.matrices.push()
+                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
+                context.matrices.scale(scale, scale, 1.0F)
 
-                    var y = 0
+                var y = 0
 
+                context.drawCenteredTextWithShadow(
+                    mc.textRenderer,
+                    durationUnit.getString(result.positions.size),
+                    0,
+                    y,
+                    Color4b.WHITE.toARGB(),
+                )
+                y += mc.textRenderer.fontHeight + 1
+
+                if (ownerName && renderer.owner !== player) {
                     context.drawCenteredTextWithShadow(
                         mc.textRenderer,
-                        durationUnit.getString(result.positions.size),
+                        renderer.owner.name,
                         0,
                         y,
                         Color4b.WHITE.toARGB(),
                     )
                     y += mc.textRenderer.fontHeight + 1
-
-                    if (ownerName && renderer.owner !== player) {
-                        context.drawCenteredTextWithShadow(
-                            mc.textRenderer,
-                            renderer.owner.name,
-                            0,
-                            y,
-                            Color4b.WHITE.toARGB(),
-                        )
-                        y += mc.textRenderer.fontHeight + 1
-                    }
-
-                    if (distance) {
-                        context.drawCenteredTextWithShadow(
-                            mc.textRenderer,
-                            "${player.pos.distanceTo(result.positions.last()).toFixed(1)}m",
-                            0,
-                            y,
-                            Color4b.WHITE.toARGB(),
-                        )
-                        y += mc.textRenderer.fontHeight + 1
-                    }
-
-                    context.matrices.pop()
                 }
+
+                if (distance) {
+                    context.drawCenteredTextWithShadow(
+                        mc.textRenderer,
+                        "${player.pos.distanceTo(result.positions.last()).toFixed(1)}m",
+                        0,
+                        y,
+                        Color4b.WHITE.toARGB(),
+                    )
+                    y += mc.textRenderer.fontHeight + 1
+                }
+
+                context.matrices.pop()
             }
 
             // Test 2D UI draw, TODO: remove
@@ -190,6 +187,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 velocity = it.velocity,
                 pos = it.pos,
                 trajectoryInfo = trajectoryInfo,
+                type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3d.ZERO
             )
 

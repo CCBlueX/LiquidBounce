@@ -47,11 +47,29 @@ class TrajectoryInfoRenderer(
     pos: Vec3d,
     val trajectoryInfo: TrajectoryInfo,
     /**
+     * Only used for rendering. No effect on simulation.
+     */
+    val type: Type,
+    /**
      * The visualization should be what-you-see-is-what-you-get, so we use the actual current position of the player
      * for simulation. Since the trajectory line should follow the player smoothly, we offset it by some amount.
      */
     private val renderOffset: Vec3d
 ) {
+    enum class Type {
+        /**
+         * From the entity holding items.
+         *
+         * @see [getHypotheticalTrajectory]
+         */
+        HYPOTHETICAL,
+
+        /**
+         * From a moving entity, such as [net.minecraft.entity.projectile.ProjectileEntity].
+         */
+        REAL,
+    }
+
     companion object {
         @JvmStatic
         @JvmOverloads
@@ -91,6 +109,7 @@ class TrajectoryInfoRenderer(
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
+                type = Type.HYPOTHETICAL,
                 renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
         }
