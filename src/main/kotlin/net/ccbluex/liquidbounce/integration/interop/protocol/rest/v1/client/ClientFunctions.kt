@@ -102,6 +102,7 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 }
 
 // POST /api/v1/client/browsePath
+@Suppress("ReturnCount")
 fun postBrowsePath(requestObject: RequestObject): FullHttpResponse {
     val jsonObj = requestObject.asJson<JsonObject>()
     val path = jsonObj["path"]?.asString ?: return httpBadRequest("No file specified")
