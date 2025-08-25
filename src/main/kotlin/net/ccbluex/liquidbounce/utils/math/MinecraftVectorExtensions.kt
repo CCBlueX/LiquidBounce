@@ -141,3 +141,21 @@ fun Vec3d.preferOver(other: Vec3d): Vec3d {
     val z = if (this.z == 0.0) other.z else this.z
     return Vec3d(x, y, z)
 }
+
+// Mutable Vec3d
+
+fun Vec3d.move(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3d = apply {
+    this.x += x
+    this.y += y
+    this.z += z
+}
+
+fun Vec3d.move(other: Vec3d): Vec3d = move(other.x, other.y, other.z)
+
+fun Vec3d.scale(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3d = apply {
+    this.x *= x
+    this.y *= y
+    this.z *= z
+}
+
+fun Vec3d.scale(scale: Double = 1.0): Vec3d = scale(x = scale, y = scale, z = scale)

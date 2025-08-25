@@ -16,10 +16,13 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.scale
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
@@ -39,8 +42,8 @@ import kotlin.math.sin
 
 class TrajectoryInfoRenderer(
     val owner: Entity,
-    private var velocity: Vec3d,
-    private var pos: Vec3d,
+    velocity: Vec3d,
+    pos: Vec3d,
     val trajectoryInfo: TrajectoryInfo,
     /**
      * The visualization should be what-you-see-is-what-you-get, so we use the actual current position of the player
@@ -68,17 +71,17 @@ class TrajectoryInfoRenderer(
                 entity.z
             )
 
-            var velocity = Vec3d(
+            val velocity = Vec3d(
                 -sin(yawRadians) * cos(pitchRadians).toDouble(),
                 -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
                 cos(yawRadians) * cos(pitchRadians).toDouble()
-            ).normalize() * trajectoryInfo.initialVelocity
+            ).normalize().scale(trajectoryInfo.initialVelocity)
 
             if (trajectoryInfo.copiesPlayerVelocity) {
-                velocity += Vec3d(
-                    entity.velocity.x,
-                    if (entity.isOnGround) 0.0 else entity.velocity.y,
-                    entity.velocity.z
+                velocity.move(
+                    x = entity.velocity.x,
+                    y = if (entity.isOnGround) 0.0 else entity.velocity.y,
+                    z = entity.velocity.z
                 )
             }
 
@@ -92,12 +95,15 @@ class TrajectoryInfoRenderer(
         }
     }
 
+    private val velocity = velocity.copy() // Used as mutable
+    private val pos = pos.copy() // Used as mutable
+
     private val hitbox = trajectoryInfo.hitbox()
+    private val mutableBlockPos = BlockPos.Mutable()
 
     fun runSimulation(
         maxTicks: Int,
     ): SimulationResult {
-        val mutableBlockPos = BlockPos.Mutable()
         val positions = mutableListOf<Vec3d>()
         var currTicks = 0
 
@@ -108,7 +114,7 @@ class TrajectoryInfoRenderer(
 
             val prevPos = pos
 
-            pos += velocity
+            pos.move(velocity)
 
             val hitResult = checkForHits(prevPos, pos)
 
@@ -129,11 +135,11 @@ class TrajectoryInfoRenderer(
                 trajectoryInfo.drag
             }
 
-            velocity *= drag
-            velocity -= Vec3d(0.0, trajectoryInfo.gravity, 0.0)
+            velocity.scale(drag)
+            velocity.y -= trajectoryInfo.gravity
 
             // Draw path
-            positions += pos
+            positions += pos.copy()
 
             currTicks++
         }
@@ -166,7 +172,7 @@ class TrajectoryInfoRenderer(
             hitbox.offset(pos).stretch(velocity).expand(1.0)
         ) {
             val canCollide = !it.isSpectator && it.isAlive
-            val shouldCollide = it.canHit() || owner != mc.player && it == mc.player
+            val shouldCollide = it.canHit() || owner !== player && it === player
 
             return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
         }
@@ -257,7 +263,7 @@ private fun drawHitEntities(
     renderEnvironmentForWorld(matrixStack) {
         withColor(entityHitColor) {
             for (entity in entities) {
-                if (entity == player) {
+                if (entity === player) {
                     continue
                 }
 
@@ -282,11 +288,11 @@ private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHi
 
     val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
         .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01).offset(currPos) }
-        .minByOrNull { it.center.squaredDistanceTo(blockHitResult.pos) }
+        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.pos) }
 
     if (bestBox != null) {
         renderEnvironmentForWorld(matrixStack) {
-            withPositionRelativeToCamera(Vec3d.of(currPos)) {
+            withPositionRelativeToCamera(currPos) {
                 withColor(color) {
                     drawSideBox(bestBox, blockHitResult.side)
                 }
