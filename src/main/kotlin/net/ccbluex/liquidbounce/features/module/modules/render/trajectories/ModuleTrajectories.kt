@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -61,9 +60,9 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
     private object ShowDetailedInfo : ToggleableConfigurable(this, "ShowDetailedInfo", false) {
-        val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
+        private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
 
-        enum class ShowAt(
+        private enum class ShowAt(
             override val choiceName: String,
             val getPosition: (TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult) -> Vec3d
         ) : NamedChoice {
@@ -78,15 +77,91 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             }),
         }
 
-        val ownerName by boolean("OwnerName", true)
-        val distance by boolean("Distance", true)
-        val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
+        private val ownerName by boolean("OwnerName", true)
+        private val distance by boolean("Distance", true)
+        private val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
 
-        enum class DurationUnit(override val choiceName: String, val getString: (ticks: Int) -> String) : NamedChoice {
+        private enum class DurationUnit(override val choiceName: String, val getString: (ticks: Int) -> String) : NamedChoice {
             TICKS("Ticks", Int::toString),
             SECONDS("Seconds", { ticks ->
                 (ticks * 0.05).toFixed(1) + "s"
             }),
+        }
+
+//        private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+        private val scale by float("Scale", 1.5F, 0.25F..4F)
+        private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+
+        val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+            val context = event.context
+
+            renderEnvironmentForGUI {
+                simulationResults.mapNotNull { (renderer, result) ->
+                    val screenPos = WorldToScreen.calculateScreenPos(showAt.getPosition(renderer, result).add(renderOffset))
+                        ?: return@mapNotNull null
+                    Triple(screenPos, renderer, result)
+                }.forEach { (screenPos, renderer, result) ->
+                    context.matrices.push()
+                    context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
+                    context.matrices.scale(scale, scale, 1.0F)
+
+                    var y = 0
+
+                    context.drawCenteredTextWithShadow(
+                        mc.textRenderer,
+                        durationUnit.getString(result.positions.size),
+                        0,
+                        y,
+                        Color4b.WHITE.toARGB(),
+                    )
+                    y += mc.textRenderer.fontHeight + 1
+
+                    if (ownerName && renderer.owner !== player) {
+                        context.drawCenteredTextWithShadow(
+                            mc.textRenderer,
+                            renderer.owner.name,
+                            0,
+                            y,
+                            Color4b.WHITE.toARGB(),
+                        )
+                        y += mc.textRenderer.fontHeight + 1
+                    }
+
+                    if (distance) {
+                        context.drawCenteredTextWithShadow(
+                            mc.textRenderer,
+                            "${player.pos.distanceTo(result.positions.last()).toFixed(1)}m",
+                            0,
+                            y,
+                            Color4b.WHITE.toARGB(),
+                        )
+                        y += mc.textRenderer.fontHeight + 1
+                    }
+
+                    context.matrices.pop()
+                }
+            }
+
+            // Test 2D UI draw, TODO: remove
+            with(event.context) {
+                matrices.push()
+
+                simulationResults.forEachIndexed { index, (renderer, result) ->
+                    val text = "[$index]".asText()
+                        .append(" ${(result.positions.size * 0.05).toFixed(1)}s")
+
+                    if (renderer.owner is PlayerEntity) {
+                        text.append(" (")
+                            .append(renderer.owner.name)
+                            .append(")")
+                    }
+
+                    drawText(mc.textRenderer,
+                        text, 100, 100 + index * (mc.textRenderer.fontHeight + 1), Color4b.WHITE.toARGB(), true)
+                }
+
+                matrices.pop()
+            }
         }
     }
 
@@ -94,96 +169,11 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         tree(ShowDetailedInfo)
     }
 
-    private val simulationResults: MutableList<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>> =
-        ObjectArrayList()
+    private val simulationResults =
+        mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
 
     override fun onDisabled() {
         simulationResults.clear()
-    }
-
-    val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
-        debugParameter("TrajectoryCount") { simulationResults.size }
-
-        if (!ShowDetailedInfo.enabled) {
-            return@handler
-        }
-
-        val context = event.context
-
-        renderEnvironmentForGUI {
-            simulationResults.mapNotNull { (renderer, result) ->
-                val screenPos = WorldToScreen.calculateScreenPos(ShowDetailedInfo.showAt.getPosition(renderer, result))
-                    ?: return@mapNotNull null
-                Triple(screenPos, renderer, result)
-            }.forEach { (screenPos, renderer, result) ->
-                context.matrices.push()
-
-                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-
-                var y = 0
-
-                context.drawCenteredTextWithShadow(
-                    mc.textRenderer,
-                    ShowDetailedInfo.durationUnit.getString(result.positions.size),
-                    0,
-                    y,
-                    Color4b.WHITE.toARGB(),
-                )
-                y += mc.textRenderer.fontHeight + 1
-
-                if (ShowDetailedInfo.ownerName && renderer.owner !== player) {
-                    context.drawCenteredTextWithShadow(
-                        mc.textRenderer,
-                        renderer.owner.name,
-                        0,
-                        y,
-                        Color4b.WHITE.toARGB(),
-                    )
-                    y += mc.textRenderer.fontHeight + 1
-                }
-
-                if (ShowDetailedInfo.distance) {
-                    context.drawCenteredTextWithShadow(
-                        mc.textRenderer,
-                        "${player.pos.distanceTo(result.positions.last()).toFixed(1)}m",
-                        0,
-                        y,
-                        Color4b.WHITE.toARGB(),
-                    )
-                    y += mc.textRenderer.fontHeight + 1
-                }
-
-                context.matrices.pop()
-            }
-        }
-
-        /**
-         * TODO:
-         * draw offset
-         * bg color
-         * scale
-         */
-
-        // Test 2D UI draw
-        with(event.context) {
-            matrices.push()
-
-            simulationResults.forEachIndexed { index, (renderer, result) ->
-                val text = "[$index]".asText()
-                    .append(" ${(result.positions.size * 0.05).toFixed(1)}s")
-
-                if (renderer.owner is PlayerEntity) {
-                    text.append(" (")
-                        .append(renderer.owner.name)
-                        .append(")")
-                }
-
-                drawText(mc.textRenderer,
-                    text, 100, 100 + index * (mc.textRenderer.fontHeight + 1), Color4b.WHITE.toARGB(), true)
-            }
-
-            matrices.pop()
-        }
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -222,6 +212,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         } else {
             drawHypotheticalTrajectory(player, event)
         }
+
+        debugParameter("TrajectoryCount") { simulationResults.size }
     }
 
     /**

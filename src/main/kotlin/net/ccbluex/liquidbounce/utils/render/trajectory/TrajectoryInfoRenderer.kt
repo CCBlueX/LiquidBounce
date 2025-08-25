@@ -109,7 +109,6 @@ class TrajectoryInfoRenderer(
         val prevPos = pos.copy()
         var currTicks = 0
 
-        positions += pos
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
                 break
@@ -143,6 +142,9 @@ class TrajectoryInfoRenderer(
             currTicks++
         }
 
+        if (positions.isEmpty()) {
+            positions += pos
+        }
         return SimulationResult(null, positions)
     }
 
