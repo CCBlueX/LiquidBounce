@@ -33,7 +33,8 @@ export type ModuleSetting =
     | BindSetting
     | VectorSetting
     | KeySetting
-    | FileSetting;
+    | FileSetting
+    | CurveSetting;
 
 export type File = string;
 
@@ -54,6 +55,18 @@ export interface FileSetting {
     dialogMode: FileDialogMode;
     supportedExtensions: string[] | undefined;
     value: File;
+}
+
+export interface CurveSetting {
+    valueType: string;
+    name: string;
+    value: [number, number][];
+    defaultValue: [number, number][];
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    tension: number;
 }
 
 export interface BlocksSetting {

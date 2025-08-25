@@ -20,6 +20,7 @@
     import MutableListSetting from "../list/MutableListSetting.svelte";
     import ItemListSetting from "../list/ItemListSetting.svelte";
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
+    import CurveSetting from "../CurveSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -65,6 +66,8 @@
         <VectorSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "CURVE"}
+        <CurveSetting {path} bind:setting={setting} on:change/>
     {:else}
         <div style="color: white">Unsupported setting {setting.valueType}</div>
     {/if}
