@@ -134,19 +134,18 @@ class DynamicFontCacheManager(
 
         val allocationList = createAllocationRequests(requestedChars)
 
-        val unsuccessfullAllocations = this.glyphPageLock.withLock {
+        val unsuccessfulAllocations = this.glyphPageLock.withLock {
             tryAllocations(allocationList)
         }
 
-        if (unsuccessfullAllocations.isEmpty()) {
+        if (unsuccessfulAllocations.isEmpty()) {
             return
         }
 
-       freeSpace()
-
+        freeSpace()
 
         val stillUnsuccessfulAllocations =
-            createAllocationRequests(unsuccessfullAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
+            createAllocationRequests(unsuccessfulAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
 
         // TODO: Optimize the atlas in this situation
         // We weren't able to allocate those chars even after freeing some space. Don't ask us ever again about
