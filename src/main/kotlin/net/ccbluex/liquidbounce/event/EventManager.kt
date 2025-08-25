@@ -209,6 +209,7 @@ object EventManager {
 
         val target = registry[event.javaClass] ?: return event
 
+        event.isCompleted = false
         for (eventHook in target) {
             if (!eventHook.handlerClass.running) {
                 continue
@@ -220,6 +221,7 @@ object EventManager {
                 logger.error("Exception while executing handler.", it)
             }
         }
+        event.isCompleted = true
 
         return event
     }
