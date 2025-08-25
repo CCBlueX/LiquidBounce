@@ -19,7 +19,6 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
