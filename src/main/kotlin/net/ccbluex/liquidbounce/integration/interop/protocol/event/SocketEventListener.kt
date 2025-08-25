@@ -19,19 +19,18 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.stream.JsonWriter
-import net.ccbluex.liquidbounce.api.core.withScope
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
-import org.apache.commons.io.output.StringBuilderWriter
+import net.minecraft.util.Util
 import kotlin.reflect.KClass
 
 /**
  * Empty event:
  * `{"name":"","event":{}}`
  */
-private const val EVENT_JSON_BYTE_COUNT = 64
+private val WRITER_CACHE = ThreadLocal.withInitial { StringBuilder(DEFAULT_BUFFER_SIZE) }
 
 class SocketEventListener : EventListener {
 
@@ -71,27 +70,22 @@ class SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass.java, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = withScope {
-        val json = runCatching {
-            StringBuilderWriter(EVENT_JSON_BYTE_COUNT).use {
-                JsonWriter(it).use { writer ->
-                    writer.beginObject()
-                    writer.name("name").value(event::class.eventName)
-                    writer.name("event")
-                    (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
-                    writer.endObject()
-                }
-                it.toString()
-            }
+    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
+        val json = WRITER_CACHE.get().runCatching {
+            append("{\"name\":\"")
+            append(event::class.eventName)
+            append("\",\"event\":")
+            (event as WebSocketEvent).serializer.toJson(event, event::class.java, this)
+            append('}')
+
+            toString().also { clear() }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return@withScope
+        }.getOrNull() ?: return@execute
 
         httpServer.webSocketController.broadcast(json) { _, t ->
             logger.error("WebSocket event broadcast failed", t)
         }
     }
-
-
 
 }
