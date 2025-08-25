@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.scale
+import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
@@ -105,18 +106,16 @@ class TrajectoryInfoRenderer(
         maxTicks: Int,
     ): SimulationResult {
         val positions = mutableListOf<Vec3d>()
+        val prevPos = pos.copy()
         var currTicks = 0
 
+        positions += pos
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
                 break
             }
 
-            val prevPos = pos
-
-            pos.move(velocity)
-
-            val hitResult = checkForHits(prevPos, pos)
+            val hitResult = checkForHits(prevPos.set(pos), pos.move(velocity))
 
             if (hitResult != null) {
                 hitResult.second?.let {
@@ -136,7 +135,7 @@ class TrajectoryInfoRenderer(
             }
 
             velocity.scale(drag)
-            velocity.y -= trajectoryInfo.gravity
+                .move(y = -trajectoryInfo.gravity)
 
             // Draw path
             positions += pos.copy()

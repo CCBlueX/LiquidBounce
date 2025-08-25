@@ -144,6 +144,14 @@ fun Vec3d.preferOver(other: Vec3d): Vec3d {
 
 // Mutable Vec3d
 
+fun Vec3d.set(x: Double = this.x, y: Double = this.y, z: Double = this.z): Vec3d = apply {
+    this.x = x
+    this.y = y
+    this.z = z
+}
+
+fun Vec3d.set(other: Vec3d): Vec3d = set(other.x, other.y, other.z)
+
 fun Vec3d.move(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3d = apply {
     this.x += x
     this.y += y

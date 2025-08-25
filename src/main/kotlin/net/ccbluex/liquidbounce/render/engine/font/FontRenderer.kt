@@ -328,7 +328,7 @@ class FontRendererBuffers {
     }
 
     fun reset() {
-        this.textBuffers.forEach { (_, bufferBuilder) ->
+        this.textBuffers.values.forEach { bufferBuilder ->
             bufferBuilder.reset()
         }
 
