@@ -19,7 +19,7 @@ class DynamicFontCacheManager(
     /**
      * Available fonts, sorted by priority
      */
-    private val availableFonts: Set<FontManager.FontFace>
+    private val availableFonts: Collection<FontManager.FontFace>
 ) {
     private val glyphPageLock = ReentrantLock()
     private val glyphPageDirtyFlag = AtomicBoolean(false)
