@@ -28,7 +28,6 @@ import net.minecraft.util.math.BlockPos
  * Intave needs to improve their movement checks
  * works on intave 14.8.4
  */
-
 object NoWebIntave14 : NoWebMode("Intave14") {
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {

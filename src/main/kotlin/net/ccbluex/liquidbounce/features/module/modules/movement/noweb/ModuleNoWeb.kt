@@ -23,7 +23,10 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAvoidHazards
-import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebAir
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebGrimBreak
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebStrafe
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.util.math.BlockPos
 
@@ -38,13 +41,17 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    val modes = choices("Mode", NoWebAir, arrayOf(NoWebAir, 
-                                                  NoWebGrimBreak, 
-                                                  NoWebIntave14, 
-                                                  NoWebStrafe
-                                                 )).apply { tagBy(this) }
+    val modes = choices(
+        "Mode", NoWebAir, arrayOf(
+            NoWebAir,
+            NoWebGrimBreak,
+            NoWebIntave14,
+            NoWebStrafe
+        )
+    ).apply { tagBy(this) }
 
-    val repeatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
             ModuleAvoidHazards.enabled = false
 
@@ -52,7 +59,7 @@ object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
                 "Compatibility error", "NoWeb is incompatible with AvoidHazards",
                 NotificationEvent.Severity.ERROR
             )
-            waitTicks(20)
+            waitTicks(40)
         }
     }
 

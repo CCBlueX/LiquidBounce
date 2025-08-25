@@ -37,7 +37,7 @@ object NoWebGrimBreak : NoWebMode("Grim2365") {
     private val breakOnWorld by boolean("BreakOnWorld", true)
 
     override fun handleEntityCollision(pos: BlockPos): Boolean {
-        if (breakOnWorld) mc.world?.setBlockState(pos, Blocks.AIR.defaultState)
+        if (breakOnWorld) world.setBlockState(pos, Blocks.AIR.defaultState)
 
         val start = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
         val abort = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN)
