@@ -277,7 +277,7 @@ open class Configurable(
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
 
-    fun curve(name: String, default: Easing) = enumChoice(name, default)
+    fun easing(name: String, default: Easing) = enumChoice(name, default)
 
     fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
@@ -309,6 +309,18 @@ open class Configurable(
 
     fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
+
+    fun curve(
+        name: String,
+        default: Array<Pair<Float, Float>>,
+        minX: Float,
+        minY: Float,
+        maxX: Float,
+        maxY: Float,
+        tension: Float = 0.0F
+    ) = CurveValue(name, default, minX, minY, maxX, maxY, tension).apply {
+        this@Configurable.inner.add(this)
+    }
 
     fun file(
         name: String,

@@ -57,6 +57,22 @@ import java.awt.Color
 
 object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
+    // TODO: REMOVE AFTER IMPLEMENTATION
+
+    private val curve = curve(
+        "CurveTest", arrayOf(
+            0f to 120f,
+            50f to 60f,
+            140f to 120f,
+            180f to 90f
+        ),
+        minX = 0f,
+        minY = 10f,
+        180f,
+        120f,
+        tension = 0f
+    )
+
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         debugParameters.clear()
     }
