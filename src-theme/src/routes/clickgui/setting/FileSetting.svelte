@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {browseFile, openFileDialog} from "../../../integration/rest";
+    import {browsePath, openFileDialog} from "../../../integration/rest";
     import {createEventDispatcher} from "svelte";
 
     export let setting: ModuleSetting;
@@ -53,7 +53,7 @@
                 <img class="icon" src="img/clickgui/icon-reset.svg" alt="reset-file" title="Reset" />
             </button>
 
-            <button class="button-action" on:click={() => browseFile(cSetting.value)}>
+            <button class="button-action" on:click={() => browsePath(cSetting.value)}>
                 <img class="icon" src="img/clickgui/icon-open-file.svg" alt="open-file" title="Open" />
             </button>
         {/if}

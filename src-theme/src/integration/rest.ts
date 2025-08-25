@@ -6,20 +6,19 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
-    File,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
-    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
+    RegistryItem,
     Server,
     Session,
     VirtualScreen,
@@ -202,13 +201,13 @@ export async function browse(target: string) {
     });
 }
 
-export async function browseFile(file: string) {
-    await fetch(`${API_BASE}/client/browseFile`, {
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({file})
+        body: JSON.stringify({path})
     });
 }
 

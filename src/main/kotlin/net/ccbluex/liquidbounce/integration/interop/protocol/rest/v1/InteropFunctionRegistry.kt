@@ -36,7 +36,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     post("/browse", ::postBrowse)
 
     // OS File Functions
-    post("/browseFile", ::postBrowseFile)
+    post("/browsePath", ::postBrowsePath)
     post("/fileDialog", ::postFileDialog)
 
     // LocalStorage Functions
