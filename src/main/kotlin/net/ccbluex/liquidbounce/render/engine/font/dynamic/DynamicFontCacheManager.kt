@@ -227,14 +227,8 @@ class DynamicFontCacheManager(
     }
 
     private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
-        return this.availableFonts.firstNotNullOfOrNull {
-            val fontInStyle = it.styles.get(ch.font)
-
-            if (fontInStyle != null && fontInStyle.awtFont.canDisplay(ch.codepoint)) {
-                fontInStyle
-            } else {
-                null
-            }
+        return this.availableFonts.firstNotNullOfOrNull { fontFace ->
+            fontFace.styles[ch.font]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
@@ -253,6 +247,6 @@ private class CharCacheData(
     /**
      * Possible values: [UNCACHED], [CACHED] and [BLOCKED]
      */
-    var cacheState: AtomicInteger = AtomicInteger(UNCACHED),
+    val cacheState: AtomicInteger = AtomicInteger(UNCACHED),
     val lastUsage: AtomicLong = AtomicLong(0L)
 )
