@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
@@ -42,31 +43,27 @@ import net.minecraft.util.math.BlockPos
  * Allows you to see selected blocks through walls.
  */
 
-object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
+object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
         findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
     ).onChange {
-        if (enabled) {
-            disable()
-            enable()
+        if (running) {
+            onDisabled()
+            onEnabled()
         }
         it
     }
 
-    private val colorMode = choices<GenericColorMode<Pair<BlockPos, BlockState>>>(
-        "ColorMode",
-        { it.choices[0] },
-        {
-            arrayOf(
-                MapColorMode(it),
-                GenericStaticColorMode(it, Color4b(255, 179, 72, 50)),
-                GenericRainbowColorMode(it)
-            )
-        }
-    )
+    private val colorMode = choices("ColorMode", 0) {
+        arrayOf(
+            MapColorMode(it),
+            GenericStaticColorMode(it, Color4b(255, 179, 72, 50)),
+            GenericRainbowColorMode(it)
+        )
+    }
 
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
@@ -88,7 +85,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 dirty = drawInternal(
-                    BlockTracker.trackedBlockMap.keys,
+                    BlockTracker.allPositions(),
                     colorMode,
                     fullAlpha,
                     drawOutline
@@ -99,7 +96,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         }
 
         private fun WorldRenderEnvironment.drawInternal(
-            blocks: Set<BlockPos>,
+            blocks: Sequence<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             fullAlpha: Boolean,
             drawOutline: Boolean
@@ -124,14 +121,14 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                     var color = colorMode.getColor(Pair(blockPos, blockState))
 
                     if (fullAlpha) {
-                        color = color.alpha(255)
+                        color = color.with(a = 255)
                     }
 
                     withPositionRelativeToCamera(blockPos.toVec3d()) {
                         drawBox(
                             boundingBox,
                             faceColor = color,
-                            outlineColor = color.alpha(150).takeIf { drawOutline }
+                            outlineColor = color.with(a = 150).takeIf { drawOutline }
                         )
                     }
 
@@ -155,9 +152,11 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
 
-            if (dirty)
+            if (dirty) {
                 event.markDirty()
+            }
         }
+
     }
 
     private object Outline : Choice("Outline") {
@@ -172,30 +171,23 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
 
-            if (dirty)
+            if (dirty) {
                 event.markDirty()
+            }
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(BlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 
-    private object TrackedState
-
-    private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (!state.isAir && targets.contains(state.block)) {
-                TrackedState
-            } else {
-                null
-            }
-        }
-
+    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
+            state.block?.takeIf { it in targets }
     }
 
 }

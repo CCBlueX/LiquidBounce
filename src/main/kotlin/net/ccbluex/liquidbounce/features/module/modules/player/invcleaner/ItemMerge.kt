@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import kotlin.math.ceil
 
 object ItemMerge {
@@ -34,18 +35,20 @@ object ItemMerge {
                 continue
             }
 
-            val stacks = mergeableItem.value.map { MergeableStack(it, it.itemStack.count) }
+            val stacks = mergeableItem.value.mapTo(ArrayDeque(mergeableItem.value.size)) {
+                MergeableStack(it, it.itemStack.count)
+            }
+            stacks.sortBy { it.count }
 
-            mergeStacks(itemsToMerge, stacks.toMutableList(), maxStackSize)
+            itemsToMerge.mergeStacks(stacks, maxStackSize)
         }
 
         return itemsToMerge
     }
 
-    class MergeableStack(val slot: ItemSlot, var count: Int)
+    private class MergeableStack(val slot: ItemSlot, var count: Int)
 
-    private fun mergeStacks(
-        itemsToDoubleclick: MutableList<ItemSlot>,
+    private fun MutableList<ItemSlot>.mergeStacks(
         stacks: MutableList<MergeableStack>,
         maxStackSize: Int,
     ) {
@@ -53,19 +56,17 @@ object ItemMerge {
             return
         }
 
-        stacks.sortBy { it.count }
-
         // Remove
         while (stacks.isNotEmpty() && stacks.last().count + stacks[0].count > maxStackSize) {
             stacks.removeLast()
         }
 
         // Find the biggest stack that can be merged
-        val itemToDoubleclick = stacks.removeLastOrNull() ?: return
+        val itemToDbclick = stacks.removeLastOrNull() ?: return
 
-        itemsToDoubleclick.add(itemToDoubleclick.slot)
+        add(itemToDbclick.slot)
 
-        var itemsToRemove = maxStackSize - itemToDoubleclick.count
+        var itemsToRemove = maxStackSize - itemToDbclick.count
 
         // Remove all small stacks that have been removed by last merge
         while (itemsToRemove > 0 && stacks.isNotEmpty()) {
@@ -82,7 +83,7 @@ object ItemMerge {
             itemsToRemove -= stack.count
         }
 
-        mergeStacks(itemsToDoubleclick, stacks, maxStackSize)
+        mergeStacks(stacks, maxStackSize)
     }
 
     private fun canMerge(

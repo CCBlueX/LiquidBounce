@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,102 +15,104 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
+import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
+import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 
-object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
+/**
+ * Module CrystalAura
+ *
+ * Automatically places and explodes end crystals.
+ *
+ * @author ccetl
+ */
+object ModuleCrystalAura : ClientModule(
+    "CrystalAura",
+    Category.COMBAT,
+    aliases = arrayOf("AutoCrystal"),
+    disableOnQuit = true
+) {
 
-    val swing by boolean("Swing", true)
+    val targetTracker = tree(TargetTracker(
+        rangeValue =  FloatValueProvider("Range", 4.5f, 1f..12f)
+    ))
 
-    internal object PlaceOptions : ToggleableConfigurable(this, "Place", true) {
-        val range by float("Range", 4.5F, 1.0F..5.0F)
-        val minEfficiency by float("MinEfficiency", 0.1F, 0.0F..5.0F)
+    object PredictFeature : Configurable("Predict") {
+        init {
+            treeAll(SelfPredict, TargetPredict)
+        }
     }
-
-    internal object DestroyOptions : ToggleableConfigurable(this, "Destroy", true) {
-        val range by float("Range", 4.5F, 1.0F..5.0F)
-        val minEfficiency by float("MinEfficiency", 0.1F, 0.0F..5.0F)
-    }
-
-    internal object SelfPreservationOptions : ToggleableConfigurable(this, "SelfPreservation", true) {
-        val selfDamageWeight by float("SelfDamageWeight", 2.0F, 0.0F..10.0F)
-        val friendDamageWeight by float("FriendDamageWeight", 1.0F, 0.0F..10.0F)
-    }
-
-    // Rotation
-    internal val rotations = tree(RotationsConfigurable(this))
 
     init {
-        tree(PlaceOptions)
-        tree(DestroyOptions)
-        tree(SelfPreservationOptions)
+        treeAll(
+            SubmoduleCrystalPlacer,
+            SubmoduleCrystalDestroyer,
+            CrystalAuraDamageOptions,
+            CrystalAuraTriggerer,
+            PredictFeature,
+            SubmoduleIdPredict,
+            SubmoduleSetDead,
+            SubmoduleBasePlace
+        )
+    }
+
+    private val targetRenderer = tree(WorldTargetRenderer(this))
+
+    val rotationMode = choices(this, "RotationMode") {
+        arrayOf(
+            NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_2, true),
+            NoRotationMode(it, this)
+        )
+    }
+
+    override fun onDisabled() {
+        CrystalAuraTriggerer.terminateRunningTasks()
+        SubmoduleCrystalPlacer.placementRenderer.clearSilently()
+        SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
+        SubmoduleBasePlace.onDisabled()
+        CrystalAuraDamageOptions.cacheMap.clear()
+    }
+
+    override fun onEnabled() {
+        SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
     }
 
     @Suppress("unused")
-    val networkTickHandler = repeatable {
-        // Make the crystal placer run
-        SubmoduleCrystalPlacer.tick()
-        // Make the crystal destroyer run
-        SubmoduleCrystalDestroyer.tick()
-    }
-
-    /**
-     * Approximates how favorable an explosion of a crystal at [pos] in a given [world] would be
-     */
-    internal fun approximateExplosionDamage(
-        world: ClientWorld,
-        pos: Vec3d,
-    ): Double {
-        val possibleVictims =
-            world
-                .getEntitiesBoxInRange(pos, 6.0) { shouldTakeIntoAccount(it) && it.boundingBox.maxY > pos.y }
-                .filterIsInstance<LivingEntity>()
-
-        var totalGood = 0.0
-        var totalHarm = 0.0
-
-        for (possibleVictim in possibleVictims) {
-            val dmg = possibleVictim.getDamageFromExplosion(pos) * entityDamageWeight(possibleVictim)
-
-            if (dmg > 0) {
-                totalGood += dmg
-            } else {
-                totalHarm += dmg
-            }
+    private val simulatedTickHandler = handler<RotationUpdateEvent>(1) {
+        CrystalAuraDamageOptions.cacheMap.clear()
+        if (CombatManager.shouldPauseCombat) {
+            return@handler
         }
 
-        return totalGood + totalHarm
+        targetTracker.selectFirst()
     }
 
-    private fun shouldTakeIntoAccount(entity: Entity): Boolean {
-        return entity.shouldBeAttacked() || entity == player || FriendManager.isFriend(entity)
-    }
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> {
+        val target = targetTracker.target ?: return@handler
 
-    private fun entityDamageWeight(entity: Entity): Double {
-        if (!SelfPreservationOptions.enabled) {
-            return 1.0
-        }
-
-        return when {
-            entity == player -> -SelfPreservationOptions.selfDamageWeight.toDouble()
-            FriendManager.isFriend(entity) -> -SelfPreservationOptions.friendDamageWeight.toDouble()
-            else -> 1.0
+        renderEnvironmentForWorld(it.matrixStack) {
+            targetRenderer.render(this, target, it.partialTicks)
         }
     }
+
 }

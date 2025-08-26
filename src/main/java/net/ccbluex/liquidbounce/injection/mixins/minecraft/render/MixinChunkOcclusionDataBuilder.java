@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinChunkOcclusionDataBuilder {
     @Inject(method = "markClosed", at = @At("HEAD"), cancellable = true)
     private void onMarkClosed(BlockPos pos, CallbackInfo cir) {
-        if(ModuleXRay.INSTANCE.getEnabled()) {
+        if (ModuleXRay.INSTANCE.getRunning()) {
             cir.cancel();
         }
     }

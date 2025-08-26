@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTranslationFix
-import net.fabricmc.fabric.api.resource.ModResourcePack
+import net.ccbluex.liquidbounce.features.spoofer.SpooferTranslation
 import net.minecraft.resource.AbstractFileResourcePack
 import net.minecraft.resource.DefaultResourcePack
 import net.minecraft.resource.ResourcePack
@@ -22,15 +21,11 @@ object VanillaTranslationRecognizer {
         return pack is DefaultResourcePack || pack is AbstractFileResourcePack
     }
 
-    fun shouldPreventLoad(pack: ResourcePack): Boolean {
-        return pack is ModResourcePack && pack.fabricModMetadata.id == "liquidbounce"
-    }
-
     var isBuildingVanillaKeybinds = false
 }
 
 fun filterNonVanillaText(text: Text): Text {
-    if (!ModuleTranslationFix.enabled) {
+    if (!SpooferTranslation.running) {
         return text
     }
 

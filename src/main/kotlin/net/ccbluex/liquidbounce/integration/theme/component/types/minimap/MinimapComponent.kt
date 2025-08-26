@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,19 +25,20 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
+import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Vec2i
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
@@ -113,7 +114,7 @@ object MinimapComponent : Component("Minimap", true) {
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
                 VertexFormats.POSITION_TEXTURE_COLOR,
-                GameRenderer.getPositionTexColorProgram()!!,
+                ShaderProgramKeys.POSITION_TEX_COLOR,
             ) { matrix ->
                 buildMinimapMesh(this, matrix, Vec2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
@@ -121,9 +122,9 @@ object MinimapComponent : Component("Minimap", true) {
             drawCustomMesh(
                 VertexFormat.DrawMode.TRIANGLES,
                 VertexFormats.POSITION_COLOR,
-                GameRenderer.getPositionColorProgram()!!,
+                ShaderProgramKeys.POSITION_COLOR,
             ) { matrix ->
-                for (renderedEntity in ModuleESP.findRenderedEntities()) {
+                for (renderedEntity in RenderedEntities) {
                     drawEntityOnMinimap(
                         this, matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
                     )

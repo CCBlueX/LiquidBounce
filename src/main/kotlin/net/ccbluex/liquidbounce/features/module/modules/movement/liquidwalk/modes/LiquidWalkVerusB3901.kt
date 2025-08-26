@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -50,11 +50,11 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.sneakKey.isPressed || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
-        if (event.state.block is FluidBlock && !isBlockAtPosition(player.box) { it is FluidBlock }) {
+        if (event.state.block is FluidBlock && !player.box.isBlockAtPosition { it is FluidBlock }) {
             event.shape = VoxelShapes.fullCube()
         }
     }
@@ -62,8 +62,12 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.SEND && packet is PlayerMoveC2SPacket) {
-            if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collidesWithAnythingElse()) {
+        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
+            if (!mc.options.sneakKey.isPressed &&
+                !player.isTouchingWater &&
+                standingOnWater() &&
+                !collidesWithAnythingElse()
+                ) {
                 packet.onGround = spoof
                 spoof = !spoof
             } else {

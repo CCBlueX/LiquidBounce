@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.entity.MovementType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluid
@@ -38,46 +38,52 @@ import net.minecraft.util.math.Vec3d
 class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
 @Nameable("death")
-@WebSocketEvent
-class DeathEvent : Event()
+object DeathEvent : Event(), WebSocketEvent
 
 @Nameable("playerTick")
 class PlayerTickEvent : CancellableEvent()
 
 @Nameable("playerPostTick")
-class PlayerPostTickEvent : Event()
+object PlayerPostTickEvent : Event()
 
 @Nameable("playerMovementTick")
-class PlayerMovementTickEvent : Event()
+object PlayerMovementTickEvent : Event()
 
 @Nameable("playerNetworkMovementTick")
-class PlayerNetworkMovementTickEvent(val state: EventState,
-                                     var x: Double,
-                                     var y: Double,
-                                     var z: Double,
-                                     var ground: Boolean
-                                    ): Event()
+class PlayerNetworkMovementTickEvent(
+    val state: EventState,
+    var x: Double,
+    var y: Double,
+    var z: Double,
+    var ground: Boolean
+) : CancellableEvent()
 
 @Nameable("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
 @Nameable("playerMove")
-class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
-
-@Nameable("rotatedMovementInput")
-class RotatedMovementInputEvent(var forward: Float, var sideways: Float) : Event()
+class PlayerMoveEvent(val type: MovementType, var movement: Vec3d) : Event()
 
 @Nameable("playerJump")
-class PlayerJumpEvent(var motion: Float) : CancellableEvent()
+class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 
 @Nameable("playerAfterJump")
-class PlayerAfterJumpEvent : Event()
+object PlayerAfterJumpEvent : Event()
 
 @Nameable("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 
+@Nameable("playerSneakMultiplier")
+class PlayerSneakMultiplier(var multiplier: Double) : Event()
+
+/**
+ * Warning: UseHotbarSlotOrOffHand won't stimulate this event
+ */
+@Nameable("playerInteractItem")
+class PlayerInteractItemEvent : CancellableEvent()
+
 @Nameable("playerInteractedItem")
-class PlayerInteractedItem(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
+class PlayerInteractedItemEvent(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
 
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()

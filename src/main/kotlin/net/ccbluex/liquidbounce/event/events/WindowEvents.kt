@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,43 +22,44 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 
 @Nameable("windowResize")
-@WebSocketEvent
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("frameBufferResize")
-@WebSocketEvent
 class FrameBufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("mouseButton")
-@WebSocketEvent
-class MouseButtonEvent(val button: Int, val action: Int, val mods: Int) : Event()
+class MouseButtonEvent(
+    val key: InputUtil.Key,
+    val button: Int,
+    val action: Int,
+    val mods: Int,
+    val screen: Screen? = null
+) : Event(), WebSocketEvent
 
 @Nameable("mouseScroll")
-@WebSocketEvent
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
 
 @Nameable("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 
 @Nameable("mouseCursor")
-@WebSocketEvent
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
-@WebSocketEvent
 class KeyboardKeyEvent(
     val key: InputUtil.Key,
     val keyCode: Int,
     val scanCode: Int,
     val action: Int,
-    val mods: Int
-) : Event()
+    val mods: Int,
+    val screen: Screen? = null
+) : Event(), WebSocketEvent
 
 @Nameable("keyboardChar")
-@WebSocketEvent
-class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event()
+class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent

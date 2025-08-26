@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,15 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
+import com.google.gson.Gson
+import net.ccbluex.liquidbounce.config.gson.interopGson
+
 /**
- * Annotation indicating that the marked event is designated for transmission through WebSocket communication.
- * This annotation serves as a declarative marker for WebSocket-compatible events, signaling their eligibility for
+ * Interface indicating that the marked event is designated for transmission through WebSocket communication.
+ * This interface serves as a declarative marker for WebSocket-compatible events, signaling their eligibility for
  * propagation over WebSocket connections.
  */
-annotation class WebSocketEvent
+interface WebSocketEvent {
+    val serializer: Gson get() = interopGson
+}
+

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PlayerEntity.class)
 public interface MixinPlayerEntityAccessor {
+
     /*
         * Used to get the TrackedData of the arm
      */
@@ -33,4 +34,5 @@ public interface MixinPlayerEntityAccessor {
     static TrackedData<Byte> getTrackedMainArm() {
         throw new AssertionError();
     }
+
 }

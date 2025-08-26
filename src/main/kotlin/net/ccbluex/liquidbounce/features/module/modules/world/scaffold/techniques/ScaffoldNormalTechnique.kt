@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +21,27 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldTellyFeature.Mode
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import kotlin.math.round
 import kotlin.random.Random
 
 /**
@@ -51,10 +57,12 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         tree(ScaffoldTellyFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldCeilingFeature)
+        tree(ScaffoldHeadHitterFeature)
     }
 
-    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
-    internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
+    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(intArrayOf(0, -1, 1, -2, 2))
+    internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(intArrayOf(0, -1, 1))
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
 
@@ -65,8 +73,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         bestStack: ItemStack
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
-            { vec -> -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5)) }
+        val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
+            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5)) }
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
@@ -75,12 +83,13 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose, optimalLine)
 
         val searchOptions = BlockPlacementTargetFindingOptions(
-            if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-            bestStack,
-            facePositionFactory,
-            priorityGetter,
-            predictedPos,
-            predictedPose
+            BlockOffsetOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                priorityComparator,
+            ),
+            FaceHandlingOptions(facePositionFactory),
+            stackToPlaceWith = bestStack,
+            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
         )
 
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
@@ -88,7 +97,14 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
     override fun getRotations(target: BlockPlacementTarget?): Rotation? {
         if (ScaffoldTellyFeature.enabled && ScaffoldTellyFeature.doNotAim) {
-            return null
+            return when (ScaffoldTellyFeature.resetMode) {
+                Mode.REVERSE -> Rotation(
+                    round(player.rotation.yaw / 45) * 45,
+                    if (player.pitch < 45f) 45f else player.pitch
+                )
+
+                Mode.RESET -> null
+            }
         }
 
         if (requiresSight) {
@@ -116,6 +132,9 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
             AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)
+            AimMode.DIAGONAL_YAW -> DiagonalYawTargetPositionFactory(config)
+            AimMode.ANGLE_YAW -> AngleYawTargetPositionFactory(config)
+            AimMode.EDGE_POINT -> EdgePointTargetPositionFactory(config)
         }
     }
 
@@ -124,15 +143,13 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         randomization = Random.nextDouble(-0.01, 0.01)
     }
 
-    private fun commonOffsetToInvestigate(xzOffsets: List<Int>): List<Vec3i> {
-        return xzOffsets.flatMap { x ->
-            xzOffsets.flatMap { z ->
-                (0 downTo -1).flatMap { y ->
-                    listOf(Vec3i(x, y, z))
-                }
+    private fun commonOffsetToInvestigate(xzOffsets: IntArray): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
+        for (x in xzOffsets) {
+            for (z in xzOffsets) {
+                add(Vec3i(x, 0, z))
+                add(Vec3i(x, -1, z))
             }
         }
     }
-
 
 }

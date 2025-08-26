@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import kotlin.math.sqrt
 open class Vec2i(val x: Int, val y: Int) {
     operator fun component1() = x
     operator fun component2() = y
+
     fun add(vec: Vec2i): Vec2i {
         return Vec2i(this.x + vec.x, this.y + vec.y)
     }
@@ -41,5 +42,10 @@ open class Vec2i(val x: Int, val y: Int) {
 
     private fun lengthSquared(): Int {
         return this.x * this.x + this.y * this.y
+    }
+
+    companion object {
+        @JvmStatic
+        val ZERO = Vec2i(0, 0)
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,30 +21,38 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.types.IntegratedComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.TextComponent
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.ccbluex.liquidbounce.utils.render.Alignment.ScreenAxisX
+import net.ccbluex.liquidbounce.utils.render.Alignment.ScreenAxisY
 
 val components: MutableList<Component> = mutableListOf()
 val customComponents: MutableList<Component> = mutableListOf(
-    TextComponent("hello! :)", enabled = false)
+    TextComponent(
+        "Ping: {ping}, XYZ {position.x}, {position.y}, {position.z} |" +
+            " Nether XZ: {netherPosition.x}, {netherPosition.z}",
+        enabled = false,
+        alignment = Alignment(ScreenAxisX.LEFT, 4, ScreenAxisY.BOTTOM, 22)
+    )
 )
 
-object ComponentOverlay : Listenable {
+object ComponentOverlay : EventListener {
 
     @JvmStatic
-    fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && !HideAppearance.isHidingNow &&
+    fun isTweakEnabled(tweak: FeatureTweak) = this.running && !HideAppearance.isHidingNow &&
         components.filterIsInstance<IntegratedComponent>().any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
     fun getComponentWithTweak(tweak: FeatureTweak): IntegratedComponent? {
-        if (!handleEvents() || HideAppearance.isHidingNow) {
+        if (!running || HideAppearance.isHidingNow) {
             return null
         }
 
@@ -52,7 +60,7 @@ object ComponentOverlay : Listenable {
             .find { it.enabled && it.tweaks.contains(tweak) }
     }
 
-    fun insertComponents() {
+    fun insertDefaultComponents() {
         val componentList = ThemeManager.activeTheme.parseComponents()
 
         // todo: fix custom components being removed

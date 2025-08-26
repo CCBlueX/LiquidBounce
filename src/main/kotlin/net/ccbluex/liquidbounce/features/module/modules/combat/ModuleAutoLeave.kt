@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,33 +18,44 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
+import net.minecraft.item.Items
 
 /**
  * AutoLeave module
  *
  * Automatically makes you leave the server whenever your health is low.
  */
-object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
+object ModuleAutoLeave : ClientModule("AutoLeave", Category.COMBAT) {
 
-    private val health by float("Health", 8f, 0f..20f)
-
-    private val delay by int("Delay", 0, 0..60, "ticks")
+    private val health by float("Health", 8f, 0f..20f, "HP")
+    /**
+     * When conditions are met, we will start counting up until we reach our threshold. If conditions are not met,
+     * we reset the counter and start from the beginning.
+     */
+    private val delay by intRange("Delay", 0..0, 0..60, "ticks")
     private val mode by enumChoice("Mode", ModuleKick.KickModeEnum.QUIT)
 
     @Suppress("unused")
-    val tickRepeatable = repeatable {
-        if (player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
-            // Delay to bypass anti cheat or combat log detections
-            waitTicks(delay)
+    private val tickHandler = tickHandler {
+        val passed = waitConditional(delay.random()) {
+            if (player.abilities.creativeMode || mc.isIntegratedServerRunning) {
+                return@waitConditional true
+            }
 
-            // Kick (@see kick module)
+            // Player can heal himself
+            if (player.mainHandStack.isOf(Items.TOTEM_OF_UNDYING) || player.offHandStack.isOf(Items.TOTEM_OF_UNDYING)) {
+                return@waitConditional true
+            }
+
+            player.health >= health
+        }
+
+        if (passed) {
             ModuleKick.kick(mode)
-
-            // Deactivate module after leaving from server
             enabled = false
         }
     }

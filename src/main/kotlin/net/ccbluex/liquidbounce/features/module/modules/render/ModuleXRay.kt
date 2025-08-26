@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks.*
@@ -30,17 +32,19 @@ import net.minecraft.util.math.Direction
  * XRay module
  *
  * Allows you to see ores through walls.
+ *
+ * Command: [CommandXRay]
  */
-
-object ModuleXRay : Module("XRay", Category.RENDER) {
+object ModuleXRay : ClientModule("XRay", Category.RENDER) {
 
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
 
     // Only render blocks with non-solid blocks around
-    private val onlyExposure by boolean("OnlyExposure", false)
+    private val exposedOnly by boolean("ExposedOnly", false)
+        .onChanged(::valueChangedReload)
 
-    private val deafultBlocks = mutableSetOf(
+    private val defaultBlocks = setOf(
         // Overworld ores
         COAL_ORE,
         COPPER_ORE,
@@ -172,29 +176,54 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
     // Set of blocks that will not be excluded
     val blocks by blocks(
         "Blocks",
-        deafultBlocks
-    )
+        defaultBlocks.toMutableSet()
+    ).onChanged(::valueChangedReload)
 
+    /**
+     * Checks if the block should be rendered or not.
+     * This can be used to exclude blocks that should not be rendered.
+     * Also features an option to only render blocks that are exposed to air.
+     */
     fun shouldRender(blockState: BlockState, blockPos: BlockPos) = when {
         blockState.block !in blocks -> false
 
-        onlyExposure -> Direction.entries.any {
+        exposedOnly -> Direction.entries.any {
             blockPos.add(it.vector)?.let { pos -> pos.getState()?.isSolidBlock(world, pos) } == false
         }
 
         else -> true
     }
 
-    fun resetBlocks() {
+    fun shouldRender(state: BlockState, otherState: BlockState, side: Direction) = when {
+        state.block !in blocks -> false
+
+        exposedOnly -> !state.isSideInvisible(otherState, side)
+
+        else -> true
+    }
+
+    /**
+     * Resets the block list to the default values
+     */
+    fun applyDefaults() {
         blocks.clear()
-        blocks.addAll(deafultBlocks)
+        blocks.addAll(defaultBlocks)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         mc.worldRenderer.reload()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         mc.worldRenderer.reload()
     }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun valueChangedReload(it: Any) {
+        RenderSystem.recordRenderCall {
+            // Reload world renderer on block list change
+            mc.worldRenderer.reload()
+        }
+    }
+
 }

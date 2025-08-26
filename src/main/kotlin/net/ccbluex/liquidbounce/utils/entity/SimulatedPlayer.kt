@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
@@ -107,7 +106,7 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
-                player.isFallFlying,
+                player.isGliding,
                 player.isOnGround,
                 player.horizontalCollision,
                 player.verticalCollision,
@@ -135,7 +134,7 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
-                player.isFallFlying,
+                player.isGliding,
                 player.isOnGround,
                 player.horizontalCollision,
                 player.verticalCollision,
@@ -172,7 +171,7 @@ class SimulatedPlayer(
             this.jumpingCooldown--
         }
 
-        this.isJumping = this.input.jumping
+        this.isJumping = this.input.playerInput.jump
 
         val d: Vec3d = this.velocity
 
@@ -227,7 +226,7 @@ class SimulatedPlayer(
         if (this.isSwimming && !this.player.hasVehicle()) {
             val g = this.getRotationVector().y
             val h = if (g < -0.2) 0.085 else 0.06
-            if (g <= 0.0 || this.input.jumping || !this.player.world
+            if (g <= 0.0 || this.input.playerInput.jump || !this.player.world
                 .getBlockState(BlockPos.ofFloored(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
                 .fluidState.isEmpty
             ) {
@@ -257,7 +256,7 @@ class SimulatedPlayer(
             val e: Double = this.pos.y
             var f = if (isSprinting()) 0.9f else 0.8f // this.player.getBaseMovementSpeedMultiplier()
             var g = 0.02f
-            var h = this.getAttributeValue(EntityAttributes.GENERIC_WATER_MOVEMENT_EFFICIENCY).toFloat()
+            var h = this.getAttributeValue(EntityAttributes.WATER_MOVEMENT_EFFICIENCY).toFloat()
 
             if (!onGround) {
                 h *= 0.5f
@@ -634,7 +633,7 @@ class SimulatedPlayer(
     }
 
     protected fun shouldClipAtLedge(): Boolean {
-        return this.input.sneaking || this.input.forceSafeWalk
+        return this.input.playerInput.sneak || this.input.forceSafeWalk
     }
 
     private fun method_30263(): Boolean {
@@ -877,7 +876,7 @@ class SimulatedPlayer(
     }
 
     class SimulatedPlayerInput(
-        directionalInput: DirectionalInput,
+        val directionalInput: DirectionalInput,
         jumping: Boolean,
         var sprinting: Boolean,
         sneaking: Boolean
@@ -885,31 +884,39 @@ class SimulatedPlayer(
         var forceSafeWalk: Boolean = false
 
         init {
-            this.pressingForward = directionalInput.forwards
-            this.pressingBack = directionalInput.backwards
-            this.pressingLeft = directionalInput.left
-            this.pressingRight = directionalInput.right
-            this.jumping = jumping
-            this.sneaking = sneaking
+            set(
+                forward = directionalInput.forwards,
+                backward = directionalInput.backwards,
+                left = directionalInput.left,
+                right = directionalInput.right,
+                jump = jumping,
+                sneak = sneaking
+            )
         }
 
         fun update() {
-            if (this.pressingForward != this.pressingBack) {
-                this.movementForward = if (this.pressingForward) 1.0f else -1.0f
+            if (this.playerInput.forward != this.playerInput.backward) {
+                this.movementForward = if (this.playerInput.forward) 1.0f else -1.0f
             } else {
                 this.movementForward = 0.0f
             }
 
-            movementSideways = if (pressingLeft == pressingRight) 0.0f else if (pressingLeft) 1.0f else -1.0f
+            movementSideways = if (playerInput.left == playerInput.right) {
+                0.0f
+            } else if (playerInput.left) {
+                1.0f
+            } else {
+                -1.0f
+            }
 
-            if (sneaking) {
+            if (playerInput.sneak) {
                 movementSideways = (movementSideways.toDouble() * 0.3).toFloat()
                 movementForward = (movementForward.toDouble() * 0.3).toFloat()
             }
         }
 
         override fun toString(): String {
-            return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$sneaking)"
+            return "SimulatedPlayerInput(forwards={${this.playerInput.forward}}, backwards={${this.playerInput.backward}}, left={${this.playerInput.left}}, right={${this.playerInput.right}}, jumping={${this.playerInput.jump}}, sprinting=$sprinting, slowDown=${playerInput.sneak})"
         }
 
         companion object {
@@ -917,20 +924,20 @@ class SimulatedPlayer(
 
             fun fromClientPlayer(
                 directionalInput: DirectionalInput,
-                jumping: Boolean = player.input.jumping,
+                jump: Boolean = player.input.playerInput.jump,
                 sprinting: Boolean = player.isSprinting,
                 sneaking: Boolean = player.isSneaking
             ): SimulatedPlayerInput {
                 val input = SimulatedPlayerInput(
                     directionalInput,
-                    jumping,
+                    jump,
                     sprinting,
                     sneaking
                 )
 
                 val safeWalkEvent = PlayerSafeWalkEvent()
 
-                EventManager.callEvent(safeWalkEvent)
+                callEvent(safeWalkEvent)
 
                 if (safeWalkEvent.isSafeWalk) {
                     input.forceSafeWalk = true

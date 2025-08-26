@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.input
 
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.util.InputUtil
+import org.lwjgl.glfw.GLFW
 
 /**
  * Data class representing a key binding.
@@ -58,7 +61,7 @@ data class InputBind(
         get() = when {
             isUnbound -> "None"
             else -> this.boundKey.translationKey
-                .split(".")
+                .split('.')
                 .drop(2) // Drops the "key.keyboard" or "key.mouse" part
                 .joinToString(separator = "_") // Joins the remaining parts with underscores
                 .uppercase() // Converts the key name to uppercase
@@ -77,6 +80,13 @@ data class InputBind(
      */
     fun bind(name: String) {
         this.boundKey = inputByName(name)
+    }
+
+    /**
+     * Binds to the given input type and code.
+     */
+    fun bind(key: InputUtil.Key) {
+        this.boundKey = key
     }
 
     /**
@@ -109,6 +119,29 @@ data class InputBind(
      */
     fun matchesMouse(code: Int): Boolean {
         return this.boundKey.category == InputUtil.Type.MOUSE && this.boundKey.code == code
+    }
+
+    /**
+     * Handles the event. Returns the new state, assumes the original state is `false`.
+     *
+     * @param event The [KeyboardKeyEvent] to handle.
+     * @param currentState The current state.
+     * @return The new state.
+     */
+    fun getNewState(event: KeyboardKeyEvent, currentState: Boolean): Boolean {
+        if (!matchesKey(event.keyCode, event.scanCode)) {
+            return currentState
+        }
+
+        val eventAction = event.action
+        return when {
+            eventAction == GLFW.GLFW_PRESS && mc.currentScreen == null -> {
+                !currentState || action == BindAction.HOLD
+            }
+
+            eventAction == GLFW.GLFW_RELEASE -> false
+            else -> currentState
+        }
     }
 
     /**

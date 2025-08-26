@@ -1,10 +1,13 @@
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
@@ -13,17 +16,50 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-object PlayerSimulationCache: Listenable {
+object PlayerSimulationCache: EventListener {
     private val otherPlayerCache = ConcurrentHashMap<PlayerEntity, SimulatedPlayerCache>()
     private var localPlayerCache: SimulatedPlayerCache? = null
 
-    private val gameTickHandler = handler<GameTickEvent> {
+    @Suppress("unused")
+    private val gameTickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         this.otherPlayerCache.clear()
     }
 
-    private val movementHandler = handler<MovementInputEvent> {
+    @Suppress("unused")
+    private val criticalMovementHandler = handler<MovementInputEvent>(
+        priority = CRITICAL_MODIFICATION
+    ) { event ->
+        this.localPlayerCache = null
+        updatePlayerCache(event.directionalInput)
+    }
+
+    @Suppress("unused")
+    private val movementHandler = handler<MovementInputEvent> { event ->
+        updatePlayerCache(event.directionalInput, verify = true)
+    }
+
+    @Suppress("unused")
+    private val modalMovementHandler = handler<MovementInputEvent>(
+        priority = MODEL_STATE
+    ) { event ->
+        updatePlayerCache(event.directionalInput, verify = true)
+    }
+
+    /**
+     * Updates the cache for the local player,
+     * this will be called on every movement input event
+     * to ensure the cache is up to date.
+     *
+     * @param directionalInput the input to update the cache with
+     */
+    private fun updatePlayerCache(directionalInput: DirectionalInput, verify: Boolean = false) {
+        // Check if we even need to update the cache
+        if (verify && localPlayerCache?.simulatedPlayer?.input?.directionalInput == directionalInput) {
+            return
+        }
+
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
         )
 
         localPlayerCache = SimulatedPlayerCache(simulatedPlayer)
@@ -59,7 +95,7 @@ object PlayerSimulationCache: Listenable {
     }
 }
 
-class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
+class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
     private var currentSimulationStep = 0
     private val simulationSteps = ArrayList<SimulatedPlayerSnapshot>().apply {
         add(SimulatedPlayerSnapshot(simulatedPlayer))
@@ -102,19 +138,19 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
     }
 
     fun getSnapshotsBetween(tickRange: IntRange): List<SimulatedPlayerSnapshot> {
-        check(tickRange.endInclusive < 60 * 20) { "tried to simulate a player for more than a minute!" }
+        check(tickRange.last < 60 * 20) { "tried to simulate a player for more than a minute!" }
 
-        simulateUntil(tickRange.endInclusive + 1)
+        simulateUntil(tickRange.last + 1)
 
         return lock.read {
-            ArrayList(simulationSteps.subList(tickRange.start, tickRange.endInclusive + 1))
+            ArrayList(simulationSteps.subList(tickRange.first, tickRange.last + 1))
         }
     }
 
     fun simulateBetween(tickRange: IntRange): Sequence<SimulatedPlayerSnapshot> {
-        check(tickRange.endInclusive < 60 * 20) { "tried to simulate a player for more than a minute!" }
+        check(tickRange.last < 60 * 20) { "tried to simulate a player for more than a minute!" }
 
-        simulateUntil(tickRange.endInclusive + 1)
+        simulateUntil(tickRange.last + 1)
 
         return sequence<SimulatedPlayerSnapshot> {
             for (i in tickRange) {
@@ -125,11 +161,20 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
 
 }
 
-class SimulatedPlayerSnapshot(s: SimulatedPlayer) {
-    val pos = s.pos
-    val fallDistance = s.fallDistance
-    val velocity = s.velocity
-    val onGround = s.onGround
+data class SimulatedPlayerSnapshot(
+    val pos: Vec3d,
+    val fallDistance: Float,
+    val velocity: Vec3d,
+    val onGround: Boolean,
+    val clipLedged: Boolean
+) {
+    constructor(s: SimulatedPlayer): this(
+        s.pos,
+        s.fallDistance,
+        s.velocity,
+        s.onGround,
+        s.clipLedged
+    )
 }
 
 /**

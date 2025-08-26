@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,33 +20,32 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
 
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.world.Heightmap
+import net.minecraft.world.chunk.Chunk
+import java.util.concurrent.ConcurrentHashMap
 
 class MinimapHeightmapManager {
-    private val heightmaps = hashMapOf<ChunkPos, HeightmapForChunk>()
+    private val heightmaps = ConcurrentHashMap<ChunkPos, HeightmapForChunk>()
 
-    fun getHeight(
-        x: Int,
-        z: Int,
-    ): Int {
-        val chunkPos = ChunkPos(BlockPos(x, 0, z))
+    fun getHeight(x: Int, z: Int): Int {
+        val chunkPos = ChunkPos(x shr 4, z shr 4)
         val heightmap = getHeightmap(chunkPos)
 
-        return heightmap.getHeight(x - chunkPos.startX, z - chunkPos.startZ)
+        return heightmap.getHeight(x and 15, z and 15)
     }
 
     private fun getHeightmap(chunkPos: ChunkPos): HeightmapForChunk {
-        return heightmaps.getOrPut(chunkPos) { HeightmapForChunk() }
+        return heightmaps.getOrPut(chunkPos, ::HeightmapForChunk)
     }
 
     fun updateChunk(chunkPos: ChunkPos) {
-        if (mc.world == null) {
-            return
-        }
+        val chunk = mc.world?.getChunk(chunkPos.x, chunkPos.z) ?: return
 
         val heightmap = HeightmapForChunk()
 
@@ -54,7 +53,7 @@ class MinimapHeightmapManager {
 
         for (x in 0..15) {
             for (z in 0..15) {
-                heightmap.setHeight(x, z, calculateHeight(chunkPos.startX + x, chunkPos.startZ + z))
+                heightmap.setHeight(x, z, chunk.calculateHeight(x, z))
             }
         }
     }
@@ -62,19 +61,17 @@ class MinimapHeightmapManager {
     /**
      * @return true if the heightmap was changed
      */
-    fun updatePosition(
-        pos: BlockPos,
-        newState: BlockState,
-    ): Boolean {
+    fun updatePosition(pos: BlockPos, newState: BlockState): Boolean {
         val chunkPos = ChunkPos(pos)
         val heightmap = getHeightmap(chunkPos)
 
-        val currentHeight = heightmap.getHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ)
+        val currentHeight = heightmap.getHeight(pos.x and 15, pos.z and 15)
 
-        val newHeight = calculateHeightIfNeeded(currentHeight, pos, newState)
+        val newHeight = mc.world!!.getChunk(chunkPos.x, chunkPos.z)
+            .calculateHeightIfNeeded(currentHeight, pos, newState)
 
         return if (newHeight != null) {
-            heightmap.setHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ, newHeight)
+            heightmap.setHeight(pos.x and 15, pos.z and 15, newHeight)
 
             true
         } else {
@@ -82,7 +79,7 @@ class MinimapHeightmapManager {
         }
     }
 
-    private fun calculateHeightIfNeeded(currentHeight: Int, pos: BlockPos, newState: BlockState): Int? {
+    private fun Chunk.calculateHeightIfNeeded(currentHeight: Int, pos: BlockPos, newState: BlockState): Int? {
         return when {
             currentHeight > pos.y -> {
                 // Do nothing, the change is under the current height
@@ -98,7 +95,7 @@ class MinimapHeightmapManager {
                 }
 
             }
-            currentHeight < pos.y -> {
+            else -> {
                 if (isSurface(pos, newState)) {
                     // If the block is a surface block, and it is above the current height, we know that it must be
                     // the new surface
@@ -107,36 +104,31 @@ class MinimapHeightmapManager {
                     null
                 }
             }
-            else -> error("Unreachable")
         }
     }
 
-    private fun calculateHeight(
-        x: Int,
-        z: Int,
-        maxY: Int? = null,
-    ): Int {
-        val world = mc.world!!
-
-        val maxHeight = (maxY ?: world.height) - 1
+    private fun Chunk.calculateHeight(x: Int, z: Int, maxY: Int? = null): Int {
+        val maxHeight = (maxY ?: height) - 1
 
         val pos = BlockPos.Mutable(x, maxHeight, z)
-        while (pos.y > world.bottomY) {
-            val state = world.getBlockState(pos)
-            if (isSurface(pos, state)) {
-                return pos.y
+
+        try {
+            while (pos.y > bottomY) {
+                val state = getBlockState(pos)
+                if (isSurface(pos, state)) {
+                    return pos.y
+                }
+                pos.y--
             }
-            pos.y--
+        } catch (e: Exception) {
+            logger.warn("Exception in height calculation", e)
         }
 
-        return world.bottomY
+        return pos.y
     }
 
-    private fun isSurface(
-        pos: BlockPos,
-        blockState: BlockState,
-    ): Boolean {
-        return !blockState.isAir && blockState.getMapColor(mc.world!!, pos) != MapColor.CLEAR
+    private fun Chunk.isSurface(pos: BlockPos, blockState: BlockState): Boolean {
+        return !blockState.isAir && blockState.getMapColor(this, pos) != MapColor.CLEAR
     }
 
     fun unloadChunk(chunkPos: ChunkPos) {

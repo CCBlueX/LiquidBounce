@@ -14,7 +14,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="main-button" on:mouseenter={() => hovered = true} on:mouseleave={() => hovered = false}
+<div class="main-button" on:mouseenter={() => hovered = true} on:mouseleave={() => hovered = false} on:click={() => hovered = false}
      on:click={() => dispatch("click")} out:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backIn}}
      in:fly|global={{duration: 400, x: -500, delay: index * 100, easing: backOut}}>
     <div class="icon">
@@ -33,7 +33,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .main-button {
     background-color: rgba($menu-base-color, 0.68);

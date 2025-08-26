@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.FluidBlock
@@ -48,10 +47,8 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    val requiresLag
-        get() = this.handleEvents()
-
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
         if (packet is PlayerMoveC2SPacket) {
@@ -60,19 +57,27 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     }
 
     @Suppress("unused")
-    val shapeHandler = handler<BlockShapeEvent> { event ->
+    private val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block !is FluidBlock && event.pos.y < player.y) {
             event.shape = VoxelShapes.fullCube()
         }
     }
 
     @Suppress("unused")
-    val jumpEvent = handler<PlayerJumpEvent> { event ->
+    private val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
+    }
+
+    @Suppress("unused")
+    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+        if (event.origin == TransferOrigin.OUTGOING) {
+            event.action = PacketQueueManager.Action.QUEUE
+        }
     }
 
     override fun disable() {
@@ -82,7 +87,7 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
         network.sendPacket(
             PlayerMoveC2SPacket.PositionAndOnGround(
                 player.x, player.y - 0.5, player.z,
-                false
+                false, player.horizontalCollision
             )
         )
     }

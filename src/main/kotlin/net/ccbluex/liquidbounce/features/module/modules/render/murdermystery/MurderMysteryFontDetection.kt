@@ -1,33 +1,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
+import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.minecraft.block.MapColor
 import net.minecraft.item.map.MapState
 import java.awt.Color
-import java.io.InputStreamReader
 
 object MurderMysteryFontDetection {
-    private val LETTER_MAP: Map<String, BooleanArray>
 
-    init {
-        val gson = Gson()
+    private const val FILE_NAME = "hypixel_mm_letters.json"
 
+    private val LETTER_MAP: Map<String, BooleanArray> = run {
         val stream =
-            ModuleMurderMystery.javaClass.getResourceAsStream("/assets/liquidbounce/data/hypixel_mm_letters.json")
+            ModuleMurderMystery.javaClass.getResourceAsStream("/resources/liquidbounce/data/$FILE_NAME")
 
-        check(stream != null) { "Unable to find hypixel_mm_letters.json!" }
+        checkNotNull(stream) { "Unable to find $FILE_NAME!" }
 
-        val map =
-            stream.use {
-                gson.fromJson(
-                    JsonReader(InputStreamReader(it)),
-                    TypeToken.getParameterized(Map::class.java, String::class.java, BooleanArray::class.java),
-                )
-            }
-
-        LETTER_MAP = map as Map<String, BooleanArray>
+        // We should not use interface here
+        decode<HashMap<String, BooleanArray>>(stream)
     }
 
     @Suppress("all")
@@ -40,7 +29,7 @@ object MurderMysteryFontDetection {
         var lastNonEmptyScanline = -1
         var emptyScanlines = 0
 
-        for (x in 0..128) {
+        for (x in 0 until 128) {
             var isEmpty = true
 
             for (y in 0 until 7) {
@@ -52,13 +41,13 @@ object MurderMysteryFontDetection {
 
             if (isEmpty) {
                 if (emptyScanlines++ > 3) {
-                    output.append(" ")
+                    output.append(' ')
                     emptyScanlines = 0
                 }
             }
 
             if (lastNonEmptyScanline != -1 && isEmpty) {
-                var yoff = lastNonEmptyScanline
+                var yOff = lastNonEmptyScanline
                 var off: Int
 
                 val w = x - lastNonEmptyScanline
@@ -69,26 +58,21 @@ object MurderMysteryFontDetection {
                 var y1 = 0
 
                 while (y1 < h) {
-                    off = yoff
+                    off = yOff
 
                     for (x1 in 0 until w) {
                         fingerPrint[y1 * w + x1] = contractLine[off++] == -1
                     }
 
                     y1++
-                    yoff += 128
+                    yOff += 128
                 }
 
-                var letter: String? = null
+                val letter = LETTER_MAP.entries.firstOrNull { (_, value1) ->
+                    value1.contentEquals(fingerPrint)
+                }?.key ?: "?"
 
-                for ((key, value1) in LETTER_MAP.entries) {
-                    if (value1.contentEquals(fingerPrint)) {
-                        letter = key
-                        break
-                    }
-                }
-
-                output.append(letter ?: "?")
+                output.append(letter)
 
                 lastNonEmptyScanline = -1
             }
@@ -99,15 +83,15 @@ object MurderMysteryFontDetection {
             }
         }
 
-        val outs = output.toString().trim { it <= ' ' }
+        val outs = output.trim { it <= ' ' }.toString()
         return outs
     }
 
     private fun filterContractLine(rgb: IntArray): IntArray {
         val contractLine = IntArray(128 * 7)
 
-        for (y in 0..7) {
-            for (x in 0..128) {
+        for (y in 0 until 7) {
+            for (x in 0 until 128) {
                 var newRGB = rgb[128 * 105 + y * 128 + x]
 
                 newRGB =
@@ -126,7 +110,7 @@ object MurderMysteryFontDetection {
     private fun extractBitmapFromMap(mapData: MapState): IntArray {
         val rgb = IntArray(128 * 128)
 
-        for (i in 0..rgb.size) {
+        for (i in rgb.indices) {
             val color = MapColor.getRenderColor(mapData.colors[i].toInt())
 
             val r = color and 0xFF

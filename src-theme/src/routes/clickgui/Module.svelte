@@ -23,17 +23,18 @@
     let configurable: ConfigurableSetting;
     const path = `clickgui.${name}`;
     let expanded = false;
+    let hasSettings = false;
 
     onMount(async () => {
-        configurable = await getModuleSettings(name);
+        await fetchModuleSettings();
 
         setTimeout(() => {
             expanded = localStorage.getItem(path) === "true"
         }, 500);
     });
 
-    highlightModuleName.subscribe(() => {
-        if (name !== $highlightModuleName) {
+    highlightModuleName.subscribe((m) => {
+        if (name !== m) {
             return;
         }
 
@@ -48,9 +49,14 @@
         }, 1000);
     });
 
+    async function fetchModuleSettings() {
+        configurable = await getModuleSettings(name);
+        hasSettings = configurable.value.filter(v => v.name !== "Bind" && v.name !== "Hidden").length > 0;
+    }
+
     async function updateModuleSettings() {
         await setModuleSettings(name, configurable);
-        configurable = await getModuleSettings(name);
+        await fetchModuleSettings();
     }
 
     async function toggleModule() {
@@ -58,17 +64,35 @@
     }
 
     function setDescription() {
-        const y = (moduleNameElement?.getBoundingClientRect().top ?? 0) + ((moduleNameElement?.clientHeight ?? 0) / 2);
-        const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
+        if (!moduleNameElement) return;
+
+        const boundingRect = moduleNameElement.getBoundingClientRect();
+        const y = (boundingRect.top + (moduleNameElement.clientHeight / 2)) * (2 / $scaleFactor);
+
         let moduleDescription = description;
         if (aliases.length > 0) {
-            moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
+            moduleDescription += ` (aka ${aliases.map(name => $spaceSeperatedNames ? convertToSpacedString(name) : name).join(", ")})`;
         }
-        descriptionStore.set({
-            x: x * (2 / $scaleFactor),
-            y: y * (2 / $scaleFactor),
-            description: moduleDescription
-        });
+
+        // If element is less than 300px from the right, display description on the left
+        if (window.innerWidth - boundingRect.right > 300) {
+            const x = boundingRect.right * (2 / $scaleFactor);
+            descriptionStore.set({
+                x,
+                y,
+                anchor: "right",
+                description: moduleDescription
+            });
+        } else {
+            const x = boundingRect.left * (2 / $scaleFactor);
+
+            descriptionStore.set({
+                x,
+                y,
+                anchor: "left",
+                description: moduleDescription
+            });
+        }
     }
 
     async function toggleExpanded() {
@@ -81,7 +105,7 @@
 <div
         class="module"
         class:expanded
-        class:has-settings={configurable?.value.length > 2}
+        class:has-settings={hasSettings}
         in:slide={{ duration: 500, easing: quintOut }}
         out:slide={{ duration: 500, easing: quintOut }}
 >
@@ -96,24 +120,20 @@
             class:enabled
             class:highlight={name === $highlightModuleName}
     >
-        {#if $spaceSeperatedNames}
-            {convertToSpacedString(name)}
-        {:else}
-            {name}
-        {/if}
+        {$spaceSeperatedNames ? convertToSpacedString(name) : name}
     </div>
 
     {#if expanded && configurable}
         <div class="settings">
             {#each configurable.value as setting (setting.name)}
-                <GenericSetting skipAnimationDelay={true} {path} bind:setting on:change={updateModuleSettings}/>
+                <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
             {/each}
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-  @import "../../colors.scss";
+  @use "../../colors.scss" as *;
 
   .module {
     position: relative;

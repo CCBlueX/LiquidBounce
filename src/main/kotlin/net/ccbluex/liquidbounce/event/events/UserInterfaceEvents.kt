@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,52 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
+import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.minecraft.text.Text
 
 @Nameable("fps")
-@WebSocketEvent
-class FpsChangeEvent(val fps: Int) : Event()
+@Suppress("unused")
+class FpsChangeEvent(val fps: Int) : Event(), WebSocketEvent
+
+@Nameable("fpsLimit")
+@Suppress("unused")
+class FpsLimitEvent(var fps: Int) : Event()
 
 @Nameable("clientPlayerData")
-@WebSocketEvent
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event() {
+@Suppress("unused")
+class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent {
     companion object {
         fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
     }
+}
+
+@Nameable("clientPlayerInventory")
+@Suppress("unused")
+class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent {
+    companion object {
+        fun fromPlayerInventory(inventory: PlayerInventoryData) = ClientPlayerInventoryEvent(inventory)
+    }
+}
+
+sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
+    sealed class TextContent : TitleEvent() {
+        abstract var text: Text?
+    }
+
+    @Nameable("title")
+    class Title(override var text: Text?) : TextContent()
+
+    @Nameable("subtitle")
+    class Subtitle(override var text: Text?) : TextContent()
+
+    @Nameable("titleFade")
+    class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()
+
+    @Nameable("clearTitle")
+    class Clear(var reset: Boolean) : TitleEvent()
 }

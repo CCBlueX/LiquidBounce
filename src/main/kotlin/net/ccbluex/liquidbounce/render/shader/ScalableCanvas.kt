@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@
 package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gl.VertexBuffer
-import net.minecraft.client.render.GameRenderer
 import org.joml.Matrix4f
 import java.io.Closeable
 
@@ -32,12 +33,12 @@ class ScalableCanvas : Closeable {
 
     private val identity = Matrix4f()
     private val output = MinecraftClient.getInstance().framebuffer
-    private val input = SimpleFramebuffer(output.textureWidth, output.textureHeight,
-        false, false)
+    private val input = SimpleFramebuffer(output.textureWidth, output.textureHeight, false)
+    private val shaderProgram by lazy { mc.shaderLoader.getOrCreateProgram(ShaderProgramKeys.POSITION_TEX_COLOR) }
 
     fun resize(width: Int, height: Int) {
         if (width() != width && height() != height && width > 0 && height > 0) {
-            input.resize(width, height, MinecraftClient.IS_SYSTEM_MAC)
+            input.resize(width, height)
         }
     }
 
@@ -56,7 +57,7 @@ class ScalableCanvas : Closeable {
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha)
 
         RenderSystem.enableBlend()
-        buffer.draw(identity, identity, GameRenderer.getPositionTexColorProgram())
+        buffer.draw(identity, identity, shaderProgram)
     }
 
     override fun close() {

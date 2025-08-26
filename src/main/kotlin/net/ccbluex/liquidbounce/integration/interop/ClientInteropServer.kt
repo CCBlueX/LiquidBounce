@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventHandler
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
+import java.net.BindException
 import java.net.Socket
 import kotlin.concurrent.thread
 
@@ -41,7 +42,7 @@ import kotlin.concurrent.thread
 object ClientInteropServer {
 
     internal var httpServer = HttpServer()
-    private var socketEventHandler = SocketEventHandler()
+    private var socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
 
@@ -50,8 +51,9 @@ object ClientInteropServer {
             logger.info("Default port unavailable. Falling back to random port.")
             (15001..17000).random()
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         logger.info("Default port $DEFAULT_PORT available.")
+
         DEFAULT_PORT
     }
     val url = "http://127.0.0.1:$port"
@@ -62,7 +64,7 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/", ConfigSystem.rootFolder.resolve("themes"))
+                file("/", ThemeManager.themesFolder)
             }
 
             // Add CORS middleware
@@ -70,13 +72,30 @@ object ClientInteropServer {
 
             // Register events with @WebSocketEvent annotation
             socketEventHandler.registerAll()
-        }.onFailure(ErrorHandler::fatal)
+        }.onFailure {
+            ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
+        }
 
         // Start the HTTP server
-        thread(name = "netty-websocket") {
-            runCatching {
-                httpServer.start(port)
-            }.onFailure(ErrorHandler::fatal)
+        thread(name = "netty-websocket", isDaemon = true, block = ::startServer)
+    }
+
+    private var attempt = 0
+    private fun startServer(port: Int = this.port) {
+        try {
+            httpServer.start(port)
+        } catch (bindException: BindException) {
+            if (attempt >= 5) {
+                ErrorHandler.fatal(bindException, additionalMessage = "Bind interop server")
+                return
+            }
+
+            // Retry with random port
+            attempt++
+            logger.error("Failed to bind to port $port. Falling back to random port.")
+            startServer((15001..17000).random())
+        } catch (exception: Exception) {
+            ErrorHandler.fatal(exception, additionalMessage = "Start interop server")
         }
     }
 

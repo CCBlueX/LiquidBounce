@@ -1,21 +1,40 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.math.average
 import net.minecraft.entity.EntityDimensions
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 object TrapPlayerSimulation {
     private val predictedPlayerStatesCache = HashMap<PlayerEntity, ArrayDeque<PredictedPlayerPos>>()
 
     private const val SIMULATION_DISTANCE: Double = 10.0
-
 
     fun runSimulations(enemies: List<LivingEntity>) {
         val seenPlayers = HashSet<PlayerEntity>()
@@ -51,7 +70,7 @@ object TrapPlayerSimulation {
 
             seenPlayers.add(enemy)
 
-            val simulationCache = this.predictedPlayerStatesCache.computeIfAbsent(enemy) { ArrayDeque() }
+            val simulationCache = this.predictedPlayerStatesCache.getOrPut(enemy, ::ArrayDeque)
 
             simulationCache.addLast(predictedPos)
 
@@ -79,31 +98,29 @@ object TrapPlayerSimulation {
         val positions = simulationCache.mapNotNull { it.nextOnGround }
 
         // Don't stop targeting if we already started
-        val canLayTrapInTime = simulationCache.last().ticksToGround ?: 0 >= 8
+        val canLayTrapInTime = (simulationCache.last().ticksToGround ?: 0) >= 8
         val sufficientEvidence = positions.size >= 5
 
         if (!sufficientEvidence || !canLayTrapInTime && !isTargetLocked) {
             return null
         }
 
-        val avg = positions
-            .fold(Vec3d.ZERO) { acc, vec -> acc.add(vec) }
-            .multiply(1.0 / positions.size)
+        val avg = positions.average()
         val std = positions
             .fold(0.0) { acc, vec -> acc + vec.subtract(avg).lengthSquared() }
-            .let { Math.sqrt(it / positions.size) }
+            .let { sqrt(it / positions.size) }
 
         ModuleDebug.debugGeometry(
             ModuleAutoTrap,
             "PredictedPlayerPos",
-            ModuleDebug.DebuggedBox(target.dimensions.getBoxAt(positions.last()), Color4b.RED.alpha(127))
+            ModuleDebug.DebuggedBox(target.dimensions.getBoxAt(positions.last()), Color4b.RED.with(a = 127))
         )
         ModuleDebug.debugGeometry(
             ModuleAutoTrap,
             "PredictedPlayerPosStd",
             ModuleDebug.DebuggedBox(
                 EntityDimensions.fixed((target.dimensions.width * std).toFloat(), 0.5F).getBoxAt(avg),
-                Color4b.BLUE.alpha(127)
+                Color4b.BLUE.with(a = 127)
             )
         )
 

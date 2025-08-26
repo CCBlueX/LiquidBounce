@@ -46,7 +46,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../../colors.scss";
+  @use "../../../../../colors.scss" as *;
 
   .select {
     cursor: pointer;
@@ -74,10 +74,6 @@
       color: $menu-text-color;
       font-size: 20px;
       font-weight: 500;
-
-      span {
-        font-weight: 600;
-      }
     }
   }
 

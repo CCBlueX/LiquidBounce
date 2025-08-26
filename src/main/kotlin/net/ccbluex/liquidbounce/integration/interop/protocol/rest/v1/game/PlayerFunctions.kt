@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,19 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNameProtect
+import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.hideShieldSlot
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.integration.interop.protocol.protocolGson
+import net.ccbluex.liquidbounce.utils.entity.netherPosition
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.util.httpNoContent
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -39,17 +44,33 @@ import net.minecraft.scoreboard.Team
 import net.minecraft.scoreboard.number.NumberFormat
 import net.minecraft.scoreboard.number.StyledNumberFormat
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import kotlin.math.min
+
+private fun nullableResponse(item: Any?) = item?.let { httpOk(interopGson.toJsonTree(it)) } ?: httpNoContent()
 
 // GET /api/v1/client/player
 @Suppress("UNUSED_PARAMETER")
-fun getPlayerData(requestObject: RequestObject) = httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
+fun getPlayerData(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerData::fromPlayer))
+
+// GET /api/v1/client/player/inventory
+@Suppress("UNUSED_PARAMETER")
+fun getPlayerInventory(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerInventoryData::fromPlayer))
+
+// GET /api/v1/client/crosshair
+@Suppress("UNUSED_PARAMETER")
+fun getCrosshairData(requestObject: RequestObject) = nullableResponse(mc.crosshairTarget)
 
 data class PlayerData(
     val username: String,
     val uuid: String,
+    val dimension: Identifier,
     val position: Vec3d,
+    val netherPosition: Vec3d,
+    val blockPosition: BlockPos,
     val velocity: Vec3d,
     val selectedSlot: Int,
     val gameMode: GameMode = GameMode.DEFAULT,
@@ -63,38 +84,84 @@ data class PlayerData(
     val maxAir: Int,
     val experienceLevel: Int,
     val experienceProgress: Float,
+    val ping: Int,
     val effects: List<StatusEffectInstance>,
     val mainHandStack: ItemStack,
     val offHandStack: ItemStack,
     val armorItems: List<ItemStack> = emptyList(),
-    val scoreboard: ScoreboardData? = null
+    val scoreboard: ScoreboardData? = null,
 ) {
 
     companion object {
 
+        @JvmStatic
         fun fromPlayer(player: PlayerEntity) = PlayerData(
-            player.nameForScoreboard,
+            ModuleNameProtect.replace(player.nameForScoreboard),
             player.uuidAsString,
+            player.world.registryKey.value,
             player.pos,
+            player.netherPosition,
+            player.blockPos,
             player.velocity,
             player.inventory.selectedSlot,
-            if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
+            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
             player.absorptionAmount.fixNaN(),
-            player.armor,
-            player.hungerManager.foodLevel,
+            player.armor.coerceAtMost(20),
+            min(player.hungerManager.foodLevel, 20),
             player.air,
             player.maxAir,
             player.experienceLevel,
             player.experienceProgress.fixNaN(),
+            player.ping,
             player.statusEffects.toList(),
             player.mainHandStack,
-            player.offHandStack,
+            if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
-            if (mc.player == player) ScoreboardData.fromScoreboard(player.scoreboard) else null
+            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null
         )
+    }
+
+}
+
+data class PlayerInventoryData(
+    val armor: List<ItemStack>,
+    val main: List<ItemStack>,
+    val crafting: List<ItemStack>,
+    val enderChest: List<ItemStack>,
+) {
+
+    companion object {
+        @JvmStatic
+        fun fromPlayer(player: PlayerEntity) = PlayerInventoryData(
+            armor = player.inventory.armor.map(ItemStack::copy),
+            main = player.inventory.main.map(ItemStack::copy),
+            crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy),
+            enderChest = player.enderChestInventory.heldStacks.map(ItemStack::copy),
+        )
+    }
+
+    private infix fun List<ItemStack>.eq(other: List<ItemStack>) =
+        this.size == other.size && this.indices.all { ItemStack.areEqual(this[it], other[it]) }
+
+    override fun hashCode(): Int {
+        var result = armor.hashCode()
+        result = 31 * result + main.hashCode()
+        result = 31 * result + crafting.hashCode()
+        result = 31 * result + enderChest.hashCode()
+        return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as PlayerInventoryData
+
+        return armor eq other.armor && main eq other.main &&
+            crafting eq other.crafting && enderChest eq other.enderChest
     }
 
 }
@@ -110,8 +177,10 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          *
          * Taken from the Minecraft source code
          */
+        @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
-            if (scoreboard == null) return null
+            scoreboard ?: return null
+            val player = mc.player ?: return null
 
             val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
 
@@ -138,11 +207,11 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
                     val entryWithDecoration: Text = Team.decorateName(team, entryName)
                     val entryValue: Text = scoreboardEntry.formatted(numberFormat)
 
-                    SidebarEntry(entryWithDecoration.sanitizeWithNameProtect(), entryValue.sanitizeWithNameProtect())
+                    SidebarEntry(entryWithDecoration.sanitizeForeignInput(), entryValue.sanitizeForeignInput())
                 }
                 .toArray { arrayOfNulls<SidebarEntry>(it) }
 
-            return ScoreboardData(objective.displayName.sanitizeWithNameProtect(), sidebarEntries)
+            return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
         }
     }
 

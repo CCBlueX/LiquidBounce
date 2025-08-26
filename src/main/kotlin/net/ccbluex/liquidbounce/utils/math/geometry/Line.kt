@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,26 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.getCoordinate
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.preferOver
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 
+@Suppress("TooManyFunctions")
 open class Line(val position: Vec3d, val direction: Vec3d) {
+
+    companion object {
+        fun fromPoints(p1: Vec3d, p2: Vec3d, normalized: Boolean = false): Line {
+            val direction = p2.subtract(p1)
+            val finalDirection = if (normalized) direction.normalize() else direction
+
+            return Line(p1, finalDirection)
+        }
+    }
 
     open fun getNearestPointTo(point: Vec3d): Vec3d {
         val plane = NormalizedPlane(point, direction)
@@ -47,17 +61,16 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
     fun getPhiForPoint(point: Vec3d): Double {
         val fromPosition = point.subtract(position)
 
-        val possibleCoordinates = mutableListOf(
-            Pair(fromPosition.x, direction.x),
-            Pair(fromPosition.y, direction.y),
-            Pair(fromPosition.z, direction.z)
-        )
-            .filter { !MathHelper.approximatelyEquals(it.second, 0.0) }
+        val possibleCoordinates = arrayOf(
+            doubleArrayOf(fromPosition.x, direction.x),
+            doubleArrayOf(fromPosition.y, direction.y),
+            doubleArrayOf(fromPosition.z, direction.z)
+        ).filter { !MathHelper.approximatelyEquals(it[1], 0.0) }
 
-        val directionAvg = possibleCoordinates.map { it.second }.average()
-        val minAvgDistPair = possibleCoordinates.minByOrNull { abs(it.second - directionAvg) }!!
+        val directionAvg = possibleCoordinates.sumOf { it[1] } / possibleCoordinates.size
+        val minAvgDistPair = possibleCoordinates.minByOrNull { abs(it[1] - directionAvg) }!!
 
-        return minAvgDistPair.first / minAvgDistPair.second
+        return minAvgDistPair[0] / minAvgDistPair[1]
     }
 
     /**
@@ -70,11 +83,46 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         return Pair(this.getPosition(phi1), other.getPosition(phi2))
     }
 
-    fun getNearestPhisTo(other: Line): Pair<Double, Double>? {
+    private fun getNearestPhisTo(other: Line): DoubleArray? {
         val phi1 = this.calculateNearestPhiTo(other) ?: return null
         val phi2 = other.calculateNearestPhiTo(this) ?: return null
 
-        return Pair(phi1, phi2)
+        return doubleArrayOf(phi1, phi2)
+    }
+
+    /**
+     * Finds the closest point on the box's surface to the [position] in positive [direction].
+     */
+    fun getPointOnBoxInDirection(box: Box): Vec3d? {
+        val candidates = Direction.entries.mapNotNull { dir ->
+            val positionCoordinate = position.getComponentAlongAxis(dir.axis)
+            val directionCoordinate = direction.getComponentAlongAxis(dir.axis)
+            computeIntersection(box.getCoordinate(dir), positionCoordinate, directionCoordinate)?.let { factor ->
+                val pointOnFace = dir.doubleVector.multiply(factor)
+                val directionalPointsOnFace = position.add(direction.normalize().multiply(factor))
+                pointOnFace.preferOver(directionalPointsOnFace)
+            }
+        }
+
+        var minDistanceSq = Double.POSITIVE_INFINITY
+        var intersection: Vec3d? = null
+        candidates.forEach { candidate ->
+            if (position.squaredDistanceTo(candidate) < minDistanceSq) {
+                minDistanceSq = position.squaredDistanceTo(candidate)
+                intersection = candidate
+            }
+        }
+
+        return intersection
+    }
+
+    private fun computeIntersection(plane: Double, pos: Double, dir: Double): Double? {
+        if (dir == 0.0) {
+            return null
+        }
+
+        val t = (plane - pos) / dir
+        return if (t > 0) t else null
     }
 
     @Suppress("MaxLineLength")
@@ -107,4 +155,7 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
 
         return t2
     }
+
+    override fun toString() = "Line(position=$position, direction=$direction)"
+
 }

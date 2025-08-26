@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,20 +30,7 @@ public class MixinClientWorldProperties {
 
     @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
     private long injectOverrideTime(long original) {
-        var module = ModuleCustomAmbience.INSTANCE;
-        if (module.getEnabled()) {
-            return switch (module.getTime().get()) {
-                case NO_CHANGE -> original;
-                case DAWN -> 23041L;
-                case DAY -> 1000L;
-                case NOON -> 6000L;
-                case DUSK -> 12610;
-                case NIGHT -> 13000L;
-                case MID_NIGHT -> 18000L;
-            };
-        }
-
-        return original;
+        return ModuleCustomAmbience.getTime(original);
     }
 
 }

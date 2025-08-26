@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,74 +21,36 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.ChatSendEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
-import net.ccbluex.liquidbounce.features.command.commands.creative.*
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandAutoAccount
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
+import net.ccbluex.liquidbounce.features.command.commands.ingame.*
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.*
+import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.CommandScript
-import net.ccbluex.liquidbounce.script.ScriptApi
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.convertToString
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.text.MutableText
-import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
+import kotlin.math.min
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.convertToString(), cause)
 
-/**
- * Links minecraft with the command engine
- */
-
-object CommandExecutor : Listenable {
-
-    /**
-     * Handles command execution
-     */
-
-    val chatEventHandler = handler<ChatSendEvent> {
-        if (it.message.startsWith(CommandManager.Options.prefix)) {
-            try {
-                CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
-            } catch (e: CommandException) {
-                chat(e.text.styled { it.withColor(Formatting.RED) })
-                chat("§cUsage: ")
-
-                if (e.usageInfo != null) {
-                    var first = true
-
-                    // Zip the usage info together, e.g.
-                    //  .friend add <name> [<alias>]
-                    //  OR .friend remove <name>
-                    e.usageInfo.forEach { usage ->
-                        chat("§c ${if (first) "" else "OR "}.$usage")
-
-                        if (first) {
-                            first = false
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                chat(markAsError(translation("liquidbounce.commandManager.exceptionOccurred",
-                    e::class.simpleName ?: "Class name missing", e.message ?: "No message")))
-                logger.error("An exception occurred while executing a command", e)
-            }
-
-            it.cancelEvent()
-        }
-    }
-
-}
+private val commands = mutableListOf<Command>()
 
 /**
  * Contains routines for handling commands
@@ -96,12 +58,10 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
-
-object CommandManager : Iterable<Command> {
-
-    internal val commands = mutableListOf<Command>()
+object CommandManager : Iterable<Command> by commands {
 
     object Options : Configurable("Commands") {
+
         /**
          * The prefix of the commands.
          *
@@ -114,6 +74,10 @@ object CommandManager : Iterable<Command> {
          */
         var prefix by text("prefix", ".")
 
+        /**
+         * How many hints should we give for unknown commands?
+         */
+        val hintCount by int("HintCount", 5, 0..10)
     }
 
     init {
@@ -124,47 +88,53 @@ object CommandManager : Iterable<Command> {
     }
 
     fun registerInbuilt() {
-        // client commands
-        addCommand(CommandClient.createCommand())
-        addCommand(CommandFriend.createCommand())
-        addCommand(CommandToggle.createCommand())
-        addCommand(CommandBind.createCommand())
-        addCommand(CommandHelp.createCommand())
-        addCommand(CommandBinds.createCommand())
-        addCommand(CommandClear.createCommand())
-        addCommand(CommandHide.createCommand())
-        addCommand(CommandItems.createCommand())
-        addCommand(CommandPanic.createCommand())
-        addCommand(CommandValue.createCommand())
-        addCommand(CommandPing.createCommand())
-        addCommand(CommandRemoteView.createCommand())
-        addCommand(CommandXRay.createCommand())
-        addCommand(CommandTargets.createCommand())
-        addCommand(CommandConfig.createCommand())
-        addCommand(CommandLocalConfig.createCommand())
-        addCommand(CommandAutoDisable.createCommand())
-        addCommand(CommandScript.createCommand())
-        addCommand(CommandContainers.createCommand())
-        addCommand(CommandSay.createCommand())
-        addCommand(CommandFakePlayer.createCommand())
-        addCommand(CommandAutoAccount.createCommand())
-        addCommand(CommandDebug.createCommand())
+        val commands = arrayOf(
+            CommandClient,
+            CommandFriend,
+            CommandToggle,
+            CommandBind,
+            CommandCenter,
+            CommandHelp,
+            CommandBinds,
+            CommandClear,
+            CommandHide,
+            CommandInvsee,
+            CommandItems,
+            CommandPanic,
+            CommandValue,
+            CommandPing,
+            CommandRemoteView,
+            CommandXRay,
+            CommandTargets,
+            CommandConfig,
+            CommandLocalConfig,
+            CommandAutoDisable,
+            CommandScript,
+            CommandContainers,
+            CommandSay,
+            CommandFakePlayer,
+            CommandAutoAccount,
+            CommandDebug,
+            CommandItemRename,
+            CommandItemGive,
+            CommandItemSkull,
+            CommandItemStack,
+            CommandItemEnchant,
+            CommandUsername,
+            CommandCoordinates,
+            CommandVClip,
+            CommandTeleport,
+            CommandPlayerTeleport,
+            CommandTps,
+            CommandServerInfo,
+            CommandModels,
+            CommandTranslate,
+            CommandAutoTranslate,
+        )
 
-        // creative commands
-        addCommand(CommandItemRename.createCommand())
-        addCommand(CommandItemGive.createCommand())
-        addCommand(CommandItemSkull.createCommand())
-        addCommand(CommandItemStack.createCommand())
-        addCommand(CommandItemEnchant.createCommand())
-
-        // utility commands
-        addCommand(CommandUsername.createCommand())
-        addCommand(CommandPosition.createCommand())
-
-        // movement commands
-        addCommand(CommandVClip.createCommand())
-        addCommand(CommandTeleport.createCommand())
-        addCommand(CommandPlayerTeleport.createCommand())
+        commands.forEach {
+            addCommand(it.createCommand())
+        }
     }
 
     fun addCommand(command: Command) {
@@ -182,7 +152,7 @@ object CommandManager : Iterable<Command> {
      *
      * @return A [Pair] of the subcommand and the index of the tokenized [cmd] it is in, if none was found, null
      */
-    fun getSubCommand(cmd: String): Pair<Command, Int>? {
+    private fun getSubCommand(cmd: String): Pair<Command, Int>? {
         return getSubCommand(tokenizeCommand(cmd).first)
     }
 
@@ -191,7 +161,7 @@ object CommandManager : Iterable<Command> {
      *
      * @param args The input command split on spaces
      * @param currentCommand The current command that is being researched
-     * @param idx The current index that is researched, only used for implementation
+     * @param idx The current index that is researched only used for implementation
      *
      * @return A [Pair] of the subcommand and the index of [args] it is in, if none was found, null
      */
@@ -229,7 +199,7 @@ object CommandManager : Iterable<Command> {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
-    @ScriptApi
+    @ScriptApiRequired
     @JvmName("execute")
     fun execute(cmd: String) {
         val args = tokenizeCommand(cmd).first
@@ -246,7 +216,28 @@ object CommandManager : Iterable<Command> {
             translation(
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
-            )
+            ),
+            usageInfo = if (commands.isEmpty() || Options.hintCount == 0) {
+                null
+            } else {
+                commands.sortedBy { command ->
+                    var distance = levenshtein(args[0], command.name)
+                    if (command.aliases.isNotEmpty()) {
+                        distance = min(
+                            distance,
+                            command.aliases.minOf { levenshtein(args[0], it) }
+                        )
+                    }
+                    distance
+                }.take(Options.hintCount).map { command ->
+                    buildString {
+                        append(command.name)
+                        if (command.aliases.isNotEmpty()) {
+                            command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
+                        }
+                    }
+                }
+            }
         )
         val command = pair.first
 
@@ -284,7 +275,7 @@ object CommandManager : Iterable<Command> {
         val parsedParameters = arrayOfNulls<Any>(args.size - idx - 1)
 
         // If the last parameter is a vararg, there might be no argument for it.
-        // In this case it's value might be null which is against the specification.
+        // In this case, its value might be null, which is against the specification.
         // To fix this, if the last parameter is a vararg, initialize it with an empty array
         if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size > args.size - idx) {
             parsedParameters[command.parameters.size - 1] = emptyArray<Any>()
@@ -326,13 +317,6 @@ object CommandManager : Iterable<Command> {
             }
         }
 
-        if (!command.executable) {
-            throw CommandException(
-                translation("liquidbounce.commandManager.commandNotExecutable", command.name),
-                usageInfo = command.usage()
-            )
-        }
-
         @Suppress("UNCHECKED_CAST")
         command.handler!!(command, parsedParameters as Array<Any>)
     }
@@ -341,12 +325,15 @@ object CommandManager : Iterable<Command> {
      * The routine that handles the parsing of a single parameter
      */
     private fun parseParameter(command: Command, argument: String, parameter: Parameter<*>): Any {
-        return if (parameter.verifier == null) {
-            argument
-        } else {
-            val validationResult = parameter.verifier.invoke(argument)
+        if (parameter.verifier == null) {
+            return argument
+        }
 
-            if (validationResult.errorMessage != null) {
+        when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
+            is ParameterValidationResult.Ok -> {
+                return validationResult.mappedResult
+            }
+            is ParameterValidationResult.Error -> {
                 throw CommandException(
                     translation(
                         "liquidbounce.commandManager.invalidParameterValue",
@@ -357,10 +344,6 @@ object CommandManager : Iterable<Command> {
                     usageInfo = command.usage()
                 )
             }
-
-            val mappedResult = validationResult.mappedResult
-
-            mappedResult!!
         }
     }
 
@@ -425,8 +408,6 @@ object CommandManager : Iterable<Command> {
         return Pair(output, outputIndices)
     }
 
-    override fun iterator() = commands.iterator()
-
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
         if (HideAppearance.isDestructed) {
             return Suggestions.empty()
@@ -464,7 +445,7 @@ object CommandManager : Iterable<Command> {
             val pair = getSubCommand(args)
 
             if (args.size == 1 && (pair == null || !nextParameter)) {
-                for (command in this.commands) {
+                for (command in commands) {
                     if (command.name.startsWith(args[0], true)) {
                         builder.suggest(command.name)
                     }
@@ -483,62 +464,11 @@ object CommandManager : Iterable<Command> {
 
             return builder.buildFuture()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Failed to supply autocompletion suggestions for '$origCmd'", e)
 
             return Suggestions.empty()
         }
-
-        //        val command = pair.first
-//
-//        // If the command is not executable, don't allow it to be executed
-//        if (!command.executable) {
-//            return Suggestions.empty()
-//        }
-//
-//        // The index the command is in
-//        val idx = pair.second
-//
-//        var paramIdx = command.parameters.size - idx
-//
-//        if ()
-//            paramIdx++
-//
-//        val parameter = if (paramIdx >= args.size) {
-//            val lastParameter = command.parameters.lastOrNull()
-//
-//            if (lastParameter?.vararg != true)
-//                return Suggestions.empty()
-//
-//            lastParameter
-//        } else {
-//            command.parameters[paramIdx]
-//        }
-//
-//        val handler = parameter.autocompletionHandler ?: return Suggestions.empty()
-//
-//        for (s in handler(args[paramIdx])) {
-//            builder.suggest(s)
-//        }
-//
-//        return builder.buildFuture()
     }
 
-
-
-    operator fun plusAssign(command: Command) {
-        addCommand(command)
-    }
-
-    operator fun plusAssign(commands: MutableList<Command>) {
-        commands.forEach(this::addCommand)
-    }
-
-    operator fun minusAssign(command: Command) {
-        removeCommand(command)
-    }
-
-    operator fun minusAssign(commands: MutableList<Command>) {
-        commands.forEach(this::removeCommand)
-    }
 
 }

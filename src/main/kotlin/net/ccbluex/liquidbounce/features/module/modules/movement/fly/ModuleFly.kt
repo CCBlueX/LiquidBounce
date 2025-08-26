@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2859V
@@ -38,6 +39,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixelFlat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * Fly module
@@ -45,7 +51,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
  * Allows you to fly.
  */
 
-object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
+object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
 
     init {
         enableLock()
@@ -79,9 +85,12 @@ object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "
             FlyVerusB3869Flat,
             FlyNcpClip,
 
+            FlyHypixel,
+            FlyHypixelFlat,
+
             FlyHycraftDamage
         )
-    )
+    ).apply { tagBy(this) }
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -99,6 +108,17 @@ object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "
 
     init {
         tree(Visuals)
+    }
+
+    private val disableOnSetback by boolean("DisableOnSetback", false)
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        // Setback detection
+        if (event.packet is PlayerPositionLookS2CPacket && disableOnSetback) {
+            chat(markAsError(message("setbackDetected")))
+            enabled = false
+        }
     }
 
 }

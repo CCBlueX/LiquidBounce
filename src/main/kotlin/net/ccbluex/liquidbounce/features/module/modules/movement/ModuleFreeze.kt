@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag.LagResult
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -42,7 +43,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  *
  * Allows you to freeze yourself without the server knowing.
  */
-object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
+object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
 
     private val modes = choices("Mode", Queue, arrayOf(Queue, Cancel, Stationary))
         .apply { tagBy(this) }
@@ -54,12 +55,12 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
     private var missedOutTick = 0
     private var warpInProgress = false
 
-    override fun enable() {
+    override fun onEnabled() {
         missedOutTick = 0
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (balance) {
             warpInProgress = true
             while (missedOutTick > 0) {
@@ -71,7 +72,7 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
         }
 
         missedOutTick = 0
-        super.disable()
+        super.onDisabled()
     }
 
     /**
@@ -85,7 +86,7 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
         missedOutTick++
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "MagicNumber")
     val renderHandler = handler<WorldRenderEvent> { event ->
         if (!balance || missedOutTick < 0 || warpInProgress) {
             return@handler
@@ -137,27 +138,18 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
      */
     object Queue : Choice("Queue") {
 
-        private val incoming by boolean("Incoming", false)
-        private val outgoing by boolean("Outgoing", true)
-
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        fun shouldLag(origin: TransferOrigin): LagResult? {
-            if (!enabled || !handleEvents()) {
-                return null
-            }
+        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
-            val isQueue = when (origin) {
-                TransferOrigin.RECEIVE -> {
-                    incoming
-                }
-                TransferOrigin.SEND -> {
-                    outgoing
-                }
+        @Suppress("unused")
+        private val fakeLagHandler = handler<QueuePacketEvent>(
+            priority = EventPriorityConvention.SAFETY_FEATURE
+        ) { event ->
+            if (origin.any { origin -> origin == event.origin }) {
+                event.action = Action.QUEUE
             }
-
-            return if (isQueue) LagResult.QUEUE else LagResult.PASS
         }
 
     }
@@ -167,22 +159,15 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
      */
     object Cancel : Choice("Cancel") {
 
-        private val incoming by boolean("Incoming", false)
-        private val outgoing by boolean("Outgoing", true)
+        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
         private val packetHandler = handler<PacketEvent> { event ->
-            when (event.origin) {
-                TransferOrigin.RECEIVE -> if (incoming) {
-                    event.cancelEvent()
-                }
-
-                TransferOrigin.SEND -> if (outgoing) {
-                    event.cancelEvent()
-                }
+            if (origin.any { origin -> origin == event.origin }) {
+                event.cancelEvent()
             }
         }
 
@@ -208,3 +193,4 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
     }
 
 }
+

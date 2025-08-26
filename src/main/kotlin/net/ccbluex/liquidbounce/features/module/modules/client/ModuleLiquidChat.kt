@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,31 +23,35 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.ChatClient
 import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
-object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true,
-    aliases = arrayOf("GlobalChat")) {
+object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
+    aliases = arrayOf("GlobalChat", "IRC")) {
 
     private var jwtToken by text("JwtToken", "")
 
+    private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
+
     private val chatClient = ChatClient()
-    private val prefix = Text.empty()
-        .styled { it.withFormatting(Formatting.RESET) }.styled { it.withFormatting(Formatting.GRAY) }
-        .append(Text.literal("LiquidChat")
-            .styled { it.withColor(Formatting.BLUE) }).styled { it.withFormatting(Formatting.BOLD) }
-        .append(Text.literal(" ▸ ")
-            .styled { it.withFormatting(Formatting.RESET) }.styled { it.withColor(Formatting.DARK_GRAY) })
+    private val prefix: Text = Text.empty()
+        .formatted(Formatting.RESET).formatted(Formatting.GRAY)
+        .append(Text.literal(this.name).withColor(Formatting.BLUE))
+        .formatted(Formatting.BOLD)
+        .append(Text.literal(" ▸ ").formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
@@ -106,17 +110,23 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         chatClient.connectAsync()
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         chatClient.disconnect()
-        super.disable()
+        super.onDisabled()
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    val shutdownHandler = handler<ClientShutdownEvent> {
+        chatClient.disconnect()
+    }
+
+    @Suppress("unused")
+    val repeatable = tickHandler {
         if (!chatClient.connected) {
             chatClient.connectAsync()
 
@@ -131,19 +141,28 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
     }
 
     @Suppress("unused")
-    val handleChatMessage = handler<ClientChatMessageEvent> { event ->
-        when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT -> writeChat(
-                event.user.name.asText().styled { it.withFormatting(Formatting.GRAY) }
-                    .append(" ▸ ".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
-                    .append(event.message.asText().styled { it.withFormatting(Formatting.GRAY) })
-            )
-            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT -> writeChat(
-                "[".asText().styled { it.withFormatting(Formatting.DARK_GRAY) }
-                    .append(event.user.name.asText().styled { it.withFormatting(Formatting.BLUE) })
-                    .append("] ".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
-                    .append(event.message.asText().styled { it.withFormatting(Formatting.GRAY) })
-            )
+    val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
+        fun prefix(): MutableText = when (event.chatGroup) {
+            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
+                event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
+                    .append(" ▸ ".asText().formatted(Formatting.DARK_GRAY))
+            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
+                "[".asText().formatted(Formatting.DARK_GRAY)
+                    .append(
+                        event.user.name.asText().formatted(Formatting.BLUE).copyable(copyContent = event.message)
+                    )
+                    .append("] ".asText().formatted(Formatting.DARK_GRAY))
+        }
+
+        writeChat(prefix().append(regular(event.message).copyable(copyContent = event.message)))
+
+        if (event.chatGroup !in autoTranslate) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = event.message)
+        if (result.isValid) {
+            writeChat(prefix().append(result.toResultText()))
         }
     }
 
@@ -207,6 +226,10 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
         }
     }
 
-    override fun handleEvents() = enabled
+    /**
+     * Overwrites the condition requirement for being in-game
+     */
+    override val running
+        get() = !isDestructed && enabled
 
 }

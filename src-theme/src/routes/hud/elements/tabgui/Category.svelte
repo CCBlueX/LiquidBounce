@@ -27,7 +27,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../../../colors.scss";
+    @use "../../../../colors.scss" as *;
 
     .name {
         font-weight: 500;

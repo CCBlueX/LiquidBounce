@@ -70,19 +70,22 @@
             bind:value={hex}
             on:input={handleValueInput}
         />
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
             class="color-pickr-button"
             on:click={() => (hidden = !hidden)}
             style="background-color: {hex};"
         ></button>
     </div>
+    <!-- svelte-ignore a11y_consider_explicit_label -->
     <div class="color-picker" class:hidden>
+        <!-- svelte-ignore element_invalid_self_closing_tag -->
         <button bind:this={colorPicker} />
     </div>
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+    @use "../../../colors.scss" as *;
 
     .setting {
         display: grid;

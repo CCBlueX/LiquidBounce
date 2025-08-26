@@ -15,7 +15,10 @@
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import Effects from "./elements/Effects.svelte";
     import BlockCounter from "./elements/BlockCounter.svelte";
+    import ArmorItems from "./elements/inventory/ArmorItems.svelte";
+    import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
     import Text from "./elements/Text.svelte";
+    import CraftingInput from "./elements/inventory/CraftingInput.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -58,12 +61,18 @@
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}
                     <Scoreboard/>
+                {:else if c.name === "ArmorItems"}
+                    <ArmorItems/>
+                {:else if c.name === "Inventory"}
+                    <InventoryContainer/>
+                {:else if c.name === "CraftingInventory"}
+                    <CraftingInput/>
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}
                     <Keystrokes/>
                 {:else if c.name === "Effects"}
-                    <Effects />
+                    <Effects/>
                 {:else if c.name === "Text"}
                     <Text settings={c.settings} />
                 {:else if c.name === "Image"}

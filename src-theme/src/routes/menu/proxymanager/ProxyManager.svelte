@@ -3,10 +3,10 @@
         addProxyFromClipboard,
         checkProxy,
         connectToProxy as connectToProxyRest,
+        deleteScreen,
         disconnectFromProxy as disconnectFromProxyRest,
         getCurrentProxy,
         getProxies,
-        openScreen,
         removeProxy as removeProxyRest,
         setProxyFavorite,
     } from "../../../integration/rest.js";
@@ -29,16 +29,14 @@
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
     import {listen} from "../../../integration/ws";
-    import type {
-        ProxyAdditionResultEvent,
-        ProxyCheckResultEvent,
-        ProxyEditResultEvent
-    } from "../../../integration/events.js";
+    import type {ProxyCheckResultEvent} from "../../../integration/events.js";
 
     $: {
         let filteredProxies = proxies;
 
         filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo?.country)));
+        filteredProxies = filteredProxies.filter(p => proxyTypes.includes(p.type));
+        console.log(proxies)
         if (favoritesOnly) {
             filteredProxies = filteredProxies.filter(a => a.favorite);
         }
@@ -56,6 +54,7 @@
     let searchQuery = "";
     let favoritesOnly = false;
     let countries: string[] = [];
+    let proxyTypes = ["SOCKS5", "HTTP"];
 
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
@@ -83,11 +82,11 @@
     async function refreshProxies() {
         proxies = await getProxies();
 
-        let c = new Set();
+        const c = new Set<string>();
         for (const p of proxies) {
             c.add(convertCountryCode(p.ipInfo?.country));
         }
-        allCountries = Array.from(c) as string[];
+        allCountries = Array.from(c);
         countries = allCountries;
     }
 
@@ -105,11 +104,6 @@
     }
 
     async function connectToProxy(id: number) {
-        notification.set({
-            title: "ProxyManager",
-            message: "Connecting to proxy...",
-            error: false
-        });
         await connectToProxyRest(id);
         notification.set({
             title: "ProxyManager",
@@ -131,50 +125,20 @@
         await refreshProxies();
     }
 
-    listen("proxyAdditionResult", async (e: ProxyAdditionResultEvent) => {
-        if (e.error) {
-            notification.set({
-                title: "ProxyManager",
-                message: "Couldn't connect to proxy",
-                error: true
-            });
-        } else {
-            notification.set({
-                title: "ProxyManager",
-                message: "Successfully added proxy",
-                error: false
-            });
-
-            await refreshProxies();
-        }
-    });
-
-    listen("proxyEditResult", async (e: ProxyEditResultEvent) => {
-        if (e.error) {
-            notification.set({
-                title: "ProxyManager",
-                message: "Couldn't connect to proxy",
-                error: true
-            });
-        } else {
-            notification.set({
-                title: "ProxyManager",
-                message: "Successfully edited proxy",
-                error: false
-            });
-
-            await refreshProxies();
-        }
-    });
-
     listen("proxyCheckResult", async (e: ProxyCheckResultEvent) => {
-        if (e.error) {
+        if (e.error && e.proxy) {
             notification.set({
                 title: "ProxyManager",
-                message: "Could not connect to proxy",
+                message: "The proxy is not working: " + e.error,
                 error: true
             });
-        } else {
+        } else if (e.error) {
+            notification.set({
+                title: "ProxyManager",
+                message: e.error,
+                error: true
+            });
+        } else if (e.proxy) {
             notification.set({
                 title: "ProxyManager",
                 message: "Proxy is working",
@@ -199,6 +163,15 @@
         currentEditProxy = proxy;
         editProxyModalVisible = true;
     }
+
+    function fromClipboard() {
+        notification.set({
+            title: "ProxyManager",
+            message: "Checking proxy from clipboard...",
+            error: false
+        });
+        addProxyFromClipboard();
+    }
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
@@ -206,16 +179,18 @@
     <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
                     host={currentEditProxy.host}
                     port={currentEditProxy.port}
+                    proxyType={currentEditProxy.type}
+                    forwardAuthentication={currentEditProxy.forwardAuthentication}
                     username={currentEditProxy.credentials?.username ?? ""}
                     password={currentEditProxy.credentials?.password ?? ""}
-                    requiresAuthentication={currentEditProxy.credentials !== undefined}
-                    on:proxyEdit={refreshProxies}/>
+                    requiresAuthentication={currentEditProxy.credentials !== undefined}/>
 {/if}
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
         <MultiSelect title="Country" options={allCountries} bind:values={countries}/>
+        <MultiSelect title="Type" options={["SOCKS5", "HTTP"]} bind:values={proxyTypes}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleProxySort}>
@@ -231,6 +206,7 @@
 
                 <svelte:fragment slot="tag">
                     <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
+                    <MenuListItemTag text={proxy.type}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
@@ -251,7 +227,7 @@
     <BottomButtonWrapper>
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
-            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => addProxyFromClipboard()}/>
+            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => fromClipboard() } />
             <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random"
                             on:click={connectToRandomProxy}/>
             <IconTextButton icon="icon-disconnect.svg" disabled={!isConnectedToProxy} title="Disconnect"
@@ -259,7 +235,7 @@
         </ButtonContainer>
 
         <ButtonContainer>
-            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
+            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => deleteScreen()}/>
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.utils.math
 
-fun Int.sq(): Int {
+inline fun Int.sq(): Int {
     return this * this
 }
 
-fun Float.sq(): Float {
+inline fun Float.sq(): Float {
     return this * this
 }
 
-fun Double.sq(): Double {
+inline fun Double.sq(): Double {
     return this * this
 }
+
+inline fun Float.toFixed(digits: Int): String {
+    return "%.${digits}f".format(this)
+}
+
+inline fun Double.toFixed(digits: Int): String {
+    return "%.${digits}f".format(this)
+}
+

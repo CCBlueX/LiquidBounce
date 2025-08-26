@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
@@ -29,9 +29,17 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
-abstract class IsSelfBedChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
+fun isSelfBedChoices(choice: ChoiceConfigurable<IsSelfBedChoice>): Array<IsSelfBedChoice> {
+    return arrayOf(
+        IsSelfBedNoneChoice(choice),
+        IsSelfBedColorChoice(choice),
+        IsSelfBedSpawnLocationChoice(choice)
+    )
+}
+
+sealed class IsSelfBedChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
     abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
-    abstract fun shouldDefend(block: BedBlock, pos: BlockPos): Boolean
+    open fun shouldDefend(block: BedBlock, pos: BlockPos): Boolean = isSelfBed(block, pos)
 }
 
 class IsSelfBedNoneChoice(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("None", parent) {
@@ -47,14 +55,13 @@ class IsSelfBedSpawnLocationChoice(parent: ChoiceConfigurable<*>) : IsSelfBedCho
     override fun isSelfBed(block: BedBlock, pos: BlockPos) =
         spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
 
-    override fun shouldDefend(block: BedBlock, pos: BlockPos) = isSelfBed(block, pos)
-
     @Suppress("unused")
     private val gameStartHandler = handler<PacketEvent> {
         val packet = it.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            val packetPos = Vec3d(packet.x, packet.y, packet.z)
+            val pos = packet.change.position
+            val packetPos = Vec3d(pos.x, pos.y, pos.z)
             val dist = player.pos.distanceTo(packetPos)
 
             if (dist > 16.0) {
@@ -73,7 +80,4 @@ class IsSelfBedColorChoice(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Col
 
         return armorColor == colorRgb
     }
-
-    override fun shouldDefend(block: BedBlock, pos: BlockPos) = isSelfBed(block, pos)
-
 }

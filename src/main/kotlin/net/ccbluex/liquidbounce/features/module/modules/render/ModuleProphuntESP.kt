@@ -1,258 +1,79 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.interpolateHue
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.client.util.math.MatrixStack
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.entity.FallingBlockEntity
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import java.util.*
+import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 
-object ModuleProphuntESP : Module("ProphuntESP", Category.RENDER,
+object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     aliases = arrayOf("BlockUpdateDetector", "FallingBlockESP")) {
 
-    private val modes = choices(
-        "Mode", Glow, arrayOf(
-            Box, Glow, Outline
-        )
+    private val renderer = PlacementRenderer("RenderBlockUpdates", true, this,
+        defaultColor = Color4b(255, 179, 72, 90), keep = false
     )
 
-    private val colorMode = choices<GenericColorMode<Any>>(
-        "ColorMode",
-        { it.choices[0] },
-        {
-            arrayOf(
-                ExpirationColor,
-                GenericStaticColorMode(it, Color4b(255, 179, 72, 150)),
-                GenericRainbowColorMode(it)
-            )
-        }
-    )
+    private val tracking by multiEnumChoice("Tracking", Tracking.entries, canBeNone = false)
 
-    private object ExpirationColor : GenericColorMode<Any>("Expiration") {
-        private val freshColor by color("FreshColor", Color4b(50, 200, 50, 255))
-        private val expireColor by color("ExpireColor", Color4b(200, 50, 50, 255))
-
-        override fun getColor(param: Any): Color4b =
-            if (param is TrackedBlock) {
-                interpolateHue(freshColor, expireColor, param.expirationProgress())
-            } else {
-                freshColor
-            }
-
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
+    private enum class Tracking(override val choiceName: String): NamedChoice {
+        FALLING_BLOCKS("FallingBlocks"),
+        BLOCK_UPDATES("BlockUpdates"),
+        CHUNK_DELTA_UPDATES("ChunkDeltaUpdates"),
     }
 
-    private val renderBlockUpdates by boolean("RenderBlockUpdates", true)
-    private val renderFallingBlockEntity by boolean("RenderFallingBlockEntity", true)
-
-    private data class TrackedBlock(val pos: BlockPos, val expirationTime: Long) : Comparable<TrackedBlock> {
-        override fun compareTo(other: TrackedBlock) =
-            expirationTime.compareTo(other.expirationTime)
-
-        fun expirationProgress() = Math.clamp(
-            1 - (expirationTime - (mc.world?.time ?: 0)).toFloat() / renderTicks,
-            0f,
-            1f
-        )
+    init {
+        tree(renderer)
     }
 
-    private val trackedBlocks = PriorityQueue<TrackedBlock>()
-    private val renderTicks by float("RenderTicks", 60f, 0f..600f)
+    override fun onDisabled() {
+        renderer.clearSilently()
+    }
 
     @Suppress("unused")
-    private val gameHandler = repeatable {
-        synchronized(trackedBlocks) {
-            while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= world.time) {
-                trackedBlocks.poll()
-            }
-        }
-
-        waitTicks(1)
-    }
-
-    private object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
-
-        private val outline by boolean("Outline", true)
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            drawBoxMode(event.matrixStack, this.outline, false)
-
-            renderEnvironmentForWorld(event.matrixStack) {
-                drawEntities(this, event.partialTicks, colorMode.activeChoice, true)
-            }
-        }
-    }
-
-    private fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-        val colorMode = colorMode.activeChoice
-
-        var dirty = false
-
-        renderEnvironmentForWorld(matrixStack) {
-            synchronized(trackedBlocks) {
-                dirty = drawBlocks(this, trackedBlocks, colorMode, fullAlpha, drawOutline) || dirty
-            }
-        }
-
-        return dirty
-    }
-
-    private fun WorldRenderEnvironment.drawEntities(
-        env: WorldRenderEnvironment,
-        partialTicks: Float,
-        colorMode: GenericColorMode<Any>,
-        drawOutline: Boolean
-    ): Boolean {
-        var dirty = false
-
-        if (renderFallingBlockEntity) {
-            BoxRenderer.drawWith(env) {
-                mc.world?.entities?.filterIsInstance<FallingBlockEntity>()?.map {
-                    val dimension = it.getDimensions(it.pose)
-                    val width = dimension.width.toDouble() / 2.0
-                    it to Box(-width, 0.0, -width, width, dimension.height.toDouble(), width)
-                }?.forEach { (entity, box) ->
-                    val pos = entity.interpolateCurrentPosition(partialTicks)
-                    val color = colorMode.getColor(entity as Any) // which doesn't matter
-
-                    val baseColor = color.alpha(50)
-                    val outlineColor = color.alpha(100)
-
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(
-                            box,
-                            baseColor,
-                            outlineColor.takeIf { drawOutline }
-                        )
-                    }
-
-                    dirty = true
+    private val tickHandler = handler<GameTickEvent> {
+        if (Tracking.FALLING_BLOCKS in tracking) {
+            for (entity in world.entities) {
+                if (entity is FallingBlockEntity) {
+                    renderer.addBlock(entity.blockPos, update = false)
                 }
             }
         }
-
-        return dirty
-    }
-
-    private fun WorldRenderEnvironment.drawBlocks(
-        env: WorldRenderEnvironment,
-        blocks: PriorityQueue<TrackedBlock>,
-        colorMode: GenericColorMode<Any>,
-        fullAlpha: Boolean,
-        drawOutline: Boolean
-    ): Boolean {
-        var dirty = false
-
-        BoxRenderer.drawWith(env) {
-
-            if (renderBlockUpdates) {
-                for (block in blocks) {
-                    val pos = block.pos
-
-                    val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-
-                    val blockPos = vec3d.toBlockPos().toBlockPos()
-                    val blockState = blockPos.getState() ?: continue
-
-                    val outlineShape = blockState.getOutlineShape(world, blockPos)
-                    val boundingBox = if (outlineShape.isEmpty) {
-                        FULL_BOX
-                    } else {
-                        outlineShape.boundingBox
-                    }
-
-                    val color = colorMode.getColor(block)
-
-                    if (fullAlpha) {
-                        color.alpha(255)
-                    }
-
-                    withPositionRelativeToCamera(vec3d) {
-                        drawBox(
-                            boundingBox,
-                            faceColor = color,
-                            outlineColor = color.alpha(150).takeIf { drawOutline }
-                        )
-                    }
-
-                    dirty = true
-                }
-            }
-        }
-
-        return dirty
-    }
-
-    private object Glow : Choice("Glow") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
-
-        @Suppress("unused")
-        private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
-                return@handler
-            }
-
-            var dirty = drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
-
-            renderEnvironmentForWorld(event.matrixStack) {
-                dirty = drawEntities(this, event.partialTicks, colorMode.activeChoice, true) || dirty
-            }
-
-            if (dirty) {
-                event.markDirty()
-            }
-        }
-    }
-
-    private object Outline : Choice("Outline") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
-
-        @Suppress("unused")
-        private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE) {
-                return@handler
-            }
-
-            var dirty = drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
-
-            renderEnvironmentForWorld(event.matrixStack) {
-                dirty = drawEntities(this, event.partialTicks, colorMode.activeChoice, true) || dirty
-            }
-
-            if (dirty) {
-                event.markDirty()
-            }
-        }
+        renderer.updateAll()
     }
 
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
-        if (event.packet is BlockUpdateS2CPacket) {
-            synchronized(trackedBlocks) {
-                trackedBlocks.offer(TrackedBlock(event.packet.pos, world.time + renderTicks.toLong()))
+        val packet = event.packet
+        when {
+            packet is BlockUpdateS2CPacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
+                renderer.addBlock(packet.pos, update = false)
+            }
+            packet is ChunkDeltaUpdateS2CPacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
+                packet.visitUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }
     }

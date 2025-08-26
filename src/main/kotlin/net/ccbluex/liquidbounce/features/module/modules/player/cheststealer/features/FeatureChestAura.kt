@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.ActionResult
@@ -61,6 +63,8 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val interactionDelay by int("Delay", 5, 1..80, "ticks")
     private val shouldDisplayVisualSwing by boolean("VisualSwing", true)
 
+    private val notDuringCombat by boolean("NotDuringCombat", true)
+
     // Sub-configurable for managing the await container settings
     private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
         val retryTimeout by int("Timeout", 10, 1..80, "ticks")
@@ -82,19 +86,25 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private var interactionAttempts = 0
 
     // Set of block names that are considered as storage blocks
-    private val validStorageBlocks = findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL").toHashSet()
+    private val validStorageBlocks = findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL")
+        .toHashSet()
 
     // Event handler responsible for updating the target block
-    val simulatedTickHandler = handler<SimulatedTickEvent> {
+    @Suppress("unused")
+    private val simulatedTickHandler = handler<RotationUpdateEvent> {
         val searchRadius = interactionRange + 1
         val searchRadiusSquared = searchRadius * searchRadius
-        val playerEyesPosition = player.eyes
+        val playerEyesPosition = player.eyePos
+
+        if (notDuringCombat && CombatManager.isInCombat) {
+            currentTargetBlock = null
+            return@handler
+        }
 
         // Select blocks for processing within the search radius
-        val nearbyStorageBlocks = searchBlocksInCuboid(searchRadius, playerEyesPosition) { pos, state ->
-            validStorageBlocks.contains(state.block) && pos !in interactedBlocksSet && getNearestPoint(
-                playerEyesPosition,
-                Box.enclosing(pos, pos.add(1, 1, 1))
+        val nearbyStorageBlocks = playerEyesPosition.searchBlocksInCuboid(searchRadius) { pos, state ->
+            state.block in validStorageBlocks && pos !in interactedBlocksSet && getNearestPoint(
+                playerEyesPosition, Box(pos)
             ).squaredDistanceTo(playerEyesPosition) <= searchRadiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
@@ -103,7 +113,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         // Find the next block to interact with
         for ((blockPos, state) in nearbyStorageBlocks) {
             val (rotation, _) = raytraceBlock(
-                player.eyes,
+                player.eyePos,
                 blockPos,
                 state,
                 range = interactionRange.toDouble(),
@@ -111,7 +121,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             ) ?: continue
 
             // Update the player rotation to aim at the new target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 rotation,
                 considerInventory = true,
                 configurable = rotationConfigurable,
@@ -133,13 +143,14 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Task that repeats to interact with the target block
-    val interactionRepeatableTask = repeatable { event ->
+    @Suppress("unused")
+    private val interactionRepeatableTask = tickHandler {
         if (mc.currentScreen is GenericContainerScreen) {
             // Do not proceed if a screen is open which implies player might be in a GUI
-            return@repeatable
+            return@tickHandler
         }
 
-        val targetBlockPos = currentTargetBlock ?: return@repeatable
+        val targetBlockPos = currentTargetBlock ?: return@tickHandler
         val currentPlayerRotation = RotationManager.serverRotation
 
         // Trace a ray from the player to the target block position
@@ -147,12 +158,12 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             interactionRange.toDouble(),
             currentPlayerRotation,
             targetBlockPos,
-            targetBlockPos.getState() ?: return@repeatable
+            targetBlockPos.getState() ?: return@tickHandler
         )
 
         // Verify if the block is hit and is the correct target
         if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != targetBlockPos) {
-            return@repeatable
+            return@tickHandler
         }
 
         // Attempt to interact with the block
@@ -178,6 +189,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
                 }
             } else {
                 interactedBlocksSet.add(targetBlockPos)
+                targetBlockPos.recordAnotherChestPart(targetBlockPos.getState())
                 currentTargetBlock = null
                 wasInteractionSuccessful = true
 
@@ -188,11 +200,16 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             // Update interacted block set and reset target if successful or exceeded retries
             if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
                 interactedBlocksSet.add(targetBlockPos)
+                targetBlockPos.recordAnotherChestPart(targetBlockPos.getState())
                 currentTargetBlock = null
             } else {
                 interactionAttempts++
             }
         }
+    }
+
+    private fun BlockPos.recordAnotherChestPart(state: BlockState?) {
+        interactedBlocksSet.add(offset(state.anotherChestPartDirection() ?: return))
     }
 
 }

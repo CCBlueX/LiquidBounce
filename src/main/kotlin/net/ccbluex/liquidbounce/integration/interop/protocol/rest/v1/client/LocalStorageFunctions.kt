@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
@@ -41,7 +42,7 @@ import net.ccbluex.netty.http.util.httpOk
 // GET /api/v1/client/localStorage
 fun getLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    val value = PersistentLocalStorage.getItem(key) ?: return@with httpForbidden("No value for key $key")
+    val value = PersistentLocalStorage[key] ?: return@with httpForbidden("No value for key $key")
 
     httpOk(JsonObject().apply {
         addProperty("value", value)
@@ -54,15 +55,15 @@ fun putLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = body["key"]?.asString ?: return@with httpForbidden("No key")
     val value = body["value"]?.asString ?: return@with httpForbidden("No value")
 
-    PersistentLocalStorage.setItem(key, value)
-    httpOk(JsonObject())
+    PersistentLocalStorage[key] = value
+    httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/client/localStorage
 fun deleteLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    PersistentLocalStorage.removeItem(key)
-    httpOk(JsonObject())
+    PersistentLocalStorage.remove(key)
+    httpOk(emptyJsonObject())
 }
 
 // GET /api/v1/client/localStorage/all
@@ -70,7 +71,7 @@ fun getAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
     httpOk(JsonObject().apply {
         val jsonArray = JsonArray()
 
-        PersistentLocalStorage.map.forEach { (key, value) ->
+        PersistentLocalStorage.forEach { (key, value) ->
             jsonArray.add(JsonObject().apply {
                 addProperty("key", key)
                 addProperty("value", value)
@@ -90,8 +91,8 @@ fun putAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
 
     PersistentLocalStorage.clear()
     body.items.forEach { item ->
-        PersistentLocalStorage.setItem(item.key, item.value)
+        PersistentLocalStorage[item.key] = item.value
     }
 
-    httpOk(JsonObject())
+    httpOk(emptyJsonObject())
 }

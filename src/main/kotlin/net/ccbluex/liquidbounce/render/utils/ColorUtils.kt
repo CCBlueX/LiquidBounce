@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.utils
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import java.awt.Color
 
 object ColorUtils {
@@ -48,7 +48,7 @@ fun shiftHue(color4b: Color4b, shift: Int): Color4b {
     val hsb = Color.RGBtoHSB(color4b.r, color4b.g, color4b.b, null)
     val shiftedColor = Color(Color.HSBtoRGB((hsb[0] + shift.toFloat() / 360) % 1F, hsb[1], hsb[2]))
 
-    return Color4b(shiftedColor).alpha(color4b.a)
+    return Color4b(shiftedColor).with(a = color4b.a)
 }
 
 fun interpolateHue(primaryColor: Color4b, otherColor: Color4b, percentageOther: Float): Color4b {

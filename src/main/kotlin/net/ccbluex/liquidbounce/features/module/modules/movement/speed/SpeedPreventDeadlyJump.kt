@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.Vec3d
 
-object SpeedPreventDeadlyJump : QuickImports {
+object SpeedPreventDeadlyJump : MinecraftShortcuts {
 
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
         val simulatedPlayer = createSimulatedPlayer(player)
@@ -43,8 +43,9 @@ object SpeedPreventDeadlyJump : QuickImports {
             }
         }
 
-        if (groundPos == null)
+        if (groundPos == null) {
             return true
+        }
 
         simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput.NONE, jumping = false,

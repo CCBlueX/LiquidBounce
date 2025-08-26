@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -31,6 +31,7 @@ import net.minecraft.util.math.BlockPos
 
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
+    private val disableOnYChange by boolean("DisableOnYChange", true)
     private val filter by enumChoice("Filter", Filter.WHITELIST)
     private val blocks by blocks("Blocks", hashSetOf(Blocks.OBSIDIAN))
     private val platformSize by int("Size", 3, 1..6)
@@ -42,21 +43,23 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     }
 
     @Suppress("unused")
-    private val repeatable = repeatable {
-        if (player.pos.y != startY) {
+    private val repeatable = tickHandler {
+        if (disableOnYChange && player.pos.y != startY) {
             ModuleAutoBuild.enabled = false
         }
     }
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<RotationUpdateEvent> {
         val blocks1 = hashSetOf<BlockPos>()
         val center = BlockPos.ofFloored(player.pos).down()
+        val pos = center.mutableCopy()
         for (x in center.x - platformSize..center.x + platformSize) {
             for (z in center.z - platformSize..center.z + platformSize) {
-                val pos = BlockPos(x, center.y, z)
+                pos.x = x
+                pos.z = z
                 if (pos.getState()!!.isReplaceable) {
-                    blocks1.add(pos)
+                    blocks1.add(pos.toImmutable())
                 }
             }
         }

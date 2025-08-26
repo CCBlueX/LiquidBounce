@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,54 +18,49 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NoneChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
+import net.minecraft.util.math.Vec3d
+import kotlin.math.min
 
 /**
  * SafeWalk module
  *
  * Prevents you from falling down as if you were sneaking.
  */
-object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
+object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
 
     @Suppress("UnusedPrivateProperty")
-    private val modes = choices("Mode", {
-        it.choices[1] // Safe mode
-    }, this::createChoices)
+    private val modes = choices("Mode", 1, ::safeWalkChoices) // Default safe mode
 
-    fun createChoices(it: ChoiceConfigurable<Choice>) =
-        arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
+    fun safeWalkChoices(choice: ChoiceConfigurable<Choice>): Array<Choice> {
+        return arrayOf(
+            NoneChoice(choice),
+            Safe(choice),
+            OnEdge(choice)
+        )
+    }
 
     class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
-
-        private val eagleOnLedge by boolean("EagleOnLedge", false)
-
-        val inputHandler = handler<MovementInputEvent> { event ->
-            if (eagleOnLedge) {
-                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        event.jumping,
-                        player.isSprinting,
-                        true
-                    ))
-                simulatedPlayer.tick()
-
-                if (simulatedPlayer.clipLedged) {
-                    event.sneaking = true
-                }
-            }
-        }
 
         @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
@@ -74,41 +69,27 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     }
 
-    class Simulate(override val parent: ChoiceConfigurable<Choice>) : Choice("Simulate") {
-
-        private val predict by int("Ticks", 5, 0..20, "ticks")
-
-        /**
-         * The input handler tracks the movement of the player and calculates the predicted future position.
-         */
-        @Suppress("unused")
-        val inputHandler = handler<MovementInputEvent> { event ->
-            if (player.isOnGround && !player.isSneaking) {
-                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        event.jumping,
-                        player.isSprinting,
-                        true
-                    ))
-
-                // TODO: Calculate the required ticks early that prevent the player from falling off the edge
-                //  instead of relying on the static predict value.
-                repeat(predict) {
-                    simulatedPlayer.tick()
-
-                    if (simulatedPlayer.clipLedged) {
-                        event.directionalInput = DirectionalInput.NONE
-                    }
-                }
-            }
-        }
-
-    }
-
     class OnEdge(override val parent: ChoiceConfigurable<Choice>) : Choice("OnEdge") {
 
-        private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
+        private val edgeDistance by float("Distance", 0.1f, 0.1f..0.5f)
+        private var center: Vec3d? = null
+
+        private enum class Mode(override val choiceName: String) : NamedChoice {
+            STOP("Stop"),
+            INVERT("Invert"),
+            CENTER("Center"),
+        }
+
+        /**
+         * Defines how many ticks we should keep running the [mode]
+         */
+        private var keepTicks by intRange("Keep", 1..2, 1..20, suffix = "ticks")
+        private var overwriteTicks = 0
+
+        private var mode by enumChoice("Mode", Mode.STOP)
+        private var sneak by intRange("Sneak", 0..0, 0..20, suffix = "ticks")
+        private var sneakTicks = 0
+        private var jump by boolean("Jump", false)
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
@@ -117,11 +98,93 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            val shouldBeActive = player.isOnGround && !player.isSneaking
+            val shouldBeActive = player.isOnGround && !event.sneak
+            if (shouldBeActive) {
+                val isOnEdge = player.isCloseToEdge(
+                    event.directionalInput,
+                    min(player.sqrtSpeed, edgeDistance.toDouble())
+                )
+                if (isOnEdge) {
+                    debugParameter("InputOnEdge") { event.directionalInput }
 
-            if (shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())) {
-                event.directionalInput = DirectionalInput.NONE
+                    val center = center
+                    if (center != null) {
+                        val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(1)
+                        debugGeometry("Center") {
+                            ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
+                        }
+
+                        val currentDistance = center.subtract(player.pos).horizontalLengthSquared()
+                        val nextDistance = center.subtract(nextTick.pos).horizontalLengthSquared()
+
+                        debugParameter("CurrentDistance") { currentDistance }
+                        debugParameter("NextDistance") { nextDistance }
+
+                        if (nextDistance <= currentDistance) {
+                            return@handler
+                        }
+                    }
+
+                    if (overwriteTicks == 0) {
+                        overwriteTicks = keepTicks.random()
+                    }
+
+                    if (sneakTicks == 0) {
+                        sneakTicks = sneak.random()
+                    }
+                }
             }
+
+            if (overwriteTicks > 0) {
+                debugParameter("OverwriteInputTicks") { overwriteTicks }
+                overwriteTicks--
+
+                when {
+                    mode == Mode.INVERT -> {
+                        event.directionalInput = event.directionalInput.invert()
+                        event.jump = false
+                    }
+                    (mode == Mode.CENTER || player.sqrtSpeed > 0.05) -> {
+                        val center = center ?: player.blockPos.toBottomCenterPos()
+                        val degrees = getDegreesRelativeToView(
+                            center.subtract(player.pos),
+                            player.yaw
+                        )
+                        event.directionalInput = getDirectionalInputForDegrees(
+                            DirectionalInput.NONE,
+                            degrees, deadAngle = 20.0F
+                        )
+                    }
+                    // [STOP] and [SNEAK] mode is not powerful enough to prevent falling off
+                    // so we use [CENTER] to fix speed when the player is moving too fast
+                    mode == Mode.STOP -> {
+                        event.directionalInput = DirectionalInput.NONE
+                        event.jump = false
+                    }
+                }
+
+                // Can do cool tricks with jumping
+                if (jump) {
+                    event.jump = true
+                }
+            }
+
+            if (sneakTicks > 0) {
+                sneakTicks--
+                event.sneak = true
+            }
+
+            // Find last good position to stand on
+            val blockPos = player.blockPos.toBottomCenterPos()
+            if (!player.wouldBeCloseToFallOff(blockPos)) {
+                center = blockPos
+            }
+        }
+
+        override fun disable() {
+            center = null
+            overwriteTicks = 0
+            super.disable()
         }
 
     }

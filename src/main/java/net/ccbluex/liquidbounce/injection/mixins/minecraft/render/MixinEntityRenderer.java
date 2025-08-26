@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
+import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.OrderedText;
@@ -43,7 +44,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityRenderer.class)
-public abstract class MixinEntityRenderer<T extends Entity> {
+public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRenderState> {
 
     @Shadow
     @Final
@@ -54,14 +55,14 @@ public abstract class MixinEntityRenderer<T extends Entity> {
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private void shouldRender(T entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleCombineMobs.INSTANCE.getEnabled() && ModuleCombineMobs.INSTANCE.trackEntity(entity)) {
+        if (ModuleCombineMobs.INSTANCE.getRunning() && ModuleCombineMobs.INSTANCE.trackEntity(entity)) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void renderMobOwners(T entity, float yaw, float tickDelta, MatrixStack matrices,
-                                 VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void renderMobOwners(S state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
         var ownerName = ModuleMobOwners.INSTANCE.getOwnerInfoText(entity);
 
         if (ownerName != null) {
@@ -98,11 +99,17 @@ public abstract class MixinEntityRenderer<T extends Entity> {
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
-    private void disableDuplicateNametagsAndInjectMobOwners(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float tickDelta, CallbackInfo ci) {
+    private void disableDuplicateNametagsAndInjectMobOwners(S state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         // Don't render nametags
-        if (ModuleNametags.INSTANCE.getEnabled() && ModuleNametags.shouldRenderNametag(entity)) {
+        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
+        if (ModuleNametags.INSTANCE.getRunning() && ModuleNametags.shouldRenderNametag(entity)) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "updateRenderState", at = @At("HEAD"))
+    private void hookInjectEntityIntoState(T entity, S state, float tickDelta, CallbackInfo ci) {
+        ((EntityRenderStateAddition) state).liquid_bounce$setEntity(entity);
     }
 
 }

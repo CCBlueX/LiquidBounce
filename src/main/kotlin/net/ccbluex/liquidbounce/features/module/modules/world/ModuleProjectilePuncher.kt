@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attack
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -44,9 +46,9 @@ import net.minecraft.util.math.MathHelper
  *
  * Shoots back incoming projectiles around you.
  */
-object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
+object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
-    private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, false))
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
@@ -58,11 +60,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
 
-    override fun disable() {
+    override fun onDisabled() {
         target = null
     }
 
-    val tickHandler = handler<SimulatedTickEvent> {
+    val tickHandler = handler<RotationUpdateEvent> {
         if (player.isSpectator) {
             return@handler
         }
@@ -70,8 +72,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
         updateTarget()
     }
 
-    val repeatable = repeatable {
-        val target = target ?: return@repeatable
+    val repeatable = tickHandler {
+        val target = target ?: return@tickHandler
 
         if (target.squaredBoxedDistanceTo(player) > range * range ||
             !facingEnemy(
@@ -80,10 +82,10 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
                 range = range.toDouble(),
                 wallsRange = 0.0
             )) {
-            return@repeatable
+            return@tickHandler
         }
 
-        clickScheduler.clicks {
+        clicker.click {
             target.attack(swing)
             true
         }
@@ -102,7 +104,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
             val nextTickFireballPosition = entity.pos + entity.pos - entity.prevPos
 
             val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyes)
+            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePos)
 
             if (distanceSquared > rangeSquared) {
                 continue
@@ -110,13 +112,13 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, ali
 
             // find best spot
             val spot = raytraceBox(
-                player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
+                player.eyePos, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
             target = entity
 
             // aim at target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,

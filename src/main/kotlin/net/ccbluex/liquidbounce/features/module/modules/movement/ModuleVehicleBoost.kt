@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
@@ -32,7 +32,7 @@ import kotlin.math.sin
  *
  * Boosts you when leaving a vehicle.
  */
-object ModuleVehicleBoost : Module("VehicleBoost", Category.MOVEMENT) {
+object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
 
     init {
         enableLock()
@@ -42,7 +42,7 @@ object ModuleVehicleBoost : Module("VehicleBoost", Category.MOVEMENT) {
     private var verticalSpeed by float("VerticalSpeed", 1f, 0.1f..5f)
     private var wasInVehicle = false
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         val isInVehicle = player.hasVehicle()
 
         if (wasInVehicle && !isInVehicle) {

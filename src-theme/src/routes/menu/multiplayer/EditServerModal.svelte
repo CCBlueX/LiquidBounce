@@ -15,6 +15,7 @@
     const dispatch = createEventDispatcher();
 
     $: disabled = validateInput(address, name);
+    $: address = address.trim();
 
     function validateInput(address: string, name: string): boolean {
         return name.length === 0 || address.length === 0;

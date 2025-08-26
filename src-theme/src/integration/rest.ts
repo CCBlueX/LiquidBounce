@@ -6,7 +6,11 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
+    GeneratorResult,
+    HitResult,
     MinecraftKeybind,
     Module,
     PersistentStorageItem,
@@ -14,18 +18,27 @@ import type {
     PrintableKey,
     Protocol,
     Proxy,
-    Registries,
+    RegistryItem,
     Server,
     Session,
     VirtualScreen,
     World
 } from "./types";
+import type {PlayerInventory} from "./events";
+import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getModule(name: string): Promise<Module> {
+    const response = await fetch(`${API_BASE}/client/module/${name}`);
+    const data = await response.json();
 
     return data;
 }
@@ -43,6 +56,23 @@ export async function setModuleSettings(name: string, settings: ConfigurableSett
     const searchParams = new URLSearchParams({name});
 
     await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+}
+
+export async function getSpooferSettings(): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/spoofer`);
+    const data = await response.json();
+
+    return data;
+}
+
+export async function setSpooferSettings(settings: ConfigurableSetting) {
+    await fetch(`${API_BASE}/client/spoofer`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -105,6 +135,32 @@ export async function getPlayerData(): Promise<PlayerData> {
     return data;
 }
 
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
+}
+
+export async function getPlayerInventory(): Promise<PlayerInventory> {
+    const response = await fetch(`${API_BASE}/client/player/inventory`);
+    const data: PlayerInventory = await response.json();
+
+    return data;
+}
+
+export async function getCrosshairData(): Promise<HitResult> {
+    const response = await fetch(`${API_BASE}/client/crosshair`);
+    const data: HitResult = await response.json();
+
+    return data;
+}
+
 export async function getPrintableKeyName(key: string): Promise<PrintableKey> {
     const searchParams = new URLSearchParams({key});
 
@@ -121,9 +177,9 @@ export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
     return data;
 }
 
-export async function getRegistries(): Promise<Registries> {
-    const response = await fetch(`${API_BASE}/client/registries`);
-    const data: Registries = await response.json();
+export async function getRegistryItems(name: string): Promise<Record<string, RegistryItem>> {
+    const response = await fetch(`${API_BASE}/client/registry/${name}`);
+    const data: Record<string, RegistryItem> = await response.json();
 
     return data;
 }
@@ -145,6 +201,16 @@ export async function browse(target: string) {
     });
 }
 
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({path})
+    });
+}
+
 export async function exitClient() {
     await fetch(`${API_BASE}/client/exit`, {
         method: "POST"
@@ -158,6 +224,12 @@ export async function openScreen(name: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({name})
+    });
+}
+
+export async function deleteScreen() {
+    await fetch(`${API_BASE}/client/screen`, {
+        method: "DELETE"
     });
 }
 
@@ -332,12 +404,15 @@ export async function removeAccount(id: number) {
 }
 
 export async function loginToAccount(id: number) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    }).finally(() => {
+        isLoggingIn.set(false);
     });
 }
 
@@ -455,23 +530,23 @@ export async function setProxyFavorite(id: number, favorite: boolean) {
     }
 }
 
-export async function addProxy(host: string, port: number, username: string, password: string) {
+export async function addProxy(host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({host, port, username, password})
+        body: JSON.stringify({host, port, username, password, type, forwardAuthentication})
     });
 }
 
-export async function editProxy(id: number, host: string, port: number, username: string, password: string) {
+export async function editProxy(id: number, host: string, port: number, username: string, password: string, type: string, forwardAuthentication: boolean) {
     await fetch(`${API_BASE}/client/proxies/edit`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({id, host, port, username, password})
+        body: JSON.stringify({id, host, port, username, password, type, forwardAuthentication})
     })
 }
 
@@ -583,5 +658,24 @@ export async function browserForceReload() {
 export async function browserClose() {
     await fetch(`${API_BASE}/client/browser/close`, {
         method: "POST",
+    });
+}
+
+export async function randomUsername(): Promise<string> {
+    let response = await fetch(`${API_BASE}/client/account/random-name`, {
+        method: "POST",
+    });
+    let data: GeneratorResult = await response.json();
+
+    return data.name;
+}
+
+export async function setTyping(typing: boolean) {
+    await fetch(`${API_BASE}/client/typing`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({typing})
     });
 }

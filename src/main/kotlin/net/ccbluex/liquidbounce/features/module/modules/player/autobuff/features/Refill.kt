@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.features
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.INVENTORY_SLOTS
-import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
@@ -42,13 +39,12 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             return
         }
 
+        val validFeatures = features.filter { it.enabled }
+
         // Find valid items in the inventory
-        val validItems = INVENTORY_SLOTS.filter {
-            it.itemStack.let {
-                itemStack -> features.any {
-                    f -> f.isValidItem(itemStack, false)
-                }
-            }
+        val validItems = Slots.Inventory.filter {
+            val itemStack = it.itemStack
+            validFeatures.any { f -> f.isValidItem(itemStack, false) }
         }
 
         // Check if we have any valid items
@@ -58,14 +54,15 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
         // Sort the items by the order of the features
         for (slot in validItems) {
-            event.schedule(inventoryConstraints, ClickInventoryAction.performQuickMove(slot = slot))
+            event.schedule(
+                inventoryConstraints, ClickInventoryAction.performQuickMove(slot = slot),
+                Priority.IMPORTANT_FOR_USAGE_1
+            )
         }
     }
 
     private fun findEmptyHotbarSlot(): Boolean {
-        return ALL_SLOTS_IN_INVENTORY.find {
-            it.slotType == ItemSlotType.HOTBAR && it.itemStack.isNothing()
-        } != null
+        return Slots.Hotbar.findSlot { it.isNothing() } != null
     }
 
 }

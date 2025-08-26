@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,15 @@
 package net.ccbluex.liquidbounce.utils.movement
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.block.forEachBlockPosBetween
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.rangeTo
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.EntityPose
 import net.minecraft.util.math.BlockPos
@@ -35,42 +36,6 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 
-data class DirectionalInput(
-    val forwards: Boolean,
-    val backwards: Boolean,
-    val left: Boolean,
-    val right: Boolean,
-) {
-    constructor(input: Input) : this(input.pressingForward, input.pressingBack, input.pressingLeft, input.pressingRight)
-
-    override fun equals(other: Any?): Boolean {
-        return other is DirectionalInput &&
-                forwards == other.forwards &&
-                backwards == other.backwards &&
-                left == other.left &&
-                right == other.right
-    }
-
-    override fun hashCode(): Int {
-        var result = forwards.hashCode()
-        result = 31 * result + backwards.hashCode()
-        result = 31 * result + left.hashCode()
-        result = 31 * result + right.hashCode()
-        return result
-    }
-
-    fun isMoving(): Boolean {
-        return forwards || backwards || left || right
-    }
-
-    companion object {
-        val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
-        val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
-        val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
-        val LEFT = DirectionalInput(forwards = false, backwards = false, left = true, right = false)
-        val RIGHT = DirectionalInput(forwards = false, backwards = false, left = false, right = true)
-    }
-}
 
 /**
  * Returns the yaw difference the position is from the player position
@@ -79,7 +44,7 @@ data class DirectionalInput(
  */
 fun getDegreesRelativeToView(
     positionRelativeToPlayer: Vec3d,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
 ): Float {
     val optimalYaw =
         atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()
@@ -122,7 +87,7 @@ fun findEdgeCollision(
 
     var currentFrom = from
 
-    val lineVec = to.subtract(from)
+    val lineVec = to - from
     val extendedFrom = from - lineVec * 1000.0
     val extendedTo = to + lineVec * 1000.0
 
@@ -184,8 +149,7 @@ private fun collectCollisionBoundingBoxes(
 
     val world = mc.world!!
 
-    forEachBlockPosBetween(fromBlockPos, toBlockPos) { vec ->
-        val pos = BlockPos(vec)
+    for (pos in fromBlockPos..toBlockPos) {
         val state = world.getBlockState(pos)
 
         val collisionShape = state.getCollisionShape(world, pos)
@@ -212,7 +176,6 @@ private fun collectCollisionBoundingBoxes(
     return foundBoxes
 }
 
-fun ClientPlayerEntity.zeroXZ() {
-    this.velocity.x = 0.0
-    this.velocity.z = 0.0
+fun ClientPlayerEntity.stopXZVelocity() {
+    this.velocity = Vec3d(0.0, this.velocity.y, 0.0)
 }

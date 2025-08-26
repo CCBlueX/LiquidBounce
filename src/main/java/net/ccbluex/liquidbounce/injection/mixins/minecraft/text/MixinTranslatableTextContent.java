@@ -11,8 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(TranslatableTextContent.class)
 public class MixinTranslatableTextContent {
 
-    @ModifyExpressionValue(method = "updateTranslations", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/util/Language;getInstance()Lnet/minecraft/util/Language;"))
+    @ModifyExpressionValue(method = "updateTranslations", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Language;getInstance()Lnet/minecraft/util/Language;"))
     private Language hookClientTranslations(Language original) {
         if ((Object) this instanceof LanguageText) {
             return LanguageManager.INSTANCE.getLanguage();

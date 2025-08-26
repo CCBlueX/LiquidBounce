@@ -3,6 +3,7 @@ $accent-color: #4677ff;
 $clickgui-base-color: black;
 $clickgui-text-color: white;
 $clickgui-text-dimmed-color: rgba(211, 211, 211, 255);
+$clickgui-grid-color: rgba(128, 128, 128, 0.25);
 
 $tabgui-base-color: black;
 $tabgui-text-color: white;
@@ -30,8 +31,11 @@ $menu-base-color: black;
 $menu-text-color: white;
 $menu-text-dimmed-color: rgba(211, 211, 211, 255);
 $menu-error-color: #fc4130;
+$menu-button-loader-color: white;
 
 $scoreboard-base-color: black;
 
 $keystrokes-base-color: black;
 $keystrokes-text-color: white;
+
+$item-damage-base-color: black;

@@ -2,7 +2,7 @@
  *
  *  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *  *
- *  * Copyright (c) 2015 - 2024 CCBlueX
+ *  * Copyright (c) 2015 - 2025 CCBlueX
  *  *
  *  * LiquidBounce is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
         addDrawableChild(disconnectButton);
     }
 
-    @Inject(method = "initTabNavigation", at = @At("HEAD"))
+    @Inject(method = "refreshWidgetPositions", at = @At("HEAD"))
     private void moveButtons(final CallbackInfo callback) {
         if (disconnectButton != null) {
             // fixes button position

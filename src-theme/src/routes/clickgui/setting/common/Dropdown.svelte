@@ -29,9 +29,10 @@
 <div class="dropdown" class:expanded on:click={() => (expanded = !expanded)}>
     <div class="head" bind:this={dropdownHead}>
         {#if name !== null}
-            <span class="text">{name} &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
         {:else}
-            <span class="text">{value}</span>
+            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
         {/if}
     </div>
 
@@ -51,7 +52,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .dropdown {
     position: relative;

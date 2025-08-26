@@ -1,11 +1,13 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
+    import CircleLoader from "../CircleLoader.svelte";
 
     export let title: string;
     export let disabled = false;
     export let secondary = false;
     export let inset = false;
     export let listenForEnter = false;
+    export let loading = false;
 
     const dispatch = createEventDispatcher();
 
@@ -20,12 +22,19 @@
 </script>
 
 <svelte:window on:keydown={handleKeyDown}/>
-<button class="button-setting" class:inset type="button" on:click={() => dispatch("click")} {disabled} class:secondary>{title}</button>
+<button class="button-setting" class:inset type="button" on:click={() => dispatch("click")} {disabled} class:secondary>
+    {#if loading}
+        <CircleLoader/>
+    {/if}
+    {title}
+</button>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "sass:color";
+  @use "../../../../colors.scss" as *;
 
   .button-setting {
+    position: relative;
     border: none;
     background-color: $accent-color;
     color: $menu-text-color;
@@ -44,11 +53,11 @@
     }
 
     &:not([disabled]):hover {
-      background-color: darken(desaturate($accent-color, 30%), 10%);
+      background-color: color.adjust(color.adjust($accent-color, $saturation: -30%), $lightness: -10%);
       cursor: pointer;
 
       &.secondary {
-        background-color: darken(desaturate($menu-base-color, 30%), 10%);
+        background-color: color.adjust(color.adjust($menu-base-color, $saturation: -30%), $lightness: -10%);
       }
     }
 

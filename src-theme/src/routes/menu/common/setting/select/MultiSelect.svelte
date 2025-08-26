@@ -40,7 +40,7 @@
 </GenericSelect>
 
 <style lang="scss">
-  @import "../../../../../colors.scss";
+  @use "../../../../../colors.scss" as *;
 
   .option {
     font-weight: 500;

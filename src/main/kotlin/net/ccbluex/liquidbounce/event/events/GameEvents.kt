@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,99 +20,165 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
+import net.minecraft.client.network.CookieStorage
+import net.minecraft.client.network.ServerAddress
+import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.option.Perspective
 import net.minecraft.client.session.Session
 import net.minecraft.client.util.InputUtil
+import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
-class GameTickEvent : Event()
+object GameTickEvent : Event()
+
+/**
+ * We can use this event to populate the render task queue with tasks that should be
+ * executed in the same frame. This is useful for more responsive task execution
+ * and allows to also schedule tasks off-schedule.
+ */
+@Nameable("gameRenderTaskQueue")
+object GameRenderTaskQueueEvent : Event()
+
+@Nameable("tickPacketProcess")
+object TickPacketProcessEvent : Event()
 
 @Nameable("key")
-@WebSocketEvent
-class KeyEvent(val key: InputUtil.Key, val action: Int) : Event()
+class KeyEvent(
+    val key: InputUtil.Key,
+    val action: Int,
+) : Event(), WebSocketEvent
 
 // Input events
 @Nameable("inputHandle")
-class InputHandleEvent : Event()
+object InputHandleEvent : Event()
 
 @Nameable("movementInput")
-class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean, var sneaking: Boolean) : Event()
+class MovementInputEvent(
+    var directionalInput: DirectionalInput,
+    var jump: Boolean,
+    var sneak: Boolean,
+) : Event()
+
+@Nameable("sprint")
+class SprintEvent(
+    val directionalInput: DirectionalInput,
+    var sprint: Boolean,
+    val source: Source,
+) : Event() {
+    enum class Source {
+        INPUT,
+        MOVEMENT_TICK,
+        NETWORK,
+    }
+}
+
+@Nameable("sneakNetwork")
+class SneakNetworkEvent(
+    val directionalInput: DirectionalInput,
+    var sneak: Boolean,
+) : Event()
 
 @Nameable("mouseRotation")
-class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
+class MouseRotationEvent(
+    var cursorDeltaX: Double,
+    var cursorDeltaY: Double,
+) : CancellableEvent()
 
 @Nameable("keybindChange")
-@WebSocketEvent
-class KeybindChangeEvent : Event()
+object KeybindChangeEvent : Event(), WebSocketEvent
 
 @Nameable("keybinding")
-@WebSocketEvent
-class KeyBindingEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
+class KeyBindingEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event(), WebSocketEvent
 
 @Nameable("keybindingCPS")
-@WebSocketEvent
-class KeyBindingCPSEvent(val key: InputUtil.Key, val cps: Int) : Event()
+class KeyBindingCPSEvent(val key: InputUtil.Key, val cps: Int) : Event(), WebSocketEvent
+
+@Nameable("keybindIsPressed")
+class KeybindIsPressedEvent(
+    val keyBinding: KeyBinding,
+    var isPressed: Boolean,
+) : Event()
 
 @Nameable("useCooldown")
-class UseCooldownEvent(var cooldown: Int) : Event()
+class UseCooldownEvent(
+    var cooldown: Int,
+) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
+
+@Nameable("autoJump")
+class MinecraftAutoJumpEvent(
+    var autoJump: Boolean,
+) : Event()
 
 /**
  * All events which are related to the minecraft client
  */
 
 @Nameable("session")
-@WebSocketEvent
-class SessionEvent(val session: Session) : Event()
+class SessionEvent(
+    val session: Session,
+) : Event(), WebSocketEvent
 
 @Nameable("screen")
-class ScreenEvent(val screen: Screen?) : CancellableEvent()
+class ScreenEvent(
+    val screen: Screen?,
+) : CancellableEvent()
 
 @Nameable("chatSend")
-@WebSocketEvent
-class ChatSendEvent(val message: String) : CancellableEvent()
+class ChatSendEvent(
+    val message: String,
+) : CancellableEvent(), WebSocketEvent
 
 @Nameable("chatReceive")
-@WebSocketEvent
 class ChatReceiveEvent(
     val message: String,
     val textData: Text,
     val type: ChatType,
-    val applyChatDecoration: (Text) -> Text
-) : CancellableEvent() {
-
-    enum class ChatType {
-        CHAT_MESSAGE,
-        DISGUISED_CHAT_MESSAGE,
-        GAME_MESSAGE
+    val applyChatDecoration: (Text) -> Text,
+) : CancellableEvent(), WebSocketEvent {
+    enum class ChatType(override val choiceName: String) : NamedChoice {
+        CHAT_MESSAGE("ChatMessage"),
+        DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
+        GAME_MESSAGE("GameMessage"),
     }
-
 }
 
-@Nameable("splashOverlay")
-@WebSocketEvent
-class SplashOverlayEvent(val showingSplash: Boolean) : Event()
-
-@Nameable("splashProgress")
-@WebSocketEvent
-class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()
-
 @Nameable("serverConnect")
-@WebSocketEvent
-class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+class ServerConnectEvent(
+    val connectScreen: ConnectScreen,
+    val address: ServerAddress,
+    val serverInfo: ServerInfo,
+    val cookieStorage: CookieStorage?,
+) : CancellableEvent()
 
 @Nameable("disconnect")
-@WebSocketEvent
-class DisconnectEvent : Event()
+object DisconnectEvent : Event(), WebSocketEvent
 
 @Nameable("overlayMessage")
-@WebSocketEvent
-class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()
+class OverlayMessageEvent(
+    val text: Text,
+    val tinted: Boolean,
+) : Event(), WebSocketEvent
+
+@Nameable("perspective")
+class PerspectiveEvent(
+    var perspective: Perspective,
+) : Event()
+
+@Nameable("itemLoreQuery")
+class ItemLoreQueryEvent(
+    val itemStack: ItemStack,
+    val lore: ArrayList<Text>,
+) : Event()

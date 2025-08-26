@@ -22,17 +22,50 @@ export type ModuleSetting =
     | IntRangeSetting
     | ChoiceSetting
     | ChooseSetting
+    | MultiChooseSetting
+    | ListSetting
+    | RegistryListSetting
+    | ItemListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting
-    | BindSetting;
+    | BindSetting
+    | VectorSetting
+    | KeySetting
+    | FileSetting;
+
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+}
+
+export interface FileSelectResult {
+    file: File | undefined;
+}
+
+export interface FileSetting {
+    valueType: string;
+    name: string;
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+    value: File;
+}
 
 export interface BlocksSetting {
     valueType: string;
     name: string;
     value: string[];
+}
+
+export interface KeySetting {
+    valueType: string;
+    name: string;
+    value: string;
 }
 
 export interface BindSetting {
@@ -54,10 +87,10 @@ export interface TextSetting {
     value: string;
 }
 
-export interface TextArraySetting {
+export interface VectorSetting {
     valueType: string;
     name: string;
-    value: string[];
+    value: Vec3;
 }
 
 export interface ColorSetting {
@@ -137,6 +170,35 @@ export interface ChooseSetting {
     value: string;
 }
 
+export interface MultiChooseSetting {
+    valueType: string;
+    name: string;
+    choices: string[];
+    value: string[];
+    canBeNone: boolean;
+}
+
+export interface ListSetting {
+    valueType: string;
+    name: string;
+    value: string[];
+    innerValueType: string;
+}
+
+export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface ItemListSetting extends ListSetting {
+    items: NamedItem[];
+}
+
+export interface NamedItem {
+    name: string;
+    value: string;
+    icon: string | undefined;
+}
+
 export interface ConfigurableSetting {
     valueType: string;
     name: string;
@@ -156,7 +218,6 @@ export interface PersistentStorageItem {
 
 export interface VirtualScreen {
     name: string;
-    showingSplash: boolean;
 }
 
 export interface Scoreboard {
@@ -171,6 +232,7 @@ export interface PlayerData {
     username: string;
     uuid: string;
     position: Vec3;
+    blockPosition: Vec3;
     velocity: Vec3;
     selectedSlot: number;
     gameMode: string;
@@ -215,6 +277,11 @@ export interface ItemStack {
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
+    /**
+     * @deprecated use {@link enchantments} instead.
+     */
+    hasEnchantment: boolean;
+    enchantments?: Record<string, number>;
 }
 
 export interface PrintableKey {
@@ -225,17 +292,6 @@ export interface PrintableKey {
 export interface MinecraftKeybind {
     bindName: string;
     key: PrintableKey;
-}
-
-export interface Registries {
-    blocks: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
-    items: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
 }
 
 export interface Session {
@@ -308,6 +364,8 @@ export interface Proxy {
     id: number;
     host: string;
     port: number;
+    type: 'HTTP' | 'SOCKS5';
+    forwardAuthentication: boolean;
     favorite: boolean;
     credentials: {
         username: string;
@@ -345,17 +403,17 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
 }
 
 export interface ClientUpdate {
-    updateAvailable: boolean;
     development: boolean;
     commit: string;
-    newestVersion: {
+    update: {
         buildId: number | undefined;
         commitId: string | undefined;
         branch: string | undefined;
@@ -365,9 +423,40 @@ export interface ClientUpdate {
         date: string;
         message: string;
         url: string;
-    }
+    } | undefined;
 }
 
 export interface Browser {
     url: string
+}
+
+export interface HitResult {
+    type: "block" | "entity" | "miss";
+    pos: Vec3;
+}
+
+export interface BlockHitResult extends HitResult {
+    blockPos: Vec3;
+    side: string;
+    isInsideBlock: boolean;
+}
+
+export interface EntityHitResult extends HitResult {
+    entityName: string;
+    entityType: string;
+    entityPos: Vec3;
+}
+
+export interface GeneratorResult {
+    name: string;
+}
+
+export interface Screen {
+    class: string,
+    title: string,
+}
+
+export interface RegistryItem {
+    name: string;
+    icon: string | undefined;
 }

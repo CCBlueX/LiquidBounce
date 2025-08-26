@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.warp
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.minecraft.item.Items
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
@@ -31,9 +34,9 @@ import kotlin.math.ceil
 /**
  * Makes the mace powerful by faking fall height.
  */
-object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
+object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
 
-    private val fallHeight by int("FallHeight", 22, 1..170)
+    private val fallHeight by int("FallHeight", 22, 1..170).apply { tagBy(this) }
 
     init {
         // This module will likely not bypass any anti-cheat, so to prevent someone using it,
@@ -42,13 +45,15 @@ object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
     }
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEvent> { event ->
+    private val attackHandler = handler<AttackEntityEvent> { event ->
         // Check if player is holding a mace
         val mainHandStack = player.mainHandStack
 
         if (mainHandStack.item != Items.MACE) {
-            // TODO: Auto Select Mace
-            return@handler
+            // Auto Select Mace
+            val maceIndex = Slots.Hotbar.findClosestSlot(Items.MACE) ?: return@handler
+
+            SilentHotbar.selectSlotSilently(this, maceIndex, 1)
         }
 
         val height = determineHeight()
@@ -86,7 +91,7 @@ object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
             val newBoundingBox = boundingBox.offset(0.0, i.toDouble(), 0.0)
 
             // Check if the player would collide with a block
-            if (world.getBlockCollisions(player, newBoundingBox).all { shape -> shape == VoxelShapes.empty() }) {
+            if (world.getBlockCollisions(player, newBoundingBox).all(VoxelShapes.empty()::equals)) {
                 return i
             }
         }

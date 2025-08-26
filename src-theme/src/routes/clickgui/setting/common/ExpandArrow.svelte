@@ -11,6 +11,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y_consider_explicit_label -->
 <button class="arrow" class:expanded on:click={handleClick}
 ></button>
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
@@ -38,18 +38,18 @@ import net.minecraft.util.math.Box
  * Allows you to see dropped items through walls.
  */
 
-object ModuleItemESP : Module("ItemESP", Category.RENDER) {
+object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
-    override val translationBaseKey: String
+    override val baseKey: String
         get() = "liquidbounce.module.itemEsp"
 
-
     private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode))
-    private val colorMode = choices<GenericColorMode<Any?>>(
-        "ColorMode",
-        { it.choices[0] },
-        { arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 255)), GenericRainbowColorMode(it)) }
-    )
+    private val colorMode = choices("ColorMode", 0) {
+        arrayOf(
+            GenericStaticColorMode(it, Color4b(255, 179, 72, 255)),
+            GenericRainbowColorMode(it)
+        )
+    }
 
     private object BoxMode : Choice("Box") {
 
@@ -63,8 +63,8 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
             val matrixStack = event.matrixStack
 
             val base = getColor()
-            val baseColor = base.alpha(50)
-            val outlineColor = base.alpha(100)
+            val baseColor = base.with(a = 50)
+            val outlineColor = base.with(a = 100)
 
             val filtered = world.entities.filter(::shouldRender)
 

@@ -7,7 +7,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .tag {
     background-color: rgba($menu-base-color, 0.36);

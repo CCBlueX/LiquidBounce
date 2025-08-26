@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,68 +20,88 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.minecraft.item.Items
 
 
 /**
  * @anticheat Spartan
- * @anticheatVersion phase 524
+ * @anticheatVersion v4.0.4.3
  * @testedOn minecraft.vagdedes.com
- * @note it might flag a bit at the start, but then stops for some reason
+ * @note it will flag randomly, that's just spartan for you
  */
-class SpeedSpartan524(override val parent: ChoiceConfigurable<*>) : Choice("Spartan524") {
+class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3") {
 
-    val repeatable = repeatable {
-        if (!player.moving) {
-            return@repeatable
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!player.input.playerInput.forward) {
+            return@handler
         }
 
-        Timer.requestTimerSpeed(1.1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
+        val wearingLeatherBoots = player.inventory.getArmorStack(0).item == Items.LEATHER_BOOTS
+        val horizontalMove = if (wearingLeatherBoots) 1.8 else 1.3
 
-        when {
-            player.isOnGround -> {
-                player.strafe(speed = 0.83)
-                player.velocity.y = 0.16
+        if (player.isOnGround) {
+            event.movement.x = player.velocity.x * horizontalMove
+            event.movement.z = player.velocity.z * horizontalMove
+
+            repeat(4) {
+                player.jump()
             }
+            event.movement.y = player.jumpVelocity.toDouble()
         }
-        player.strafe()
-    }
-
-    override fun enable() {
-        player.zeroXZ()
-        player.velocity.y = 0.0
     }
 }
 
 /**
  * @anticheat Spartan
- * @anticheatVersion phase 524
+ * @anticheatVersion v4.0.4.3
  * @testedOn minecraft.vagdedes.com
- * @note it will flag you for jumping
+ * @note it will flag randomly, that's just spartan for you. Could flag anywhere from 0-20vl if you do 180's with it on
  */
-class SpeedSpartan524GroundTimer(override val parent: ChoiceConfigurable<*>) : Choice("Spartan524GroundTimer") {
+class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Choice("Spartan-4.0.4.3-FastFall") {
 
-    private val additionalTicks by int("AdditionalTicks", 2, 1..10, "ticks")
-
-    val repeatable = handler<PlayerPostTickEvent> {
-        repeat(additionalTicks) {
-            player.tickMovement()
-        }
+    override fun disable() {
+        player.stopXZVelocity()
     }
 
-    val jumpEvent = handler<PlayerJumpEvent> { event ->
-        event.cancelEvent()
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!player.input.playerInput.forward) {
+            return@handler
+        }
+
+        val wearingLeatherBoots = player.inventory.getArmorStack(0).item == Items.LEATHER_BOOTS
+        val horizontalMove = if (wearingLeatherBoots) 1.2 else 1.05
+        val jumps = if (wearingLeatherBoots) 7 else 3
+
+        if (player.isOnGround) {
+            event.movement.x = player.velocity.x * horizontalMove
+            event.movement.z = player.velocity.z * horizontalMove
+
+            repeat(jumps) {
+                player.jump()
+            }
+
+            event.movement.y = 0.42
+        } else if (player.airTicks == 1) {
+            Timer.requestTimerSpeed(0.5f, Priority.NORMAL, ModuleSpeed, 0)
+
+            network.sendPacket(MovePacketType.FULL.generatePacket().apply { // for some reason full works best
+                onGround = true
+            })
+
+            event.movement.y = -0.0784
+        }
     }
 }
 

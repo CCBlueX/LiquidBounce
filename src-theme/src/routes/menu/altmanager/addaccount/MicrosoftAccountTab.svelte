@@ -3,7 +3,10 @@
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
     import {addMicrosoftAccount, addMicrosoftAccountCopyUrl} from "../../../../integration/rest.js";
 
+    let loading = false;
+
     async function addAccount() {
+        loading = true;
         await addMicrosoftAccount();
     }
 
@@ -13,6 +16,6 @@
 </script>
 
 <Tab>
-    <ButtonSetting title="Link Account" on:click={addAccount}/>
+    <ButtonSetting title="Link Account" on:click={addAccount} {loading}/>
     <ButtonSetting title="Copy URL" secondary={true} on:click={copyLoginUrl} inset={true}/>
 </Tab>

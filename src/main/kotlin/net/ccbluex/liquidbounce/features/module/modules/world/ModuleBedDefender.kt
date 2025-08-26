@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,36 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import it.unimi.dsi.fastutil.ints.IntLongPair
+import it.unimi.dsi.fastutil.ints.IntObjectPair
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.render.BED_BLOCKS
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedChoice
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedColorChoice
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedNoneChoice
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedSpawnLocationChoice
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.isSelfBedChoices
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.block.searchBedLayer
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.component1
+import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.minecraft.block.BedBlock
-import net.minecraft.block.BlockState
+import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 
-object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
+object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD) {
 
     private val maxLayers by int("MaxLayers", 1, 1..5)
 
-    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", { it.choices[0] }, { arrayOf(
-        IsSelfBedNoneChoice(it),
-        IsSelfBedColorChoice(it),
-        IsSelfBedSpawnLocationChoice(it)
-    )})
+    private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     private val placer = tree(BlockPlacer("Place", this, Priority.NOT_IMPORTANT, {
         val selected = player.inventory.selectedSlot
@@ -60,7 +55,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         var maxCount = 0
         var best: HotbarItemSlot? = null
 
-        HOTBAR_SLOTS.forEach {
+        Slots.OffhandWithHotbar.forEach {
             if (!it.itemStack.isFullBlock()) {
                 return@forEach
             }
@@ -105,7 +100,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
     private val requiresSneak by boolean("RequiresSneak", false)
 
     @Suppress("unused")
-    private val targetUpdater = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<RotationUpdateEvent> {
         if (!placer.ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -118,103 +113,63 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
             return@handler
         }
 
-        placer.slotFinder() ?: return@handler
+        placer.slotFinder(null) ?: return@handler
 
-        val eyesPos = player.eyes
+        val eyesPos = player.eyePos
         val rangeSq = placer.range * placer.range
-        val bedBlocks = searchBlocksInCuboid(placer.range + 1, eyesPos) { pos, state ->
-            getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).squaredDistanceTo(eyesPos) <= rangeSq
-            && (state.block as? BedBlock)?.let {
-                bedBlock -> isSelfBedMode.activeChoice.shouldDefend(bedBlock, pos)
-            } == true
-        }
 
-        if (bedBlocks.isEmpty()) {
-            return@handler
-        }
-
-        // With [getPlacementPositions] we should be fine with only one bed block
-        val (blockPos, state) = bedBlocks.minByOrNull { (blockPos, _) -> blockPos.getSquaredDistance(eyesPos) }
-            ?: return@handler
-
-        val playerPosition = player.pos
-
-        val placementPositions = getPlacementPositions(blockPos, state)
-            // todo: sort by usefulness instead, currently it just places the block as far as possible
-            //   so we prevent placing blocks in front of our face
-            .sortedBy { pos -> -pos.getSquaredDistance(playerPosition) }
-        if (placementPositions.isEmpty()) {
-            return@handler
-        }
-
-        ModuleDebug.debugGeometry(this, "PlacementPosition", ModuleDebug.DebugCollection(
-            placementPositions.map { pos -> ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.alpha(100)) }
-        ))
-
-        placer.update(placementPositions.toSet())
-    }
-
-    override fun disable() {
-        placer.disable()
-    }
-
-    private fun getPlacementPositions(pos: BlockPos, state: BlockState): List<BlockPos> {
-        val pos2 = pos.offset(BedBlock.getOppositePartDirection(state))
-        if (pos2.getState()?.block !in BED_BLOCKS) {
-            return emptyList()
-        }
-
-        return (pos.getPlacementPositionsAround() + pos2.getPlacementPositionsAround())
-            .distinct()
-    }
-
-    private fun BlockPos.getPlacementPositionsAround(): List<BlockPos> {
-        val positions = mutableListOf<BlockPos>()
-
-        val layers = Layer.entries
-        for ((yOffset, outermostLayer) in (maxLayers downTo 0).withIndex()) {
-
-            // ignore the layer where the block itself is located in
-            val innermostLayer = if (yOffset == 0) 1 else 0
-
-            for (currentLayer in outermostLayer downTo innermostLayer) {
-                layers[currentLayer].offsets.forEach {
-                    positions += this.add(it[0], yOffset, it[1])
-                }
+        // The bed that need to be defended may be already covered, so we search further
+        val bedBlocks = eyesPos.searchBlocksInCuboid(placer.range + maxLayers + 1) { pos, state ->
+            val block = state.block
+            when {
+                block !is BedBlock -> false
+                BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST -> false
+                else -> isSelfBedMode.activeChoice.shouldDefend(block, pos)
             }
         }
 
-        return positions
+        // Get the closest bed block
+        val (blockPos, state) = bedBlocks.minByOrNull {
+            (blockPos, _) -> blockPos.getSquaredDistance(eyesPos)
+        } ?: return@handler
+
+        val mutable = BlockPos.Mutable()
+        val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
+            mutable.set(pos).toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
+        }
+
+        if (placementPositions.none()) {
+            return@handler
+        }
+
+        val updatePositions = placementPositions.toMutableList().apply {
+            // Layer(ASC) Center Distance(DESC)
+            sortWith(
+                Comparator.comparingInt(IntLongPair::leftInt)
+                    .thenComparingDouble {
+                        -mutable.set(it.rightLong()).getSquaredDistance(eyesPos)
+                    }
+            )
+        }
+
+        debugGeometry("PlacementPosition") {
+            ModuleDebug.DebugCollection(
+                updatePositions.map { (_, pos) ->
+                    ModuleDebug.DebuggedPoint(mutable.set(pos).toCenterPos(), Color4b.RED.with(a = 100))
+                }
+            )
+        }
+
+        // Need ordered set (like TreeSet/LinkedHashSet)
+        placer.update(
+            updatePositions.mapTo(linkedSetOf()) {
+                BlockPos.fromLong(it.rightLong())
+            }
+        )
     }
 
-    // (x, z)
-    private enum class Layer(vararg val offsets: IntArray) {
-
-        ZERO(intArrayOf(0, 0)),
-        ONE(intArrayOf(-1, 0), intArrayOf(1, 0), intArrayOf(0, -1), intArrayOf(0, 1)),
-        TWO(
-            intArrayOf(-2, 0), intArrayOf(2, 0), intArrayOf(0, -2), intArrayOf(0, 2),
-            intArrayOf(-1, -1), intArrayOf(1, 1), intArrayOf(1, -1), intArrayOf(-1, 1)
-        ),
-        THREE(
-            intArrayOf(-3, 0), intArrayOf(3, 0), intArrayOf(0, -3), intArrayOf(0, 3),
-            intArrayOf(-2, -1), intArrayOf(2, -1), intArrayOf(-2, 1), intArrayOf(2, 1),
-            intArrayOf(-1, -2), intArrayOf(1, -2), intArrayOf(-1, 2), intArrayOf(1, 2)
-        ),
-        FOUR(
-            intArrayOf(-4, 0), intArrayOf(4, 0), intArrayOf(0, -4), intArrayOf(0, 4),
-            intArrayOf(-3, -1), intArrayOf(3, -1), intArrayOf(-3, 1), intArrayOf(3, 1),
-            intArrayOf(-1, -3), intArrayOf(1, -3), intArrayOf(-1, 3), intArrayOf(1, 3),
-            intArrayOf(-2, -2), intArrayOf(2, -2), intArrayOf(-2, 2), intArrayOf(2, 2)
-        ),
-        FIVE(
-            intArrayOf(-5, 0), intArrayOf(5, 0), intArrayOf(0, -5), intArrayOf(0, 5),
-            intArrayOf(-4, -1), intArrayOf(4, -1), intArrayOf(-4, 1), intArrayOf(4, 1),
-            intArrayOf(-1, -4), intArrayOf(1, -4), intArrayOf(-1, 4), intArrayOf(1, 4),
-            intArrayOf(-3, -2), intArrayOf(3, -2), intArrayOf(-3, 2), intArrayOf(3, 2),
-            intArrayOf(-2, -3), intArrayOf(2, -3), intArrayOf(-2, 3), intArrayOf(2, 3)
-        )
-
+    override fun onDisabled() {
+        placer.disable()
     }
 
 }

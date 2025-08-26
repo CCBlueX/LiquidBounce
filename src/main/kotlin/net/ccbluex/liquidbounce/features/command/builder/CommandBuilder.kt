@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,52 +30,50 @@ class CommandBuilder private constructor(val name: String) {
     private var subcommands: ArrayList<Command> = ArrayList()
     private var handler: CommandHandler? = null
     private var executable = true
+    private var ingame = false
 
     companion object {
         fun begin(name: String): CommandBuilder = CommandBuilder(name)
     }
 
-    fun alias(vararg aliases: String): CommandBuilder {
+    fun alias(vararg aliases: String) = apply {
         this.aliases = aliases
-
-        return this
     }
 
-    fun parameter(parameter: Parameter<*>): CommandBuilder {
+    fun parameter(parameter: Parameter<*>) = apply {
         this.parameters.add(parameter)
-
-        return this
     }
 
-    fun subcommand(subcommand: Command): CommandBuilder {
+    fun subcommand(subcommand: Command) = apply {
         this.subcommands.add(subcommand)
-
-        return this
     }
 
-    fun handler(handler: CommandHandler): CommandBuilder {
+    fun handler(handler: CommandHandler) = apply {
         this.handler = handler
+    }
 
-        return this
+    /**
+     * Doesn't allow the command do be executed if either the world or the player are `null`.
+     */
+    fun requiresIngame() = apply {
+        this.ingame = true
     }
 
     /**
      * If a command is marked as a hub command, it is impossible to execute it.
      *
-     * For example: <code>.friend</code>
+     * For example, <code>.friend</code>
      *
      * The command _friend_ would not be executable since it just acts as a
      * hub for its subcommands
      */
-    fun hub(): CommandBuilder {
+    fun hub() = apply {
         this.executable = false
-
-        return this
     }
 
     fun build(): Command {
         require(executable || this.handler == null) {
-            "The command is marked as not executable (hub), but no handler was specified"
+            "The command is marked as not executable (hub), but a handler was specified"
         }
         require(!executable || this.handler != null) {
             "The command is marked as executable, but no handler was specified."
@@ -104,7 +102,8 @@ class CommandBuilder private constructor(val name: String) {
                 emptyArray()
             ),
             executable,
-            this.handler
+            this.handler,
+            ingame
         )
     }
 

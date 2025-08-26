@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -29,6 +29,11 @@ class Alignment(
     verticalAlignment: ScreenAxisY,
     verticalOffset: Int,
 ) : Configurable("Alignment") {
+
+    companion object {
+        @JvmStatic
+        fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
+    }
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
     val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
@@ -81,16 +86,16 @@ class Alignment(
     fun toStyle() = """
         position: fixed;
         ${when (horizontalAlignment) {
-            ScreenAxisX.LEFT -> "left: ${horizontalOffset}px"
-            ScreenAxisX.RIGHT -> "right: ${horizontalOffset}px"
-            ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalOffset}px)"
-            ScreenAxisX.CENTER_TRANSLATED -> "left: calc(50% + ${horizontalOffset}px)"
+        ScreenAxisX.LEFT -> "left: ${horizontalOffset}px"
+        ScreenAxisX.RIGHT -> "right: ${horizontalOffset}px"
+        ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalOffset}px)"
+        ScreenAxisX.CENTER_TRANSLATED -> "left: calc(50% + ${horizontalOffset}px)"
     }};
         ${when (verticalAlignment) {
-            ScreenAxisY.TOP -> "top: ${verticalOffset}px"
-            ScreenAxisY.BOTTOM -> "bottom: ${verticalOffset}px"
-            ScreenAxisY.CENTER -> "top: calc(50% + ${verticalOffset}px)"
-            ScreenAxisY.CENTER_TRANSLATED -> "top: calc(50% + ${verticalOffset}px)"
+        ScreenAxisY.TOP -> "top: ${verticalOffset}px"
+        ScreenAxisY.BOTTOM -> "bottom: ${verticalOffset}px"
+        ScreenAxisY.CENTER -> "top: calc(50% + ${verticalOffset}px)"
+        ScreenAxisY.CENTER_TRANSLATED -> "top: calc(50% + ${verticalOffset}px)"
     }};
         transform: translate(
             ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "-50%" else "0"},

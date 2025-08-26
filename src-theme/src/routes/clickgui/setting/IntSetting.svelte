@@ -32,6 +32,9 @@
 
             cSetting.value = newValue;
             setting = { ...cSetting };
+        });
+
+        apiSlider.on("set", () => {
             dispatch("change");
         });
     });
@@ -50,7 +53,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+    @use "../../../colors.scss" as *;
 
     .setting {
         padding: 7px 0 2px 0;

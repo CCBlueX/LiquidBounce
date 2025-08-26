@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import Loader from "../Loader.svelte";
+    import RippleLoader from "../RippleLoader.svelte";
 
     export let image: string;
     export let imageText: string | null = null;
@@ -19,7 +19,7 @@
     <div class="image">
         {#if !previewImageLoaded}
             <div class="loader">
-                <Loader />
+                <RippleLoader />
             </div>
         {/if}
         <img class="preview" on:load={() => previewImageLoaded = true} src={image} alt="preview">
@@ -46,7 +46,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors.scss" as *;
 
   .menu-list-item {
     display: grid;

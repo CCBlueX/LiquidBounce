@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -40,9 +40,9 @@ import kotlin.math.sin
  *
  * Highlight the active TNTs.
  */
-object ModuleTNTTimer : Module("TNTTimer", Category.RENDER) {
+object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
 
-    override val translationBaseKey: String
+    override val baseKey: String
         get() = "liquidbounce.module.tntTimer"
 
     // Glow ESP
@@ -74,9 +74,8 @@ object ModuleTNTTimer : Module("TNTTimer", Category.RENDER) {
         tree(ShowTimer)
     }
 
-    private val fontRenderer by lazy {
-        Fonts.DEFAULT_FONT.get()
-    }
+    private val fontRenderer
+        get() = FontManager.FONT_RENDERER
 
     private const val DEFAULT_FUSE = 80
 

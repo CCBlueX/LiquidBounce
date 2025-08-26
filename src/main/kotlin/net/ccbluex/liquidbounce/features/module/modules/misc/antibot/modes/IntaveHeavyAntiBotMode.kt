@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -37,8 +37,8 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
-    private val suspectList = hashMapOf<UUID, Pair<Int, Long>>()
-    private val botList = ArrayList<UUID>()
+    private val suspectList = hashMapOf<UUID, SuspectInfo>()
+    private val botList = hashSetOf<UUID>()
 
     /**
      * ## Ping logic:
@@ -69,13 +69,8 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      */
     private fun handlePlayerRemove(packet: PlayerRemoveS2CPacket) {
         for (id in packet.profileIds) {
-            if (suspectList.containsKey(id)) {
-                suspectList.remove(id)
-            }
-
-            if (botList.contains(id)) {
-                botList.remove(id)
-            }
+            suspectList.remove(id)
+            botList.remove(id)
         }
     }
 
@@ -96,10 +91,10 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
                 continue
             }
 
-            val pingSinceJoin = suspectList.getValue(entry.profileId).first
+            val pingSinceJoin = suspectList.getValue(entry.profileId).latency
 
             val deltaPing = pingSinceJoin - entry.latency
-            val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profileId).second
+            val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profileId).timestamp
 
             // Intave instantly sends this packet, but some servers might lag, so it might be delayed,
             // that's why the difference limit is 15 MS. The less the value, the lower the chances of producing
@@ -120,7 +115,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
                 continue
             }
 
-            suspectList[entry.profileId] = entry.latency to System.currentTimeMillis()
+            suspectList[entry.profileId] = SuspectInfo(entry.latency, System.currentTimeMillis())
         }
     }
 
@@ -132,5 +127,8 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
         suspectList.clear()
         botList.clear()
     }
+
+    @JvmRecord
+    data class SuspectInfo(val latency: Int, val timestamp: Long)
 
 }

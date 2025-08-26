@@ -1,6 +1,19 @@
-import type {Component, PlayerData, Proxy, Server, TextComponent} from "./types";
+import type {
+    Component,
+    ConfigurableSetting,
+    ItemStack,
+    PlayerData,
+    Proxy,
+    Screen,
+    Server,
+    TextComponent
+} from "./types";
 
-export interface ToggleModuleEvent {
+export interface ClickGuiValueChangeEvent {
+    configurable: ConfigurableSetting;
+}
+
+export interface ModuleToggleEvent {
     moduleName: string;
     hidden: boolean;
     enabled: boolean;
@@ -12,6 +25,15 @@ export interface KeyboardKeyEvent {
     action: number;
     mods: number;
     key: string;
+    screen: Screen | undefined;
+}
+
+export interface MouseButtonEvent {
+    key: string;
+    button: number;
+    action: number;
+    mods: number;
+    screen: Screen | undefined;
 }
 
 export interface ScaleFactorChangeEvent {
@@ -67,6 +89,10 @@ export interface AccountManagerAdditionEvent {
     error: string | null;
 }
 
+export interface AccountManagerRemovalEvent {
+    username: string | null;
+}
+
 export interface AccountManagerMessageEvent {
     message: string;
 }
@@ -80,18 +106,19 @@ export interface ServerPingedEvent {
     server: Server;
 }
 
-export interface ProxyAdditionResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
+export interface PlayerInventoryEvent {
+    inventory: PlayerInventory;
 }
 
-export interface ProxyEditResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
+export interface PlayerInventory {
+    armor: ItemStack[];
+    main: ItemStack[];
+    crafting: ItemStack[];
+    enderChest: ItemStack[];
 }
 
 export interface ProxyCheckResultEvent {
-    proxy: Proxy;
+    proxy: Proxy | null;
     error: string | null;
 }
 

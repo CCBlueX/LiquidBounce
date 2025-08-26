@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  *
  *
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -32,13 +31,7 @@ public class MixinAbstractHorseEntity {
 
     @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
     private boolean isSaddled(boolean original) {
-        // If entity control is enabled and enforce saddled is enabled,
-        // return always true and pretend the entity is saddled
-        if (ModuleEntityControl.INSTANCE.getEnabled() && ModuleEntityControl.INSTANCE.getEnforceSaddled()) {
-            return true;
-        }
-
-        return original;
+        return ModuleEntityControl.getEnforceSaddled() || original;
     }
 
 }

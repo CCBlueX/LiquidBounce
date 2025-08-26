@@ -1,72 +1,68 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
-import net.ccbluex.liquidbounce.utils.block.forEachBlockPosBetween
+import it.unimi.dsi.fastutil.doubles.DoubleLongPair
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
+import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PositionFactoryConfiguration
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.entity.prevPos
-import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.minecraft.block.Blocks
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.*
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 
-class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.IgnitionIntentData>(
+class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlanner.IgnitionIntentData>(
     parent,
     "Ignite",
     true
 ) {
-    private val targetTracker = tree(TargetTracker())
 
     private val trapItems = arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
     private val trapWorthyBlocks = arrayOf(Blocks.LAVA, Blocks.FIRE)
 
-
-    override fun plan(): BlockChangeIntent<IgnitionIntentData>? {
-        targetTracker.validateLock { it.shouldBeAttacked() && it.boxedDistanceTo(player) in ModuleAutoTrap.range }
-
+    override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<IgnitionIntentData>? {
         val slot = findItemToIgnite() ?: return null
 
-        val enemies = targetTracker.enemies()
-
-        TrapPlayerSimulation.runSimulations(enemies)
-
         for (target in enemies) {
-            if (!shouldTarget(target)) {
+            if (target.isOnFire) {
                 continue
             }
             val targetPos = TrapPlayerSimulation.findPosForTrap(
-                target,
-                isTargetLocked = this.targetTracker.lockedOnTarget == target
+                target, isTargetLocked = targetTracker.target == target
             ) ?: continue
 
             val placementTarget = generatePlacementInfo(targetPos, target, slot) ?: continue
 
-            targetTracker.lock(target)
-
-            return BlockChangeIntent<IgnitionIntentData>(
+            targetTracker.target = target
+            return BlockChangeIntent(
                 BlockChangeInfo.PlaceBlock(placementTarget ),
                 slot,
                 IntentTiming.NEXT_PROPITIOUS_MOMENT,
@@ -76,10 +72,6 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
         }
 
         return null
-    }
-
-    private fun shouldTarget(target: LivingEntity): Boolean {
-        return !target.isOnFire && target.boxedDistanceTo(player) in ModuleAutoTrap.range
     }
 
     private fun generatePlacementInfo(
@@ -101,11 +93,15 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
         )
 
         val options = BlockPlacementTargetFindingOptions(
-            offsetsForTargets,
-            slot.itemStack,
-            NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePos, 0.5)),
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            player.pos
+            BlockOffsetOptions(
+                offsetsForTargets,
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            ),
+            FaceHandlingOptions(
+                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePos, 0.5))
+            ),
+            stackToPlaceWith = slot.itemStack,
+            PlayerLocationOnPlacement(position = player.pos),
         )
 
         return findBestBlockPlacementTarget(blockPos, options)
@@ -116,7 +112,7 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
         dims: EntityDimensions,
         velocity: Vec3d,
         mustBeOnGround: Boolean
-    ): List<Vec3i> {
+    ): List<BlockPos> {
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
@@ -130,7 +126,7 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
         val searchBB = normalizedEnddBB
 
         if (searchBB.size > 30) {
-            return listOf(Vec3i(0, 0, 0))
+            return listOf(BlockPos.ORIGIN)
         }
 
         return findOffsetsBetween(normalizedStartBB, normalizedEnddBB, blockPos, mustBeOnGround)
@@ -141,38 +137,37 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
         endBox: Box,
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
-    ): List<Vec3i> {
-        val offsets = mutableListOf<Pair<Vec3i, Double>>()
+    ): List<BlockPos> {
+        val offsets = mutableListOf<DoubleLongPair>()
 
-        forEachBlockPosBetween(startBox.minPos.toVec3i(), startBox.maxPos.toVec3i()) { offset ->
+        startBox.collidingRegion.iterate().forEach { offset ->
             val bp = offsetPos.add(offset)
 
-            val bb = Box(BlockPos(offset))
+            val bb = Box(offset)
 
             if (!startBox.intersects(bb) && !endBox.intersects(bb)) {
-                return@forEachBlockPosBetween
+                return@forEach
             }
 
             val currentState = bp.getState()?.block
 
             if (currentState in trapWorthyBlocks || currentState != Blocks.AIR) {
-                return@forEachBlockPosBetween
+                return@forEach
             }
 
             // !(x == true)? I need it for null checking purposes
-            if (mustBeOnGround && ((bp.down().getState()?.isAir ?: true) == true)) {
-                return@forEachBlockPosBetween
+            if (mustBeOnGround && (bp.down().getState()?.isAir != false)) {
+                return@forEach
             }
 
-            val intersect =
-                startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
+            val intersect = startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
 
-            offsets.add(offset to intersect)
+            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
         }
 
-        offsets.sortByDescending { it.second }
+        offsets.sortByDescending { it.leftDouble() }
 
-        return offsets.map { it.first }
+        return offsets.map { BlockPos.fromLong(it.rightLong()) }
     }
 
     override fun validate(plan: BlockChangeIntent<IgnitionIntentData>, raycast: BlockHitResult): Boolean {
@@ -190,11 +185,11 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
     }
 
     override fun onIntentFullfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
-        this.targetTracker.lock(intent.planningInfo.target, reportToUI = false)
+        targetTracker.target = intent.planningInfo.target
     }
 
     private fun findItemToIgnite(): HotbarItemSlot? {
-        return Hotbar.findClosestItem(items = trapItems)
+        return Slots.OffhandWithHotbar.findClosestSlot(items = trapItems)
     }
 
     class IgnitionIntentData(

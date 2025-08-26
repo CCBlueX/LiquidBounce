@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NoneChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.item.MiningToolItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 
 /**
@@ -33,15 +34,18 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
  *
  * Allows you to break blocks faster.
  */
-object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
+object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
+    private val onlyTool by boolean("OnlyTool", false)
 
-    private val modeChoice = choices<Choice>("Mode", { it.choices[0] }, { arrayOf(NoneChoice(it), AbortAnother) }
-    ).apply { tagBy(this) }
+    private val modeChoice = choices("Mode", 0) { arrayOf(NoneChoice(it), AbortAnother) }.apply(::tagBy)
 
+    val repeatable = tickHandler {
+        if (onlyTool && player.mainHandStack.item !is MiningToolItem) {
+            return@tickHandler
+        }
 
-    val repeatable = repeatable {
         interaction.blockBreakingCooldown = 0
 
         if (interaction.currentBreakingProgress > breakDamage) {
@@ -60,15 +64,24 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modeChoice
 
+
         val packetHandler = handler<PacketEvent> {
+            if (onlyTool && player.mainHandStack.item !is MiningToolItem) {
+                return@handler
+            }
+
             val packet = it.packet
 
             if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK) {
                 val blockPos = packet.pos ?: return@handler
 
                 // Abort block break on the block above (which we are not breaking)
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
-                    blockPos.up(), packet.direction))
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
+                        blockPos.up(), packet.direction
+                    )
+                )
             }
         }
 

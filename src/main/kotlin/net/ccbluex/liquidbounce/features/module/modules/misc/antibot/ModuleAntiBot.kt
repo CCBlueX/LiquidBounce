@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +23,15 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode.reset
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.MatrixAntiBotMode
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 
-object ModuleAntiBot : Module("AntiBot", Category.MISC) {
+object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(
         CustomAntiBotMode,
@@ -43,23 +42,24 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     private val literalNPC by boolean("LiteralNPC", false)
 
-    val tagHandler = handler<TagEntityEvent> {
-        if (it.entity is PlayerEntity && isBot(it.entity)) {
+    @Suppress("unused")
+    private val tagHandler = handler<TagEntityEvent> {
+        if (isBot(it.entity)) {
            it.ignore()
         }
     }
 
-    override fun disable() {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+    private fun reset() = this.modes.choices.forEach {
+        (it as IAntiBotMode).reset()
+    }
+
+    override fun onDisabled() {
+        reset()
     }
 
     @Suppress("unused")
     private val handleWorldChange = handler<WorldChangeEvent> {
-        this.modes.choices.forEach {
-            (it as IAntiBotMode).reset()
-        }
+        reset()
     }
 
     fun isADuplicate(profile: GameProfile): Boolean {
@@ -79,7 +79,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
      * Check if player might be a bot
      */
     fun isBot(player: Entity): Boolean {
-        if (!enabled) {
+        if (!running) {
             return false
         }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
+import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.utils.client.defaultProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.protocolVersions
@@ -55,12 +56,12 @@ fun putProtocol(requestObject: RequestObject): FullHttpResponse {
     val protocolRequest = requestObject.asJson<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }
 
 // DELETE /api/v1/protocols/protocol
 @Suppress("UNUSED_PARAMETER")
 fun deleteProtocol(requestObject: RequestObject): FullHttpResponse {
     selectProtocolVersion(defaultProtocolVersion.version)
-    return httpOk(JsonObject())
+    return httpOk(emptyJsonObject())
 }

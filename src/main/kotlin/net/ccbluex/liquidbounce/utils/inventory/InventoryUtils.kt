@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,36 @@
  *
  *
  */
+@file:Suppress("TooManyFunctions", "WildcardImport")
+
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1
-import com.viaversion.viaversion.api.Via
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Types
-import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.fabricmc.loader.api.FabricLoader
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
+import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.DyedColorComponent
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterials
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
-import net.minecraft.util.Colors
-import net.minecraft.util.DyeColor
 import net.minecraft.util.Hand
-import kotlin.math.abs
+import java.util.*
 
 /**
  * Constraints for inventory actions.
  * This can be used to ensure that the player is not moving or rotating while interacting with the inventory.
- * Also allows to set delays for opening, clicking and closing the inventory.
+ * It Also allows setting delays for opening, clicking and closing the inventory.
  */
+@Suppress("MagicNumber")
 open class InventoryConstraints : Configurable("Constraints") {
 
     internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
@@ -60,16 +55,23 @@ open class InventoryConstraints : Configurable("Constraints") {
     internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
 
-    private val requiresNoMovement by boolean("RequiresNoMovement", false)
-    private val requiresNoRotation by boolean("RequiresNoRotation", false)
+    internal val requirements by multiEnumChoice<InventoryRequirements>("Requires",
+        default = emptyEnumSet(),
+        choices = EnumSet.of(
+            InventoryRequirements.NO_MOVEMENT,
+            InventoryRequirements.NO_ROTATION
+        ).also {
+            if (this is PlayerInventoryConstraints) {
+                it.add(InventoryRequirements.OPEN_INVENTORY)
+            }
+        }
+    )
 
     /**
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
-     * This can be overridden by [PlayerInventoryConstraints] which introduces additional requirements.
      */
-    open fun passesRequirements(action: InventoryAction) =
-        (!requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) &&
-            (!requiresNoRotation || RotationManager.rotationMatchesPreviousRotation())
+    fun passesRequirements(action: InventoryAction) =
+        requirements.all { it.testRequirement(action) }
 
 }
 
@@ -78,104 +80,67 @@ open class InventoryConstraints : Configurable("Constraints") {
  * instead of a generic container.
  */
 class PlayerInventoryConstraints : InventoryConstraints() {
+    val requiresOpenInventory get() = InventoryRequirements.OPEN_INVENTORY in requirements
+}
+
+internal enum class InventoryRequirements(
+    override val choiceName: String,
+    val testRequirement: (action: InventoryAction) -> Boolean
+) : NamedChoice {
+    NO_MOVEMENT("NoMovement", { _ ->
+        player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
+    }),
+
+    NO_ROTATION("NoRotation", { _ ->
+        RotationManager.rotationMatchesPreviousRotation()
+    }),
 
     /**
      * When this option is not enabled, the inventory will be opened silently
      * depending on the Minecraft version chosen using ViaFabricPlus.
      *
-     * If the protocol contains [Protocol1_12To1_11_1] and the client status packet is supported,
+     * If the protocol contains [com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1]
+     * and the client status packet is supported,
      * the inventory will be opened silently using [openInventorySilently].
      * Otherwise, the inventory will not have any open tracking and
      * the server will only know when clicking in the inventory.
      *
-     * Closing will still be required to be done for any version. Sad. :(
+     * Closing will still be required to be done for any version.
+     * Sad.
+     * :(
      */
-    private val requiresOpenInvenotory by boolean("RequiresInventoryOpen", false)
-
-    override fun passesRequirements(action: InventoryAction) =
-        super.passesRequirements(action) &&
-            (!action.requiresPlayerInventoryOpen() || !requiresOpenInvenotory ||
-                InventoryManager.isInventoryOpenServerSide)
-
-}
-
-val HOTBAR_SLOTS = (0 until 9).map { HotbarItemSlot(it) }
-val INVENTORY_SLOTS: List<ItemSlot> =
-    (0 until 27).map { InventoryItemSlot(it) }
-val OFFHAND_SLOT = OffHandSlot
-val ARMOR_SLOTS = (0 until 4).map { ArmorItemSlot(it) }
-
-/**
- * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
- */
-val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> =
-    HOTBAR_SLOTS + OFFHAND_SLOT + INVENTORY_SLOTS + ARMOR_SLOTS
-
-object Hotbar {
-
-    fun findClosestItem(vararg items: Item): HotbarItemSlot? {
-        return HOTBAR_SLOTS.filter { it.itemStack.item in items }
-            .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
-    }
-
-    val items
-        get() = (0..8).map { player.inventory.getStack(it).item }
-
-    fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
-        HOTBAR_SLOTS
-            .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
-            .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
-            ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
-
+    OPEN_INVENTORY("InventoryOpen", { action ->
+        !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
+    })
 }
 
 fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
 
 fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
-    return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { it.itemStack.isEmpty }
+    return (Slots.Inventory + Slots.Hotbar).filter { it.itemStack.isEmpty }
 }
 
 fun findNonEmptyStorageSlotsInInventory(): List<ItemSlot> {
-    return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { !it.itemStack.isEmpty }
+    return (Slots.Inventory + Slots.Hotbar).filter { !it.itemStack.isEmpty }
 }
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
-    return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
+    return Slots.All.filter { !it.itemStack.isEmpty }
 }
 
 /**
  * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions.
  */
-
-// https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
-    if (InventoryManager.isInventoryOpenServerSide) {
+    if (InventoryManager.isInventoryOpenServerSide || !usesViaFabricPlus) {
         return
     }
 
-    runCatching {
-        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
-
-        if (!isViaFabricPlusLoaded) {
-            return
-        }
-
-        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
-
-        if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
-            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_COMMAND, viaConnection)
-            clientStatus.write(Types.VAR_INT, 2) // Open Inventory Achievement
-
-            runCatching {
-                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
-            }.onSuccess {
-                InventoryManager.isInventoryOpenServerSide = true
-            }.onFailure {
-                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
-                it.printStackTrace()
-            }
-        }
-    }
+    network.sendPacket(
+        OpenInventorySilentlyPacket(),
+        onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
+        onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
+    )
 }
 
 fun closeInventorySilently() {
@@ -192,17 +157,25 @@ fun findItemsInContainer(screen: GenericContainerScreen) =
         .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun useHotbarSlotOrOffhand(item: HotbarItemSlot) = when (item) {
-    OffHandSlot -> interactItem(Hand.OFF_HAND)
-    else -> interactItem(Hand.MAIN_HAND) {
-        SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
+fun useHotbarSlotOrOffhand(
+    item: HotbarItemSlot,
+    ticksUntilReset: Int = 1,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
+    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+) = when (item) {
+    OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch)
+    else -> {
+        SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
+        interactItem(Hand.MAIN_HAND, yaw, pitch)
     }
 }
 
-fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
-    preInteraction()
-
-    interaction.interactItem(player, hand).takeIf { it.isAccepted }?.let {
+fun interactItem(
+    hand: Hand,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
+    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+) {
+    interaction.interactItem(player, hand, yaw, pitch).takeIf { it.isAccepted }?.let {
         if (it.shouldSwingHand()) {
             player.swingHand(hand)
         }
@@ -217,21 +190,22 @@ fun findBlocksEndingWith(vararg targets: String) =
 /**
  * Get the color of the armor on the player
  */
-fun getArmorColor() = ARMOR_SLOTS.mapNotNull { slot ->
+fun getArmorColor() = Slots.Armor.firstNotNullOfOrNull { slot ->
     val itemStack = slot.itemStack
-    val color = itemStack.getArmorColor() ?: return@mapNotNull null
+    val color = itemStack.getArmorColor() ?: return@firstNotNullOfOrNull null
 
     Pair(slot, color)
-}.firstOrNull()
+}
 
 /**
  * Get the color of the armor on the item stack
  *
  * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
  */
+@Suppress("MagicNumber")
 fun ItemStack.getArmorColor(): Int? {
     return if (isIn(ItemTags.DYEABLE)) {
-        DyedColorComponent.getColor(this, -6265536)
+        DyedColorComponent.getColor(this, -6265536) // #FFA06540
     } else {
         null
     }
@@ -241,14 +215,14 @@ fun ItemStack.getArmorColor(): Int? {
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold
  * won't count them as blocks
  */
-var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
+val DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.TNT,
     Blocks.COBWEB,
     Blocks.NETHER_PORTAL,
 )
 
 /**
- * @see [ModuleScaffold.isBlockUnfavourable]
+ * @see [ScaffoldBlockItemSelection.isBlockUnfavourable]
  */
 val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.CRAFTING_TABLE,

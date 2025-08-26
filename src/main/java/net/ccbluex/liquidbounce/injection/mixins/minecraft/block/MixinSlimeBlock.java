@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlimeBlock;
@@ -35,7 +34,7 @@ public class MixinSlimeBlock {
 
     @Inject(method = "bounce", at = @At("HEAD"), cancellable = true)
     private void hookBounce(Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowSlime.INSTANCE.getEnabled()) {
+        if (NoSlowSlime.INSTANCE.getRunning()) {
             if (entity.getVelocity().y == -0.0784000015258789 || entity.getVelocity().y == -0.001567998535156222) {
                 ci.cancel();
             }
@@ -44,7 +43,7 @@ public class MixinSlimeBlock {
 
     @Inject(method = "onSteppedOn", at = @At("HEAD"), cancellable = true)
     private void hookStep(World world, BlockPos pos, BlockState state, Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowSlime.INSTANCE.getEnabled()) {
+        if (NoSlowSlime.INSTANCE.getRunning()) {
             ci.cancel();
         }
     }

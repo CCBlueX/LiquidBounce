@@ -22,9 +22,9 @@ import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
@@ -34,12 +34,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.ceil
 import kotlin.math.min
@@ -50,7 +48,7 @@ import kotlin.math.min
  * Automatically buys specific items in a BedWars shop.
  */
 @Suppress("TooManyFunctions")
-object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
+object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
 
     private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
@@ -81,12 +79,12 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     @Suppress("unused")
-    private val repeatable = repeatable {
+    private val repeatable = tickHandler {
         if (!isShopOpen()) {
-            return@repeatable
+            return@tickHandler
         }
 
-        if (ModuleDebug.enabled) {
+        if (ModuleDebug.running) {
             startMilliseconds = System.currentTimeMillis()
         }
 
@@ -98,7 +96,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         if (!isShopOpen()) {
             reset()
-            return@repeatable
+            return@tickHandler
         }
 
         for (index in currentConfig.elements.indices) {
@@ -113,7 +111,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 // check if it's capable of clicking
                 if (!isShopOpen()) {
                     reset()
-                    return@repeatable
+                    return@tickHandler
                 }
                 needToBuy = checkElement(element, remainingElements) != null
             }
@@ -126,7 +124,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         reset()
     }
 
-    private suspend fun Sequence<*>.doClicks(remainingElements: List<ShopElement>) {
+    private suspend fun Sequence.doClicks(remainingElements: List<ShopElement>) {
         val currentElement = remainingElements.first()
         val categorySlot = currentElement.categorySlot
         val itemSlot = currentElement.itemSlot
@@ -150,7 +148,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         buyAllItemsInCategory(remainingElements)
     }
 
-    private suspend fun Sequence<*>.switchCategory(nextCategorySlot: Int) {
+    private suspend fun Sequence.switchCategory(nextCategorySlot: Int) {
         // we don't need to open, for example, "Blocks" category again if it's already open
         if (prevCategorySlot == nextCategorySlot) {
             return
@@ -165,7 +163,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             mc.player
         )
 
-        if (ModuleDebug.enabled) {
+        if (ModuleDebug.running) {
             recordedClicks.add(nextCategorySlot)
         }
 
@@ -174,7 +172,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence<*>.buyItem(itemSlot: Int, shopElement: ShopElement) {
+    private suspend fun Sequence.buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = autoShopInventoryManager.getInventoryItems()
 
         interaction.clickSlot(
@@ -185,7 +183,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             mc.player
         )
 
-        if (ModuleDebug.enabled) {
+        if (ModuleDebug.running) {
             recordedClicks.add(itemSlot)
         }
 
@@ -208,7 +206,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         waitConditional(NormalPurchaseMode.extraDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence<*>.buyAllItemsInCategory(remainingElements: List<ShopElement>) {
+    private suspend fun Sequence.buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = autoShopInventoryManager.getInventoryItems()
@@ -229,7 +227,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 mc.player
             )
 
-            if (ModuleDebug.enabled) {
+            if (ModuleDebug.running) {
                 recordedClicks.add(slot)
             }
         }
@@ -443,7 +441,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     private fun reset() {
-        if (ModuleDebug.enabled && startMilliseconds != 0L && canAutoClose) {
+        if (ModuleDebug.running && startMilliseconds != 0L && canAutoClose) {
             chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
             chat("[AutoShop] Clicked on the following slots: $recordedClicks")
             recordedClicks.clear()

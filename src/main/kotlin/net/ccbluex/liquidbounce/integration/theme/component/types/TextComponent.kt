@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,22 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.types
 
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.Alignment
 
 /**
  * A text component
  */
 @Suppress("unused")
-class TextComponent(text: String, enabled: Boolean = true) : Component("Text", enabled) {
+class TextComponent(
+    text: String,
+    enabled: Boolean = true,
+    alignment: Alignment = Alignment.center()
+) : Component("Text", enabled, alignment) {
 
     private val text by text("Text", text)
     private val color by color("Color", Color4b.WHITE)

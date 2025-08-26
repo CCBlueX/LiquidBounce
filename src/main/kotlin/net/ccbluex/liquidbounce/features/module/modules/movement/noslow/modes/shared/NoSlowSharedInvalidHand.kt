@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -33,7 +33,7 @@ internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*
     private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
-        if (!event.isCancelled && event.origin == TransferOrigin.SEND && packet is PlayerInteractItemC2SPacket) {
+        if (!event.isCancelled && event.origin == TransferOrigin.OUTGOING && packet is PlayerInteractItemC2SPacket) {
             event.cancelEvent()
             sendPacketSilently(PlayerInteractItemC2SPacket(null, packet.sequence, packet.pitch, packet.yaw))
         }

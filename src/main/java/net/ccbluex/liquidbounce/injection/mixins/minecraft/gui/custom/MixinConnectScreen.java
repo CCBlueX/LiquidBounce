@@ -2,7 +2,7 @@
  *
  *  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *  *
- *  * Copyright (c) 2015 - 2024 CCBlueX
+ *  * Copyright (c) 2015 - 2025 CCBlueX
  *  *
  *  * LiquidBounce is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
-import net.ccbluex.liquidbounce.api.IpInfoApi;
+import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
-import net.ccbluex.liquidbounce.features.misc.ProxyManager;
+import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -54,7 +54,10 @@ import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensiti
 public abstract class MixinConnectScreen extends MixinScreen {
 
     @Shadow
-    private volatile @Nullable ClientConnection connection;
+    volatile @Nullable ClientConnection connection;
+
+    @Shadow
+    public abstract void connect(MinecraftClient client, ServerAddress address, ServerInfo info, @Nullable CookieStorage cookieStorage);
 
     @Unique
     private ServerAddress serverAddress = null;
@@ -85,10 +88,14 @@ public abstract class MixinConnectScreen extends MixinScreen {
     }
 
 
-    @Inject(method = "connect(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V", at = @At("HEAD"))
+    @Inject(method = "connect(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V", at = @At("HEAD"), cancellable = true)
     private void injectConnect(MinecraftClient client, ServerAddress address, ServerInfo info, CookieStorage cookieStorage, CallbackInfo ci) {
         this.serverAddress = address;
-        EventManager.INSTANCE.callEvent(new ServerConnectEvent(info.name, info.address));
+        var event = EventManager.INSTANCE.callEvent(new ServerConnectEvent((ConnectScreen) (Object) this, address, info, cookieStorage));
+
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
     }
 
     @ModifyConstant(method = "render", constant = @Constant(intValue = 50))
@@ -105,7 +112,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
                 hideSensitiveAddress(serverAddress.getAddress()),
                 serverAddress.getPort()
         );
-        var ipInfo = IpInfoApi.INSTANCE.getLocalIpInfo();
+        var ipInfo = IpInfoApi.INSTANCE.getCurrent();
 
         var client = Text.literal("Client").formatted(Formatting.BLUE);
         if (ipInfo != null) {

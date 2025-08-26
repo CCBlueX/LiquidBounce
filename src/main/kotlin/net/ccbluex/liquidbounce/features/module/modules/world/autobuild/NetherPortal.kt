@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
-import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.minecraft.block.Blocks
+import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
 class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direction, rotated: Direction)
-    : QuickImports {
+    : MinecraftShortcuts {
 
     val frameBlocks = arrayOf(
         origin.up(4), origin.offset(rotated).up(4),
@@ -58,14 +60,28 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
             return
         }
 
+        val canDestroyCrystals = ModuleAutoBuild.placer.crystalDestroyer.enabled
         frameBlocks.forEach {
             val blockState = world.getBlockState(it)
-            if (blockState.block == Blocks.OBSIDIAN) {
-                score += 3
-            } else if (!blockState.isReplaceable || it.isBlockedByEntities()) {
-                // a block is not obsidian and not replaceable, making the portal invalid
-                score = -1
-                return
+
+            when {
+                blockState.block == Blocks.OBSIDIAN -> score += 3
+
+                !blockState.isReplaceable || !canDestroyCrystals && it.isBlockedByEntities() -> {
+                    // a block that is not obsidian and not replaceable, making the portal invalid
+                    score = -1
+                    return
+                }
+
+                canDestroyCrystals -> {
+                    val blockingEntities = it.getBlockingEntities()
+                    if (blockingEntities.any { entity -> entity !is EndCrystalEntity }) {
+                        score = -1
+                        return
+                    } else if (blockingEntities.isNotEmpty()) {
+                        score -= 10 - 2 * blockingEntities.size
+                    }
+                }
             }
         }
 
@@ -75,7 +91,6 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
                 score += 4
            } else if (it.isBlockedByEntities()) {
                score -= 1
-               score = score.coerceAtLeast(0)
            }
         }
 
@@ -88,6 +103,8 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
         if (player.movementDirection == direction) {
             score += 10
         }
+
+        score = score.coerceAtLeast(0)
     }
 
     /**

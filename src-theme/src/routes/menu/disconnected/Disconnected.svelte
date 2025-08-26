@@ -4,22 +4,20 @@
         directLoginToCrackedAccount,
         getAccounts,
         loginToAccount,
+        randomUsername,
         reconnectToServer
     } from "../../../integration/rest";
-    import {faker} from "@faker-js/faker";
     import type {AccountManagerLoginEvent} from "../../../integration/events";
     import {listen} from "../../../integration/ws";
     import {onMount} from "svelte";
     import type {Account} from "../../../integration/types";
-    import {
-        restoreSession,
-    } from "../../../integration/rest.js";
+    import {restoreSession,} from "../../../integration/rest.js";
 
     let premiumAccounts: Account[] = [];
 
     async function reconnectWithRandomUsername() {
-        const username = faker.internet.userName().substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
-        await directLoginToCrackedAccount(username);
+        const username = await randomUsername();
+        await directLoginToCrackedAccount(username, false);
     }
 
     async function reconnectWithRandomAccount() {

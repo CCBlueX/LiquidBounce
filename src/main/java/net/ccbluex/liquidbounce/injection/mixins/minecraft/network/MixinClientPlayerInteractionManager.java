@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ClientBlockBreakTrigger;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
@@ -33,20 +33,31 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerInteractionManager.class)
-public class MixinClientPlayerInteractionManager {
+public abstract class MixinClientPlayerInteractionManager {
+
+    @Shadow
+    public abstract void attackEntity(PlayerEntity player, Entity target);
 
     /**
      * Hook attacking entity
      */
-    @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V", shift = At.Shift.AFTER))
+    @Inject(method = "attackEntity", at = @At("HEAD"), cancellable = true)
     private void hookAttack(PlayerEntity player, Entity target, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new AttackEvent(target));
+        var attackEvent = EventManager.INSTANCE.callEvent(new AttackEntityEvent(target, () -> {
+            attackEntity(player, target);
+            return null;
+        }));
+
+        if (attackEvent.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
@@ -71,6 +82,15 @@ public class MixinClientPlayerInteractionManager {
         }
     }
 
+    @Inject(method = "attackBlock", at = @At("HEAD"), cancellable = true)
+    private void hookAttackBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+        var attackEvent = new BlockAttackEvent(pos);
+        EventManager.INSTANCE.callEvent(attackEvent);
+        if (attackEvent.isCancelled()) {
+            cir.setReturnValue(false);
+        }
+    }
+
     /**
      * @author superblaubeere27
      */
@@ -79,17 +99,19 @@ public class MixinClientPlayerInteractionManager {
         return SilentHotbar.INSTANCE.getServersideSlot();
     }
 
-    @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
-    private void injectAutoClicker(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleAutoClicker.INSTANCE.getEnabled() && ModuleAutoClicker.Left.INSTANCE.getEnabled()) {
-            cir.setReturnValue(false);
-        }
+    @Inject(method = "interactItem", at = @At("RETURN"))
+    private void hookItemInteractAtReturn(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        final PlayerInteractedItemEvent cancelEvent = new PlayerInteractedItemEvent(player, hand, cir.getReturnValue());
+        EventManager.INSTANCE.callEvent(cancelEvent);
     }
 
-    @Inject(method = "interactItem", at = @At("RETURN"))
-    private void hookItemInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        final PlayerInteractedItem cancelEvent = new PlayerInteractedItem(player, hand, cir.getReturnValue());
+    @Inject(method = "interactItem", at = @At("HEAD"), cancellable = true)
+    private void hookItemInteractAtHead(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent();
         EventManager.INSTANCE.callEvent(cancelEvent);
+        if (cancelEvent.isCancelled()) {
+            cir.setReturnValue(ActionResult.PASS);
+        }
     }
 
     @Inject(method = "stopUsingItem", at = @At("HEAD"))
@@ -105,6 +127,11 @@ public class MixinClientPlayerInteractionManager {
     @Inject(method = "setGameModes", at = @At("RETURN"))
     private void setGameModes(GameMode gameMode, GameMode previousGameMode, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    }
+
+    @Inject(method = "breakBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onBroken(Lnet/minecraft/world/WorldAccess;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", shift = At.Shift.AFTER))
+    private void hookBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        ClientBlockBreakTrigger.INSTANCE.clientBreakHandler();
     }
 
 }

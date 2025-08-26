@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.BlockState
 import net.minecraft.entity.EntityPose
@@ -31,14 +32,16 @@ import net.minecraft.util.math.Vec3d
 /**
  * Prevents you from bumping into corners when chasing.
  */
-object SpeedAntiCornerBump : QuickImports {
+object SpeedAntiCornerBump : MinecraftShortcuts {
     /**
      * Called when the speed mode might jump. Decides if the jump should be delayed.
      */
     fun shouldDelayJump(): Boolean {
         val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
 
-        input.jumping = true
+        input.set(
+            jump = true
+        )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
@@ -46,23 +49,23 @@ object SpeedAntiCornerBump : QuickImports {
     }
 
     /**
-     * Is called while the player stands on the ground in order to decide if he should jump now or later.
+     * Is called while the player stands on the ground to decide if he should jump now or later.
      * Does the following steps n times:
      * 1. Jumps
      * 2. Wait until the player hits an edge. If we don't hit an edge before being on ground.
      *    We don't suggest a jump delay
      *
-     * When we hit a wall on the second jump, we suggest to delay the jump so that the second jump will be able to
+     * When we hit a wall on the second jump, we suggest delaying the jump so that the second jump will be able to
      * jump on the block.
      *
      * A delay is not suggested...
-     * - if we cannot jump on the block because there is not enough space
+     * - if we can’t jump on the block because there is not enough space
      *
      * @param n number of jumps to simulate
      *
      * @return suggested delay in ticks, if we don't suggest a delay, null
      */
-    fun getSuggestedJumpDelay(
+    private fun getSuggestedJumpDelay(
         simulatedPlayer: SimulatedPlayer,
         n: Int = 2,
     ): Int? {
@@ -76,13 +79,11 @@ object SpeedAntiCornerBump : QuickImports {
 
             // Jump is already good. No need to change anything about it.
             if (simulatedPlayer.onGround) {
-                jumpCount++
+                if (jumpCount++ >= n) {
+                    break
+                }
 
                 lastGroundPos = simulatedPlayer.pos
-
-                if (jumpCount > n) {
-                    return null
-                }
             }
 
             if (simulatedPlayer.horizontalCollision) {
@@ -120,10 +121,12 @@ object SpeedAntiCornerBump : QuickImports {
             return false
         }
 
+        val jumpOnPos = BlockPos.Mutable(0, blockPos.y, 0)
         for (x in blockPos.x..blockPos2.x) {
             for (z in blockPos.z..blockPos2.z) {
-                val jumpOnPos = BlockPos(x, blockPos.y, z)
-                val jumpOnState = world.getBlockState(jumpOnPos)
+                jumpOnPos.x = x
+                jumpOnPos.z = z
+                val jumpOnState = jumpOnPos.getState()!!
 
                 // Simple check that asserts that we can actually reach the block with a jump.
                 if (jumpOnPos.y + 1 - lastGroundPos.y > 1.3) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed
 
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.fastclimb.FastClimb
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed
 
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ic
  *
  * Move faster on specific surfaces.
  */
-object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
+object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, aliases = arrayOf("FastClimb")) {
 
     init {
         enableLock()

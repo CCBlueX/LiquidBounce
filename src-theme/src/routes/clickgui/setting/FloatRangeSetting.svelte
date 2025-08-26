@@ -3,7 +3,7 @@
     import "./nouislider.scss";
     import {createEventDispatcher, onMount} from "svelte";
     import noUiSlider, {type API} from "nouislider";
-    import type {ModuleSetting, FloatRangeSetting} from "../../../integration/types";
+    import type {FloatRangeSetting, ModuleSetting} from "../../../integration/types";
     import ValueInput from "./common/ValueInput.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
@@ -17,6 +17,16 @@
     let apiSlider: API;
 
     onMount(() => {
+        let step = 0.01;
+
+        if (cSetting.range.to > 100) {
+            step = 0.1;
+        } else if (cSetting.range.to <= 0.1) {
+            step = 0.0001;
+        } else if (cSetting.range.to <= 1.0) {
+            step = 0.001;
+        }
+
         apiSlider = noUiSlider.create(slider, {
             start: [cSetting.value.from, cSetting.value.to],
             connect: true,
@@ -24,7 +34,11 @@
                 min: cSetting.range.from,
                 max: cSetting.range.to,
             },
-            step: 0.01,
+            step: step,
+            format: {
+                to: (value) => parseFloat(value.toFixed(4)), // Display up to 4 decimal places
+                from: (value) => parseFloat(value), // Convert back to float
+            }
         });
 
         apiSlider.on("update", values => {
@@ -35,6 +49,9 @@
                 to: newValue[1]
             };
             setting = {...cSetting};
+        });
+
+        apiSlider.on("set", () => {
             dispatch("change");
         });
     });
@@ -56,7 +73,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors.scss";
+  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0 2px 0;

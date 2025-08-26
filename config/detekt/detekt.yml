@@ -19,9 +19,9 @@ complexity:
     active: false
   CognitiveComplexMethod:
     active: true
+    threshold: 16
   StringLiteralDuplication:
-    active: true
-    threshold: 8
+    active: false
 
 performance:
   active: true
@@ -49,7 +49,7 @@ style:
   ForbiddenComment:
     active: false
   UnusedPrivateProperty:
-    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler'
+    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
   ForbiddenMethodCall:
     active: true
     methods: [ 'kotlin.io.print', 'kotlin.io.println' ]
