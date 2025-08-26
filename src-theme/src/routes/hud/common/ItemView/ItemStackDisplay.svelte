@@ -24,18 +24,19 @@
 </script>
 
 <div class="item-stack" class:dyed-mode={dyedMode}>
-    {#if showEnchantment}
-        <div class="enchant-glint" style="mask-image: url({itemIconUrl})" />
-    {/if}
 
     <img alt={identifier} class="item-icon" src={itemIconUrl} />
+
+    {#if showEnchantment}
+        <div class="enchant-glint" style="mask-image: url({itemIconUrl})"></div>
+    {/if}
 
     {#if showDurability && maxDamage > 0}
         <div class="durability-bar" class:outside={durabilityPosition === 'outside'}>
             <div
                     class="durability"
                     style="width: {durabilityPercent * 100}%; background-color: {durabilityColor}"
-            />
+            ></div>
         </div>
     {/if}
 

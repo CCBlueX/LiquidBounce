@@ -44,8 +44,9 @@
         <div class="progress-bar">
             <div
                     class="progress-fill"
-                    style="width: {(progressEvent.progress / progressEvent.maxProgress) * 100}%;"
-            />
+                    style="width: {(progressEvent.progress / progressEvent.maxProgress) * 100}%;">
+
+            </div>
         </div>
     </div>
 {/if}

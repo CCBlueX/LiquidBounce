@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {shouldZoom} from "../LoginMenu/locked_store";
+    import {shouldZoom} from "../login/locked_store";
     import {currentLogo} from './header/logoStorage';
     import {fade} from "svelte/transition";
 
@@ -35,7 +35,7 @@
   .vignette {
     position: absolute;
     inset: 0;
-    background: url('/src/shaders/Vignette.png') center / 100% 100%;
+    background: url('/Vignette.png') center / 100% 100%;
     z-index: -1;
     pointer-events: none;
   }

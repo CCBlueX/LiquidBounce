@@ -27,12 +27,13 @@
     {#if !asBar}
         {key?.key.localized ?? "???"}
     {:else}
-        <div class="bar"/>
+        <div class="bar"></div>
     {/if}
 </div>
 
 
 <style lang="scss">
+  @use "sass:color";
   @use "../../../../colors.scss" as *;
 
   @keyframes activeEffect {
@@ -85,7 +86,7 @@
     background: linear-gradient(
                     135deg,
                     rgba(20, 20, 20, 0.6) 0%,
-                    rgba(darken($base, 5%), 0.5) 100%
+                    rgba(color.adjust($base, $lightness: -5%), 0.5) 100%
     );
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28),

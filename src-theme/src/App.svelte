@@ -13,8 +13,8 @@
     import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
     import Browser from "./routes/browser/Browser.svelte";
-    import LoginMenu from "./routes/menu/LoginMenu/LoginMenu.svelte";
-    import LockScreen from "./routes/menu/LoginMenu/LockScreen.svelte";
+    import LoginMenu from "./routes/menu/login/LoginMenu.svelte";
+    import LockScreen from "./routes/menu/login/LockScreen.svelte";
     import ConnectionScreen from "./routes/menu/connected/ConnectionScreen.svelte";
     import SpareModule from "./routes/menu/common/SpareModule.svelte";
     import Inventory from "./routes/menu/inventory/Inventory.svelte";

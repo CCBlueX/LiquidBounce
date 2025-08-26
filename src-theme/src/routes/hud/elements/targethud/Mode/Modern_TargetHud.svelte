@@ -339,7 +339,7 @@
         </div>
 
     {:else}
-        <div class="empty-placeholder"/>
+        <div class="empty-placeholder"></div>
     {/if}
 </div>
 

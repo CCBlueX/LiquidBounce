@@ -50,6 +50,7 @@
 </div>
 
 <style lang="scss">
+  @use "sass:color";
   @import "../../../colors.scss";
 
   :root {
@@ -82,7 +83,7 @@
     background: linear-gradient(
                     90deg,
                     transparent 0%,
-                    rgba($scoreboard-base-color, 0.3) 100%);
+                    rgba(color.adjust($scoreboard-base-color, $lightness: -5%), 0.5) 100%);
     display: inline-block;
     width: max-content;
     max-width: 240px;

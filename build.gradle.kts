@@ -448,6 +448,4 @@ tasks.named("sourcesJar") {
 tasks.named("build") {
     dependsOn("copyZipInclude")
 }
-tasks.named("build") {
-    dependsOn("proguard")
-}
+

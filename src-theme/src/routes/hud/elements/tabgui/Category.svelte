@@ -6,7 +6,7 @@
 </script>
 
 <div class="category" class:selected>
-    <div class="background" class:selected/>
+    <div class="background" class:selected></div>
     <div class="icon" class:selected>
         <img
                 alt="icon"

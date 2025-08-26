@@ -32,11 +32,17 @@
 </script>
 
 
-<div class="splash-tip" on:click={refreshContent} transition:fade={{duration:600}}>
+<div
+        class="splash-tip"
+        role="button"
+        tabindex="0"
+        onclick={refreshContent}
+        onkeydown={(e) => e.key === 'Enter' && refreshContent()}
+        transition:fade={{ duration: 600 }}
+>
     <h1>{currentTitle}</h1>
     <p class="desc1">{currentDesc1}。</p>
     <p class="desc2">{currentDesc2}···</p>
-
 </div>
 
 <style>

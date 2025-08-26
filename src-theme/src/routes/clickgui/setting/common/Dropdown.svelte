@@ -115,6 +115,7 @@
 </div>
 <style lang="scss">
   @use "../../../../colors.scss" as *;
+  @use "sass:color";
 
   .dropdown {
     position: relative;
@@ -202,7 +203,7 @@
       background: linear-gradient(
                       145deg,
                       rgba($base, 0.82) 0%,
-                      rgba(darken($base, 8%), 0.78) 100%
+                      rgba(color.adjust($base, $lightness: -8%), 0.78) 100%
       );
 
       mask-size: 100% 100%;

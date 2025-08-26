@@ -87,6 +87,8 @@
         class="draggable"
         class:draggable={!disabled}
         on:mousedown={startDrag}
+        role="button"
+        tabindex="0"
         style="
         position: absolute;
         left: {position.x}px;

@@ -140,9 +140,15 @@
             style="transform: translate({panelConfig.left}px, {panelConfig.top}px) scale({scaleFactor * 50}%); z-index: {panelConfig.zIndex};"
     >
 
-        <div class="title" on:mousedown={onMouseDown}>
+        <div
+                class="title"
+                on:mousedown={onMouseDown}
+                role="presentation"
+                tabindex="-1"
+        >
             <h2>Local Configs</h2>
         </div>
+
         <div class="configs-list">
             {#if configs.length > 0}
                 <ul>

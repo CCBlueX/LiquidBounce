@@ -103,7 +103,7 @@
                             {/if}
                         </div>
                         {#if index === currentSlot}
-                            <div class="selection-overlay"/>
+                            <div class="selection-overlay"></div>
                         {/if}
                     </div>
                 </div>

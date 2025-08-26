@@ -1,10 +1,12 @@
+@use "sass:color";
+
 $base: rgb(20, 20, 20);
 $mantle: #181825;
 $crust: #11111b;
 $primary-color: #3962CD;
 $secondary-color: #1F8F6A;
 $accent: rgb(44, 121, 156);
-$accent-mix: mix($primary-color, $secondary-color, 50%);
+$accent-mix: color.mix($primary-color, $secondary-color, 50%);
 $liquid: #3962CD;
 $bounce: #1F8F6A;
 $clickgui-base-color: rgb(20, 20, 20);

@@ -58,20 +58,22 @@
 </div>
 
 <style lang="scss">
+  @use "sass:color";
   @import "../../../../colors.scss";
+
 
   .notification {
     --accent-color: #{var(--primary-color)};
-    --success-color: #{mix($green, $text, 70%)};
-    --error-color: #{mix($red, $text, 70%)};
-    --info-color: #{mix($blue, $text, 70%)};
+    --success-color: #{color.mix($green, $text, 70%)};
+    --error-color: #{color.mix($red, $text, 70%)};
+    --info-color: #{color.mix($blue, $text, 70%)};
     display: flex;
     align-items: center;
     gap: 12px;
     background: linear-gradient(
                     135deg,
                     rgba(20, 20, 20, 0.5) 0%,
-                    rgba(darken($base, 5%), 0.5) 100%
+                    rgba(color.adjust($base, $lightness: -5%), 0.5) 100%
     );
     border-radius: var(--border-radius);
     width: 400px;
@@ -296,27 +298,27 @@
     transition: width 0.1s linear;
 
     &.enabled {
-      background: linear-gradient(90deg, mix($green, $text, 20%) 0%, $green 100%);
+      background: linear-gradient(90deg, color.mix($green, $text, 20%) 0%, $green 100%);
     }
 
     &.disabled {
-      background: linear-gradient(90deg, mix($red, $text, 20%) 0%, $red 100%);
+      background: linear-gradient(90deg, color.mix($red, $text, 20%) 0%, $red 100%);
     }
 
     &.success {
-      background: linear-gradient(90deg, mix($green, $text, 30%) 0%, $green 100%);
+      background: linear-gradient(90deg, color.mix($green, $text, 30%) 0%, $green 100%);
     }
 
     &.error {
-      background: linear-gradient(90deg, mix($red, $text, 30%) 0%, $red 100%);
+      background: linear-gradient(90deg, color.mix($red, $text, 30%) 0%, $red 100%);
     }
 
     &.info {
-      background: linear-gradient(90deg, mix($blue, $text, 30%) 0%, $blue 100%);
+      background: linear-gradient(90deg, color.mix($blue, $text, 30%) 0%, $blue 100%);
     }
 
     &.blinking, &.blinked {
-      background: linear-gradient(90deg, mix($blue, $text, 30%) 0%, $blue 100%);
+      background: linear-gradient(90deg, color.mix($blue, $text, 30%) 0%, $blue 100%);
     }
   }
 
