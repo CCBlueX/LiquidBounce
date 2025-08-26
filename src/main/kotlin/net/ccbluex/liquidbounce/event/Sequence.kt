@@ -97,7 +97,10 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         // overwritten by the initialization of the `totalTicks` field
         // which results in one or fewer ticks of actual wait time.
         @OptIn(DelicateCoroutinesApi::class)
-        this.coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
+        this.coroutine = GlobalScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) {
             SequenceManager.sequences += this@Sequence
             coroutineRun()
             SequenceManager.sequences -= this@Sequence

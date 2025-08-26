@@ -49,7 +49,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
         && (mainHandItem is SwordItem || player === this.player && running && alwaysHideShield)
 
     @Suppress("UNUSED")
-    private val packetHandler = sequenceHandler<PacketEvent> {
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
         if (onlyVisual) {
             return@sequenceHandler
         }
@@ -59,7 +59,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
             return@sequenceHandler
         }
 
-        val packet = it.packet
+        val packet = event.packet
 
         if (packet is PlayerInteractItemC2SPacket) {
             val hand = packet.hand
@@ -78,7 +78,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
                         )
                     }
                 } else {
-                    it.cancelEvent()
+                    event.cancelEvent()
                     // We use the old sequence
                     network.sendPacket(
                         PlayerInteractItemC2SPacket(

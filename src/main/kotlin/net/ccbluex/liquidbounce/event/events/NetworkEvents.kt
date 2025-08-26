@@ -37,9 +37,19 @@ class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val origina
 @Nameable("queuePacket")
 class QueuePacketEvent(
     val packet: Packet<*>?,
-    val origin: TransferOrigin,
+    val origin: TransferOrigin
+) : Event() {
+
     var action: PacketQueueManager.Action = PacketQueueManager.Action.FLUSH
-) : Event()
+        set(value) {
+            if (field == value || field.priority >= value.priority) {
+                return
+            }
+
+            field = value
+        }
+
+}
 
 enum class TransferOrigin(override val choiceName: String) : NamedChoice {
     INCOMING("Incoming"),
