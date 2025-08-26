@@ -72,7 +72,9 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     private val algorithm by enumChoice("Algorithm", Algorithm.SimulatedAnnealing)
 
     val voidThreshold by int("VoidLevel", 0, -256..0)
+    val ticksToPredict by  int("TicksToPredict", 30, 30..100)
     val adjacentSafeBlocks by int("AdjacentSafeBlocks", 0, 0..3)
+
     private val aimPrecision by float("AimPrecision", 0.1f, 0.1f..1f)
     private val pitchRange by floatRange("PitchLimit", -90f..0f, -90f..45f)
     private val pearlTrajectorySteps by int("PearlTrajectorySteps", 40, 20..100)
@@ -82,9 +84,9 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
 
     object PlayerTrajectory: ToggleableConfigurable(this,"PlayerTrajectory",false) {
-        val ticksToPredict by  int("TicksToPredict", 20, 5..100)
-        val securitySection by color("Security", Color4b.CYAN.withAlpha(50))
-        val hazardSection by color("Hazard", Color4b.RED.withAlpha(50))
+        val trajectoryLength by int("TrajectoryLength", 30, 30..200)
+        val securitySection by color("Security", Color4b.CYAN.withAlpha(75))
+        val hazardSection by color("Hazard", Color4b.RED.withAlpha(75))
     }
     init {
 
@@ -330,7 +332,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             lastPlayerState = currentPlayerState
 
             val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
-            val points = List(PlayerTrajectory.ticksToPredict) { tick ->
+            val points = List(PlayerTrajectory.trajectoryLength) { tick ->
                 val snapshot = cache.getSnapshotAt(tick)
                 val isSafe = canReachSafeBlockFrom() && !isInVoid(snapshot.pos)
                 snapshot.pos to isSafe

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.ccbluex.liquidbounce.utils.kotlin.mapString
+import net.minecraft.client.MinecraftClient
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
@@ -50,7 +51,7 @@ import kotlin.random.Random
 object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
     private val replacement by text("Replacement", "You")
-
+    private val disengageFix by boolean("脱盒修复", false)
     private val colorMode = choices<GenericColorMode<Unit>>(
         "ColorMode",
         0
@@ -105,7 +106,8 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     }
 
     private val replacementMappings = NameProtectMappings()
-
+    private var lastPlayerNameCheck = 0L
+    private const val NAME_CHECK_INTERVAL = 3000L
     private val coloringInfo = NameProtectMappings.ColoringInfo(
         username = { this.colorMode.activeChoice.getColor(Unit) },
         friends = { ReplaceFriendNames.colorMode.activeChoice.getColor(Unit) },
@@ -140,7 +142,21 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         }
 
 
-        val playerName = player.gameProfile?.name
+        val mc = MinecraftClient.getInstance()
+        val player = mc.player ?: return@handler
+        val currentTime = System.currentTimeMillis()
+        var cachedPlayerName = player.name.string
+        if (currentTime - lastPlayerNameCheck >= NAME_CHECK_INTERVAL) {
+            cachedPlayerName = player.name.string
+            lastPlayerNameCheck = currentTime
+        }
+
+        val playerName = if (disengageFix) {
+            cachedPlayerName
+        } else {
+            player.gameProfile?.name ?: mc.session.username
+        }
+
         val selfPair = mc.session.username to if (applyGarbled) {
             getGarbledName(replacement)
         } else {

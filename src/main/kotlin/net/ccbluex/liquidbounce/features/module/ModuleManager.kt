@@ -321,6 +321,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoReport,
             ModuleBetterTitle,
             ModuleAntiCheat,
+            ModuleAutoEZ,
 
            // Movement
             ModuleAirJump,

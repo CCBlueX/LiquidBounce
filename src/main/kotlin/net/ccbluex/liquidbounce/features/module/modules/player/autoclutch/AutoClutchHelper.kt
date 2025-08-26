@@ -1,8 +1,8 @@
 @file:Suppress("detekt:all")
 package net.ccbluex.liquidbounce.features.module.modules.player.autoclutch
 
-import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.PlayerTrajectory.ticksToPredict
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.adjacentSafeBlocks
+import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.ticksToPredict
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.unsafeBlocks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.voidThreshold
 import net.ccbluex.liquidbounce.utils.client.player
