@@ -2,16 +2,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -56,6 +52,12 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
     @Shadow
     private long lastButtonClickTime;
 
+    @Shadow
+    protected int x;
+
+    @Shadow
+    protected int y;
+
     @Inject(method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V", at = @At("HEAD"), cancellable = true)
     private void cancelMouseClick(Slot slot, int slotId, int button, SlotActionType actionType, CallbackInfo ci) {
         var inventoryMove = ModuleInventoryMove.INSTANCE;
@@ -90,12 +92,8 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         }
 
         var stack = slot.getStack();
-        if (stack.isOf(Items.SHULKER_BOX)) {
-            ContainerComponent containerComponent = stack.getComponents().get(DataComponentTypes.CONTAINER);
-            // Mode 1: merge all same stacks like 128x wools
-            // Mode 2: display like real shulker screen
-            System.out.println(containerComponent);
-            // TODO: shulker here
+        if (!ModuleBetterInventory.INSTANCE.drawContainerItemView(context, cursorStack, this.x, this.y, mouseX, mouseY)) {
+            ModuleBetterInventory.INSTANCE.drawContainerItemView(context, stack, this.x, this.y, mouseX, mouseY);
         }
 
         if (matchingItemScrollerMoveConditions(mouseX, mouseY)) {

@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
 
@@ -79,7 +80,6 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         tree(HighlightClicked)
     }
 
-
     private object TextCooldownProgress : ToggleableConfigurable(this, "TextCooldownProgress", enabled = true) {
         val mode by enumChoice("Mode", CooldownProgressMode.PERCENTAGE)
 
@@ -95,6 +95,18 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         PERCENTAGE("Percentage"),
         DURATION_TICKS("DurationTicks"),
         DURATION_SECONDS("DurationSeconds"),
+    }
+
+    private object ContainerItemView : ToggleableConfigurable(this, "ContainerItemView", enabled = true) {
+        val skipEmptyStack by boolean("SkipEmptyStack", true)
+
+        val scale by float("Scale", 1F, 0.25F..4F)
+        val relativeToMouse by boolean("RelativeToMouse", true)
+
+    }
+
+    init {
+        tree(ContainerItemView)
     }
 
     fun DrawContext.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
@@ -127,9 +139,50 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
     }
 
     fun DrawContext.drawHighlightSlot(slot: Slot) {
-        if (!running || slot.id != InventoryManager.lastClickedSlot) return
+        if (!running || !HighlightClicked.enabled || slot.id != InventoryManager.lastClickedSlot) return
 
         HighlightClicked.mode.activeChoice.drawHighlightSlot(this, slot)
+    }
+
+    fun DrawContext.drawContainerItemView(
+        stack: ItemStack,
+        x: Int,
+        y: Int,
+        mouseX: Int,
+        mouseY: Int,
+    ): Boolean {
+        if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return false
+
+        val containerComponent = stack.getComponents()[DataComponentTypes.CONTAINER] ?: return false
+
+        val stacks = if (ContainerItemView.skipEmptyStack) {
+            containerComponent.streamNonEmpty()
+        } else {
+            containerComponent.stream()
+        }.toArray()
+
+        if (stacks.isEmpty()) return false
+
+        matrices.push()
+        matrices.translate(-x.toDouble(), -y.toDouble(), 200.0)
+
+        if (ContainerItemView.relativeToMouse) {
+            matrices.translate(mouseX.toDouble(), mouseY.toDouble(), 0.0)
+        }
+
+        matrices.scale(ContainerItemView.scale, ContainerItemView.scale, 1f)
+
+        stacks.forEachIndexed { index, stack ->
+            stack as ItemStack
+            val x = index * 16
+            val y = 0
+            drawItem(stack, x, y)
+            drawStackOverlay(mc.textRenderer, stack, x, y)
+        }
+
+        matrices.pop()
+
+        return true
     }
 
 }
