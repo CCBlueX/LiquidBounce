@@ -1,13 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.parkour
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -19,9 +18,7 @@ class Platform(
     val edges: List<LineSegment>,
     var reachable: Boolean? = null,
     var isTarget: Boolean = false
-) {
-
-}
+)
 
 private fun canBeInside(blockPos: BlockPos): Boolean {
     return blockPos.getState()?.getCollisionShape(world, blockPos)?.isEmpty ?: true
@@ -34,8 +31,6 @@ private fun canRouteThrough(blockPos: BlockPos): Boolean {
 fun findHighestPlatformBlock(blockPos: BlockPos, maxDepth: Int = 3): BlockPos? {
     // How many air blocks have we seen?
     var airBlocks = 0
-
-    val openBlocks = ArrayDeque<BlockPos>()
 
     for (y in blockPos.y + 2 downTo blockPos.y - maxDepth) {
         val currentPos = BlockPos(blockPos.x, y, blockPos.z)
@@ -62,8 +57,7 @@ fun discoverPlatforms(
     interestingPoints: List<Vec2i>,
     y: Int,
     lineFrom: Vec2i,
-    lineTo: Vec2i,
-    maxLineDistance: Double = 3.0
+    lineTo: Vec2i
 ): List<Platform> {
     val currentTime = System.nanoTime()
     val blocks = ArrayDeque<BlockPos>()
@@ -115,7 +109,11 @@ fun debugPlatforms(platforms: List<Platform>, currentPlatform: Platform?) {
 
         val alpha = if (platform.reachable == true) 255 else 64
 
-        val modColor = if (platform == currentPlatform) Color4b.BLACK else if (platform.isTarget) Color4b(127, 127, 127) else color.alpha(alpha)
+        val modColor = if (platform == currentPlatform) Color4b.BLACK else if (platform.isTarget) Color4b(
+            127,
+            127,
+            127
+        ) else color.alpha(alpha)
 
         val group = platform.platformBlocks.map { ModuleDebug.DebuggedBox(Box.from(Vec3d.of(it)), modColor) }
 
@@ -124,8 +122,8 @@ fun debugPlatforms(platforms: List<Platform>, currentPlatform: Platform?) {
         for (edge in platform.edges) {
             edgeGeomety.add(
                 ModuleDebug.DebuggedLineSegment(
-                    edge.getPosition(0.0).toVec3(),
-                    edge.getPosition(1.0).toVec3(),
+                    edge.getPosition(0.0),
+                    edge.getPosition(1.0),
                     Color4b.WHITE
                 )
             )
@@ -217,7 +215,7 @@ fun findEdges(components: ConnectedComponents): List<LineSegment> {
 
             val lineCenter = Vec3d.ofCenter(pos, 1.0).add(Vec3d.of(directionVector).multiply(0.8))
 
-            edges.add(LineSegment.from(lineCenter.add(edgeLenLeft), lineCenter.add(edgeLenRight)))
+            edges.add(LineSegment.fromPoints(lineCenter.add(edgeLenLeft), lineCenter.add(edgeLenRight)))
         }
     }
 

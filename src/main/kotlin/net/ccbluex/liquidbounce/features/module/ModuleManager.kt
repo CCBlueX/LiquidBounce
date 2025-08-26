@@ -111,6 +111,7 @@ import net.ccbluex.jmcomicfix.features.module.modules.`fun`.*
 import net.ccbluex.jmcomicfix.features.module.modules.render.*
 import net.ccbluex.jmcomicfix.features.module.modules.misc.ModuleAutoScreenShot
 import net.ccbluex.liquidbounce.features.module.modules.misc.anticheat.ModuleAntiCheat
+import net.ccbluex.liquidbounce.features.module.modules.movement.parkour.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
@@ -280,7 +281,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleGodMode,
 
             // Fun
-            ModuleAutoVoid,
+            ModuleSuicide,
             ModuleDankBobbing,
             ModuleDerp,
             ModuleIQBoost,

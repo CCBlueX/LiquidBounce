@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.parkour
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -43,7 +43,7 @@ import kotlin.math.absoluteValue
  *
  * Automatically jumps at the very edge of a block.
  */
-object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
+object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
 
 //    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
@@ -79,15 +79,16 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     var jumpOnNextTick = false
 
+    @Suppress("unused")
     val tickJumpHandler = handler<MovementInputEvent> {
         this.directionalInput = it.directionalInput
 
-        if (it.jumping && player.isOnGround) {
+        if (it.jump && player.isOnGround) {
             println("P: " + player.pos)
         }
 
         if (jumpOnNextTick) {
-            it.jumping = true
+            it.jump= true
 
             println("A: " + player.pos)
 
@@ -178,7 +179,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
 //    val distRepeatable = repeatable {
 //        if (!player.isOnGround)
-//            return@repeatable
+//            return@tickHandler
 //
 //        var startPos = player.pos
 //
@@ -199,8 +200,8 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 //
 //        }
 //    }
-
-    val tick = repeatable {
+  @Suppress("unused")
+  private val tick = tickHandler{
         ModuleDebug.debugParameter(ModuleParkour, "Play [blocks]", "N/A")
 
         val rotVec = Vec3d(0.0, 0.0, 1.0).rotateY(-player.yaw.toRadians())
@@ -214,9 +215,9 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
         val nextGround = findHypotheticalPosOnGround()
 
-        val currentPlatform = findNearestPlatform(platforms, nextGround) ?: return@repeatable
+        val currentPlatform = findNearestPlatform(platforms, nextGround) ?: return@tickHandler
 
-        val (jumpOffLine, jumpOffPoint) = findJumpOffPosition(nextGround, rotVec, currentPlatform) ?: return@repeatable
+        val (jumpOffLine, jumpOffPoint) = findJumpOffPosition(nextGround, rotVec, currentPlatform) ?: return@tickHandler
 
         ModuleDebug.debugGeometry(ModuleParkour, "XZ", ModuleDebug.DebuggedPoint(jumpOffPoint, Color4b.WHITE))
 
@@ -230,7 +231,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
         if (targetPlatform == null) {
             debugPlatforms(platforms, currentPlatform)
 
-            return@repeatable
+            return@tickHandler
         }
 
         targetPlatform.isTarget = true
@@ -244,7 +245,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
         val sss = eee.minByOrNull { it.second.squaredDistanceTo(player.pos.add(0.0, 1.0, 0.0)) }
 
         if (sss == null) {
-            return@repeatable
+            return@tickHandler
         }
 
         val targetPos = sss.second
@@ -264,7 +265,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
         thresholdLine = jumpOffLine
 
-        return@repeatable
+        return@tickHandler
     }
 
     private fun findHypotheticalPosOnGround(): Vec3d {
@@ -278,7 +279,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
         )
 
-        for (ignored in 0..20) {
+        repeat(20) {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.onGround) {

@@ -222,7 +222,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         draw(
                             process(text),
                             120f,
-                            40 + ((fontRenderer.height * 0.17f) * index).toFloat(),
+                            40 + ((fontRenderer.height * 0.17f) * index),
                             shadow = true,
                             scale = 0.17f
                         )
@@ -244,7 +244,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 
@@ -266,7 +266,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 

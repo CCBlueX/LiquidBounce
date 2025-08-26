@@ -101,7 +101,8 @@ object ModuleMiddleClickAction : ClientModule(
             }
         }
 
-        val handler = handler<WorldChangeEvent> {
+       @Suppress("unused")
+       private val handler = handler<WorldChangeEvent> {
             wasPressed = false
         }
 
