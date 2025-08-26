@@ -758,5 +758,6 @@
   "liquidbounce.module.potionAura.description":"自动朝目标投掷副作用与伤害药水。",
   "liquidbounce.module.antiInstakillAxe.description":"当对方手持秒人斧时且瞄准你时，试图放置生物蛋抵挡秒杀。",
   "liquidbounce.module.motionCamera.description":"动态调整游戏中的相机位置。",
-  "liquidbounce.module.delayBlink.description":"在别人眼里你的行动比真实的行动慢一些。"
+  "liquidbounce.module.delayBlink.description":"在别人眼里你的行动比真实的行动慢一些。",
+  "liquidbounce.module.suicide.description":"我有抑郁症。"
 }

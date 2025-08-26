@@ -754,5 +754,6 @@
   "liquidbounce.module.bowBomb.description": "Use the OneShot bug to shoot an arrow with infinite power.",
   "liquidbounce.module.bowBomb.potionAura":"Automatically throws side effects and damage potions at the target.",
   "liquidbounce.module.antiInstakillAxe.description":"When the opponent is holding a one-hit axe and aiming at you, try placing a spawn egg to block the instant kill.",
-  "liquidbounce.module.motionCamera.description":"Dynamically adjust the camera position in the game."
+  "liquidbounce.module.motionCamera.description":"Dynamically adjust the camera position in the game.",
+  "liquidbounce.module.suicide.description":"I have depression."
 }
