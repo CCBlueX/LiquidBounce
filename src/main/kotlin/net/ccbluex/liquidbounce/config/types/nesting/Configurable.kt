@@ -317,8 +317,10 @@ open class Configurable(
         minY: Float,
         maxX: Float,
         maxY: Float,
+        xLabel: String = "X Axis",
+        yLabel: String = "Y Axis",
         tension: Float = 0.0F
-    ) = CurveValue(name, default, minX, minY, maxX, maxY, tension).apply {
+    ) = CurveValue(name, default, minX, minY, maxX, maxY, xLabel, yLabel, tension).apply {
         this@Configurable.inner.add(this)
     }
 

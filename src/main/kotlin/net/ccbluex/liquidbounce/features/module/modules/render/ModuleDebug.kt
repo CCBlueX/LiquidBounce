@@ -60,7 +60,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     // TODO: REMOVE AFTER IMPLEMENTATION
 
     private val curve = curve(
-        "CurveTest", arrayOf(
+        "CPS", arrayOf(
             0f to 120f,
             50f to 60f,
             140f to 120f,
@@ -70,6 +70,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         minY = 10f,
         180f,
         120f,
+        xLabel = "seconds",
+        yLabel = "CPS",
         tension = 0f
     )
 

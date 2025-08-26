@@ -28,6 +28,8 @@ open class CurveValue(
     @Exclude var minY: Float,
     @Exclude var maxX: Float,
     @Exclude var maxY: Float,
+    @Exclude var xLabel: String = "X Axis",
+    @Exclude var yLabel: String = "Y Axis",
     // Bezier curve tension of the line. Set to 0 to draw straightlines.
     @Exclude var tension: Float = 0.0F,
 ) : ListValue<MutableList<FloatArray>, FloatArray>(

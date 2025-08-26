@@ -1,15 +1,17 @@
 <script lang="ts">
     import type {CurveSetting, ModuleSetting} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {onMount, onDestroy} from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import {
         Chart,
+        type Chart as ChartJS,
         LinearScale,
-        PointElement,
+        LineController,
         LineElement,
+        type Point,
+        PointElement,
         ScatterController,
-        type ScatterDataPoint,
-        type Chart as ChartJS, type Point, LineController
+        type ScatterDataPoint
     } from "chart.js";
     import dragDataPlugin from "chartjs-plugin-dragdata";
     import ExpandArrow from "./common/ExpandArrow.svelte";
@@ -158,7 +160,7 @@
                         },
                         title: {
                             display: true,
-                            text: "X Axis",
+                            text: cSetting.xLabel,
                             color: COLOR_DIMMED_TEXT
                         }
                     },
@@ -174,7 +176,7 @@
                         },
                         title: {
                             display: true,
-                            text: "Y Axis",
+                            text: cSetting.yLabel,
                             color: COLOR_DIMMED_TEXT
                         }
                     }

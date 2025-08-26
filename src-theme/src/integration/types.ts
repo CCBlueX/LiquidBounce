@@ -66,6 +66,8 @@ export interface CurveSetting {
     maxX: number;
     minY: number;
     maxY: number;
+    xLabel: string;
+    yLabel: string;
     tension: number;
 }
 
