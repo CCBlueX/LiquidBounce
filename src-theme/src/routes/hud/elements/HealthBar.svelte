@@ -4,22 +4,22 @@
     import type {PlayerData} from "../../../integration/types";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
     import {onDestroy, onMount, tick} from "svelte";
-    import {tweened} from 'svelte/motion';
     import {cubicOut} from 'svelte/easing';
     import {fade} from "svelte/transition";
     import {hsvToRgba} from "../../../util/color_utils";
+    import {Tween} from "svelte/motion";
 
     let showHealthbar = false;
     let blink = false;
     let playerData: PlayerData | null = null;
     let iv: ReturnType<typeof setInterval> | null = null;
 
-    const healthTweened = tweened(0, {duration: 300, easing: cubicOut});
-    const absorptionTweened = tweened(0, {duration: 300, easing: cubicOut});
-    const maxHealthTweened = tweened(1, {duration: 300, easing: cubicOut});
-    const totalTweened = tweened(0, {duration: 800, easing: cubicOut});
-    const prevHealthTweened = tweened(0, {duration: 800, easing: cubicOut});
-    const prevAbsorptionTweened = tweened(0, {duration: 1000, easing: cubicOut});
+    const healthTweened = new Tween(0, {duration: 300, easing: cubicOut});
+    const absorptionTweened = new Tween(0, {duration: 300, easing: cubicOut});
+    const maxHealthTweened = new Tween(1, {duration: 300, easing: cubicOut});
+    const totalTweened = new Tween(0, {duration: 800, easing: cubicOut});
+    const prevHealthTweened = new Tween(0, {duration: 800, easing: cubicOut});
+    const prevAbsorptionTweened = new Tween(0, {duration: 1000, easing: cubicOut});
 
     async function showDelayed() {
         await tick();
@@ -50,11 +50,11 @@
 
     $: health = playerData ? playerData.health : 0;
     $: max = playerData ? playerData.maxHealth : 1;
-    $: total = Math.max($healthTweened + $absorptionTweened, $maxHealthTweened, 1);
-    $: healthPct = Math.min(Math.max($healthTweened / total, 0), 1) * 100;
-    $: absorbPct = Math.min(Math.max($absorptionTweened / total, 0), 1) * 100;
-    $: prevHealthPct = Math.min(Math.max($prevHealthTweened / total, 0), 1) * 100;
-    $: prevAbsorbPct = Math.min(Math.max($prevAbsorptionTweened / total, 0), 1) * 100;
+    $: total = Math.max(healthTweened.current + absorptionTweened.current, maxHealthTweened.current, 1);
+    $: healthPct = Math.min(Math.max(healthTweened.current / total, 0), 1) * 100;
+    $: absorbPct = Math.min(Math.max(absorptionTweened.current / total, 0), 1) * 100;
+    $: prevHealthPct = Math.min(Math.max(prevHealthTweened.current / total, 0), 1) * 100;
+    $: prevAbsorbPct = Math.min(Math.max(prevAbsorptionTweened.current / total, 0), 1) * 100;
     $: prevPct = prevHealthPct + prevAbsorbPct;
     $: isLowHealth = health / max <= 0.25;
 
@@ -122,13 +122,13 @@
                     </div>
                     <div class="health-display">
                         <div class="left-group">
-                            <span class="number current">{fmt($healthTweened)}</span>
-                            {#if $absorptionTweened > 0}
-                                <span class="absorption">+{fmt($absorptionTweened)}</span>
+                            <span class="number current">{fmt(healthTweened.current)}</span>
+                            {#if absorptionTweened.current > 0}
+                                <span class="absorption">+{fmt(absorptionTweened.current)}</span>
                             {/if}
                         </div>
                         <span class="separator">/</span>
-                        <span class="number max">{fmt($maxHealthTweened)}</span>
+                        <span class="number max">{fmt(maxHealthTweened.current)}</span>
                     </div>
                 </div>
             </div>

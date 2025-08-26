@@ -6,13 +6,13 @@
     import {getPlayerData, getPlayerInventory} from "../../../../integration/rest";
     import ItemStackView from "../../common/ItemView/ItemStackView.svelte";
     import {elasticOut} from 'svelte/easing';
-    import {tweened} from 'svelte/motion';
+    import {Tween} from "svelte/motion";
 
     let lastSlot = 0;
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
     let hotbar: ItemStack[] = [];
-    const glowIntensity = tweened(0, {
+    const glowIntensity = new Tween(0, {
         duration: 300,
         easing: elasticOut
     });

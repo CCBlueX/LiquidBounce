@@ -6,7 +6,7 @@
     import {getMinecraftKeybinds} from '../../../../integration/rest';
     import type {MinecraftKeybind} from '../../../../integration/types';
     import {fly} from 'svelte/transition';
-    import {tweened} from 'svelte/motion';
+    import {Tween} from 'svelte/motion';
     import {cubicOut, expoInOut} from 'svelte/easing';
 
     const MAX_MESSAGES = 50;
@@ -18,7 +18,7 @@
     const FADE_DELAY_BETWEEN_BATCHES = 800;
 
     $: chatHeight.set(focus ? HEIGHT_FOCUSED : HEIGHT_BLUR);
-    const chatHeight = tweened(HEIGHT_BLUR, {
+    const chatHeight = new Tween(HEIGHT_BLUR, {
         duration: 300,
         easing: cubicOut
     });
@@ -171,7 +171,7 @@
         class="chat-hud {focus ? 'focused' : ''} {hasVisibleMessages ? 'visible' : 'hidden'}"
         style="
     --chat-width: 700px;
-    --chat-height: {$chatHeight}px;
+    --chat-height: {chatHeight.current}px;
     --line-height: 20px;
     --chat-scale: 1;
     --bg-opacity: 0.5

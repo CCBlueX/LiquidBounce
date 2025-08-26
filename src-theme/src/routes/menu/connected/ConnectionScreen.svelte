@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {tweened} from "svelte/motion";
+    import {Tween} from "svelte/motion";
     import {onMount, tick} from "svelte";
     import {expoInOut} from "svelte/easing";
     import {fade} from "svelte/transition";
@@ -27,7 +27,7 @@
         };
     }
 
-    const progress = tweened(0, {
+    const progress = new Tween(0, {
         duration: totalDuration,
         easing: makeCustomEasing(fps),
     });
@@ -63,7 +63,7 @@
             <div class="loading-bar-bg"></div>
             <div
                     class="loading-bar-progress"
-                    style="width: {$progress}%"
+                    style="width: {progress.current}%"
             ></div>
         </div>
     </div>

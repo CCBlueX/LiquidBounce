@@ -6,15 +6,15 @@
     import {onMount,tick} from "svelte";
     import {FadeOut} from "../../../util/animate_utils";
     import {blockCount} from './island/Island';
-    import {tweened} from "svelte/motion";
     import {cubicOut} from "svelte/easing";
+    import {Tween} from "svelte/motion";
 
     let playerData: PlayerData | null = null;
     let count: number | undefined;
     let contentElement: HTMLDivElement;
     let firstAppear = true;
 
-    const maxWidth = tweened(0, { duration: 150, easing: cubicOut });
+    const maxWidth = new Tween(0, { duration: 150, easing: cubicOut });
 
     listen("blockCountChange", (e: BlockCountChangeEvent) => {
         count = e.count;
@@ -62,7 +62,7 @@
         <div
                 class="hud hud-container"
                 bind:this={contentElement}
-                style="max-width: {$maxWidth}px"
+                style="max-width: {maxWidth.current}px"
                 aria-hidden={count === undefined}
                 out:FadeOut|global={{ duration: 200 }}>
             {#if playerData?.mainHandStack}

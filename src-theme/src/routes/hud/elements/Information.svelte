@@ -2,7 +2,7 @@
     import {listen} from "../../../integration/ws";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
     import type {ClientInfo, PlayerData} from "../../../integration/types";
-    import {tweened} from 'svelte/motion';
+    import {Tween} from 'svelte/motion';
     import {cubicOut, expoInOut} from 'svelte/easing';
     import {getClientInfo} from "../../../integration/rest";
     import {onMount} from "svelte";
@@ -14,9 +14,9 @@
         position: {x: 0, y: 0, z: 0},
     } as PlayerData;
 
-    const xPos = tweened(0, {duration: 300, easing: cubicOut});
-    const yPos = tweened(0, {duration: 300, easing: cubicOut});
-    const zPos = tweened(0, {duration: 300, easing: cubicOut});
+    const xPos = new Tween(0, {duration: 300, easing: cubicOut});
+    const yPos = new Tween(0, {duration: 300, easing: cubicOut});
+    const zPos = new Tween(0, {duration: 300, easing: cubicOut});
 
     function roundToDecimal(value: number, decimal: number) {
         const rounded = Math.round(value * Math.pow(10, decimal)) / Math.pow(10, decimal);
@@ -65,9 +65,9 @@
             <span class="label">BPS:&nbsp;</span>
             <span class="value">{bpsValue}</span>
         </div>
-        {@const x = formatCoordinate($xPos)}
-        {@const y = formatCoordinate($yPos)}
-        {@const z = formatCoordinate($zPos)}
+        {@const x = formatCoordinate(xPos.current)}
+        {@const y = formatCoordinate(yPos.current)}
+        {@const z = formatCoordinate(zPos.current)}
         <div class="stat">
             <span class="label">XYZ:&nbsp;</span>
             <span class="value">{x}, {y}, {z}</span>

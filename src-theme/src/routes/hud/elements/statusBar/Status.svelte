@@ -1,6 +1,7 @@
 <script lang="ts">
-    import {tweened} from 'svelte/motion';
+    import {Tween} from 'svelte/motion';
     import {cubicOut} from 'svelte/easing';
+    import {readable} from 'svelte/store';
 
     export let max: number = 100;
     export let value: number = 0;
@@ -11,22 +12,25 @@
     export let label: string | null = null;
     export let icon: string | null = null;
     export let animate: boolean = true;
-    export let onDone: () => void = () => {
-    };
+    export let onDone: () => void = () => {};
 
     $: ratio = Math.max(0, Math.min(value, max)) / max;
+    $: tweenRatio = tweenStore(tween, ratio);
 
-    const tweenRatio = tweened(0, {
+    const tween = new Tween(0, {
         duration: animate ? 450 : 0,
         easing: cubicOut
     });
 
-    $: tweenRatio.set(ratio).then(() => {
-        onDone();
-    });
+    function tweenStore<T>(tween: Tween<T>, target: T) {
+        return readable(tween.current, (set) => {
+            tween.set(target).then(() => onDone());
+            const interval = setInterval(() => set(tween.current), 16);
+            return () => clearInterval(interval);
+        });
+    }
 
     import {derived} from 'svelte/store';
-
     const widthPct = derived(tweenRatio, $tr => $tr * 100);
 
     $: pct = ratio * 100;

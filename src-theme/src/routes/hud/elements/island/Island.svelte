@@ -11,7 +11,7 @@
     import type {ClientInfo, ItemStack, PlayerData, Session} from "../../../../integration/types";
     import type {ClientPlayerDataEvent, PlayerInventoryEvent, ProgressEvent,} from "../../../../integration/events";
     import {listen} from "../../../../integration/ws";
-    import {tweened} from "svelte/motion";
+    import {Tween} from "svelte/motion";
     import {cubicOut} from "svelte/easing";
     import {
         armorDurabilityStore,
@@ -113,10 +113,10 @@
         chest: null as HTMLDivElement | null
     };
 
-    const initialWidth = tweened(0, {duration: 400, easing: cubicOut});
-    const initialOpacity = tweened(0, {duration: 400, easing: cubicOut});
-    const w = tweened(400, {duration: 300, easing: cubicOut});
-    const h = tweened(40, {duration: 300, easing: cubicOut});
+    const initialWidth = new Tween(0, {duration: 400, easing: cubicOut});
+    const initialOpacity = new Tween(0, {duration: 400, easing: cubicOut});
+    const w = new Tween(400, {duration: 300, easing: cubicOut});
+    const h = new Tween(40, {duration: 300, easing: cubicOut});
 
     const getTimeGreeting = (hours: number): string => {
         if (hours >= 5 && hours < 12) return "Good morning";
@@ -581,9 +581,9 @@
              class:contract={animationPhase === 'contract'}
              class:expand={animationPhase === 'expand'}
              class:initial={initialAnimation}
-             style="width: {initialAnimation ? $initialWidth : $w}px;
-                height: {initialAnimation ? 40 : ($h + (currentAlert ? 10 : 0))}px;
-                opacity: {$initialOpacity};
+             style="width: {initialAnimation ? initialWidth.current : w.current}px;
+                height: {initialAnimation ? 40 : (h.current + (currentAlert ? 10 : 0))}px;
+                opacity: {initialOpacity.current};
                 transform-origin: top center;">
             <div class="content-wrapper" bind:this={wrapper}>
                 {#if currentAlert}

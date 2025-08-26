@@ -3,10 +3,10 @@
     import {notification, type TNotification} from "./notification_store";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
-    import { tweened } from 'svelte/motion';
-    import { cubicOut } from 'svelte/easing';
+    import {cubicOut} from 'svelte/easing';
+    import {Tween} from "svelte/motion";
 
-    let progress = tweened(1, { duration: 0, easing: cubicOut });
+    let progress = new Tween(1, { duration: 0, easing: cubicOut });
 
     let currentNotification: TNotification | null = null;
     let showNotification = false;
@@ -56,7 +56,7 @@
         {#key currentNotification.id || currentNotification.message}
             <div class="notification"
                  transition:fly|global={{duration: 500, y: -100}}
-                 style="--progress: {$progress}"
+                 style="--progress: {progress.current}"
                  on:outroend={() => {
         if (!showNotification) currentNotification = null;
      }}>
