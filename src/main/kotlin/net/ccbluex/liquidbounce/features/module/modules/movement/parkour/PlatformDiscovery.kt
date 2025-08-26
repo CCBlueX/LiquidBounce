@@ -109,11 +109,15 @@ fun debugPlatforms(platforms: List<Platform>, currentPlatform: Platform?) {
 
         val alpha = if (platform.reachable == true) 255 else 64
 
-        val modColor = if (platform == currentPlatform) Color4b.BLACK else if (platform.isTarget) Color4b(
-            127,
-            127,
-            127
-        ) else color.alpha(alpha)
+        val modColor = if (platform == currentPlatform) {
+            Color4b.BLACK
+        } else {
+            if (platform.isTarget) {
+                Color4b(127, 127, 127)
+            } else{
+                color.alpha(alpha)
+            }
+        }
 
         val group = platform.platformBlocks.map { ModuleDebug.DebuggedBox(Box.from(Vec3d.of(it)), modColor) }
 
@@ -168,7 +172,12 @@ fun isEdge(pos: BlockPos): Boolean {
     return canBeInside(pos.up(1)) && canBeInside(pos.up(2))
 }
 
-private fun calculateEdgeLength(components: Map<BlockPos, EdgeDetectionComponent>, pos: BlockPos, edgeDirection: Vec3i, direction: Int, sign: Int): Vec3d? {
+private fun calculateEdgeLength(
+    components: Map<BlockPos, EdgeDetectionComponent>,
+    pos: BlockPos,
+    edgeDirection: Vec3i,
+    direction: Int,
+    sign: Int): Vec3d? {
     val walkDirection = if (edgeDirection.x == 0) {
         Vec3i(sign, 0, 0)
     } else {
@@ -189,7 +198,7 @@ private fun calculateEdgeLength(components: Map<BlockPos, EdgeDetectionComponent
         component.clearDirection(direction)
     }
 
-    throw IllegalStateException("NO!!!")
+    error("Edge calculation failed after 500 iterations")
 }
 
 fun findEdges(components: ConnectedComponents): List<LineSegment> {

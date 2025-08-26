@@ -4,6 +4,5 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
 object ScaffoldAutoClutchHelper : ToggleableConfigurable(ModuleScaffold, "AutoClutchHelper", true) {
-    val disableOnFinish by boolean("DisableOnFinish",true)
     val scaffoldOnlyDuringCombat by boolean("ScaffoldOnlyDuringCombat", true)
 }

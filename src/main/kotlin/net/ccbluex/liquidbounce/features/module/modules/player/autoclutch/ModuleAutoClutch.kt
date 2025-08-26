@@ -82,7 +82,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
 
     object PlayerTrajectory: ToggleableConfigurable(this,"PlayerTrajectory",false) {
-        val trajectoryLength by int("TrajectoryLength", 30, 30..200)
+        val ticksToPredict by  int("TicksToPredict", 20, 5..100)
         val securitySection by color("Security", Color4b.CYAN.withAlpha(50))
         val hazardSection by color("Hazard", Color4b.RED.withAlpha(50))
     }
@@ -313,26 +313,31 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             clearTrajectoryAndCache()
             return
         }
-        val currentTime = System.currentTimeMillis()
+
         val camera = mc.entityRenderDispatcher.camera ?: return
-        val playerState = Triple(player.pos, player.velocity, DirectionalInput(player.input))
-        if (cachedTrajectory == null || currentTime - lastTrajectoryUpdate > 100 || lastPlayerState?.let {
-                it.first.distanceTo(playerState.first) > 0.5 || it.second.distanceTo(playerState.second) > 0.1
-            } != false) {
-            lastTrajectoryUpdate = currentTime
-            lastPlayerState = playerState
+        val currentPlayerState = Triple(player.pos, player.velocity, DirectionalInput(player.input))
+        val now = System.currentTimeMillis()
+
+        val needsUpdate = cachedTrajectory == null
+            || now - lastTrajectoryUpdate > 100
+            || lastPlayerState?.let {
+            it.first.distanceTo(currentPlayerState.first) > 0.5
+                || it.second.distanceTo(currentPlayerState.second) > 0.1
+        } != false
+
+        if (needsUpdate) {
+            lastTrajectoryUpdate = now
+            lastPlayerState = currentPlayerState
 
             val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
-            val trajectoryPoints = mutableListOf<Pair<Vec3d, Boolean>>()
-
-            for (tick in 0 until PlayerTrajectory.trajectoryLength) {
+            val points = List(PlayerTrajectory.ticksToPredict) { tick ->
                 val snapshot = cache.getSnapshotAt(tick)
-                val currentPos = snapshot.pos
-                val isSafe = canReachSafeBlockFrom() && !isInVoid(currentPos)
-                trajectoryPoints.add(currentPos to isSafe)
+                val isSafe = canReachSafeBlockFrom() && !isInVoid(snapshot.pos)
+                snapshot.pos to isSafe
             }
+
             cachedTrajectory = TrajectorySegments.generateTrajectorySegments(
-                trajectoryPoints,
+                points,
                 PlayerTrajectory.securitySection,
                 PlayerTrajectory.hazardSection
             )
@@ -341,23 +346,23 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         renderEnvironmentForWorld(matrixStack) {
             withDisabledCull {
                 val matrix = matrixStack.peek().positionMatrix
-                val buffer = RenderSystem.renderThreadTesselator().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR)
+                val buffer = RenderSystem.renderThreadTesselator()
+                    .begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR)
                 RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
-                cachedTrajectory?.let { segments ->
-                    buffer.apply {
-                        val camPos = camera.pos
-                        for ((start, end, color) in segments) {
-                            vertex(matrix, start.x - camPos.x.toFloat(), start.y - camPos.y.toFloat(), start.z - camPos.z.toFloat())
-                                .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-                            vertex(matrix, end.x - camPos.x.toFloat(), end.y - camPos.y.toFloat(), end.z - camPos.z.toFloat())
-                                .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-                        }
-                        BufferRenderer.drawWithGlobalProgram(end())
-                    }
+
+                val camPos = camera.pos
+                cachedTrajectory?.forEach { (start, end, color) ->
+                    buffer.vertex(matrix, start.x - camPos.x.toFloat(), start.y - camPos.y.toFloat(), start.z - camPos.z.toFloat())
+                        .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+                    buffer.vertex(matrix, end.x - camPos.x.toFloat(), end.y - camPos.y.toFloat(), end.z - camPos.z.toFloat())
+                        .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
                 }
+
+                BufferRenderer.drawWithGlobalProgram(buffer.end())
             }
         }
     }
+
 
     private fun clearTrajectoryAndCache() {
         cachedTrajectory = null

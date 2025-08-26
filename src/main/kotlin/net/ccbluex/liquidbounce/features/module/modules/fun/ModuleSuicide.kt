@@ -9,7 +9,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
 import net.minecraft.block.Blocks
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
@@ -20,12 +22,14 @@ import kotlin.math.sin
 object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("AutoVoid")) {
 
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0.2f..1.0f)
-    private val maxSearchRadius by int("MaxSearchRadius", 30, 10..100)
     private val allowJump by boolean("AllowJump", true)
     private var targetPos: Vec3d? = null
 
+
     @Suppress("unused")
     private val moveInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
+        if (shouldSkipMovement()) return@handler
+
         if (targetPos == null || player.pos.distanceTo(targetPos!!) < pathStepThreshold) {
             targetPos = findDangerousTarget()
             ModuleDebug.debugParameter(this, "TargetPos", targetPos ?: "None")
@@ -43,7 +47,6 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
             ModuleDebug.debugParameter(this, "TargetReached", true)
             return@handler
         }
-
 
         val yaw = atan2(dir.z, dir.x) * 180.0 / Math.PI - 90.0
         player.yaw = yaw.toFloat()
@@ -72,10 +75,21 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
             right = rightAmt > thresh
         )
 
-
         val shouldJump = allowJump && player.isOnGround && (isObstacleInPath(target) || isJumpNeeded(target))
         event.jump = shouldJump
         ModuleDebug.debugParameter(this, "ShouldJump", shouldJump)
+    }
+    private fun shouldSkipMovement(): Boolean {
+        if (player.isCreative || player.isSpectator) return true
+        if (OnGlass) return true
+        if (!player.isAlive || player.abilities.flying || player.hasStatusEffect(StatusEffects.LEVITATION)) return true
+
+        val yawRad = Math.toRadians(player.yaw.toDouble())
+        val forwardX = -sin(yawRad)
+        val forwardZ = cos(yawRad)
+        val checkPos = player.pos + Vec3d(forwardX, 0.0, forwardZ)
+        val block = world.getBlockState(BlockPos(checkPos.toVec3i())).block
+        return block != Blocks.AIR && block != Blocks.LAVA && block != Blocks.MAGMA_BLOCK
     }
 
     private fun isJumpNeeded(target: Vec3d): Boolean {
@@ -96,7 +110,7 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         return false
     }
     private fun findDangerousTarget(): Vec3d? {
-        val maxRadius = maxSearchRadius
+        val maxRadius = 64
         val playerPos = player.pos
         val yLevel = floor(playerPos.y).toInt()
 

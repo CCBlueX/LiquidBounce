@@ -4,8 +4,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayChatEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.minecraft.block.Blocks
 import net.minecraft.text.Text
 import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
@@ -16,7 +20,15 @@ object GameWins: EventListener {
     private val winsCounterLock = Any()
     private var lastWinDetectionTime = 0L
     private val cooldownMillis = TimeUnit.SECONDS.toMillis(10)
+    var OnGlass : Boolean = false
 
+    @Suppress("unused")
+    private val blockCheckHandler = handler<PlayerTickEvent> { event ->
+        val blockPos = player.blockPos.down()
+        val block = world.getBlockState(blockPos).block
+
+        OnGlass  = block == Blocks.GLASS || block == Blocks.TINTED_GLASS
+    }
     var localWinsCounter = 0
         private set(value) {
             synchronized(winsCounterLock) {
@@ -102,7 +114,7 @@ object GameWins: EventListener {
 
     private val winKeywordsTitle = listOf(
         "victory", "you win", "Good Game",
-        "胜", "赢", "游戏结束",
+        "胜", "赢", "游戏结束","恭喜你赢下了比赛","你是最后的站立者",
         "victoire", "gagné",
         "gewonnen",
         "vittoria",

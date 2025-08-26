@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -34,6 +35,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private var stuckTicks = 0
     private var stuckCooldown = 0
     private var lastGroundY = LOWEST_Y
+    private var ignoreTicks = 0
 
     var isInAir = false
     var shouldEnableStuck = false
@@ -41,6 +43,11 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     private fun hasPearlInHotbar() =
         player.inventory.main.any { it?.item == Items.ENDER_PEARL }
+
+    @Suppress("unused")
+    private val serverConnectHandler = handler<ServerConnectEvent> {
+        ignoreTicks = 20
+    }
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> {
@@ -126,6 +133,13 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val world = mc.world ?: return@tickHandler
         val player = mc.player ?: return@tickHandler
 
+        if (ignoreTicks > 0 || player.y <= 0) {
+            ignoreTicks--
+            shouldEnableStuck = false
+            shouldActivate = false
+            return@tickHandler
+        }
+
         if (!alwaysInVoid && player.isOnGround) lastGroundY = player.y.toInt() - 1
 
         if (stuckCooldown > 0) {
@@ -151,13 +165,14 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
             isInAir = false
         } else if (!shouldActivate && shouldEnableStuck) {
             shouldEnableStuck = false
+            ModuleScaffold.enabled = false
         }
 
         if (shouldEnableScaffold()) {
             if (!ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = true
             }
-            if (ScaffoldAutoClutchHelper.disableOnFinish && player.isOnGround) {
+            if (player.isOnGround) {
                 ModuleScaffold.enabled = false
             }
         }
@@ -170,6 +185,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private fun isReadyToActivate(): Boolean {
         val combatReady = !onlyDuringCombat || CombatManager.isInCombat
         val pearlReady = !onlyPearl || hasPearlInHotbar()
+
         val airReady = !player.isOnGround
         val voidReady = if (alwaysInVoid) isVoidFallImminent else player.y <= lastGroundY + 1 - fallDistance
         return combatReady && pearlReady && airReady && voidReady

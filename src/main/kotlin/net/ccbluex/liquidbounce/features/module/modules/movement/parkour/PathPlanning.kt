@@ -1,3 +1,4 @@
+@file:Suppress("VariableNaming")
 package net.ccbluex.liquidbounce.features.module.modules.movement.parkour
 
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
@@ -116,8 +117,9 @@ fun findIntersects(
             b1.horizontalComponent(),
             b2.horizontalComponent(),
         )
-        if (point == null)
+        if (point == null) {
             return@mapNotNull null
+        }
 
         val jumpOffPoint = Vec3d(point.x, platformY, point.y)
 

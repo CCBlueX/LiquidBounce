@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
 import net.minecraft.block.Blocks
 import net.minecraft.screen.slot.SlotActionType
 
@@ -119,22 +120,11 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
                 isGreedy = isGreedy,
             )
         }
-    var OnGlass : Boolean = false
 
-    @Suppress("UNUSED_PARAMETER")
-    val blockCheckHandler = handler<PlayerTickEvent> { event ->
-        if (!OnlyGaming.enabled || !OnlyGaming.checkGlass) {
-            return@handler
-        }
 
-        val blockPos = player.blockPos.down()
-        val block = world.getBlockState(blockPos).block
-
-        OnGlass  = block == Blocks.GLASS || block == Blocks.TINTED_GLASS
-    }
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
-        if (OnlyGaming.enabled && OnGlass) {
+        if (OnlyGaming.enabled && OnlyGaming.checkGlass && OnGlass) {
             return@handler
         }
         val currentInventorySlots = findNonEmptySlotsInInventory()

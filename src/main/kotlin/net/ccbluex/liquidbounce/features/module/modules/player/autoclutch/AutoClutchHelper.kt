@@ -1,6 +1,7 @@
 @file:Suppress("detekt:all")
 package net.ccbluex.liquidbounce.features.module.modules.player.autoclutch
 
+import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.PlayerTrajectory.ticksToPredict
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.adjacentSafeBlocks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.unsafeBlocks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.voidThreshold
@@ -15,7 +16,7 @@ import kotlin.math.floor
 
 fun canReachSafeBlockFrom(pos: Vec3d = player.pos): Boolean {
     val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
-    val snapshots = (0 until 20).map { cache.getSnapshotAt(it) }
+    val snapshots = (0 until ticksToPredict).map { cache.getSnapshotAt(it) }
 
     for (snapshot in snapshots) {
         val currentPos = snapshot.pos
@@ -63,16 +64,22 @@ fun countAdjacentSafeBlocks(center: BlockPos): Int {
 }
 
 fun canReachSafeBlock(): Boolean {
-    return simulatePlayerTrajectory { pos, playerBox, blockPos ->
+    val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
+    for (tick in 1..ticksToPredict) {
+        val snapshot = cache.getSnapshotAt(tick)
+        val pos = snapshot.pos
+        val playerBox = player.boundingBox.offset(pos.subtract(player.pos))
+        val blockPos = BlockPos(pos.x.toInt(), (pos.y - 0.5).toInt(), pos.z.toInt())
         val belowPos = blockPos.down()
         val belowState = world.getBlockState(belowPos)
         val isSafeLanding = !belowState.isAir && belowState.block !in unsafeBlocks
-
         val hasCollision = world.getBlockCollisions(player, playerBox).iterator().hasNext()
         val safeBlockCount = countAdjacentSafeBlocks(blockPos)
-
-        hasCollision && isSafeLanding && safeBlockCount >= adjacentSafeBlocks
+        if (isSafeLanding && safeBlockCount >= adjacentSafeBlocks && !hasCollision) {
+            return true
+        }
     }
+    return false
 }
 
 
@@ -117,10 +124,14 @@ fun isInVoid(pos: Vec3d, voidDistance: Int = -1): Boolean {
 
 fun simulatePlayerTrajectory(checkCondition: (Vec3d, Box, BlockPos) -> Boolean): Boolean {
     val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
-        val snapshot = cache.getSnapshotAt(1)
+    for (tick in 1..ticksToPredict) {
+        val snapshot = cache.getSnapshotAt(tick)
         val pos = snapshot.pos
         val playerBox = player.boundingBox.offset(pos.subtract(player.pos))
         val blockPos = BlockPos(pos.x.toInt(), (pos.y - 0.5).toInt(), pos.z.toInt())
-
-    return checkCondition(pos, playerBox, blockPos)
+        if (checkCondition(pos, playerBox, blockPos)) {
+            return true
+        }
+    }
+    return false
 }

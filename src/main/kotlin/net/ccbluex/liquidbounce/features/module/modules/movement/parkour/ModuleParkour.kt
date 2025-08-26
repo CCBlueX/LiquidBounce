@@ -68,8 +68,9 @@ object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
                 linePoints.second.horizontalComponent()
             )
 
-            if (intersect != null)
+            if (intersect != null) {
                 return Triple(tick, currPos.horizontalComponent(), intersect)
+            }
 
             currPos = nextPos
         }
@@ -146,8 +147,9 @@ object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
         while (true) {
             callback(x0, y0)
 
-            if (x0 == to.x && y0 == to.y)
+            if (x0 == to.x && y0 == to.y) {
                 break
+            }
 
             e2 = 2 * err
 
