@@ -176,6 +176,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         }
 
         // Vanilla container background is in texture pack, no texture for a single slot
+        // TODO
+        /**
+         * @see net.minecraft.client.gui.screen.StatsScreen.SLOT_TEXTURE
+         */
         @Suppress("UNCHECKED_CAST")
         drawItemTags(
             stacks = stacks.asList() as List<ItemStack>,
