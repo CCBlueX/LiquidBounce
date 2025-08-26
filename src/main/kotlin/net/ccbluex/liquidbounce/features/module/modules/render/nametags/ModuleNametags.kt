@@ -137,7 +137,9 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             list += Nametag(entity)
         }
 
-        if (showSelf && (mc.options.perspective !== Perspective.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)) {
+        if (showSelf &&
+            (mc.options.perspective !== Perspective.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
+        ) {
             list += Nametag(player)
         }
 
