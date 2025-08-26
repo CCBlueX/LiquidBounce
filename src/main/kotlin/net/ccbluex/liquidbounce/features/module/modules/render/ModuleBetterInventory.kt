@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
+import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -35,6 +37,7 @@ import net.minecraft.client.render.RenderLayer
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
+import net.minecraft.util.math.Vec3d
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
@@ -102,7 +105,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         val scale by float("Scale", 1F, 0.25F..4F)
         val relativeToMouse by boolean("RelativeToMouse", true)
-
+        val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     }
 
     init {
@@ -163,24 +166,23 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         if (stacks.isEmpty()) return false
 
-        matrices.push()
-        matrices.translate(-x.toDouble(), -y.toDouble(), 200.0)
+        var renderX = ContainerItemView.renderOffset.x.toFloat() - x.toFloat()
+        var renderY = ContainerItemView.renderOffset.y.toFloat() - y.toFloat()
+        val renderZ = ContainerItemView.renderOffset.z.toFloat() + 200.0F
 
         if (ContainerItemView.relativeToMouse) {
-            matrices.translate(mouseX.toDouble(), mouseY.toDouble(), 0.0)
+            renderX += mouseX
+            renderY += mouseY
         }
 
-        matrices.scale(ContainerItemView.scale, ContainerItemView.scale, 1f)
-
-        stacks.forEachIndexed { index, stack ->
-            stack as ItemStack
-            val x = index * 16
-            val y = 0
-            drawItem(stack, x, y)
-            drawStackOverlay(mc.textRenderer, stack, x, y)
-        }
-
-        matrices.pop()
+        // Vanilla container background is in texture pack, no texture for a single slot
+        @Suppress("UNCHECKED_CAST")
+        drawItemTags(
+            stacks = stacks.asList() as List<ItemStack>,
+            centerPos = Vec3(renderX, renderY, renderZ),
+            backgroundColor = 0, // TODO
+            scale = ContainerItemView.scale,
+        )
 
         return true
     }
