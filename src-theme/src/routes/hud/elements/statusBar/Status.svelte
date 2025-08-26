@@ -2,6 +2,7 @@
     import {Tween} from 'svelte/motion';
     import {cubicOut} from 'svelte/easing';
     import {readable} from 'svelte/store';
+    import {derived} from 'svelte/store';
 
     export let max: number = 100;
     export let value: number = 0;
@@ -30,7 +31,7 @@
         });
     }
 
-    import {derived} from 'svelte/store';
+
     const widthPct = derived(tweenRatio, $tr => $tr * 100);
 
     $: pct = ratio * 100;

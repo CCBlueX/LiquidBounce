@@ -9,7 +9,7 @@
     import {hsvToRgba} from "../../../util/color_utils";
     import {Tween} from "svelte/motion";
 
-    let showHealthbar = false;
+    let showHealthBar = false;
     let blink = false;
     let playerData: PlayerData | null = null;
     let iv: ReturnType<typeof setInterval> | null = null;
@@ -17,21 +17,19 @@
     const healthTweened = new Tween(0, {duration: 300, easing: cubicOut});
     const absorptionTweened = new Tween(0, {duration: 300, easing: cubicOut});
     const maxHealthTweened = new Tween(1, {duration: 300, easing: cubicOut});
-    const totalTweened = new Tween(0, {duration: 800, easing: cubicOut});
     const prevHealthTweened = new Tween(0, {duration: 800, easing: cubicOut});
     const prevAbsorptionTweened = new Tween(0, {duration: 1000, easing: cubicOut});
 
-    async function showDelayed() {
-        await tick();
-        await new Promise(res => setTimeout(res, 500));
-        showHealthbar = true;
-    }
+
+    let healthVal = 0;
+    let absorptionVal = 0;
+    let maxHealthVal = 1;
+    let prevHealthVal = 0;
+    let prevAbsorptionVal = 0;
 
     function fmt(n: number): string {
         const rounded = Math.round(n);
-        return Math.abs(n - rounded) < 0.05
-            ? `${rounded}`
-            : n.toFixed(1);
+        return Math.abs(n - rounded) < 0.05 ? `${rounded}` : n.toFixed(1);
     }
 
     function updatePlayerData(s: PlayerData) {
@@ -39,7 +37,6 @@
         healthTweened.set(s.health);
         absorptionTweened.set(s.absorption);
         maxHealthTweened.set(s.maxHealth);
-        totalTweened.set(s.health + s.absorption);
         prevHealthTweened.set(s.health);
         prevAbsorptionTweened.set(s.absorption);
     }
@@ -48,15 +45,29 @@
         updatePlayerData(e.playerData);
     });
 
-    $: health = playerData ? playerData.health : 0;
-    $: max = playerData ? playerData.maxHealth : 1;
-    $: total = Math.max(healthTweened.current + absorptionTweened.current, maxHealthTweened.current, 1);
-    $: healthPct = Math.min(Math.max(healthTweened.current / total, 0), 1) * 100;
-    $: absorbPct = Math.min(Math.max(absorptionTweened.current / total, 0), 1) * 100;
-    $: prevHealthPct = Math.min(Math.max(prevHealthTweened.current / total, 0), 1) * 100;
-    $: prevAbsorbPct = Math.min(Math.max(prevAbsorptionTweened.current / total, 0), 1) * 100;
+    async function showDelayed() {
+        await tick();
+        await new Promise(res => setTimeout(res, 500));
+        showHealthBar = true;
+    }
+
+    function animate() {
+        healthVal = healthTweened.current;
+        absorptionVal = absorptionTweened.current;
+        maxHealthVal = maxHealthTweened.current;
+        prevHealthVal = prevHealthTweened.current;
+        prevAbsorptionVal = prevAbsorptionTweened.current;
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    $: total = Math.max(healthVal + absorptionVal, maxHealthVal, 1);
+    $: healthPct = Math.min(Math.max(healthVal / total, 0), 1) * 100;
+    $: absorbPct = Math.min(Math.max(absorptionVal / total, 0), 1) * 100;
+    $: prevHealthPct = Math.min(Math.max(prevHealthVal / total, 0), 1) * 100;
+    $: prevAbsorbPct = Math.min(Math.max(prevAbsorptionVal / total, 0), 1) * 100;
     $: prevPct = prevHealthPct + prevAbsorbPct;
-    $: isLowHealth = health / max <= 0.25;
+    $: isLowHealth = healthVal / maxHealthVal <= 0.25;
 
     $: {
         if (isLowHealth && !iv) {
@@ -74,11 +85,11 @@
         : hsvToRgba(82, 68, 84, 0.7);
     $: abColor = "rgba(212,175,55,0.7)";
     $: barBgStyle = `linear-gradient(
-        to bottom,
-        ${bgFlash},
-        rgba(154,216,31,0.1),
-        rgba(20,20,20,0.5)
-    )`;
+    to bottom,
+    ${bgFlash},
+    rgba(154,216,31,0.1),
+    rgba(20,20,20,0.5)
+)`;
 
     $: barStyle = `linear-gradient(to right,
     ${hpColor}   0%,
@@ -86,7 +97,7 @@
     ${abColor}   ${healthPct + absorbPct}%,
     rgba(0,0,0,0.4) ${healthPct + absorbPct}%,
     rgba(0,0,0,0.4) 100%
-    )`;
+)`;
 
     $: fadeStyle = (() => {
         const curEnd = healthPct + absorbPct;
@@ -107,9 +118,9 @@
         await showDelayed();
     });
     onDestroy(() => iv && clearInterval(iv));
-
 </script>
-{#if showHealthbar && playerData && playerData.gameMode !== "spectator"}
+
+{#if showHealthBar && playerData && playerData.gameMode !== "spectator"}
     <div class="healthbar" transition:fade>
         {#if playerData.gameMode !== "creative"}
             <div class="status-container">
@@ -122,13 +133,13 @@
                     </div>
                     <div class="health-display">
                         <div class="left-group">
-                            <span class="number current">{fmt(healthTweened.current)}</span>
-                            {#if absorptionTweened.current > 0}
-                                <span class="absorption">+{fmt(absorptionTweened.current)}</span>
+                            <span class="number current">{fmt(healthVal)}</span>
+                            {#if absorptionVal > 0}
+                                <span class="absorption">+{fmt(absorptionVal)}</span>
                             {/if}
                         </div>
                         <span class="separator">/</span>
-                        <span class="number max">{fmt(maxHealthTweened.current)}</span>
+                        <span class="number max">{fmt(maxHealthVal)}</span>
                     </div>
                 </div>
             </div>

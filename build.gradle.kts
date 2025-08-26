@@ -385,7 +385,12 @@ kotlin {
     }
 }
 
+val finalJarName = "jmcomicfix_${minecraft_version}_fabric_v${mod_version}.jar"
+val finalSourcesName = "jmcomicfix_${minecraft_version}_fabric_v${mod_version}-sources.jar"
+
 tasks.jar {
+    archiveFileName.set(finalJarName)
+
     manifest {
         attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
         attributes["Implementation-Title"] = archives_base_name
@@ -393,16 +398,16 @@ tasks.jar {
         attributes["Implementation-Vendor"] = maven_group
     }
 
-    // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
-        rename {
-            "${it}_${archives_base_name}"
-        }
+        rename { "${it}_${archives_base_name}" }
     }
 
     from(files(project.configurations.mappings.get().map(::zipTree))) {
         include("mappings/mappings.tiny")
     }
+}
+tasks.named<Jar>("sourcesJar") {
+    archiveFileName.set(finalSourcesName)
 }
 
 tasks.register<JavaExec>("proguard") {
@@ -411,30 +416,39 @@ tasks.register<JavaExec>("proguard") {
     mainClass.set("proguard.ProGuard")
     classpath = configurations.detachedConfiguration(dependencies.create("com.guardsquare:proguard-base:7.7.0"))
 
-    val inputJar = layout.buildDirectory.file("libs/${archives_base_name}-${mod_version}.jar").get().asFile
-    val outputJar = layout.buildDirectory.file("libs/${archives_base_name}-${mod_version}-obf.jar").get().asFile
+    val outputJar = layout.buildDirectory.file("libs/$finalJarName").get().asFile
     val libFile = layout.buildDirectory.file("tmp/proguard-libraries.txt").get().asFile
     val javaHome = System.getProperty("java.home")
-    val remappedJar = tasks.named("remapJar").get().outputs.files.singleFile
-    val libraryJars = (configurations.runtimeClasspath.get().files + remappedJar).distinctBy { it.absolutePath }
+
+    dependsOn(tasks.named("remapJar"))
 
     doFirst {
+        val remappedJar =tasks.named("remapJar").get().outputs.files.singleFile
         outputJar.parentFile.mkdirs()
         libFile.parentFile.mkdirs()
         libFile.writeText(buildString {
-            appendLine("-injars ${inputJar.absolutePath}")
+            appendLine("-injars ${remappedJar.absolutePath}")
             appendLine("-outjars ${outputJar.absolutePath}")
             listOf("java.base", "java.desktop", "java.logging", "java.datatransfer").forEach {
                 appendLine("-libraryjars $javaHome/jmods/$it.jmod(!**.jar;!module-info.class)")
             }
-            libraryJars.filter { it.exists() && it.isFile && it != inputJar && it != outputJar }
+            val libraryJars = (configurations.runtimeClasspath.get().files + remappedJar).distinctBy { it.absolutePath }
+            libraryJars.filter { it.exists() && it.isFile && it != remappedJar && it != outputJar }
                 .forEach { appendLine("-libraryjars ${it.absolutePath}") }
         })
     }
 
     args("-include", file("proguard-rules.pro").absolutePath, "@${libFile.absolutePath}")
+
+    doLast {
+        val remappedJar = tasks.named("remapJar").get().outputs.files.singleFile
+        if (remappedJar.exists()) remappedJar.delete()
+    }
 }
 
+tasks.named("build") {
+    dependsOn("proguard")
+}
 
 tasks.register<Copy>("copyZipInclude") {
     from("zip_include/")
@@ -448,4 +462,3 @@ tasks.named("sourcesJar") {
 tasks.named("build") {
     dependsOn("copyZipInclude")
 }
-
