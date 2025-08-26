@@ -25,6 +25,7 @@ import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Vector2d
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
@@ -132,6 +133,9 @@ fun Vec3i.toVec3d(
 
 fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
 fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
+
+fun Vec3i.horizontalComponent(): Vec2i = Vec2i(this.x, this.z)
+fun Vec3d.horizontalComponent(): Vector2d = Vector2d(this.x, this.z)
 
 fun Vec3d.toBlockPos() = BlockPos.ofFloored(x, y, z)!!
 

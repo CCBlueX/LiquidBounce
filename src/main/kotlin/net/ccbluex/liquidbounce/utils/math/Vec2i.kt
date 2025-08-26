@@ -28,6 +28,14 @@ open class Vec2i(val x: Int, val y: Int) {
         return Vec2i(this.x + vec.x, this.y + vec.y)
     }
 
+    fun subtract(vec: Vec2i): Vec2i {
+        return Vec2i(this.x - vec.x, this.y - vec.y)
+    }
+
+    operator fun minus(other: Vec2i): Vec2i {
+        return this.subtract(other)
+    }
+
     fun dotProduct(otherVec: Vec2i): Int {
         return this.x * otherVec.x + this.y * otherVec.y
     }
