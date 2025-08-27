@@ -18,7 +18,26 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
+import com.google.gson.*
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
+import java.io.File
 
-object BlockAdapter : IdentifierAsStringAdapter<Block>(Registries.BLOCK)
+object FileAdapter : TypeAdapter<File>() {
+
+    override fun read(source: JsonReader): File? {
+        return when (source.peek()) {
+            JsonToken.NULL -> {
+                source.nextNull()
+                null
+            }
+            JsonToken.STRING -> File(source.nextString())
+            else -> error("Unknown JsonToken for ${File::class.java.name}: ${source.peek()}")
+        }
+    }
+
+    override fun write(sink: JsonWriter, value: File?) {
+        sink.value(value?.path)
+    }
+}

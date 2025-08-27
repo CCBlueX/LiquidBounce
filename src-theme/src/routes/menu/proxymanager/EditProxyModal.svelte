@@ -4,7 +4,6 @@
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import {editProxy as editProxyRest} from "../../../integration/rest";
-    import {afterUpdate} from "svelte";
     import {listen} from "../../../integration/ws";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
 
@@ -50,7 +49,7 @@
         await editProxyRest(id, host, parseInt(port), username, password, proxyType, forwardAuthentication);
     }
 
-    listen("proxyEditResult", () => {
+    listen("proxyCheckResult", () => {
         visible = false;
         loading = false;
     });

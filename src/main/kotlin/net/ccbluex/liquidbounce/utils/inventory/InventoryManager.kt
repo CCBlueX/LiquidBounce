@@ -65,8 +65,8 @@ object InventoryManager : EventListener {
             field = value
         }
 
-    var lastClickedSlot: Int = 0
-        private set
+    var lastClickedSlot: Int = -1
+        internal set
 
     private var recentInventoryOpen = false
 
@@ -205,7 +205,7 @@ object InventoryManager : EventListener {
             closeInventorySilently()
         }
 
-        lastClickedSlot = 0
+        lastClickedSlot = -1
     }
 
     /**
@@ -389,6 +389,7 @@ data class ClickInventoryAction(
     override fun performAction(): Boolean {
         val slotId = slot.getIdForServer(screen) ?: return false
         interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
+        InventoryManager.lastClickedSlot = slotId
 
         return true
     }
@@ -404,8 +405,9 @@ data class ClickInventoryAction(
             .filter { it.itemStack.isEmpty }
             .minByOrNull { slot.distance(it) } ?: return false
 
-        interaction.clickSlot(screen.syncId, closestEmptySlot.getIdForServer(screen), 0,
-            SlotActionType.PICKUP, player)
+        val slotId = closestEmptySlot.getIdForServer(screen)
+        interaction.clickSlot(screen.syncId, slotId, 0, SlotActionType.PICKUP, player)
+        InventoryManager.lastClickedSlot = slotId
         return true
     }
 
@@ -477,6 +479,7 @@ data class CreativeInventoryAction(
         if (slot != null) {
             val slotId = slot.getIdForServer(null) ?: return false
             interaction.clickCreativeStack(itemStack, slotId)
+            InventoryManager.lastClickedSlot = slotId
         } else {
             interaction.dropCreativeStack(itemStack)
         }

@@ -697,6 +697,7 @@
   "liquidbounce.module.chams.description": "渲染墙背后的玩家。",
   "liquidbounce.module.bungeeSpoofer.description": "允许你通过伪造BungeeCord握手来连接到受BungeeCord保护的子服务器。",
   "liquidbounce.module.customAmbience.description": "允许你覆盖世界时间和天气。",
+  "liquidbounce.module.translation.description": "为客户端设置自动翻译器。",
   "liquidbounce.module.bedPlates.description": "允许你看到床周围的保护方块。",
   "liquidbounce.module.targetStrafe.description": "自动绕着杀戮光环的目标移动。",
   "liquidbounce.module.autoShop.description": "自动在起床战争的商店中购买特定商品。",

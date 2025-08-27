@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
@@ -38,10 +37,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.*
-import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import java.util.*
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -86,7 +82,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> {
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
                 bedStatesWithSquaredDistance.forEachWithSelf { (distSq, bedState), i, self ->
@@ -102,8 +98,9 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                     val rectHeight = ITEM_SIZE
 
                     // draw items and background
-                    with(newDrawContext()) {
+                    with(event.context) {
                         with(matrices) {
+                            push()
                             translate(screenPos.x, screenPos.y, z)
                             scale(scale, scale, 1.0F)
                             translate(-0.5F * rectWidth, -0.5F * rectHeight, -1F)
@@ -122,6 +119,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                                 itemX += ITEM_SIZE
                                 drawItem(it.block.asItem().defaultStack, itemX, 0)
                             }
+                            pop()
                         }
                     }
 

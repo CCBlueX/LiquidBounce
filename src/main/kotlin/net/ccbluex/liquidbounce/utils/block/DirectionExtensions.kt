@@ -20,10 +20,20 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.util.math.Direction
 
+@JvmField
 val DIRECTIONS_EXCLUDING_UP = arrayOf(
     Direction.WEST,
     Direction.EAST,
     Direction.NORTH,
     Direction.SOUTH,
-    Direction.DOWN
+    Direction.DOWN,
+)
+
+@JvmField
+val DIRECTIONS_EXCLUDING_DOWN = arrayOf(
+    Direction.WEST,
+    Direction.EAST,
+    Direction.NORTH,
+    Direction.SOUTH,
+    Direction.UP,
 )

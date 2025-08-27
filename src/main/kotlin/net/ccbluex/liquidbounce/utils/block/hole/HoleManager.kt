@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
-import net.ccbluex.liquidbounce.utils.block.Region
+import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.minecraft.util.math.BlockPos
 
 object HoleManager : EventListener, MinecraftShortcuts {
@@ -69,10 +69,10 @@ object HoleManager : EventListener, MinecraftShortcuts {
         val horizontalDistance = activeModules.maxOf { it.horizontalDistance() }
         val verticalDistance = activeModules.maxOf { it.verticalDistance() }
         val changedAreas = movableRegionScanner.moveTo(
-            Region.quadAround(
-                playerPos,
-                horizontalDistance,
-                verticalDistance
+            playerPos.expendToBlockBox(
+                offsetX = horizontalDistance,
+                offsetY = verticalDistance,
+                offsetZ = horizontalDistance
             )
         )
 

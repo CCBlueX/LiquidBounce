@@ -32,7 +32,29 @@ export type ModuleSetting =
     | TextSetting
     | BindSetting
     | VectorSetting
-    | KeySetting;
+    | KeySetting
+    | FileSetting;
+
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+}
+
+export interface FileSelectResult {
+    file: File | undefined;
+}
+
+export interface FileSetting {
+    valueType: string;
+    name: string;
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+    value: File;
+}
 
 export interface BlocksSetting {
     valueType: string;
@@ -381,7 +403,8 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;

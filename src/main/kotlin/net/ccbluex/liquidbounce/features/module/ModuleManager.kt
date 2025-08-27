@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.M
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
@@ -328,6 +329,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleFastExp,
             ModuleFastUse,
             ModuleInventoryCleaner,
+            ModuleNoEntityInteract,
             ModuleNoFall,
             ModuleNoRotateSet,
             ModuleReach,
@@ -339,6 +341,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Render
             ModuleAnimations,
             ModuleAntiBlind,
+            ModuleBetterInventory,
             ModuleBlockESP,
             ModuleBlockOutline,
             ModuleBreadcrumbs,

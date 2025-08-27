@@ -72,7 +72,7 @@ fun getItemTexture(requestObject: RequestObject) = run {
 
     val buffer = okio.Buffer()
     ImageIO.write(image, "PNG", buffer.outputStream())
-    httpFileStream(buffer.inputStream())
+    httpFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
 }
 
 // GET /api/v1/client/skin
@@ -86,7 +86,7 @@ fun getSkin(requestObject: RequestObject) = run {
     if (texture is NativeImageBackedTexture) {
         val buffer = okio.Buffer()
         texture.image?.write(buffer) ?: return@run httpInternalServerError("Texture is not cached yet")
-        httpFileStream(buffer.inputStream())
+        httpFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
     } else {
         val resource = mc.resourceManager.getResource(skinTextures.texture)
             .getOrNull() ?: return@run httpInternalServerError("Texture not found")

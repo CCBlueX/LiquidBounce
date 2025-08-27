@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
@@ -147,14 +147,8 @@ class AccountManagerAdditionResultEvent(
 @Nameable("accountManagerRemoval")
 class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
 
-@Nameable("proxyAdditionResult")
-class ProxyAdditionResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
-
 @Nameable("proxyCheckResult")
-class ProxyCheckResultEvent(val proxy: Proxy, val error: String? = null) : Event(), WebSocketEvent
-
-@Nameable("proxyEditResult")
-class ProxyEditResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
+class ProxyCheckResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
 @Nameable("browserReady")
 object BrowserReadyEvent : Event()

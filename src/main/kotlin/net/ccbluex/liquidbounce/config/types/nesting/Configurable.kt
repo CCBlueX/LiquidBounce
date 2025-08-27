@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
 import net.minecraft.sound.SoundEvent
@@ -35,6 +36,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.glfw.GLFW
+import java.io.File
 import java.util.*
 import kotlin.enums.EnumEntries
 
@@ -304,6 +306,18 @@ open class Configurable(
 
     fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
+
+    fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
+        registryList(name, default, ValueType.ENTITY_TYPE)
+
+    fun file(
+        name: String,
+        default: File? = null,
+        dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
+        supportedExtensions: Set<String>? = null
+    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> multiEnumChoice(
         name: String,
