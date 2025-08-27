@@ -25,17 +25,12 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.client.option.Perspective
-import net.minecraft.entity.Entity
 import kotlin.math.abs
 
 /**
@@ -48,8 +43,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
-
-    private val showSelf by boolean("ShowSelf", true)
 
     internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
 
@@ -137,18 +130,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             list += Nametag(entity)
         }
 
-        if (showSelf &&
-            (mc.options.perspective !== Perspective.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
-        ) {
-            list += Nametag(player)
-        }
-
         list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
 
-    /**
-     * Should [ModuleNametags] render nametags above this [entity]?
-     */
-    @JvmStatic
-    fun shouldRenderNametag(entity: Entity) = entity.shouldBeShown() || showSelf && entity === player
 }
