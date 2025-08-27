@@ -26,6 +26,7 @@ import type {
 } from "./types";
 import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
+import {isConnecting} from "../routes/menu/disconnected/disconnected_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -411,29 +412,29 @@ export async function loginToAccount(id: number) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
-    }).finally(() => {
-        isLoggingIn.set(false);
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToCrackedAccount(username: string, online: boolean) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({username, online})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToSessionAccount(token: string) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/session`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({token})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function getAccounts(): Promise<Account[]> {
@@ -603,9 +604,10 @@ export async function getClientUpdate(): Promise<ClientUpdate> {
 }
 
 export async function reconnectToServer() {
+    isConnecting.set(true);
     await fetch(`${API_BASE}/client/reconnect`, {
         method: "POST",
-    });
+    }).finally(() => isConnecting.set(false));
 }
 
 export async function toggleBackgroundShaderEnabled() {
