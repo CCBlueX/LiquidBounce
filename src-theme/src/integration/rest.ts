@@ -26,7 +26,6 @@ import type {
 } from "./types";
 import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
-import {isConnecting} from "../routes/menu/disconnected/disconnected_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -316,9 +315,10 @@ export async function setSelectedProtocol(protocol: Protocol) {
 }
 
 export async function restoreSession() {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/restore`, {
         method: "POST",
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function orderAccounts(order: number[]) {
@@ -604,10 +604,9 @@ export async function getClientUpdate(): Promise<ClientUpdate> {
 }
 
 export async function reconnectToServer() {
-    isConnecting.set(true);
     await fetch(`${API_BASE}/client/reconnect`, {
         method: "POST",
-    }).finally(() => isConnecting.set(false));
+    });
 }
 
 export async function toggleBackgroundShaderEnabled() {

@@ -11,7 +11,6 @@
     import {onMount} from "svelte";
     import type {Account} from "../../../integration/types";
     import {restoreSession} from "../../../integration/rest.js";
-    import {isConnecting} from "./disconnected_store";
     import {isLoggingIn} from "../altmanager/altmanager_store";
 
     const premiumAccounts: Account[] = $state([]);
@@ -36,12 +35,13 @@
 
 <div class="reconnect">
     <ButtonSetting title="Reconnect" on:click={reconnectToServer}
-                   disabled={$isConnecting}/>
-    <ButtonSetting title="Restore initial session" on:click={restoreSession}/>
+                   disabled={$isLoggingIn}/>
+    <ButtonSetting title="Restore initial session" on:click={restoreSession}
+                   disabled={$isLoggingIn}/>
     <ButtonSetting title="Reconnect with random account" on:click={reconnectWithRandomAccount}
-                   disabled={premiumAccounts.length === 0 || $isConnecting || $isLoggingIn}/>
+                   disabled={premiumAccounts.length === 0 || $isLoggingIn}/>
     <ButtonSetting title="Reconnect with random username" on:click={reconnectWithRandomUsername}
-                   disabled={$isConnecting || $isLoggingIn}/>
+                   disabled={$isLoggingIn}/>
 </div>
 
 <style lang="scss">
