@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
@@ -35,7 +38,7 @@ private const val ITEM_SIZE = 16
  */
 private val ID_SINGLE_SLOT = Identifier.ofVanilla("container/slot")
 
-private class ItemStackListRenderer private constructor(
+class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
 ) {
@@ -88,6 +91,12 @@ private class ItemStackListRenderer private constructor(
         this.useTexture = true
     }
 
+    fun background(choice: BackgroundChoice) =
+        when (choice) {
+            is BackgroundChoice.Rect -> rectBackground(choice.color.toARGB(), choice.margin)
+            is BackgroundChoice.Texture -> textureBackground()
+        }
+
     fun draw() {
         if (stacks.isEmpty()) return
 
@@ -117,8 +126,6 @@ private class ItemStackListRenderer private constructor(
 
         // render stacks
         stacks.forEachIndexed { i, stack ->
-            if (stack.isEmpty) return@forEachIndexed
-
             val leftX = i % rowLength * size
             val topY = i / rowLength * size
             if (this.useTexture) {
@@ -131,6 +138,9 @@ private class ItemStackListRenderer private constructor(
                     SLOT_SIZE,
                 )
             }
+
+            if (stack.isEmpty) return@forEachIndexed
+
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
 
             drawContext.drawItem(stack, leftX + diff, topY + diff)
@@ -145,6 +155,23 @@ private class ItemStackListRenderer private constructor(
         @JvmName("create")
         fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
             return ItemStackListRenderer(this, stacks)
+        }
+    }
+
+    sealed class BackgroundChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
+        class Rect(parent: ChoiceConfigurable<*>) : BackgroundChoice("Rect", parent) {
+            val color by color("Color", Color4b(Int.MIN_VALUE, true))
+            val margin by int("Margin", 2, 0..100)
+        }
+
+        class Texture(parent: ChoiceConfigurable<*>) : BackgroundChoice("Texture", parent)
+
+        companion object {
+            @JvmStatic
+            internal fun backgroundChoices(parent: ChoiceConfigurable<*>) = arrayOf(
+                Rect(parent),
+                Texture(parent),
+            )
         }
     }
 
