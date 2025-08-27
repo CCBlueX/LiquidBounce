@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
@@ -34,6 +35,121 @@ private const val ITEM_SIZE = 16
  */
 private val ID_SINGLE_SLOT = Identifier.ofVanilla("container/slot")
 
+private class ItemStackListRenderer private constructor(
+    private val drawContext: DrawContext,
+    private val stacks: List<ItemStack>,
+) {
+    private var centerX = 0.0F
+    private var centerY = 0.0F
+    private var centerZ = 0.0F
+    private var scale = 1.0F
+    private var rowLength = 9
+    private var backgroundColor = Int.MIN_VALUE
+    private var backgroundMargin = 2
+    private var useTexture = false
+
+    fun centerX(centerX: Float) = apply {
+        this.centerX = centerX
+    }
+
+    fun centerY(centerY: Float) = apply {
+        this.centerY = centerY
+    }
+
+    fun centerZ(centerZ: Float) = apply {
+        this.centerZ = centerZ
+    }
+
+    fun center(center: Vec3) = apply {
+        this.centerX = center.x
+        this.centerY = center.y
+        this.centerZ = center.z
+    }
+
+    /**
+     * @param rowLength The maximum count of stack which can be placed in one row.
+     */
+    fun rowLength(rowLength: Int) = apply {
+        require(rowLength > 0) { "Row length must not be greater than zero." }
+        this.rowLength = rowLength
+    }
+
+    fun scale(scale: Float) = apply {
+        this.scale = scale
+    }
+
+    @JvmOverloads
+    fun rectBackground(color: Int, margin: Int = this.backgroundMargin) = apply {
+        this.backgroundColor = color
+        this.backgroundMargin = margin
+    }
+
+    fun textureBackground() = apply {
+        this.useTexture = true
+    }
+
+    fun draw() {
+        if (stacks.isEmpty()) return
+
+        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
+
+        val matrices = drawContext.matrices
+
+        val width = size * minOf(stacks.size, rowLength)
+        val height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
+
+        matrices.push()
+
+        matrices.translate(centerX, centerY, centerZ)
+        matrices.scale(scale, scale, 1.0F)
+        matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
+
+        // draw background
+        if (!this.useTexture) {
+            drawContext.fill(
+                -backgroundMargin,
+                -backgroundMargin,
+                width + backgroundMargin,
+                height + backgroundMargin,
+                backgroundColor
+            )
+        }
+
+        // render stacks
+        stacks.forEachIndexed { i, stack ->
+            if (stack.isEmpty) return@forEachIndexed
+
+            val leftX = i % rowLength * size
+            val topY = i / rowLength * size
+            if (this.useTexture) {
+                drawContext.drawGuiTexture(
+                    RenderLayer::getGuiTextured,
+                    ID_SINGLE_SLOT,
+                    leftX,
+                    topY,
+                    SLOT_SIZE,
+                    SLOT_SIZE,
+                )
+            }
+            val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
+
+            drawContext.drawItem(stack, leftX + diff, topY + diff)
+            drawContext.drawStackOverlay(mc.textRenderer, stack, leftX + diff, topY + diff)
+        }
+
+        matrices.pop()
+    }
+
+    companion object {
+        @JvmStatic
+        @JvmName("create")
+        fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
+            return ItemStackListRenderer(this, stacks)
+        }
+    }
+
+}
+
 /**
  * Draw a tag for a list of [ItemStack]s.
  *
@@ -48,78 +164,25 @@ fun DrawContext.drawItemTags(
     backgroundMargin: Int = 2,
     scale: Float = 1.0F,
     rowLength: Int = 9,
-) {
-    if (stacks.isEmpty()) return
-
-    val width = ITEM_SIZE * minOf(stacks.size, rowLength)
-    val height = ITEM_SIZE * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
-
-    matrices.push()
-
-    matrices.translate(centerPos.x, centerPos.y, centerPos.z)
-    matrices.scale(scale, scale, 1.0F)
-    matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
-
-    // draw background
-    fill(
-        -backgroundMargin,
-        -backgroundMargin,
-        width + backgroundMargin,
-        height + backgroundMargin,
-        backgroundColor
-    )
-
-    // render stacks
-    stacks.forEachIndexed { i, stack ->
-        if (stack.isEmpty) return@forEachIndexed
-
-        val leftX = i % rowLength * ITEM_SIZE
-        val topY = i / rowLength * ITEM_SIZE
-
-        drawItem(stack, leftX, topY)
-        drawStackOverlay(mc.textRenderer, stack, leftX, topY)
-    }
-
-    matrices.pop()
-}
+) = drawItemStackList(stacks)
+    .centerX(centerPos.x)
+    .centerY(centerPos.y)
+    .centerZ(centerPos.z)
+    .scale(scale)
+    .rectBackground(backgroundColor, backgroundMargin)
+    .rowLength(rowLength)
+    .draw()
 
 fun DrawContext.drawItemTagsWithSlotTexture(
     stacks: List<ItemStack>,
     centerPos: Vec3,
     scale: Float = 1.0F,
     rowLength: Int = 9,
-) {
-    if (stacks.isEmpty()) return
-
-    val width = SLOT_SIZE * minOf(stacks.size, rowLength)
-    val height = SLOT_SIZE * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
-
-    matrices.push()
-
-    matrices.translate(centerPos.x, centerPos.y, centerPos.z)
-    matrices.scale(scale, scale, 1.0F)
-    matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
-
-    // render stacks
-    stacks.forEachIndexed { i, stack ->
-        if (stack.isEmpty) return@forEachIndexed
-
-        val slotLeftX = i % rowLength * SLOT_SIZE
-        val slotTopY = i / rowLength * SLOT_SIZE
-        val itemLeftX = slotLeftX + (SLOT_SIZE - ITEM_SIZE) / 2
-        val itemTopY = slotTopY + (SLOT_SIZE - ITEM_SIZE) / 2
-
-        drawGuiTexture(
-            RenderLayer::getGuiTextured,
-            ID_SINGLE_SLOT,
-            slotLeftX,
-            slotTopY,
-            SLOT_SIZE,
-            SLOT_SIZE,
-        )
-        drawItem(stack, itemLeftX, itemTopY)
-        drawStackOverlay(mc.textRenderer, stack, itemLeftX, itemTopY)
-    }
-
-    matrices.pop()
-}
+) = drawItemStackList(stacks)
+    .centerX(centerPos.x)
+    .centerY(centerPos.y)
+    .centerZ(centerPos.z)
+    .scale(scale)
+    .textureBackground()
+    .rowLength(rowLength)
+    .draw()
