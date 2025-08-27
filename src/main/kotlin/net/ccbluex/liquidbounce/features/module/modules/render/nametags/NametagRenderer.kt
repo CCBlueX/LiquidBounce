@@ -126,6 +126,10 @@ class NametagRenderer {
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
 
         itemsToRender.forEachIndexed { index, itemStack ->
+            if (itemStack.isEmpty) {
+                return@forEachIndexed
+            }
+
             val x = index * ITEM_SIZE
             dc.drawItem(itemStack, x, 0)
             if (itemInfo) {
