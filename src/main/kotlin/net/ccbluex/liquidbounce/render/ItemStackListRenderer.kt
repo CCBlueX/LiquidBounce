@@ -38,6 +38,7 @@ private const val ITEM_SIZE = 16
  */
 private val ID_SINGLE_SLOT = Identifier.ofVanilla("container/slot")
 
+@Suppress("TooManyFunctions")
 class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
@@ -102,6 +103,28 @@ class ItemStackListRenderer private constructor(
         this.drawStackOverlay = drawStackOverlay
     }
 
+    private fun fillBackground(width: Int, height: Int) {
+        drawContext.fill(
+            -backgroundMargin,
+            -backgroundMargin,
+            width + backgroundMargin,
+            height + backgroundMargin,
+            backgroundColor
+        )
+    }
+
+    private fun drawSlotTexture(x: Int, y: Int) {
+        drawContext.drawGuiTexture(
+            RenderLayer::getGuiTextured,
+            ID_SINGLE_SLOT,
+            x,
+            y,
+            SLOT_SIZE,
+            SLOT_SIZE,
+        )
+    }
+
+    @Suppress("CognitiveComplexMethod")
     fun draw() {
         if (stacks.isEmpty()) return
 
@@ -118,33 +141,19 @@ class ItemStackListRenderer private constructor(
         matrices.scale(scale, scale, 1.0F)
         matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
 
-        // draw background
         if (!this.useTexture) {
-            drawContext.fill(
-                -backgroundMargin,
-                -backgroundMargin,
-                width + backgroundMargin,
-                height + backgroundMargin,
-                backgroundColor
-            )
+            fillBackground(width, height)
         }
 
         // render stacks
-        stacks.forEachIndexed { i, stack ->
+        for ((i, stack) in stacks.withIndex()) {
             val leftX = i % rowLength * size
             val topY = i / rowLength * size
             if (this.useTexture) {
-                drawContext.drawGuiTexture(
-                    RenderLayer::getGuiTextured,
-                    ID_SINGLE_SLOT,
-                    leftX,
-                    topY,
-                    SLOT_SIZE,
-                    SLOT_SIZE,
-                )
+                drawSlotTexture(leftX, topY)
             }
 
-            if (stack.isEmpty) return@forEachIndexed
+            if (stack.isEmpty) continue
 
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
 
