@@ -1,6 +1,6 @@
 <script lang="ts">
     import {listen} from "../../../../integration/ws";
-    import type {KeyBindingEvent, KeyBindingCPSEvent} from "../../../../integration/events";
+    import type {KeyBindingCPSEvent, KeyBindingEvent} from "../../../../integration/events";
     import type {MinecraftKeybind} from "../../../../integration/types";
 
     export let flexBasis: string = '50px';
@@ -12,7 +12,7 @@
 
     let cps = 0;
 
-    listen("keybinding", (e: KeyBindingEvent) => {
+    listen("keyBinding", (e: KeyBindingEvent) => {
         if (e.key !== key?.key.translationKey) {
             return;
         }
@@ -21,7 +21,7 @@
     });
 
     if (showCPS) {
-        listen("keybindingCPS", (e: KeyBindingCPSEvent) => {
+        listen("keyBindingCPS", (e: KeyBindingCPSEvent) => {
             if (e.key !== key?.key.translationKey) {
                 return;
             }

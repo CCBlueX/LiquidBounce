@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.input
 
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.InputUtil.Type.KEYSYM
 import net.minecraft.client.util.InputUtil.Type.MOUSE
 import org.lwjgl.glfw.GLFW
@@ -48,10 +48,10 @@ object InputTracker : EventListener {
         KeyBindingTracker(mc.options.sneakKey),
     )
 
-    override fun children(): List<Listenable> = trackers
+    override fun children(): List<EventListener> = trackers
 
     // Tracks CPS
-    class KeyBindingTracker internal constructor(val keyBinding: KeyBinding) : Listenable {
+    private class KeyBindingTracker(val keyBinding: KeyBinding) : EventListener {
         // Records clicks in latest 20 ticks (1 sec)
         private val countByTick = IntArray(20)
         private var tickIndex = 0
@@ -69,8 +69,7 @@ object InputTracker : EventListener {
                 field = value
             }
 
-        @Suppress("NOTHING_TO_INLINE")
-        private inline fun setPressed(action: Int) {
+        private fun setPressed(action: Int) {
             when (action) {
                 GLFW.GLFW_RELEASE -> pressed = false
                 GLFW.GLFW_PRESS -> pressed = true
@@ -135,8 +134,7 @@ object InputTracker : EventListener {
      * @return True if the key is pressed on the keyboard, false otherwise.
      */
     val KeyBinding.pressedOnKeyboard: Boolean
-        get() = this.boundKey.category == InputUtil.Type.KEYSYM
-            && boundKey.isPressed
+        get() = this.boundKey.category == KEYSYM && boundKey.isPressed
 
     /**
      * Extension property that checks if a key binding is pressed on the mouse.
@@ -144,7 +142,7 @@ object InputTracker : EventListener {
      * @return True if the mouse button is pressed, false otherwise.
      */
     val KeyBinding.pressedOnMouse: Boolean
-        get() = this.boundKey.category == InputUtil.Type.MOUSE && isMouseButtonPressed(this.boundKey.code)
+        get() = this.boundKey.category == MOUSE && isMouseButtonPressed(this.boundKey.code)
 
     /**
      * Extension property that checks if a key binding was pressed recently.
@@ -154,8 +152,8 @@ object InputTracker : EventListener {
      */
     fun KeyBinding.wasPressedRecently(withinMs: Long): Boolean {
         return when (this.boundKey.category) {
-            InputUtil.Type.KEYSYM -> wasKeyPressedRecently(this.boundKey.code, withinMs)
-            InputUtil.Type.MOUSE -> wasMouseButtonPressedRecently(this.boundKey.code, withinMs)
+            KEYSYM -> wasKeyPressedRecently(this.boundKey.code, withinMs)
+            MOUSE -> wasMouseButtonPressedRecently(this.boundKey.code, withinMs)
             else -> false
         }
     }
@@ -168,8 +166,8 @@ object InputTracker : EventListener {
     val KeyBinding.timeSinceLastPress: Long
         get() {
             return when (this.boundKey.category) {
-                InputUtil.Type.KEYSYM -> getTimeSinceKeyPress(this.boundKey.code)
-                InputUtil.Type.MOUSE -> getTimeSinceMousePress(this.boundKey.code)
+                KEYSYM -> getTimeSinceKeyPress(this.boundKey.code)
+                MOUSE -> getTimeSinceMousePress(this.boundKey.code)
                 else -> Long.MAX_VALUE
             }
         }

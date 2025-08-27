@@ -58,6 +58,12 @@ class KeyEvent(
     val action: Int,
 ) : Event(), WebSocketEvent
 
+@Nameable("keyBinding")
+class KeyBindingEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event(), WebSocketEvent
+
+@Nameable("keyBindingCPS")
+class KeyBindingCPSEvent(val key: InputUtil.Key, val cps: Int) : Event(), WebSocketEvent
+
 // Input events
 @Nameable("inputHandle")
 object InputHandleEvent : Event()
@@ -96,12 +102,6 @@ class MouseRotationEvent(
 
 @Nameable("keybindChange")
 object KeybindChangeEvent : Event(), WebSocketEvent
-
-@Nameable("keybinding")
-class KeyBindingEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event(), WebSocketEvent
-
-@Nameable("keybindingCPS")
-class KeyBindingCPSEvent(val key: InputUtil.Key, val cps: Int) : Event(), WebSocketEvent
 
 @Nameable("keybindIsPressed")
 class KeybindIsPressedEvent(
