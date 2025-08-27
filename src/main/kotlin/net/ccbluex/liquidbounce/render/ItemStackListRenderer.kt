@@ -50,6 +50,7 @@ class ItemStackListRenderer private constructor(
     private var backgroundColor = Int.MIN_VALUE
     private var backgroundMargin = 2
     private var useTexture = false
+    private var drawStackOverlay = true
 
     fun centerX(centerX: Float) = apply {
         this.centerX = centerX
@@ -96,6 +97,10 @@ class ItemStackListRenderer private constructor(
             is BackgroundChoice.Rect -> rectBackground(choice.color.toARGB(), choice.margin)
             is BackgroundChoice.Texture -> textureBackground()
         }
+
+    fun drawStackOverlay(drawStackOverlay: Boolean) = apply {
+        this.drawStackOverlay = drawStackOverlay
+    }
 
     fun draw() {
         if (stacks.isEmpty()) return
@@ -144,7 +149,9 @@ class ItemStackListRenderer private constructor(
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
 
             drawContext.drawItem(stack, leftX + diff, topY + diff)
-            drawContext.drawStackOverlay(mc.textRenderer, stack, leftX + diff, topY + diff)
+            if (drawStackOverlay) {
+                drawContext.drawStackOverlay(mc.textRenderer, stack, leftX + diff, topY + diff, null)
+            }
         }
 
         matrices.pop()
