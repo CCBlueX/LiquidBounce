@@ -38,7 +38,7 @@ import org.lwjgl.glfw.GLFW
  */
 object InputTracker : EventListener {
 
-    @Suppress("UNUSED")
+    @Suppress("unused")
     private val cpsTick = handler<PlayerTickEvent>(priority = READ_FINAL_STATE) {
         mc.options.allKeys.forEach {
             (it as KeyBindingAdditions).`liquidbounce$triggerTickEnd`()
