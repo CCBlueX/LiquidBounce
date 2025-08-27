@@ -1,3 +1,4 @@
+@file:Suppress("LoopWithTooManyJumpStatements")
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -22,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -35,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.*
@@ -43,6 +46,8 @@ import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity
 import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -56,12 +61,7 @@ import java.awt.Color
 
 object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
-    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
-    private val show by multiEnumChoice(
-        "Show",
-        Show.CHEST
-
-    )
+    private val modes = choices("Mode", TagMode, arrayOf(BoxMode, Glow, TagMode))
     private val chestColor by color("Chest", Color4b.WHITE)
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
     private val furnaceColor by color("Furnace", Color4b(79, 79, 79))
@@ -69,9 +69,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
     private val potColor by color("Pot", Color4b(209, 134, 0))
-
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
-
+    private val show by multiEnumChoice("Show", Show.CHEST)
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
     }
@@ -80,8 +79,69 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         ChunkScanner.unsubscribe(StorageScanner)
     }
 
-    private object BoxMode : Choice("Box") {
+    private object TagMode : Choice("Tag") {
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
 
+        private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+        private val scale by float("Scale", 0.5F, 0.25F..1F)
+
+        @Suppress("unused")
+        val renderHandler = handler<OverlayRenderEvent> { event ->
+            renderEnvironmentForGUI {
+                for ((pos, type) in StorageScanner.iterate()) {
+                    if (type.showChoice !in show || type.color.a <= 0 || !type.shouldRender(pos)) continue
+                    val state = pos.getState() ?: continue
+                    if (state.isAir) continue
+
+                    val worldPos = pos.toVec3d().add(0.5, 0.5, 0.5)
+                    val screenPos = WorldToScreen.calculateScreenPos(worldPos) ?: continue
+
+                    val stack = when (type) {
+                        ChestType.CHEST -> ItemStack(Items.CHEST)
+                        ChestType.ENDER_CHEST -> ItemStack(Items.ENDER_CHEST)
+                        ChestType.FURNACE -> ItemStack(Items.FURNACE)
+                        ChestType.DISPENSER -> ItemStack(Items.DISPENSER)
+                        ChestType.HOPPER -> ItemStack(Items.HOPPER)
+                        ChestType.SHULKER_BOX -> ItemStack(Items.SHULKER_BOX)
+                        ChestType.POT -> ItemStack(Items.DECORATED_POT)
+                    }
+
+                    event.context.drawItemTags(
+                        stacks = listOf(stack),
+                        centerPos = screenPos,
+                        backgroundColor = backgroundColor.toARGB(),
+                        scale = scale,
+                        rowLength = 1
+                    )
+                }
+
+                for (entity in world.entities) {
+                    val type = entity.categorize() ?: continue
+                    if (type.showChoice !in show || type.color.a <= 0) continue
+
+                    val pos = entity.interpolateCurrentPosition(event.tickDelta)
+                    val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
+
+                    val stack = when (type) {
+                        ChestType.CHEST -> ItemStack(Items.CHEST)
+                        ChestType.HOPPER -> ItemStack(Items.HOPPER)
+                        else -> continue
+                    }
+
+                    event.context.drawItemTags(
+                        stacks = listOf(stack),
+                        centerPos = screenPos,
+                        backgroundColor = backgroundColor.toARGB(),
+                        scale = scale,
+                        rowLength = 1
+                    )
+                }
+            }
+        }
+    }
+
+    private object BoxMode : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
@@ -100,14 +160,16 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                         val playerPos = player.interpolateCurrentPosition(event.partialTicks)
                         val dist = playerPos.distanceTo(pos)
                         val alphaFactor =
-                            if (dist >= fadeDistance) 1f
-                            else minAlpha / 255f + (1f - minAlpha / 255f) * (dist / fadeDistance)
+                            if (dist >= fadeDistance) {
+                                1f
+                            } else {
+                                minAlpha / 255f + (1f - minAlpha / 255f) * (dist / fadeDistance)
+                            }
                         val baseAlpha = (50 * alphaFactor.toFloat()).toInt().coerceIn(0, 255)
                         val outlineAlpha = (100 * alphaFactor.toFloat()).toInt().coerceIn(0, 255)
 
                         val baseColor = color.with(a = baseAlpha)
                         val outlineColor = color.with(a = outlineAlpha)
-
 
                         withPositionRelativeToCamera(pos) {
                             drawBox(box, baseColor, outlineColor.takeIf { outline })
@@ -117,9 +179,9 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
         }
 
-
         @JvmRecord
         private data class BoxRecord(val pos: Vec3d, val box: Box, val color: Color4b)
+
 
         private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
             val queuedBoxes = mutableListOf<BoxRecord>()
@@ -153,8 +215,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             return queuedBoxes
         }
     }
-    object Glow : Choice("Glow") {
 
+    object Glow : Choice("Glow") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
@@ -169,19 +231,14 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 BoxRenderer.drawWith(this) {
                     for ((pos, type) in StorageScanner.iterate()) {
                         val state = pos.getState() ?: continue
-
-                        // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                        // their outline
                         if (state.renderType != BlockRenderType.MODEL) {
                             continue
                         }
-
                         if (state.isAir) {
                             continue
                         }
 
                         val outlineShape = state.getOutlineShape(world, pos)
-
                         val boundingBox = if (outlineShape.isEmpty) {
                             FULL_BOX
                         } else {
@@ -202,7 +259,6 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     @JvmStatic
     fun Entity.categorize(): ChestType? {
         return when (this) {
-            // This includes any storage type minecart entity including ChestMinecartEntity
             is HopperMinecartEntity -> ChestType.HOPPER
             is StorageMinecartEntity -> ChestType.CHEST
             is ChestBoatEntity -> ChestType.CHEST
@@ -226,9 +282,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
     }
 
-    enum class Show(
-        override val choiceName: String
-    ) : NamedChoice {
+    enum class Show(override val choiceName: String) : NamedChoice {
         CHEST("Chest"),
         ENDER_CHEST("EnderChest"),
         FURNACE("Furnace"),
@@ -237,6 +291,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         SHULKER_BOX("ShulkerBox"),
         POT("Pot"),
     }
+
     enum class ChestType(val showChoice: Show) {
         CHEST(Show.CHEST) {
             override val color get() = chestColor
@@ -262,7 +317,6 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         POT(Show.POT) {
             override val color get() = potColor
         };
-
         abstract val color: Color4b
         open fun shouldRender(pos: BlockPos): Boolean = true
     }
