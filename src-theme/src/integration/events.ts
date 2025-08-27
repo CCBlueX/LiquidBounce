@@ -6,8 +6,32 @@ import type {
     Proxy,
     Screen,
     Server,
-    TextComponent
+    TextComponent,
 } from "./types";
+
+export interface EventMap {
+    clickGuiValueChange: ClickGuiValueChangeEvent;
+    moduleToggle: ModuleToggleEvent;
+    keyboardKey: KeyboardKeyEvent;
+    mouseButton: MouseButtonEvent;
+    scaleFactorChange: ScaleFactorChangeEvent;
+    componentsUpdate: ComponentsUpdateEvent;
+    clientPlayerData: ClientPlayerDataEvent;
+    overlayMessage: OverlayMessageEvent;
+    notification: NotificationEvent;
+    keyEvent: KeyEvent;
+    targetChange: TargetChangeEvent;
+    blockCountChange: BlockCountChangeEvent;
+    accountManagerAddition: AccountManagerAdditionEvent;
+    accountManagerRemoval: AccountManagerRemovalEvent;
+    accountManagerMessage: AccountManagerMessageEvent;
+    accountManagerLogin: AccountManagerLoginEvent;
+    serverPinged: ServerPingedEvent;
+    clientPlayerInventory: ClientPlayerInventoryEvent;
+    proxyCheckResult: ProxyCheckResultEvent;
+    spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    browserUrlChange: BrowserUrlChangeEvent;
+}
 
 export interface ClickGuiValueChangeEvent {
     configurable: ConfigurableSetting;
@@ -95,7 +119,7 @@ export interface ServerPingedEvent {
     server: Server;
 }
 
-export interface PlayerInventoryEvent {
+export interface ClientPlayerInventoryEvent {
     inventory: PlayerInventory;
 }
 
@@ -113,10 +137,6 @@ export interface ProxyCheckResultEvent {
 
 export interface SpaceSeperatedNamesChangeEvent {
     value: boolean;
-}
-
-export interface ClickGuiScaleChangeEvent {
-    value: number;
 }
 
 export interface BrowserUrlChangeEvent {
