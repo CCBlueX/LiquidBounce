@@ -310,21 +310,16 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
-fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
-    val origin = doubleArrayOf(eyes.x, eyes.y, eyes.z)
-    val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
-    val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
-
-    // It loops through every coordinate of the double arrays and picks the nearest point
-    for (i in 0..2) {
-        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
-    }
-
-    return Vec3d(origin[0], origin[1], origin[2])
+fun getNearestPoint(from: Vec3d, box: Box): Vec3d {
+    return Vec3d(
+        from.x.coerceIn(box.minX, box.maxX),
+        from.y.coerceIn(box.minY, box.maxY),
+        from.z.coerceIn(box.minZ, box.maxZ),
+    )
 }
 
-fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
-    val nearestPointInBlock = getNearestPoint(eyes, box)
+fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
+    val nearestPointInBlock = getNearestPoint(from, box)
 
     val x = nearestPointInBlock.x
     val y = nearestPointInBlock.y
@@ -375,19 +370,15 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     var amount = damage
 
     if (this is PlayerEntity) {
-        if (this.abilities.invulnerable && source.type.msgId != mc.world!!.damageSources.outOfWorld().type.msgId)
+        if (this.abilities.invulnerable && source.type.msgId != world.damageSources.outOfWorld().type.msgId)
             return 0.0F
 
         if (source.isScaledWithDifficulty) {
             if (world.difficulty == Difficulty.PEACEFUL) {
                 amount = 0.0f
-            }
-
-            if (world.difficulty == Difficulty.EASY) {
+            } else if (world.difficulty == Difficulty.EASY) {
                 amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
-            }
-
-            if (world.difficulty == Difficulty.HARD) {
+            } else if (world.difficulty == Difficulty.HARD) {
                 amount = amount * 3.0f / 2.0f
             }
         }
@@ -396,9 +387,8 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     if (amount == 0.0F)
         return 0.0F
 
-    if (source == mc.world!!.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+    if (source == world.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
         return 0.0F
-
 
     if (!ignoreShield && blockedByShield(source))
         return 0.0F
@@ -493,7 +483,7 @@ fun LivingEntity.getExposureToExplosion(
             isDescending,
             entityBoundingBox1.minY,
             mainHandStack,
-            { state -> canWalkOnFluid(state) },
+            ::canWalkOnFluid,
             this
         )
     } ?: ShapeContext.of(this)

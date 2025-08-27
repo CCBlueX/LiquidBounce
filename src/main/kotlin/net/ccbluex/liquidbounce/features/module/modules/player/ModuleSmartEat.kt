@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -129,12 +128,12 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             private val offset by int("Offset", 40, 30..70)
 
             @Suppress("unused")
-            private val renderHandler = handler<OverlayRenderEvent> {
+            private val renderHandler = handler<OverlayRenderEvent> { event ->
                 renderEnvironmentForGUI {
                     // MC-Rendering code for off-hand
 
                     val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
-                    val dc = newDrawContext()
+                    val dc = event.context
                     val scaledWidth = dc.scaledWindowWidth
                     val scaledHeight = dc.scaledWindowHeight
                     val i: Int = scaledWidth / 2

@@ -6,17 +6,19 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
-    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
+    RegistryItem,
     Server,
     Session,
     VirtualScreen,
@@ -133,6 +135,18 @@ export async function getPlayerData(): Promise<PlayerData> {
     return data;
 }
 
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
+}
+
 export async function getPlayerInventory(): Promise<PlayerInventory> {
     const response = await fetch(`${API_BASE}/client/player/inventory`);
     const data: PlayerInventory = await response.json();
@@ -184,6 +198,16 @@ export async function browse(target: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({target})
+    });
+}
+
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({path})
     });
 }
 

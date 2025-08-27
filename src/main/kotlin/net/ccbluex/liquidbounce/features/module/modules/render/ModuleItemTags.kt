@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
@@ -29,22 +32,21 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.collection.Filter
-import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
+import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
-import java.util.*
 
 /**
  * ItemTags module
@@ -80,7 +82,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
 
         object Distance : ClusterSizeMode("Distance") {
-            private val size by floatRange("Size", 1F..16F, 0.1F..32.0F)
+            private val size by floatRange("Size", 1F..16F, 0.1F..32F)
             private val range by floatRange("Range", 32F..64F, 1F..256F)
             private val curve by curve("Curve", Easing.LINEAR)
 
@@ -91,39 +93,42 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private val drawContext = newDrawContext()
-
-    private var itemEntities by computedOn<GameTickEvent, Map<Vec3d, List<ItemStack>>>(
-        initialValue = emptyMap()
-    ) { _, _ ->
+    private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
+        initialValue = ObjectArrayList()
+    ) { _, clusteredEntities ->
         val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
 
         @Suppress("UNCHECKED_CAST")
-        (world.entities.filter {
+        val entities = world.entities.filter {
             it is ItemEntity && it.squaredDistanceTo(cameraPos) < maxDistSquared && filter(it.stack.item, items)
-        } as List<ItemEntity>).cluster()
+        } as List<ItemEntity>
+
+        computeEntityClusters(entities, clusteredEntities)
+
+        clusteredEntities
     }
 
     override fun onDisabled() {
-        itemEntities = emptyMap()
+        itemEntities.clear()
     }
 
     @Suppress("unused")
     private val worldHandler = handler<WorldChangeEvent> {
-        itemEntities = emptyMap()
+        itemEntities.clear()
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> {
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
         renderEnvironmentForGUI {
-            itemEntities.mapNotNull { (center, items) ->
-                val renderPos = WorldToScreen.calculateScreenPos(center.add(renderOffset))
+            itemEntities.mapNotNull { result ->
+                val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
+                val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset))
                     ?: return@mapNotNull null
-                renderPos to items
+                renderPos to result.stacks
             }.forEachWithSelf { (center, stacks), i, self ->
                 val z = 1000.0F * i / self.size
-                drawContext.drawItemTags(
+                event.context.drawItemTags(
                     stacks = stacks,
                     centerPos = center.copy(z = z),
                     backgroundColor = backgroundColor.toARGB(),
@@ -134,22 +139,26 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    @JvmStatic
-    private fun List<ItemEntity>.cluster(): Map<Vec3d, List<ItemStack>> {
-        if (this.isEmpty()) {
-            return emptyMap()
+    private class ClusteredEntities(val entities: List<Entity>, val stacks: List<ItemStack>) {
+        fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
+            return entities.fold(Vec3d.ZERO) { acc, entity ->
+                acc.add(entity.interpolateCurrentPosition(tickDelta))
+            }.multiply(1.0 / entities.size)
         }
+    }
 
-        val groups = mutableListOf<Set<ItemEntity>>()
-        val visited = hashSetOf<ItemEntity>()
+    @JvmStatic
+    private fun computeEntityClusters(entities: List<ItemEntity>, output: ObjectArrayList<ClusteredEntities>) {
+        val groups = ObjectArrayList<List<ItemEntity>>()
+        val visited = ReferenceOpenHashSet<ItemEntity>()
 
-        for (entity in this) {
+        for (entity in entities) {
             if (entity in visited) continue
 
             val radiusSquared = clusterSizeMode.activeChoice.size(entity).sq()
 
             // `entity` will also be added
-            val group = this.filterTo(hashSetOf()) { other ->
+            val group = entities.filter { other ->
                 other !in visited && entity.squaredDistanceTo(other) < radiusSquared
             }
 
@@ -157,12 +166,11 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             groups.add(group)
         }
 
-        return groups.associate { entities ->
-            Pair(
-                // Get the center pos of all entities
-                entities.map { it.box.center }.average(),
-                entities.mergeStacks(),
-            )
+        // Output
+        output.clear()
+        output.ensureCapacity(groups.size)
+        groups.mapTo(output) {
+            ClusteredEntities(it, it.mergeStacks())
         }
     }
 
@@ -170,21 +178,21 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
      * Merge stacks with same item, order by count desc
      */
     @JvmStatic
-    private fun Set<ItemEntity>.mergeStacks(): List<ItemStack> {
-        val map = IdentityHashMap<Item, MutableList<ItemStack>>()
+    private fun List<ItemEntity>.mergeStacks(): List<ItemStack> {
+        val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
         for (itemEntity in this) {
-            map.getOrPut(itemEntity.stack.item, ::mutableListOf).add(itemEntity.stack)
+            map.getOrPut(itemEntity.stack.item, ::mutableListOf)
+                .add(itemEntity.stack)
         }
-        val result = ArrayList<ItemStack>(map.size)
-        map.values.forEach { stacks ->
+        val result = map.values.mapArray { stacks ->
             if (stacks.size == 1) {
-                result.add(stacks[0])
+                stacks[0]
             } else {
-                result.add(ItemStack(stacks[0].item, stacks.sumOf { it.count }))
+                ItemStack(stacks[0].item, stacks.sumOf { it.count })
             }
         }
         result.sortByDescending { it.count }
-        return result
+        return result.asList()
     }
 
 }

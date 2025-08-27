@@ -106,18 +106,8 @@ export interface PlayerInventory {
     enderChest: ItemStack[];
 }
 
-export interface ProxyAdditionResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
-}
-
-export interface ProxyEditResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
-}
-
 export interface ProxyCheckResultEvent {
-    proxy: Proxy;
+    proxy: Proxy | null;
     error: string | null;
 }
 

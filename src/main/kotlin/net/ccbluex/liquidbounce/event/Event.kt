@@ -24,14 +24,17 @@ import kotlin.reflect.KClass
 /**
  * A callable event
  */
-abstract class Event
+abstract class Event {
+    var isCompleted: Boolean = false
+        internal set
+}
 
 /**
  * A cancellable event
  */
 abstract class CancellableEvent : Event() {
     /**
-     * Let you know if the event is cancelled
+     * Let you know if the event is canceled
      *
      * @return state of cancel
      */
@@ -42,6 +45,8 @@ abstract class CancellableEvent : Event() {
      * Allows you to cancel an event
      */
     fun cancelEvent() {
+        require(!isCompleted) { "Cannot cancel an event that has already been completed." }
+
         isCancelled = true
     }
 

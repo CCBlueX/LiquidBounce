@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -20,7 +21,10 @@ import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket
 import net.minecraft.text.RawFilteredPair
 import net.minecraft.text.Style
 import net.minecraft.text.Text
+import okio.buffer
+import okio.source
 import java.util.*
+import java.util.stream.IntStream
 
 /**
  * Maximum number of lines that can fit on a single page in the Minecraft book.
@@ -54,7 +58,11 @@ private const val MAX_LINE_WIDTH: Float = 114f
 object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    private val generationMode = choices("Mode", GenerationMode.Random, arrayOf(GenerationMode.Random)).apply {
+    internal val generationMode = choices(
+        "Mode",
+        GenerationMode.Random,
+        arrayOf(GenerationMode.Random, GenerationMode.File)
+    ).apply {
         tagBy(this)
     }
 
@@ -72,12 +80,8 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private var bookCount = 0
 
-    internal var random: Random = Random()
-        private set
-
     override fun onEnabled() {
         bookCount = 0
-        random = Random()
         chronometer.reset()
     }
 
@@ -136,44 +140,16 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         }
 
         val bookBuilder = BookBuilder()
-        bookBuilder.buildBookContent(generationMode.activeChoice.generate()) {
+        val generator = generationMode.activeChoice.generate()
+            .filter { it.toChar() != '\r' }
+            .iterator()
+
+        bookBuilder.buildBookContent(generator) {
             mc.textRenderer.textHandler.widthRetriever.getWidth(it, Style.EMPTY)
         }
         bookBuilder.writeBook()
 
         bookCount++
-    }
-
-    private sealed class GenerationMode(
-        name: String,
-    ) : Choice(name) {
-        override val parent: ChoiceConfigurable<*> = ModuleBookBot.generationMode
-
-        val pages by int("Pages", 50, 0..100)
-
-        abstract fun generate(): PrimitiveIterator.OfInt
-
-
-        object Random : GenerationMode("Random") {
-            private val asciiOnly by boolean("AsciiOnly", false)
-
-            private val allowSpace by boolean("AllowSpace", true)
-
-            /**
-             * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
-             * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
-             * @author arlomcwalter (on Meteor Client)
-             */
-            override fun generate(): PrimitiveIterator.OfInt {
-                val origin = if (asciiOnly) 0x21 else 0x0800
-                val bound = if (asciiOnly) 0x7E else 0x10FFFF
-
-                return random
-                    .ints(origin, bound)
-                    .filter { allowSpace || !Character.isWhitespace(it) }
-                    .iterator()
-            }
-        }
     }
 
     private fun StringBuilder.appendLineBreak(lineIndex: Int) {
@@ -272,6 +248,72 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
                     if (Sign.enabled) Optional.of(title) else Optional.empty()
                 )
             )
+        }
+    }
+}
+
+internal sealed class GenerationMode(
+    name: String,
+) : Choice(name) {
+    override val parent: ChoiceConfigurable<*> get() = ModuleBookBot.generationMode
+
+    internal val random = Random()
+
+    val pages by int("Pages", 50, 0..100)
+
+    abstract fun generate(): IntStream
+
+    object Random : GenerationMode("Random") {
+        private val asciiOnly by boolean("AsciiOnly", false)
+        private val allowSpace by boolean("AllowSpace", true)
+
+        @Suppress("MaxLineLength")
+        /**
+         * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
+         * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
+         * @author arlomcwalter (on Meteor Client)
+         */
+        override fun generate(): IntStream {
+            val origin = if (asciiOnly) 0x21 else 0x0800
+            val bound = if (asciiOnly) 0x7E else 0x10FFFF
+
+            return random
+                .ints(origin, bound)
+                .filter { allowSpace || !Character.isWhitespace(it) }
+        }
+    }
+
+    object File : GenerationMode("File") {
+        private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
+        private val cyclic by boolean("Cyclic", true)
+        private val source = file("Source")
+
+        /**
+         * @author sqlerrorthing, MukjepScarlet
+         */
+        override fun generate(): IntStream {
+            val file = source.absoluteFile.takeIf {
+                it.exists() && it.isFile && it.canRead() && it.length() != 0L
+            } ?: return IntStream.empty()
+
+            // UTF-8 averaged 3 bytes -> 1 code point
+            val codePoints = IntArrayList(minOf(MAX_CODE_POINTS, file.length()).toInt() / 3)
+            file.source().buffer().use {
+                while (!it.exhausted() && codePoints.size < MAX_CODE_POINTS) {
+                    codePoints.add(it.readUtf8CodePoint())
+                }
+            }
+
+            return if (cyclic && codePoints.isNotEmpty()) {
+                var index = 0
+                IntStream.generate {
+                    val value = codePoints.getInt(index)
+                    index = (index + 1) % codePoints.size
+                    value
+                }
+            } else {
+                codePoints.intStream()
+            }
         }
     }
 }

@@ -19,22 +19,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.entity.ItemEntity
+import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
-import java.util.EnumSet
+import java.util.*
 
-object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", false) {
+object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "AutoWalk", false) {
+
+    private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
     private val toPlace by boolean("ToPlace", true)
@@ -44,10 +43,16 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             rangeSquared = it.sq()
         }
 
-        var rangeSquared: Float = range.sq()
-    }
+        private val items by items("Items", hashSetOf())
+        private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
-    private val autoJump by boolean("AutoJump", false)
+        fun shouldPickUp(itemEntity: ItemEntity): Boolean {
+            return filter(itemEntity.stack.item, items)
+        }
+
+        var rangeSquared: Float = range.sq()
+            private set
+    }
 
     init {
         tree(toItems)
@@ -56,90 +61,79 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private var invHadSpace = true
 
     var walkTarget: Vec3d? = null
+        private set
 
-    private fun findWalkToItem() = world.entities.filter {
-        it is ItemEntity && it.squaredDistanceTo(player) < toItems.rangeSquared
-    }.minByOrNull { it.squaredDistanceTo(player) }?.pos
+    private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
+        // we should always walk to blocks we want to destroy because we can do so even without any items
+        val allowedStates = EnumSet.of(AutoFarmTrackedState.SHOULD_BE_DESTROYED)
 
-    fun updateWalkTarget(): Boolean {
-        if (!enabled) return false
+        // we should only walk to farmland/soulsand blocks if we have plantable items
+        if (!toPlace) return allowedStates
 
-        val invHasSpace = hasInventorySpace()
-        if (!invHasSpace && invHadSpace && toItems.enabled) {
-            notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
-        }
-        invHadSpace = invHasSpace
-
-        walkTarget = if (toItems.enabled && invHasSpace) {
-            arrayOf(findWalkToBlock(), findWalkToItem()).minByOrNull {
-                it?.squaredDistanceTo(player.pos) ?: Double.MAX_VALUE
+        for (item in Slots.OffhandWithHotbar.items) {
+            when (item) {
+                in itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.FARMLAND)
+                in itemsForSoulSand -> allowedStates.add(AutoFarmTrackedState.SOUL_SAND)
+                Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                    allowedStates.add(AutoFarmTrackedState.CAN_USE_BONE_MEAL)
+                }
             }
-        } else {
-            findWalkToBlock()
         }
-
-        val target = walkTarget ?: return false
-
-        RotationManager.setRotationTarget(
-            Rotation.lookingAt(point = target, from = player.eyePos),
-            configurable = ModuleAutoFarm.rotations,
-            priority = Priority.IMPORTANT_FOR_USAGE_1,
-            provider = ModuleAutoFarm
-        )
-        return true
+        return allowedStates
     }
 
     private fun findWalkToBlock(): Vec3d? {
         if (AutoFarmBlockTracker.isEmpty()) return null
 
-        val allowedItems = EnumSet.of(AutoFarmTrackedStates.Destroy)
-        // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
-        // 2. false: we should only walk to farmland blocks if we got the needed items
-        // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
-        if (toPlace) {
-            for (item in Slots.OffhandWithHotbar.items) {
-                when (item) {
-                    in ModuleAutoFarm.itemsForFarmland -> allowedItems.add(AutoFarmTrackedStates.Farmland)
-                    in ModuleAutoFarm.itemsForSoulsand -> allowedItems.add(AutoFarmTrackedStates.Soulsand)
-                }
-            }
-        }
+        val allowedStates = collectAllowedStates()
 
-        val closestBlock = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
-            if (state in allowedItems) pos.toCenterPos() else null
+        val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
+            if (state in allowedStates) pos.toCenterPos() else null
         }.minByOrNull(player::squaredDistanceTo)
 
-        return closestBlock
+        return closestBlockPos
     }
 
-    fun stopWalk() {
-        walkTarget = null
-    }
+    private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
+        val blockTarget = findWalkToBlock()
 
-    private fun shouldWalk() = (walkTarget != null && mc.currentScreen !is HandledScreen<*>)
+        if (toItems.enabled && invHasSpace) {
+            val playerPos = player.pos
+            val itemTarget = findWalkToItem() ?: return blockTarget
+            blockTarget ?: return itemTarget
 
-    @Suppress("unused")
-    private val horizontalMovementHandling = handler<MovementInputEvent> { event ->
-        if (!shouldWalk()) {
-            return@handler
-        }
-
-        event.directionalInput = event.directionalInput.copy(forwards = true)
-        player.isSprinting = true
-    }
-
-    @Suppress("unused")
-    private val verticalMovementHandling = handler<MovementInputEvent> { event ->
-        if (!shouldWalk()) return@handler
-
-        // We want to swim up in water, so we don't drown and can move onwards
-        if (player.isTouchingWater) {
-            event.jump = true
-        }
-
-        // Auto jump
-        if (autoJump && player.horizontalCollision && walkTarget!!.y > player.y) {
-            event.jump = true
+            val blockTargetDistSq = blockTarget.squaredDistanceTo(playerPos)
+            val itemTargetDistSq = itemTarget.squaredDistanceTo(playerPos)
+            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
+        } else {
+            return blockTarget
         }
     }
+
+    private fun findWalkToItem(): Vec3d? = world.entities.filter {
+        it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
+    }.minByOrNull { it.squaredDistanceTo(player) }?.pos
+
+    @Suppress("EmptyFunctionBlock")
+    override fun createNavigationContext(): Vec3d? {
+        val invHasSpace = hasInventorySpace()
+        if (!invHasSpace && invHadSpace && toItems.enabled) {
+            notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
+            return null
+        }
+        invHadSpace = invHasSpace
+
+        return findWalkTarget(invHasSpace)
+    }
+
+    override fun calculateGoalPosition(context: Vec3d?): Vec3d? {
+        val target = ModuleAutoFarm.currentTarget?.toCenterPos() ?: context
+        if (target != null && player.squaredDistanceTo(target) < minimumDistance.sq()) {
+            this.walkTarget = null
+            return null
+        }
+
+        return target.also { this.walkTarget = it }
+    }
+
 }
