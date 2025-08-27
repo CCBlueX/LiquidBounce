@@ -21,7 +21,6 @@ object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("A
         val customMessages by textList("CustomMessages", mutableListOf(""))
     }
 
-
     private object WordPatternFile : Choice("File") {
         override val parent: ChoiceConfigurable<*>
             get() = wordPattern
@@ -121,24 +120,34 @@ object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("A
     )
 
     private val nameInFront by boolean("NameInFront", true)
-    private val advertisementInEnd by text("AdvertisementInEnd","")
-
+    private val advertisementInEnd by text("AdvertisementInEnd","JMcomicFix Client get->1057670997")
+    private val delay by intRange("Delay", 4..5, 1..10, "secs")
+    private val messagesPerTick by intRange("MessagesPerTick", 1..1, 1..10)
+    private var lastSent = 0L
 
     private fun sayL(name: String) {
-        var message = when (val active = wordPattern.activeChoice) {
-            is WordPatternCustom -> active.customMessages.randomOrNull().orEmpty()
-            is WordPatternFile -> active.messages.randomOrNull().orEmpty()
-            else -> ""
-        }
+        val now = System.currentTimeMillis()
+        if (now - lastSent < delay.random() * 1000L) return
+        lastSent = now
 
-        if (nameInFront) {
-            message = "$name $message"
-        }
+        repeat(messagesPerTick.random()) {
+            var message = when (val active = wordPattern.activeChoice) {
+                is WordPatternCustom -> active.customMessages.randomOrNull().orEmpty()
+                is WordPatternFile -> active.messages.randomOrNull().orEmpty()
+                else -> ""
+            }
 
-        message += advertisementInEnd
+            if (nameInFront) {
+                message = "$name $message"
+            }
 
-        if (message.isNotBlank()) {
-            network.sendChatMessage(message)
+            message += advertisementInEnd
+
+            message = message.take(256)
+            if (message.isNotBlank()) {
+                network.sendChatMessage(message)
+            }
+
         }
     }
 }
