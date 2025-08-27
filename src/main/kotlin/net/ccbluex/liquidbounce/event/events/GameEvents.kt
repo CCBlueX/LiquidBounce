@@ -58,9 +58,6 @@ class KeyEvent(
     val action: Int,
 ) : Event(), WebSocketEvent
 
-@Nameable("keyBinding")
-class KeyBindingEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event(), WebSocketEvent
-
 @Nameable("keyBindingCPS")
 class KeyBindingCPSEvent(val key: InputUtil.Key, val cps: Int) : Event(), WebSocketEvent
 

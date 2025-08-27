@@ -20,10 +20,12 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.interfaces.KeyBindingAdditions
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil.Type.KEYSYM
 import net.minecraft.client.util.InputUtil.Type.MOUSE
@@ -36,67 +38,10 @@ import org.lwjgl.glfw.GLFW
  */
 object InputTracker : EventListener {
 
-    private val trackers = listOf(
-        KeyBindingTracker(mc.options.forwardKey),
-        KeyBindingTracker(mc.options.backKey),
-        KeyBindingTracker(mc.options.leftKey),
-        KeyBindingTracker(mc.options.rightKey),
-        KeyBindingTracker(mc.options.jumpKey),
-        KeyBindingTracker(mc.options.attackKey),
-        KeyBindingTracker(mc.options.useKey),
-        KeyBindingTracker(mc.options.sprintKey),
-        KeyBindingTracker(mc.options.sneakKey),
-    )
-
-    override fun children(): List<EventListener> = trackers
-
-    // Tracks CPS
-    private class KeyBindingTracker(val keyBinding: KeyBinding) : EventListener {
-        // Records clicks in latest 20 ticks (1 sec)
-        private val countByTick = IntArray(20)
-        private var tickIndex = 0
-        private var currentCount = 0
-
-        // Sum of countByTick
-        var cps = 0
-            private set
-
-        var pressed = false
-            private set(value) {
-                if (value) {
-                    currentCount++
-                }
-                field = value
-            }
-
-        private fun setPressed(action: Int) {
-            when (action) {
-                GLFW.GLFW_RELEASE -> pressed = false
-                GLFW.GLFW_PRESS -> pressed = true
-            }
-        }
-
-        val keyHandler = handler<KeyboardKeyEvent> {
-            if (keyBinding.boundKey.category == KEYSYM && keyBinding.boundKey.code == it.key.code) {
-                setPressed(it.action)
-                EventManager.callEvent(KeyBindingEvent(keyBinding.boundKey, it.action, it.mods))
-            }
-        }
-
-        val mouseHandler = handler<MouseButtonEvent> {
-            if (keyBinding.boundKey.category == MOUSE && keyBinding.boundKey.code == it.button) {
-                setPressed(it.action)
-                EventManager.callEvent(KeyBindingEvent(keyBinding.boundKey, it.action, it.mods))
-            }
-        }
-
-        val tickHandler = handler<PlayerTickEvent> {
-            cps -= countByTick[tickIndex]
-            countByTick[tickIndex] = currentCount
-            cps += currentCount
-            currentCount = 0
-            tickIndex = (tickIndex + 1) % countByTick.size
-            EventManager.callEvent(KeyBindingCPSEvent(keyBinding.boundKey, cps))
+    @Suppress("UNUSED")
+    private val cpsTick = handler<PlayerTickEvent>(priority = READ_FINAL_STATE) {
+        mc.options.allKeys.forEach {
+            (it as KeyBindingAdditions).`liquidbounce$triggerTickEnd`()
         }
     }
 
