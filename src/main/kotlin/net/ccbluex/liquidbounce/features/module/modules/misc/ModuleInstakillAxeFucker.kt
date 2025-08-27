@@ -1,13 +1,17 @@
-package net.ccbluex.liquidbounce.features.module.modules.player
+
+package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
@@ -23,13 +27,15 @@ import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
 
-object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.PLAYER) {
+object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MISC) {
 
     private val inventoryConstraints = tree(InventoryConstraints())
     private var paused = false
     private var hasPerformedActions = false
+    private var tasking = false
 
     private fun Slot.toContainerItemSlot(): ContainerItemSlot = ContainerItemSlot(this.id)
+
 
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
@@ -43,7 +49,7 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.PL
         }
 
         KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
-
+        tasking = true
         val screen = mc.currentScreen as? GenericContainerScreen ?: return@handler
 
         val chestSlot = screen.screenHandler.slots.firstOrNull { it.stack.item == Items.CHEST }
@@ -67,13 +73,20 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.PL
                     "InstakillAxeFucker", "InstakillAxe has been auto selected with no probability.",
                     NotificationEvent.Severity.INFO
                 )
+                tasking = false
                 paused = true
             }
         }
     }
 
     @Suppress("unused")
-    private val chatMonitor = handler<ChatReceiveEvent> { event ->
+    private val screenHandler = handler<ScreenEvent> { event ->
+        FeatureSilentScreen.setHide("InstakillAxeFucker", tasking && event.screen is GenericContainerScreen)
+    }
+
+
+    @Suppress("unused")
+    private val chatMonitor = sequenceHandler<ChatReceiveEvent> { event ->
         val localName = player.name.string
         val message = event.textData.string
 
@@ -86,6 +99,7 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.PL
     private val respawnListener = handler<PacketEvent> { event ->
         if (event.packet is PlayerRespawnS2CPacket) {
             paused = false
+            tasking = false
             hasPerformedActions = false
         }
     }
@@ -93,6 +107,7 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.PL
     @Suppress("unused")
     private val worldChangeListener = handler<WorldChangeEvent> {
         paused = false
+        tasking = false
         hasPerformedActions = false
     }
 }

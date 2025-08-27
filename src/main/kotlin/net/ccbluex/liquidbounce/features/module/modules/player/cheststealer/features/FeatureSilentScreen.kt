@@ -100,11 +100,23 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
         tree(drawInventoryTag)
     }
 
+    private val hideSources = mutableSetOf<String>()
+
+    fun setHide(source: String, value: Boolean) {
+        if (value) {
+            hideSources.add(source)
+        } else {
+            hideSources.remove(source)
+        }
+        shouldHide = hideSources.isNotEmpty()
+    }
+
     @get:JvmStatic
-    var shouldHide = false
+    var shouldHide: Boolean = false
+        private set
 
     val screenHandler = handler<ScreenEvent> { event ->
-        shouldHide = event.screen?.canBeStolen() == true
+        setHide("ChestStealer", event.screen?.canBeStolen() == true)
     }
 
     @Volatile

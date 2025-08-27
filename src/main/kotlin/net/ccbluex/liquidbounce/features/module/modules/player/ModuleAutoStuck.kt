@@ -133,7 +133,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val world = mc.world ?: return@tickHandler
         val player = mc.player ?: return@tickHandler
 
-        if (ignoreTicks > 0 || player.y <= 0) {
+        if (player.isSpectator || ignoreTicks > 0 || player.y <= 0) {
             ignoreTicks--
             shouldEnableStuck = false
             shouldActivate = false
@@ -179,8 +179,27 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
-        return alwaysInVoid && isVoidFallImminent && ScaffoldAutoClutchHelper.enabled && scaffoldCombatReady
+        if (!(alwaysInVoid && isVoidFallImminent && ScaffoldAutoClutchHelper.enabled && scaffoldCombatReady)) return false
+
+        val bb = player.boundingBox
+        val baseY = floor(bb.minY - 1).toInt()
+        val px = floor(player.x).toInt()
+        val pz = floor(player.z).toInt()
+
+        for (dx in -4..4) {
+            for (dz in -4..4) {
+                if (dx * dx + dz * dz > (4.5 * 4.5)) continue
+                if (dx == 0 && dz == 0) continue
+                val pos = BlockPos(px + dx, baseY, pz + dz)
+                val state = pos.getState()
+                if (state != null && !state.isAir) {
+                    return true
+                }
+            }
+        }
+        return false
     }
+
 
     private fun isReadyToActivate(): Boolean {
         val combatReady = !onlyDuringCombat || CombatManager.isInCombat

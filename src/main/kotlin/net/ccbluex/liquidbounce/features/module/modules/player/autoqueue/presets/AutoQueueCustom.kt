@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueAction
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueActionChat
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueActionUseItem
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.*
@@ -39,7 +38,7 @@ object AutoQueueCustom : Choice("Custom") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAutoQueue.presets
 
-    internal val triggers = choices<AutoQueueTrigger>("Trigger", 0) {
+    internal val triggers = choices("Trigger", 0) {
         arrayOf(
             AutoQueueTriggerMessage,
             AutoQueueTriggerItem,
@@ -48,7 +47,7 @@ object AutoQueueCustom : Choice("Custom") {
         )
     }
 
-    internal val actions = choices<AutoQueueAction>("Action", 0) {
+    internal val actions = choices("Action", 0) {
         arrayOf(
             AutoQueueActionChat,
             AutoQueueActionUseItem
