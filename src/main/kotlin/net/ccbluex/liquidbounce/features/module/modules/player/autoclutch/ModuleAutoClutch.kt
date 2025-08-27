@@ -21,6 +21,11 @@ import net.ccbluex.liquidbounce.render.withDisabledCull
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.raycast
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
@@ -149,7 +154,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     override val running: Boolean
         get() =
             super.running
-                && !(ModuleAutoStuck.shouldActivate)
+                && !(ModuleAutoStuck.shouldActivate && ModuleAutoStuck.alwaysInVoid)
                 && !(onlyDuringCombat && !CombatManager.isInCombat)
                 && !ModuleScaffold.running
                 && !ModuleFreeze.running
@@ -303,7 +308,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     private fun checkPlayerMovement() {
         val currentPos = player.pos
         lastPlayerPosition?.let { lastPos ->
-            if (currentPos.distanceTo(lastPos) > 0.5) {
+            if (currentPos.distanceTo(lastPos) > 2.5) {
                 resetAllVariables()
             }
         }
@@ -488,13 +493,11 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             motion = motion.multiply(drag, drag, drag)
             motion = motion.add(0.0, -trajectoryInfo.gravity, 0.0)
 
-            val blockHitResult = mc.world!!.raycast(
-                RaycastContext(
-                    pos, newPos,
-                    RaycastContext.ShapeType.COLLIDER,
-                    RaycastContext.FluidHandling.NONE,
-                    pearlEntity
-                )
+            val blockHitResult = world.raycast(
+                RaycastContext(pos, newPos, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, pearlEntity),
+                exclude = null,
+                include = null,
+                maxBlastResistance = null
             )
 
             val entityHitResult = ProjectileUtil.getEntityCollision(
@@ -520,7 +523,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 }
             }
 
-            if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
+            if (blockHitResult.type != HitResult.Type.MISS) {
                 val hitPos = blockHitResult.pos
                 val blockPos = blockHitResult.blockPos
                 val state = world.getBlockState(blockPos)
@@ -609,16 +612,17 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         if (horizontalDistance > maxThrowDistance * maxThrowDistance) {
             return Double.MAX_VALUE
         }
-        val blockState = world.getBlockState(blockPos)
-        if (blockState.isFullCube(world, blockPos) || !blockState.getCollisionShape(world, blockPos).isEmpty) {
-            return Double.MAX_VALUE
+        val blockState = blockPos.getState()
+        if (blockState != null) {
+            if (blockState.isFullCube(world, blockPos) || !blockState.getCollisionShape(world, blockPos).isEmpty) {
+                return Double.MAX_VALUE
+            }
         }
 
         return blockPositionScoreCache.computeIfAbsent(blockPos) { _ ->
             val belowPos = blockPos.down()
             val belowState = world.getBlockState(belowPos)
-            val hasGround = !belowState.isAir && belowState.block !in unsafeBlocks
-
+            val hasGround = belowPos.canStandOn() && belowState.block !in unsafeBlocks
             var allPositionsSafe = true
             val offsetChecks = listOf(
                 Vec3d(0.0, 0.0, 0.0),
@@ -687,41 +691,17 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     }
 
     private fun findNearestSafeBlock(pos: Vec3d): Vec3d? {
-        val blockPos = pos.toBlockPos()
-        val maxThrowDistance = 10
-        val maxVerticalDistance = 5
-        var searchRadius = 6
+        val maxThrowDistance = 10f
 
-        while (searchRadius <= maxThrowDistance) {
-            var nearest: Vec3d? = null
-            var bestDist = Double.MAX_VALUE
-
-            for (y in -maxVerticalDistance..maxVerticalDistance) {
-                for (x in -searchRadius..searchRadius) {
-                    for (z in -searchRadius..searchRadius) {
-                        val checkPos = blockPos.add(x, y, z)
-                        val center = checkPos.toVec3d().add(0.5, 0.0, 0.5)
-                        val distSq = distanceSq2D(pos, center)
-                        if (distSq > maxThrowDistance * maxThrowDistance || distSq >= bestDist) continue
-
-                        val state = world.getBlockState(checkPos)
-                        if (!state.isAir && state.block !in unsafeBlocks && state.isFullCube(world, checkPos)) {
-                            val abovePos = checkPos.up()
-                            if (!ensureCompleteSpace || world.getBlockState(abovePos).isAir) {
-                                nearest = center.add(0.0, 1.0, 0.0)
-                                bestDist = distSq
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (nearest != null) return nearest
-            searchRadius += 6
+        return pos.searchBlocksInCuboid(maxThrowDistance) { checkPos, state ->
+            !state.isAir && state.block !in unsafeBlocks && state.isFullCube(world, checkPos) &&
+                (!ensureCompleteSpace || checkPos.up().getState()?.isAir == true)
+        }.minByOrNull { (checkPos, _) ->
+            checkPos.getCenterDistanceSquared()
+        }?.let { (checkPos, _) ->
+            checkPos.toVec3d().add(0.5, 1.0, 0.5)
         }
-        return null
     }
-
     private fun rotateToSolution() {
         if (allowClutchWithStuck) {
             ModuleAutoStuck.shouldEnableStuck = true

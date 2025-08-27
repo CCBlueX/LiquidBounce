@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoClutchHelper
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -26,12 +27,12 @@ import kotlin.math.floor
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
     private val fallDistance by int("FallDistance", 5, 0..25, "blocks")
-    private val alwaysInVoid by boolean("AlwaysInVoid", true)
     private val onlyPearl by boolean("OnlyPearl", true)
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
+    val alwaysInVoid by boolean("AlwaysInVoid", true)
+
 
     private const val LOWEST_Y = -64
-
     private var stuckTicks = 0
     private var stuckCooldown = 0
     private var lastGroundY = LOWEST_Y
@@ -179,25 +180,13 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
-        if (!(alwaysInVoid && isVoidFallImminent && ScaffoldAutoClutchHelper.enabled && scaffoldCombatReady)) return false
-
-        val bb = player.boundingBox
-        val baseY = floor(bb.minY - 1).toInt()
-        val px = floor(player.x).toInt()
-        val pz = floor(player.z).toInt()
-
-        for (dx in -4..4) {
-            for (dz in -4..4) {
-                if (dx * dx + dz * dz > (4.5 * 4.5)) continue
-                if (dx == 0 && dz == 0) continue
-                val pos = BlockPos(px + dx, baseY, pz + dz)
-                val state = pos.getState()
-                if (state != null && !state.isAir) {
-                    return true
-                }
-            }
-        }
-        return false
+        return alwaysInVoid
+            && isVoidFallImminent
+            && ScaffoldAutoClutchHelper.enabled
+            && scaffoldCombatReady
+            && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
+            !state.isAir
+        }.any()
     }
 
 

@@ -54,7 +54,9 @@ object AutoQueueKKCraftSW : Choice("KKCraftSW") {
         }
 
         val screen = mc.currentScreen as? GenericContainerScreen ?: return@handler
-        val fireworkSlot = screen.screenHandler.slots.firstOrNull { it.stack.item == Items.FIREWORK_ROCKET } ?: return@handler
+        val fireworkSlot = screen.screenHandler.slots.firstOrNull {
+            it.stack.item == Items.FIREWORK_ROCKET
+        } ?: return@handler
 
         event.schedule(
             InventoryConstraints(),

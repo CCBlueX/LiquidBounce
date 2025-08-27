@@ -5,6 +5,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.ticksToPredict
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.unsafeBlocks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.voidThreshold
+import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -42,23 +46,21 @@ fun isPlayerSafe(): Boolean {
     return false
 }
 
- fun isPredictingFall(): Boolean {
+fun isPredictingFall(): Boolean {
     if (player.isOnGround) return false
     val velY = player.velocity.y
     if (velY < -0.2 && !canReachSafeBlock()) return true
     if (player.fallDistance > 2f && velY <= 0.0 && !canReachSafeBlock()) return true
-
-    return simulatePlayerTrajectory { pos, _, _ ->
-        pos.y <= voidThreshold.toDouble() && !canReachSafeBlock()
+    return simulatePlayerTrajectory { pos, box, _ ->
+        pos.y <= voidThreshold.toDouble() && box.collideBlockIntersects { it.defaultState.isAir }
     }
 }
-
 fun countAdjacentSafeBlocks(center: BlockPos): Int {
     var count = 0
     for (dx in -1..1) for (dz in -1..1) {
         val nearby = BlockPos(center.x + dx, center.y - 1, center.z + dz)
-        val state = world.getBlockState(nearby)
-        if (!state.isAir && state.block !in unsafeBlocks) count++
+        val state = nearby.getState()
+        if (state != null && !state.isAir && state.block !in unsafeBlocks) count++
     }
     return count
 }
@@ -71,17 +73,12 @@ fun canReachSafeBlock(): Boolean {
         val playerBox = player.boundingBox.offset(pos.subtract(player.pos))
         val blockPos = BlockPos(pos.x.toInt(), (pos.y - 0.5).toInt(), pos.z.toInt())
         val belowPos = blockPos.down()
-        val belowState = world.getBlockState(belowPos)
-        val isSafeLanding = !belowState.isAir && belowState.block !in unsafeBlocks
-        val hasCollision = world.getBlockCollisions(player, playerBox).iterator().hasNext()
-        val safeBlockCount = countAdjacentSafeBlocks(blockPos)
-        if (isSafeLanding && safeBlockCount >= adjacentSafeBlocks && !hasCollision) {
+        if (belowPos.canStandOn() && countAdjacentSafeBlocks(blockPos) >= adjacentSafeBlocks && !playerBox.collideBlockIntersects { it.defaultState.isAir }) {
             return true
         }
     }
     return false
 }
-
 
 fun isInVoid(pos: Vec3d, voidDistance: Int = -1): Boolean {
     val xRange = mutableListOf(0)
@@ -93,35 +90,25 @@ fun isInVoid(pos: Vec3d, voidDistance: Int = -1): Boolean {
     if (pos.z - floor(pos.z) <= 0.3) zRange.add(-1)
     else if (ceil(pos.z) - pos.z <= 0.3) zRange.add(1)
 
-    val minY = if (voidDistance == -1) - 64 else pos.y.toInt() - voidDistance
+    val minY = if (voidDistance == -1) -64 else pos.y.toInt() - voidDistance
     val maxY = pos.y.toInt()
 
     for (xOffset in xRange) {
         for (zOffset in zRange) {
             for (y in minY..maxY) {
-                val block = world.getBlockState(BlockPos(pos.x.toInt() + xOffset, y, pos.z.toInt() + zOffset))
-                if (!block.isAir) return false
+                val blockPos = BlockPos(pos.x.toInt() + xOffset, y, pos.z.toInt() + zOffset)
+                val state = blockPos.getState()
+                if (state != null && !state.isAir) return false
             }
         }
     }
     return true
 }
 
- fun isBlockUnder(height: Double = 5.0): Boolean {
-
-    var offset = 0.0
-    while (offset < height) {
-        val motionX = player.velocity.x
-        val motionZ = player.velocity.z
-        val playerBox = player.boundingBox.offset(motionX * offset, -offset, motionZ * offset)
-        if (world.getBlockCollisions(player, playerBox).iterator().hasNext()) {
-            return true
-        }
-        offset += 0.5
-    }
-    return false
+fun isBlockUnder(height: Double = 5.0): Boolean {
+    val box = player.boundingBox.offset(0.0, -height, 0.0)
+    return box.collideBlockIntersects { it.defaultState.isAir }
 }
-
 fun simulatePlayerTrajectory(checkCondition: (Vec3d, Box, BlockPos) -> Boolean): Boolean {
     val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
     for (tick in 1..ticksToPredict) {
