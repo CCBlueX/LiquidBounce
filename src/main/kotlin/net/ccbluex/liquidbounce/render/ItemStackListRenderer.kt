@@ -200,6 +200,7 @@ class ItemStackListRenderer private constructor(
  * @param rowLength The maximum count of stack which can be placed in one row.
  */
 @Suppress("LongParameterList")
+@JvmOverloads
 fun DrawContext.drawItemTags(
     stacks: List<ItemStack>,
     centerPos: Vec3,
@@ -213,19 +214,5 @@ fun DrawContext.drawItemTags(
     .centerZ(centerPos.z)
     .scale(scale)
     .rectBackground(backgroundColor, backgroundMargin)
-    .rowLength(rowLength)
-    .draw()
-
-fun DrawContext.drawItemTagsWithSlotTexture(
-    stacks: List<ItemStack>,
-    centerPos: Vec3,
-    scale: Float = 1.0F,
-    rowLength: Int = 9,
-) = drawItemStackList(stacks)
-    .centerX(centerPos.x)
-    .centerY(centerPos.y)
-    .centerZ(centerPos.z)
-    .scale(scale)
-    .textureBackground()
     .rowLength(rowLength)
     .draw()

@@ -26,9 +26,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
-import net.ccbluex.liquidbounce.render.drawItemTagsWithSlotTexture
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -101,11 +100,11 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
     }
 
     private object ContainerItemView : ToggleableConfigurable(this, "ContainerItemView", enabled = true) {
-        val skipEmptyStack by boolean("SkipEmptyStack", true)
+        val skipEmptyStack by boolean("SkipEmptyStack", false)
 
         val scale by float("Scale", 1F, 0.25F..4F)
         val relativeToMouse by boolean("RelativeToMouse", true)
-        val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+        val renderOffset by vec3d("RenderOffset", Vec3d(150.0, 0.0, 200.0))
     }
 
     init {
@@ -176,11 +175,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         }
 
         @Suppress("UNCHECKED_CAST")
-        drawItemTagsWithSlotTexture(
-            stacks = stacks.asList() as List<ItemStack>,
-            centerPos = Vec3(renderX, renderY, renderZ),
-            scale = ContainerItemView.scale,
-        )
+        drawItemStackList(stacks.asList() as List<ItemStack>)
+            .centerX(renderX)
+            .centerY(renderY)
+            .centerZ(renderZ)
+            .scale(ContainerItemView.scale)
+            .textureBackground()
+            .draw()
 
         return true
     }
