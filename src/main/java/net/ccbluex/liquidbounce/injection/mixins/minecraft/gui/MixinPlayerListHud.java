@@ -195,8 +195,8 @@ public abstract class MixinPlayerListHud {
         Text hudFooter = this.footer;
         PlayerListHud self = (PlayerListHud) (Object) this;
         List<PlayerEntry> players = collectPlayerEntries().stream().map(entry -> {
-            String originalName = self.getPlayerName(entry).getString();
-            Text fullName = Text.literal(ModuleNameProtect.INSTANCE.replace(originalName));
+            Text originalName = self.getPlayerName(entry);
+            Text fullName = ModuleNameProtect.INSTANCE.replace(originalName);
             Text latency = Text.literal(entry.getLatency() + "ms")
                     .styled(style -> style.withColor(getLatencyColor(entry.getLatency())));
             boolean isFriend = FriendManager.INSTANCE.isFriend(entry.getProfile().getName());

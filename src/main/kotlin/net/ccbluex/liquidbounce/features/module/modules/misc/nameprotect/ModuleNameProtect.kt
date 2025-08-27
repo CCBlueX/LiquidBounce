@@ -219,6 +219,11 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
         return output.toString()
     }
+    fun replace(original: Text): Text {
+        if (!running) return original
+        val degenerated = LegacyTextSanitizer.SanitizedLegacyText(original)
+        return NameProtectOrderedText(degenerated).toText()
+    }
 
     class NameProtectOrderedText(original: OrderedText) : OrderedText {
         private val mappedCharacters = ArrayList<MappedCharacter>(64)
@@ -300,6 +305,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
  * 1. Degenerates legacy formatting into new formatting [LegacyTextSanitizer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
+
 fun Text.sanitizeForeignInput(): Text {
     val degeneratedText = LegacyTextSanitizer.SanitizedLegacyText(this)
 

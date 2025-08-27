@@ -40,7 +40,7 @@
         players.forEach((player, index) => {
             const col = Math.floor(index / rows);
             const playerName = getTextString(player.name);
-            const textWidth = playerName.length * 8;
+            const textWidth = playerName.length * 10;
             columnWidths[col] = Math.max(columnWidths[col], textWidth + 50);
         });
     }
@@ -114,7 +114,7 @@
                 {/if}
 
                 <!-- Player Grid - always visible when tab is open -->
-                <div class="player-grid" style="grid-template-columns: {columnWidths.map(w => w + 'px').join(' ')};">
+                <div class="player-grid" style="grid-template-columns: {columnWidths.map(w => `minmax(360px, ${w}px)`).join(' ')};">
                     {#each OverlayPlayList.players as player, index}
                         <div class="player-entry" class:friend={player.isFriend} class:staff={player.isStaff}>
                             {#if !isVisible("NameOnly")}
@@ -222,7 +222,6 @@
   .player-name {
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     flex: 1 1 auto;
     min-width: 0;
   }
