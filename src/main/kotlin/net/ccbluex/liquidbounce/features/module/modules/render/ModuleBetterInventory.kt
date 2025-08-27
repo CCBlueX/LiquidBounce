@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
-import net.ccbluex.liquidbounce.render.drawItemTags
+import net.ccbluex.liquidbounce.render.drawItemTagsWithSlotTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -175,16 +175,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             renderY += mouseY
         }
 
-        // Vanilla container background is in texture pack, no texture for a single slot
-        // TODO
-        /**
-         * @see net.minecraft.client.gui.screen.StatsScreen.SLOT_TEXTURE
-         */
         @Suppress("UNCHECKED_CAST")
-        drawItemTags(
+        drawItemTagsWithSlotTexture(
             stacks = stacks.asList() as List<ItemStack>,
             centerPos = Vec3(renderX, renderY, renderZ),
-            backgroundColor = 0, // TODO
             scale = ContainerItemView.scale,
         )
 
