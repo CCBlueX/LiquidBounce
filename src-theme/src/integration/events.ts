@@ -21,6 +21,7 @@ export interface EventMap {
     overlayMessage: OverlayMessageEvent;
     notification: NotificationEvent;
     keyEvent: KeyEvent;
+    keyBindingCPS: KeyBindingCPSEvent;
     targetChange: TargetChangeEvent;
     blockCountChange: BlockCountChangeEvent;
     accountManagerAddition: AccountManagerAdditionEvent;
