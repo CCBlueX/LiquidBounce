@@ -37,6 +37,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private var stuckCooldown = 0
     private var lastGroundY = LOWEST_Y
     private var ignoreTicks = 0
+    private var scaffolding = false
 
     var isInAir = false
     var shouldEnableStuck = false
@@ -172,15 +173,26 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         if (shouldEnableScaffold()) {
             if (!ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = true
+                scaffolding = true
             }
             if (player.isOnGround) {
+                if (scaffolding) {
+                    ModuleScaffold.enabled = false
+                    scaffolding = false
+                }
+            }
+        } else {
+            if (scaffolding) {
                 ModuleScaffold.enabled = false
+                scaffolding = false
             }
         }
+
+
     }
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
-        val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isReceiveHit
+        val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyReceiveHit || CombatManager.isReceiveHit
             return alwaysInVoid
                 && isVoidFallImminent
                 && ScaffoldAutoClutchHelper.enabled
