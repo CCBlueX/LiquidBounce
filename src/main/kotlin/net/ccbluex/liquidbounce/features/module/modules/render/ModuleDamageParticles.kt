@@ -46,7 +46,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val scale by float("Scale", 1.5F, 0.25F..4F)
     private val ttl by float("TimeToLive", 1.5F, 0.5F..5.0F, "s")
     private val transitionY by float("TransitionY", 1.0F, -2.0F..2.0F)
-    private val transitionType by curve("TransitionType", Easing.QUAD_OUT)
+    private val transitionType by easing("TransitionType", Easing.QUAD_OUT)
 
     private val healthMap = Object2FloatOpenHashMap<LivingEntity>()
 

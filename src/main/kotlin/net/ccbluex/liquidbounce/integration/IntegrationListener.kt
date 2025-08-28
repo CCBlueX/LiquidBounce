@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -54,7 +55,7 @@ object IntegrationListener : EventListener {
      */
     lateinit var browser: Browser
         private set
-    lateinit var browserSettings: BrowserSettings
+    lateinit var browserSettings: IntegrationBrowserSettings
         private set
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -106,7 +107,7 @@ object IntegrationListener : EventListener {
         logger.info("Browser is ready.")
 
         // Fires up the client tab
-        browserSettings = BrowserSettings(0, ::restart)
+        browserSettings = IntegrationBrowserSettings(0, ::restart)
         browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         browserIsReady = true
     }

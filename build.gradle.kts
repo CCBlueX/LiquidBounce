@@ -21,6 +21,7 @@ import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
 import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
     id("fabric-loom")
@@ -31,21 +32,10 @@ plugins {
     id("org.jetbrains.dokka") version "1.9.10"
 }
 
-val archives_base_name: String by project
-val mod_version: String by project
-val maven_group: String by project
-
-val minecraft_version: String by project
-val fabric_version: String by project
-val loader_version: String by project
-val min_loader_version: String by project
-val fabric_kotlin_version: String by project
-val viafabricplus_version: String by project
-
 base {
-    archivesName = archives_base_name
-    version = mod_version
-    group = maven_group
+    archivesName = project.property("archives_base_name") as String
+    version = project.property("mod_version") as String
+    group = project.property("maven_group") as String
 }
 
 /** Includes non-mod dependency recursively in the JAR file */
@@ -89,9 +79,14 @@ fun Configuration.excludeProvidedLibs() = apply {
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
-configurations.include.get().extendsFrom(includeModDependency)
-configurations.modApi.get().extendsFrom(includeModDependency)
-configurations.modCompileOnlyApi.get().extendsFrom(includeModDependency)
+configurations {
+    include.configure {
+        extendsFrom(includeModDependency)
+    }
+    modApi.configure {
+        extendsFrom(includeModDependency)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -136,13 +131,13 @@ loom {
 
 dependencies {
     // Minecraft
-    minecraft("com.mojang:minecraft:${minecraft_version}")
+    minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
 
     // Fabric
-    modApi("net.fabricmc:fabric-loader:${loader_version}")
-    modApi("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
-    modApi("net.fabricmc:fabric-language-kotlin:${fabric_kotlin_version}")
+    modApi("net.fabricmc:fabric-loader:${project.property("loader_version")}")
+    modApi("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+    modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // Mod menu
     modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
@@ -152,8 +147,8 @@ dependencies {
     modApi("maven.modrinth:lithium:${project.property("lithium_version")}")
 
     // ViaFabricPlus
-    modApi("com.viaversion:viafabricplus-api:${viafabricplus_version}")
-    modRuntimeOnly("com.viaversion:viafabricplus:${viafabricplus_version}")
+    modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
+    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
     includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
@@ -186,7 +181,7 @@ dependencies {
     includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.97.Final")
+    includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
@@ -195,18 +190,18 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // Test libraries
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.1")
+    testImplementation(kotlin("test"))
+//    testImplementation("net.fabricmc:fabric-loader-junit:${project.property("loader_version")}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fix nullable annotations
-    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    compileOnlyApi("com.google.code.findbugs:jsr305:3.0.2")
 
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val compileOnlyApiDependency = dependencies.compileOnlyApi(it.requested.toString()) {
+            val apiDependency = dependencies.api(it.requested.toString()) {
                 isTransitive = false
             }
-            val apiDependency = dependencies.api(compileOnlyApiDependency)!!
 
             dependencies.include(apiDependency)
         }
@@ -216,31 +211,40 @@ dependencies {
 tasks.processResources {
     dependsOn("bundleTheme")
 
-    val contributors = JsonOutput.prettyPrint(
-        JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
-    )
+    val modVersion = providers.gradleProperty("mod_version")
+    val minecraftVersion = providers.gradleProperty("minecraft_version")
+    val fabricVersion = providers.gradleProperty("fabric_version")
+    val loaderVersion = providers.gradleProperty("loader_version")
+    val minLoaderVersion = providers.gradleProperty("min_loader_version")
+    val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version")
+    val viafabricplusVersion = providers.gradleProperty("viafabricplus_version")
 
-    inputs.property("version", mod_version)
+    val contributors = provider {
+        JsonOutput.prettyPrint(
+            JsonOutput.toJson(getContributors("CCBlueX", "LiquidBounce"))
+        )
+    }
 
-    inputs.property("minecraft_version", minecraft_version)
-    inputs.property("fabric_version", fabric_version)
-    inputs.property("loader_version", loader_version)
-    inputs.property("min_loader_version", min_loader_version)
-    inputs.property("fabric_kotlin_version", fabric_kotlin_version)
-    inputs.property("viafabricplus_version", viafabricplus_version)
+    inputs.property("version", modVersion)
+    inputs.property("minecraft_version", minecraftVersion)
+    inputs.property("fabric_version", fabricVersion)
+    inputs.property("loader_version", loaderVersion)
+    inputs.property("min_loader_version", minLoaderVersion)
+    inputs.property("fabric_kotlin_version", fabricKotlinVersion)
+    inputs.property("viafabricplus_version", viafabricplusVersion)
     inputs.property("contributors", contributors)
 
     filesMatching("fabric.mod.json") {
         expand(
             mapOf(
-                "version" to mod_version,
-                "minecraft_version" to minecraft_version,
-                "fabric_version" to fabric_version,
-                "loader_version" to loader_version,
-                "min_loader_version" to min_loader_version,
-                "contributors" to contributors,
-                "fabric_kotlin_version" to fabric_kotlin_version,
-                "viafabricplus_version" to viafabricplus_version,
+                "version" to modVersion.get(),
+                "minecraft_version" to minecraftVersion.get(),
+                "fabric_version" to fabricVersion.get(),
+                "loader_version" to loaderVersion.get(),
+                "min_loader_version" to minLoaderVersion.get(),
+                "contributors" to contributors.get(),
+                "fabric_kotlin_version" to fabricKotlinVersion.get(),
+                "viafabricplus_version" to viafabricplusVersion.get()
             )
         )
     }
@@ -356,8 +360,16 @@ tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
 
     val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
     baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFiles().filter { it.extension.equals("json", ignoreCase = true) })
+    files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
     consoleOutputCount.set(5)
+}
+
+tasks.register<JavaExec>("liquidInstruction") {
+    group = "other"
+    description = "Run LiquidInstruction class."
+
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.ccbluex.liquidbounce.LiquidInstruction")
 }
 
 java {
@@ -378,14 +390,33 @@ kotlin {
 }
 
 tasks.jar {
+    val archivesBaseName = providers.gradleProperty("archives_base_name")
+    val modVersion = providers.gradleProperty("mod_version")
+    val mavenGroup = providers.gradleProperty("maven_group")
+    val mappingFiles = provider {
+        rootProject.configurations.mappings.get().map(::zipTree)
+    }
+
+    inputs.property("archives_base_name", archivesBaseName)
+    inputs.property("mod_version", modVersion)
+    inputs.property("maven_group", mavenGroup)
+    inputs.files(mappingFiles).withPropertyName("mappingFiles")
+
+    manifest {
+        attributes["Main-Class"] = "net.ccbluex.liquidbounce.LiquidInstruction"
+        attributes["Implementation-Title"] = archivesBaseName.get()
+        attributes["Implementation-Version"] = modVersion.get()
+        attributes["Implementation-Vendor"] = mavenGroup.get()
+    }
+
     // Rename the project's license file to LICENSE_<project_name> to avoid conflicts
     from("LICENSE") {
         rename {
-            "${it}_${archives_base_name}"
+            "${it}_${archivesBaseName.get()}"
         }
     }
 
-    from(files(project.configurations.mappings.get().map(::zipTree))) {
+    from(files(mappingFiles.get())) {
         include("mappings/mappings.tiny")
     }
 }

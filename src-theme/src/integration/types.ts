@@ -32,7 +32,45 @@ export type ModuleSetting =
     | TextSetting
     | BindSetting
     | VectorSetting
-    | KeySetting;
+    | KeySetting
+    | FileSetting
+    | CurveSetting;
+
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+}
+
+export interface FileSelectResult {
+    file: File | undefined;
+}
+
+export interface FileSetting {
+    valueType: string;
+    name: string;
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
+    value: File;
+}
+
+export interface CurveSetting {
+    valueType: string;
+    name: string;
+    value: Vector2f[];
+    xAxis: {
+        label: string;
+        range: Range;
+    },
+    yAxis: {
+        label: string;
+        range: Range;
+    }
+    tension: number;
+}
 
 export interface BlocksSetting {
     valueType: string;
@@ -86,10 +124,7 @@ export interface BooleanSetting {
 export interface FloatSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
     value: number;
 }
@@ -97,24 +132,15 @@ export interface FloatSetting {
 export interface FloatRangeSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
+    value: Range;
 }
 
 export interface IntSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
     value: number;
 }
@@ -122,15 +148,9 @@ export interface IntSetting {
 export interface IntRangeSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
+    value: Range;
 }
 
 export interface ChoiceSetting {
@@ -381,7 +401,8 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
@@ -436,4 +457,14 @@ export interface Screen {
 export interface RegistryItem {
     name: string;
     icon: string | undefined;
+}
+
+export interface Range {
+    from: number;
+    to: number;
+}
+
+export interface Vector2f {
+    x: number;
+    y: number;
 }

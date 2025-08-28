@@ -120,8 +120,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     GameModeChangeEvent::class,
     ComponentsUpdate::class,
     ResourceReloadEvent::class,
-    ProxyAdditionResultEvent::class,
-    ProxyEditResultEvent::class,
     ProxyCheckResultEvent::class,
     ScaleFactorChangeEvent::class,
     DrawOutlinesEvent::class,
@@ -212,6 +210,7 @@ object EventManager {
 
         val target = registry[event.javaClass] ?: return event
 
+        event.isCompleted = false
         for (eventHook in target) {
             if (!eventHook.handlerClass.running) {
                 continue
@@ -223,6 +222,7 @@ object EventManager {
                 logger.error("Exception while executing handler.", it)
             }
         }
+        event.isCompleted = true
 
         return event
     }
