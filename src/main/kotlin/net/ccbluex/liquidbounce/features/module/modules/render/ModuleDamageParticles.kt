@@ -41,10 +41,11 @@ import kotlin.math.abs
  */
 object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) {
 
+    private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
-    private val ttl by float("TimeToLive", 2F, 0.5F..5.0F, "s")
-    private val transition by vec3d("Transition", Vec3d(0.0, 1.0, 0.0))
-    private val easing by easing("Easing", Easing.QUAD_OUT)
+    private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
+    private val displacement by vec3d("Displacement", Vec3d(0.0, 1.0, 0.0))
+    private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
 
     /**
      * Ordered by startTime
@@ -76,7 +77,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
                 System.currentTimeMillis(),
                 FORMATTER.format(delta),
                 if (oldHealth > newHealth) Color4b.RED else Color4b.GREEN,
-                entity.box.center.add(entity.movement),
+                entity.box.center,
             )
         }
     }
@@ -95,13 +96,15 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
         particles.forEachIndexed { i, particle ->
             val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-            val currentPos = particle.pos.add(transition * easing.transform(progress).toDouble())
+            val currentPos = particle.pos.add(displacement * displacementTransition.transform(progress).toDouble())
             val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
+
+            val currentScale = scale * scaleTransition.transform(progress)
 
             with(event.context) {
                 matrices.push()
                 matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                matrices.scale(scale, scale, 1.0F)
+                matrices.scale(currentScale, currentScale, 1.0F)
 
                 drawCenteredTextWithShadow(
                     mc.textRenderer,
