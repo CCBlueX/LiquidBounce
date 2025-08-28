@@ -36,6 +36,7 @@ import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
@@ -284,9 +285,9 @@ open class Configurable(
 
     fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
-    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR_I)
+    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 
-    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
+    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
     fun <C : MutableSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -314,7 +315,7 @@ open class Configurable(
     @Suppress("LongParameterList")
     fun curve(
         name: String,
-        default: Array<Pair<Float, Float>>,
+        default: MutableList<Vector2f>,
         xAxis: Axis,
         yAxis: Axis,
         tension: Float = 0.4f,

@@ -31,7 +31,6 @@ enum class ValueType(
     BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
     FLOAT(HumanInputDeserializer.floatDeserializer),
     FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
-    FLOAT_ARRAY,
     INT(HumanInputDeserializer.intDeserializer),
     INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
     TEXT(HumanInputDeserializer.textDeserializer),
@@ -46,8 +45,9 @@ enum class ValueType(
     KEY(HumanInputDeserializer.keyDeserializer),
     FILE(HumanInputDeserializer.pathDeserializer),
     BIND,
-    VECTOR_I,
-    VECTOR_D,
+    VECTOR3_I,
+    VECTOR3_D,
+    VECTOR2_F,
 
     // Configuration Types
     CHOICE(completer = AutoCompletionProvider.choiceCompleter),

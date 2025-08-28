@@ -131,7 +131,7 @@
             data: {
                 datasets: [{
                     type: "line",
-                    data: sortPoints(cSetting.value.map(([x, y]) => ({x, y}))),
+                    data: sortPoints(cSetting.value.map(point => ({x: point.x, y: point.y}))),
                     showLine: true,
                     parsing: false,
                     borderWidth: 2,

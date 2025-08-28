@@ -19,29 +19,37 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.utils.math.CurveUtil
+import org.joml.Vector2f
 
 open class CurveValue(
     name: String,
-    value: Array<Pair<Float, Float>>,
+    value: MutableList<Vector2f>,
     @Exclude var xAxis: Axis,
     @Exclude var yAxis: Axis,
     @Exclude var tension: Float = 0.4f,
-) : ListValue<MutableList<FloatArray>, FloatArray>(
+) : ListValue<MutableList<Vector2f>, Vector2f>(
     name,
-    value.map { pair -> floatArrayOf(pair.first, pair.second) }.toMutableList(),
+    value,
     ValueType.CURVE,
-    ValueType.FLOAT_ARRAY,
-    FloatArray::class.java
+    ValueType.VECTOR2_F,
+    Vector2f::class.java
 ) {
 
-    data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>)
+    data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>) {
+        companion object {
+            infix fun String.axis(range: ClosedFloatingPointRange<Float>) = Axis(this, range)
+        }
+    }
 
     init {
         require(tension in 0.0..1.0) { "Tension must be in range [0.0, 1.0]" }
         require(value.size >= 2) { "Curve must have at least 2 points" }
-        require(value.all { point -> point.first in xAxis.range && point.second in yAxis.range }) {
+        require(value.all { point -> point.x in xAxis.range && point.y in yAxis.range }) {
             "Curve points must be within the given bounds"
         }
     }
+
+    fun transform(x: Float) = CurveUtil.transform(get(), x, tension)
 
 }

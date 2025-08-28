@@ -60,8 +60,7 @@ export interface FileSetting {
 export interface CurveSetting {
     valueType: string;
     name: string;
-    value: [number, number][];
-    defaultValue: [number, number][];
+    value: Vector2f[];
     xAxis: {
         label: string;
         range: Range;
@@ -463,4 +462,9 @@ export interface RegistryItem {
 export interface Range {
     from: number;
     to: number;
+}
+
+export interface Vector2f {
+    x: number;
+    y: number;
 }
