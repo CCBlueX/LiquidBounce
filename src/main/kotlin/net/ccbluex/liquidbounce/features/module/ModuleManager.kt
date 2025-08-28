@@ -116,6 +116,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera
 import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo
 import org.lwjgl.glfw.GLFW
 
@@ -287,7 +288,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleIQBoost,
             ModuleFPSBoost,
             ModuleHandDerp,
-            ModuleMotionCamera,
             ModuleSkinDerp,
             ModuleTwerk,
             ModuleVomit,

@@ -753,7 +753,6 @@
   "liquidbounce.module.bowBomb.description": "Shoot an infinitely powerful arrow using a OneShot bug.",
   "liquidbounce.module.potionAura.description": "Automatically throw harmful and side-effect potions at targets.",
   "liquidbounce.module.antiInstakillAxe.description": "Attempt to block an opponent's one-hit axe by placing a spawn egg when they aim at you.",
-  "liquidbounce.module.motionCamera.description": "Dynamically adjust the in-game camera.",
   "liquidbounce.module.suicide.description": "Triggers suicide.",
   "liquidbounce.module.autoEz.description": "Automatically send a taunt after a kill.",
   "liquidbounce.module.godMode.description": "Negates all damage; works only on servers without anti-cheat.",

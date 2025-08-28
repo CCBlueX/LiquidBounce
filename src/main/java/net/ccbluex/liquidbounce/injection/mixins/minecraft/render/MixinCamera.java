@@ -20,13 +20,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera;
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SimpleMode;
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.StrictMode;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.render.Camera;
@@ -42,6 +43,8 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Camera.class)
 public abstract class MixinCamera {
@@ -66,6 +69,8 @@ public abstract class MixinCamera {
 
     @Shadow
     public abstract void setPos(Vec3d pos);
+    @Shadow
+    private Entity focusedEntity;
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
     private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
@@ -143,7 +148,28 @@ public abstract class MixinCamera {
 
     @Inject(method = "update", at = @At("TAIL"))
     private void onUpdate(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
+        if (StrictMode.INSTANCE.getRunning()) {
+            ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
+        }
+    }
+
+    @Inject(method = "update", at = @At(value = "HEAD"))
+    private void onUpdateHead(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo info) {
+        this.focusedEntity = focusedEntity;
+    }
+
+    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V"))
+    private  void onSetCameraPosition(Args args) {
+        if (ModuleSmoothCamera.shouldApplyChanges() && SimpleMode.INSTANCE.getRunning() && this.focusedEntity != null) {
+            Vec3d playerPos = this.focusedEntity.getPos();
+            ModuleSmoothCamera.cameraUpdate(this.yaw, this.pitch, playerPos);
+            Vec3d cameraPos = ModuleSmoothCamera.getCameraPosition();
+            if (cameraPos != null) {
+                args.set(0, cameraPos.x);
+                args.set(1, cameraPos.y);
+                args.set(2, cameraPos.z);
+            }
+        }
     }
 
     @ModifyReturnValue(method = "getPos", at = @At("RETURN"))
