@@ -125,7 +125,14 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                         for (x in curve.xAxis.range step 0.1f) {
                             var y = curve.transform(x)
-                            this.fill(posX + x, posY - y, posX + x + 1, posY - y + 1, 0.0f, Color4b.GREEN.toARGB())
+                            this.fill(
+                                posX + x,
+                                posY - y,
+                                posX + x + 1,
+                                posY - y + 1,
+                                0.0f,
+                                Color4b.GREEN.toARGB()
+                            )
                         }
 
                         val points = curve.get()
@@ -133,7 +140,14 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                             var x = point[0]
                             var y = point[1]
 
-                            this.fill(posX + x - 2, posY - y - 2, posX + x + 2, posY - y + 2, 0.0f, Color4b.WHITE.toARGB())
+                            this.fill(
+                                posX + x - 2,
+                                posY - y - 2,
+                                posX + x + 2,
+                                posY - y + 2,
+                                0.0f,
+                                Color4b.WHITE.toARGB()
+                            )
                         }
                     }
                 }
