@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
-import net.ccbluex.liquidbounce.utils.io.awaitSuspend
 import java.net.InetSocketAddress
 import java.util.*
 import kotlin.coroutines.Continuation
@@ -92,12 +91,12 @@ object OAuthClient {
                         .channel(NioServerSocketChannel::class.java)
                         .childHandler(NettyChannelInitializer())
 
-                    val channelFuture = bootstrap.bind(0).awaitSuspend()
+                    val channelFuture: ChannelFuture = bootstrap.bind(0).sync()
                     val localPort = (channelFuture.channel().localAddress() as InetSocketAddress).port
                     cont.resume(localPort)
 
                     // Keep server running until closed
-                    channelFuture.channel().closeFuture().awaitSuspend()
+                    channelFuture.channel().closeFuture().sync()
                 } finally {
                     bossGroup.shutdownGracefully()
                     workerGroup.shutdownGracefully()

@@ -21,12 +21,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import kotlinx.coroutines.Dispatchers
+import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,14 +41,13 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         "loyisa.cn",
         "anticheat-test.com"
     )
-    @Volatile
     private var isScheduled = false
 
     init {
         doNotIncludeAlways()
     }
 
-    override suspend fun enabledEffect() {
+    override fun onEnabled() {
         val currentServerEntry = mc.currentServerEntry
 
         if (currentServerEntry == null) {
@@ -59,19 +58,22 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
+        withScope {
+            loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
+        }
+        super.onEnabled()
     }
 
     @Suppress("unused")
-    private val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
+    private val handleServerConnect = handler<ServerConnectEvent> { event ->
         if (isScheduled) {
-            return@sequenceHandler
+            return@handler
         }
 
         // This will stop us from connecting to the server right away
         event.cancelEvent()
 
-        waitFor(Dispatchers.IO) {
+        withScope {
             try {
                 isScheduled = true
                 val address = event.serverInfo.address.dropPort().rootDomain()

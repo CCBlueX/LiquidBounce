@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -111,12 +110,14 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override suspend fun enabledEffect() {
-        chatClient.connect()
+    override fun onEnabled() {
+        chatClient.connectAsync()
+        super.onEnabled()
     }
 
     override fun onDisabled() {
         chatClient.disconnect()
+        super.onDisabled()
     }
 
     @Suppress("unused")
@@ -127,9 +128,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     @Suppress("unused")
     val repeatable = tickHandler {
         if (!chatClient.connected) {
-            waitFor(Dispatchers.IO) {
-                chatClient.connect()
-            }
+            chatClient.connectAsync()
 
             // Wait 60 seconds before retrying
             waitSeconds(60)
@@ -137,7 +136,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val sessionChange = suspendHandler<SessionEvent> {
+    val sessionChange = handler<SessionEvent> {
         chatClient.reconnect()
     }
 
@@ -168,7 +167,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent> { event ->
+    val handleIncomingJwtToken = handler<ClientChatJwtTokenEvent> { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }
