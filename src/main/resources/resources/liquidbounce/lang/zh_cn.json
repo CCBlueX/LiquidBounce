@@ -549,6 +549,7 @@
   "liquidbounce.module.flagCheck.messages.forceRotate": "强制转头",
   "liquidbounce.module.flagCheck.messages.invalid": "无效",
   "liquidbounce.module.freeCam.description": "允许你的视野离开身体。",
+  "liquidbounce.module.smoothCamera.description": "让你的相机移动更加平滑。",
   "liquidbounce.module.freeLook.description": "允许你围绕角色自由移动视角。",
   "liquidbounce.module.freeze.description": "允许在服务器不知道的情况下将你冻结在你现在的位置。",
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s 已添加到好友列表。",

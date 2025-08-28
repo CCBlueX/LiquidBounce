@@ -32,7 +32,7 @@ import net.minecraft.util.math.Vec3d
  */
 object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
 
-    val factor by float("Factor", 0.2f, 0.0f..1.0f)
+    private val factor by float("Factor", 0.2f, 0.0f..1.0f)
 
     var smoothPos: Vec3d = Vec3d.ZERO
         private set
