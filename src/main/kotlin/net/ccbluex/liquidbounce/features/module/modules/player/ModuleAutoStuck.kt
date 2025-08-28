@@ -180,11 +180,13 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
-        return alwaysInVoid
-            && isVoidFallImminent
-            && ScaffoldAutoClutchHelper.enabled
-            && scaffoldCombatReady
-            && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
+        val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isReceiveHit
+            return alwaysInVoid
+                && isVoidFallImminent
+                && ScaffoldAutoClutchHelper.enabled
+                && scaffoldCombatReady
+                && scaffoldReceiveHit
+                && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
             !state.isAir
         }.any()
     }

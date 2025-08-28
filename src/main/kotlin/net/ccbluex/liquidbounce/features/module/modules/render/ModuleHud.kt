@@ -84,7 +84,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     val centeredCrosshair by boolean("CenteredCrosshair", false)
 
 
-    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
+    val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
         EventManager.callEvent(SpaceSeperatedNamesChangeEvent(state))
         state
     }
@@ -212,8 +212,19 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         browserBrowser?.close()
         browserBrowser = null
     }
+
+
+
     fun getThemeColor(): Pair<Color4b, Color4b> =
         customization.primaryColor to customization.secondaryColor
+    @JvmStatic
+    fun getPrimaryColor(): Color4b = customization.primaryColor
+
+    @JvmStatic
+    fun getSecondaryColor(): Color4b = customization.secondaryColor
+
+    @JvmStatic
+    fun getClientScale() :Float = customization.hudZoom
 
     fun reopen() {
         close()

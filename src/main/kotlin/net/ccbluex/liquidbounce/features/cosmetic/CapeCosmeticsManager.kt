@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.jmcomicfix.features.module.modules.client.ModuleCapes
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleCapes
 import net.minecraft.util.Identifier
 
 object CapeCosmeticsManager : EventListener {

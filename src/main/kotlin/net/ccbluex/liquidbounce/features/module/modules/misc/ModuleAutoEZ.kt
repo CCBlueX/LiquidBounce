@@ -4,13 +4,13 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.HeypixelSWKillEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
+
 
 object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("AutoL")) {
 
@@ -81,31 +81,10 @@ object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("A
             get() = modes
 
         @Suppress("unused")
-        private val packetEventHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
-            if (packet !is GameMessageS2CPacket) return@handler
-
-            val message = packet.content.string
-
-            val patterns = listOf(
-                Regex("(.+?)被(.+?)击败"),
-                Regex("(.+?)被炸成了粉尘, 最终还是被(.+?)击败!?"),
-                Regex("(.+?)消逝了, 最终还是被(.+?)击败!?"),
-                Regex("(.+?)被架在了烧烤架上, 熟透了, 最终还是被(.+?)击败!?"),
-                Regex("(.+?)跑得很快, 但是他还是摔了一跤, 最终被(.+?)击败?"),
-                Regex("(.+?)被(.+?)用弓箭射穿了"),
-                Regex("(.+?)被重压地无法呼吸, 最终还是被(.+?)击败!?")
-            )
-
-            for (pattern in patterns) {
-                val match = pattern.find(message) ?: continue
-                val victim = match.groupValues[1].trim()
-                val killer = match.groupValues[2].trim()
-
-                if (killer == player.name.string) {
-                    sayL(victim)
-                    return@handler
-                }
+        private val heypixelSWKillEventHandler =
+            handler<HeypixelSWKillEvent> { event ->
+                if (event.killer == player.name.string) {
+                    sayL(event.victim)
             }
         }
     }

@@ -229,3 +229,9 @@ class OverlayChatEvent(
     val timestamp: Long,
     val isSystem: Boolean
 ) : Event(),WebSocketEvent
+
+@Nameable("heypixelSWKill")
+class HeypixelSWKillEvent(
+    val victim: String,
+    val killer: String
+) : Event()

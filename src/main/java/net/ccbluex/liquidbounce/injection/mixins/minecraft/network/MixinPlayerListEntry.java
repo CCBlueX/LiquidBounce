@@ -2,7 +2,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.mojang.authlib.GameProfile;
-import net.ccbluex.jmcomicfix.features.module.modules.client.ModuleCapes;
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleCapes;
 import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
 import net.minecraft.client.MinecraftClient;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -15,11 +15,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
-import net.minecraft.client.MinecraftClient;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerListEntry.class)
 public abstract class MixinPlayerListEntry {

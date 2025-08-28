@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -16,8 +17,12 @@ object ModuleMotionCamera : ClientModule("MotionCamera", Category.FUN, aliases =
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val player = mc.player ?: return@handler run { cameraPos = null }
-        val playerPos = player.pos
-        updateCameraPos(playerPos)
+        val eyePos = Vec3d(player.x, player.y + player.getEyeHeight(player.pose), player.z)
+        updateCameraPos(eyePos)
+    }
+    @Suppress("unused")
+    private val worldChange = handler<WorldChangeEvent> { event ->
+        initializeCameraPos()
     }
 
     override fun onEnabled() {

@@ -50,7 +50,7 @@ object AutoQueueCustom : Choice("Custom") {
     internal val actions = choices("Action", 0) {
         arrayOf(
             AutoQueueActionChat,
-            AutoQueueActionUseItem
+            AutoQueueActionUseItem,
         )
     }
 

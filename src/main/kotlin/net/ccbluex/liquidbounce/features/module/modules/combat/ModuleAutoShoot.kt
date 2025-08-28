@@ -131,7 +131,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
      */
     private fun commonChecks(target: LivingEntity?, slot: HotbarItemSlot?): Boolean {
         if (target == null || slot == null) return false
-        if (requiresKillAura && (!ModuleKillAura.running || !ModuleKillAura.enabled)) return false
+        if (requiresKillAura && (!ModuleKillAura.running)) return false
         if (notDuringCombat && CombatManager.isInCombat) return false
         if (notDuringUsingItem && player.usingItem) return false
         if (ModuleScaffold.enabled) return false

@@ -2,32 +2,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import com.google.common.collect.Queues
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
-import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.isInteractable
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -43,21 +33,11 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
     private val maxStuckTicks by int("MaxStuckTicks", 5, 1..100, "ticks")
     private val onlyOnGround by boolean("OnlyOnGround", true)
 
-    private object PlaceWater : ToggleableConfigurable(this, "PlaceWater", false) {
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
-    }
-
-    init {
-        tree(PlaceWater)
-    }
-
     private var canCancel = false
     private var delay = false
     private var needClick = false
     private var waitForUpdate = false
     private var shouldSkip = false
-    private var needPlaceWaterRotation = false
-    private var needPlaceWater = false
     private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
 
     override fun enable() {
@@ -66,8 +46,6 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
         needClick = false
         waitForUpdate = false
         shouldSkip = false
-        needPlaceWaterRotation = false
-        needPlaceWater = false
         delayedPacketQueue.clear()
     }
 
@@ -76,7 +54,7 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
         delayedPacketQueue.clear()
     }
 
-    @Suppress("unused", "DEPRECATION","ComplexCondition")
+    @Suppress("unused", "DEPRECATION")
     private val packetEventHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
@@ -96,7 +74,6 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
             waitTicks(1)
             waitForUpdate = false
             needClick = false
-            if (PlaceWater.enabled) needPlaceWaterRotation = true
             return@sequenceHandler
         }
 
@@ -129,10 +106,8 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
                 && !hitResult.blockPos.getBlock().isInteractable(blockState)
                 && blockState.isSolid
                 && blockState.isOpaqueFullCube
-                && (!PlaceWater.enabled || Slots.OffhandWithHotbar.findClosestSlot(Items.WATER_BUCKET) != null)
             ) {
                 event.cancelEvent()
-                if (PlaceWater.enabled) needPlaceWaterRotation = true
                 delay = true
                 needClick = true
             }
@@ -187,41 +162,6 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
     }
 
     @Suppress("unused")
-    private val rotationUpdateEventHandler = handler<RotationUpdateEvent> {
-        if (!PlaceWater.enabled || !needPlaceWaterRotation) return@handler
-
-        RotationManager.setRotationTarget(
-            rotation = Rotation(
-                player.yaw - (0.002f..0.004f).random(),
-                90f - (0.002f..0.004f).random()
-            ),
-            configurable = PlaceWater.rotationsConfigurable,
-            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
-            provider = ModuleVelocity,
-        )
-
-        needPlaceWaterRotation = false
-        needPlaceWater = true
-    }
-
-    @Suppress("unused")
-    private val placeWaterHandler = tickHandler {
-        if (!PlaceWater.enabled) return@tickHandler
-
-        waitUntil { needPlaceWater }
-
-        val waterBucket = Slots.OffhandWithHotbar.findClosestSlot(Items.WATER_BUCKET)!!
-        SilentHotbar.selectSlotSilently(this, waterBucket, 1)
-
-        doPlacement(
-            rayTraceResult = raycast(),
-            hand = waterBucket.useHand
-        )
-
-        needPlaceWater = false
-    }
-
-    @Suppress("unused")
     private val tickHandler = tickHandler {
         waitUntil { waitForUpdate }
 
@@ -230,10 +170,10 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
             if (!waitForUpdate) return@tickHandler
         }
 
+
+
         waitForUpdate = false
         needClick = false
     }
-
-
 
 }
