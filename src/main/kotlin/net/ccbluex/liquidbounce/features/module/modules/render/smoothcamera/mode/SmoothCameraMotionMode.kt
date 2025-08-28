@@ -8,7 +8,7 @@ import kotlin.math.exp
 import kotlin.math.sqrt
 
 object SmoothCameraMotionMode : SmoothCameraMode("Motion") {
-    val motion by float("Motion", 2.0f, 1.0f..5.0f)
+    val motion by float("Motion", 2.0f, 2.0f..10.0f)
     private val distance by float("Distance",4.0f,1.0f..10f)
     override fun cameraUpdate(
         yaw: Float,
