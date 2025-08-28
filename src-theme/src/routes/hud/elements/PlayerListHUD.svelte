@@ -41,8 +41,9 @@
             const col = Math.floor(index / rows);
             const playerName = getTextString(player.name);
             const textWidth = playerName.length * 10;
-            columnWidths[col] = Math.max(columnWidths[col], textWidth + 50);
+            columnWidths[col] = Math.max(columnWidths[col], textWidth + 50, 360);
         });
+
     }
 
     function getTextString(tc: string | TTextComponent): string {

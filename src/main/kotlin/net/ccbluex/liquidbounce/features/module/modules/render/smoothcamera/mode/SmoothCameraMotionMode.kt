@@ -7,7 +7,7 @@ import net.minecraft.util.math.Vec3d
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-object SmoothCameraMotionMode : SmoothCameraMode("Motion") {
+object SmoothCameraMotionMode : SmoothCameraMode("Test") {
     val motion by float("Motion", 2.0f, 2.0f..10.0f)
     private val distance by float("Distance",4.0f,1.0f..10f)
     override fun cameraUpdate(

@@ -1,7 +1,11 @@
+@file:Suppress("unused")
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -12,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspImag
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspImageMode.RotationOption.rotationSpeed
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -21,25 +26,32 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
 import org.joml.Quaternionf
+import java.io.FileInputStream
 import java.util.*
 
 object EspImageMode : EspMode("Image", requiresTrueSight = true) {
 
-    private val image by enumChoice("Image", FaceImage.XINXIN)
-    private val imageSize by float("ImageSize", 0.6f, 0.1f..2f)
+    internal val imageMode = choices(
+        "Mode",
+        ImageMode.FaceImageMode,
+        arrayOf(ImageMode.FaceImageMode, ImageMode.FileImageMode)
+    )
 
+    private val imageSize by float("ImageSize", 0.5f, 0.1f..2f)
+    private val opacity by float("Opacity", 0.8f, 0f..1f)
+    private val attackColor by color("Attack", Color4b.PINK)
     private object ImageOffset : ToggleableConfigurable(this, "ImageOffset", true) {
         val offsetX by float("OffsetX", 0f, -1f..1f)
         val offsetY by float("OffsetY", 0.8f, -1f..1f)
         val offsetZ by float("OffsetZ", 0f, -1f..1f)
     }
-
-    private val opacity by float("Opacity", 0.8f, 0f..1f)
 
     private object RotationOption : ToggleableConfigurable(this, "AttackRotation", true) {
         val rotationSpeed by float("RotationSpeed", 180f, 0f..360f)
@@ -59,7 +71,6 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
-
         if (!RotationOption.enabled || !event.entity.isLiving || !chronometer.hasElapsed(230) || event.isCancelled) {
             return@handler
         }
@@ -78,7 +89,6 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
                 val deltaPrev = easedPrev * maxRotationAngle * (rotationSpeed / 360f)
                 prev.startAngle += deltaPrev
             }
-
             prev.isRotatingBack = false
         }
 
@@ -110,7 +120,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
                 if (ImageOffset.enabled) ImageOffset.offsetZ.toDouble() else 0.0
             )
         ) {
-            RenderSystem.setShaderTexture(0, image.texture)
+            RenderSystem.setShaderTexture(0, imageMode.activeChoice.getTexture())
 
             matrixStack.apply {
                 push()
@@ -124,10 +134,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
                 translate(-0.5f, -0.5f, 0.0f)
             }
             val alpha = MathHelper.clamp((255 * opacity).toInt(), 0, 255)
-            val imgColor = getColor(entity).with(a = alpha)
-
-
-
+            val imgColor = attackColor.with(a = alpha).takeIf { entity.hurtTime > 0 } ?: getColor(entity).with(a = alpha)
 
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
@@ -145,7 +152,6 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
     }
 
     private fun calculateRotationAngle(entity: LivingEntity): Float? {
-
         if (!RotationOption.enabled) {
             hitDataMap.remove(entity.uuid)
             return null
@@ -183,17 +189,63 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
         multiply(Quaternionf().rotateZ(Math.toRadians(degrees.toDouble()).toFloat()))
     }
 
-    @Suppress("UNUSED")
-    private enum class FaceImage(
-        override val choiceName: String,
-        textureName: String
-    ) : NamedChoice {
-        XINXIN("Xinxin", "xinxin"),
-        BAIZHIJUN("SuChen", "suchen"),
-        ALAN34("Alan34", "alan");
+    internal sealed class ImageMode(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*> get() = imageMode
 
-        val texture: Identifier =
-            "image/esp2D/$textureName.png".registerAsDynamicImageFromClientResources()
+        abstract fun getTexture(): Identifier
+
+        object FaceImageMode : ImageMode("Face") {
+            private val image by enumChoice("Image", FaceImage.ALAN34)
+
+            override fun getTexture(): Identifier = image.texture
+
+            private enum class FaceImage(
+                override val choiceName: String,
+                textureName: String
+            ) : NamedChoice {
+                XINXIN("Xinxin", "xinxin"),
+                BAIZHIJUN("SuChen", "suchen"),
+                ALAN34("Alan34", "alan");
+
+                val texture: Identifier =
+                    "image/esp2D/$textureName.png".registerAsDynamicImageFromClientResources()
+            }
+        }
+        object FileImageMode : ImageMode("File") {
+            private val customImage by file("CustomImage")
+            private var cachedTexture: Identifier? = null
+            private var cachedNativeImage: NativeImage? = null
+            private var cachedPath: String? = null
+
+            override fun getTexture(): Identifier {
+                val file = customImage.absoluteFile.takeIf { it.exists() && it.isFile && it.canRead() }
+                if (file == null) {
+                    cachedTexture?.let { return it }
+                    cachedNativeImage?.close()
+                    val defaultId = Identifier.of("liquidbounce", "esp-default")
+                    cachedNativeImage = NativeImage.read(
+                        LiquidBounce.javaClass.getResourceAsStream("/resources/liquidbounce/image/esp2D/alan.png")!!
+                    )
+                    mc.textureManager.registerTexture(defaultId, NativeImageBackedTexture(cachedNativeImage))
+                    cachedTexture = defaultId
+                    cachedPath = null
+                    return defaultId
+                }
+
+                val path = file.absolutePath
+                if (cachedPath != path) {
+                    cachedNativeImage?.close()
+                    FileInputStream(file).use { fis ->
+                        cachedNativeImage = NativeImage.read(fis)
+                    }
+                    val id = Identifier.of("liquidbounce", "esp-file-${System.currentTimeMillis().toString(36)}")
+                    mc.textureManager.registerTexture(id, NativeImageBackedTexture(cachedNativeImage))
+                    cachedTexture = id
+                    cachedPath = path
+                }
+                return cachedTexture!!
+            }
+        }
 
     }
 }

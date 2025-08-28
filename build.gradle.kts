@@ -22,6 +22,7 @@ import com.github.gradle.node.task.NodeTask
 import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("fabric-loom")
@@ -474,4 +475,8 @@ tasks.named("sourcesJar") {
 
 tasks.named("build") {
     dependsOn("copyZipInclude")
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xnon-local-break-continue"))
 }
