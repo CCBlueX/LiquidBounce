@@ -7,19 +7,17 @@
         randomUsername,
         reconnectToServer
     } from "../../../integration/rest";
-    import type {
-        AccountManagerLoginEvent,
-    } from "../../../integration/events";
     import {listen} from "../../../integration/ws";
     import {onMount} from "svelte";
     import type {Account} from "../../../integration/types";
     import {restoreSession,} from "../../../integration/rest.js";
     import {fly} from "svelte/transition";
     import Menu from "../common/Menu.svelte";
+    import {isLoggingIn} from "../altmanager/altmanager_store";
 
     import ReasonInfo from "./ReasonInfo.svelte";
 
-    let premiumAccounts: Account[] = [];
+    const premiumAccounts: Account[] = $state([]);
 
     function handleBackClick(screen: string) {
 
@@ -36,25 +34,24 @@
         await loginToAccount(account.id);
     }
 
+
     onMount(async () => {
-        premiumAccounts = (await getAccounts()).filter(a => a.type !== "Cracked" && !a.favorite);
-        setTimeout(() => {
-            listen("accountManagerLogin", async (e: AccountManagerLoginEvent) => {
-                await reconnectToServer();
-            });
-        }, 1000);
+        const accounts = await getAccounts();
+        premiumAccounts.push(...accounts.filter(a => a.type !== "Cracked" && !a.favorite));
     });
+
+    listen("accountManagerLogin", reconnectToServer);
 
 </script>
 
 
 <Menu>
     <div class="reconnect" transition:fly|global={{duration:300, y:100}}>
-        <SimpleButton on:click={() => reconnectToServer()} title="Reconnect"/>
-        <SimpleButton on:click={restoreSession} title="Restore initial session"/>
-        <SimpleButton disabled={premiumAccounts.length === 0} on:click={reconnectWithRandomAccount}
-                      title="Reconnect with random account"/>
-        <SimpleButton on:click={reconnectWithRandomUsername} title="Reconnect with random username"/>
+        <SimpleButton  on:click={reconnectToServer} title="Reconnect" disabled={$isLoggingIn}/>
+        <SimpleButton on:click={restoreSession} title="Restore initial session" disabled={$isLoggingIn}/>
+        <SimpleButton disabled={premiumAccounts.length === 0 || $isLoggingIn} on:click={reconnectWithRandomAccount}
+                      title="Reconnect with random account" />
+        <SimpleButton on:click={reconnectWithRandomUsername} title="Reconnect with random username" disabled={$isLoggingIn}/>
     </div>
     <div class="back" transition:fly|global={{duration:300, y:100}}>
         <SimpleButton on:click={() => handleBackClick("altmanager")} title="Back to AltManager"/>

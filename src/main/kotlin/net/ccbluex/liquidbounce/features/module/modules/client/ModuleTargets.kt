@@ -33,23 +33,26 @@ object ModuleTargets : ClientModule(
     hide = true,
     aliases = arrayOf("Enemies")
 ) {
-    val combatConfigurable = multiEnumChoice(
-        "Combat",
-        Targets.PLAYERS,
-        Targets.HOSTILE,
-        Targets.ANGERABLE,
-        Targets.WATER_CREATURE,
-        Targets.INVISIBLE,
+    val combatConfigurable = multiEnumChoice("Combat",
+        default = EnumSet.of(
+            Targets.PLAYERS,
+            Targets.HOSTILE,
+            Targets.ANGERABLE,
+            Targets.WATER_CREATURE,
+            Targets.INVISIBLE,
+        ),
+        choices = EnumSet.allOf(Targets::class.java).apply { remove(Targets.SELF) }
     )
 
-    val visualConfigurable = multiEnumChoice(
-        "Visual",
-        Targets.PLAYERS,
-        Targets.HOSTILE,
-        Targets.ANGERABLE,
-        Targets.WATER_CREATURE,
-        Targets.INVISIBLE,
-        Targets.FRIENDS
+    val visualConfigurable = multiEnumChoice("Visual",
+        default = EnumSet.of(
+            Targets.PLAYERS,
+            Targets.HOSTILE,
+            Targets.ANGERABLE,
+            Targets.WATER_CREATURE,
+            Targets.INVISIBLE,
+        ),
+        choices = EnumSet.allOf(Targets::class.java)
     )
 
     inline val combat: EnumSet<Targets> get() = combatConfigurable.get() as EnumSet

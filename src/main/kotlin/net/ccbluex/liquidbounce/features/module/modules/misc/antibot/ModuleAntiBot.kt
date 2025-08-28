@@ -46,6 +46,10 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     @Suppress("unused")
     private val tagHandler = handler<TagEntityEvent> {
+        if (it.entity === player) {
+            return@handler
+        }
+
         if (isBot(it.entity)) {
             it.ignore()
         }
@@ -81,7 +85,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
      * Check if player might be a bot
      */
     fun isBot(player: Entity): Boolean {
-        if (!running) {
+        if (!running || player === mc.player) {
             return false
         }
 

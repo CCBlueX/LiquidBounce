@@ -53,8 +53,9 @@ class NametagRenderer {
 
     private val fontBuffers = FontRendererBuffers()
 
-    fun drawNametag(env: RenderEnvironment, nametag: Nametag, pos: Vec3) = with(env) {
+    fun RenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         val fontSize = FontManager.DEFAULT_FONT_SIZE
+
         val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
         matrixStack.push()
@@ -73,23 +74,21 @@ class NametagRenderer {
         // Make the model view matrix center the text when rendering
         matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
 
-        ModuleNametags.fontRenderer.commit(env, fontBuffers)
+        ModuleNametags.fontRenderer.commit(this@drawNametag, fontBuffers)
 
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
-
-        // Only draw background if BACKGROUND option is showing
         if (NametagShowOptions.BACKGROUND.isShowing()) {
-            quadBuffers.drawQuad(env, q1, q2)
+        quadBuffers.drawQuad(this@drawNametag, q1, q2)
         }
-
         if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(env, q1, q2)
+            lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
         }
 
         if (NametagShowOptions.ITEMS.isShowing()) {
             drawItemList(pos, nametag.items)
         }
+
         // Draw enchantments directly for the entity (regardless of whether items are shown)
         if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
             val entityPos = nametag.entity.pos
@@ -97,7 +96,7 @@ class NametagRenderer {
             val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 
             NametagEnchantmentRenderer.drawEntityEnchantments(
-                env,
+                this@drawNametag,
                 nametag.entity,
                 worldX,
                 worldY,
@@ -108,7 +107,7 @@ class NametagRenderer {
         matrixStack.pop()
     }
 
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack?>) {
+    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) {
         dc.matrices.push()
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
         dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
@@ -125,8 +124,11 @@ class NametagRenderer {
         dc.matrices.translate(0.0F, 0.0F, 100.0F)
 
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
+
         itemsToRender.forEachIndexed { index, itemStack ->
-            itemStack ?: return@forEachIndexed
+            if (itemStack.isEmpty) {
+                return@forEachIndexed
+            }
 
             val x = index * ITEM_SIZE
             dc.drawItem(itemStack, x, 0)
@@ -143,7 +145,12 @@ class NametagRenderer {
         GL11.glEnable(GL11.GL_DEPTH_TEST)
 
         RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
+        RenderSystem.blendFuncSeparate(
+            GL11.GL_SRC_ALPHA,
+            GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE,
+            GL11.GL_ZERO
+        )
 
         env.withColor(Color4b(0, 0, 0, 120)) {
             quadBuffers.draw()
@@ -155,5 +162,4 @@ class NametagRenderer {
             fontBuffers.draw()
         }
     }
-
 }

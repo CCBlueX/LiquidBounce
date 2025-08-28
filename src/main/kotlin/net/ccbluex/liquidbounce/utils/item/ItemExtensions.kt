@@ -106,28 +106,8 @@ val ItemStack.isFood: Boolean
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
 
-private val BUNDLE_ITEMS = setOf(
-    Items.BUNDLE,
-    Items.WHITE_BUNDLE,
-    Items.ORANGE_BUNDLE,
-    Items.MAGENTA_BUNDLE,
-    Items.LIGHT_BLUE_BUNDLE,
-    Items.YELLOW_BUNDLE,
-    Items.LIME_BUNDLE,
-    Items.PINK_BUNDLE,
-    Items.GRAY_BUNDLE,
-    Items.LIGHT_GRAY_BUNDLE,
-    Items.CYAN_BUNDLE,
-    Items.PURPLE_BUNDLE,
-    Items.BLUE_BUNDLE,
-    Items.BROWN_BUNDLE,
-    Items.GREEN_BUNDLE,
-    Items.RED_BUNDLE,
-    Items.BLACK_BUNDLE
-)
-
 val ItemStack.isBundle
-    get() = this.item in BUNDLE_ITEMS
+    get() = this.item is BundleItem
 
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
@@ -145,7 +125,7 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
         AttributeModifiersComponent.DEFAULT
     )
-    .modifiers()
+    .modifiers
     .filter { modifier -> modifier.attribute() == attribute }
     .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
 

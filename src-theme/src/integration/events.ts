@@ -6,21 +6,45 @@ import type {
     Proxy,
     Screen,
     Server,
-    TextComponent
+    TextComponent,
 } from "./types";
-export interface Event {
+
+export interface EventMap {
+    socketReady: void;
+    clickGuiValueChange: ClickGuiValueChangeEvent;
+    moduleToggle: ModuleToggleEvent;
+    keyboardKey: KeyboardKeyEvent;
+    mouseButton: MouseButtonEvent;
+    scaleFactorChange: ScaleFactorChangeEvent;
+    componentsUpdate: ComponentsUpdateEvent;
+    clientPlayerData: ClientPlayerDataEvent;
+    overlayMessage: OverlayMessageEvent;
+    notification: NotificationEvent;
+    keyEvent: KeyEvent;
+    targetChange: TargetChangeEvent;
+    blockCountChange: BlockCountChangeEvent;
+    accountManagerAddition: AccountManagerAdditionEvent;
+    accountManagerRemoval: AccountManagerRemovalEvent;
+    accountManagerMessage: AccountManagerMessageEvent;
+    accountManagerLogin: AccountManagerLoginEvent;
+    serverPinged: ServerPingedEvent;
+    clientPlayerInventory: ClientPlayerInventoryEvent;
+    proxyCheckResult: ProxyCheckResultEvent;
+    spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    browserUrlChange: BrowserUrlChangeEvent;
 }
-export interface ClickGuiValueChangeEvent extends Event {
+
+export interface ClickGuiValueChangeEvent {
     configurable: ConfigurableSetting;
 }
 
-export interface ModuleToggleEvent extends Event  {
+export interface ModuleToggleEvent {
     moduleName: string;
     hidden: boolean;
     enabled: boolean;
 }
 
-export interface KeyboardKeyEvent extends Event {
+export interface KeyboardKeyEvent {
     keyCode: number;
     scanCode: number;
     action: number;
@@ -29,7 +53,7 @@ export interface KeyboardKeyEvent extends Event {
     screen: Screen | undefined;
 }
 
-export interface MouseButtonEvent extends Event  {
+export interface MouseButtonEvent {
     key: string;
     button: number;
     action: number;
@@ -37,19 +61,19 @@ export interface MouseButtonEvent extends Event  {
     screen: Screen | undefined;
 }
 
-export interface ScaleFactorChangeEvent extends Event  {
+export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent extends Event  {
+export interface ComponentsUpdateEvent {
     components: Component[];
 }
 
-export interface ClientPlayerDataEvent extends Event  {
+export interface ClientPlayerDataEvent {
     playerData: PlayerData;
 }
 
-export interface OverlayMessageEvent extends Event  {
+export interface OverlayMessageEvent {
     text: TextComponent | string;
     tinted: boolean;
 }
@@ -122,45 +146,48 @@ export interface ProgressEvent  extends Event  {
     timeRemaining: number;
 }
 
-export interface KeyEvent  extends Event {
+export interface KeyEvent {
     key: string;
     action: number;
     mods: number;
-
 }
 
-export interface TargetChangeEvent  extends Event {
+export interface TargetChangeEvent {
     target: PlayerData | null;
     distant:number;
 }
 
-export interface BlockCountChangeEvent  extends Event {
+export interface BlockCountChangeEvent {
     count?: number;
 }
 
-export interface AccountManagerAdditionEvent  extends Event {
+export interface AccountManagerAdditionEvent {
     username: string | null;
     error: string | null;
 }
 
-export interface AccountManagerMessageEvent extends Event  {
+export interface AccountManagerRemovalEvent {
+    username: string | null;
+}
+
+export interface AccountManagerMessageEvent {
     message: string;
 }
 
-export interface AccountManagerLoginEvent  extends Event {
+export interface AccountManagerLoginEvent {
     username: string | null;
     error: string | null;
 }
 
-export interface ServerPingedEvent extends Event  {
+export interface ServerPingedEvent {
     server: Server;
 }
 
-export interface PlayerInventoryEvent  extends Event {
+export interface PlayerInventoryEvent {
     inventory: PlayerInventory;
 }
 
-export interface PlayerInventory  extends Event {
+export interface PlayerInventory {
     armor: ItemStack[];
     main: ItemStack[];
     crafting: ItemStack[];
@@ -168,17 +195,15 @@ export interface PlayerInventory  extends Event {
     openChest: ItemStack[];
 }
 
-
 export interface ProxyCheckResultEvent {
     proxy: Proxy | null;
     error: string | null;
 }
 
-export interface SpaceSeperatedNamesChangeEvent  extends Event {
+export interface SpaceSeperatedNamesChangeEvent {
     value: boolean;
 }
 
-export interface BrowserUrlChangeEvent  extends Event {
+export interface BrowserUrlChangeEvent {
     url: string;
 }
-

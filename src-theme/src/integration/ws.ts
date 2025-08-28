@@ -1,5 +1,5 @@
-import { WS_BASE } from "./host";
-import type {Event} from "./events";
+import {WS_BASE} from "./host";
+import type {EventMap} from "./events";
 
 console.log("Connecting to server at: ", WS_BASE);
 
@@ -34,10 +34,10 @@ function connect() {
     }
 }
 
-const alwaysListeners = new Map<string, Function[]>();
-const listeners = new Map<string, Function[]>();
+const alwaysListeners = new Map<keyof EventMap, Function[]>();
+const listeners = new Map<keyof EventMap, Function[]>();
 
-export function listenAlways<E extends Event>(eventName: string, callback: (event: E) => any) {
+export function listenAlways<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!alwaysListeners.has(eventName)) {
         alwaysListeners.set(eventName, []);
     }
@@ -45,7 +45,7 @@ export function listenAlways<E extends Event>(eventName: string, callback: (even
     alwaysListeners.get(eventName)!!.push(callback);
 }
 
-export function listen<E extends Event>(eventName: string, callback: (event: E) => any) {
+export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!listeners.has(eventName)) {
         listeners.set(eventName, []);
     }
@@ -79,7 +79,7 @@ export function cleanupListeners() {
     console.log("[WS] Cleaned up event listeners");
 }
 
-export function deleteListener(eventName: string, cb: Function) {
+export function deleteListener<NAME extends keyof EventMap>(eventName: NAME, cb: (event: EventMap[NAME]) => void) {
     listeners.set(
         eventName,
         listeners.get(eventName)?.filter(handler => handler !== cb) ?? []

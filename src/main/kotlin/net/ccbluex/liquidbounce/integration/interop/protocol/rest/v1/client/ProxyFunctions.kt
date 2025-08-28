@@ -27,7 +27,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import org.lwjgl.glfw.GLFW
 
@@ -45,11 +45,11 @@ import org.lwjgl.glfw.GLFW
 
 // GET /api/v1/client/proxy
 @Suppress("UNUSED_PARAMETER")
-fun getProxyInfo(requestObject: RequestObject) = httpOk(ProxyManager.currentProxy?.let { proxy ->
-    interopGson.toJsonTree(proxy).asJsonObject.apply {
+fun getProxyInfo(requestObject: RequestObject) = ProxyManager.currentProxy?.let { proxy ->
+    httpOk(interopGson.toJsonTree(proxy).asJsonObject.apply {
         addProperty("id", ProxyManager.proxies.indexOf(proxy))
-    }
-} ?: emptyJsonObject())
+    })
+} ?: httpNoContent()
 
 // POST /api/v1/client/proxy
 @Suppress("UNUSED_PARAMETER")
@@ -63,14 +63,14 @@ fun postProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.proxy = ProxyManager.proxies[body.id]
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // DELETE /api/v1/client/proxy
 @Suppress("UNUSED_PARAMETER")
 fun deleteProxy(requestObject: RequestObject): FullHttpResponse {
     ProxyManager.proxy = Proxy.NONE
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // GET /api/v1/client/proxies
@@ -106,7 +106,7 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication))
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v1/client/proxies/add/clipboard
@@ -137,7 +137,7 @@ fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v1/client/proxies/edit
@@ -164,7 +164,7 @@ fun postEditProxy(requestObject: RequestObject): FullHttpResponse {
 
     val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
     ProxyManager.validateProxy(proxy, index = id)
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v1/client/proxies/check
@@ -179,7 +179,7 @@ fun postCheckProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.validateProxy(ProxyManager.proxies[body.id], checkOnly = true)
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // DELETE /api/v1/client/proxies/remove
@@ -196,7 +196,7 @@ fun deleteRemoveProxy(requestObject: RequestObject): FullHttpResponse {
     if (ProxyManager.proxies.removeAt(body.id) == ProxyManager.proxy) {
         ProxyManager.proxy = Proxy.NONE
     }
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // PUT /api/v1/client/proxies/favorite
@@ -212,7 +212,7 @@ fun putFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
 
     ProxyManager.proxies[body.id].favorite = true
     ConfigSystem.storeConfigurable(ProxyManager)
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // DELETE /api/v1/client/proxies/favorite
@@ -228,5 +228,5 @@ fun deleteFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
 
     ProxyManager.proxies[body.id].favorite = false
     ConfigSystem.storeConfigurable(ProxyManager)
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }

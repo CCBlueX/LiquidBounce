@@ -49,7 +49,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arra
     private object Render : ToggleableConfigurable(this, "Render", true) {
         private val notInFirstPerson by boolean("NotInFirstPerson", true)
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
-        private val fadeOut by curve("FadeOut", Easing.QUAD_OUT)
+        private val fadeOut by easing("FadeOut", Easing.QUAD_OUT)
         private val outTime by int("OutTime", 500, 0..2000, "ms")
 
         private val alpha by int("Alpha", 100, 0..255)

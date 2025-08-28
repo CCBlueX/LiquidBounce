@@ -24,7 +24,6 @@ import com.google.gson.JsonObject
 import com.thealtening.api.retriever.DataRetriever.gson
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.netty.http.model.RequestObject
@@ -43,7 +42,7 @@ fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
     ThemeManager.initializeBackground()
     ConfigSystem.storeConfigurable(ThemeManager)
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 @Suppress("UNUSED_PARAMETER")

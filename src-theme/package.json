@@ -10,35 +10,22 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
+    "sass": "^1.70.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tsconfig/svelte": "^5.0.4",
-    "@types/dateformat": "^5.0.3",
-    "@types/lodash": "^4.17.16",
-    "@types/node": "^22.14.1",
-    "sass": "^1.70.0",
     "svelte": "^5.2.7",
     "svelte-check": "^4.1.0",
-    "svelte-preprocess": "^6.0.3",
     "tslib": "^2.8.1",
     "typescript": "~5.6.2",
-    "vite": "^6.3.3",
-    "vite-plugin-raw": "^1.0.3"
+    "vite": "^6.3.4"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.3.0",
     "@jhubbardsf/svelte-sortablejs": "^1.1.0",
     "@simonwep/pickr": "^1.9.0",
-    "@types/howler": "^2.2.12",
     "archiver": "^6.0.1",
-    "colorjs.io": "^0.5.2",
     "country-code-lookup": "^0.1.2",
     "dateformat": "^5.0.3",
-    "express": "^5.1.0",
-    "howler": "^2.2.4",
-    "node-fetch": "^3.3.2",
     "nouislider": "^15.7.1",
-    "svelte-spa-router": "^4.0.1",
-    "three": "^0.176.0",
-    "ws": "^8.18.1"
+    "svelte-spa-router": "^4.0.1"
   }
 }
