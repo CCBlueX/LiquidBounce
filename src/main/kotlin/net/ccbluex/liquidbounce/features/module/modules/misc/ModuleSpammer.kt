@@ -78,7 +78,8 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         object File : MessageProvider("File") {
-            private val file by file("Source", supportedExtensions = setOf("txt")).onChanged {
+
+            private val source by file("Source").onChanged {
                 lineIndex.clear()
                 if (!it.isFile) return@onChanged
 
@@ -100,7 +101,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
                     SpammerPattern.RANDOM -> lineIndex.getLong(Random.nextInt(lineIndex.size))
                     SpammerPattern.LINEAR -> lineIndex.getLong(linear++ % lineIndex.size)
                 }
-                return RandomAccessFile(file, "r").use { raf ->
+                return RandomAccessFile(source, "r").use { raf ->
                     raf.seek(index)
                     raf.readLine()
                 }
@@ -112,7 +113,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
     private val customFormatter by boolean("CustomFormatter", false)
 
     override suspend fun enabledEffect() = withContext(Dispatchers.IO) {
-        while (running) {
+        while (true) {
             repeat(mps.random()) {
                 val chosenMessage = try {
                     message.activeChoice.nextMessage()
@@ -121,31 +122,34 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
                     return@repeat
                 }
 
-                val text = if (chosenMessage.startsWith('/')) {
-                    format(chosenMessage)
-                }else {
-                    messageConverterMode.convert(if (customFormatter) {
-                        format(chosenMessage)
-                    } else {
-                        "[${RandomStringUtils.randomAlphabetic(1, 5)}] " +
-                            MessageConverterMode.RANDOM_CASE_CONVERTER.convert(chosenMessage)
-                    })
-                }
+                val text = applyConversion(chosenMessage)
 
-                if (text.length > 256) {
-                    chat("Spammer message is too long! (Max 256 characters)")
-                    return@repeat
-                }
-
-                // Check if message text is command
-                if (text.startsWith('/')) {
-                    network.sendCommand(text.substring(1))
-                } else {
-                    network.sendChatMessage(text)
-                }
+                sendMessageOrCommand(text)
             }
 
             delay(delay.random().toDouble().seconds)
+        }
+    }
+
+    private fun applyConversion(text: String): String {
+        return messageConverterMode.convert(if (customFormatter) {
+            format(text)
+        } else {
+            "[${RandomStringUtils.insecure().nextAlphabetic(1, 5)}] " +
+                MessageConverterMode.RANDOM_CASE_CONVERTER.convert(text)
+        })
+    }
+
+    private fun sendMessageOrCommand(text: String) {
+        if (text.length > 256) {
+            chat("Spammer message is too long! (Max 256 characters)")
+            return
+        }
+
+        if (text.startsWith('/')) {
+            network.sendCommand(text.substring(1))
+        } else {
+            network.sendChatMessage(text)
         }
     }
 
@@ -155,7 +159,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }.replace("%i") {
             Random.nextInt(10000)
         }.replace("%s") {
-            RandomStringUtils.randomAlphabetic(4, 7)
+            RandomStringUtils.insecure().nextAlphabetic(4, 7)
         }
 
         if (formattedText.contains("@a")) {
