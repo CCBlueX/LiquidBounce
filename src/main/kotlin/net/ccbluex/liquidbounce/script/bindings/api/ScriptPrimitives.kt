@@ -38,13 +38,15 @@ object ScriptPrimitives {
 
     fun byte(long: Long): Byte = long.toByte()
 
-    fun byte(string: String?): Byte = string?.toByte() ?: 0.toByte()
+    @JvmOverloads
+    fun byte(string: String?, radix: Int = 10): Byte = string?.toByte(radix) ?: 0.toByte()
 
     fun short(short: Short): Short = short
 
     fun short(long: Long): Short = long.toShort()
 
-    fun short(string: String?): Short = string?.toShort() ?: 0.toShort()
+    @JvmOverloads
+    fun short(string: String?, radix: Int = 10): Short = string?.toShort(radix) ?: 0.toShort()
 
     fun char(char: Char): Char = char
 
@@ -56,11 +58,13 @@ object ScriptPrimitives {
 
     fun int(long: Long): Int = long.toInt()
 
-    fun int(string: String?): Int = string?.toInt() ?: 0
+    @JvmOverloads
+    fun int(string: String?, radix: Int = 10): Int = string?.toInt(radix) ?: 0
 
     fun long(long: Long): Long = long
 
-    fun long(string: String?): Long = string?.toLong() ?: 0L
+    @JvmOverloads
+    fun long(string: String?, radix: Int = 10): Long = string?.toLong(radix) ?: 0L
 
     fun float(float: Float): Float = float
 
