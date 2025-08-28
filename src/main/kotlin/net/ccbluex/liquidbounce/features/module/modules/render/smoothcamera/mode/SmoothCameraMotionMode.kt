@@ -2,14 +2,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mod
 
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.SmoothCameraMode
+import net.minecraft.client.option.Perspective
 import net.minecraft.util.math.Vec3d
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-object SimpleMode : SmoothCameraMode("Simple") {
-
+object SmoothCameraMotionMode : SmoothCameraMode("Motion") {
+    val motion by float("Motion", 2.0f, 1.0f..5.0f)
     private val distance by float("Distance",4.0f,1.0f..10f)
-
     override fun cameraUpdate(
         yaw: Float,
         pitch: Float,
@@ -22,12 +22,10 @@ object SimpleMode : SmoothCameraMode("Simple") {
         setCameraPos: (Vec3d?) -> Unit
     ) {
         val player = mc.player ?: return
-
         val currentPos = ModuleSmoothCamera.getCameraPosition() ?: pos
         val eyePos = Vec3d(player.x, player.y + player.getEyeHeight(player.pose), player.z)
         val yawRad = Math.toRadians(yaw.toDouble())
         val pitchRad = Math.toRadians(pitch.toDouble())
-
 
         val dir = Vec3d(
             -kotlin.math.sin(yawRad) * kotlin.math.cos(pitchRad),
@@ -35,8 +33,8 @@ object SimpleMode : SmoothCameraMode("Simple") {
             kotlin.math.cos(yawRad) * kotlin.math.cos(pitchRad)
         )
 
-
-        val targetPos = eyePos.subtract(dir.multiply(distance.toDouble()))
+        val distanceSigned = if (mc.options.perspective == Perspective.THIRD_PERSON_FRONT) -distance else distance
+        val targetPos = eyePos.subtract(dir.multiply(distanceSigned.toDouble()))
 
         val dx = targetPos.x - currentPos.x
         val dy = targetPos.y - currentPos.y
@@ -56,7 +54,5 @@ object SimpleMode : SmoothCameraMode("Simple") {
         setSmoothPos(newCameraPos)
 
     }
-
-
 }
 

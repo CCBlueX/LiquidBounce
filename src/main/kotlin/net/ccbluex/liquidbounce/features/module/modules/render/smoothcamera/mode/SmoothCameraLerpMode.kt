@@ -6,7 +6,9 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-object StrictMode : SmoothCameraMode("Strict") {
+object SmoothCameraLerpMode : SmoothCameraMode("Lerp") {
+    val factor by float("Factor", 0.2f, 0.0f..1.0f)
+
     override fun cameraUpdate(
         yaw: Float,
         pitch: Float,

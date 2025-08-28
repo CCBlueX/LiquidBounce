@@ -2,8 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SimpleMode
-import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.StrictMode
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraMotionMode
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraLerpMode
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraLerpMode.factor
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraMotionMode.motion
 import net.minecraft.client.option.Perspective
 import net.minecraft.util.math.Vec3d
 
@@ -14,10 +16,7 @@ import net.minecraft.util.math.Vec3d
  */
 object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER, aliases = arrayOf("MotionCamera")) {
 
-    val modes = choices("Mode", StrictMode, arrayOf(StrictMode, SimpleMode))
-
-    private val factor by float("Factor", 0.2f, 0.0f..1.0f)
-    private val motion by float("Motion", 2.0f, 1.0f..5.0f)
+    val modes = choices("Mode", SmoothCameraLerpMode, arrayOf(SmoothCameraLerpMode, SmoothCameraMotionMode))
 
     var smoothPos: Vec3d = Vec3d.ZERO
         private set
@@ -70,6 +69,5 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER, aliase
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =
-        running && !(modes.activeChoice is SimpleMode && isFirstPerson())
-
+        running && !(modes.activeChoice is SmoothCameraMotionMode && isFirstPerson())
 }

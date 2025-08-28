@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera;
-import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SimpleMode;
-import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.StrictMode;
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraMotionMode;
+import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraLerpMode;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.render.Camera;
@@ -148,7 +148,7 @@ public abstract class MixinCamera {
 
     @Inject(method = "update", at = @At("TAIL"))
     private void onUpdate(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        if (StrictMode.INSTANCE.getRunning()) {
+        if (SmoothCameraLerpMode.INSTANCE.getRunning()) {
             ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
         }
     }
@@ -160,7 +160,7 @@ public abstract class MixinCamera {
 
     @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V"))
     private  void onSetCameraPosition(Args args) {
-        if (ModuleSmoothCamera.shouldApplyChanges() && SimpleMode.INSTANCE.getRunning() && this.focusedEntity != null) {
+        if (ModuleSmoothCamera.shouldApplyChanges() && SmoothCameraMotionMode.INSTANCE.getRunning() && this.focusedEntity != null) {
             Vec3d playerPos = this.focusedEntity.getPos();
             ModuleSmoothCamera.cameraUpdate(this.yaw, this.pitch, playerPos);
             Vec3d cameraPos = ModuleSmoothCamera.getCameraPosition();
