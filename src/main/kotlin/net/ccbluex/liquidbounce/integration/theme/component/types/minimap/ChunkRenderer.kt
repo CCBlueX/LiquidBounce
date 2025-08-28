@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.utils.math.dotProduct
 import net.ccbluex.liquidbounce.utils.math.similarity
 import net.minecraft.block.BlockState
@@ -32,6 +31,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.world.chunk.WorldChunk
+import org.joml.Vector2i
 import org.joml.component1
 import org.joml.component2
 import java.awt.Color
@@ -43,7 +43,7 @@ object ChunkRenderer {
     private val textureAtlasManager = MinimapTextureAtlasManager()
     private val heightmapManager = MinimapHeightmapManager()
 
-    val SUN_DIRECTION = Vec2i(2, 1)
+    val SUN_DIRECTION = Vector2i(2, 1)
 
     fun unloadEverything() {
         heightmapManager.unloadAllChunks()
@@ -94,14 +94,14 @@ object ChunkRenderer {
         }
 
         private val offsetsToCheck = arrayOf(
-            Vec2i(-1, 0),
-            Vec2i(1, 0),
-            Vec2i(0, -1),
-            Vec2i(0, 1),
-            Vec2i(-1, 1),
-            Vec2i(1, 1),
-            Vec2i(-1, -1),
-            Vec2i(1, -1),
+            Vector2i(-1, 0),
+            Vector2i(1, 0),
+            Vector2i(0, -1),
+            Vector2i(0, 1),
+            Vector2i(-1, 1),
+            Vector2i(1, 1),
+            Vector2i(-1, -1),
+            Vector2i(1, -1),
         )
 
         private val AIR_COLOR = Color(255, 207, 179).rgb
@@ -116,7 +116,7 @@ object ChunkRenderer {
                     heightmapManager.getHeight(x + offset.x, z + offset.y) > height
                 }
 
-                val higherOffsetVec = Vec2i(0, 0)
+                val higherOffsetVec = Vector2i(0, 0)
                 higherOffsets.forEach { higherOffsetVec.add(it) }
 
                 val brightness =
@@ -161,10 +161,10 @@ object ChunkRenderer {
 
             val chunkBordersToUpdate =
                 arrayOf(
-                    Triple(ChunkPos(x + 1, z), Vec2i(0, 0), Vec2i(0, 15)),
-                    Triple(ChunkPos(x - 1, z), Vec2i(15, 0), Vec2i(15, 15)),
-                    Triple(ChunkPos(x, z + 1), Vec2i(0, 0), Vec2i(15, 0)),
-                    Triple(ChunkPos(x, z - 1), Vec2i(0, 15), Vec2i(15, 15)),
+                    Triple(ChunkPos(x + 1, z), Vector2i(0, 0), Vector2i(0, 15)),
+                    Triple(ChunkPos(x - 1, z), Vector2i(15, 0), Vector2i(15, 15)),
+                    Triple(ChunkPos(x, z + 1), Vector2i(0, 0), Vector2i(15, 0)),
+                    Triple(ChunkPos(x, z - 1), Vector2i(0, 15), Vector2i(15, 15)),
                 )
 
             heightmapManager.updateChunk(chunkPos)

@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
@@ -20,6 +19,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
+import org.joml.Vector2i
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -27,7 +27,7 @@ import kotlin.math.sqrt
 private const val NATIVE_ITEM_SIZE: Int = 16
 
 private class Atlas(
-    val map: Map<Item, Pair<Vec2i, Vec2i>>,
+    val map: Map<Item, Pair<Vector2i, Vector2i>>,
     val image: BufferedImage,
     /**
      * Contains aliases. For example `minecraft:blue_wall_banner` -> `minecraft:wall_banner` which is necessary since
@@ -133,7 +133,7 @@ private class ItemFramebufferRenderer(
 
     val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
 
-    fun render(ctx: DrawContext): Map<Item, Pair<Vec2i, Vec2i>> {
+    fun render(ctx: DrawContext): Map<Item, Pair<Vector2i, Vector2i>> {
         this.framebuffer.beginWrite(true)
 
         ctx.matrices.push()
@@ -157,15 +157,15 @@ private class ItemFramebufferRenderer(
         GlobalFramebuffer.push(framebuffer)
 
         val map = this.items.mapIndexed { idx, item ->
-            val from = Vec2i(
+            val from = Vector2i(
                 (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE,
                 (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
             )
 
             ctx.drawItem(ItemStack(item), from.x, from.y)
 
-            val fbFrom = Vec2i(from.x * this.scale, from.y * this.scale)
-            val fbTo = Vec2i(
+            val fbFrom = Vector2i(from.x * this.scale, from.y * this.scale)
+            val fbTo = Vector2i(
                 fbFrom.x + this.itemPixelSizeOnFramebuffer,
                 fbFrom.y + this.itemPixelSizeOnFramebuffer
             )

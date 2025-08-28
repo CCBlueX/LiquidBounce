@@ -21,12 +21,10 @@ package net.ccbluex.liquidbounce.utils.math
 import org.joml.Vector2i
 import kotlin.math.sqrt
 
-typealias Vec2i = Vector2i
+fun Vector2i.dotProduct(other: Vector2i): Long = dotProduct(other.x, other.y)
 
-fun Vec2i.dotProduct(other: Vec2i): Long = dotProduct(other.x, other.y)
+fun Vector2i.dotProduct(x: Int, y: Int): Long = this.x.toLong() * x + this.y.toLong() * y
 
-fun Vec2i.dotProduct(x: Int, y: Int): Long = this.x.toLong() * x + this.y.toLong() * y
-
-fun Vec2i.similarity(other: Vec2i): Double {
+fun Vector2i.similarity(other: Vector2i): Double {
     return this.dotProduct(other) / sqrt((this.lengthSquared() * other.lengthSquared()).toDouble())
 }
