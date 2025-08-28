@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {CurveSetting, ModuleSetting} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {onDestroy, onMount} from "svelte";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import {
         Chart,
         type Chart as ChartJS,
@@ -21,6 +21,8 @@
     export let path: string;
 
     const cSetting = setting as CurveSetting;
+
+    const dispatch = createEventDispatcher();
 
     const thisPath = `${path}.${cSetting.name}`;
     let expanded = localStorage.getItem(thisPath) === "true";
@@ -53,8 +55,9 @@
     function updateValue() {
         if (!chart) return;
         const ds = chart.data.datasets[0] as any;
-        const tuples = ds.data.map((p: ScatterDataPoint) => [p.x, p.y]) as [number, number][];
-        console.log(tuples);
+        cSetting.value = ds.data.map((p: ScatterDataPoint) => ({x: p.x, y: p.y})) as Point[];
+        setting = { ...cSetting };
+        dispatch("change");
     }
 
     /**
