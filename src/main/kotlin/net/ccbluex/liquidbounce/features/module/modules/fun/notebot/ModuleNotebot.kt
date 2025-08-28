@@ -50,7 +50,7 @@ import java.util.*
  */
 object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = true) {
 
-    private val song by text("SongName", "")
+    private val song by file("Song", supportedExtensions = setOf("nbs"))
     private val pianoOnly by boolean("PianoOnly", false)
     val range by float("Range", 6f, 1f..6f)
     val rotationsConfigurable = RotationsConfigurable(this)
