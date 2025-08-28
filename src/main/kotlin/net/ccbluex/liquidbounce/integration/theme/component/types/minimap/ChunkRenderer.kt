@@ -24,12 +24,16 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Vec2i
+import net.ccbluex.liquidbounce.utils.math.dotProduct
+import net.ccbluex.liquidbounce.utils.math.similarity
 import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.world.chunk.WorldChunk
+import org.joml.component1
+import org.joml.component2
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
@@ -112,7 +116,8 @@ object ChunkRenderer {
                     heightmapManager.getHeight(x + offset.x, z + offset.y) > height
                 }
 
-                val higherOffsetVec = higherOffsets.fold(Vec2i.ZERO) { acc, vec -> acc.add(vec) }
+                val higherOffsetVec = Vec2i(0, 0)
+                higherOffsets.forEach { higherOffsetVec.add(it) }
 
                 val brightness =
                     if (higherOffsets.size < 2) {
@@ -121,7 +126,7 @@ object ChunkRenderer {
                         130.0 / 255.0
                     } else {
                         val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)
-                        val eee = higherOffsetVec.dotProduct(Vec2i(x, z)).toDouble() / higherOffsetVec.length()
+                        val eee = higherOffsetVec.dotProduct(x, z).toDouble() / higherOffsetVec.length()
                         val sine = sin(eee * 0.5 * PI)
 
                         (190.0 + (similarityToSunDirection * 55.0) + sine * 10.0) / 255.0

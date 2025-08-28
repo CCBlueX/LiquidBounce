@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
-import net.ccbluex.liquidbounce.utils.math.Vec2i;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -81,7 +80,7 @@ public abstract class MixinScreen {
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
     private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
-            if (ThemeManager.INSTANCE.drawBackground(context, width, height, new Vec2i(mouseX, mouseY), delta)) {
+            if (ThemeManager.INSTANCE.drawBackground(context, width, height, mouseX, mouseY, delta)) {
                 ci.cancel();
             }
         }
