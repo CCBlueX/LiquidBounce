@@ -32,6 +32,7 @@ export interface EventMap {
     proxyCheckResult: ProxyCheckResultEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    inventoryManagerProgress: InventoryManagerProgressEvent;
 }
 
 export interface ClickGuiValueChangeEvent {
