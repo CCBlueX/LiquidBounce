@@ -96,10 +96,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         private val curve = curve(
             "Curve", mutableListOf(
-                0f vec 120f,
-                50f vec 60f,
-                140f vec 120f,
-                180f vec 90f
+                0f vector2f 120f,
+                50f vector2f 60f,
+                140f vector2f 120f,
+                180f vector2f 90f
             ),
             xAxis = "X Axis" axis 0f..180f,
             yAxis = "Y Axis" axis 40f..120f
