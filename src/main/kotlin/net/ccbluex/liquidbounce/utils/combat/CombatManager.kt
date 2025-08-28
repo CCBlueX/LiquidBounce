@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.mc
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.utils.client.player
@@ -92,6 +93,7 @@ object CombatManager : EventListener {
     }
     val tickHandler = handler<GameTickEvent> {
         update()
+        val player = mc.player ?: return@handler
         if (player.hurtTime > 0) {
             receiveHitForAtLeast()
         }
@@ -112,14 +114,15 @@ object CombatManager : EventListener {
     fun receiveHitForAtLeast(ticks: Int = RECEIVE_HIT_TICKS) {
         receiveHitTicks = receiveHitTicks.coerceAtLeast(ticks)
     }
-    @Suppress("unused")
+
+
     val packetHandler = handler<PacketEvent> { event ->
+        val player = mc.player ?: return@handler
         val packet = event.packet
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             receiveHitForAtLeast()
         }
     }
-
 
     @Suppress("unused")
     val attackHandler = handler<AttackEntityEvent> { event ->

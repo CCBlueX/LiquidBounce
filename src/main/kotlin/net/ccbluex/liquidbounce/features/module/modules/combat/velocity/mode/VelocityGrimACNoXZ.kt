@@ -64,7 +64,7 @@ internal object VelocityGrimACNoXZ : VelocityMode("Heypixel") {
             cooldownTicks = Cooldown.cooldownTicks
         }
 
-        @Suppress("unused")
+        @Suppress("unused","ComplexCondition")
         private val tickHandler = tickHandler {
             if (!CombatManager.isInCombat) totalAttackCount = 0
 
@@ -110,7 +110,8 @@ internal object VelocityGrimACNoXZ : VelocityMode("Heypixel") {
                     val sprinting = player.isSprinting
 
                     if (!sprinting) {
-                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround, player.horizontalCollision))
+                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly
+                                (player.isOnGround, player.horizontalCollision))
                         network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING))
                     }
 

@@ -738,7 +738,7 @@
   "liquidbounce.module.pendant.description": "显示一个图片在某些界面。",
   "liquidbounce.module.iQBoost.description": "允许你提高自己的IQ。",
   "liquidbounce.module.setbackOnRespawn.description": "重生时将你传送到你死亡的位置。",
-  "liquidbounce.module.autoStuck.description": "在进入虚空娘的怀抱之前将你卡住。",
+  "liquidbounce.module.autoStuck.description": "在进入虚空娘的怀抱之前将你冻结在半空。",
   "liquidbounce.module.autoClutch.description": "基于模拟退火算法的自动珍珠自救。",
   "liquidbounce.module.noweb.mode.grim.messages.Protocol": "请使用1.18.2以上的协议以绕过Grim高版本弱检测！",
   "liquidbounce.module.autoRod.description": "自动使用鱼竿控距，需要准星指向对方。",
@@ -749,6 +749,7 @@
   "liquidbounce.module.pointerESP.description": "朝向目标的指针组成的环。",
   "liquidbounce.module.tPBowAura.description":"「天堂陨落长弓」",
   "liquidbounce.module.fPSBoost.description":"显示一个虚假的FPS值。",
+  "liquidbounce.module.penisESP.description":"绘制一个圆柱和有着冠状沟的半圆。",
   "liquidbounce.module.particleCosmetics.description":"在你身边形成一个粒子组成的装饰效果。",
   "liquidbounce.module.treasureManager.description":"自动将贵重的物品存储进箱子中。",
   "liquidbounce.module.instakillAxeFucker.description":"在KKCraft空岛战争自动选择秒人斧无概率。",
@@ -759,6 +760,12 @@
   "liquidbounce.module.antiInstakillAxe.description":"当对方手持秒人斧时且瞄准你时，试图放置生物蛋抵挡秒杀。",
   "liquidbounce.module.motionCamera.description":"动态调整游戏中的相机位置。",
   "liquidbounce.module.delayBlink.description":"在别人眼里你的行动比真实的行动慢一些。",
+  "liquidbounce.module.fireballFly.description": "延迟火球的击退以实现飞行的效果。",
+  "liquidbounce.module.autoReport.description": "自动举报你没能打过的人。",
   "liquidbounce.module.suicide.description":"我有抑郁症。",
-  "liquidbounce.module.autoEz.description":"自动扣字。"
+  "liquidbounce.module.autoEz.description":"自动扣字。",
+  "liquidbounce.module.betterInventory.description":"显示某些信息，比如InvManager选中的槽位，和物品冷却。",
+  "liquidbounce.module.godMode.description":"无效化所有攻击，只能在无反作弊的情况下工作。",
+  "liquidbounce.module.auroraAntiCheat.description":"基于数据分析运动预测的客户端模拟反作弊。",
+  "liquidbounce.module.noEntityInteract.description":"允许你透过实体的碰撞箱与方块交互。"
 }

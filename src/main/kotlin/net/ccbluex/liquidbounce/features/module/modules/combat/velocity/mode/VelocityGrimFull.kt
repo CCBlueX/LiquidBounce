@@ -54,7 +54,7 @@ internal object VelocityGrimFull : VelocityMode("GrimACFull") {
         delayedPacketQueue.clear()
     }
 
-    @Suppress("unused", "DEPRECATION")
+    @Suppress("unused", "DEPRECATION","ComplexCondition")
     private val packetEventHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
