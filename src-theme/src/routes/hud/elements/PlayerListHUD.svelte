@@ -1,6 +1,6 @@
 <script lang="ts">
     import {listen} from "../../../integration/ws";
-    import type {OverlayPlayListEvent, KeyEvent, ClickGuiValueChangeEvent} from "../../../integration/events";
+    import type {OverlayPlayListEvent, KeyEvent, ClickGuiValueChangeEvent, EventMap} from "../../../integration/events";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import {onMount} from "svelte";
     import {getMinecraftKeybinds, getModuleSettings} from "../../../integration/rest";
@@ -81,8 +81,11 @@
     }
 
 
-    listen("keybindChange", updateKeybinds);
-    listen("key", handleKeyDown);
+    listen("keybindChange" as keyof EventMap, updateKeybinds);
+    listen("key", (e: KeyEvent) => {
+        handleKeyDown(e);
+    });
+
 
     listen("overlayPlayList", (event: OverlayPlayListEvent) => {
         OverlayPlayList = event;
@@ -114,7 +117,7 @@
                 {/if}
 
                 <!-- Player Grid - always visible when tab is open -->
-                <div class="player-grid" style="grid-template-columns: {columnWidths.map(w => `minmax(360px, ${w}px)`).join(' ')};">
+                <div class="player-grid" style="grid-template-columns: {columnWidths.map(w => w + 'px').join(' ')};">
                     {#each OverlayPlayList.players as player, index}
                         <div class="player-entry" class:friend={player.isFriend} class:staff={player.isStaff}>
                             {#if !isVisible("NameOnly")}

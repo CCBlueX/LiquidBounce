@@ -53,8 +53,10 @@ class HudValueChangeEvent(val configurable: Configurable) : Event(),WebSocketEve
 class HudLayoutEditorValueChangeEvent(val configurable: Configurable) : Event(),WebSocketEvent
 
 @Nameable("betterTabValueChange")
-
 class BetterTabChangeEvent(val configurable: Configurable) : Event(),WebSocketEvent
+
+@Nameable("nameProtectValueChange")
+class NameProtectEvent(val configurable: Configurable) : Event(),WebSocketEvent
 
 @Nameable("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
@@ -94,8 +96,6 @@ class ProgressEvent(
     val timeRemaining: Long? = null,
 ) : Event(),WebSocketEvent
 
-@Nameable("nameProtect")
-class NameProtectEvent(val configurable: Configurable) : Event(),WebSocketEvent
 
 @Nameable("gameModeChange")
 class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent

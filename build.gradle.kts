@@ -420,15 +420,8 @@ tasks.jar {
         include("mappings/mappings.tiny")
     }
 }
-val minecraftVersion = providers.gradleProperty("minecraft_version").get()
-val modVersion = providers.gradleProperty("mod_version").get()
 
-val finalJarName = "jmcomicfix_${minecraftVersion}_fabric_v${modVersion}.jar"
-val finalSourcesName = "jmcomicfix_${minecraftVersion}_fabric_v${modVersion}-sources.jar"
 
-tasks.named<Jar>("sourcesJar") {
-    archiveFileName.set(finalSourcesName)
-}
 
 tasks.register<JavaExec>("proguard") {
     group = "build"
@@ -436,7 +429,7 @@ tasks.register<JavaExec>("proguard") {
     mainClass.set("proguard.ProGuard")
     classpath = configurations.detachedConfiguration(dependencies.create("com.guardsquare:proguard-base:7.7.0"))
 
-    val outputJar = layout.buildDirectory.file("libs/$finalJarName").get().asFile
+    val outputJar = layout.buildDirectory.file("libs/jmcomicfix_${providers.gradleProperty("minecraft_version").get()}_fabric_v${providers.gradleProperty("mod_version").get()}.jar").get().asFile
     val libFile = layout.buildDirectory.file("tmp/proguard-libraries.txt").get().asFile
     val javaHome = System.getProperty("java.home")
 

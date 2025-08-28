@@ -2,7 +2,7 @@
     import { onMount } from "svelte"
     import type {
         BlockCountChangeEvent,
-        ClientPlayerDataEvent,
+        ClientPlayerDataEvent, EventMap,
     } from "../../../integration/events"
     import type { PlayerData} from "../../../integration/types"
     import { listen } from "../../../integration/ws"
@@ -17,8 +17,8 @@
 
     listen("blockCountChange", (e: BlockCountChangeEvent) => count = e.count)
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => playerData = e.playerData)
-    listen("selectingHotbarSlotSilently", () =>selectingHotbar = true)
-    listen("resetHotbarSlotSilently", () => selectingHotbar = false)
+    listen("selectingHotbarSlotSilently"as keyof EventMap, () =>selectingHotbar = true)
+    listen("resetHotbarSlotSilently"as keyof EventMap, () => selectingHotbar = false)
     listen("moduleToggle", () => checkSilentHotbar())
 
     async function checkSilentHotbar() {

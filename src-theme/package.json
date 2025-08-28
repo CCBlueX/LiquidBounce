@@ -12,6 +12,7 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tsconfig/svelte": "^5.0.4",
+    "@types/lodash": "^4.17.20",
     "sass": "^1.70.0",
     "svelte": "^5.2.7",
     "svelte-check": "^4.1.0",
@@ -29,6 +30,7 @@
     "country-code-lookup": "^0.1.2",
     "dateformat": "^5.0.3",
     "howler": "^2.2.4",
+    "lodash": "^4.17.21",
     "nouislider": "^15.7.1",
     "svelte-spa-router": "^4.0.1"
   }

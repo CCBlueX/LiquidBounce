@@ -21,7 +21,7 @@
     left: 0;
     z-index: 9999;
     pointer-events: none;
-    background: url('/src/shaders/Vignette.png') no-repeat;
+    background: url('/img/Vignette.png') no-repeat;
     background-size: 100% 100%;
   }
 </style>

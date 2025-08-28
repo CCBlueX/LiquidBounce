@@ -6,6 +6,7 @@
     import {listen} from "../../../../integration/ws";
     import {expoInOut} from "svelte/easing";
     import {fly} from "svelte/transition";
+    import type {EventMap} from "../../../../integration/events";
 
     let keyForward: MinecraftKeybind | undefined;
     let keyBack: MinecraftKeybind | undefined;
@@ -25,7 +26,7 @@
 
     onMount(updateKeybinds);
 
-    listen("keybindChange", updateKeybinds)
+    listen("keybindChange" as keyof EventMap, updateKeybinds)
 </script>
 
 <div class="keystrokes" transition:fly|global={{duration: 500, x: -50, easing: expoInOut}}>

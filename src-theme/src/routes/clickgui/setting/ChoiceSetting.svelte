@@ -63,7 +63,7 @@
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting={setting} on:change={handleChange}/>
+                <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange}/>
             {/each}
         </div>
     {/if}

@@ -146,7 +146,7 @@ body {
   height: 100%;
   pointer-events: none;
 
-  background-image: url('./shaders/glint.png');
+  background-image: url('/public/img/glint.png');
   background-size: 200% 200%;
   animation: enchantGlint 1.5s linear infinite;
 

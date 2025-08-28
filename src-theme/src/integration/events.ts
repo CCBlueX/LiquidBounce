@@ -5,7 +5,7 @@ import type {
     PlayerData,
     Proxy,
     Screen,
-    Server,
+    Server, Session,
     TextComponent,
 } from "./types";
 
@@ -39,6 +39,12 @@ export interface EventMap {
     overlayChat: OverlayChatEvent;
     overlayDisconnection: OverlayDisconnectionEvent;
     progress: ProgressEvent;
+
+    session: SessionEvent;
+    key: KeyEvent;
+
+
+    nameProtectValueChange:ClickGuiValueChangeEvent;
 }
 
 export interface ClickGuiValueChangeEvent {
@@ -213,4 +219,7 @@ export interface SpaceSeperatedNamesChangeEvent {
 
 export interface BrowserUrlChangeEvent {
     url: string;
+}
+export interface SessionEvent {
+    session: Session;
 }

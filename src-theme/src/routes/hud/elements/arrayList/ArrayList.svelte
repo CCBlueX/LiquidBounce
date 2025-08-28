@@ -2,7 +2,6 @@
     import {fade} from 'svelte/transition';
     import {expoInOut} from 'svelte/easing';
     import Modules from "./Modules.svelte";
-    import GlitchedLayers from "../../common/VFX/GlitchedLayers.svelte";
 
 </script>
 

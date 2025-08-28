@@ -2,7 +2,7 @@
     import {onMount, afterUpdate} from 'svelte';
     import {listen} from '../../../../integration/ws';
     import TextComponent from '../../../menu/common/TextComponent.svelte';
-    import {type KeyEvent, type ChatReceiveEvent, ChatType} from '../../../../integration/events';
+    import {type KeyEvent, type ChatReceiveEvent, ChatType, type EventMap} from '../../../../integration/events';
     import {getMinecraftKeybinds} from '../../../../integration/rest';
     import type {MinecraftKeybind} from '../../../../integration/types';
     import {fly} from 'svelte/transition';
@@ -159,7 +159,7 @@
         listen('chatReceive', addMessage);
         listen('key', handleKeyDown);
     });
-    listen("keybindChange", updateKeybinds);
+    listen("keybindChange" as keyof EventMap, updateKeybinds);
     afterUpdate(() => {
         if (isAtBottom) {
             container.scrollTop = container.scrollHeight;

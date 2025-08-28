@@ -548,7 +548,7 @@
             }, 100);
         }
     });
-    listen("playerData", async (event: ClientPlayerDataEvent) => {
+    listen("clientPlayerData", async (event: ClientPlayerDataEvent) => {
         const newData = event.playerData;
         if (newData.armorItems) newData.armor = calcArmorValue(newData.armorItems);
 
@@ -569,7 +569,7 @@
     listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
         openChest = data.inventory.openChest ?? [];
     });
-    listen("nameProtect", async () => {
+    listen("nameProtectValueChange", async () => {
         const settings = await getModuleSettings("NameProtect");
         NameProtectSetting(settings);
     });

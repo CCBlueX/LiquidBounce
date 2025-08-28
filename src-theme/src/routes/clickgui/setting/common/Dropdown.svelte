@@ -2,6 +2,7 @@
     import {createEventDispatcher, afterUpdate} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {fade} from 'svelte/transition';
+    import { FadeIn,FadeOut } from "../../../../util/animate_utils";
     import {cubicOut} from "svelte/easing";
 
     export let name: string | null;
@@ -17,41 +18,7 @@
         value = v;
         dispatch("change");
     }
-
-    function FadeIn(node: Element, {delay = 0, duration = 200, blurAmount = 4} = {}) {
-        return {
-            delay,
-            duration,
-            css: (t: number) => {
-                const eased = easeInBack(t);
-                return `
-                transform: scale(${1 - (1 - t) * 0.5});
-                opacity: ${eased};
-                backdrop-filter: blur(${(1 - t) * blurAmount}px);
-                transition-timing-function: cubic-bezier(0.68, -0.55, 0.27, 1.55);
-                transform-origin: center;
-            `;
-            }
-        };
-    }
-
-    function FadeOut(node: Element, {delay = 0, duration = 200, blurAmount = 4} = {}) {
-        return {
-            delay,
-            duration,
-            css: (t: number) => {
-                const eased = easeInBack(1 - t);
-                return `
-                transform: scale(${1 - eased * 0.5});
-                opacity: ${1 - eased};
-                backdrop-filter: blur(${t * blurAmount}px);
-                transition-timing-function: cubic-bezier(0.68, -0.55, 0.27, 1.55);
-                transform-origin: center;
-            `;
-            }
-        };
-    }
-
+    
     function easeInBack(t: number): number {
         const c1 = 1.5;
         const c3 = c1 + 1;

@@ -2,7 +2,7 @@
     import type {ConfigurableSetting, Module} from "../../integration/types";
     import {getModuleSettings, setModuleEnabled} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
+    import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {highlightModuleName, filteredModules, showSearch, query} from "./clickgui_store";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import { shrinkOut } from "../../util/animate_utils";
