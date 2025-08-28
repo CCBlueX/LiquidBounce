@@ -42,7 +42,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
 
 }
 
-class BrowserSettings(
+open class BrowserSettings(
     fpsLimit: Int = 0,
     update: () -> Unit
 ) : Configurable("Renderer") {
@@ -56,12 +56,17 @@ class BrowserSettings(
         }
     }
 
-    val syncGameFps by boolean("SyncGameFps", true)
-
     val currentFps: Int
         get() {
             val fpsValue = fps.get()
             return if (fpsValue <= 0) refreshRate else fpsValue
         }
 
+}
+
+class IntegrationBrowserSettings(
+    fpsLimit: Int = 0,
+    update: () -> Unit
+) : BrowserSettings(fpsLimit, update) {
+    val syncGameFps by boolean("SyncGameFps", true)
 }

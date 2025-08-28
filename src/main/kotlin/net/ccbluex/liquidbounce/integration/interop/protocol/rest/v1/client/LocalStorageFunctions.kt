@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 
 /**
@@ -56,14 +56,14 @@ fun putLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val value = body["value"]?.asString ?: return@with httpForbidden("No value")
 
     PersistentLocalStorage[key] = value
-    httpOk(emptyJsonObject())
+    httpNoContent()
 }
 
 // DELETE /api/v1/client/localStorage
 fun deleteLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = queryParams["key"] ?: return@with httpForbidden("No key")
     PersistentLocalStorage.remove(key)
-    httpOk(emptyJsonObject())
+    httpNoContent()
 }
 
 // GET /api/v1/client/localStorage/all
@@ -94,5 +94,5 @@ fun putAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
         PersistentLocalStorage[item.key] = item.value
     }
 
-    httpOk(emptyJsonObject())
+    httpNoContent()
 }

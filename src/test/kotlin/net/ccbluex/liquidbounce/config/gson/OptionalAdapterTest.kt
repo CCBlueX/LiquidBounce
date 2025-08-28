@@ -21,12 +21,8 @@ package net.ccbluex.liquidbounce.config.gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.config.gson.adapter.OptionalAdapter
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNotNull
-import java.util.Optional
+import java.util.*
+import kotlin.test.*
 
 class OptionalAdapterTest {
 

@@ -18,22 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
+import java.text.DecimalFormat
 import kotlin.math.abs
 
 /**
@@ -43,12 +41,10 @@ import kotlin.math.abs
  */
 object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) {
 
-    private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val ttl by float("TimeToLive", 1.5F, 0.5F..5.0F, "s")
-    private val transitionY by float("TransitionY", 1.0F, -2.0F..2.0F)
-    private val transitionType by curve("TransitionType", Easing.QUAD_OUT)
-
-    private val healthMap = Object2FloatOpenHashMap<LivingEntity>()
+    private val scale by float("Scale", 2F, 0.25F..4F)
+    private val ttl by float("TimeToLive", 2F, 0.5F..5.0F, "s")
+    private val transition by vec3d("Transition", Vec3d(0.0, 1.0, 0.0))
+    private val easing by easing("Easing", Easing.QUAD_OUT)
 
     /**
      * Ordered by startTime
@@ -56,96 +52,71 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val particles = ArrayDeque<Particle>()
 
     private const val EPSILON = 0.05F
-    private const val FORMATTER = "%.1f"
-
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
+    private val FORMATTER = DecimalFormat("0.#")
 
     override fun onDisabled() {
-        healthMap.clear()
         particles.clear()
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        healthMap.clear()
         particles.clear()
     }
 
     @Suppress("unused")
-    private val disconnectHandler = handler<DisconnectEvent> {
-        healthMap.clear()
-        particles.clear()
+    private val entityHealthUpdateHandler = handler<EntityHealthUpdateEvent> {
+        val entity = it.entity
+        val oldHealth = it.old
+        val newHealth = it.new
+        val maxHealth = it.max
+
+        val delta = abs(oldHealth - newHealth)
+        if (delta > EPSILON) {
+            particles += Particle(
+                System.currentTimeMillis(),
+                FORMATTER.format(delta),
+                if (oldHealth > newHealth) Color4b.RED else Color4b.GREEN,
+                entity.box.center.add(entity.movement),
+            )
+        }
     }
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val entities = world.entities.filterIsInstanceTo(hashSetOf<LivingEntity>())
-        entities.remove(player)
-
-        val now = System.currentTimeMillis()
-
-        entities.forEach {
-            val currentHealth = it.health
-
-            if (healthMap.containsKey(it)) {
-                val prevHealth = healthMap.getFloat(it)
-                val delta = abs(prevHealth - currentHealth)
-                if (delta > EPSILON) {
-                    particles += Particle(
-                        now,
-                        FORMATTER.format(delta),
-                        if (prevHealth > currentHealth) Color4b.RED else Color4b.GREEN,
-                        it.box.center.add(it.movement),
-                    )
-                }
-            }
-
-            healthMap.put(it, currentHealth)
-        }
-
-        healthMap.keys.removeIf { it !in entities || it.isDead }
-
-        val earliest = now - (ttl * 1000).toLong()
+        val earliest = System.currentTimeMillis() - (ttl * 1000).toLong()
         while (particles.isNotEmpty() && particles.first().startTime < earliest) {
             particles.removeFirst()
         }
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> {
-        renderEnvironmentForGUI {
-            fontRenderer.withBuffers { buf ->
-                val now = System.currentTimeMillis()
-                val c = size
-                val fontScale = 1.0F / (c * 0.15F) * scale
-                particles.forEachIndexed { i, particle ->
-                    val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
+        val now = System.currentTimeMillis()
+        particles.forEachIndexed { i, particle ->
+            val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-                    val currentPos = particle.pos.add(
-                        0.0,
-                        (transitionY * transitionType.transform(progress)).toDouble(),
-                        0.0
-                    )
-                    val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
+            val currentPos = particle.pos.add(transition * easing.transform(progress).toDouble())
+            val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
-                    val text = process(particle.text, particle.color)
+            with(event.context) {
+                matrices.push()
+                matrices.translate(screenPos.x, screenPos.y, screenPos.z)
+                matrices.scale(scale, scale, 1.0F)
 
-                    draw(
-                        text,
-                        screenPos.x,
-                        screenPos.y,
-                        shadow = true,
-                        z = 1000.0F * i / particles.size,
-                        scale = fontScale
-                    )
-                }
-                commit(buf)
+                drawCenteredTextWithShadow(
+                    mc.textRenderer,
+                    particle.text,
+                    0,
+                    0,
+                    particle.color.toARGB(),
+                )
+                matrices.pop()
             }
         }
+
     }
 
     @JvmRecord
-    data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3d)
+    private data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3d)
 
 }

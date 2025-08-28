@@ -26,7 +26,6 @@ import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
@@ -69,12 +68,8 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.GitInfo
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -366,7 +361,7 @@ object LiquidBounce : EventListener {
             FontManager.createGlyphManager()
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
-        logger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
+        logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
 
         // Insert default components on HUD
         ComponentOverlay.insertDefaultComponents()

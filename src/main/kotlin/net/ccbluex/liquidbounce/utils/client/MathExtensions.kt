@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import org.joml.Vector2f
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -72,3 +73,5 @@ fun Box.getFace(direction: Direction): AlignedFace {
 fun Double.roundToDecimalPlaces(decimalPlaces: Int = 1): Double {
     return BigDecimal(this).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
 }
+
+infix fun Float.vector2f(other: Float) = Vector2f(this, other)
