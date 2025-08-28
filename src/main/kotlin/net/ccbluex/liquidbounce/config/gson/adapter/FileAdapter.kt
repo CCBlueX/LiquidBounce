@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 202 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.registry.Registries
+import com.google.gson.*
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
+import java.io.File
 
-object StatusEffectAdapter : IdentifierAsStringAdapter<StatusEffect>(Registries.STATUS_EFFECT)
+object FileAdapter : TypeAdapter<File>() {
+
+    override fun read(source: JsonReader): File? {
+        return when (source.peek()) {
+            JsonToken.NULL -> {
+                source.nextNull()
+                null
+            }
+            JsonToken.STRING -> File(source.nextString())
+            else -> error("Unknown JsonToken for ${File::class.java.name}: ${source.peek()}")
+        }
+    }
+
+    override fun write(sink: JsonWriter, value: File?) {
+        sink.value(value?.path)
+    }
+}

@@ -65,7 +65,6 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
      */
-    @Suppress("ReturnCount")
     private fun isInClientPlayersTeam(entity: LivingEntity) =
         matches.any { it.testMatches(entity) } || checkArmor(entity)
 
@@ -118,7 +117,6 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
                 ?.string
                 ?.stripMinecraftColorCodes()
                 ?.split(" ")
-
 
             targetSplit != null
                 && clientSplit != null

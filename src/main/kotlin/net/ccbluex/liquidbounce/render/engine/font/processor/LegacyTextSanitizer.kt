@@ -1,7 +1,10 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.minecraft.text.*
+import net.minecraft.text.CharacterVisitor
+import net.minecraft.text.OrderedText
 import net.minecraft.text.StringVisitable.StyledVisitor
+import net.minecraft.text.Style
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.*
 
@@ -12,10 +15,10 @@ import java.util.*
  * @param innerVisitor the receiver of the degenerated text formatting.
  */
 class LegacyTextSanitizer(
-    private val innerVisitor: StyledVisitor<Unit>
-): StyledVisitor<Unit> {
+    private val innerVisitor: StyledVisitor<Nothing>
+): StyledVisitor<Nothing> {
 
-    override fun accept(style: Style, text: String): Optional<Unit> {
+    override fun accept(style: Style, text: String): Optional<Nothing> {
         var currentStyle = style
 
         var currentIndex = 0
@@ -69,12 +72,11 @@ class LegacyTextSanitizer(
 
     class SanitizedLegacyText(private val text: Text): OrderedText {
         override fun accept(visitor: CharacterVisitor): Boolean {
-            var idx = 0
-
             val degenerator = LegacyTextSanitizer { style, text ->
-                for (codePoint in text.chars()) {
-                    visitor.accept(idx, style, codePoint)
+                var idx = 0
 
+                text.chars().forEach { codePoint ->
+                    visitor.accept(idx, style, codePoint)
                     idx++
                 }
 

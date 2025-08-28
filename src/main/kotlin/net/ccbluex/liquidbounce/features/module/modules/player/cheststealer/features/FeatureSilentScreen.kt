@@ -26,10 +26,9 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
-import net.ccbluex.liquidbounce.render.drawItemTags
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.render.newDrawContext
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -53,7 +52,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
     private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
 
-        private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+        private val background = choices(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
 
@@ -79,8 +78,6 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
         }
 
-        private val drawContext = newDrawContext()
-
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
@@ -89,12 +86,11 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             val containerScreen = mc.currentScreen as GenericContainerScreen
 
             renderEnvironmentForGUI {
-                drawContext.drawItemTags(
-                    stacks = getSlotsInContainer(containerScreen).map { it.itemStack },
-                    centerPos = pos,
-                    backgroundColor = backgroundColor.toARGB(),
-                    scale = scale,
-                )
+                event.context.drawItemStackList(getSlotsInContainer(containerScreen).map { it.itemStack })
+                    .center(pos)
+                    .scale(scale)
+                    .background(background.activeChoice)
+                    .draw()
             }
         }
     }
