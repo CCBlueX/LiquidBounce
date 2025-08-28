@@ -9,7 +9,7 @@
         getSession
     } from "../../../../integration/rest";
     import type {ClientInfo, ItemStack, PlayerData, Session} from "../../../../integration/types";
-    import type {ClientPlayerDataEvent, PlayerInventoryEvent, ProgressEvent,} from "../../../../integration/events";
+    import type {ClientPlayerDataEvent, ClientPlayerInventoryEvent, ProgressEvent,} from "../../../../integration/events";
     import {listen} from "../../../../integration/ws";
     import {Tween} from "svelte/motion";
     import {cubicOut} from "svelte/easing";
@@ -566,7 +566,7 @@
 
         playerData = newData;
     });
-    listen("clientPlayerInventory", (data: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
         openChest = data.inventory.openChest ?? [];
     });
     listen("nameProtect", async () => {

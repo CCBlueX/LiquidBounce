@@ -58,21 +58,25 @@ export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (
 /**
  * Wait next event which matches given {@link predicate}.
  */
-export async function waitMatches<E extends Event>(eventName: string, predicate: (event: E) => boolean): Promise<E> {
+export function waitMatches<NAME extends keyof EventMap>(
+    eventName: NAME,
+    predicate: (event: EventMap[NAME]) => boolean
+): Promise<EventMap[NAME]> {
     return new Promise((resolve, reject) => {
-        const deleteHandler = listen(eventName, (e: E) => {
+        const deleteHandler = listen(eventName, (event) => {
             try {
-                if (predicate(e)) {
-                    resolve(e);
+                if (predicate(event)) {
+                    resolve(event);
                     deleteHandler();
                 }
-            } catch (e) {
-                reject(e);
+            } catch (err) {
+                reject(err);
                 deleteHandler();
             }
-        })
+        });
     });
 }
+
 
 export function cleanupListeners() {
     listeners.clear();

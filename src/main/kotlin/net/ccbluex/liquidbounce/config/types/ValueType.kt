@@ -40,6 +40,7 @@ enum class ValueType(
     SOUND(HumanInputDeserializer.soundDeserializer),
     STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
     ENTITY_TYPE,
+    PLAYERS,
     CLIENT_PACKET,
     SERVER_PACKET,
     KEY(HumanInputDeserializer.keyDeserializer),

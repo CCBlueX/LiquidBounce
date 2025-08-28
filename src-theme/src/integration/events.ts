@@ -32,6 +32,13 @@ export interface EventMap {
     proxyCheckResult: ProxyCheckResultEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    chatReceive: ChatReceiveEvent;
+    connectionDetails: ConnectionDetailsEvent;
+    overlayTitle: OverlayTitleEvent;
+    overlayPlayList: OverlayPlayListEvent;
+    overlayChat: OverlayChatEvent;
+    overlayDisconnection: OverlayDisconnectionEvent;
+    progress: ProgressEvent;
 }
 
 export interface ClickGuiValueChangeEvent {
@@ -78,13 +85,13 @@ export interface OverlayMessageEvent {
     tinted: boolean;
 }
 
-export interface ConnectionDetailsEvent extends Event  {
+export interface ConnectionDetailsEvent {
 
     result: TextComponent | string;
 
 }
 
-export interface OverlayTitleEvent extends Event  {
+export interface OverlayTitleEvent {
     title: TextComponent | string;
     subtitle: TextComponent | string;
 }
@@ -97,14 +104,14 @@ export interface PlayerEntry {
     isStaff: boolean;
 }
 
-export interface OverlayPlayListEvent  extends Event {
+export interface OverlayPlayListEvent {
     header: TextComponent | string;
     footer: TextComponent | string;
     players: PlayerEntry[];
 
 }
 
-export interface OverlayChatEvent  extends Event {
+export interface OverlayChatEvent {
     content: TextComponent | string,
     timestamp: number;
     isSystem: Boolean;
@@ -113,11 +120,11 @@ export interface OverlayChatEvent  extends Event {
     fadeTimeout?: number;
 }
 
-export interface OverlayDisconnectionEvent  extends Event  {
+export interface OverlayDisconnectionEvent  {
     parent: "title" | "menu" | "custom";
     info: TextComponent | string;
 }
-export interface ChatReceiveEvent  extends Event {
+export interface ChatReceiveEvent {
     message: string;
     textData: TextComponent | string;
     type: ChatType;
@@ -133,13 +140,13 @@ export enum ChatType {
 
 
 
-export interface NotificationEvent  extends Event  {
+export interface NotificationEvent {
     title: string;
     message: string;
     severity: "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED" | "BLINK" | "BLINKED" | "BLINKING";
 }
 
-export interface ProgressEvent  extends Event  {
+export interface ProgressEvent {
     title: string;
     progress: number;
     maxProgress: number;
@@ -183,7 +190,7 @@ export interface ServerPingedEvent {
     server: Server;
 }
 
-export interface PlayerInventoryEvent {
+export interface ClientPlayerInventoryEvent {
     inventory: PlayerInventory;
 }
 

@@ -38,7 +38,7 @@ class BlockRenderer(
         )
     }
 
-    val easing by curve("Easing", Easing.LINEAR)
+    val easing by easing("Easing", Easing.LINEAR)
 
     private var currentPosition: Box? = null
     private var previousPosition: Box? = null

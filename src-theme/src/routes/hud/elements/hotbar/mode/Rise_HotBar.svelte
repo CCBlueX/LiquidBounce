@@ -1,6 +1,6 @@
 <script lang="ts">
     import {listen} from "../../../../../integration/ws";
-    import type {ClientPlayerDataEvent, PlayerInventoryEvent} from "../../../../../integration/events";
+    import type {ClientPlayerDataEvent, ClientPlayerInventoryEvent} from "../../../../../integration/events";
     import type {PlayerData, ItemStack} from "../../../../../integration/types";
     import {getPlayerData, getPlayerInventory} from "../../../../../integration/rest";
     import {onMount} from "svelte";
@@ -23,7 +23,7 @@
         updatePlayerData(event.playerData);
     });
 
-    listen("clientPlayerInventory", (event: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (event: ClientPlayerInventoryEvent) => {
         updateInventory(event.inventory);
     });
 

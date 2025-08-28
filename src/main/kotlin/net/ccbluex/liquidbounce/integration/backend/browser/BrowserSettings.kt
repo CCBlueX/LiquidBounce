@@ -56,7 +56,6 @@ open class BrowserSettings(
         }
     }
 
-    val syncGameFps by boolean("SyncGameFps", false)
 
     val currentFps: Int
         get() {
@@ -67,7 +66,7 @@ open class BrowserSettings(
 }
 
 class IntegrationBrowserSettings(
-    fpsLimit: Int = 0,
+    fpsLimit: Int = 24,
     update: () -> Unit
 ) : BrowserSettings(fpsLimit, update) {
     val syncGameFps by boolean("SyncGameFps", true)

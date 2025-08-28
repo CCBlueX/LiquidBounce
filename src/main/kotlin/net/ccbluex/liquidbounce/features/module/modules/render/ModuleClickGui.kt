@@ -133,24 +133,22 @@ object ModuleClickGui :
         )
         super.onEnabled()
     }
-    var clickGuiBrowserSettings: BrowserSettings? = null
+
+
 
     private fun open() {
         if (clickGuiBrowser != null) {
             return
         }
-        clickGuiBrowserSettings = BrowserSettings(60) { reload() }
-        clickGuiBrowser = clickGuiBrowserSettings?.let {
-            ThemeManager.openInputAwareImmediate(
-                VirtualScreenType.CLICK_GUI,
-                true,
-                priority = 20,
-                settings = it
-            ) {
-                mc.currentScreen is ClickScreen
-            }
-        }
 
+        clickGuiBrowser = ThemeManager.openInputAwareImmediate(
+            VirtualScreenType.CLICK_GUI,
+            true,
+            priority = 20,
+            settings = IntegrationListener.browserSettings
+        ) {
+            mc.currentScreen is ClickScreen
+        }
     }
 
     /**

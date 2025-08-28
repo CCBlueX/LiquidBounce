@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {ItemStack} from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
-    import type {PlayerInventory, PlayerInventoryEvent} from "../../../../integration/events";
+    import type {PlayerInventory, ClientPlayerInventoryEvent} from "../../../../integration/events";
     import {getPlayerInventory} from "../../../../integration/rest";
     import ItemStackView from "../../common/ItemView/ItemStackView.svelte";
     import {onMount} from "svelte";
@@ -23,7 +23,7 @@
         emptySlotCount.set(emptySlots);
     }
 
-    listen("clientPlayerInventory", (data: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
         updateStacks(data.inventory);
     });
     onMount(async () => {

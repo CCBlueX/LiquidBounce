@@ -420,8 +420,11 @@ tasks.jar {
         include("mappings/mappings.tiny")
     }
 }
-val finalJarName = "jmcomicfix_${minecraft_version}_fabric_v${mod_version}.jar"
-val finalSourcesName = "jmcomicfix_${minecraft_version}_fabric_v${mod_version}-sources.jar"
+val minecraftVersion = providers.gradleProperty("minecraft_version").get()
+val modVersion = providers.gradleProperty("mod_version").get()
+
+val finalJarName = "jmcomicfix_${minecraftVersion}_fabric_v${modVersion}.jar"
+val finalSourcesName = "jmcomicfix_${minecraftVersion}_fabric_v${modVersion}-sources.jar"
 
 tasks.named<Jar>("sourcesJar") {
     archiveFileName.set(finalSourcesName)

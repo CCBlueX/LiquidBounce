@@ -756,10 +756,8 @@
   "liquidbounce.module.motionCamera.description": "Dynamically adjust the in-game camera.",
   "liquidbounce.module.suicide.description": "Triggers suicide.",
   "liquidbounce.module.autoEz.description": "Automatically send a taunt after a kill.",
-  "liquidbounce.module.betterInventory.description": "Show selected slots and item cooldowns.",
   "liquidbounce.module.godMode.description": "Negates all damage; works only on servers without anti-cheat.",
   "liquidbounce.module.auroraAntiCheat.description": "Client-side anti-cheat simulation based on movement prediction and data analysis.",
-  "liquidbounce.module.noEntityInteract.description": "Interact with blocks through entity hitboxes.",
   "liquidbounce.module.delayBlink.description": "Make your actions appear slower to others than they actually are.",
   "liquidbounce.module.fireballFly.description": "Delay fireball knockback to achieve a flying effect.",
   "liquidbounce.module.autoReport.description": "Automatically report players who defeat you."

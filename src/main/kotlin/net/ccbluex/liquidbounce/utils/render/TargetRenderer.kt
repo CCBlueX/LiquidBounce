@@ -305,7 +305,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val floatSpeed by float("FloatSpeed", 2f, 0.5f..5f)
         private val pulseSpeed by float("PulseSpeed", 1f, 0.1f..5f)
         private val pulseRange by float("PulseRange", 0.2f, 0.1f..0.5f)
-        private val slideEasing by curve("SlideEasing", Easing.LINEAR)
+        private val slideEasing by easing("SlideEasing", Easing.LINEAR)
 
         private val deltaTime: Double
             get() {
@@ -711,7 +711,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
 }
 
 sealed class TargetRenderAppearance<T : RenderEnvironment>(name: String) : Choice(name) {
-    protected val fadeOutEasing by curve("FadeOutEasing", Easing.QUAD_OUT)
+    protected val fadeOutEasing by easing("FadeOutEasing", Easing.QUAD_OUT)
 
     open fun render(
         env: T,

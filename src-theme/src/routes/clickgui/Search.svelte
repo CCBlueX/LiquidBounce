@@ -461,7 +461,9 @@
 
     listen("keyboardKey", handleKeyDown);
 
-    listen("clickGuiValueChange", applyValues);
+    listen("clickGuiValueChange", (e: ClickGuiValueChangeEvent) => {
+        applyValues(e.configurable);
+    });
 
 </script>
 

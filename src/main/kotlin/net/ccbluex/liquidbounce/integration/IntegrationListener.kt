@@ -25,12 +25,9 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui.ClickScreen
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui.clickGuiBrowserSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
@@ -231,10 +228,6 @@ object IntegrationListener : EventListener {
         if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
             return@handler
         }
-
-        event.fps = min(event.fps, browserSettings.currentFps)
-        if (!clickGuiBrowserSettings!!.syncGameFps || mc.currentScreen !is ClickScreen) return@handler
-        event.fps = min(event.fps, clickGuiBrowserSettings!!.currentFps)
     }
 
     @Suppress("unused")

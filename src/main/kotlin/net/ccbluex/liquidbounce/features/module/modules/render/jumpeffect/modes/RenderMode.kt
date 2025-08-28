@@ -18,7 +18,7 @@ object RenderMode : JumpEffectMode("Render") {
     private val endRadius by floatRange("EndRadius", 0.9F..1F, 0F..3F)
     private val innerAlpha by int("InnerAlpha", 0, 0..255)
     private val outerAlpha by int("OuterAlpha", 91, 0..255)
-    private val animCurve by curve("AnimCurve", Easing.QUAD_OUT)
+    private val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
     private val hueOffsetAnim by int("HueOffsetAnim", 0, -360..360)
     private val lifetime by int("Lifetime", 30, 1..30)
     private val circles = ArrayDeque<ObjectLongMutablePair<Vec3d>>()

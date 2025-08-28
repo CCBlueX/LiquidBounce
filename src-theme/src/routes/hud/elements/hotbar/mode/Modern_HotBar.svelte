@@ -19,7 +19,7 @@
 
 <script lang="ts">
     import {onMount} from "svelte";
-    import type {ClientPlayerDataEvent, PlayerInventory, PlayerInventoryEvent} from "../../../../../integration/events";
+    import type {ClientPlayerDataEvent, PlayerInventory, ClientPlayerInventoryEvent} from "../../../../../integration/events";
     import type {ItemStack, PlayerData} from "../../../../../integration/types";
     import {listen} from "../../../../../integration/ws";
     import {getPlayerData, getPlayerInventory} from "../../../../../integration/rest";
@@ -65,7 +65,7 @@
         updateDisplayedStacks(); // 槽位更新后也得调用
     }
 
-    listen("clientPlayerInventory", (data: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
         updateStacks(data.inventory);
     });
 

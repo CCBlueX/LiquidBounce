@@ -1,6 +1,6 @@
 <script lang="ts">
     import {listen} from "../../../../integration/ws";
-    import type {ClientPlayerDataEvent, PlayerInventory, PlayerInventoryEvent} from "../../../../integration/events";
+    import type {ClientPlayerDataEvent, PlayerInventory, ClientPlayerInventoryEvent} from "../../../../integration/events";
     import type {PlayerData, ItemStack} from "../../../../integration/types";
     import {onMount} from "svelte";
     import {getPlayerInventory, getPlayerData} from "../../../../integration/rest";
@@ -99,7 +99,7 @@
         return stack.identifier !== "minecraft:air" && stack.count > 0;
     }
 
-    listen("clientPlayerInventory", (event: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (event: ClientPlayerInventoryEvent) => {
         updateInventory(event.inventory);
 
     });
