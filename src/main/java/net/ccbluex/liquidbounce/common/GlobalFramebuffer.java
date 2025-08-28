@@ -30,9 +30,11 @@ import java.util.List;
  *
  * @author ccetl
  */
-public class GlobalFramebuffer {
+public final class GlobalFramebuffer {
 
-    public final static List<Framebuffer> stack = new ArrayList<>(2);
+    private GlobalFramebuffer() {}
+
+    private static final List<Framebuffer> stack = new ArrayList<>(2);
 
     private static Framebuffer spoofedFramebuffer;
 

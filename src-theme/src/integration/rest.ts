@@ -315,9 +315,10 @@ export async function setSelectedProtocol(protocol: Protocol) {
 }
 
 export async function restoreSession() {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/restore`, {
         method: "POST",
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function orderAccounts(order: number[]) {
@@ -411,29 +412,29 @@ export async function loginToAccount(id: number) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
-    }).finally(() => {
-        isLoggingIn.set(false);
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToCrackedAccount(username: string, online: boolean) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({username, online})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToSessionAccount(token: string) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/session`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({token})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function getAccounts(): Promise<Account[]> {

@@ -20,7 +20,7 @@ object EntityTaggingManager: EventListener {
 
     fun getTag(suspect: Entity): EntityTag {
         return this.cache.computeIfAbsent(suspect) {
-            val targetingInfo = TagEntityEvent(suspect, EntityTargetingInfo.DEFAULT)
+            val targetingInfo = TagEntityEvent(it, EntityTargetingInfo.DEFAULT)
 
             EventManager.callEvent(targetingInfo)
 
