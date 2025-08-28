@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.io.skipLine
 import net.ccbluex.liquidbounce.utils.kotlin.mapString
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -79,6 +80,8 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         object File : MessageProvider("File") {
             private val file by file("Source", supportedExtensions = setOf("txt")).onChanged {
                 lineIndex.clear()
+                if (!it.isFile) return@onChanged
+
                 lineIndex.add(0L)
                 RandomAccessFile(it, "r").use { raf ->
                     while (raf.skipLine() != 0L) {
@@ -91,6 +94,8 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
             private val lineIndex = LongArrayList()
 
             override fun nextMessage(): String {
+                require(lineIndex.isNotEmpty()) { "File is empty or not selected" }
+
                 val index = when (pattern) {
                     SpammerPattern.RANDOM -> lineIndex.getLong(Random.nextInt(lineIndex.size))
                     SpammerPattern.LINEAR -> lineIndex.getLong(linear++ % lineIndex.size)
@@ -109,7 +114,12 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
     override suspend fun enabledEffect() = withContext(Dispatchers.IO) {
         while (running) {
             repeat(mps.random()) {
-                val chosenMessage = message.activeChoice.nextMessage()
+                val chosenMessage = try {
+                    message.activeChoice.nextMessage()
+                } catch (e: Exception) {
+                    chat(markAsError("Failed to get spammer message: $e"))
+                    return@repeat
+                }
 
                 val text = if (chosenMessage.startsWith('/')) {
                     format(chosenMessage)
