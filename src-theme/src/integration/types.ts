@@ -62,12 +62,14 @@ export interface CurveSetting {
     name: string;
     value: [number, number][];
     defaultValue: [number, number][];
-    minX: number;
-    maxX: number;
-    minY: number;
-    maxY: number;
-    xLabel: string;
-    yLabel: string;
+    xAxis: {
+        label: string;
+        range: Range;
+    },
+    yAxis: {
+        label: string;
+        range: Range;
+    }
     tension: number;
 }
 
@@ -123,10 +125,7 @@ export interface BooleanSetting {
 export interface FloatSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
     value: number;
 }
@@ -134,24 +133,15 @@ export interface FloatSetting {
 export interface FloatRangeSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
+    value: Range;
 }
 
 export interface IntSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
     value: number;
 }
@@ -159,15 +149,9 @@ export interface IntSetting {
 export interface IntRangeSetting {
     valueType: string;
     name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
+    value: Range;
 }
 
 export interface ChoiceSetting {
@@ -474,4 +458,9 @@ export interface Screen {
 export interface RegistryItem {
     name: string;
     icon: string | undefined;
+}
+
+export interface Range {
+    from: number;
+    to: number;
 }

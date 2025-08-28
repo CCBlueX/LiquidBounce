@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -24,14 +23,9 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 open class CurveValue(
     name: String,
     value: Array<Pair<Float, Float>>,
-    @Exclude var minX: Float,
-    @Exclude var minY: Float,
-    @Exclude var maxX: Float,
-    @Exclude var maxY: Float,
-    @Exclude var xLabel: String = "X Axis",
-    @Exclude var yLabel: String = "Y Axis",
-    // Bezier curve tension of the line. Set to 0 to draw straightlines.
-    @Exclude var tension: Float = 0.0F,
+    @Exclude var xAxis: Axis,
+    @Exclude var yAxis: Axis,
+    @Exclude var tension: Float = 0.4f,
 ) : ListValue<MutableList<FloatArray>, FloatArray>(
     name,
     value.map { pair -> floatArrayOf(pair.first, pair.second) }.toMutableList(),
@@ -40,12 +34,12 @@ open class CurveValue(
     FloatArray::class.java
 ) {
 
+    data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>)
+
     init {
         require(tension in 0.0..1.0) { "Tension must be in range [0.0, 1.0]" }
-        require(minX < maxX) { "Min X must be less than max X" }
-        require(minY < maxY) { "Min Y must be less than max Y" }
         require(value.size >= 2) { "Curve must have at least 2 points" }
-        require(value.all { point -> point.first in minX..maxX && point.second in minY..maxY }) {
+        require(value.all { point -> point.first in xAxis.range && point.second in yAxis.range }) {
             "Curve points must be within the given bounds"
         }
     }

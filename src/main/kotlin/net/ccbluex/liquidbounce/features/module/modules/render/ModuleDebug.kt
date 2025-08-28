@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.CurveValue
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Sequence
@@ -57,24 +58,6 @@ import java.awt.Color
 
 object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
-    // TODO: REMOVE AFTER IMPLEMENTATION
-
-    private val curve = curve(
-        "CPS", arrayOf(
-            0f to 120f,
-            50f to 60f,
-            140f to 120f,
-            180f to 90f
-        ),
-        minX = 0f,
-        minY = 10f,
-        180f,
-        120f,
-        xLabel = "seconds",
-        yLabel = "CPS",
-        tension = 0f
-    )
-
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         debugParameters.clear()
     }
@@ -111,8 +94,55 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     }
 
+    object Graph : ToggleableConfigurable(this, "Graph", false) {
+
+        private val curve = curve(
+            "Curve", arrayOf(
+                0f to 120f,
+                50f to 60f,
+                140f to 120f,
+                180f to 90f
+            ),
+            xAxis = CurveValue.Axis("X Axis", 0f..180f),
+            yAxis = CurveValue.Axis("Y Axis", 40f..120f)
+        )
+
+        @Suppress("unused")
+        private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+            val context = event.context
+
+            renderEnvironmentForGUI {
+                fontRenderer.withBuffers { buffers ->
+                    with(context) {
+                        draw(
+                            process("Graph".asText()),
+                            120f,
+                            22f,
+                            shadow = true,
+                            scale = 0.3f
+                        )
+
+                        var posX = 300
+                        var posY = 500
+                        val points = curve.get()
+                        for (point in curve.get()) {
+                            var x = point[0]
+                            var y = point[1]
+
+                            this.fill(posX + x, posY - y, posX + x + 5, posY - y + 5, 0.0f, Color4b.WHITE.toARGB())
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+    }
+
     init {
         tree(RenderSimulatedPlayer)
+        tree(Graph)
     }
 
     private val debuggedGeometry = hashMapOf<DebuggedOwner, DebuggedGeometry>()

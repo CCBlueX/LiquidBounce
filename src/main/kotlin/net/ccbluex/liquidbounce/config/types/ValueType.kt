@@ -29,8 +29,11 @@ enum class ValueType(
 
     // Primitive Types
     BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
-    FLOAT(HumanInputDeserializer.floatDeserializer), FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer), FLOAT_ARRAY,
-    INT(HumanInputDeserializer.intDeserializer), INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
+    FLOAT(HumanInputDeserializer.floatDeserializer),
+    FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
+    FLOAT_ARRAY,
+    INT(HumanInputDeserializer.intDeserializer),
+    INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
     TEXT(HumanInputDeserializer.textDeserializer),
     COLOR(HumanInputDeserializer.colorDeserializer),
     BLOCK(HumanInputDeserializer.blockDeserializer),

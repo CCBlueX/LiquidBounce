@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.nesting
 
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -310,17 +311,14 @@ open class Configurable(
     fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
 
+    @Suppress("LongParameterList")
     fun curve(
         name: String,
         default: Array<Pair<Float, Float>>,
-        minX: Float,
-        minY: Float,
-        maxX: Float,
-        maxY: Float,
-        xLabel: String = "X Axis",
-        yLabel: String = "Y Axis",
-        tension: Float = 0.0F
-    ) = CurveValue(name, default, minX, minY, maxX, maxY, xLabel, yLabel, tension).apply {
+        xAxis: Axis,
+        yAxis: Axis,
+        tension: Float = 0.4f,
+    ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
         this@Configurable.inner.add(this)
     }
 

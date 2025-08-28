@@ -67,19 +67,19 @@
 
         const findAtX = (x: number) => dataset.data.find((p: ScatterDataPoint) => Math.abs(p.x - x) <= EPS);
 
-        if (findAtX(cSetting.minX) === undefined) {
-            dataset.data.push({x: cSetting.minX, y: cSetting.minY / 2});
+        if (findAtX(cSetting.xAxis.range.from) === undefined) {
+            dataset.data.push({x: cSetting.xAxis.range.from, y: cSetting.yAxis.range.from / 2});
         }
-        if (findAtX(cSetting.maxX) === undefined) {
-            dataset.data.push({x: cSetting.maxX, y: cSetting.minY / 2});
+        if (findAtX(cSetting.xAxis.range.to) === undefined) {
+            dataset.data.push({x: cSetting.xAxis.range.to, y: cSetting.yAxis.range.from / 2});
         }
 
         for (let p of dataset.data) {
-            if (Math.abs(p.x - cSetting.minX) <= EPS) {
-                p.x = cSetting.minX;
+            if (Math.abs(p.x - cSetting.xAxis.range.from) <= EPS) {
+                p.x = cSetting.xAxis.range.from;
             }
-            if (Math.abs(p.x - cSetting.maxX) <= EPS) {
-                p.x = cSetting.maxX;
+            if (Math.abs(p.x - cSetting.xAxis.range.to) <= EPS) {
+                p.x = cSetting.xAxis.range.to;
             }
         }
 
@@ -105,22 +105,22 @@
     }
 
     function lockEdgePoints(previousPoint: Point, currentPoint: Point) {
-        const minOpen = cSetting.minX + EDGE_MARGIN;
-        const maxOpen = cSetting.maxX - EDGE_MARGIN;
+        const minOpen = cSetting.xAxis.range.from + EDGE_MARGIN;
+        const maxOpen = cSetting.xAxis.range.to - EDGE_MARGIN;
 
-        // Determine endpoint by X position (non-endpoints can never equal minX/maxX due to open-interval clamp)
-        const isMinEndpoint = Math.abs(previousPoint.x - cSetting.minX) <= EPS;
-        const isMaxEndpoint = Math.abs(previousPoint.x - cSetting.maxX) <= EPS;
+        // Determine endpoint by X position (non-endpoints can never equal xAxis.range.from/xAxis.range.to due to open-interval clamp)
+        const isMinEndpoint = Math.abs(previousPoint.x - cSetting.xAxis.range.from) <= EPS;
+        const isMaxEndpoint = Math.abs(previousPoint.x - cSetting.xAxis.range.to) <= EPS;
 
         if (isMinEndpoint) {
-            currentPoint.x = cSetting.minX; // lock X
+            currentPoint.x = cSetting.xAxis.range.from; // lock X
         } else if (isMaxEndpoint) {
-            currentPoint.x = cSetting.maxX; // lock X
+            currentPoint.x = cSetting.xAxis.range.to; // lock X
         } else {
             currentPoint.x = clamp(currentPoint.x, minOpen, maxOpen); // keep away from exact edges
         }
 
-        currentPoint.y = clamp(currentPoint.y, cSetting.minY, cSetting.maxY);
+        currentPoint.y = clamp(currentPoint.y, cSetting.yAxis.range.from, cSetting.yAxis.range.to);
     }
 
     onMount(() => {
@@ -141,7 +141,7 @@
                     pointBorderWidth: 0,
                     pointHoverRadius: 6,
                     pointHoverBackgroundColor: COLOR_ACCENT,
-                    tension: 0.4
+                    tension: cSetting.tension
                 }]
             },
             options: {
@@ -150,8 +150,8 @@
                 scales: {
                     x: {
                         type: "linear",
-                        min: cSetting.minX,
-                        max: cSetting.maxX,
+                        min: cSetting.xAxis.range.from,
+                        max: cSetting.xAxis.range.to,
                         grid: {
                             color: COLOR_GRID
                         },
@@ -160,14 +160,14 @@
                         },
                         title: {
                             display: true,
-                            text: cSetting.xLabel,
+                            text: cSetting.xAxis.label,
                             color: COLOR_DIMMED_TEXT
                         }
                     },
                     y: {
                         type: "linear",
-                        min: cSetting.minY,
-                        max: cSetting.maxY,
+                        min: cSetting.yAxis.range.from,
+                        max: cSetting.yAxis.range.to,
                         grid: {
                             color: COLOR_GRID
                         },
@@ -176,7 +176,7 @@
                         },
                         title: {
                             display: true,
-                            text: cSetting.yLabel,
+                            text: cSetting.yAxis.label,
                             color: COLOR_DIMMED_TEXT
                         }
                     }
@@ -229,11 +229,11 @@
         if (!chart || isDragging) return;
 
         const {x, y} = getPositionInChart(e, chart);
-        const minOpen = cSetting.minX + EDGE_MARGIN;
-        const maxOpen = cSetting.maxX - EDGE_MARGIN;
+        const minOpen = cSetting.xAxis.range.from + EDGE_MARGIN;
+        const maxOpen = cSetting.xAxis.range.to - EDGE_MARGIN;
 
         const nx = clamp(x, minOpen, maxOpen);
-        const ny = clamp(y, cSetting.minY, cSetting.maxY);
+        const ny = clamp(y, cSetting.yAxis.range.from, cSetting.yAxis.range.to);
 
         const dataset = chart.data.datasets[0];
         dataset.data.push({x: nx, y: ny});
@@ -256,8 +256,8 @@
         const p = dataset.data[index];
 
         // Don't remove the required endpoints
-        if (Math.abs(p.x - cSetting.minX) <= EPS) return;
-        if (Math.abs(p.x - cSetting.maxX) <= EPS) return;
+        if (Math.abs(p.x - cSetting.xAxis.range.from) <= EPS) return;
+        if (Math.abs(p.x - cSetting.xAxis.range.to) <= EPS) return;
 
         dataset.data.splice(index, 1);
         sortPoints(dataset.data);
