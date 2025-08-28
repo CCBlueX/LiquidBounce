@@ -20,7 +20,7 @@ export interface EventMap {
     clientPlayerData: ClientPlayerDataEvent;
     overlayMessage: OverlayMessageEvent;
     notification: NotificationEvent;
-    keyEvent: KeyEvent;
+    key: KeyEvent;
     keyBindingCPS: KeyBindingCPSEvent;
     targetChange: TargetChangeEvent;
     blockCountChange: BlockCountChangeEvent;
