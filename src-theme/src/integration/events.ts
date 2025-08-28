@@ -10,6 +10,7 @@ import type {
 } from "./types";
 
 export interface EventMap {
+    socketReady: void;
     clickGuiValueChange: ClickGuiValueChangeEvent;
     moduleToggle: ModuleToggleEvent;
     keyboardKey: KeyboardKeyEvent;

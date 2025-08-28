@@ -34,10 +34,10 @@ function connect() {
     }
 }
 
-const alwaysListeners = new Map<string, Function[]>();
-const listeners = new Map<string, Function[]>();
+const alwaysListeners = new Map<keyof EventMap, Function[]>();
+const listeners = new Map<keyof EventMap, Function[]>();
 
-export function listenAlways(eventName: string, callback: Function) {
+export function listenAlways<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!alwaysListeners.has(eventName)) {
         alwaysListeners.set(eventName, []);
     }
