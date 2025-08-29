@@ -99,7 +99,7 @@ class Command(
         val content = data?.let(::variable) ?: markAsError("N/A")
         val resultText = formatting(result(key, content))
 
-        chat(resultText.onHover(hover).onClick(clickEvent))
+        chat(resultText.onHover(hover).clickEvent(clickEvent))
     }
 
     /**

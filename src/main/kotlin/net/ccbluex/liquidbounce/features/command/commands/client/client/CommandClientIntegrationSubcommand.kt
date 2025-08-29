@@ -64,7 +64,7 @@ object CommandClientIntegrationSubcommand {
                     .append(
                         variable(baseUrl)
                             .underline(true)
-                            .onClick(ClickEvent.OpenUrl(URI(baseUrl)))
+                            .clickEvent(ClickEvent.OpenUrl(URI(baseUrl)))
                             .onHover(
                                 HoverEvent.ShowText(
                                     regular("Click to open the integration URL in your browser.")
@@ -89,7 +89,7 @@ object CommandClientIntegrationSubcommand {
                         .append(
                             variable("Browser")
                                 .underline(true)
-                                .onClick(ClickEvent.OpenUrl(URI(url)))
+                                .clickEvent(ClickEvent.OpenUrl(URI(url)))
                                 .onHover(
                                     HoverEvent.ShowText(
                                         regular("Click to open the URL in your browser.")

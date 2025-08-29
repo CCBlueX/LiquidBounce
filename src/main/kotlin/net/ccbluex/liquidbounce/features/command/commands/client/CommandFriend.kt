@@ -99,7 +99,7 @@ object CommandFriend : CommandFactory {
                             .formatted(Formatting.RED)
                             .bold(true)
                             .onHover(HoverEvent.ShowText(removeText))
-                            .onClick(ClickEvent.SuggestCommand(removeCommand))
+                            .clickEvent(ClickEvent.SuggestCommand(removeCommand))
 
                         chat(
                             regular("- "),

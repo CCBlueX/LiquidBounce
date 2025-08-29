@@ -92,7 +92,7 @@ inline fun MutableText.italic(value: Boolean?): MutableText =
 inline fun MutableText.onHover(event: HoverEvent?): MutableText =
     setStyle(style.withHoverEvent(event))
 
-inline fun MutableText.onClick(event: ClickEvent?): MutableText =
+inline fun MutableText.clickEvent(event: ClickEvent?): MutableText =
     setStyle(style.withClickEvent(event))
 
 inline fun MutableText.onClick(callback: Runnable): MutableText =
@@ -138,7 +138,7 @@ fun MutableText.copyable(
     hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
 ): MutableText = apply {
     hover?.let(::onHover)
-    onClick(ClickEvent.CopyToClipboard(copyContent))
+    clickEvent(ClickEvent.CopyToClipboard(copyContent))
 }
 
 fun MutableText.bypassNameProtection(): MutableText = styled {

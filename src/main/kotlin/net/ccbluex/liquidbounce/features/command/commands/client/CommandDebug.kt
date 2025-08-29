@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.clickEvent
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.minecraft.SharedConstants
 import net.minecraft.text.ClickEvent
@@ -90,7 +90,7 @@ object CommandDebug : CommandFactory {
                 }.append(
                     Text.literal(pasteUriString)
                         .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent.OpenUrl(uri))
+                        .clickEvent(ClickEvent.OpenUrl(uri))
                 )
             )
         }

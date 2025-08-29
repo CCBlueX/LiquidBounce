@@ -103,7 +103,7 @@ object CommandConfig : CommandFactory {
 
                     chat(
                         variable(settingName)
-                            .onClick(ClickEvent.SuggestCommand(".config load $settingName"))
+                            .clickEvent(ClickEvent.SuggestCommand(".config load $settingName"))
                             .onHover(HoverEvent.ShowText(Text.of("§7Click to load $settingName"))),
                         regular(spaces),
                         regular(" | "),
