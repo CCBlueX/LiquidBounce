@@ -121,7 +121,6 @@ private data class EnchantmentInfo(
 object NametagEnchantmentRenderer {
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
-    private const val Y_OFFSET = -450f
     private const val LINE_HEIGHT = 14f
     private const val COLUMN_SPACING = 20f
     private const val PADDING = 3f
@@ -179,7 +178,11 @@ object NametagEnchantmentRenderer {
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 
-        if (isPositionOccluded(x, y)) {
+        val worldPos = entity.pos
+        val worldX = worldPos.x.toFloat()
+        val worldY = (worldPos.y + entity.height + 0.5f).toFloat()
+
+        if (isPositionOccluded(worldX, worldY)) {
             return
         }
 
@@ -197,14 +200,14 @@ object NametagEnchantmentRenderer {
 
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
-            ModuleNametags.drawnEnchantmentAreas.add(Pair(x, y))
-            drawEnchantmentColumns(env, x, y, fontRenderer, columnData)
+            ModuleNametags.drawnEnchantmentAreas.add(Pair(worldX, worldY))
+            drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
         }
     }
     
     // Check if a position would be occluded by another enchantment panel
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
-        val OCCLUSION_THRESHOLD = 30f // Threshold to consider a panel occluded
+        val OCCLUSION_THRESHOLD = 2f
         
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
             val distance = Math.sqrt(((existingX - x) * (existingX - x) + 
@@ -288,7 +291,7 @@ object NametagEnchantmentRenderer {
 
         cells.forEachIndexed { index, cell ->
             val cellX = x - cellWidth / 2
-            val cellY = y + Y_OFFSET + index * (CELL_HEIGHT + VERTICAL_SPACING)
+            val cellY = y + index * (CELL_HEIGHT + VERTICAL_SPACING)
 
             val rect = Rect(
                 cellX,
@@ -352,9 +355,9 @@ object NametagEnchantmentRenderer {
 
         val groupRect = Rect(
             x - halfTotalWidth - FRAME_MARGIN,
-            y + Y_OFFSET - FRAME_MARGIN,
+            y - FRAME_MARGIN,
             x + halfTotalWidth + FRAME_MARGIN,
-            y + Y_OFFSET + maxColumnHeight + FRAME_MARGIN
+            y + maxColumnHeight + FRAME_MARGIN
         )
 
         drawGroupBorder(env, groupRect)

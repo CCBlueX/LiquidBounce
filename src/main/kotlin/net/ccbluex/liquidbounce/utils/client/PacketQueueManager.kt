@@ -169,11 +169,9 @@ object PacketQueueManager : EventListener {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        // Use LiquidBounce accent color
-        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
-
         renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
+            // Use LiquidBounce accent color
+            withColor(Color4b.LIQUID_BOUNCE) {
                 drawLineStrip(positions = positions.mapArray { vec3d -> Vec3(relativeToCamera(vec3d)) })
             }
         }
@@ -254,10 +252,10 @@ object PacketQueueManager : EventListener {
     private fun fireEvent(packet: Packet<*>?, origin: TransferOrigin) =
         EventManager.callEvent(QueuePacketEvent(packet, origin)).action
 
-    enum class Action {
-        QUEUE,
-        PASS,
-        FLUSH,
+    enum class Action(val priority: Int) {
+        FLUSH(0),
+        PASS(1),
+        QUEUE(2)
     }
 
 }

@@ -19,16 +19,14 @@
 package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.handler.proxy.Socks5ProxyHandler
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
-import net.ccbluex.liquidbounce.event.events.ProxyAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
-import net.ccbluex.liquidbounce.event.events.ProxyEditResultEvent
 import net.ccbluex.liquidbounce.event.handler
 
 /**
@@ -38,124 +36,56 @@ import net.ccbluex.liquidbounce.event.handler
  */
 object ProxyManager : Configurable("proxy"), EventListener {
 
-    private val NO_PROXY = Proxy("", 0, null, Proxy.Type.SOCKS5)
-
-    private var proxy by value("selectedProxy", NO_PROXY, valueType = ValueType.PROXY)
+    var proxy by value("selectedProxy", Proxy.NONE, valueType = ValueType.PROXY).onChanged {
+        ConfigSystem.storeConfigurable(this)
+    }
     internal val proxies by list(name, mutableListOf<Proxy>(), valueType = ValueType.PROXY)
 
     /**
      * The proxy that is set in the current session and used for all server connections
      */
     val currentProxy
-        get() = proxy.takeIf { it.host.isNotBlank() }
+        get() = proxy.takeIf { proxy -> proxy.host.isNotBlank() && proxy.port > 0 }
 
     init {
         ConfigSystem.root(this)
     }
 
-    @Suppress("LongParameterList")
-    fun addProxy(
-        host: String,
-        port: Int,
-        username: String = "",
-        password: String = "",
-        type: Proxy.Type = Proxy.Type.SOCKS5,
-        forwardAuthentication: Boolean = false
-    ) {
-        Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication).check(
-            success = { proxy ->
-                LiquidBounce.logger.info("Added proxy [${proxy.host}:${proxy.port}]")
+    /**
+     * Validate if [proxy] is working by sending a query-request to our Minecraft Ping Server.
+     * This eliminates proxy that only work for HTTP(S) connections.
+     *
+     * This function also automatically adds the proxy to our list, if [index] is not provided.
+     * If [index] is provided, it will swap out the proxy at that index with the new one.
+     * If [checkOnly] is true, we will skip adding the proxy to our list.
+     */
+    fun validateProxy(proxy: Proxy, index: Int? = null, checkOnly: Boolean = false) = proxy.check(
+        success = { proxy ->
+            logger.info("Successfully checked proxy [${proxy.host}:${proxy.port}]")
+            EventManager.callEvent(ProxyCheckResultEvent(proxy = proxy))
+
+            if (checkOnly) {
+                return@check
+            }
+
+            val isConnected = index != null && this@ProxyManager.proxy == proxies[index]
+            if (index != null) {
+                proxies[index] = proxy
+            } else {
+                // If no index is provided, we are adding a new proxy
                 proxies.add(proxy)
-                ConfigSystem.storeConfigurable(this)
-
-                EventManager.callEvent(ProxyAdditionResultEvent(proxy = proxy))
-            },
-            failure = {
-                LiquidBounce.logger.error("Failed to check proxy", it)
-
-                EventManager.callEvent(ProxyAdditionResultEvent(error = it.message ?: "Unknown error"))
             }
-        )
-    }
+            ConfigSystem.storeConfigurable(this)
 
-    @Suppress("LongParameterList")
-    fun editProxy(
-        index: Int,
-        host: String,
-        port: Int,
-        username: String = "",
-        password: String = "",
-        type: Proxy.Type = Proxy.Type.SOCKS5,
-        forwardAuthentication: Boolean = false
-    ) {
-        Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication).check(
-            success = { newProxy ->
-                val isConnected = proxy == proxies[index]
-
-                LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
-                proxies[index] = newProxy
-                ConfigSystem.storeConfigurable(this)
-
-                EventManager.callEvent(ProxyEditResultEvent(proxy = proxy))
-
-                if (isConnected) {
-                    setProxy(index)
-                }
-            },
-            failure = {
-                LiquidBounce.logger.error("Failed to check proxy", it)
-
-                EventManager.callEvent(ProxyEditResultEvent(error = it.message ?: "Unknown error"))
+            if (isConnected) {
+                this@ProxyManager.proxy = proxy
             }
-        )
-    }
-
-    fun checkProxy(index: Int) {
-        val proxy = proxies.getOrNull(index) ?: error("Invalid proxy index")
-        proxy.check(
-            success = { proxy ->
-                LiquidBounce.logger.info("Checked proxy [${proxy.host}:${proxy.port}]")
-                ConfigSystem.storeConfigurable(this)
-
-                EventManager.callEvent(ProxyCheckResultEvent(proxy = proxy))
-            },
-            failure = {
-                LiquidBounce.logger.error("Failed to check proxy", it)
-                EventManager.callEvent(ProxyCheckResultEvent(proxy = proxy, error = it.message ?: "Unknown error"))
-            }
-        )
-    }
-
-    fun removeProxy(index: Int) {
-        val proxy = proxies.removeAt(index)
-        if (proxy == currentProxy) {
-            unsetProxy()
+        },
+        failure = {
+            logger.error("Failed to check proxy", it)
+            EventManager.callEvent(ProxyCheckResultEvent(proxy, error = it.message ?: "Unknown error"))
         }
-
-        ConfigSystem.storeConfigurable(this)
-    }
-
-    fun setProxy(index: Int) {
-        proxy = proxies[index]
-        ConfigSystem.storeConfigurable(this)
-    }
-
-    fun unsetProxy() {
-        proxy = NO_PROXY
-        ConfigSystem.storeConfigurable(this)
-    }
-
-    fun favoriteProxy(index: Int) {
-        val proxy = proxies[index]
-        proxy.favorite = true
-        ConfigSystem.storeConfigurable(this)
-    }
-
-    fun unfavoriteProxy(index: Int) {
-        val proxy = proxies[index]
-        proxy.favorite = false
-        ConfigSystem.storeConfigurable(this)
-    }
+    )
 
     /**
      * Adds a SOCKS5 netty proxy handler to the pipeline when a proxy is set

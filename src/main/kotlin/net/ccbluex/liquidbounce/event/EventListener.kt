@@ -74,21 +74,28 @@ inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
     noinline handler: Handler<T>
 ): EventHook<T> {
-    return EventManager.registerEventHook(T::class.java,
-        EventHook(this, handler, priority)
-    )
+    return EventManager.registerEventHook(T::class.java, EventHook(this, handler, priority))
+}
+
+inline fun <reified T : Event> EventListener.until(
+    priority: Short = 0,
+    crossinline handler: (T) -> Boolean
+): EventHook<T> {
+    lateinit var eventHook: EventHook<T>
+    eventHook = EventHook(this, {
+        if (!this.running || handler(it)) {
+            EventManager.unregisterEventHook(T::class.java, eventHook)
+        }
+    }, priority)
+    return EventManager.registerEventHook(T::class.java, eventHook)
 }
 
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
     crossinline handler: Handler<T>
-): EventHook<T> {
-    lateinit var eventHook: EventHook<T>
-    eventHook = EventHook(this, {
-        handler(it)
-        EventManager.unregisterEventHook(T::class.java, eventHook)
-    }, priority)
-    return EventManager.registerEventHook(T::class.java, eventHook)
+): EventHook<T> = until(priority) { event ->
+    handler(event)
+    true // This will unregister the handler after the first call
 }
 
 /**

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -30,10 +29,7 @@ import java.io.IOException
 
 object NbsLoader {
 
-    val root = File(ConfigSystem.rootFolder, "nbs").apply { mkdirs() }
-
-    fun load(songName: String): SongData? {
-        val nbsFile = root.resolve("$songName.nbs")
+    fun load(nbsFile: File): SongData? {
         if (!nbsFile.exists()) {
             chat(markAsError(ModuleNotebot.message("noNbs", nbsFile.absolutePath)), ModuleNotebot)
             return null
@@ -45,7 +41,7 @@ object NbsLoader {
             val songTickLength = notesByTick.keys.max()
             val songTicksPerGameTick = (nbs.header.tempo / 100f) / 20f
 
-            SongData(songName, nbs, notesByTick, songTickLength, songTicksPerGameTick)
+            SongData(nbsFile.nameWithoutExtension, nbs, notesByTick, songTickLength, songTicksPerGameTick)
         } catch (e: IOException) {
             logger.error("Failed to load NBS data from ${nbsFile.absolutePath}", e)
             chat(markAsError(ModuleNotebot.message("CouldNotParse")), ModuleNotebot)

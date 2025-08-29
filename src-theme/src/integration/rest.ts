@@ -6,23 +6,26 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
-    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
+    RegistryItem,
     Server,
     Session,
     VirtualScreen,
     World
 } from "./types";
 import type {PlayerInventory} from "./events";
+import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -132,6 +135,18 @@ export async function getPlayerData(): Promise<PlayerData> {
     return data;
 }
 
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
+}
+
 export async function getPlayerInventory(): Promise<PlayerInventory> {
     const response = await fetch(`${API_BASE}/client/player/inventory`);
     const data: PlayerInventory = await response.json();
@@ -183,6 +198,16 @@ export async function browse(target: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({target})
+    });
+}
+
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({path})
     });
 }
 
@@ -379,12 +404,15 @@ export async function removeAccount(id: number) {
 }
 
 export async function loginToAccount(id: number) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    }).finally(() => {
+        isLoggingIn.set(false);
     });
 }
 

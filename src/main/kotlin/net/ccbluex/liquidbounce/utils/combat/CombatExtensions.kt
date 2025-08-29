@@ -74,6 +74,7 @@ enum class EntityTargetClassification {
  * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
 enum class Targets(override val choiceName: String) : NamedChoice {
+    SELF("Self"),
     PLAYERS("Players"),
     HOSTILE("Hostile"),
     ANGERABLE("Angerable"),
@@ -123,7 +124,7 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
     // Check if enemy is a player and should be considered as a target
     return when (suspect) {
         is PlayerEntity -> when {
-            suspect == mc.player -> false
+            suspect === mc.player -> Targets.SELF in this
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
             else -> Targets.PLAYERS in this

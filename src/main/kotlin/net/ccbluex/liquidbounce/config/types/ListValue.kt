@@ -1,11 +1,31 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import java.util.*
+import java.util.EnumMap
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -37,12 +57,6 @@ open class ListValue<T : MutableCollection<E>, E>(
     valueType = valueType,
 ) {
 
-    init {
-        require(value is List<*> || value is HashSet<*> || value is Set<*>) {
-            "Inner value must be a List, HashSet or Set, but was ${value::class.java.name}"
-        }
-    }
-
     @Suppress("UNCHECKED_CAST")
     override fun setByString(string: String) {
         val deserializer = this.innerValueType.deserializer
@@ -53,29 +67,15 @@ open class ListValue<T : MutableCollection<E>, E>(
     }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
+        // TODO: Might add adaptation for single element like : ["foo", "bar"] or "foo"
+        element as? JsonArray ?: error("ListValue can only be deserialized from a JsonArray.")
+
         val currValue = this.inner
 
-        set(when (currValue) {
-            is List<*> -> {
-                element.asJsonArray.mapTo(
-                    mutableListOf()
-                ) { gson.fromJson(it, this.innerType) } as T
-            }
+        currValue.clear()
+        element.mapTo(currValue) { gson.fromJson(it, this.innerType) }
 
-            is HashSet<*> -> {
-                element.asJsonArray.mapTo(
-                    HashSet()
-                ) { gson.fromJson(it, this.innerType) } as T
-            }
-
-            is Set<*> -> {
-                element.asJsonArray.mapTo(
-                    TreeSet()
-                ) { gson.fromJson(it, this.innerType) } as T
-            }
-
-            else -> error("Unsupported collection type: ${currValue::class.java.name}")
-        })
+        set(currValue) { /** Trigger listener callbacks */ }
     }
 
 }
@@ -128,7 +128,7 @@ open class ItemListValue<T : MutableSet<E>, E>(
 
 }
 
-open class RegistryListValue<T : MutableSet<E>, E>(
+class RegistryListValue<T : MutableSet<E>, E>(
     name: String,
     value: T,
     innerValueType: ValueType = ValueType.INVALID,
@@ -144,14 +144,20 @@ open class RegistryListValue<T : MutableSet<E>, E>(
     /**
      * This is used to determine the registry endpoint for the API.
      */
-    @Exclude var registry: String = when (innerValueType) {
-        ValueType.BLOCK -> "blocks"
-        ValueType.ITEM -> "items"
-        ValueType.SOUND -> "sounds"
-        ValueType.STATUS_EFFECT -> "statuseffects"
-        ValueType.CLIENT_PACKET -> "clientpackets"
-        ValueType.SERVER_PACKET -> "serverpackets"
-        else -> error("Unsupported registry type: $innerValueType")
+    @Exclude
+    val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
+
+    companion object {
+        @JvmField
+        internal val TYPE_TO_REGISTRY_NAME = EnumMap<_, String>(ValueType::class.java).apply {
+            put(ValueType.BLOCK, "blocks")
+            put(ValueType.ITEM, "items")
+            put(ValueType.SOUND, "sounds")
+            put(ValueType.STATUS_EFFECT, "statuseffects")
+            put(ValueType.CLIENT_PACKET, "clientpackets")
+            put(ValueType.SERVER_PACKET, "serverpackets")
+            put(ValueType.ENTITY_TYPE, "entity_type")
+        }
     }
 
 }

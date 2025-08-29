@@ -284,7 +284,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferAverageHardBlocks(neutralRange = false),
         )
 
-    override fun enable() {
+    override fun onEnabled() {
         // Placement Y is the Y coordinate of the block below the player
         placementY = player.blockPos.y - 1
         startY = player.blockPos.y
@@ -293,10 +293,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
 
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)

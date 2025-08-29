@@ -45,7 +45,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
     private val handleGameTick = tickHandler {
         if (paused()) {
             if (noClipSet) {
-                disable()
+                onDisabled()
             }
 
             return@tickHandler
@@ -87,7 +87,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         noClipSet = false
         player.noClip = false
         player.controllingVehicle?.let { it.noClip = false }

@@ -30,7 +30,7 @@ import net.minecraft.util.math.BlockPos
  */
 object AirAboveCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         return cache.up.getState()!!.isAir
     }
 
@@ -41,7 +41,7 @@ object AirAboveCondition : PlacementCondition {
  */
 object AirOldVersionCondition : PlacementCondition {
 
-    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos.Mutable): Boolean {
+    override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         return !SubmoduleCrystalPlacer.oldVersion || candidate.up(2).getState()!!.isAir
     }
 

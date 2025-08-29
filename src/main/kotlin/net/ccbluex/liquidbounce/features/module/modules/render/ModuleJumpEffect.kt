@@ -47,7 +47,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val circles = ExpiringList<Vec3d>()
 
-    override fun disable() {
+    override fun onDisabled() {
         circles.clear()
     }
 

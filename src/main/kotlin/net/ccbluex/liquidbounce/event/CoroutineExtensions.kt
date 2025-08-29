@@ -27,6 +27,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
@@ -35,6 +37,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.Duration
 
 private val RenderThreadDispatcher = mc.asCoroutineDispatcher()
 
@@ -53,7 +56,11 @@ val EventListener.eventListenerScope: CoroutineScope
         CoroutineScope(
             SupervisorJob() // Prevent exception canceling
             + CoroutineExceptionHandler { ctx, throwable -> // logging
-                logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                if (throwable is EventListenerNotListeningException) {
+                    logger.debug("{} is not listening, job cancelled", throwable.eventListener)
+                } else {
+                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                }
             }
             + CoroutineName(it.toString()) // Name
             // Render thread + Auto cancel on not listening
@@ -79,6 +86,63 @@ inline fun <reified T : Event> EventListener.suspendHandler(
         }
     }
 }
+
+/**
+ * Wait an event of type [T] which matches given [predicate].
+ *
+ * The continuation resumes on the event handler thread. For example:
+ * - [net.ccbluex.liquidbounce.event.events.PacketEvent]:  client Netty IO (EventLoopGroup)
+ * - [net.ccbluex.liquidbounce.event.events.GameTickEvent]: client render thread
+ *
+ * @param priority The priority of the event hook.
+ * @param predicate The predicate to match the event.
+ * If it throws a [Throwable], the continuation will be resumed with [Result.failure].
+ */
+suspend inline fun <reified T : Event> EventListener.waitMatches(
+    priority: Short = 0,
+    crossinline predicate: (T) -> Boolean,
+): T = suspendCancellableCoroutine { continuation ->
+    lateinit var eventHook: EventHook<T>
+    fun resumeAndUnregister(result: Result<T>) {
+        EventManager.unregisterEventHook(T::class.java, eventHook)
+        if (continuation.isActive) {
+            continuation.resumeWith(result)
+        }
+    }
+    eventHook = EventHook(this, handler = { event ->
+        try {
+            if (predicate(event)) {
+                resumeAndUnregister(Result.success(event))
+            }
+        } catch (e: Throwable) {
+            resumeAndUnregister(Result.failure(e))
+        }
+    }, priority)
+    continuation.invokeOnCancellation {
+        EventManager.unregisterEventHook(T::class.java, eventHook)
+    }
+    EventManager.registerEventHook(T::class.java, eventHook)
+}
+
+/**
+ * Wait an event of type [T] which matches given [predicate].
+ * If the timeout is exceeded, return null.
+ *
+ * This is exactly a shortcut of:
+ * ```kotlin
+ * withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
+ * ```
+ *
+ * @param timeout The timeout duration.
+ * @param priority The priority of the event hook.
+ * @param predicate The predicate to match the event.
+ * If it throws a [Throwable], the continuation will be resumed with [Result.failure].
+ */
+suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
+    timeout: Duration,
+    priority: Short = 0,
+    crossinline predicate: (T) -> Boolean,
+): T? = withTimeoutOrNull(timeout) { waitMatches(priority, predicate) }
 
 /**
  * Wrap the [original] interceptor and make it auto-detect

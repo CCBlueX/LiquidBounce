@@ -134,11 +134,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     /**
      * Hook entity movement tick event at HEAD and call out PRE tick movement event
      */
-    @Inject(method = "sendMovementPackets", at = @At("HEAD"))
+    @Inject(method = "sendMovementPackets", at = @At("HEAD"), cancellable = true)
     private void hookMovementPre(CallbackInfo callbackInfo) {
         ClientPlayerEntity player = (ClientPlayerEntity) (Object) this;
         eventMotion = new PlayerNetworkMovementTickEvent(EventState.PRE, player.getX(), player.getY(), player.getZ(), player.isOnGround());
         EventManager.INSTANCE.callEvent(eventMotion);
+
+        if (eventMotion.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getX()D"))

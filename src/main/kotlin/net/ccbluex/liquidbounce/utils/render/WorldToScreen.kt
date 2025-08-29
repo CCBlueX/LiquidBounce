@@ -54,6 +54,8 @@ object WorldToScreen : EventListener {
         this.projectionMatrix.set(RenderSystem.getProjectionMatrix())
     }
 
+    @JvmStatic
+    @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3d,
         cameraPos: Vec3d = mc.gameRenderer.camera.pos,
@@ -72,6 +74,8 @@ object WorldToScreen : EventListener {
         return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
     }
 
+    @JvmStatic
+    @JvmOverloads
     fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.pos): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 

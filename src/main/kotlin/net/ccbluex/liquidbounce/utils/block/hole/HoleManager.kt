@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.utils.block.hole
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
-import net.ccbluex.liquidbounce.utils.block.Region
-import net.ccbluex.liquidbounce.utils.kotlin.isEmpty
+import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.minecraft.util.math.BlockPos
 
 object HoleManager : EventListener, MinecraftShortcuts {
 
     internal val movableRegionScanner = MovableRegionScanner()
-    private val activeModules = hashSetOf<HoleManagerSubscriber>()
+    private val activeModules = ReferenceOpenHashSet<HoleManagerSubscriber>()
     private val playerPos = BlockPos.Mutable()
 
     override val running: Boolean
@@ -69,14 +69,14 @@ object HoleManager : EventListener, MinecraftShortcuts {
         val horizontalDistance = activeModules.maxOf { it.horizontalDistance() }
         val verticalDistance = activeModules.maxOf { it.verticalDistance() }
         val changedAreas = movableRegionScanner.moveTo(
-            Region.quadAround(
-                playerPos,
-                horizontalDistance,
-                verticalDistance
+            playerPos.expendToBlockBox(
+                offsetX = horizontalDistance,
+                offsetY = verticalDistance,
+                offsetZ = horizontalDistance
             )
         )
 
-        if (changedAreas.isEmpty()) {
+        if (changedAreas.none()) {
             return
         }
 

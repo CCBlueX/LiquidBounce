@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
-import it.unimi.dsi.fastutil.doubles.DoubleObjectPair
+import it.unimi.dsi.fastutil.doubles.DoubleLongPair
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
@@ -135,9 +135,9 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
-        val offsets = mutableListOf<DoubleObjectPair<BlockPos>>()
+        val offsets = mutableListOf<DoubleLongPair>()
 
-        startBox.collidingRegion.forEach { offset ->
+        startBox.collidingRegion.iterate().forEach { offset ->
             val bp = offsetPos.add(offset)
 
             val bb = Box(offset)
@@ -158,12 +158,12 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
 
             val intersect = startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
 
-            offsets.add(DoubleObjectImmutablePair(intersect, offset.toImmutable()))
+            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
         }
 
-        offsets.sortByDescending { it.keyDouble() }
+        offsets.sortByDescending { it.leftDouble() }
 
-        return offsets.map { it.value() }
+        return offsets.map { BlockPos.fromLong(it.rightLong()) }
     }
 
     override fun validate(plan: BlockChangeIntent<WebIntentData>, raycast: BlockHitResult): Boolean {
