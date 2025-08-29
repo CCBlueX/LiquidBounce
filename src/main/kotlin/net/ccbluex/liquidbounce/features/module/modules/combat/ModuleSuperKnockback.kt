@@ -81,10 +81,6 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
         @Suppress("unused", "ComplexCondition")
         private val attackHandler = handler<AttackEntityEvent> { event ->
-            if (event.isCancelled) {
-                return@handler
-            }
-
             val enemy = event.entity
 
             if (!shouldOperate(enemy)) {

@@ -41,10 +41,6 @@ object VelocityIntave : VelocityMode("Intave") {
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
-            if (event.isCancelled) {
-                return@handler
-            }
-
             if (player.hurtTime in hurtTime && System.currentTimeMillis() - lastAttackTime <= lastAttackTimeToReduce) {
                 player.velocity.x *= reduceFactor
                 player.velocity.z *= reduceFactor

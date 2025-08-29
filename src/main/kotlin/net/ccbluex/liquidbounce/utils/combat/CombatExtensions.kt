@@ -199,11 +199,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
 
 @Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
 fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
-    if (EventManager.callEvent(AttackEntityEvent(this) {
-        attack(swing, keepSprint)
-    }).isCancelled) {
-        return
-    }
+    EventManager.callEvent(AttackEntityEvent(this))
 
     with(player) {
         // Swing before attacking (on 1.8)
