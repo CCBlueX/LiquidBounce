@@ -32,9 +32,12 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import org.joml.Quaternionf
 import java.io.FileInputStream
 import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 object EspImageMode : EspMode("Image", requiresTrueSight = true) {
 
@@ -47,11 +50,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
     private val imageSize by float("ImageSize", 0.5f, 0.1f..2f)
     private val opacity by float("Opacity", 0.8f, 0f..1f)
     private val attackColor by color("Attack", Color4b.PINK)
-    private object ImageOffset : ToggleableConfigurable(this, "ImageOffset", true) {
-        val offsetX by float("OffsetX", 0f, -1f..1f)
-        val offsetY by float("OffsetY", 0.8f, -1f..1f)
-        val offsetZ by float("OffsetZ", 0f, -1f..1f)
-    }
+    private val onlyPlayer by boolean("OnlyPlayer", true)
 
     private object RotationOption : ToggleableConfigurable(this, "AttackRotation", true) {
         val rotationSpeed by float("RotationSpeed", 180f, 0f..360f)
@@ -65,7 +64,6 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
     private val chronometer = Chronometer()
 
     init {
-        tree(ImageOffset)
         tree(RotationOption)
     }
 
@@ -94,60 +92,61 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
 
         hitDataMap[uuid] = HitData(now, prev?.startAngle ?: 0f)
     }
-
-    @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val entities = RenderedEntities.filterIsInstance<LivingEntity>().filter { it.isPlayer }
+        val entities = if(onlyPlayer) RenderedEntities.filter { it.isPlayer } else RenderedEntities
+        if (entities.isEmpty()) return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
+        renderEnvironmentForWorld(event.matrixStack) {
+            val activeTex = imageMode.activeChoice.getTexture()
+            RenderSystem.setShaderTexture(0, activeTex)
+
+            matrixStack.push()
             entities.forEach { entity ->
                 renderImageAtEntity(entity, event.partialTicks)
             }
+            matrixStack.pop()
         }
     }
 
     private fun WorldRenderEnvironment.renderImageAtEntity(entity: LivingEntity, partialTicks: Float) {
         val pos = entity.interpolateCurrentPosition(partialTicks)
-        val dims = entity.getDimensions(entity.pose)
-        val centerY = dims.height / 2.0f
+        val eyeHeight = entity.getEyeHeight(entity.pose)
+        var renderPos = pos.add(0.0, eyeHeight.toDouble() + 0.03, 0.0)
         val size = imageSize
-
-        withPositionRelativeToCamera(
-            pos.add(
-                if (ImageOffset.enabled) ImageOffset.offsetX.toDouble() else 0.0,
-                centerY.toDouble() + if (ImageOffset.enabled) ImageOffset.offsetY.toDouble() else 0.0,
-                if (ImageOffset.enabled) ImageOffset.offsetZ.toDouble() else 0.0
+        if (entity.isSwimming) {
+            val pitchRad = Math.toRadians(entity.pitch.toDouble())
+            val yawRad = Math.toRadians(entity.yaw.toDouble())
+            val forward = Vec3d(
+                -sin(yawRad) * cos(pitchRad),
+                -sin(pitchRad),
+                cos(yawRad) * cos(pitchRad)
             )
-        ) {
-            RenderSystem.setShaderTexture(0, imageMode.activeChoice.getTexture())
-
+            renderPos = renderPos.add(forward.multiply(0.64))
+        }
+        withPositionRelativeToCamera(renderPos) {
             matrixStack.apply {
-                push()
                 multiply(mc.gameRenderer.camera.rotation)
                 if (RotationOption.enabled) {
-                    calculateRotationAngle(entity)?.let { angle ->
-                        rotateZ(angle)
-                    }
+                    calculateRotationAngle(entity)?.let { angle -> rotateZ(angle) }
                 }
                 scale(size, size, size)
                 translate(-0.5f, -0.5f, 0.0f)
             }
+
             val alpha = MathHelper.clamp((255 * opacity).toInt(), 0, 255)
-            val imgColor = attackColor.with(a = alpha).takeIf { entity.hurtTime > 0 } ?: getColor(entity).with(a = alpha)
+            val color = attackColor.with(a = alpha).takeIf { entity.hurtTime > 0 }
+                ?: getColor(entity).with(a = alpha)
 
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
                 VertexFormats.POSITION_TEXTURE_COLOR,
                 ShaderProgramKeys.POSITION_TEX_COLOR
             ) { matrix ->
-                vertex(matrix, 0.0f, 0.0f, 0.0f).texture(0.0f, 1.0f).color(imgColor.toARGB())
-                vertex(matrix, 1.0f, 0.0f, 0.0f).texture(1.0f, 1.0f).color(imgColor.toARGB())
-                vertex(matrix, 1.0f, 1.0f, 0.0f).texture(1.0f, 0.0f).color(imgColor.toARGB())
-                vertex(matrix, 0.0f, 1.0f, 0.0f).texture(0.0f, 0.0f).color(imgColor.toARGB())
+                vertex(matrix, 0.0f, 0.0f, 0.0f).texture(0.0f, 1.0f).color(color.toARGB())
+                vertex(matrix, 1.0f, 0.0f, 0.0f).texture(1.0f, 1.0f).color(color.toARGB())
+                vertex(matrix, 1.0f, 1.0f, 0.0f).texture(1.0f, 0.0f).color(color.toARGB())
+                vertex(matrix, 0.0f, 1.0f, 0.0f).texture(0.0f, 0.0f).color(color.toARGB())
             }
-
-            matrixStack.pop()
         }
     }
 
