@@ -115,7 +115,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
         @Suppress("unused", "ComplexCondition")
         private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
-            if (event.isCancelled || !shouldOperate(event.entity) || !shouldStopSprinting(event) || cancelSprint) {
+            if (!shouldOperate(event.entity) || !shouldStopSprinting(event) || cancelSprint) {
                 return@sequenceHandler
             }
 
@@ -164,7 +164,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
         @Suppress("unused", "ComplexCondition")
         private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
-            if (event.isCancelled || !shouldOperate(event.entity) || !shouldStopSprinting(event) || inSequence) {
+            if (!shouldOperate(event.entity) || !shouldStopSprinting(event) || inSequence) {
                 return@sequenceHandler
             }
 
