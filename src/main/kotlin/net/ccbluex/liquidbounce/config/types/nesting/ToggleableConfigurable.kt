@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * A [ToggleableConfigurable] has a state that can be toggled on and off. It also allows you
@@ -68,10 +69,14 @@ abstract class ToggleableConfigurable(
         }
 
         if (!state) {
-            // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
-            cancelAllSequences(this)
-            // Remove and cancel coroutine scope
-            removeEventListenerScope()
+            runCatching {
+                // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
+                cancelAllSequences(this)
+                // Remove and cancel coroutine scope
+                removeEventListenerScope()
+            }.onFailure {
+                logger.error("Failed to cancel sequences or remove scope for $this", it)
+            }
         }
 
         val state = super.onToggled(state)
