@@ -29,10 +29,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -194,6 +197,29 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             .maxOrNull()
 
         return bestSlot?.itemSlot as HotbarItemSlot?
+    }
+
+    /**
+     * Get the attack speed of the determined weapon, or
+     * return [original] if no weapon is selected
+     * or if [ChangeOnAction] does not contain [ChangeOnAction.ON_ATTACK].
+     *
+     * When we switch our item on the same tick as we attack,
+     * the cooldown progress is not updated.
+     */
+    fun getAttackSpeed(original: Double): Double {
+        debugParameter("Original Attack Speed") { original }
+
+        if (!running || ChangeOnAction.ON_ATTACK !in changeOnActions) {
+            return original
+        }
+
+        val itemStack = determineWeaponSlot(null)?.itemStack ?: return original
+        val itemAttackSpeed = itemStack.attackSpeed
+        debugParameter("Item") { itemStack.itemName.convertToString() }
+        debugParameter("Attack Speed") { itemAttackSpeed }
+
+        return itemAttackSpeed
     }
 
 }
