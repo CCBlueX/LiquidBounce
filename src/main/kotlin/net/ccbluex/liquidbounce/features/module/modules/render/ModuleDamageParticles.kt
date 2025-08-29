@@ -97,7 +97,8 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val now = System.currentTimeMillis()
-        particles.forEachIndexed { i, particle ->
+        val snapshot = particles.toList()
+        snapshot.forEachIndexed { i, particle ->
             val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
             val currentPos = particle.pos.add(displacement * displacementTransition.transform(progress).toDouble())

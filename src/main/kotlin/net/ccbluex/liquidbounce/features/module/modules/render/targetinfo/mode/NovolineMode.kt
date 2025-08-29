@@ -33,15 +33,15 @@ object NovolineMode : TargetInfoMode("Novoline") {
     }
 
     private fun determineTarget(): LivingEntity? {
-        val target =(ModuleKillAura.targetTracker.target
-            ?: ModuleAimbot.targetTracker.target)?.takeIf { it is PlayerEntity }
+        val target = (ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target)
+            ?.takeIf { it is PlayerEntity }
 
         return when {
             target != null -> target.also {
                 delayCounter = 0
                 lastTarget = it
             }
-            delayCounter < 10 && lastTarget != null -> lastTarget.also { delayCounter++ }
+            lastTarget != null && delayCounter++ < 10 -> lastTarget
             else -> null.also {
                 delayCounter = 0
                 lastTarget = null
@@ -50,67 +50,55 @@ object NovolineMode : TargetInfoMode("Novoline") {
     }
 
     private fun renderTargetHUD(ctx: DrawContext, target: LivingEntity?) {
-        if (target != null || (lastTarget != null && delayCounter < 10)) {
-            updateAnimationStates(target ?: lastTarget!!)
-        } else {
+        val activeTarget = target ?: lastTarget?.takeIf { delayCounter < 10 } ?: run {
             alpha = 0
             lastTarget = null
             easingHealth = 0f
             return
         }
 
+        updateAnimationStates(activeTarget)
         if (alpha <= 0) return
 
         val entity = lastTarget as? PlayerEntity ?: return
         val mc = net.minecraft.client.MinecraftClient.getInstance()
 
         val nameWidth = mc.textRenderer.getWidth(entity.name.string) * 0.3f
-        val width = 36f + 6f + nameWidth + 64f
-        val scaledWidth = mc.window.scaledWidth
-        val scaledHeight = mc.window.scaledHeight
+        val width = 106f + nameWidth
+        val x = mc.window.scaledWidth * ModuleTargetInfo.xOffsetRatio
+        val y = mc.window.scaledHeight * ModuleTargetInfo.yOffsetRatio
 
-        val x = scaledWidth * ModuleTargetInfo.xOffsetRatio
-        val y = scaledHeight * ModuleTargetInfo.yOffsetRatio
+        fun Color4b.fade() = withAlpha((a * alpha / 255f).toInt())
 
-        val bgColor = ModuleTargetInfo.backgroundColor.withAlpha(
-            (ModuleTargetInfo.backgroundColor.a * alpha / 255f).toInt())
-        val bdColor = ModuleTargetInfo.borderColor.withAlpha((
-            ModuleTargetInfo.borderColor.a * alpha / 255f).toInt())
-        val txtColor = ModuleTargetInfo.textColor.withAlpha((
-            ModuleTargetInfo.textColor.a * alpha / 255f).toInt())
+        ctx.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + 36).toInt(), ModuleTargetInfo.backgroundColor.fade().toARGB())
 
-        ctx.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + 36).toInt(), bgColor.toARGB())
+        listOf(
+            listOf(x - 1, y - 1, x + width + 1, y),
+            listOf(x - 1, y + 36, x + width + 1, y + 37),
+            listOf(x - 1, y, x, y + 36),
+            listOf(x + width, y, x + width + 1, y + 36)
+        ).forEach { (sx, sy, ex, ey) ->
+            ctx.fill(sx.toInt(), sy.toInt(), ex.toInt(), ey.toInt(), ModuleTargetInfo.borderColor.fade().toARGB())
+        }
 
-
-        ctx.fill((x - 1).toInt(), (y - 1).toInt(), (x + width + 1).toInt(), y.toInt(), bdColor.toARGB()) // 上
-        ctx.fill((x - 1).toInt(), (y + 36).toInt(), (x + width + 1).toInt(), (y + 37).toInt(), bdColor.toARGB()) // 下
-        ctx.fill((x - 1).toInt(), y.toInt(), x.toInt(), (y + 36).toInt(), bdColor.toARGB()) // 左
-        ctx.fill((x + width).toInt(), y.toInt(), (x + width + 1).toInt(), (y + 36).toInt(), bdColor.toARGB()) // 右
 
         drawHealthBar(ctx, entity, width, x, y)
-        drawPlayerHead(ctx, x, y)
-        drawText(ctx, entity, txtColor, width, x, y)
+        drawPlayerHead(ctx, x.toInt(), y.toInt())
+        drawText(ctx, entity, ModuleTargetInfo.textColor.fade(), width, x, y)
     }
 
     private fun updateAnimationStates(entity: LivingEntity) {
         val mc = net.minecraft.client.MinecraftClient.getInstance()
         val health = entity.getActualHealth(true)
         val max = (entity.maxHealth + entity.absorptionAmount).coerceAtLeast(1f)
-        val delta = mc.renderTickCounter.getTickDelta(true)
-
         if (max <= 0f) return
 
-        val smoothing = 0.2f
-        val fadeSmoothing = 0.1f
-        easingHealth += (health - easingHealth) * smoothing * delta
-        easingHealth = easingHealth.coerceIn(0f, max)
+        val delta = mc.renderTickCounter.getTickDelta(true)
+        easingHealth = (easingHealth + (health - easingHealth) * 0.2f * delta).coerceIn(0f, max)
+        previousEasingHealth = (previousEasingHealth + (easingHealth - previousEasingHealth) * 0.1f * delta).coerceIn(0f, max)
 
-
-        previousEasingHealth += (easingHealth - previousEasingHealth) * fadeSmoothing * delta
-        previousEasingHealth = previousEasingHealth.coerceIn(0f, max)
-        val target = determineTarget()
-        val targetAlpha = if (target  != null || delayCounter < 10) 255 else 0
-        alpha = (alpha + (targetAlpha - alpha) * smoothing * delta).toInt().coerceIn(0, 255)
+        val targetAlpha = if (determineTarget() != null || delayCounter < 10) 255 else 0
+        alpha = (alpha + (targetAlpha - alpha) * 0.2f * delta).toInt().coerceIn(0, 255)
     }
 
     @Suppress("LongParameterList")
@@ -166,7 +154,7 @@ object NovolineMode : TargetInfoMode("Novoline") {
         )
     }
 
-    private fun drawPlayerHead(ctx: DrawContext, x: Float, y: Float) {
+    private fun drawPlayerHead(ctx: DrawContext, x: Int, y: Int) {
         val target = lastTarget as? PlayerEntity ?: return
         val mc = net.minecraft.client.MinecraftClient.getInstance()
         val id = mc.skinProvider.getSkinTextures(target.gameProfile).texture()
@@ -181,8 +169,24 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
         val layer = Function<Identifier, RenderLayer> { RenderLayer.getGuiTextured(it) }
 
-        ctx.drawTexture(layer, id, (x + 6).toInt(), (y + 6).toInt(), 8f, 8f, 8, 8, 64, 64, alphaMask)
-        ctx.drawTexture(layer, id, (x + 6).toInt(), (y + 6).toInt(), 40f, 8f, 8, 8, 64, 64, alphaMask)
+        ctx.drawTexture(layer,
+            id, (x + 6), (y + 6),
+            8f,
+            8f,
+            8,
+            8,
+            64,
+            64,
+            alphaMask)
+        ctx.drawTexture(layer,
+            id, (x + 6), (y + 6),
+            40f,
+            8f,
+            8,
+            8,
+            64,
+            64,
+            alphaMask)
 
         ctx.matrices.pop()
     }

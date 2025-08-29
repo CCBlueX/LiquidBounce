@@ -6,8 +6,7 @@
     import {onMount} from "svelte";
     import ItemIndexView from "../../../common/ItemView/ItemIndexView.svelte";
     import {clientName} from "../../../../../util/Theme/ThemeManager";
-    import ItemStackDisplay from "../../../common/ItemView/ItemStackDisplay.svelte";
-    import ItemStackView from "../../../common/ItemView/ItemStackView.svelte";
+
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
     let hotbar: ItemStack[] = [];

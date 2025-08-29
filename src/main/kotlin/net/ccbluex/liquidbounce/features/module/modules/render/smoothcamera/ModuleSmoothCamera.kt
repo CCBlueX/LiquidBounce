@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraMotionMode
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraLerpMode
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.mode.SmoothCameraMotionMode.motion
@@ -68,5 +69,5 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER, aliase
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =
-        running && !(modes.activeChoice is SmoothCameraMotionMode && isFirstPerson())
+       running && !ModuleFreeLook.running && !(modes.activeChoice is SmoothCameraMotionMode && isFirstPerson())
 }
