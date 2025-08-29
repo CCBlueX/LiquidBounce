@@ -48,8 +48,8 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    internal fun onParentNewState(parentState: Boolean) {
-        if (parentState) {
+    internal fun updateChildState(state: Boolean) {
+        if (state) {
             this.activeChoice.enable()
         } else {
             this.activeChoice.disable()

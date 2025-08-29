@@ -46,7 +46,7 @@ abstract class ToggleableConfigurable(
     @ScriptApiRequired
     override var enabled by boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
-        .onChange(::onToggled)
+        .onChange { state -> onToggled(state, false) }
 
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
         return value
@@ -54,6 +54,16 @@ abstract class ToggleableConfigurable(
 
     override fun onToggled(state: Boolean): Boolean {
         if (!inGame) {
+            return state
+        }
+
+        return onToggled(state, true)
+    }
+
+    fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
+        // We cannot use [parent.running] because we are interested in the state of the parent,
+        // not if it is running. We do not care if we are the root.
+        if (!isParentUpdate && parent is Toggleable && !parent.enabled) {
             return state
         }
 
@@ -65,7 +75,7 @@ abstract class ToggleableConfigurable(
         }
 
         val state = super.onToggled(state)
-        updateChildState(state)
+        this@ToggleableConfigurable.updateChildState(state)
         return state
     }
 
@@ -97,7 +107,7 @@ private fun Configurable.updateChildState(state: Boolean) {
             } else if (!state && value.enabled) {
                 value.onToggled(false)
             }
-            is ChoiceConfigurable<*> -> value.onParentNewState(state)
+            is ChoiceConfigurable<*> -> value.updateChildState(state)
             is Configurable -> value.updateChildState(state)
         }
     }
