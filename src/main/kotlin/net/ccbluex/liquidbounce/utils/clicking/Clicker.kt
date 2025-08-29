@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.*
@@ -116,7 +117,8 @@ open class Clicker<T>(
             return 1
         }
 
-        if (itemCooldown?.isCooldownPassed(tick) == false) {
+        // We should not wait for item cooldown when our axe is going to break the shield
+        if (itemCooldown?.isCooldownPassed(tick) == false && !ModuleAutoWeapon.willBreakShield()) {
             return 0
         }
 
