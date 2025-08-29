@@ -54,8 +54,6 @@ class ChoiceConfigurable<T : Choice>(
         } else {
             this.activeChoice.disable()
         }
-
-        updateChildState(parentState)
     }
 
     override fun setByString(name: String) {

@@ -63,9 +63,9 @@ abstract class ToggleableConfigurable(
     fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
         // We cannot use [parent.running] because we are interested in the state of the parent,
         // not if it is running. We do not care if we are the root.
-        if (!isParentUpdate && parent is Toggleable && !parent.enabled) {
-            return state
-        }
+//        if (!isParentUpdate && parent is Toggleable && !parent.enabled) {
+//            return state
+//        }
 
         if (!state) {
             // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
@@ -99,13 +99,16 @@ abstract class ToggleableConfigurable(
  * All implementations of [Toggleable] with super class [Configurable]
  * should call this function in [Toggleable.onToggled].
  */
-internal fun Configurable.updateChildState(state: Boolean) {
+private fun Configurable.updateChildState(state: Boolean) {
     for (value in inner) {
         when (value) {
+            is Toggleable -> if (state && value.enabled) {
+                value.onToggled(true)
+            } else if (!state && value.enabled) {
+                value.onToggled(false)
+            }
             is ChoiceConfigurable<*> -> value.onParentNewState(state)
-            is ToggleableConfigurable -> value.onToggled(state, false)
             is Configurable -> value.updateChildState(state)
-            is Toggleable -> value.onToggled(state)
         }
     }
 }
