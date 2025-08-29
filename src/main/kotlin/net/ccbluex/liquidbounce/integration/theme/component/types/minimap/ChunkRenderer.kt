@@ -29,7 +29,6 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.MathHelper
 import net.minecraft.world.chunk.WorldChunk
 import org.joml.Vector2i
 import org.joml.component1
@@ -122,7 +121,7 @@ object ChunkRenderer {
                 val brightness =
                     if (higherOffsets.size < 2) {
                         220.0 / 255.0
-                    } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
+                    } else if (higherOffsetVec.x == 0 && higherOffsetVec.y == 0) {
                         130.0 / 255.0
                     } else {
                         val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)

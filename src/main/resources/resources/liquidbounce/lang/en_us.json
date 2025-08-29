@@ -547,6 +547,7 @@
   "liquidbounce.module.flagCheck.messages.forceRotate": "Force-Rotate",
   "liquidbounce.module.flagCheck.messages.invalid": "Invalid",
   "liquidbounce.module.freeCam.description": "Allows you to move the camera out of your body.",
+  "liquidbounce.module.smoothCamera.description": "Makes your camera move smoother.",
   "liquidbounce.module.freeLook.description": "Allows you to move the camera freely around your character.",
   "liquidbounce.module.freeze.description": "Allows you to freeze yourself in your current position without the server knowing.",
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s was successfully added to the friends list.",

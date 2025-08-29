@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
@@ -79,14 +80,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public abstract void setHealth(float health);
 
-
     @Shadow
     public abstract boolean isGliding();
 
     @Shadow
     protected abstract boolean canGlide();
 
-    /**
+  @Shadow
+  public abstract float getHealth();
+
+  @Shadow
+  public abstract float getMaxHealth();
+
+  /**
      * Disable [StatusEffects.LEVITATION] effect when [ModuleAntiLevitation] is enabled
      */
     @ModifyExpressionValue(
@@ -326,5 +332,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         previousIsGliding = gliding;
+    }
+
+    @Inject(method = "setHealth", at = @At("HEAD"))
+    private void hookSetHealth(float health, CallbackInfo callbackInfo) {
+        var oldHealth = this.getHealth();
+        var maxHealth = this.getMaxHealth();
+        var newHealth = MathHelper.clamp(health, 0.0F, maxHealth);
+
+        if (oldHealth != newHealth) {
+            EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
+        }
     }
 }
