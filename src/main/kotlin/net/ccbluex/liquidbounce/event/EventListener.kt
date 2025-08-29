@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 typealias Handler<T> = (T) -> Unit
 
@@ -59,6 +61,7 @@ interface EventListener {
      */
     fun unregister() {
         EventManager.unregisterEventHandler(this)
+        removeEventListenerScope()
 
         for (child in children()) {
             child.unregister()
@@ -71,21 +74,28 @@ inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
     noinline handler: Handler<T>
 ): EventHook<T> {
-    return EventManager.registerEventHook(T::class.java,
-        EventHook(this, handler, priority)
-    )
+    return EventManager.registerEventHook(T::class.java, EventHook(this, handler, priority))
+}
+
+inline fun <reified T : Event> EventListener.until(
+    priority: Short = 0,
+    crossinline handler: (T) -> Boolean
+): EventHook<T> {
+    lateinit var eventHook: EventHook<T>
+    eventHook = EventHook(this, {
+        if (!this.running || handler(it)) {
+            EventManager.unregisterEventHook(T::class.java, eventHook)
+        }
+    }, priority)
+    return EventManager.registerEventHook(T::class.java, eventHook)
 }
 
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
     crossinline handler: Handler<T>
-): EventHook<T> {
-    lateinit var eventHook: EventHook<T>
-    eventHook = EventHook(this, {
-        handler(it)
-        EventManager.unregisterEventHook(T::class.java, eventHook)
-    }, priority)
-    return EventManager.registerEventHook(T::class.java, eventHook)
+): EventHook<T> = until(priority) { event ->
+    handler(event)
+    true // This will unregister the handler after the first call
 }
 
 /**
@@ -122,4 +132,39 @@ fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
             sequence = null
         }
     }
+}
+
+/**
+ * Returns computed [ReadWriteProperty] based on the [accumulator] of specific event.
+ *
+ * The value of property will be updated on event received with [accumulator].
+ *
+ * Example:
+ * ```kotlin
+ * var ticksSinceEnabled by computedOn<GameTickEvent, Int>(0) { _, prev -> prev + 1 }
+ *
+ * fun enabled() { ticksSinceEnabled = 0 }
+ * ```
+ *
+ * @author MukjepScarlet
+ * @since 0.30.1
+ */
+inline fun <reified E : Event, V> EventListener.computedOn(
+    initialValue: V,
+    priority: Short = 0,
+    crossinline accumulator: (event: E, prev: V) -> V,
+): ReadWriteProperty<EventListener, V> = object : ReadWriteProperty<EventListener, V> {
+    @Volatile // Make this value visible to all threads
+    private var value = initialValue
+
+    @Suppress("unused") // May be useful?
+    private val eventHook = handler<E>(priority) { event ->
+        value = accumulator(event, value)
+    }
+
+    override fun getValue(thisRef: EventListener, property: KProperty<*>): V = value
+    override fun setValue(thisRef: EventListener, property: KProperty<*>, value: V) {
+        this.value = value
+    }
+    override fun toString(): String = "ComputedProperty<${E::class.java.simpleName}>($value)"
 }

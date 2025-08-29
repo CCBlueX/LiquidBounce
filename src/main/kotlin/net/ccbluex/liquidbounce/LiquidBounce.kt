@@ -26,13 +26,12 @@ import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.event.EventListener
@@ -54,7 +53,7 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -69,11 +68,8 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -107,9 +103,12 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
-        val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
+        val version = text("Version", GitInfo.version())
+            .immutable()
+        val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
+            .immutable()
+        val branch = text("Branch", GitInfo.branch())
+            .immutable()
 
         init {
             ConfigSystem.root(this)
@@ -325,12 +324,12 @@ object LiquidBounce : EventListener {
 
     /**
      * Prepares the GUI stage of the client.
-     * This will load [ThemeManager], as well as the [BrowserManager] and [ClientInteropServer].
+     * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
         // Load theme and component overlay
         ThemeManager
-        BrowserManager
+        BrowserBackendManager
 
         // Start Interop Server
         ClientInteropServer.start()
@@ -339,7 +338,7 @@ object LiquidBounce : EventListener {
         taskManager = TaskManager(scope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
-            BrowserManager.makeDependenciesAvailable(this)
+            BrowserBackendManager.makeDependenciesAvailable(this)
 
             // Initialize deep learning engine as task, because we cannot know if DJL will request
             // resources from the internet.
@@ -362,7 +361,7 @@ object LiquidBounce : EventListener {
             FontManager.createGlyphManager()
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
-        logger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
+        logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
 
         // Insert default components on HUD
         ComponentOverlay.insertDefaultComponents()
@@ -386,7 +385,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.storeAll()
 
         // Shutdown browser as last step
-        BrowserManager.stopBrowser()
+        BrowserBackendManager.stop()
     }
 
     /**

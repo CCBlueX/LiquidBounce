@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
@@ -46,6 +48,8 @@ import net.minecraft.util.Identifier
 import java.net.InetAddress
 import java.util.TreeSet
 import kotlin.collections.ArrayDeque
+import kotlin.random.Random
+import kotlin.time.Duration
 
 object ServerObserver : EventListener {
 
@@ -95,8 +99,7 @@ object ServerObserver : EventListener {
     var hostingInformation: IpInfoApi.IpData? = null
         private set
 
-    private var isCapturingCommandSuggestions = false
-    var plugins: TreeSet<String>? = null
+    var plugins: Set<String>? = null
         private set
 
     val formattedPluginList: List<Text>?
@@ -146,10 +149,30 @@ object ServerObserver : EventListener {
      * @see [net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket]
      * @see [net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins]
      */
-    fun captureCommandSuggestions() {
-        this.isCapturingCommandSuggestions = true
+    suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
-        network.sendPacket(RequestCommandCompletionsC2SPacket(0, "/"))
+        val completionId = Random.nextInt(0, 32767)
+        network.sendPacket(RequestCommandCompletionsC2SPacket(completionId, "/"))
+        /**
+         * Server sends a command suggestions packet with a list of commands.
+         * These commands are usually prefixed with the plugin name and a colon.
+         */
+        val packet = waitMatchesWithTimeout<PacketEvent>(timeout, priority = FIRST_PRIORITY) {
+            it.packet is CommandSuggestionsS2CPacket && it.packet.id == completionId
+        }?.packet ?: return false
+
+        packet as CommandSuggestionsS2CPacket
+
+        this.plugins = packet.suggestions.list.mapNotNullTo(sortedSetOf()) { cmd ->
+            val command = cmd.text.split(":")
+
+            if (command.size > 1) {
+                command[0].replace("/", "")
+            } else {
+                null
+            }
+        }
+        return !this.plugins.isNullOrEmpty()
     }
 
     suspend fun requestHostingInformation() {
@@ -170,14 +193,12 @@ object ServerObserver : EventListener {
 
     @Suppress("unused")
     private val packetObserver = handler<PacketEvent> { event ->
-        val packet = event.packet
-
-        when {
+        when (val packet = event.packet) {
             /**
              * The world time update packet should be sent once every second.
              * This allows us to calculate the TPS (ticks per second) of the server.
              */
-            packet is WorldTimeUpdateS2CPacket -> {
+            is WorldTimeUpdateS2CPacket -> {
                 if (wasDisconnected && intervals.isEmpty()) {
                     wasDisconnected = false
                     chronometer.reset()
@@ -194,7 +215,7 @@ object ServerObserver : EventListener {
                 }
 
                 val averageInterval = intervals.average()
-                mc.renderTaskQueue.add {
+                mc.execute {
                     tps = if (averageInterval > 0 && !averageInterval.isNaN()) {
                         (20.0 / (averageInterval / 1000.0)).coerceIn(0.0..20.0)
                     } else {
@@ -210,7 +231,7 @@ object ServerObserver : EventListener {
              *
              * @author nekosarekawaii
              */
-            packet is SelectKnownPacksS2CPacket -> {
+            is SelectKnownPacksS2CPacket -> {
                 for (knownPack in packet.knownPacks()) {
                     if (knownPack.isVanilla && knownPack.id() == "core") { // Works for 1.20.5+ servers
                         this.serverVersion = knownPack.version()
@@ -223,7 +244,7 @@ object ServerObserver : EventListener {
              * Server sents a hello packet with the server id and public key,
              * as well as if the server is cracked or not.
              */
-            packet is LoginHelloS2CPacket -> {
+            is LoginHelloS2CPacket -> {
                 // The Server ID is not often present and likely reserved for official servers.
                 if (packet.serverId.isNotEmpty()) {
                     this.serverId = packet.serverId
@@ -236,31 +257,14 @@ object ServerObserver : EventListener {
             }
 
             /**
-             * Server sends a command suggestions packet with a list of commands.
-             * These commands are usually prefixed with the plugin name and a colon.
-             */
-            packet is CommandSuggestionsS2CPacket && isCapturingCommandSuggestions -> {
-                this.isCapturingCommandSuggestions = false
-                this.plugins = packet.suggestions.list.mapNotNullTo(sortedSetOf()) { cmd ->
-                    val command = cmd.text.split(":")
-
-                    if (command.size > 1) {
-                        command[0].replace("/", "")
-                    } else {
-                        null
-                    }
-                }
-            }
-
-            /**
              * Watches for the payload channels that are being used by the server.
              */
-            packet is CustomPayloadS2CPacket -> {
+            is CustomPayloadS2CPacket -> {
                 val payload = packet.payload
                 payloadChannels.add(payload.id.id)
             }
 
-            packet is CommonPingS2CPacket -> if (isCapturingTransactions) {
+            is CommonPingS2CPacket -> if (isCapturingTransactions) {
                 transactions.add(packet.parameter)
                 if (transactions.size >= 5) {
                     ModuleAntiCheatDetect.completed()
@@ -268,7 +272,7 @@ object ServerObserver : EventListener {
                 }
             }
 
-            packet is GameJoinS2CPacket -> {
+            is GameJoinS2CPacket -> {
                 transactions.clear()
                 isCapturingTransactions = true
             }
@@ -292,8 +296,6 @@ object ServerObserver : EventListener {
         this.serverType = null
         this.payloadChannels.clear()
         this.transactions.clear()
-        this.isCapturingCommandSuggestions = false
-        this.isCapturingCommandSuggestions = false
     }
 
     /**

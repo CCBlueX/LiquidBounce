@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
@@ -129,12 +128,12 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             private val offset by int("Offset", 40, 30..70)
 
             @Suppress("unused")
-            private val renderHandler = handler<OverlayRenderEvent> {
+            private val renderHandler = handler<OverlayRenderEvent> { event ->
                 renderEnvironmentForGUI {
                     // MC-Rendering code for off-hand
 
                     val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
-                    val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
+                    val dc = event.context
                     val scaledWidth = dc.scaledWindowWidth
                     val scaledHeight = dc.scaledWindowHeight
                     val i: Int = scaledWidth / 2

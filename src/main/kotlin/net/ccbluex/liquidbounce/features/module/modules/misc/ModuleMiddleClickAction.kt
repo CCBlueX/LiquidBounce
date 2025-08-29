@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -54,7 +54,7 @@ object ModuleMiddleClickAction : ClientModule(
 
     private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
-    override fun disable() {
+    override fun onDisabled() {
         Pearl.disable()
     }
 

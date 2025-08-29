@@ -96,7 +96,7 @@ object HideAppearance : EventListener {
         if (isHidingNow) {
             IntegrationListener.restoreOriginalScreen()
         } else {
-            IntegrationListener.updateIntegrationBrowser()
+            IntegrationListener.update()
         }
 
         mc.updateWindowTitle()
@@ -106,9 +106,9 @@ object HideAppearance : EventListener {
     }
 
     @Suppress("unused")
-    private val keyHandler = handler<KeyboardKeyEvent> {
-        val keyCode = it.keyCode
-        val modifier = it.mods
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        val keyCode = event.keyCode
+        val modifier = event.mods
 
         if (inGame) {
             return@handler

@@ -22,7 +22,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -88,7 +88,7 @@ internal enum class InventoryRequirements(
     val testRequirement: (action: InventoryAction) -> Boolean
 ) : NamedChoice {
     NO_MOVEMENT("NoMovement", { _ ->
-        player.input.movementVector.lengthSquared() == 0.0F
+        player.input.movementVector.lengthSquared() == 0.0F && !player.jumping
     }),
 
     NO_ROTATION("NoRotation", { _ ->

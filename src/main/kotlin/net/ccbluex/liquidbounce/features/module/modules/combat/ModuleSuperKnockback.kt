@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -126,11 +127,15 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
             onCancellation {
                 cancelSprint = false
+                this@SprintTap.debugParameter("State") { "Allowing Sprint (Cancellation)" }
             }
 
+            this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
             waitUntil { !player.isSprinting && !player.lastSprinting }
+            this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
+            this@SprintTap.debugParameter("State") { "Allowing Sprint" }
             cancelSprint = false
         }
 
@@ -172,13 +177,18 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
             onCancellation {
                 cancelMovement = false
                 inSequence = false
+                this@WTap.debugParameter("State") { "Allowing Movement (Cancellation)" }
             }
 
             inSequence = true
+            this@WTap.debugParameter("State") { "Waiting for Movement Block" }
             waitTicks(ticksUntilMovementBlock.random())
+            this@WTap.debugParameter("State") { "Disallowing Movement" }
             cancelMovement = true
             waitUntil { !player.input.hasForwardMovement() }
+            this@WTap.debugParameter("State") { "Waiting for Allowed Movement" }
             waitTicks(ticksUntilAllowedMovement.random())
+            this@WTap.debugParameter("State") { "Allowing Movement" }
             cancelMovement = false
             inSequence = false
         }

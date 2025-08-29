@@ -28,7 +28,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.MathHelper
+import net.minecraft.world.chunk.WorldChunk
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
@@ -116,7 +116,7 @@ object ChunkRenderer {
                 val brightness =
                     if (higherOffsets.size < 2) {
                         220.0 / 255.0
-                    } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
+                    } else if (higherOffsetVec.x == 0 && higherOffsetVec.y == 0) {
                         130.0 / 255.0
                     } else {
                         val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)
@@ -148,11 +148,10 @@ object ChunkRenderer {
             }
         }
 
-        override fun chunkUpdate(
-            x: Int,
-            z: Int,
-        ) {
-            val chunkPos = ChunkPos(x, z)
+        override fun chunkUpdate(chunk: WorldChunk) {
+            val chunkPos = chunk.pos
+            val x = chunkPos.x
+            val z = chunkPos.z
 
             val chunkBordersToUpdate =
                 arrayOf(
@@ -191,14 +190,9 @@ object ChunkRenderer {
             }
         }
 
-        override fun clearChunk(
-            x: Int,
-            z: Int,
-        ) {
-            val chunkPos = ChunkPos(x, z)
-
-            heightmapManager.unloadChunk(chunkPos)
-            textureAtlasManager.deallocate(chunkPos)
+        override fun clearChunk(pos: ChunkPos) {
+            heightmapManager.unloadChunk(pos)
+            textureAtlasManager.deallocate(pos)
         }
 
         override fun clearAllChunks() {

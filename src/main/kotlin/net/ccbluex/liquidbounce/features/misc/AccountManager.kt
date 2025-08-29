@@ -24,15 +24,14 @@ import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.ListValueType
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.session.ProfileKeys
@@ -44,25 +43,26 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Suppress("TooManyFunctions")
 object AccountManager : Configurable("Accounts"), EventListener {
 
-    val accounts by value(name, mutableListOf<MinecraftAccount>(), listType = ListValueType.Account)
+    val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 
-    private var initialSession: SessionData? = null
+    private var initialSession: SessionData
 
-    private val logging = AtomicBoolean(false)
-
-    @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent> {
-        if (initialSession == null) {
-            initialSession = SessionData(mc.session, mc.sessionService, mc.profileKeys)
-        }
-    }
+    private val loggingIn = AtomicBoolean(false)
 
     init {
         ConfigSystem.root(this)
+
+        try {
+            initialSession = SessionData(mc.session, mc.sessionService, mc.profileKeys)
+            logger.info("Initial session saved: ${mc.session.username} (${mc.session.uuidOrNull})")
+        } catch (e: Exception) {
+            logger.error("Failed to save initial session", e)
+            initialSession = SessionData(mc.session, null, ProfileKeys.MISSING)
+        }
     }
 
     fun loginAccount(id: Int) {
-        if (!logging.compareAndSet(false, true)) {
+        if (!loggingIn.compareAndSet(false, true)) {
             EventManager.callEvent(AccountManagerLoginResultEvent(error = "Logging in already started!"))
             return
         }
@@ -72,7 +72,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
         loginDirectAccount(account)
-        logging.set(false)
+        loggingIn.set(false)
     }
 
     fun loginDirectAccount(account: MinecraftAccount) = try {

@@ -21,8 +21,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.ChatClient
 import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
@@ -42,8 +45,10 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     private var jwtToken by text("JwtToken", "")
 
+    private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
+
     private val chatClient = ChatClient()
-    private val prefix = Text.empty()
+    private val prefix: Text = Text.empty()
         .formatted(Formatting.RESET).formatted(Formatting.GRAY)
         .append(Text.literal(this.name).withColor(Formatting.BLUE))
         .formatted(Formatting.BOLD)
@@ -106,14 +111,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override fun enable() {
-        chatClient.connectAsync()
-        super.enable()
+    override suspend fun enabledEffect() {
+        chatClient.connect()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         chatClient.disconnect()
-        super.disable()
     }
 
     @Suppress("unused")
@@ -124,7 +127,9 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     @Suppress("unused")
     val repeatable = tickHandler {
         if (!chatClient.connected) {
-            chatClient.connectAsync()
+            waitFor(Dispatchers.IO) {
+                chatClient.connect()
+            }
 
             // Wait 60 seconds before retrying
             waitSeconds(60)
@@ -132,29 +137,38 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val sessionChange = handler<SessionEvent> {
+    val sessionChange = suspendHandler<SessionEvent> {
         chatClient.reconnect()
     }
 
     @Suppress("unused")
-    val handleChatMessage = handler<ClientChatMessageEvent> { event ->
-        when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT -> writeChat(
-                event.user.name.asText().formatted(Formatting.GRAY)
+    val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
+        fun prefix(): MutableText = when (event.chatGroup) {
+            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
+                event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
                     .append(" ▸ ".asText().formatted(Formatting.DARK_GRAY))
-                    .append(event.message.asText().formatted(Formatting.GRAY))
-            )
-            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT -> writeChat(
+            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
                 "[".asText().formatted(Formatting.DARK_GRAY)
-                    .append(event.user.name.asText().formatted(Formatting.BLUE))
+                    .append(
+                        event.user.name.asText().formatted(Formatting.BLUE).copyable(copyContent = event.message)
+                    )
                     .append("] ".asText().formatted(Formatting.DARK_GRAY))
-                    .append(event.message.asText().formatted(Formatting.GRAY))
-            )
+        }
+
+        writeChat(prefix().append(regular(event.message).copyable(copyContent = event.message)))
+
+        if (event.chatGroup !in autoTranslate) {
+            return@suspendHandler
+        }
+
+        val result = ModuleTranslation.translate(text = event.message)
+        if (result.isValid) {
+            writeChat(prefix().append(result.toResultText()))
         }
     }
 
     @Suppress("unused")
-    val handleIncomingJwtToken = handler<ClientChatJwtTokenEvent> { event ->
+    val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent> { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }

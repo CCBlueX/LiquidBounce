@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyInCombat.modes
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.OnlyOnPotionEffect.potionEffects
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hyl
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrix7
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
@@ -97,7 +98,9 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
         SpeedHylexLowHop(configurable),
         SpeedHylexGround(configurable),
 
-        SpeedBlocksMC(configurable)
+        SpeedBlocksMC(configurable),
+
+        SpeedMatrix7(configurable)
     )
 
     val modes = choices("Mode", 0, this::initializeSpeeds).apply(::tagBy)
@@ -118,13 +121,11 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             // prevents accessing player when it's null below
             // in case it was forgotten to be checked
             return when {
-                !super.running -> false
+                !(super.running || ModuleScaffold.running && ModuleScaffold.autoSpeed) -> false
                 !passesRequirements() -> false
                 OnlyInCombat.enabled && CombatManager.isInCombat -> false
                 OnlyOnPotionEffect.enabled && potionEffects.activeChoice.checkPotionEffects() -> false
-                else -> {
-                    true
-                }
+                else -> true
             }
         }
 

@@ -74,7 +74,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
-    override fun disable() {
+    override fun onDisabled() {
         placer.disable()
     }
 

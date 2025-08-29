@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
@@ -219,7 +219,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         placer.support.blocks.addAll(DEFAULT_BLOCKS)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         if (Features.CENTER in features) {
             CommandCenter.state = CenterHandlerState.APPLY_ON_NEXT_EVENT
         }
@@ -229,7 +229,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         centerPos = Vector2d(centerBlockPos.x, centerBlockPos.z)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         placer.disable()
         addExtraLayerBlocks = false
     }

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.deeplearn
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.event.EventListener
@@ -86,7 +86,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
 
         models.choices = choices.toMutableList()
         models.setByString(models.activeChoice.name)
-        ModuleClickGui.reloadView()
+        ModuleClickGui.reload()
     }
 
     /**

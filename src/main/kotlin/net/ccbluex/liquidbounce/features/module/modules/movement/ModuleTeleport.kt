@@ -47,7 +47,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = arr
     private var indicatedTeleport: Vec3d? = null
     private var teleportsToWait: Int = 0
 
-    override fun enable() {
+    override fun onEnabled() {
         if (indicatedTeleport == null) {
             chat(warning(message("useCommand")))
 
@@ -58,7 +58,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = arr
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         indicatedTeleport = null
         teleportsToWait = 0
     }

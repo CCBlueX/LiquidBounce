@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {ItemStack} from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
-    import type {PlayerInventory, PlayerInventoryEvent} from "../../../../integration/events";
+    import type {ClientPlayerInventoryEvent, PlayerInventory} from "../../../../integration/events";
     import ItemStackView from "./ItemStackView.svelte";
     import {onMount} from "svelte";
     import {getPlayerInventory} from "../../../../integration/rest";
@@ -12,7 +12,7 @@
         stacks = inventory.crafting;
     }
 
-    listen("clientPlayerInventory", (data: PlayerInventoryEvent) => {
+    listen("clientPlayerInventory", (data: ClientPlayerInventoryEvent) => {
         updateStacks(data.inventory);
     });
 

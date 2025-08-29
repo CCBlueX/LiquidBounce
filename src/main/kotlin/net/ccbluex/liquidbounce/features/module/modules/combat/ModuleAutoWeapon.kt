@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.blockedByShield
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.enchantment.Enchantments
@@ -135,7 +134,9 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
         // Sync selected slot right now,
         // we will not sync on this tick otherwise
-        interaction.syncSelectedSlot()
+        if (switchOn == 0) {
+            interaction.syncSelectedSlot()
+        }
 
         if (isOnSwitch && switchOn > 0) {
             event.cancelEvent()

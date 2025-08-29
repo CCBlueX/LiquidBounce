@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import com.mojang.blaze3d.systems.RenderSystem
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -58,7 +58,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
-    internal object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
+    private object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
         val alive by int("Alive", 900, 10..10000, "ms")
         val fade by boolean("Fade", true)
     }
@@ -70,7 +70,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     private val trails = IdentityHashMap<Entity, Trail>()
     private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
 
-    override fun disable() {
+    override fun onDisabled() {
         clear()
     }
 

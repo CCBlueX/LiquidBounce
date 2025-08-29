@@ -21,12 +21,13 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
-import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
@@ -35,19 +36,19 @@ import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
-import java.util.*
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
 typealias ValueListener<T> = (T) -> T
-
 typealias ValueChangedListener<T> = (T) -> Unit
+
+/**
+ * Order by name of [Value] (ignoreCase)
+ */
+val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
 /**
  * Value based on generics and support for readable names and descriptions.
@@ -58,10 +59,9 @@ open class Value<T : Any>(
     @Exclude val aliases: Array<out String> = emptyArray(),
     @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
-    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None,
 
     /**
-     * If true, the description won't be bound to any [Configurable].
+     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.nesting.Configurable].
      */
     @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
@@ -79,6 +79,12 @@ open class Value<T : Any>(
     @Exclude
     @ProtocolExclude
     private val changedListeners = mutableListOf<ValueChangedListener<T>>()
+
+    @Exclude
+    @ProtocolExclude
+    private val stateFlow = MutableStateFlow(inner)
+
+    fun asStateFlow(): StateFlow<T> = stateFlow
 
     /**
      * If true, value will not be included in generated public config
@@ -230,6 +236,7 @@ open class Value<T : Any>(
             apply(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it(currT) }
+            stateFlow.value = currT
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
@@ -279,42 +286,19 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.inner
 
-        set(
-            when (currValue) {
-                is List<*> -> {
-                    element.asJsonArray.mapTo(
-                        mutableListOf()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
+        var clazz: Class<*>? = currValue.javaClass
+        var r: T? = null
 
-                is HashSet<*> -> {
-                    element.asJsonArray.mapTo(
-                        HashSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
+        while (clazz != null && clazz != Any::class.java) {
+            try {
+                r = gson.fromJson(element, clazz) as T?
+                break
+            } catch (@Suppress("SwallowedException") e: ClassCastException) {
+                clazz = clazz.superclass
+            }
+        }
 
-                is Set<*> -> {
-                    element.asJsonArray.mapTo(
-                        TreeSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-
-                else -> {
-                    var clazz: Class<*>? = currValue.javaClass
-                    var r: T? = null
-
-                    while (clazz != null && clazz != Any::class.java) {
-                        try {
-                            r = gson.fromJson(element, clazz) as T?
-                            break
-                        } catch (@Suppress("SwallowedException") e: ClassCastException) {
-                            clazz = clazz.superclass
-                        }
-                    }
-
-                    r ?: error("Failed to deserialize value")
-                }
-            })
+        set(r ?: error("Failed to deserialize value"))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -326,133 +310,4 @@ open class Value<T : Any>(
         set(deserializer.deserializeThrowing(string) as T)
     }
 
-}
-
-/**
- * Ranged value adds support for closed ranges
- */
-class RangedValue<T : Any>(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: T,
-    @Exclude val range: ClosedRange<*>,
-    @Exclude val suffix: String,
-    valueType: ValueType
-) : Value<T>(name, aliases, defaultValue, valueType) {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun setByString(string: String) {
-        if (this.inner is ClosedRange<*>) {
-            val split = string.split("..")
-
-            require(split.size == 2)
-
-            val closedRange = this.inner as ClosedRange<*>
-
-            val newValue = when (closedRange.start) {
-                is Int -> split[0].toInt()..split[1].toInt()
-                is Long -> split[0].toLong()..split[1].toLong()
-                is Float -> split[0].toFloat()..split[1].toFloat()
-                is Double -> split[0].toDouble()..split[1].toDouble()
-                else -> error("unrecognised range value type")
-            }
-
-            set(newValue as T)
-        } else {
-            val translationFunction: (String) -> Any = when (this.inner) {
-                is Int -> String::toInt
-                is Long -> String::toLong
-                is Float -> String::toFloat
-                is Double -> String::toDouble
-                else -> error("unrecognised value type")
-            }
-
-            set(translationFunction(string) as T)
-        }
-    }
-
-}
-
-class BindValue(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: InputBind,
-) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
-    override fun setByString(string: String) {
-        get().bind(string)
-    }
-}
-
-class ChooseListValue<T : NamedChoice>(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: T,
-    @Exclude val choices: Array<T>
-) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
-
-    override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val name = element.asString
-
-        setByString(name)
-    }
-
-    override fun setByString(string: String) {
-        val newValue = choices.firstOrNull { it.choiceName == string }
-
-        if (newValue == null) {
-            throw IllegalArgumentException(
-                "ChooseListValue `${this.name}` has no option named $string" +
-                    " (available options are ${this.choices.joinToString { it.choiceName }})"
-            )
-        }
-
-        set(newValue)
-    }
-
-    @ScriptApiRequired
-    fun getChoicesStrings(): Array<String> {
-        return this.choices.mapArray { it.choiceName }
-    }
-
-}
-
-interface NamedChoice {
-    val choiceName: String
-}
-
-enum class ValueType(
-    val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
-    val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter
-) {
-    BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
-    FLOAT(HumanInputDeserializer.floatDeserializer), FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
-    INT(HumanInputDeserializer.intDeserializer), INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
-    TEXT(HumanInputDeserializer.textDeserializer), TEXT_ARRAY(HumanInputDeserializer.textArrayDeserializer),
-    COLOR(HumanInputDeserializer.colorDeserializer),
-    BLOCK(HumanInputDeserializer.blockDeserializer), BLOCKS(HumanInputDeserializer.blockListDeserializer),
-    ITEM(HumanInputDeserializer.itemDeserializer), ITEMS(HumanInputDeserializer.itemListDeserializer),
-    KEY(HumanInputDeserializer.keyDeserializer),
-    BIND,
-    VECTOR_I,
-    VECTOR_D,
-    CHOICE(completer = AutoCompletionProvider.choiceCompleter),
-    CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
-    INVALID,
-    PROXY,
-    CONFIGURABLE,
-    TOGGLEABLE,
-    ALIGNMENT,
-    WALLPAPER,
-}
-
-enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java),
-    String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java),
-    Proxy(net.ccbluex.liquidbounce.features.misc.proxy.Proxy::class.java),
-    Account(MinecraftAccount::class.java),
-    Enums(Enum::class.java),
-    None(null)
 }

@@ -51,7 +51,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
     private val trackedHotbarItems = Array<Item>(9) { Items.AIR }
     private val chronometer = Chronometer()
 
-    override fun enable() {
+    override fun onEnabled() {
         trackedHotbarItems.fill(Items.AIR)
     }
 

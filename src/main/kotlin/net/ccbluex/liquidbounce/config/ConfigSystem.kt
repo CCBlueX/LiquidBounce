@@ -24,9 +24,9 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.DynamicConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -118,7 +118,7 @@ object ConfigSystem {
     /**
      * Create a ZIP file of root configurable files
      */
-    fun backup(fileName: String, configurables: List<Configurable> = this.configurables) {
+    fun backup(fileName: String, configurables: Collection<Configurable> = this.configurables) {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(!zipFile.exists()) { "Backup file already exists" }
 
@@ -310,25 +310,6 @@ object ConfigSystem {
         }.onFailure {
             logger.error("Unable to deserialize value ${value.name}", it)
         }
-    }
-
-    inline fun autoComplete(begin: String, validator: (Configurable) -> Boolean = { true }): List<String> {
-        val parts = begin.split(",")
-        val matchingPrefix = parts.last()
-        val resultPrefix = parts.subList(0, parts.size - 1).joinToString(",") + ","
-        return configurables.filter { it.name.startsWith(matchingPrefix, true) && validator(it) }
-            .map { configurable ->
-                if (parts.size == 1) {
-                    configurable.name.lowercase()
-                } else {
-                    resultPrefix + configurable.name.lowercase()
-                }
-            }
-    }
-
-    fun parseConfigurablesFromParameter(name: String?): List<Configurable> {
-        if (name == null) return emptyList()
-        return name.split(",").mapNotNull { getConfigurableByName(it) }
     }
 
     fun getConfigurableByName(name: String): Configurable? {

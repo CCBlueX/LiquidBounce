@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.combat.EntityTargetingInfo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 
 @Nameable("attack")
 class AttackEntityEvent(
@@ -38,6 +39,9 @@ class AttackEntityEvent(
 
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
+
+@Nameable("entityHealthUpdate")
+class EntityHealthUpdateEvent(val entity: LivingEntity, val old: Float, val new: Float, val max: Float) : Event()
 
 @Nameable("tagEntityEvent")
 class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {

@@ -57,11 +57,12 @@ object RotationManager : EventListener {
      */
     private val rotationTarget
         get() = rotationTargetHandler.getActiveRequestValue()
-    private var rotationTargetHandler = RequestHandler<RotationTarget>()
+    private val rotationTargetHandler = RequestHandler<RotationTarget>()
 
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
     internal var previousRotationTarget: RotationTarget? = null
+        private set
 
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.

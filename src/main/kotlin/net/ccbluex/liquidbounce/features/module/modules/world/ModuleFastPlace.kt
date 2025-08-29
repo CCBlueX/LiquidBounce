@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.input.InputTracker.timeSinceLastPress
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ProjectileItem
@@ -34,17 +35,20 @@ import java.util.function.Predicate
  * Allows you to place blocks faster.
  */
 object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
-    private val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
+
+    private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")
     private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
+    private val startDelay by int("StartDelay", 0, 0..1000, "ms")
 
     @Suppress("unused")
     private val useCooldownHandler = handler<UseCooldownEvent> { event ->
         val mainHandItem = player.mainHandStack.item
         val offHandItem = player.offHandStack.item
+
         if (applyTo.any {
-            it.condition.test(mainHandItem) || it.condition.test(offHandItem)
-        }) {
-            event.cooldown = cooldown
+                it.condition.test(mainHandItem) || it.condition.test(offHandItem)
+            } && (startDelay <= 0 || mc.options.useKey.timeSinceLastPress >= startDelay)) {
+            event.cooldown = cooldown.random()
         }
     }
 

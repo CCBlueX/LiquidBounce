@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
@@ -52,11 +53,10 @@ object GameRenderTaskQueueEvent : Event()
 object TickPacketProcessEvent : Event()
 
 @Nameable("key")
-@WebSocketEvent
 class KeyEvent(
     val key: InputUtil.Key,
     val action: Int,
-) : Event()
+) : Event(), WebSocketEvent
 
 // Input events
 @Nameable("inputHandle")
@@ -95,8 +95,7 @@ class MouseRotationEvent(
 ) : CancellableEvent()
 
 @Nameable("keybindChange")
-@WebSocketEvent
-object KeybindChangeEvent : Event()
+object KeybindChangeEvent : Event(), WebSocketEvent
 
 @Nameable("keybindIsPressed")
 class KeybindIsPressedEvent(
@@ -122,10 +121,9 @@ class MinecraftAutoJumpEvent(
  */
 
 @Nameable("session")
-@WebSocketEvent
 class SessionEvent(
     val session: Session,
-) : Event()
+) : Event(), WebSocketEvent
 
 @Nameable("screen")
 class ScreenEvent(
@@ -133,23 +131,21 @@ class ScreenEvent(
 ) : CancellableEvent()
 
 @Nameable("chatSend")
-@WebSocketEvent
 class ChatSendEvent(
     val message: String,
-) : CancellableEvent()
+) : CancellableEvent(), WebSocketEvent
 
 @Nameable("chatReceive")
-@WebSocketEvent
 class ChatReceiveEvent(
     val message: String,
     val textData: Text,
     val type: ChatType,
     val applyChatDecoration: (Text) -> Text,
-) : CancellableEvent() {
-    enum class ChatType {
-        CHAT_MESSAGE,
-        DISGUISED_CHAT_MESSAGE,
-        GAME_MESSAGE,
+) : CancellableEvent(), WebSocketEvent {
+    enum class ChatType(override val choiceName: String) : NamedChoice {
+        CHAT_MESSAGE("ChatMessage"),
+        DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
+        GAME_MESSAGE("GameMessage"),
     }
 }
 
@@ -162,15 +158,13 @@ class ServerConnectEvent(
 ) : CancellableEvent()
 
 @Nameable("disconnect")
-@WebSocketEvent
-object DisconnectEvent : Event()
+object DisconnectEvent : Event(), WebSocketEvent
 
 @Nameable("overlayMessage")
-@WebSocketEvent
 class OverlayMessageEvent(
     val text: Text,
     val tinted: Boolean,
-) : Event()
+) : Event(), WebSocketEvent
 
 @Nameable("perspective")
 class PerspectiveEvent(

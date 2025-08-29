@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.lang
 
 import net.ccbluex.liquidbounce.config.gson.util.decode
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -40,6 +40,7 @@ object LanguageManager : Configurable("lang") {
         "de_de",
         "ja_jp",
         "zh_cn",
+        "zh_tw",
         "ru_ru",
         "ua_ua",
         "en_pt",

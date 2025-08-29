@@ -21,12 +21,13 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.block.Region
+import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 
-inline operator fun BlockPos.rangeTo(other: BlockPos) = Region(this, other)
+inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
 inline operator fun Vec3i.component1() = this.x
 inline operator fun Vec3i.component2() = this.y
@@ -57,6 +58,9 @@ inline operator fun Vec3d.minus(other: Vec3d): Vec3d {
 inline operator fun Vec3d.times(scalar: Double): Vec3d {
     return this.multiply(scalar)
 }
+
+val Vec3d.isLikelyZero: Boolean
+    get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6)
 
 inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
     Vec3d(

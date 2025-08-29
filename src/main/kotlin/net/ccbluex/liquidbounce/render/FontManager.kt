@@ -29,6 +29,13 @@ import java.io.File
 
 object FontManager {
 
+    private val STYLES = intArrayOf(
+        Font.BOLD,
+        Font.BOLD,
+        Font.ITALIC,
+        Font.BOLD or Font.ITALIC
+    )
+
     /**
      * As fallback, we can use a common font that is available on all systems.
      */
@@ -60,9 +67,11 @@ object FontManager {
     /**
      * All font faces that are known to the font manager.
      */
-    internal val fontFaces = mutableSetOf(
-        COMMON_FONT
-    )
+    internal val fontFaces = HashMap<String, FontFace>(8).apply { put(COMMON_FONT.name, COMMON_FONT) }
+
+    private fun addFontFace(fontFace: FontFace) {
+        fontFaces[fontFace.name] = fontFace
+    }
 
     /**
      * The active font renderer that all text rendering will be based on.
@@ -90,12 +99,12 @@ object FontManager {
     /**
      * Returns the font by the given name.
      */
-    internal fun fontFace(name: String) = fontFaces.associateBy { fontFace -> fontFace.name }[name]
+    internal fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
         glyphManager = FontGlyphPageManager(
-            baseFonts = fontFaces,
-            additionalFonts = setOf(CJK_FONT).filterNotNull().toSet()
+            baseFonts = fontFaces.values,
+            additionalFonts = setOfNotNull(CJK_FONT)
         )
     }
 
@@ -120,7 +129,7 @@ object FontManager {
                 return
             }
 
-            if (fontFaces.any { it.file == file }) {
+            if (fontFaces.values.any { it.file == file }) {
                 logger.warn("Font file ${file.absolutePath} is already loaded.")
                 return
             }
@@ -134,7 +143,7 @@ object FontManager {
             val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
             // In this case, we have only one style available, which is the plain style.
             fontFace.fillStyle(font, 0)
-            fontFaces += fontFace
+            addFontFace(fontFace)
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
         }
@@ -143,15 +152,9 @@ object FontManager {
     private fun systemFont(name: String): FontFace {
         val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
 
-        arrayOf(
-            Font.BOLD,
-            Font.BOLD,
-            Font.ITALIC,
-            Font.BOLD or Font.ITALIC
-        ).map { style ->
-            Font(name, style, DEFAULT_FONT_SIZE.toInt())
+        STYLES.forEachIndexed { index, style ->
+            val font = Font(name, style, DEFAULT_FONT_SIZE.toInt())
                 .deriveFont(DEFAULT_FONT_SIZE)
-        }.forEachIndexed { index, font ->
             fontFace.fillStyle(font, index)
         }
 
@@ -165,7 +168,6 @@ object FontManager {
          * The file of the font. If the font is a system font, this will be null.
          */
         val file: File? = null,
-        @Suppress("ArrayInDataClass")
         /**
          * Style of the font. If an element is null, fall back to `[0]`
          *
@@ -180,7 +182,8 @@ object FontManager {
         val styles: Array<FontId?> = arrayOfNulls(4)
     ) {
 
-        val renderer: FontRenderer by lazy {
+        // We only access it on the main thread so don't do synchronized
+        val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
             FontRenderer(this, glyphManager!!)
         }
 
@@ -195,9 +198,30 @@ object FontManager {
             styles[index] = FontId(index, font, metrics.height.toFloat(), metrics.ascent.toFloat())
         }
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is FontFace) return false
+
+            if (size != other.size) return false
+            if (name != other.name) return false
+            if (file != other.file) return false
+            if (!styles.contentEquals(other.styles)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = size.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + (file?.absolutePath?.hashCode() ?: 0)
+            result = 31 * result + styles.contentHashCode()
+            return result
+        }
+
     }
 
-    class FontId(
+    @JvmRecord
+    data class FontId(
         val style: Int,
         val awtFont: Font,
         val height: Float,

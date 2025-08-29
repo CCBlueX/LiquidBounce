@@ -28,8 +28,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 
-@ConsistentCopyVisibility
-data class Nametag private constructor(
+class Nametag private constructor(
     val entity: Entity,
     /**
      * The text to render as nametag
@@ -38,10 +37,11 @@ data class Nametag private constructor(
     /**
      * The items that should be rendered above the name tag
      */
-    val items: List<ItemStack?>
+    val items: List<ItemStack>
 ) {
 
     var position: Vec3? = null
+        private set
 
     constructor(entity: Entity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
 
@@ -58,7 +58,7 @@ data class Nametag private constructor(
          * Creates a list of items that should be rendered above the name tag. Currently, it is the item in main hand,
          * the item in off-hand (as long as it exists) and the armor items.
          */
-        private fun createItemList(entity: Entity): List<ItemStack?> {
+        private fun createItemList(entity: Entity): List<ItemStack> {
             if (entity !is LivingEntity) {
                 return emptyList()
             }

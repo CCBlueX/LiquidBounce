@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
@@ -79,14 +80,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public abstract void setHealth(float health);
 
-
     @Shadow
     public abstract boolean isGliding();
 
     @Shadow
     protected abstract boolean canGlide();
 
-    /**
+  @Shadow
+  public abstract float getHealth();
+
+  @Shadow
+  public abstract float getMaxHealth();
+
+  /**
      * Disable [StatusEffects.LEVITATION] effect when [ModuleAntiLevitation] is enabled
      */
     @ModifyExpressionValue(
@@ -139,14 +145,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
+    @Unique
+    private PlayerJumpEvent jumpEvent;
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
 
-        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-        EventManager.INSTANCE.callEvent(jumpEvent);
+        jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(getJumpVelocity(), this.getYaw()));
         if (jumpEvent.isCancelled()) {
             ci.cancel();
         }
@@ -154,16 +162,28 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
     private float hookJumpEvent(float original) {
-        if (((Object) this) != MinecraftClient.getInstance().player) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
             return original;
         }
 
-        final var jumpEvent = EventManager.INSTANCE.callEvent(new PlayerJumpEvent(original));
         return jumpEvent.getMotion();
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    private float hookJumpYaw(float original) {
+        // Replaces ((Object) this) != MinecraftClient.getInstance().player
+        if (jumpEvent == null) {
+            return original;
+        }
+
+        return jumpEvent.getYaw();
     }
 
     @Inject(method = "jump", at = @At("RETURN"))
     private void hookAfterJumpEvent(CallbackInfo ci) {
+        jumpEvent = null;
+
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
@@ -312,5 +332,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         previousIsGliding = gliding;
+    }
+
+    @Inject(method = "setHealth", at = @At("HEAD"))
+    private void hookSetHealth(float health, CallbackInfo callbackInfo) {
+        var oldHealth = this.getHealth();
+        var maxHealth = this.getMaxHealth();
+        var newHealth = MathHelper.clamp(health, 0.0F, maxHealth);
+
+        if (oldHealth != newHealth) {
+            EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
+        }
     }
 }
