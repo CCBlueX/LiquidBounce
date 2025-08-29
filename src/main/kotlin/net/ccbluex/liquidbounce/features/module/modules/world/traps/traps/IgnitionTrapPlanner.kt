@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
@@ -139,7 +140,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     ): List<BlockPos> {
         val offsets = mutableListOf<DoubleLongPair>()
 
-        startBox.collidingRegion.forEach { offset ->
+        startBox.collidingRegion.iterate().forEach { offset ->
             val bp = offsetPos.add(offset)
 
             val bb = Box(offset)

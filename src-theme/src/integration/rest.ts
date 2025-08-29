@@ -6,17 +6,19 @@ import type {
     ClientUpdate,
     Component,
     ConfigurableSetting,
+    FileSelectDialog,
+    FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
     MinecraftKeybind,
-    RegistryItem,
     Module,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
     Protocol,
     Proxy,
+    RegistryItem,
     Server,
     Session,
     VirtualScreen,
@@ -133,6 +135,18 @@ export async function getPlayerData(): Promise<PlayerData> {
     return data;
 }
 
+export async function openFileDialog(body: FileSelectDialog): Promise<FileSelectResult> {
+    const response = await fetch(`${API_BASE}/client/fileDialog`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return await response.json();
+}
+
 export async function getPlayerInventory(): Promise<PlayerInventory> {
     const response = await fetch(`${API_BASE}/client/player/inventory`);
     const data: PlayerInventory = await response.json();
@@ -184,6 +198,16 @@ export async function browse(target: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({target})
+    });
+}
+
+export async function browsePath(path: string) {
+    await fetch(`${API_BASE}/client/browsePath`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({path})
     });
 }
 
@@ -291,9 +315,10 @@ export async function setSelectedProtocol(protocol: Protocol) {
 }
 
 export async function restoreSession() {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/restore`, {
         method: "POST",
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function orderAccounts(order: number[]) {
@@ -387,29 +412,29 @@ export async function loginToAccount(id: number) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
-    }).finally(() => {
-        isLoggingIn.set(false);
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToCrackedAccount(username: string, online: boolean) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({username, online})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function directLoginToSessionAccount(token: string) {
+    isLoggingIn.set(true);
     await fetch(`${API_BASE}/client/account/login/session`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({token})
-    });
+    }).finally(() => isLoggingIn.set(false));
 }
 
 export async function getAccounts(): Promise<Account[]> {

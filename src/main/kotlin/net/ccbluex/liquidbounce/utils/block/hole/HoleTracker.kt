@@ -22,12 +22,17 @@ import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
-import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.kotlin.getValue
+import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
+import net.ccbluex.liquidbounce.utils.math.iterate
+import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.size
+import net.ccbluex.liquidbounce.utils.math.toBlockBox
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.registry.Registries
+import net.minecraft.util.math.BlockBox
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Direction
@@ -62,24 +67,24 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         // Invalidate old ones
         if (state.isAir) {
             // if one of the neighbor blocks becomes air, invalidate the hole
-            holes.removeIf { it.positions.any { p -> p.getManhattanDistance(pos) == 1 } }
+            holes.removeIf { it.positions.iterate().any { p -> p.getManhattanDistance(pos) == 1 } }
         } else {
             holes.removeIf { pos in it.blockInvalidators }
         }
 
         // Check new ones
-        val region = Region.quadAround(pos, 2, 3)
+        val region = pos.expendToBlockBox(2, 3, 2)
         invalidate(region)
         region.cachedUpdate()
     }
 
-    private fun invalidate(region: Region) {
+    private fun invalidate(region: BlockBox) {
         holes.removeIf { it.positions.intersects(region) }
     }
 
-    @Suppress("CognitiveComplexMethod", "LongMethod")
-    fun Region.cachedUpdate() {
-        val buffer = BlockStateBuffer(volume)
+    @Suppress("CognitiveComplexMethod", "LongMethod", "LoopWithTooManyJumpStatements")
+    fun BlockBox.cachedUpdate() {
+        val buffer = BlockStateBuffer(size)
 
         val mutableLocal = BlockPos.Mutable()
 
@@ -87,17 +92,17 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
 
         val holesInRegion = if (holes.size >= 32) {
             holes.subSet(
-                Hole(Hole.Type.ONE_ONE, Region.from(mutableLocal.set(start, -2, -2, -2))), true,
-                Hole(Hole.Type.ONE_ONE, Region.from(mutableLocal.set(endInclusive, 2, 2, 2))), true
+                Hole(Hole.Type.ONE_ONE, BlockBox(mutableLocal.set(minX - 2, minY - 2, minZ - 2))), true,
+                Hole(Hole.Type.ONE_ONE, BlockBox(mutableLocal.set(maxX + 2, maxY + 2, maxZ + 2))), true
             )
         } else {
             holes
         }
 
         // Only check positions in this chunk (pos is BlockPos.Mutable)
-        forEach { pos ->
+        for (pos in this) {
             if (pos.y >= topY || holesInRegion.any { pos in it } || !buffer.checkSameXZ(pos)) {
-                return@forEach
+                continue
             }
 
             val surroundings = Direction.HORIZONTAL.filterTo(ArrayList(4)) { direction ->
@@ -113,7 +118,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                         cached == INDESTRUCTIBLE
                     }
 
-                    holes += Hole(Hole.Type.ONE_ONE, Region.from(pos), bedrockOnly)
+                    holes += Hole(Hole.Type.ONE_ONE, BlockBox(pos), bedrockOnly)
                 }
                 // 1*2
                 3 -> {
@@ -121,7 +126,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     val another = pos.offset(airDirection)
 
                     if (!buffer.checkSameXZ(another)) {
-                        return@forEach
+                        continue
                     }
 
                     val airOpposite = airDirection.opposite
@@ -132,7 +137,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     }
 
                     if (buffer.checkSurroundings(another, checkDirections)) {
-                        holes += Hole(Hole.Type.ONE_TWO, Region(pos, another))
+                        holes += Hole(Hole.Type.ONE_TWO, BlockBox.create(pos, another))
                     }
                 }
                 // 2*2
@@ -140,18 +145,18 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     val (direction1, direction2) = Direction.HORIZONTAL.filterTo(ArrayList(2)) { it !in surroundings }
 
                     if (!buffer.checkState(mutableLocal.set(pos, direction1), direction1, direction2.opposite)) {
-                        return@forEach
+                        continue
                     }
 
                     if (!buffer.checkState(mutableLocal.set(pos, direction2), direction2, direction1.opposite)) {
-                        return@forEach
+                        continue
                     }
 
                     if (!buffer.checkState(mutableLocal.move(direction1), direction1, direction2)) {
-                        return@forEach
+                        continue
                     }
 
-                    holes += Hole(Hole.Type.TWO_TWO, Region(pos, mutableLocal))
+                    holes += Hole(Hole.Type.TWO_TWO, BlockBox.create(pos, mutableLocal))
                 }
             }
         }
@@ -209,7 +214,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     }
 
     override fun chunkUpdate(chunk: WorldChunk) {
-        val region = Region.from(chunk)
+        val region = chunk.toBlockBox()
         if (region.intersects(HoleManager.movableRegionScanner.currentRegion)) {
             invalidate(region)
             region.cachedUpdate()
@@ -217,7 +222,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     }
 
     override fun clearChunk(pos: ChunkPos) {
-        invalidate(Region.from(pos))
+        invalidate(pos.toBlockBox())
     }
 
     override fun clearAllChunks() {

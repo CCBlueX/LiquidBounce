@@ -21,9 +21,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import net.ccbluex.liquidbounce.api.core.withScope
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,13 +42,14 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         "loyisa.cn",
         "anticheat-test.com"
     )
+    @Volatile
     private var isScheduled = false
 
     init {
         doNotIncludeAlways()
     }
 
-    override fun onEnabled() {
+    override suspend fun enabledEffect() {
         val currentServerEntry = mc.currentServerEntry
 
         if (currentServerEntry == null) {
@@ -58,10 +60,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        withScope {
-            loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
-        }
-        super.onEnabled()
+        loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
     }
 
     @Suppress("unused")
@@ -73,7 +72,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         // This will stop us from connecting to the server right away
         event.cancelEvent()
 
-        withScope {
+        eventListenerScope.launch {
             try {
                 isScheduled = true
                 val address = event.serverInfo.address.dropPort().rootDomain()

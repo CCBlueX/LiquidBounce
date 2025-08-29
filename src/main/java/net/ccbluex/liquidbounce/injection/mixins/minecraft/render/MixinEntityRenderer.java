@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
+import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
@@ -102,7 +103,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     private void disableDuplicateNametagsAndInjectMobOwners(S state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         // Don't render nametags
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-        if (ModuleNametags.INSTANCE.getRunning() && ModuleNametags.shouldRenderNametag(entity)) {
+        if (ModuleNametags.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
             ci.cancel();
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 202 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.gson.adapter
 
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
+package net.ccbluex.liquidbounce.features.module.modules.movement.noweb
 
-object BlockAdapter : IdentifierAsStringAdapter<Block>(Registries.BLOCK)
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb.modes
+import net.minecraft.util.math.BlockPos
+
+abstract class NoWebMode(name: String) : Choice(name) {
+
+    override val parent: ChoiceConfigurable<NoWebMode>
+        get() = modes
+
+    abstract fun handleEntityCollision(pos: BlockPos): Boolean
+}

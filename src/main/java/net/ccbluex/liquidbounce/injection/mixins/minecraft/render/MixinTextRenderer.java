@@ -39,12 +39,7 @@ public abstract class MixinTextRenderer {
 
     @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))
     private boolean injectNameProtectB(OrderedText orderedText, CharacterVisitor visitor) {
-        if (ModuleNameProtect.INSTANCE.getRunning()) {
-            final OrderedText wrapped = new ModuleNameProtect.NameProtectOrderedText(orderedText);
-            return wrapped.accept(visitor);
-        }
-
-        return orderedText.accept(visitor);
+        return ModuleNameProtect.INSTANCE.wrap(orderedText).accept(visitor);
     }
 
     @ModifyArg(method = "getWidth(Ljava/lang/String;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Ljava/lang/String;)F"), index = 0)
@@ -60,11 +55,7 @@ public abstract class MixinTextRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Lnet/minecraft/text/OrderedText;)F"),
             index = 0)
     private OrderedText injectNameProtectWidthB(OrderedText text) {
-        if (ModuleNameProtect.INSTANCE.getRunning()) {
-            return new ModuleNameProtect.NameProtectOrderedText(text);
-        }
-
-        return text;
+        return ModuleNameProtect.INSTANCE.wrap(text);
     }
 
 }

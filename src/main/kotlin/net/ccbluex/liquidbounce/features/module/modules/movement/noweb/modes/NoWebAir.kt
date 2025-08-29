@@ -17,9 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.adapter
+package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
+import net.minecraft.util.math.BlockPos
 
-object ItemAdapter : IdentifierAsStringAdapter<Item>(Registries.ITEM)
+/**
+ * No collision with cobwebs
+ */
+object NoWebAir : NoWebMode("Air") {
+    override fun handleEntityCollision(pos: BlockPos) = true
+}

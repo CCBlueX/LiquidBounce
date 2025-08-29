@@ -32,134 +32,103 @@ export type ModuleSetting =
     | TextSetting
     | BindSetting
     | VectorSetting
-    | KeySetting;
+    | KeySetting
+    | FileSetting
+    | CurveSetting;
 
-export interface BlocksSetting {
-    valueType: string;
-    name: string;
-    value: string[];
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface KeySetting {
-    valueType: string;
-    name: string;
-    value: string;
+export interface FileSelectResult {
+    file: File | undefined;
 }
 
-export interface BindSetting {
+export interface Setting<V> {
     valueType: string;
     name: string;
-    value: {
-        boundKey: string;
-        action: string;
-    };
-    defaultValue: {
-        boundKey: string;
-        action: string;
-    };
+    value: V;
 }
 
-export interface TextSetting {
-    valueType: string;
-    name: string;
-    value: string;
+export interface FileSetting extends Setting<File> {
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface VectorSetting {
-    valueType: string;
-    name: string;
-    value: Vec3;
+export interface CurveSetting extends Setting<Vector2f[]> {
+    xAxis: {
+        label: string;
+        range: Range;
+    },
+    yAxis: {
+        label: string;
+        range: Range;
+    }
+    tension: number;
 }
 
-export interface ColorSetting {
-    valueType: string;
-    name: string;
-    value: number;
+export interface BlocksSetting extends Setting<string[]> {
 }
 
-export interface BooleanSetting {
-    valueType: string;
-    name: string;
-    value: boolean;
+export interface KeySetting extends Setting<string> {
 }
 
-export interface FloatSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface BindSetting extends Setting<InputBind> {
+    defaultValue: InputBind;
+}
+
+export interface TextSetting extends Setting<string> {
+}
+
+export interface VectorSetting extends Setting<Vec3> {
+}
+
+export interface ColorSetting extends Setting<number> {
+}
+
+export interface BooleanSetting extends Setting<boolean> {
+}
+
+export interface FloatSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface FloatRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface FloatRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface IntSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface IntRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface ChoiceSetting {
-    valueType: string;
-    name: string;
+export interface ChoiceSetting extends Setting<ModuleSetting[]> {
     active: string;
     choices: { [name: string]: ModuleSetting }
-    value: ModuleSetting[];
 }
 
-export interface ChooseSetting {
-    valueType: string;
-    name: string;
+export interface ChooseSetting extends Setting<string> {
     choices: string[];
-    value: string;
 }
 
-export interface MultiChooseSetting {
-    valueType: string;
-    name: string;
+export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
-    value: string[];
     canBeNone: boolean;
 }
 
-export interface ListSetting {
-    valueType: string;
-    name: string;
-    value: string[];
+export interface ListSetting extends Setting<string[]> {
     innerValueType: string;
 }
 
@@ -177,16 +146,15 @@ export interface NamedItem {
     icon: string | undefined;
 }
 
-export interface ConfigurableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface ConfigurableSetting extends Setting<ModuleSetting[]> {
 }
 
-export interface TogglableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface TogglableSetting extends Setting<ModuleSetting[]> {
+}
+
+export interface InputBind {
+    boundKey: string;
+    action: "Toggle" | "Hold";
 }
 
 export interface PersistentStorageItem {
@@ -381,7 +349,8 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
@@ -436,4 +405,14 @@ export interface Screen {
 export interface RegistryItem {
     name: string;
     icon: string | undefined;
+}
+
+export interface Range {
+    from: number;
+    to: number;
+}
+
+export interface Vector2f {
+    x: number;
+    y: number;
 }
