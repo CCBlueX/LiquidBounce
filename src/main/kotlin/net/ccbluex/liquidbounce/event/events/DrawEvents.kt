@@ -56,6 +56,7 @@ class DrawOutlinesEvent(
      */
     fun markDirty() {
         this.dirtyFlag = true
+
     }
 
     enum class OutlineType {

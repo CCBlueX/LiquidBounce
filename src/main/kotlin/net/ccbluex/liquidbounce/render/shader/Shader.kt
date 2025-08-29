@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.platform.GlConst
-import com.mojang.blaze3d.platform.GlStateManager
+import com.mojang.blaze3d.opengl.GlStateManager
 import java.io.Closeable
 
 open class Shader(vertex: String, fragment: String, private val uniforms: Array<UniformProvider> = emptyArray()) :
