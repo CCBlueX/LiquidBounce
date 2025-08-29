@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 class ItemCooldown<T>(module: T) : ToggleableConfigurable(module, "ItemCooldown", true, aliases = arrayOf("Cooldown"))
@@ -30,9 +31,26 @@ class ItemCooldown<T>(module: T) : ToggleableConfigurable(module, "ItemCooldown"
         1.0f..1.0f, 0.0f..2.0f
     )
 
+    private val ignoreOnShieldBreak by boolean("IgnoreOnShieldBreak", true)
+    private val ignoreOnMaceSmash by boolean("IgnoreOnMaceSmash", true)
+
     private var nextCooldown = minimumCooldown.random()
 
-    fun isCooldownPassed(ticks: Int = 0) = !this.enabled || cooldownProgress(ticks) >= nextCooldown
+    fun isCooldownPassed(ticks: Int = 0): Boolean {
+        if (!this.enabled) {
+            return true
+        }
+
+        if (ignoreOnShieldBreak && ModuleAutoWeapon.willShieldBreak) {
+            return true
+        }
+
+        if (ignoreOnMaceSmash && ModuleAutoWeapon.willMaceSmash) {
+            return true
+        }
+
+        return cooldownProgress(ticks) >= nextCooldown
+    }
 
     /**
      * Calculates the current cooldown progress.

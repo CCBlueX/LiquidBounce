@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.againstShield
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.prepare
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
@@ -55,7 +56,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
      * which is covered by the [againstShield] weapon type.
      */
     private val preferredWeapon by enumChoice("Preferred", WeaponType.SWORD)
-    private val againstShield by enumChoice("BlockedByShield", WeaponType.AXE)
+    private val autoShieldBreak by boolean("AutoShieldBreak", true)
+    private val autoMace by boolean("AutoMace", true)
 
     @Suppress("unused")
     private enum class WeaponType(
@@ -68,8 +70,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         MACE("Mace", { it.itemStack.item is MaceItem }),
 
         /**
-         * Do not prefer any weapon type, this is useful to only
-         * use the [againstShield] weapon type.
+         * Do not prefer any weapon type. This is useful if you only
+         * want to make use of either [autoShieldBreak] or [autoMace].
          */
         NONE("None", { false });
     }
@@ -100,19 +102,40 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     /**
      * Check if the attack will break the shield
      */
-    fun willBreakShield(): Boolean {
-        if (!this.running || isOlderThanOrEqual1_8) {
-            return false
+    val willShieldBreak: Boolean
+        get() {
+            if (isOlderThanOrEqual1_8) {
+                return false
+            }
+
+            // If we have an axe in our main hand, we will break the shield
+            if (player.mainHandStack.item is AxeItem) {
+                return true
+            }
+
+            // If we are not going to switch to an axe, we will not break the shield
+            return determineWeaponSlot(null, enforceShield = true)?.itemStack?.item is AxeItem
         }
 
-        // If we have an axe in our main hand, we will break the shield
-        if (player.mainHandStack.item is AxeItem) {
-            return true
+    /**
+     * Check if the attack will mace smash
+     */
+    val willMaceSmash: Boolean
+        get() {
+            if (!canMaceSmash) {
+                return false
+            }
+
+            if (player.mainHandStack.item is MaceItem) {
+                return true
+            }
+
+            return determineWeaponSlot(null)?.itemStack?.item is MaceItem
         }
 
-        // If we are not going to switch to an axe, we will not break the shield
-        return determineWeaponSlot(null, enforceShield = true)?.itemStack?.item is AxeItem
-    }
+    // https://minecraft.wiki/w/Mace#Falling
+    private val canMaceSmash
+        get() = !isOlderThanOrEqual1_8 && MaceItem.shouldDealAdditionalDamage(player)
 
     @Suppress("unused")
     private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
@@ -166,17 +189,22 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
-        val blockedByShield = enforceShield || !isOlderThanOrEqual1_8 &&
-            target?.blockedByShield(world.damageSources.playerAttack(player)) == true
+        val requiresShield = autoShieldBreak && (enforceShield || !isOlderThanOrEqual1_8 &&
+            target?.blockedByShield(world.damageSources.playerAttack(player)) == true)
+        val requiresMace = autoMace && canMaceSmash
 
         val bestSlot = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .filter(
+            .filter { itemFacet ->
                 when {
-                    blockedByShield -> againstShield.filter
-                    else -> preferredWeapon.filter
+                    // A mace's smash attack cannot be blocked by a shield
+                    requiresMace && itemFacet.itemStack.item is MaceItem -> true
+                    // An axe will stun the target if it is blocking with a shield
+                    requiresShield && itemFacet.itemStack.item is AxeItem -> true
+                    // Fall back to a preferred weapon when no special case applies
+                    else -> preferredWeapon.filter(itemFacet)
                 }
-            )
+            }
             .maxOrNull()
 
         return bestSlot?.itemSlot as HotbarItemSlot?

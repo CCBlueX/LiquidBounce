@@ -48,7 +48,7 @@ object KillAuraTargetTracker : TargetTracker() {
             return true
         }
 
-        if (player.mainHandStack.item is AxeItem || ModuleAutoWeapon.willBreakShield()) {
+        if (player.mainHandStack.item is AxeItem || ModuleAutoWeapon.willShieldBreak) {
             return true
         }
 
