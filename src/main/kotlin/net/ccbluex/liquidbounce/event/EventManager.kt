@@ -219,7 +219,7 @@ object EventManager {
             runCatching {
                 eventHook.handler(event)
             }.onFailure {
-                logger.error("Exception while executing handler.", it)
+                logger.error("Exception while executing handler of ${eventHook.handlerClass}.", it)
             }
         }
         event.isCompleted = true
