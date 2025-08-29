@@ -35,7 +35,7 @@
   .vignette {
     position: absolute;
     inset: 0;
-    background: url('/Vignette.png') center / 100% 100%;
+    background: url('/img/Vignette.png') center / 100% 100%;
     z-index: -1;
     pointer-events: none;
   }

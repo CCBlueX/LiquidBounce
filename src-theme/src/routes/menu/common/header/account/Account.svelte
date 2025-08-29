@@ -299,7 +299,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../../colors";
+    @use "../../../../../colors" as *;;
 
   $border-radius: 12px;
   $transition-speed: 0.2s;

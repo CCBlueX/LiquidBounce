@@ -288,7 +288,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors";
+  @use "../../../colors" as *;
 
   @function gray($color) {
     @return rgb($color, $color, $color);

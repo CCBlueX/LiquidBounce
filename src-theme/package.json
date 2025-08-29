@@ -7,12 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tsconfig/svelte": "^5.0.4",
+    "@types/howler": "^2.2.12",
     "@types/lodash": "^4.17.20",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "sass": "^1.70.0",
     "svelte": "^5.2.7",
     "svelte-check": "^4.1.0",

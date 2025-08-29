@@ -12,7 +12,7 @@
 </div>
 
 <style lang="scss">
-  @import '../../../../colors';
+    @use "../../../../colors" as *;;
 
   :root {
     --primary-color-rgb: var(--primary-color-rgb);

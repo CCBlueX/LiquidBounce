@@ -149,7 +149,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .hidden {
     display: none;

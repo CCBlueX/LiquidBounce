@@ -114,7 +114,7 @@
 
 
 <style lang="scss">
-  @import "../../../../../colors";
+    @use "../../../../../colors" as *;;
 
   .hotbar-container {
     display: flex;

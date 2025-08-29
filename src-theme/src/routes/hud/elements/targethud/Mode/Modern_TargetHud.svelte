@@ -344,7 +344,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../../colors";
+    @use "../../../../../colors" as *;;
 
   .targethud-container {
     display: flex;

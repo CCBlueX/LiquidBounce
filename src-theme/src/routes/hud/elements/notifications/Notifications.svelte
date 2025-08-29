@@ -167,12 +167,12 @@
         </div>
     {:else}
         <!-- 空状态下的占位元素 -->
-        <div class="empty-placeholder"/>
+        <div class="empty-placeholder"></div>
     {/each}
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+    @use "../../../../colors" as *;
 
   .notifications {
     will-change: transform, opacity;

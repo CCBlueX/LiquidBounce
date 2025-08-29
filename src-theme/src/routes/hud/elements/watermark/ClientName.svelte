@@ -16,7 +16,7 @@
     {$clientName ? $clientName : `禁漫修復 ${clientInfo?.clientVersion ?? ''}`}
 </div>
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   @property --k {
     syntax: '<number>';

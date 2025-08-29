@@ -655,7 +655,8 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
+  @use "sass:list";
 
   @mixin text-ellipsis {
     white-space: nowrap;
@@ -826,10 +827,10 @@
 
     // 循环生成不同类型通知的样式
     @each $type, $colors in $notification-types {
-      $primary: nth($colors, 1);
-      $secondary: nth($colors, 2);
-      $hue-rotate: nth($colors, 3);
-      $text-color: nth($colors, 4);
+      $primary: list.nth($colors, 1);
+      $secondary: list.nth($colors, 2);
+      $hue-rotate: list.nth($colors, 3);
+      $text-color: list.nth($colors, 4);
 
       &.#{$type} {
         .icon img {
@@ -846,25 +847,26 @@
         .progress-bar {
           background: linear-gradient(90deg, $primary, $secondary);
         }
+
+        .eating-progress-bar {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 0 0 16px 16px;
+          overflow: hidden;
+
+          .eating-progress-fill {
+            height: 100%;
+            transition: width 0.1s linear;
+            background: linear-gradient(90deg, $primary, $secondary);
+          }
+        }
       }
     }
 
-    .eating-progress-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 0 0 16px 16px;
-      overflow: hidden;
-
-      .eating-progress-fill {
-        height: 100%;
-        transition: width 0.1s linear;
-        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-      }
-    }
 
     .progress-bar-container {
       position: absolute;

@@ -52,7 +52,8 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @use "../../../../colors" as *;
+  @use "sass:color";
 
   .progress-container {
     position: fixed;
@@ -64,7 +65,7 @@
     background: color-mix(
                     in srgb,
                     rgba(20, 20, 20, 0.5) 0%,
-                    rgba(darken($base, 5%), 0.5) 100%
+                    rgba(color.scale($base, $lightness: -5%), 0.5)
     );
     border-radius: 14px;
     padding: 12px 16px;

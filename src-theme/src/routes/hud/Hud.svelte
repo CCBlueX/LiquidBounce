@@ -218,7 +218,7 @@
 
 
 <style lang="scss">
-  @import "../../colors.scss";
+  @use "../../colors" as *;
 
   $GRID_SIZE: 10px;
   .hud {

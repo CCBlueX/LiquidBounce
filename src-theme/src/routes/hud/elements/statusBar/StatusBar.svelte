@@ -81,7 +81,7 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .hotbar {
     position: relative;

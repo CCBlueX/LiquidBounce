@@ -101,7 +101,7 @@
 
 
 <style lang="scss">
-  @import '../../../../colors';
+    @use "../../../../colors" as *;;
 
 
   .module {

@@ -70,7 +70,7 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../../../colors";
+    @use "../../../../../colors" as *;;
   .targethud {
     color: $text-color;
     font-size: 14px;

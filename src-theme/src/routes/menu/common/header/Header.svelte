@@ -23,7 +23,7 @@
     </div>
 {/if}
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .logo {
     height: 125px;

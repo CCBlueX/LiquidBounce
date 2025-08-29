@@ -102,7 +102,7 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
 
   .logo-container {

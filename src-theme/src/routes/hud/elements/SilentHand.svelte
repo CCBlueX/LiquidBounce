@@ -48,7 +48,7 @@
 
 
 <style lang="scss">
-  @import "../../../colors";
+  @use "../../../colors" as *;
 
   .silent-hand-container {
     display: flex;

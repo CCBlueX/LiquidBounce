@@ -51,7 +51,7 @@
 
 <style lang="scss">
   @use "sass:color";
-  @import "../../../colors.scss";
+  @use"../../../colors.scss" as *;
 
   :root {
     --primary-color-rgb: var(--primary-color-rgb);
@@ -131,7 +131,7 @@
     align-items: center;
     padding: 10px;
     text-shadow: 0 0 5px rgba($text-color, 0.4),
-    1px 1px 1px rgba(darken($scoreboard-base-color, 20%), 0.6);
+    1px 1px 1px rgba(color.scale($scoreboard-base-color, $lightness: -20%), 0.6);
     text-align: center;
     white-space: nowrap;
     box-sizing: border-box;

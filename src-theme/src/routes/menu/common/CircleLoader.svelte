@@ -10,7 +10,7 @@
   /*
     Taken from https://loading.io/css/
    */
-  @import "../../../colors";
+  @use "../../../colors" as *;
 
   .loader-wrapper {
     position: absolute;

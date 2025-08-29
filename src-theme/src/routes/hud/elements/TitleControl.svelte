@@ -35,7 +35,7 @@
 
 
 <style lang="scss">
-  @import "../../../colors.scss";
+  @use"../../../colors.scss" as *;
 
   .overlay-container {
     position: fixed;

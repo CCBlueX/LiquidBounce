@@ -64,7 +64,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .status-bar-container {
     position: relative;

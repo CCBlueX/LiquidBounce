@@ -85,7 +85,7 @@
 
 
 <style lang="scss">
-  @import "../../../colors";
+  @use "../../../colors" as *;
 
   .session-info {
     --ring-thickness: 10px;

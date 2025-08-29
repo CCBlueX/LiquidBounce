@@ -50,7 +50,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .item-stack {
     position: relative;

@@ -74,7 +74,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @use "../../../../colors" as *;
 
   .watermark {
     display: flex;
