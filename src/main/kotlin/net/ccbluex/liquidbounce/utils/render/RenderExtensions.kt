@@ -19,24 +19,20 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
+import org.apache.commons.lang3.mutable.MutableObject
 import java.awt.image.BufferedImage
 
 /**
  * @see ScreenshotRecorder.takeScreenshot
  */
 fun Framebuffer.toNativeImage(): NativeImage {
-    val nativeImage = NativeImage(textureWidth, textureHeight, false)
-
-    RenderSystem.bindTexture(colorAttachment)
-
-    nativeImage.loadFromTextureImage(0, false)
-    nativeImage.mirrorVertically()
-
-    return nativeImage
+    val ref = MutableObject<NativeImage>()
+    // FIXME: check if alpha is cleared, this function disallow transparent pixel at 1.21.4
+    ScreenshotRecorder.takeScreenshot(this, ref::setValue)
+    return ref.value
 }
 
 fun NativeImage.toBufferedImage(): BufferedImage {

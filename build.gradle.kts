@@ -89,8 +89,8 @@ configurations {
 }
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
     maven {
         name = "CCBlueX"
         url = uri("https://maven.ccbluex.net/releases")
