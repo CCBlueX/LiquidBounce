@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage
 
 class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = NativeImageBackedTexture(image.toNativeImage())
+    override val texture = NativeImageBackedTexture({ "DynamicGlyphPage" }, image.toNativeImage())
     val glyphMap = HashMap<Pair<Int, Char>, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     val dirty = ArrayList<GlyphRenderInfo>()
 

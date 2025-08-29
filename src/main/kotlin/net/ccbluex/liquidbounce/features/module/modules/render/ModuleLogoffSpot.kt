@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -45,12 +43,13 @@ import java.util.*
  */
 object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
 
+    @JvmRecord
     private data class LoggedOffPlayer(
-        val time: Instant,
+        val time: Long,
         val entity: Entity
     )
 
-    private val lastSeenPlayers = mutableMapOf<UUID, LoggedOffPlayer>()
+    private val lastSeenPlayers = hashMapOf<UUID, LoggedOffPlayer>()
 
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
@@ -68,7 +67,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         clone.inventory.clone(entity.inventory)
         clone.health = entity.getActualHealth()
         world.addEntity(clone)
-        lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Clock.System.now(), clone)
+        lastSeenPlayers[entity.uuid] = LoggedOffPlayer(System.currentTimeMillis(), clone)
 
         val blockPos = entity.pos.toBlockPos()
         chat(regular(message("disappeared", entity.nameForScoreboard, blockPos.x, blockPos.y, blockPos.z)))
