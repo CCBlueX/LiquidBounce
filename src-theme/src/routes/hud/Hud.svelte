@@ -1,7 +1,6 @@
 <script lang="ts">
     import {onDestroy, onMount} from "svelte";
     import ArrayList from "./elements/arrayList/ArrayList.svelte";
-    import ModernTargetHud from "./elements/targethud/Mode/Modern_TargetHud.svelte";
     import Notifications from "./elements/notifications/Notifications.svelte";
     import TabGui from "./elements/tabgui/TabGui.svelte";
     import HealthBar from "./elements/HealthBar.svelte";
@@ -12,7 +11,6 @@
     import ItemColumnHUD from "./elements/inventory/ItemColumnHUD.svelte";
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
-    import Effects from "./elements/Effects.svelte";
     import BlockCounter from "./elements/BlockCounter.svelte";
     import ArmorItems from "./elements/inventory/ArmorItems.svelte";
     import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
@@ -40,6 +38,8 @@
     import ProgressBar from "./elements/progressBar/ProgressBar.svelte";
     import SilentHand from "./elements/SilentHand.svelte";
     import TargetHud from "./elements/targethud/TargetHud.svelte";
+    import Effects from "./elements/effects/Effects.svelte";
+
 
     const {width, height, destroy} = WindowSize();
     let components: Component[] = [];
@@ -122,6 +122,8 @@
         <Text settings={component.settings}/>
     {:else if component.name === 'HotBar'}
         <HotBar settings={component.settings}/>
+    {:else if component.name === 'Effects'}
+        <Effects settings={component.settings}/>
     {:else if component.name === 'Image'}
         <img alt="" src={component.settings.src} style="scale: {component.settings.scale};"/>
     {:else}
@@ -144,9 +146,7 @@
             {#if component.name === 'CraftingInput'}
                 <CraftingInput/>
             {/if}
-            {#if component.name === 'Effects'}
-                <Effects/>
-            {/if}
+
             {#if component.name === 'HealthBar'}
                 <HealthBar/>
             {/if}

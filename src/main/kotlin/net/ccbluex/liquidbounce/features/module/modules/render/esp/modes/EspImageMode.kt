@@ -98,7 +98,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        val entities = RenderedEntities.filterIsInstance<LivingEntity>()
+        val entities = RenderedEntities.filterIsInstance<LivingEntity>().filter { it.isPlayer }
 
         renderEnvironmentForWorld(matrixStack) {
             entities.forEach { entity ->

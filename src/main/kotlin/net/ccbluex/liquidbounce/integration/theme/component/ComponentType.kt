@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.integration.theme.component.types.EffectsComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.HotBarComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.IntegratedComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.TargetHUDComponent
@@ -110,9 +111,12 @@ enum class ComponentType(
     ),
     EFFECTS(
         "Effects",
-        componentTweaks = arrayOf(
-            FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY
-        )
+        createComponent = { EffectsComponent(
+                tweaks = arrayOf(
+                    FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY
+                )
+            )
+        }
     ),
 
     SCOREBOARD(
