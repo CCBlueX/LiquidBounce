@@ -142,7 +142,7 @@ open class ClientModule(
      */
     open suspend fun enabledEffect() {}
 
-    override fun onToggled(state: Boolean): Boolean {
+    final override fun onToggled(state: Boolean): Boolean {
         // Check if the module is locked and cannot be enabled
         locked?.let { locked ->
             if (locked.get()) {

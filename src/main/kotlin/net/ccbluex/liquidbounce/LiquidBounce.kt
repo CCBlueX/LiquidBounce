@@ -81,7 +81,6 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
-import org.apache.logging.log4j.LogManager
 import java.io.File
 import kotlin.time.measureTime
 
@@ -140,7 +139,7 @@ object LiquidBounce : EventListener {
     /**
      * Client logger to print out console messages
      */
-    val logger = LogManager.getLogger(CLIENT_NAME)!!
+    val logger get() = net.ccbluex.liquidbounce.utils.client.logger
 
     var taskManager: TaskManager? = null
 

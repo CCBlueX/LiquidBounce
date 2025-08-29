@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Util
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 val logger: Logger
-    get() = LiquidBounce.logger
+    get() = LogManager.getLogger(CLIENT_NAME)
 
 val inGame: Boolean
     get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } == true

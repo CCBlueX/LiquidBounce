@@ -57,16 +57,6 @@ abstract class ToggleableConfigurable(
             return state
         }
 
-        return onToggled(state, false)
-    }
-
-    fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
-        // We cannot use [parent.running] because we are interested in the state of the parent,
-        // not if it is running. We do not care if we are the root.
-//        if (!isParentUpdate && parent is Toggleable && !parent.enabled) {
-//            return state
-//        }
-
         if (!state) {
             // Cancel all sequences when the module is disabled, maybe disable first and then cancel?
             cancelAllSequences(this)
