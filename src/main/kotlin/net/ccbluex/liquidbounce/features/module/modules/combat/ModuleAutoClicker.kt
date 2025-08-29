@@ -178,7 +178,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
 
             val crosshairTarget = mc.crosshairTarget
             if (crosshairTarget is EntityHitResult) {
-                ModuleAutoWeapon.prepare(crosshairTarget.entity)
+                ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
                 if (!isCriticalHit(crosshairTarget.entity)) {
                     return@run

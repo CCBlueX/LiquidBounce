@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.prepare
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
@@ -40,6 +40,7 @@ import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
 import net.minecraft.item.SwordItem
 import net.minecraft.util.Hand
+import java.util.*
 
 /**
  * AutoWeapon module
@@ -49,13 +50,11 @@ import net.minecraft.util.Hand
 object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     /**
-     * The weapon type to prefer, which is on 1.8 and 1.9+ versions usually a sword,
+     * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,
      * due to the attack speed.
-     *
-     * On 1.9+ we are likely to prefer an axe when the target is blocking with a shield,
-     * which is covered by the [againstShield] weapon type.
      */
     private val preferredWeapon by enumChoice("Preferred", WeaponType.SWORD)
+
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
 
@@ -76,21 +75,20 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         NONE("None", { false });
     }
 
-    private val prepare by boolean("Prepare", true)
-
-    /**
-     * In Minecraft, even when we send a packet to switch the slot,
-     * before we attack, the server will still calculate damage
-     * based on the slot we were on before the switch.
-     *
-     * This is why we have to wait at least 1 tick before attacking
-     * after switching the slot.
-     *
-     * This is not necessary when we are already on the correct slot,
-     * which should be the case when using [prepare].
-     */
-    private val switchOn by int("SwitchOn", 1, 0..2, "ticks")
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
+
+    private val changeOnActions by multiEnumChoice<ChangeOnAction>(
+        "ChangeOn",
+        EnumSet.of(ChangeOnAction.ON_ATTACK)
+    )
+
+    @Suppress("unused")
+    private enum class ChangeOnAction(
+        override val choiceName: String
+    ): NamedChoice {
+        ON_ATTACK("OnAttack"),
+        ON_TARGET("OnTarget")
+    }
 
     /**
      * Prioritize Auto Buff or consuming an item over Auto Weapon
@@ -138,13 +136,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         get() = !isOlderThanOrEqual1_8 && MaceItem.shouldDealAdditionalDamage(player)
 
     @Suppress("unused")
-    private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
-        val entity = event.entity as? LivingEntity ?: return@sequenceHandler
-        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@sequenceHandler
-        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        val entity = event.entity as? LivingEntity ?: return@handler
+        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@handler
 
-        if (isBusy) {
-            return@sequenceHandler
+        if (isBusy || ChangeOnAction.ON_ATTACK !in changeOnActions) {
+            return@handler
         }
 
         SilentHotbar.selectSlotSilently(
@@ -153,28 +150,17 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             switchBack
         )
 
-        // Sync selected slot right now,
-        // we will not sync on this tick otherwise
-        if (switchOn == 0) {
-            interaction.syncSelectedSlot()
-        }
-
-        if (isOnSwitch && switchOn > 0) {
-            event.cancelEvent()
-
-            // Re-attack after switch
-            // This should not end up in a recursive loop,
-            // because we switched slot by now
-            waitTicks(switchOn)
-            event.caller()
-        }
+        // [ClientPlayerInteractionManager.attackEntity] will sync the selected slot,
+        // so we can do that here already. This is legitimate, but unfortunately, the server seems
+        // to not care about the sync when it occurs in the same tick as the attack.
+        interaction.syncSelectedSlot()
     }
 
     /**
-     * Prepare AutoWeapon for given [entity] if [prepare] is enabled
+     * Prepare AutoWeapon for given [entity] if [onTarget] is enabled
      */
-    fun prepare(entity: Entity?) {
-        if (!running || !prepare || entity !is LivingEntity || isBusy) {
+    fun onTarget(entity: Entity?) {
+        if (!running || entity !is LivingEntity || isBusy || ChangeOnAction.ON_TARGET !in changeOnActions) {
             return
         }
 

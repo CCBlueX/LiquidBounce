@@ -107,7 +107,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
         }
 
         // Update Auto Weapon
-        ModuleAutoWeapon.prepare(targetTracker.target)
+        ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
     override fun onDisabled() {

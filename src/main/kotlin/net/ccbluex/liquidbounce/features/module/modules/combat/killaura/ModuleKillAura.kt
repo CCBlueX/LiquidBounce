@@ -59,7 +59,6 @@ import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -160,9 +159,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen =
-            InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen
-
+        val isInInventoryScreen = isInventoryOpen || mc.currentScreen is GenericContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDead || !requirementsMet
 
         if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
@@ -175,7 +172,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         updateTarget()
 
         // Update Auto Weapon
-        ModuleAutoWeapon.prepare(targetTracker.target)
+        ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
     @Suppress("unused")
