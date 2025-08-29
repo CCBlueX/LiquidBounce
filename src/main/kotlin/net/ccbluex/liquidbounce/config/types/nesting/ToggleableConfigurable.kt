@@ -47,7 +47,7 @@ abstract class ToggleableConfigurable(
     @ScriptApiRequired
     override var enabled by boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
-        .onChange { state -> onToggled(state, false) }
+        .onChange { state -> onToggled(state) }
 
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
         return value
@@ -58,7 +58,7 @@ abstract class ToggleableConfigurable(
             return state
         }
 
-        return onToggled(state, true)
+        return onToggled(state, false)
     }
 
     fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
@@ -107,13 +107,18 @@ abstract class ToggleableConfigurable(
 private fun Configurable.updateChildState(state: Boolean) {
     for (value in inner) {
         when (value) {
+            is ToggleableConfigurable -> if (state && value.enabled) {
+                value.onToggled(state = true, isParentUpdate = true)
+            } else if (!state && value.enabled) {
+                value.onToggled(state = false, isParentUpdate = true)
+            }
+            is ChoiceConfigurable<*> -> value.updateChildState(state)
+            is Configurable -> value.updateChildState(state)
             is Toggleable -> if (state && value.enabled) {
                 value.onToggled(true)
             } else if (!state && value.enabled) {
                 value.onToggled(false)
             }
-            is ChoiceConfigurable<*> -> value.updateChildState(state)
-            is Configurable -> value.updateChildState(state)
         }
     }
 }
