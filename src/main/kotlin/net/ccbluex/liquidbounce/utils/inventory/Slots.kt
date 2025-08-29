@@ -81,10 +81,17 @@ object Slots {
      * Armor slots 0~3
      *
      * Boots/Leggings/Chestplate/Helmet
+     *
+     * TODO: is this correct?
      */
     @JvmField
     val Armor = SlotGroup(
-        List(4) { ArmorItemSlot(it) }
+        listOf(
+            ArmorItemSlot(ArmorItemSlot.ArmorType.FEET),
+            ArmorItemSlot(ArmorItemSlot.ArmorType.LEGS),
+            ArmorItemSlot(ArmorItemSlot.ArmorType.CHEST),
+            ArmorItemSlot(ArmorItemSlot.ArmorType.HEAD),
+        )
     )
 
     /**

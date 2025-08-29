@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.MojangApi
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.entity.Entity
+import net.minecraft.entity.Tameable
 import net.minecraft.entity.passive.HorseEntity
 import net.minecraft.entity.passive.TameableEntity
 import net.minecraft.entity.projectile.ProjectileEntity
@@ -51,11 +52,10 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
         }
 
         val ownerId = when {
-            entity is TameableEntity -> entity.ownerUuid
-            entity is HorseEntity -> entity.ownerUuid
-            entity is ProjectileEntity && projectiles -> entity.ownerUuid
+            entity is Tameable -> entity.ownerReference
+            entity is ProjectileEntity && projectiles -> entity.owner
             else -> null
-        } ?: return null
+        }?.uuid ?: return null
 
         return world.getPlayerByUuid(ownerId)
             ?.let { OrderedText.styledForwardsVisitedString(it.nameForScoreboard, Style.EMPTY) }
