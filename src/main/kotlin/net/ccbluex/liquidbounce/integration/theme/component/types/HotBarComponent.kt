@@ -18,6 +18,7 @@ class HotBarComponent(
         Simple("Simple"),
         Modern("Modern"),
         Rise("Rise"),
+        Hanabi("Hanabi")
     }
 }
 

@@ -90,7 +90,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     class Customization : Configurable( "Customization") {
-        val hudZoom by float("ScaleFactor", 1f, 0.5f..2f).onChanged {
+        val hudZoom by float("ScaleFactor", 0.8f, 0.5f..2f).onChanged {
             EventManager.callEvent(HudValueChangeEvent(ModuleHud))
         }
         val shadowStrength by int("ShadowStrength", 16, 4..32).onChanged {
