@@ -32,21 +32,26 @@ internal object NoFallBlocksMC : Choice("BlocksMC") {
     private var shouldClip = false
     private var fallMotion = 0.0
 
+    // Prevents this from running during AntiBot verification
+    const val MIN_AGE = 20 * 5
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
+    override val running: Boolean
+        get() = super.running && player.age > MIN_AGE
+
     @Suppress("unused")
-    private val onTick = tickHandler {
+    private val tickHandler = tickHandler {
         if (player.velocity.y < -0.7) {
             shouldClip = true
             fallMotion = player.velocity.y
         }
     }
 
-    val packetHandler = handler<PacketEvent> {
-        val packet = it.packet
-
-        when (packet) {
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        when (val packet = event.packet) {
             is PlayerMoveC2SPacket -> {
                 if (player.isOnGround && shouldClip) {
                     packet.y -= 0.1
