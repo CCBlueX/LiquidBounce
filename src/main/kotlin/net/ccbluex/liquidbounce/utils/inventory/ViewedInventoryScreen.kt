@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen.BACKGROUND_TEXTURE
@@ -104,7 +105,8 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
     }
 
     private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
+        context.drawTexture(
+            RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
             0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
         player()?.let { player ->
             drawEntity(
@@ -122,7 +124,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         if (slot.stack.isEmpty && slot.isEnabled) {
             val identifier = slot.backgroundSprite
             if (identifier != null) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16);
+                context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, identifier, slot.x, slot.y, 16, 16);
                 spriteDrawn = true
             }
         }

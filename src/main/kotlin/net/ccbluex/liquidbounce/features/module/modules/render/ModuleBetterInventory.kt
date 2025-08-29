@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.component.DataComponentTypes
@@ -66,7 +67,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                  */
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
                     context.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         MixinInGameHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,

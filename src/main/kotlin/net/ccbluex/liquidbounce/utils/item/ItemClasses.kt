@@ -5,14 +5,15 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Item
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.registry.tag.TagKey
+import java.util.EnumSet
 
 val Item.isSword: Boolean
     get() = isIn(ItemTags.SWORDS)
+
 val Item.isTool: Boolean
     get() = components.get(DataComponentTypes.TOOL) != null
 
-
-private val ARMOR_EQUIPMENT_SLOTS = setOf(
+private val ARMOR_EQUIPMENT_SLOTS = EnumSet.of(
     EquipmentSlot.HEAD,
     EquipmentSlot.BODY,
     EquipmentSlot.LEGS,

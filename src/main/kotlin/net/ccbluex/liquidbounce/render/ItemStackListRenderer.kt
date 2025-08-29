@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Identifier
 
@@ -115,7 +115,7 @@ class ItemStackListRenderer private constructor(
 
     private fun drawSlotTexture(x: Int, y: Int) {
         drawContext.drawGuiTexture(
-            RenderLayer::getGuiTextured,
+            RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
             x,
             y,

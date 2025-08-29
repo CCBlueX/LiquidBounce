@@ -177,7 +177,7 @@ object ThemeManager : Configurable("theme") {
         val image = activeTheme.loadedBackgroundImage ?: defaultTheme.loadedBackgroundImage
         if (image != null) {
             context.drawTexture(
-                RenderLayer::getGuiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 image,
                 0,
                 0,
