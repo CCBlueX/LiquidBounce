@@ -121,7 +121,7 @@
 </script>
 
 {#if showHealthBar && playerData && playerData.gameMode !== "spectator"}
-    <div class="healthbar" transition:fade>
+    <div class="health-bar" transition:fade>
         {#if playerData.gameMode !== "creative"}
             <div class="status-container">
                 <div class="status-wrapper">
@@ -148,7 +148,7 @@
 {/if}
 
 <style lang="scss">
-  .healthbar {
+  .health-bar {
     display: flex;
     justify-content: center;
     margin-bottom: 6px;

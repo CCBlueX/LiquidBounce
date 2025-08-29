@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo.colorModes
 import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.TargetInfoMode

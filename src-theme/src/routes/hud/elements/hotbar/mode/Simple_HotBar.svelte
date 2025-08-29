@@ -38,7 +38,7 @@
     <div class="hotbar">
         <div class="hotbar-elements">
             <div class="slots">
-                {#each hotbar as stack, index}
+                {#each hotbar as stack, index(stack)}
                     <div class="slot" class:selected={index === currentSlot}>
                         {#if stack && stack.identifier !== "minecraft:air"}
                             <ItemIndexView {stack}/>

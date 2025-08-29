@@ -6,6 +6,8 @@
     import {onMount} from "svelte";
     import ItemIndexView from "../../../common/ItemView/ItemIndexView.svelte";
     import {clientName} from "../../../../../util/Theme/ThemeManager";
+    import ItemStackDisplay from "../../../common/ItemView/ItemStackDisplay.svelte";
+    import ItemStackView from "../../../common/ItemView/ItemStackView.svelte";
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
     let hotbar: ItemStack[] = [];
@@ -66,13 +68,14 @@
 
         </div>
         <div class="slots">
-            {#each hotbar as stack, index}
+            {#each hotbar as stack, index (stack)}
                 <div class="slot" class:selected={index === currentSlot}>
                     {#if stack && stack.identifier !== "minecraft:air"}
                         <ItemIndexView {stack}/>
                     {/if}
                 </div>
             {/each}
+
         </div>
         <div class="build-version">
             {$clientName ? $clientName : `JMcomicFix`} Build {clientInfo?.clientVersion} Developer Version - {userData.username}
@@ -151,7 +154,7 @@
     align-items: center;
     justify-content: center;
     transition: background-color 0.1s;
-
+    filter: drop-shadow(0 0 4px rgba($base, 0.5));
     &.selected {
       background-color: rgba(255, 255, 255, 0.4);
     }

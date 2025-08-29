@@ -77,8 +77,8 @@
     font-family: 'Alibaba', sans-serif;
   }
   .effect-icon {
-    height: 20px;
-    width: 20px;
+    height: 32px;
+    width: 32px;
     filter: drop-shadow(0 0 4px rgba($base, 0.5));
   }
   .effect {
