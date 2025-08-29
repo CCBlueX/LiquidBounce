@@ -67,6 +67,10 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     @Suppress("unused")
     private val entityHealthUpdateHandler = handler<EntityHealthUpdateEvent> {
         val entity = it.entity
+        if (entity.age == 0) {
+            return@handler
+        }
+
         val oldHealth = it.old
         val newHealth = it.new
         val maxHealth = it.max
