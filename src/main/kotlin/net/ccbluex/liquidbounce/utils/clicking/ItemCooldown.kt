@@ -37,7 +37,7 @@ open class ItemCooldown<T>(module: T) : ToggleableConfigurable(
     private var nextCooldown = minimumCooldown.random()
 
     open fun isCooldownPassed(ticks: Int = 0) = when {
-        !this.enabled -> false
+        !this.enabled -> true
         else -> cooldownProgress(ticks) >= nextCooldown
     }
 
