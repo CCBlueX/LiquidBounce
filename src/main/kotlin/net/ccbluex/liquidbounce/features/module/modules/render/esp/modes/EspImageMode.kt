@@ -69,7 +69,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
-        if (!RotationOption.enabled || !event.entity.isLiving || !chronometer.hasElapsed(230) || event.isCancelled) {
+        if (!RotationOption.enabled || !event.entity.isLiving || !chronometer.hasElapsed(230)) {
             return@handler
         }
         chronometer.reset()

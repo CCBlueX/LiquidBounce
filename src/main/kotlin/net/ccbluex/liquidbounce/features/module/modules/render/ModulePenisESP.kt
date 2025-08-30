@@ -106,7 +106,7 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
-        if (!event.entity.isLiving || event.isCancelled || !attackedTrigger) {
+        if (!event.entity.isLiving || !attackedTrigger) {
             return@handler
         }
 

@@ -1,0 +1,104 @@
+package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
+
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.minecraft.client.gl.ShaderProgramKeys
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.hit.HitResult
+import net.minecraft.util.math.MathHelper
+import net.minecraft.world.RaycastContext
+
+object EspAvatarMode : EspMode("Avatar", requiresTrueSight = true) {
+
+    private val size by float("ImageSize", 0.5f, 0.5f..1f)
+    private val opacity by float("Opacity", 0.8f, 0f..1f)
+
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        val entities = RenderedEntities.filter { it is PlayerEntity && it != mc.player }
+
+        if (entities.isEmpty()) return@handler
+
+        renderEnvironmentForWorld(event.matrixStack) {
+            entities.forEach { entity ->
+                if (entity !is PlayerEntity) return@forEach
+                renderAvatarAtEntity(entity, event.partialTicks)
+            }
+        }
+    }
+    private fun WorldRenderEnvironment.renderAvatarAtEntity(entity: PlayerEntity, partialTicks: Float) {
+        val eyes = mc.player!!.eyePos
+        val pos = entity.interpolateCurrentPosition(partialTicks)
+        val renderPos = pos.add(0.0, 1.0, 0.0)
+
+        val hit = mc.world?.raycast(
+            RaycastContext(
+                eyes,
+                renderPos,
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE,
+                mc.player
+            )
+        )
+        hit?.let {
+            if (it.type == HitResult.Type.BLOCK) {
+                val blockState = mc.world?.getBlockState(it.blockPos) ?: return
+                if (blockState.isAir || blockState.block.translationKey== "block.minecraft.barrier") return
+            }
+        }
+
+
+        val dist = mc.player!!.distanceTo(entity).toDouble()
+        val scaleFactor = (0.8 + dist * 0.02).toFloat().coerceIn(0.5f, 4.0f)
+
+        val skin = mc.skinProvider.getSkinTextures(entity.gameProfile).texture()
+        RenderSystem.setShaderTexture(0, skin)
+
+        val s = size * scaleFactor
+        withPositionRelativeToCamera(renderPos) {
+            matrixStack.apply {
+                multiply(mc.gameRenderer.camera.rotation)
+                scale(s, s, s)
+                translate(-0.5f, -0.5f, 0f)
+            }
+
+            val alpha = MathHelper.clamp((255 * opacity).toInt(), 0, 255)
+            val color = getColor(entity).with(a = alpha)
+
+            drawCustomMesh(
+                VertexFormat.DrawMode.QUADS,
+                VertexFormats.POSITION_TEXTURE_COLOR,
+                ShaderProgramKeys.POSITION_TEX_COLOR
+            ) { matrix ->
+                vertex(matrix, 0f, 0f, 0f).texture(8f/64f, 16f/64f).color(color.toARGB())
+                vertex(matrix, 1f, 0f, 0f).texture(16f/64f, 16f/64f).color(color.toARGB())
+                vertex(matrix, 1f, 1f, 0f).texture(16f/64f, 8f/64f).color(color.toARGB())
+                vertex(matrix, 0f, 1f, 0f).texture(8f/64f, 8f/64f).color(color.toARGB())
+            }
+
+            drawCustomMesh(
+                VertexFormat.DrawMode.QUADS,
+                VertexFormats.POSITION_TEXTURE_COLOR,
+                ShaderProgramKeys.POSITION_TEX_COLOR
+            ) { matrix ->
+                vertex(matrix, 0f, 0f, 0.001f).texture(40f/64f, 16f/64f).color(color.toARGB())
+                vertex(matrix, 1f, 0f, 0.001f).texture(48f/64f, 16f/64f).color(color.toARGB())
+                vertex(matrix, 1f, 1f, 0.001f).texture(48f/64f, 8f/64f).color(color.toARGB())
+                vertex(matrix, 0f, 1f, 0.001f).texture(40f/64f, 8f/64f).color(color.toARGB())
+            }
+        }
+    }
+
+
+}
