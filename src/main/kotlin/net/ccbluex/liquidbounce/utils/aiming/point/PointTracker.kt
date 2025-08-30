@@ -41,7 +41,7 @@ class PointTracker(
     highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
     lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
     targetExtrapolation: Float = 0.4f,
-    targetExtrapolationScale: ClosedFloatingPointRange<Float> = -1f..1f
+    targetExtrapolationScale: ClosedFloatingPointRange<Float> = 0f..2f
 ) : Configurable("AimPoint", aliases = arrayOf("PointTracker")), EventListener {
 
     /**
