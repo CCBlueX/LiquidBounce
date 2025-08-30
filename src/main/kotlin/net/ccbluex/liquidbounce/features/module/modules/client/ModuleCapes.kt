@@ -27,10 +27,17 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
         open fun clearCache() {}
     }
 
-
+    internal fun invalidateLocalCache() {
+        localCapeIdentifier?.let { mc.textureManager.destroyTexture(it) }
+        localCapeIdentifier = null
+    }
     object ClientMode : CapeMode("Client") {
 
-        private val image by enumChoice("Image", ClientCape.JMcomicFix)
+        private val image by enumChoice("Image",
+            ClientCape.JMcomicFix).onChanged {
+            clearCache()
+            invalidateLocalCache()
+        }
         private var cachedTexture: Identifier? = null
 
         override fun clearCache() {
@@ -71,7 +78,10 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
 
 
     object FileImageMode : CapeMode("File") {
-        private val customImage by file("CustomImage")
+        private val customImage by file("CustomImage").onChanged {
+            ClientMode.clearCache()
+            invalidateLocalCache()
+        }
         private var cachedTexture: Identifier? = null
         private var cachedNativeImage: NativeImage? = null
         private var cachedPath: String? = null
