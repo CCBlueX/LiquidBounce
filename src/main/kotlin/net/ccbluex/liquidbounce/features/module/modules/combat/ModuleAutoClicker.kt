@@ -48,7 +48,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 
-        val clicker = tree(Clicker(this, mc.options.attackKey, true))
+        val clicker = tree(Clicker(this, mc.options.attackKey))
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
@@ -145,7 +145,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     object UseButton : ToggleableConfigurable(this, "Use", false) {
-        val clicker = tree(Clicker(this, mc.options.useKey, false))
+        val clicker = tree(Clicker(this, mc.options.useKey, null))
         internal val delayStart by boolean("DelayStart", false)
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)

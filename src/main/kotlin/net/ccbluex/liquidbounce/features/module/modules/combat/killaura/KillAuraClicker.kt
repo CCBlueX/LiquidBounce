@@ -23,19 +23,76 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
+import kotlin.math.round
 
-object KillAuraClicker : Clicker<ModuleKillAura>(ModuleKillAura, mc.options.attackKey, true) {
+object KillAuraClicker : Clicker<ModuleKillAura>(
+    ModuleKillAura,
+    mc.options.attackKey,
+    KillAuraClickerItemCooldown()
+) {
+
+    class KillAuraClickerItemCooldown : ItemCooldown<ModuleKillAura>(ModuleKillAura) {
+        val ignoreWhenExitingRange by boolean("IgnoreWhenExitingRange", true)
+
+        override fun isCooldownPassed(ticks: Int): Boolean {
+            if (ignoreWhenExitingRange && predictExitingRange(1.0 + ticks.toDouble())) {
+                return true
+            }
+
+            return super.isCooldownPassed(ticks)
+        }
+
+        /**
+         * Predicts if we are going to move out of attack range.
+         */
+        fun predictExitingRange(ticks: Double): Boolean {
+            require(ticks > 0) { "ticks must be positive" }
+
+            val target = KillAuraTargetTracker.target ?: return false
+
+            val futurePos = PositionExtrapolation.getBestForEntity(player)
+                .getPositionInTicks(ticks)
+            val futureTargetPos = PositionExtrapolation.getBestForEntity(target)
+                .getPositionInTicks(ticks)
+
+            val ownEyePos = futurePos.add(0.0, player.getEyeHeight(player.pose).toDouble(), 0.0)
+            val targetBox = target.getBoundingBoxAt(futureTargetPos)
+
+            val isExitingRange = !canSeeBox(
+                eyes = ownEyePos,
+                box = targetBox,
+                // Do not care about scan range
+                range = ModuleKillAura.range.toDouble(),
+                wallsRange = ModuleKillAura.wallRange.toDouble()
+            )
+            debugParameter("Is Exiting Range On ${round(ticks)}") { isExitingRange }
+            if (isExitingRange) {
+                debugGeometry("Exiting") { ModuleDebug.DebuggedPoint(futurePos, Color4b.RED, 0.4) }
+            }
+
+            return isExitingRange
+        }
+
+    }
 
     /**
      * Prepare the environment for attacking an entity

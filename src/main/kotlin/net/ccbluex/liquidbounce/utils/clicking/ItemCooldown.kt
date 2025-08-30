@@ -23,8 +23,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
-class ItemCooldown<T>(module: T) : ToggleableConfigurable(module, "ItemCooldown", true, aliases = arrayOf("Cooldown"))
-    where T : EventListener {
+open class ItemCooldown<T>(module: T) : ToggleableConfigurable(
+    module,
+    "ItemCooldown",
+    true,
+    aliases = arrayOf("Cooldown")
+) where T : EventListener {
 
     private val minimumCooldown by floatRange(
         "Minimum",
@@ -36,7 +40,7 @@ class ItemCooldown<T>(module: T) : ToggleableConfigurable(module, "ItemCooldown"
 
     private var nextCooldown = minimumCooldown.random()
 
-    fun isCooldownPassed(ticks: Int = 0): Boolean {
+    open fun isCooldownPassed(ticks: Int = 0): Boolean {
         if (!this.enabled) {
             return true
         }

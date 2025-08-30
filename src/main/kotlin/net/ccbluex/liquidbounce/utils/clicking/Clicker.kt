@@ -49,8 +49,7 @@ import java.util.*
 open class Clicker<T>(
     val parent: T,
     val keyBinding: KeyBinding,
-
-    showCooldown: Boolean,
+    val itemCooldown: ItemCooldown<T>? = ItemCooldown(parent),
     maxCps: Int = 60,
     name: String = "Clicker"
 ) : Configurable(name, aliases = arrayOf("ClickScheduler")), EventListener where T : EventListener {
@@ -74,10 +73,8 @@ open class Clicker<T>(
             fill()
         }
 
-    private val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
-        tree(ItemCooldown(parent))
-    } else {
-        null
+    init {
+        itemCooldown?.let(this::tree)
     }
 
     /**
