@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.VertexFormat
@@ -49,6 +49,7 @@ import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
+import org.joml.Vector2i
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -61,6 +62,17 @@ object MinimapComponent : Component("Minimap", true) {
     init {
         ChunkRenderer
         registerComponentListen()
+    }
+
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+    }
+
+    override fun onDisabled() {
+        RenderedEntities.unsubscribe(this)
+        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        ChunkRenderer.unloadEverything()
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
@@ -116,7 +128,7 @@ object MinimapComponent : Component("Minimap", true) {
                 VertexFormats.POSITION_TEXTURE_COLOR,
                 ShaderProgramKeys.POSITION_TEX_COLOR,
             ) { matrix ->
-                buildMinimapMesh(this, matrix, Vec2i(baseX, baseZ), chunksToRenderAround, viewDistance)
+                buildMinimapMesh(this, matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
 
             drawCustomMesh(
@@ -228,7 +240,7 @@ object MinimapComponent : Component("Minimap", true) {
     private fun buildMinimapMesh(
         builder: BufferBuilder,
         matrix: Matrix4f,
-        centerPos: Vec2i,
+        centerPos: Vector2i,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {

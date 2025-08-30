@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.integration.theme.component
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
 /**
@@ -32,7 +33,7 @@ abstract class Component(
     name: String,
     enabled: Boolean,
     alignment: Alignment = Alignment.center()
-) : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
+) : ToggleableConfigurable(parent = ModuleHud, name = name, enabled = enabled) {
 
     val alignment = tree(alignment)
 
@@ -47,7 +48,5 @@ abstract class Component(
             }
         }
     }
-
-    override fun parent() = ComponentOverlay
 
 }

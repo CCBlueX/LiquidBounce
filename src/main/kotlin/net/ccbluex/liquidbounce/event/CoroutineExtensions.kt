@@ -18,25 +18,11 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.AbstractCoroutineContextElement
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.ContinuationInterceptor
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.*
 import kotlin.time.Duration
 
 private val RenderThreadDispatcher = mc.asCoroutineDispatcher()
@@ -102,9 +88,10 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
     priority: Short = 0,
     crossinline predicate: (T) -> Boolean,
 ): T = suspendCancellableCoroutine { continuation ->
+    val eventClass = T::class.java
     lateinit var eventHook: EventHook<T>
     fun resumeAndUnregister(result: Result<T>) {
-        EventManager.unregisterEventHook(T::class.java, eventHook)
+        EventManager.unregisterEventHook(eventClass, eventHook)
         if (continuation.isActive) {
             continuation.resumeWith(result)
         }
@@ -119,9 +106,9 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
         }
     }, priority)
     continuation.invokeOnCancellation {
-        EventManager.unregisterEventHook(T::class.java, eventHook)
+        EventManager.unregisterEventHook(eventClass, eventHook)
     }
-    EventManager.registerEventHook(T::class.java, eventHook)
+    EventManager.registerEventHook(eventClass, eventHook)
 }
 
 /**

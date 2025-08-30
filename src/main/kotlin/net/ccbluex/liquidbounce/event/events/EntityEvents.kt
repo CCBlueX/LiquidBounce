@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.Nameable
@@ -33,9 +32,8 @@ import net.minecraft.entity.LivingEntity
 
 @Nameable("attack")
 class AttackEntityEvent(
-    val entity: Entity,
-    val caller: () -> Unit
-) : CancellableEvent()
+    val entity: Entity
+) : Event()
 
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()

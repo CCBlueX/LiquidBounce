@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -49,8 +49,7 @@ import java.util.*
 open class Clicker<T>(
     val parent: T,
     val keyBinding: KeyBinding,
-
-    showCooldown: Boolean,
+    val itemCooldown: ItemCooldown<T>? = ItemCooldown(parent),
     maxCps: Int = 60,
     name: String = "Clicker"
 ) : Configurable(name, aliases = arrayOf("ClickScheduler")), EventListener where T : EventListener {
@@ -74,10 +73,8 @@ open class Clicker<T>(
             fill()
         }
 
-    private val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
-        tree(ItemCooldown(parent))
-    } else {
-        null
+    init {
+        itemCooldown?.let(this::tree)
     }
 
     /**
@@ -108,6 +105,17 @@ open class Clicker<T>(
 
     val isClickTick: Boolean
         get() = willClickAt(0)
+
+    val ticksUntilClick: Int
+        get() {
+            for (i in 0 until clickArray.iterations) {
+                if (willClickAt(i)) {
+                    return i
+                }
+            }
+
+            return clickArray.iterations
+        }
 
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 

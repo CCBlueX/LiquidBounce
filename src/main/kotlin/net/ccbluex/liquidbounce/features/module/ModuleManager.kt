@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
@@ -85,6 +87,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -148,17 +151,21 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      * Handles world change and enables modules that are not enabled yet
      */
     @Suppress("unused")
-    private val handleWorldChange = handler<WorldChangeEvent> { event ->
+    private val handleWorldChange = sequenceHandler<WorldChangeEvent> { event ->
         // Delayed start handling
         if (event.world != null) {
-            for (module in modules) {
-                if (!module.enabled || module.calledSinceStartup) continue
+            waitUntil { inGame }
+            AutoConfig.withLoading {
+                for (module in modules) {
+                    if (!module.enabled || module.calledSinceStartup) continue
 
-                try {
-                    module.calledSinceStartup = true
-                    module.onEnabled()
-                } catch (e: Exception) {
-                    logger.error("Failed to enable module ${module.name}", e)
+                    try {
+                        module.calledSinceStartup = true
+                        // inGame is false here, so use onToggle0
+                        module.onToggled(true)
+                    } catch (e: Exception) {
+                        logger.error("Failed to enable module ${module.name}", e)
+                    }
                 }
             }
         }

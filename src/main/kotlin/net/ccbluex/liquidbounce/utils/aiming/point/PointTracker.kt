@@ -20,57 +20,32 @@ package net.ccbluex.liquidbounce.utils.aiming.point
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBestHitVector
+import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
+import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptContext
 import net.ccbluex.liquidbounce.utils.aiming.point.features.Gaussian
 import net.ccbluex.liquidbounce.utils.aiming.point.features.LazyPoint
-import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPart
-import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPoint
+import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.prevPos
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
+import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
+import java.awt.Color
 
-class PointTracker(
-    highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
-    lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
-    timeEnemyOffsetDefault: Float = 0.4f,
-    timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
-) : Configurable("AimPoint", aliases = arrayOf("PointTracker")), EventListener {
+class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventListener {
 
-    /**
-     * Define the highest and lowest point of the box we want to aim at.
-     */
-    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
-        .onChange { new ->
-            if (lowestPoint.isHigherThan(new)) {
-                lowestPoint
-            } else {
-                new
-            }
-        }
-    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
-        .onChange { new ->
-            if (new.isHigherThan(highestPoint)) {
-                highestPoint
-            } else {
-                new
-            }
-        }
+    override fun parent() = parent
 
-    private val preferredBoxPoint by enumChoice("BoxPoint", PreferredBoxPoint.STRAIGHT)
+    private val predicateBoxParts by multiEnumChoice<ExemptBoxPart>("ExemptBoxParts")
+    private val predicateBestHitVector = tree(ExemptBestHitVector(this))
 
-    /**
-     * The time offset defines a prediction or rather a delay of the point tracker.
-     * We can either try to predict the next location of the player and use this as our newest point, or
-     * we pretend to be slow in the head and aim behind.
-     */
-    private val timeEnemyOffset by float("TimeEnemyOffset", timeEnemyOffsetDefault, timeEnemyOffsetScale)
+    private val prediction by boolean("Prediction", false)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
@@ -83,86 +58,84 @@ class PointTracker(
      */
     private val lazyPoint = tree(LazyPoint(this))
 
-    /**
-     * OutOfBox will set the box offset to an unreachable position.
-     */
-    private val outOfBox by boolean("OutOfBox", false)
-
-    /**
-     * The shrink box value will shrink the cut-off box by the given amount.
-     */
-    private val shrinkBox by float("ShrinkBox", 0.05f, 0.0f..0.3f)
-    private val dynamicShrinkBox by boolean("DynamicShrinkBox", true)
+    private val processors
+        get() = listOf(gaussian, lazyPoint).filter { processor -> processor.enabled }
 
     /**
      * The point tracker is being used to track a certain point of an entity.
      *
      * @param entity The entity we want to track.
      */
-    fun gatherPoint(entity: LivingEntity, situation: AimSituation): Point {
-        val playerPosition = player.pos
-        val playerEyes = player.eyePos
-        val positionDifference = playerPosition.y - entity.pos.y
+    fun findPoint(entity: LivingEntity, ticks: Int): AimPoint {
+        val eyes = player.eyePos
 
-        // Predicted target position of the enemy
-        val targetVelocity = entity.pos.subtract(entity.prevPos)
-        var box = entity.box.offset(targetVelocity.multiply(timeEnemyOffset.toDouble()))
-        if (!situation.isNear && outOfBox) {
-            box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)
-        }
-
-        val highest = (highestPoint.cutOff(box) + positionDifference)
-            .coerceAtMost(box.maxY)
-            .coerceAtLeast(box.minY + 1.0)
-        val lowest = (lowestPoint.cutOff(box) + positionDifference)
-            .coerceAtMost(box.maxY - 1.0)
-            .coerceAtLeast(box.minY)
-
-        val speedShrinkFactor = min(0.05, max(player.sqrtSpeed * 0.5, targetVelocity.sqrtSpeed * 0.5))
-
-        val initialCutoffBox = box
-            .withMaxY(highest)
-            .withMinY(lowest)
-            .contract(shrinkBox.toDouble(), 0.0, shrinkBox.toDouble())
-            .contract(speedShrinkFactor, abs(player.velocity.y), speedShrinkFactor)
-
-        val cutoffBox = if (dynamicShrinkBox) {
-            initialCutoffBox.contract(speedShrinkFactor, abs(player.velocity.y), speedShrinkFactor)
+        // Predict target position
+        val targetPos = if (prediction) {
+            PositionExtrapolation.getBestForEntity(entity)
+                .getPositionInTicks(ticks.toDouble())
         } else {
-            initialCutoffBox
+            entity.pos
         }
 
-        val offset = if (gaussian.enabled && gaussian.factorCheck()) {
-            gaussian.updateGaussianOffset(entity)
-            gaussian.currentOffset
-        } else {
-            Vec3d.ZERO
+        // Project points onto box
+        val box = entity.getBoundingBoxAt(targetPos)
+        val points = box.getPoints(eyes)
+
+        val bestHitVector = points.minByOrNull { it.squaredDistanceTo(eyes) }
+            ?: box.getPseudoClosest(eyes)
+        val worstHitVector = points.maxByOrNull { it.squaredDistanceTo(eyes) }
+            ?: box.getPseudoFurthest(eyes)
+
+        // Filter exempts
+        val predicateContext = ExemptContext(box, bestHitVector, worstHitVector)
+        val predicates = predicateBoxParts + predicateBestHitVector
+        val pointsWithExempts = points.filter { point ->
+            predicates.none { predicate -> predicate.predicate(predicateContext, point) }
         }
 
-        val targetPoint = lazyPoint.update(preferredBoxPoint.point(cutoffBox, playerEyes) + offset)
+        parent.debugGeometry("Points") {
+            ModuleDebug.DebugCollection(points.map { point ->
+                val percentage = calculateDistancePercentage(point, eyes, bestHitVector, worstHitVector)
+                val color = if (point !in pointsWithExempts) {
+                    Color4b(Color.MAGENTA)
+                } else {
+                    Color4b(Color.GREEN).interpolateTo(Color4b.RED, percentage)
+                }.fade(1.0f - percentage.toFloat())
+                ModuleDebug.DebuggedPoint(point, color, 0.05)
+            })
+        }
 
-        val finalCutoffBox = Box(
-            min(targetPoint.x, cutoffBox.minX),
-            min(targetPoint.y, cutoffBox.minY),
-            min(targetPoint.z, cutoffBox.minZ),
-            max(targetPoint.x, cutoffBox.maxX),
-            max(targetPoint.y, cutoffBox.maxY),
-            max(targetPoint.z, cutoffBox.maxZ)
-        )
-
-        return Point(playerEyes, targetPoint, box, finalCutoffBox)
+        var pos = pointsWithExempts.minByOrNull { it.distanceTo(eyes) }
+            ?: bestHitVector
+        for (processor in processors) {
+            pos = processor.process(pos, box)
+        }
+        return AimPoint(eyes, pos, box)
     }
 
-    data class Point(val fromPoint: Vec3d, val toPoint: Vec3d, val box: Box, val cutOffBox: Box)
-
-    enum class AimSituation {
-        FOR_THE_FUTURE,
-        FOR_NEXT_TICK,
-        FOR_NOW;
-
-        val isNear: Boolean
-            get() = this == FOR_NEXT_TICK || this == FOR_NOW
-
+    private fun Box.getPoints(eyes: Vec3d) = mutableListOf<Vec3d>().apply {
+        projectPointsOnBox(eyes, this@getPoints) { point ->
+            add(point)
+        }
     }
+
+    private fun Box.getPseudoClosest(eyes: Vec3d) = getNearestPoint(eyes, this)
+
+    private fun Box.getPseudoFurthest(eyes: Vec3d) = Vec3d(
+        eyes.x.coerceAtLeast(maxX).coerceAtMost(minX),
+        eyes.y.coerceAtLeast(maxY).coerceAtMost(minY),
+        eyes.z.coerceAtLeast(maxZ).coerceAtMost(minZ)
+    )
+
+    // For debug visuals
+    private fun calculateDistancePercentage(point: Vec3d, eyes: Vec3d, bestHitVector: Vec3d,
+                                            worstHitVector: Vec3d): Double {
+        val pointDistance = point.distanceTo(eyes)
+        val bestDistance = bestHitVector.distanceTo(eyes)
+        val worstDistance = worstHitVector.distanceTo(eyes)
+        return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).coerceIn(0.0, 1.0)
+    }
+
+    data class AimPoint(val eyes: Vec3d, val pos: Vec3d, val box: Box)
 
 }

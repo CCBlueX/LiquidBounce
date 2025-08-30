@@ -160,13 +160,13 @@ fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
         level * 1.25
     }
 
-val ItemStack.attackSpeed: Float
+val ItemStack.attackSpeed: Double
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
 
 val ItemStack.durability
     get() = this.maxDamage - this.damage
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Double {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     this.components
@@ -179,7 +179,7 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
             attribInstance.addTemporaryModifier(modifier)
         }
 
-    return attribInstance.value.toFloat()
+    return attribInstance.value
 }
 
 fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {

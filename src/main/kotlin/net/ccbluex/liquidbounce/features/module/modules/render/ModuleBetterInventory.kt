@@ -153,7 +153,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         mouseX: Int,
         mouseY: Int,
     ): Boolean {
-        if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return false
+        if (!running || stack.isEmpty || !ContainerItemView.enabled) return false
 
         val containerComponent = stack.getComponents()[DataComponentTypes.CONTAINER] ?: return false
 

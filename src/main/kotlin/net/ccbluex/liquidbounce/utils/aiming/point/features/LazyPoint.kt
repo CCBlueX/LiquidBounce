@@ -19,17 +19,17 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
 /**
  * Lazy Point allows you to set a threshold when the point is going to be updated.
  * If the new point is below this threshold, we return the current point instead
  */
-internal class LazyPoint(parent: EventListener) : ToggleableConfigurable(parent, "Lazy", false) {
+internal class LazyPoint(parent: EventListener) : PointProcessor(parent, "Lazy", false) {
 
     private val threshold by floatRange("Threshold", 0.0f..0.2f, 0.01f..1f).onChanged { range ->
         currentThreshold = range.random()
@@ -38,14 +38,10 @@ internal class LazyPoint(parent: EventListener) : ToggleableConfigurable(parent,
     private var currentThreshold: Float = threshold.random()
     private var currentPoint: Vec3d? = null
 
-    /**
-     * Update the point if the distance is greater than the threshold
-     */
-    fun update(point: Vec3d): Vec3d {
-        if (!enabled) {
-            return point
-        }
-
+    override fun process(
+        point: Vec3d,
+        box: Box
+    ): Vec3d {
         val currentPoint = currentPoint ?: run {
             this.currentPoint = point
             return point
@@ -61,7 +57,8 @@ internal class LazyPoint(parent: EventListener) : ToggleableConfigurable(parent,
 
         this.currentPoint = point
         this.currentThreshold = threshold.random()
-        return point
+
+        return currentPoint
     }
 
 
