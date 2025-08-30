@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -101,7 +100,6 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         GOLDEN_APPLE,
 
         SNOWBALL,
-        EGG,
         TNT,
         FLINT_AND_STEEL
     )
@@ -126,33 +124,36 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
                 .filter { it.squaredDistanceTo(camera) <= maximumDistance * maximumDistance }
 
             renderEnvironmentForGUI {
-                val fontBuffers = FontRendererBuffers()
-                for (item in items) {
-                    val pos = item.interpolateCurrentPosition(event.tickDelta)
-                    val screenPos = WorldToScreen.calculateScreenPos(pos.add(0.0, item.height + 0.25, 0.0)) ?: continue
+                fontRenderer.withBuffers { buf ->
+                    for (item in items) {
+                        val pos = item.interpolateCurrentPosition(event.tickDelta)
+                        val screenPos = WorldToScreen.calculateScreenPos(
+                            pos.add(0.0, item.height + 0.25, 0.0)) ?: continue
 
-                    matrixStack.push()
-                    matrixStack.translate(screenPos.x, screenPos.y, 0f)
+                        matrixStack.push()
+                        matrixStack.translate(screenPos.x, screenPos.y, 0f)
 
-                    val distanceScale =
-                        mc.player?.let { (1f / (it.distanceTo(item) * 0.1f)).coerceIn(0.5f, 2f) /5 * scale } ?: scale
-                    matrixStack.scale(distanceScale, distanceScale, 1f)
-                    val processed = fontRenderer.process(item.stack.name.string)
-                    val textWidth = fontRenderer.getStringWidth(processed)
-                    val textHeight = fontRenderer.height
+                        val distanceScale = mc.player?.let {
+                            (1f / (it.distanceTo(item) * 0.1f)).coerceIn(0.5f, 2f) /5 * scale } ?: scale
+                        matrixStack.scale(distanceScale, distanceScale, 1f)
+                        val processed = fontRenderer.process(item.stack.name.string)
+                        val textWidth = fontRenderer.getStringWidth(processed)
+                        val textHeight = fontRenderer.height
 
-                    fontRenderer.draw(
-                        processed,
-                        -textWidth / 2f,
-                        -textHeight / 2f,
-                        true,
-                        z = 0.001f
-                    )
-                    fontRenderer.commit(this, fontBuffers)
+                        fontRenderer.draw(
+                            processed,
+                            -textWidth / 2f,
+                            -textHeight / 2f,
+                            true,
+                            z = 0.001f
+                        )
+                        fontRenderer.commit(buf)
 
-                    matrixStack.pop()
+                        matrixStack.pop()
+                    }
                 }
             }
+
         }
 
     }

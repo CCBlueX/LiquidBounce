@@ -17,52 +17,52 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.Identifier
 import java.util.function.Function
+import kotlin.math.min
 
 object NovolineMode : TargetInfoMode("Novoline") {
 
+    private const val HOLD_TICKS = 10
+
     private var easingHealth = 0f
+    private var previousEasingHealth = 0f
     private var alpha = 0
     private var delayCounter = 0
-    private var previousEasingHealth = 0f
     private var lastTarget: LivingEntity? = null
+    private var lastKnownHealth = 0f
+    private var lastKnownMax = 1f
 
     @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> {
-        val target = determineTarget()
-        renderTargetHUD(it.context, target)
-    }
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
+        val currentTarget = (ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target)
+            ?.takeIf { it is PlayerEntity } as? PlayerEntity
 
-    private fun determineTarget(): LivingEntity? {
-        val target = (ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target)
-            ?.takeIf { it is PlayerEntity }
-
-        return when {
-            target != null -> target.also {
-                delayCounter = 0
-                lastTarget = it
-            }
-            lastTarget != null && delayCounter++ < 10 -> lastTarget
-            else -> null.also {
-                delayCounter = 0
-                lastTarget = null
-            }
+        var hasActive = false
+        if (currentTarget != null) {
+            lastTarget = currentTarget
+            lastKnownHealth = currentTarget.getActualHealth(true)
+            lastKnownMax = (currentTarget.maxHealth + currentTarget.absorptionAmount).coerceAtLeast(1f)
+            delayCounter = 0
+            hasActive = true
+        } else if (lastTarget != null && delayCounter++ < HOLD_TICKS) {
+            hasActive = true
+        } else {
+            hasActive = false
         }
-    }
 
-    private fun renderTargetHUD(ctx: DrawContext, target: LivingEntity?) {
-        val activeTarget = target ?: lastTarget?.takeIf { delayCounter < 10 } ?: run {
-            alpha = 0
+        updateAnimationStates(lastTarget, hasActive)
+
+        val entity = lastTarget as? PlayerEntity
+        if (alpha > 0 && entity != null) {
+            renderTargetHUD(event.context, entity)
+        } else if (!hasActive) {
             lastTarget = null
+            delayCounter = 0
             easingHealth = 0f
-            return
+            previousEasingHealth = 0f
         }
-
-        updateAnimationStates(activeTarget)
-        if (alpha <= 0) return
-
-        val entity = lastTarget as? PlayerEntity ?: return
-        val mc = net.minecraft.client.MinecraftClient.getInstance()
-
+    }
+    @Suppress("DestructuringDeclarationWithTooManyEntries")
+    private fun renderTargetHUD(ctx: DrawContext, entity: PlayerEntity) {
         val nameWidth = mc.textRenderer.getWidth(entity.name.string) * 0.3f
         val width = 106f + nameWidth
         val x = mc.window.scaledWidth * ModuleTargetInfo.xOffsetRatio
@@ -70,64 +70,98 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
         fun Color4b.fade() = withAlpha((a * alpha / 255f).toInt())
 
-        ctx.fill(x.toInt(), y.toInt(), (x + width).toInt(), (y + 36).toInt(), ModuleTargetInfo.backgroundColor.fade().toARGB())
+        ctx.fill(x.toInt(), y.toInt(),
+            (x + width).toInt(), (y + 36).toInt(),
+            ModuleTargetInfo.backgroundColor.fade().toARGB())
 
         listOf(
-            listOf(x - 1, y - 1, x + width + 1, y),
-            listOf(x - 1, y + 36, x + width + 1, y + 37),
-            listOf(x - 1, y, x, y + 36),
-            listOf(x + width, y, x + width + 1, y + 36)
-        ).forEach { (sx, sy, ex, ey) ->
-            ctx.fill(sx.toInt(), sy.toInt(), ex.toInt(), ey.toInt(), ModuleTargetInfo.borderColor.fade().toARGB())
+            floatArrayOf(x - 1, y - 1, x + width + 1, y),
+            floatArrayOf(x - 1, y + 36, x + width + 1, y + 37),
+            floatArrayOf(x - 1, y, x, y + 36),
+            floatArrayOf(x + width, y, x + width + 1, y + 36)
+        ).forEach { arr ->
+            val (sx, sy, ex, ey) = arr
+            ctx.fill(
+                sx.toInt(), sy.toInt(),
+                ex.toInt(), ey.toInt(),
+                ModuleTargetInfo.borderColor.fade().toARGB()
+            )
         }
 
-
-        drawHealthBar(ctx, entity, width, x, y)
+        drawHealthBar(ctx, width, x, y)
         drawPlayerHead(ctx, x.toInt(), y.toInt())
         drawText(ctx, entity, ModuleTargetInfo.textColor.fade(), width, x, y)
     }
 
-    private fun updateAnimationStates(entity: LivingEntity) {
-        val mc = net.minecraft.client.MinecraftClient.getInstance()
-        val health = entity.getActualHealth(true)
-        val max = (entity.maxHealth + entity.absorptionAmount).coerceAtLeast(1f)
-        if (max <= 0f) return
-
+    private fun updateAnimationStates(entity: LivingEntity?, hasActive: Boolean) {
         val delta = mc.renderTickCounter.getTickDelta(true)
-        easingHealth = (easingHealth + (health - easingHealth) * 0.2f * delta).coerceIn(0f, max)
-        previousEasingHealth = (previousEasingHealth + (easingHealth - previousEasingHealth) * 0.1f * delta).coerceIn(0f, max)
 
-        val targetAlpha = if (determineTarget() != null || delayCounter < 10) 255 else 0
+        if (entity != null) {
+            val health = entity.getActualHealth(true)
+            val max = (entity.maxHealth + entity.absorptionAmount).coerceAtLeast(1f).coerceAtLeast(1f)
+            lastKnownHealth = health
+            lastKnownMax = max
+
+            easingHealth = (easingHealth + (health - easingHealth) * 0.2f * delta).coerceIn(0f, max)
+            previousEasingHealth = (previousEasingHealth +
+                (easingHealth - previousEasingHealth) * 0.1f * delta).coerceIn(0f, max)
+        } else {
+            previousEasingHealth = (previousEasingHealth +
+                (easingHealth - previousEasingHealth) * 0.1f * delta).coerceIn(0f, lastKnownMax.coerceAtLeast(1f))
+        }
+
+        val targetAlpha = if (hasActive) 255 else 0
         alpha = (alpha + (targetAlpha - alpha) * 0.2f * delta).toInt().coerceIn(0, 255)
+
+        if (!hasActive && alpha <= 0) {
+            easingHealth = 0f
+            previousEasingHealth = 0f
+            delayCounter = 0
+        }
     }
 
     @Suppress("LongParameterList")
     private fun drawText(ctx: DrawContext, target: PlayerEntity, color: Color4b, width: Float, x: Float, y: Float) {
-        val mc = net.minecraft.client.MinecraftClient.getInstance()
-        val max = (target.maxHealth + target.absorptionAmount).coerceAtLeast(1f)
-        val percent = (easingHealth / max * 100).toInt().coerceIn(0, 100).toString() + "%"
+        val max = lastKnownMax.coerceAtLeast(1f)
+        val percent = (if (max > 0f) (easingHealth / max * 100).toInt().coerceIn(0, 100) else 0).toString() + "%"
         val percentWidth = mc.textRenderer.getWidth(percent) * 0.3f
         val percentX = x + 38f + ((width - 40f) - percentWidth) / 2f
         val percentY = y + 24f + 4f - (mc.textRenderer.fontHeight * 0.3f / 2f) - 1f
 
         val name = mc.textRenderer.trimToWidth(target.name.string, ((width - 44f) / 0.3f).toInt())
 
-        ctx.drawText(mc.textRenderer, name, (x + 38f).toInt(), (y + 6f).toInt(), color.toARGB(), false)
-        ctx.drawText(mc.textRenderer, percent, percentX.toInt(), percentY.toInt(), Color4b.WHITE.toARGB(), false)
+        ctx.drawText(
+            mc.textRenderer,
+            name,
+            (x + 38f).toInt(),
+            (y + 6f).toInt(),
+            color.toARGB(),
+            false
+        )
+        val percentColor = Color4b.WHITE.with(a = (Color4b.WHITE.a * alpha / 255f).toInt()).toARGB()
+        ctx.drawText(
+            mc.textRenderer,
+            percent,
+            percentX.toInt(),
+            percentY.toInt(),
+            percentColor,
+            false
+        )
     }
 
+    private fun drawHealthBar(ctx: DrawContext, width: Float, x: Float, y: Float) {
 
-    private fun drawHealthBar(ctx: DrawContext, target: LivingEntity, width: Float, x: Float, y: Float) {
         val barX = x + 38f
         val barY = y + 24f
         val barW = (width - 40f).coerceAtLeast(0f)
 
-        val maxHealth = (target.maxHealth + target.absorptionAmount).coerceAtLeast(1f)
+        val maxHealth = lastKnownMax.coerceAtLeast(1f)
         val currentHealth = (easingHealth / maxHealth).coerceIn(0f, 1f) * barW
         val previousHealth = (previousEasingHealth / maxHealth).coerceIn(0f, 1f) * barW
 
         val (start, end) = when (val mode = colorModes.activeChoice) {
-            is GenericStaticColorMode, is GenericRainbowColorMode -> mode.getColors(mc.player).first.let { it to it }
+            is GenericStaticColorMode,
+            is GenericRainbowColorMode -> mode.getColors(mc.player).first.let { it to it }
             else -> mode.getColors(mc.player)
         }
 
@@ -137,18 +171,22 @@ object NovolineMode : TargetInfoMode("Novoline") {
         )
 
         if (previousHealth != currentHealth) {
-            val fadeStartX = barX + minOf(previousHealth, currentHealth)
+            val fadeStartX = barX + min(previousHealth, currentHealth)
             val fadeWidth = (previousHealth - currentHealth).coerceIn(-barW, barW)
             ctx.fillGradient(
-                fadeStartX.toInt(), barY.toInt(), (fadeStartX + fadeWidth).toInt(), (barY + 8f).toInt(), 0,
+                fadeStartX.toInt(),
+                barY.toInt(),
+                (fadeStartX + fadeWidth).toInt(), (barY + 8f).toInt(), 0,
                 start.with(a = (start.a * alpha / 255f * 0.5f).toInt()).toARGB(),
                 end.with(a = (end.a * alpha / 255f * 0.5f).toInt()).toARGB()
             )
         }
 
-
         ctx.fillGradient(
-            barX.toInt(), barY.toInt(), (barX + currentHealth).toInt(), (barY + 8f).toInt(), 0,
+            barX.toInt(),
+            barY.toInt(),
+            (barX + currentHealth).toInt(),
+            (barY + 8f).toInt(), 0,
             start.with(a = (start.a * alpha / 255f).toInt()).toARGB(),
             end.with(a = (end.a * alpha / 255f).toInt()).toARGB()
         )
@@ -156,7 +194,6 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
     private fun drawPlayerHead(ctx: DrawContext, x: Int, y: Int) {
         val target = lastTarget as? PlayerEntity ?: return
-        val mc = net.minecraft.client.MinecraftClient.getInstance()
         val id = mc.skinProvider.getSkinTextures(target.gameProfile).texture()
         val centerX = x + 8f
         val centerY = y + 8f

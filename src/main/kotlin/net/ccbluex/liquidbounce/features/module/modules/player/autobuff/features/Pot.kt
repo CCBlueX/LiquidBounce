@@ -74,10 +74,17 @@ object Pot : Buff("Pot") {
 
             val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
             val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
+            if (!isCloseGround || isSplashNearby()) return false
 
-            // Do not check for health pass requirements, because this is already done in the potion check
-            return isCloseGround && !isSplashNearby()
+            return (0..8).any { slotIndex ->
+                val stack = player.inventory.getStack(slotIndex)
+                !stack.isNothing() &&
+                    isValidPotion(stack) &&
+                    stack.getPotionEffects().any { !alreadyHasOrNotNeeded(it) }
+            }
         }
+
+
 
 
     private object HealthPotion : ToggleableConfigurable(Drink, "HealthPotion", true) {
@@ -113,6 +120,12 @@ object Pot : Buff("Pot") {
     override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
         // TODO: Use movement prediction to splash against walls and away from the player
         //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
+        val stack = slot.itemStack
+        if (stack.isNothing() || !isValidPotion(stack) ||
+            stack.getPotionEffects().all { alreadyHasOrNotNeeded(it) }) {
+
+            return
+        }
         var rotation = Rotation(player.yaw, (85f..90f).random())
 
         when (ModuleAutoBuff.rotations.rotationTiming) {
@@ -208,6 +221,19 @@ object Pot : Buff("Pot") {
 
     }
 
+    private fun alreadyHasOrNotNeeded(effect: StatusEffectInstance): Boolean {
+        val active = player.statusEffects.map { it.effectType }.toSet()
+        val fullHp = player.health >= player.maxHealth
+
+        return when (effect.effectType) {
+            StatusEffects.INSTANT_HEALTH -> fullHp || !HealthPotion.enabled
+            StatusEffects.REGENERATION -> active.contains(StatusEffects.REGENERATION) || !RegenPotion.enabled
+            StatusEffects.STRENGTH -> active.contains(StatusEffects.STRENGTH) || !strengthPotion
+            StatusEffects.SPEED -> active.contains(StatusEffects.SPEED) || !speedPotion
+            StatusEffects.FIRE_RESISTANCE -> active.contains(StatusEffects.FIRE_RESISTANCE) || !fireResistancePotion
+            else -> true
+        }
+    }
     /**
      * Check if the player is standing inside a lingering potion cloud
      */

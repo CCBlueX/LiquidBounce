@@ -47,7 +47,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
         arrayOf(ImageMode.FaceImageMode, ImageMode.FileImageMode)
     )
 
-    private val imageSize by float("ImageSize", 0.5f, 0.1f..2f)
+    private val imageSize by float("ImageSize", 0.5f, 0.5f..1f)
     private val opacity by float("Opacity", 0.8f, 0f..1f)
     private val attackColor by color("Attack", Color4b.PINK)
     private val onlyPlayer by boolean("OnlyPlayer", true)
