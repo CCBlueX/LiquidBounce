@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
@@ -178,8 +179,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
-        val requiresShield = autoShieldBreak && (enforceShield || !isOlderThanOrEqual1_8 &&
-            target?.blockedByShield(world.damageSources.playerAttack(player)) == true)
+        val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
 
         val bestSlot = Slots.Hotbar

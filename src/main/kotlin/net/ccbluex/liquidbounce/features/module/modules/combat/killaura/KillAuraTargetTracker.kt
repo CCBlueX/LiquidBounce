@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.minecraft.entity.LivingEntity
@@ -52,7 +51,7 @@ object KillAuraTargetTracker : TargetTracker() {
             return true
         }
 
-        return !entity.blockedByShield(world.damageSources.playerAttack(player)) || !entity.wouldBlockHit(player)
+        return !entity.wouldBlockHit
     }
 
 }

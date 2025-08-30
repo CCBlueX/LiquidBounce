@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -51,14 +53,18 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
 ) {
 
     class KillAuraClickerItemCooldown : ItemCooldown<ModuleKillAura>(ModuleKillAura) {
-        val ignoreWhenExitingRange by boolean("IgnoreWhenExitingRange", true)
 
-        override fun isCooldownPassed(ticks: Int): Boolean {
-            if (ignoreWhenExitingRange && predictExitingRange(1.0 + ticks.toDouble())) {
-                return true
-            }
+        private val ignoreOnShieldBreak by boolean("IgnoreOnShieldBreak", true)
+        private val ignoreOnMaceSmash by boolean("IgnoreOnMaceSmash", true)
+        private val ignoreWhenExitingRange by boolean("IgnoreWhenExitingRange", true)
 
-            return super.isCooldownPassed(ticks)
+        override fun isCooldownPassed(ticks: Int) = when {
+            super.isCooldownPassed(ticks) -> true
+            ignoreOnShieldBreak && ModuleKillAura.targetTracker.target?.wouldBlockHit == true
+                && ModuleAutoWeapon.willShieldBreak -> true
+            ignoreOnMaceSmash && ModuleAutoWeapon.willMaceSmash -> true
+            ignoreWhenExitingRange && predictExitingRange(1.0 + ticks.toDouble()) -> true
+            else -> false
         }
 
         /**
