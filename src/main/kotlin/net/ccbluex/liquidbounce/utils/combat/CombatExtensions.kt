@@ -207,6 +207,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
             swing.swing(Hand.MAIN_HAND)
         }
 
+        interaction.syncSelectedSlot()
         network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
 
         if (keepSprint) {
