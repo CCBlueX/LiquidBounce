@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("WildcardImport")
-
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
@@ -162,10 +161,8 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-
-        val isInInventoryScreen =
-            isInventoryOpen || mc.currentScreen is GenericContainerScreen
-
+        // Make sure killaura-logic is not running while inventory is open
+        val isInInventoryScreen = isInventoryOpen || mc.currentScreen is GenericContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDead || !requirementsMet
 
         if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
@@ -179,7 +176,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         updateTarget()
 
         // Update Auto Weapon
-        ModuleAutoWeapon.prepare(targetTracker.target)
+        ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
     @Suppress("unused")
@@ -230,7 +227,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
                     }
                 })?.entity ?: target
             }
-
             else -> target
         }
 
@@ -248,8 +244,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent> { event ->
         if (shouldBlockSprinting && (event.source == SprintEvent.Source.MOVEMENT_TICK ||
-                event.source == SprintEvent.Source.INPUT)
-        ) {
+                event.source == SprintEvent.Source.INPUT)) {
             event.sprint = false
         }
     }
@@ -260,11 +255,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         KillAuraAutoBlock.makeSeemBlock()
 
         // Are we actually facing the [chosenEntity]
-        val isFacingEnemy = facingEnemy(
-            toEntity = target, rotation = rotation,
+        val isFacingEnemy = facingEnemy(toEntity = target, rotation = rotation,
             range = range.toDouble(),
-            wallsRange = wallRange.toDouble()
-        ) || ModuleElytraTarget.canIgnoreKillAuraRotations
+            wallsRange = wallRange.toDouble()) || ModuleElytraTarget.canIgnoreKillAuraRotations
 
         ModuleDebug.debugParameter(ModuleKillAura, "Is Facing Enemy", isFacingEnemy)
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
@@ -273,8 +266,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         // Check if our target is in range, otherwise deal with auto block
         if (!isFacingEnemy) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= (range + currentScanExtraRange).pow(2)
-            ) {
+                player.squaredBoxedDistanceTo(target) <= (range + currentScanExtraRange).pow(2)) {
                 KillAuraAutoBlock.startBlocking()
                 return
             }
@@ -317,8 +309,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
                 true
             }
         } else if (KillAuraAutoBlock.currentTickOff > 0 && clickScheduler.willClickAt(KillAuraAutoBlock.currentTickOff)
-            && KillAuraAutoBlock.shouldUnblockToHit
-        ) {
+            && KillAuraAutoBlock.shouldUnblockToHit) {
             KillAuraAutoBlock.stopBlocking(pauses = true)
         } else {
             KillAuraAutoBlock.startBlocking()
@@ -330,7 +321,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val situation = when {
             clickScheduler.isClickTick || clickScheduler.willClickAt(1)
                 -> PointTracker.AimSituation.FOR_NEXT_TICK
-
             else -> PointTracker.AimSituation.FOR_THE_FUTURE
         }
         ModuleDebug.debugParameter(ModuleKillAura, "AimSituation", situation)
@@ -373,7 +363,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     }
 
     @Suppress("ReturnCount")
-
     private fun processTarget(
         entity: LivingEntity,
         maximumRange: Float,

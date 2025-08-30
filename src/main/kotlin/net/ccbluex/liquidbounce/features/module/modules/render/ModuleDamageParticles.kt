@@ -18,18 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
 import java.text.DecimalFormat
 import kotlin.math.abs
@@ -46,52 +50,101 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
     private val displacement by vec3d("Displacement", Vec3d(0.0, 1.0, 0.0))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
+    private val trackMode by enumChoice("TrackMode", TrackMode.ON_UPDATE)
+
+    // colors
+    private val damageColor by color("DamageColor", Color4b.RED)
+    private val deathColor by color("DeathColor", Color4b.RED)
+    private val healColor by color("HealColor", Color4b.GREEN)
+    private val maxHealthColor by color("MaxHealthColor", Color4b.GREEN)
+
+    private enum class TrackMode(override val choiceName: String) : NamedChoice {
+        ON_UPDATE("OnUpdate"),
+        ON_TICK("OnTick"),
+    }
 
     /**
-     * Ordered by startTime
+     * Ordered by [Particle.startTime]
      */
     private val particles = ArrayDeque<Particle>()
+
+    private val entityHealthMap = Reference2FloatOpenHashMap<LivingEntity>()
 
     private const val EPSILON = 0.05F
     private val FORMATTER = DecimalFormat("0.#")
 
+    private fun trackEntityHealth(entity: LivingEntity, oldHealth: Float, newHealth: Float, maxHealth: Float) {
+        val delta = abs(oldHealth - newHealth)
+        if (delta > EPSILON) {
+            val color = when {
+                newHealth <= 0F -> deathColor
+                oldHealth > newHealth -> damageColor
+                newHealth < maxHealth -> healColor
+                else -> maxHealthColor
+            }
+
+            particles += Particle(
+                System.currentTimeMillis(),
+                FORMATTER.format(delta),
+                color,
+                entity.box.center.add(entity.movement),
+            )
+        }
+    }
+
+    private fun shouldNotTrack(entity: LivingEntity) = entity.age == 0 || entity === player
+
     override fun onDisabled() {
         particles.clear()
+        entityHealthMap.clear()
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         particles.clear()
+        entityHealthMap.clear()
     }
 
     @Suppress("unused")
     private val entityHealthUpdateHandler = handler<EntityHealthUpdateEvent> {
-        val entity = it.entity
-        if (entity.age == 0) {
+        if (trackMode !== TrackMode.ON_UPDATE) {
             return@handler
         }
 
-        val oldHealth = it.old
-        val newHealth = it.new
-        val maxHealth = it.max
-
-        val delta = abs(oldHealth - newHealth)
-        if (delta > EPSILON) {
-            particles += Particle(
-                System.currentTimeMillis(),
-                FORMATTER.format(delta),
-                if (oldHealth > newHealth) Color4b.RED else Color4b.GREEN,
-                entity.box.center,
-            )
+        val entity = it.entity
+        if (shouldNotTrack(entity)) {
+            return@handler
         }
+
+        trackEntityHealth(entity, it.old, it.new, it.max)
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         val earliest = System.currentTimeMillis() - (ttl * 1000).toLong()
         while (particles.isNotEmpty() && particles.first().startTime < earliest) {
             particles.removeFirst()
         }
+
+        if (trackMode !== TrackMode.ON_TICK) {
+            return@handler
+        }
+
+        val entities = world.entities
+        for (entity in entities) {
+            if (entity !is LivingEntity || shouldNotTrack(entity)) {
+                continue
+            }
+
+            val newHealth = entity.health
+            val maxHealth = entity.maxHealth
+            val oldHealth = entityHealthMap.put(entity, newHealth)
+            if (oldHealth != 0F) {
+                trackEntityHealth(entity, oldHealth, newHealth, maxHealth)
+            }
+        }
+
+        entityHealthMap.keys.removeIf { it !in entities || it.isDead }
     }
 
     @Suppress("unused")

@@ -48,7 +48,7 @@ import net.minecraft.entity.projectile.ShulkerBulletEntity
  */
 object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
-    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, false))
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, null))
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)

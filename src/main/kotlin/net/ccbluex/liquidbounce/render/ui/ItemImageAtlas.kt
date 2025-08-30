@@ -22,6 +22,7 @@ import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
+import org.joml.Vector2i
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
 import kotlin.math.sqrt

@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -39,13 +38,11 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
-import net.ccbluex.liquidbounce.integration.theme.component.types.minimap.ChunkRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 
@@ -130,13 +127,16 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     val isBlurEffectActive
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
-    var browserSettings: BrowserSettings? = null
+
+    private var browserSettings: BrowserSettings? = null
 
 
     private val customization = tree(Customization())
 
     init {
+        @Suppress("UNCHECKED_CAST")
         tree(Configurable("In-built", value = components as MutableList<Value<*>>))
+        @Suppress("UNCHECKED_CAST")
         tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
     }
     val clientName: String
@@ -148,24 +148,13 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
             chat(markAsError(message("hidingAppearance")))
         }
 
-        // Minimap
-        RenderedEntities.subscribe(this)
-        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-
         if (visible) {
             open()
         }
     }
 
     override fun onDisabled() {
-        // Closes tab entirely
-        browserBrowser?.close()
-        browserBrowser = null
-
-        // Minimap
-        RenderedEntities.unsubscribe(this)
-        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.unloadEverything()
+        close()
     }
 
 
@@ -195,9 +184,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
 
     private fun open(): Browser {
-        if (browserBrowser != null) {
-            return browserBrowser!!
-        }
+        browserBrowser?.let { return it }
 
         return ThemeManager.openImmediate(
             VirtualScreenType.HUD,
@@ -209,8 +196,10 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     private fun close() {
-        browserBrowser?.close()
-        browserBrowser = null
+        browserBrowser?.let {
+            it.close()
+            browserBrowser = null
+        }
     }
 
 

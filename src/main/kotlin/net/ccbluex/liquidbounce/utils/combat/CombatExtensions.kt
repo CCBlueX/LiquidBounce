@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("TooManyFunctions")
-
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
@@ -138,7 +137,6 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
             suspect.isSleeping && Targets.SLEEPING !in this -> false
             else -> Targets.PLAYERS in this
         }
-
         is WaterCreatureEntity -> Targets.WATER_CREATURE in this
         is PassiveEntity -> Targets.PASSIVE in this
         is HostileEntity, is Monster -> Targets.HOSTILE in this
@@ -181,12 +179,8 @@ fun ClientWorld.getEntitiesInCuboid(
     range: Double,
     predicate: Predicate<Entity> = Predicate { true }
 ): MutableList<Entity> {
-    return getOtherEntities(
-        null, Box(
-            midPos.subtract(range, range, range),
-            midPos.add(range, range, range)
-        ), predicate
-    )
+    return getOtherEntities(null, Box(midPos.subtract(range, range, range),
+        midPos.add(range, range, range)), predicate)
 }
 
 inline fun ClientWorld.getEntitiesBoxInRange(
@@ -205,11 +199,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
 
 @Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
 fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
-    if (EventManager.callEvent(AttackEntityEvent(this) {
-            attack(swing, keepSprint)
-        }).isCancelled) {
-        return
-    }
+    EventManager.callEvent(AttackEntityEvent(this))
 
     with(player) {
         // Swing before attacking (on 1.8)
@@ -217,6 +207,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
             swing.swing(Hand.MAIN_HAND)
         }
 
+        interaction.syncSelectedSlot()
         network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
 
         if (keepSprint) {
@@ -227,10 +218,8 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
                     getAttributeValue(EntityAttributes.ATTACK_DAMAGE).toFloat()
                 }
             val damageSource = this.damageSources.playerAttack(this)
-            var enchantAttackDamage = this.getDamageAgainst(
-                this@attack, genericAttackDamage,
-                damageSource
-            ) - genericAttackDamage
+            var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
+                damageSource) - genericAttackDamage
 
             val attackCooldown = this.getAttackCooldownProgress(0.5f)
             genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f

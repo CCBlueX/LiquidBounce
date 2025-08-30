@@ -2,8 +2,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -18,6 +18,7 @@ import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.client.render.entity.state.LivingEntityRenderState
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import java.util.*
 
 /**
@@ -37,7 +38,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
         val entity = event.entity
-        if (entity !is PlayerEntity || isLogoffEntity(entity)) {
+        if (entity !is PlayerEntity || isLogoffEntity(entity.id)) {
             return@handler
         }
 
@@ -82,11 +83,13 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     }
 
     @Suppress("unused")
-    private val attackHandler = handler<AttackEntityEvent> { event ->
-        val entity = event.entity
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
 
-        if (isLogoffEntity(entity)) {
-            event.cancelEvent()
+        if (packet is PlayerInteractEntityC2SPacket) {
+            if (isLogoffEntity(packet.entityId)) {
+                event.cancelEvent()
+            }
         }
     }
 
@@ -103,9 +106,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     }
 
     fun isLogoffEntity(state: LivingEntityRenderState) =
-        isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`())
+        isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`().id)
 
-    fun isLogoffEntity(entity: Entity) = this.running
-        && lastSeenPlayers.any { (_, logOffPlayer) -> entity == logOffPlayer.entity }
+    fun isLogoffEntity(entityId: Int) = this.running
+        && lastSeenPlayers.any { (_, logOffPlayer) -> logOffPlayer.entity.id == entityId }
 
 }
