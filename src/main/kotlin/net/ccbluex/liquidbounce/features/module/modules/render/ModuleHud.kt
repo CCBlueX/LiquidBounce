@@ -22,11 +22,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.events.HudValueChangeEvent
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
-import net.ccbluex.liquidbounce.event.events.VirtualTypeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.Category
@@ -39,7 +35,6 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components
 import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError

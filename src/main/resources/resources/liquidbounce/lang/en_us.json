@@ -759,5 +759,7 @@
   "liquidbounce.module.auroraAntiCheat.description": "Client-side anti-cheat simulation based on movement prediction and data analysis.",
   "liquidbounce.module.delayBlink.description": "Make your actions appear slower to others than they actually are.",
   "liquidbounce.module.fireballFly.description": "Delay fireball knockback to achieve a flying effect.",
-  "liquidbounce.module.autoReport.description": "Automatically report players who defeat you."
+  "liquidbounce.module.autoReport.description": "Automatically report players who defeat you.",
+  "liquidbounce.module.clientTitle.description":"Allows you to customize the title of the client window.",
+  "liquidbounce.module.autoSwap.description": "Auto switches the off-hand to GoldenApple or Throwable"
 }

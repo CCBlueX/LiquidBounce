@@ -32,7 +32,7 @@ import net.minecraft.util.hit.EntityHitResult
 /**
  * Skip crosshair entity targets.
  */
-object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
+object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER, aliases = arrayOf("NoEntityTrace")) {
 
     private fun defaultEntityTypes(): MutableSet<EntityType<*>> {
         return hashSetOf(EntityType.VILLAGER, EntityType.ARMOR_STAND)

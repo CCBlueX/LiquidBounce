@@ -767,5 +767,7 @@
   "liquidbounce.module.betterInventory.description":"显示某些信息，比如InvManager选中的槽位，和物品冷却。",
   "liquidbounce.module.godMode.description":"无效化所有攻击，只能在无反作弊的情况下工作。",
   "liquidbounce.module.auroraAntiCheat.description":"基于数据分析运动预测的客户端模拟反作弊。",
-  "liquidbounce.module.noEntityInteract.description":"允许你透过实体的碰撞箱与方块交互。"
+  "liquidbounce.module.noEntityInteract.description":"允许你透过实体的碰撞箱与方块交互。",
+  "liquidbounce.module.clientTitle.description":"允许你自定义客户端窗口的标题。",
+  "liquidbounce.module.autoSwap.description": "自动切换副手为金苹果或者投掷物"
 }

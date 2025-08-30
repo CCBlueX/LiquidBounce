@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
@@ -259,6 +258,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleMaceKill,
             ModuleNoMissCooldown,
             ModuleBowBomb,
+
             // Exploit
             ModuleAbortBreaking,
             ModuleAntiReducedDebugInfo,
@@ -289,13 +289,14 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleGodMode,
 
             // Fun
-            ModuleSuicide,
+            ModuleAutoSex,
             ModuleDankBobbing,
             ModuleDerp,
             ModuleIQBoost,
             ModuleFPSBoost,
             ModuleHandDerp,
             ModuleSkinDerp,
+            ModuleSuicide,
             ModuleTwerk,
             ModuleVomit,
 
@@ -329,6 +330,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleBetterTitle,
             ModuleAntiCheat,
             ModuleAutoEZ,
+            ModuleClientTitle,
 
            // Movement
             ModuleAirJump,
@@ -400,8 +402,9 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAntiInstakillAxe,
             ModuleDelayBlink,
             ModuleFireballFly,
+            ModuleAutoSwap,
 
-            // Render
+                // Render
             ModuleAnimations,
             ModuleAntiBlind,
             ModuleBetterInventory,

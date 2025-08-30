@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.Module
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
