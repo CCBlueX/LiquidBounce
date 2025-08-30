@@ -95,7 +95,7 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
 
         // Filter exempts
         val predicateContext = ExemptContext(box, bestHitVector, worstHitVector)
-        val predicates = listOf(*predicateBoxParts.toTypedArray(), predicateBestHitVector)
+        val predicates = predicateBoxParts + predicateBestHitVector
         val pointsWithExempts = points.filter { point ->
             predicates.none { predicate -> predicate.predicate(predicateContext, point) }
         }
