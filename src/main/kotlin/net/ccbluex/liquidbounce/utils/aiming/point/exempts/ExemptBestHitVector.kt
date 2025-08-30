@@ -17,20 +17,19 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.aiming.point.preference
+package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.minecraft.util.math.Box
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
+import net.minecraft.util.math.Vec3d
 
-enum class PreferredBoxPart(override val choiceName: String, val cutOff: (Box) -> Double) : NamedChoice {
-    HEAD("Head", { box -> box.maxY }),
-    BODY("Body", { box -> box.center.y }),
-    FEET("Feet", { box -> box.minY });
+internal class ExemptBestHitVector(parent: EventListener) :
+    ToggleableConfigurable(parent, "ExemptBestHitVector", false), ExemptPoint {
 
-    /**
-     * Check if this part of the box is higher than the other by the index of the enum.
-     * So please DO NOT change the order of the enum.
-     */
-    fun isHigherThan(other: PreferredBoxPart) = entries.indexOf(this) < entries.indexOf(other)
+    private val vertical by float("Vertical", 0.2f, 0.0f..1f)
+    private val horizontal by float("Horizontal", 0.1f, 0.0f..1f)
+
+    override fun predicate(context: ExemptContext, point: Vec3d) = enabled &&
+        point.isWithinRangeOf(context.bestHitVector, horizontal.toDouble(), vertical.toDouble())
 
 }

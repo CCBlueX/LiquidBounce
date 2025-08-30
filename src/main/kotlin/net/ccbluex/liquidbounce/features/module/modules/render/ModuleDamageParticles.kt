@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -52,11 +53,16 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_UPDATE)
 
-    // colors
-    private val damageColor by color("DamageColor", Color4b.RED)
-    private val deathColor by color("DeathColor", Color4b.RED)
-    private val healColor by color("HealColor", Color4b.GREEN)
-    private val maxHealthColor by color("MaxHealthColor", Color4b.GREEN)
+    init {
+        tree(Colors)
+    }
+
+    private object Colors : Configurable("Colors") {
+        val damage by color("Damage", Color4b.RED)
+        val death by color("Death", Color4b.RED)
+        val heal by color("Heal", Color4b.GREEN)
+        val maxHealth by color("MaxHealth", Color4b.GREEN)
+    }
 
     private enum class TrackMode(override val choiceName: String) : NamedChoice {
         ON_UPDATE("OnUpdate"),
@@ -77,10 +83,10 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
         val delta = abs(oldHealth - newHealth)
         if (delta > EPSILON) {
             val color = when {
-                newHealth <= 0F -> deathColor
-                oldHealth > newHealth -> damageColor
-                newHealth < maxHealth -> healColor
-                else -> maxHealthColor
+                newHealth <= 0F -> Colors.death
+                oldHealth > newHealth -> Colors.damage
+                newHealth < maxHealth -> Colors.heal
+                else -> Colors.maxHealth
             }
 
             particles += Particle(

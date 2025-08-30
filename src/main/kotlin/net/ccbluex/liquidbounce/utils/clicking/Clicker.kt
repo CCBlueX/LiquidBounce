@@ -106,6 +106,17 @@ open class Clicker<T>(
     val isClickTick: Boolean
         get() = willClickAt(0)
 
+    val ticksUntilClick: Int
+        get() {
+            for (i in 0 until clickArray.iterations) {
+                if (willClickAt(i)) {
+                    return i
+                }
+            }
+
+            return clickArray.iterations
+        }
+
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
