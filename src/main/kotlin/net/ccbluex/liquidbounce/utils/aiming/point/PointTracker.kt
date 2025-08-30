@@ -45,7 +45,7 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
     private val predicateBoxParts by multiEnumChoice<ExemptBoxPart>("ExemptBoxParts")
     private val predicateBestHitVector = tree(ExemptBestHitVector(this))
 
-    private val prediction by boolean("Prediction", true)
+    private val prediction by boolean("Prediction", false)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
@@ -67,14 +67,7 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
      * @param entity The entity we want to track.
      */
     fun findPoint(entity: LivingEntity, ticks: Int): AimPoint {
-        // Predict player position
-        val playerPos = if (prediction) {
-            PositionExtrapolation.getBestForEntity(player)
-                .getPositionInTicks(ticks.toDouble())
-        } else {
-            player.pos
-        }
-        val eyes = playerPos.add(0.0, player.getEyeHeight(player.pose).toDouble(), 0.0)
+        val eyes = player.eyePos
 
         // Predict target position
         val targetPos = if (prediction) {
