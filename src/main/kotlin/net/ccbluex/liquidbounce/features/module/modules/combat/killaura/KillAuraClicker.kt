@@ -74,6 +74,9 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             require(ticks > 0) { "ticks must be positive" }
 
             val target = KillAuraTargetTracker.target ?: return false
+            if (target.hurtTime > 7) {
+                return false
+            }
 
             val futurePos = PositionExtrapolation.getBestForEntity(player)
                 .getPositionInTicks(ticks)
