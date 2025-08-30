@@ -107,7 +107,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     val filteredItems by items(
         "Items",
         defaultItems.toMutableSet()
-    ).onChanged(::reloadRender)
+    )
 
     private object NametagsMode : Choice("Nametags") {
         override val parent: ChoiceConfigurable<Choice>
@@ -136,7 +136,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
                         val distanceScale = mc.player?.let {
                             (1f / (it.distanceTo(item) * 0.1f)).coerceIn(0.5f, 2f) /5 * scale } ?: scale
                         matrixStack.scale(distanceScale, distanceScale, 1f)
-                        val processed = fontRenderer.process(item.stack.name.string)
+                        val processed = fontRenderer.process(item.stack.itemName.string)
                         val textWidth = fontRenderer.getStringWidth(processed)
                         val textHeight = fontRenderer.height
 
@@ -198,10 +198,6 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     object OutlineMode : Choice("Outline") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
-    }
-
-    fun reloadRender(@Suppress("UNUSED_PARAMETER") any: Any) {
-        mc.worldRenderer.reload()
     }
 
     fun shouldRender(entity: Entity?): Boolean {
