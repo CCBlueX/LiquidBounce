@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -71,7 +71,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
     private var lastExtinguishPos: BlockPos? = null
     private val lastAttemptTimer = Chronometer()
 
-    override fun enable() {
+    override fun onEnabled() {
         currentTarget = null
     }
 

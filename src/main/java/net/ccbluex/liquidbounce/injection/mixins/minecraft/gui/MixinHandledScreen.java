@@ -1,15 +1,12 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import kotlin.Unit;
-import kotlin.random.Random;
-import kotlin.random.RandomKt;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
-import net.ccbluex.liquidbounce.utils.client.Chronometer;
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -55,9 +52,11 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
     @Shadow
     private long lastButtonClickTime;
 
-    @Unique
-    @Final
-    private final Chronometer chronometer = new Chronometer();
+    @Shadow
+    protected int x;
+
+    @Shadow
+    protected int y;
 
     @Inject(method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V", at = @At("HEAD"), cancellable = true)
     private void cancelMouseClick(Slot slot, int slotId, int button, SlotActionType actionType, CallbackInfo ci) {
@@ -65,23 +64,42 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         if ((Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();
         }
+
+        if (FeatureSilentScreen.getShouldHide()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void cancelRenderByChestStealer(CallbackInfo ci) {
+        if (FeatureSilentScreen.getShouldHide()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V", shift = At.Shift.AFTER))
+    private void drawSlotOutline(DrawContext context, Slot slot, CallbackInfo ci) {
+        ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawSlots(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
     private void hookDrawSlot(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         var cursorStack = this.handler.getCursorStack();
         var slot = getSlotAt(mouseX, mouseY);
+
         if (!cursorStack.isEmpty() || slot == null) {
             return;
         }
 
-        if (matchingItemScrollerMoveConditions(mouseX, mouseY)) {
-            this.quickMovingStack = slot.hasStack() ? slot.getStack().copy() : ItemStack.EMPTY;
+        var stack = slot.getStack();
+        if (!ModuleBetterInventory.INSTANCE.drawContainerItemView(context, cursorStack, this.x, this.y, mouseX, mouseY)) {
+            ModuleBetterInventory.INSTANCE.drawContainerItemView(context, stack, this.x, this.y, mouseX, mouseY);
+        }
 
-            ModuleItemScroller.getClickMode().getAction().invoke(this.handler, slot, (callbackSlot, slotId, mouseButton, actionType) -> {
-                this.onMouseClick(callbackSlot, slotId, mouseButton, actionType);
-                return Unit.INSTANCE;
-            });
+        if (matchingItemScrollerMoveConditions(mouseX, mouseY)) {
+            this.quickMovingStack = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
+
+            ModuleItemScroller.getClickMode().getAction().invoke(this.handler, slot, this::onMouseClick);
 
             this.cancelNextRelease = true;
 
@@ -89,7 +107,7 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
             this.lastButtonClickTime = Util.getMeasuringTimeMs();
             this.lastClickedButton = GLFW.GLFW_MOUSE_BUTTON_1;
 
-            chronometer.reset();
+            ModuleItemScroller.INSTANCE.resetChronometer();
         }
     }
 
@@ -105,14 +123,8 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
 
     @Unique
     private boolean matchingItemScrollerMoveConditions(int mouseX, int mouseY) {
-        var handle = this.client.getWindow().getHandle();
-
-        return (InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT)
-                        || InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT))
-                && getSlotAt(mouseX, mouseY) != null
-                && ModuleItemScroller.INSTANCE.getRunning()
-                && GLFW.glfwGetMouseButton(handle, GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
-                && chronometer.hasAtLeastElapsed(RandomKt.nextInt(Random.Default, ModuleItemScroller.getDelay()) * 50L);
+        long handle = this.client.getWindow().getHandle();
+        return getSlotAt(mouseX, mouseY) != null && ModuleItemScroller.INSTANCE.canPerformScroll(handle);
     }
 
 }

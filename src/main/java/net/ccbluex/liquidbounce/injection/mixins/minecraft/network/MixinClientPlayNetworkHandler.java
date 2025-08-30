@@ -71,7 +71,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
     private void injectUnloadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.pos().x, packet.pos().z));
+        EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.pos()));
     }
 
     @Inject(method = "onChunkDeltaUpdate", at = @At("HEAD"))

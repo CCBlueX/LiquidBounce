@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -51,8 +51,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
     ).onChange {
         if (running) {
-            disable()
-            enable()
+            onDisabled()
+            onEnabled()
         }
         it
     }
@@ -177,11 +177,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(BlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 

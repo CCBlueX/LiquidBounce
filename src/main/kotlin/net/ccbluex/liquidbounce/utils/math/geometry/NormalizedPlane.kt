@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
@@ -99,7 +100,7 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
         fun fromParams(base: Vec3d, directionA: Vec3d, directionB: Vec3d): NormalizedPlane {
             val normalVec = directionA.crossProduct(directionB).normalize()
 
-            require(!MathHelper.approximatelyEquals(normalVec.lengthSquared(), 0.0)) {
+            require(!normalVec.isLikelyZero) {
                 "Points must not be on the same line"
             }
 

@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
 import net.ccbluex.liquidbounce.render.*

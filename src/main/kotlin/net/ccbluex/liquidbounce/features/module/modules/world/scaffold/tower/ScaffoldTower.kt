@@ -18,22 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.minecraft.util.math.BlockPos
 
-open class ScaffoldTower(override val name: String) : Choice(name) {
+abstract class ScaffoldTower(name: String) : Choice(name) {
 
-    override val parent: ChoiceConfigurable<*>
+    final override val parent: ChoiceConfigurable<*>
         get() = towerMode
 
     /**
      * Overwrites the [ModuleScaffold.getTargetedPosition] with a tower-specific one.
      */
     open fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        return blockPos.add(0, -1, 0)
+        return blockPos.down()
     }
 
 }

@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.blockVecPosition
@@ -26,24 +27,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionAndOnGr
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
-import java.util.*
-import kotlin.math.roundToInt
 
-private class Node(val position: Vec3i, var parent: Node? = null) {
-    var g = 0
-    var h = 0
-    var f = 0
-
-    override fun hashCode(): Int = position.hashCode()
-    override fun equals(other: Any?): Boolean = other is Node && other.position == this.position
-}
-
-object AStarMode : TpAuraChoice("AStar") {
+object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     private val maximumDistance by int("MaximumDistance", 95, 50..250)
     private val maximumCost by int("MaximumCost", 250, 50..500)
     private val tickDistance by int("TickDistance", 3, 1..7)
-    private val allowDiagonal by boolean("AllowDiagonal", false)
+    override val allowDiagonal by boolean("AllowDiagonal", false)
 
     private val stickAt by int("Stick", 5, 1..10, "ticks")
 
@@ -59,7 +49,7 @@ object AStarMode : TpAuraChoice("AStar") {
 
         travel(path)
         waitTicks(stickAt)
-        travel(path.reversed())
+        travel(path.asReversed())
         desyncPlayerPosition = null
         pathCache = null
     }
@@ -163,112 +153,5 @@ object AStarMode : TpAuraChoice("AStar") {
     }
 
     data class PathCache(val enemy: LivingEntity, val path: List<Vec3i>)
-
-    private fun findPath(start: Vec3i, end: Vec3i, maxCost: Int, maxIterations: Int = 500): List<Vec3i> {
-        if (start == end) return listOf(end)
-
-        val startNode = Node(start)
-        val endNode = Node(end)
-
-        // Node::f won't be modified after added
-        val openList = TreeSet(Comparator.comparingInt(Node::f).thenComparing(Node::position)).apply { add(startNode) }
-        val closedList = hashSetOf<Node>()
-
-        var iterations = 0
-        while (openList.isNotEmpty()) {
-            iterations++
-            if (iterations > maxIterations) {
-                break
-            }
-
-            val currentNode = openList.removeFirst()
-            closedList.add(currentNode)
-
-            if (currentNode.position.isWithinDistance(endNode.position, 2.0)) {
-                return constructPath(currentNode)
-            }
-
-            for (node in getAdjacentNodes(currentNode)) {
-                if (node in closedList || !isPassable(node.position)) continue
-
-                val tentativeG = currentNode.g + distanceBetween(currentNode.position, node.position)
-                if (tentativeG < node.g || node !in openList) {
-                    if (tentativeG > maxCost) continue // Skip this node if the cost exceeds the maximum
-
-                    node.parent = currentNode
-                    node.g = tentativeG
-                    node.h = distanceBetween(node.position, endNode.position)
-                    node.f = node.g + node.h
-
-                    openList.add(node)
-                }
-            }
-        }
-
-        return emptyList() // Return an empty list if no path was found
-    }
-
-    private fun constructPath(node: Node): List<Vec3i> {
-        val path = mutableListOf<Vec3i>()
-        var currentNode = node
-        while (currentNode.parent != null) {
-            path.add(currentNode.position)
-            currentNode = currentNode.parent!!
-        }
-        path.reverse()
-        return path
-    }
-
-    private val directions = buildList(22) {
-        add(Vec3i(-1, 0, 0)) // left
-        add(Vec3i(1, 0, 0)) // right
-        (-9..-1).mapTo(this) { Vec3i(0, it, 0) } // down
-        (1..9).mapTo(this) { Vec3i(0, it, 0) } // up
-        add(Vec3i(0, 0, -1)) // front
-        add(Vec3i(0, 0, 1)) // back
-    }
-
-    private val diagonalDirections = arrayOf(
-        Vec3i(-1, 0, -1), // left front
-        Vec3i(1, 0, -1), // right front
-        Vec3i(-1, 0, 1), // left back
-        Vec3i(1, 0, 1) // right back
-    )
-
-    @Suppress("detekt:CognitiveComplexMethod")
-    private fun getAdjacentNodes(node: Node): List<Node> = buildList {
-        for (direction in directions) {
-            val adjacentPosition = node.position + direction
-            if (isPassable(adjacentPosition)) {
-                add(Node(adjacentPosition, node))
-            }
-        }
-
-        if (!allowDiagonal) {
-            return@buildList
-        }
-
-        for (direction in diagonalDirections) {
-            val adjacentPosition = node.position + direction
-            if (!isPassable(adjacentPosition)) {
-                continue
-            }
-
-            if (isPassable(node.position.add(direction.x, 0, 0)) && isPassable(node.position.add(0, 0, direction.z))) {
-                add(Node(adjacentPosition, node))
-            }
-        }
-    }
-
-    private fun isPassable(position: Vec3i): Boolean {
-        val start = position.toVec3d()
-        val end = start.add(1.0, 2.0, 1.0)
-
-        val collisions = world.getBlockCollisions(player, Box(start, end))
-
-        return collisions.none()
-    }
-
-    private fun distanceBetween(a: Vec3i, b: Vec3i) = a.getSquaredDistance(b).roundToInt()
 
 }

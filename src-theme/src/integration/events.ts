@@ -6,8 +6,33 @@ import type {
     Proxy,
     Screen,
     Server,
-    TextComponent
+    TextComponent,
 } from "./types";
+
+export interface EventMap {
+    socketReady: void;
+    clickGuiValueChange: ClickGuiValueChangeEvent;
+    moduleToggle: ModuleToggleEvent;
+    keyboardKey: KeyboardKeyEvent;
+    mouseButton: MouseButtonEvent;
+    scaleFactorChange: ScaleFactorChangeEvent;
+    componentsUpdate: ComponentsUpdateEvent;
+    clientPlayerData: ClientPlayerDataEvent;
+    overlayMessage: OverlayMessageEvent;
+    notification: NotificationEvent;
+    keyEvent: KeyEvent;
+    targetChange: TargetChangeEvent;
+    blockCountChange: BlockCountChangeEvent;
+    accountManagerAddition: AccountManagerAdditionEvent;
+    accountManagerRemoval: AccountManagerRemovalEvent;
+    accountManagerMessage: AccountManagerMessageEvent;
+    accountManagerLogin: AccountManagerLoginEvent;
+    serverPinged: ServerPingedEvent;
+    clientPlayerInventory: ClientPlayerInventoryEvent;
+    proxyCheckResult: ProxyCheckResultEvent;
+    spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    browserUrlChange: BrowserUrlChangeEvent;
+}
 
 export interface ClickGuiValueChangeEvent {
     configurable: ConfigurableSetting;
@@ -95,7 +120,7 @@ export interface ServerPingedEvent {
     server: Server;
 }
 
-export interface PlayerInventoryEvent {
+export interface ClientPlayerInventoryEvent {
     inventory: PlayerInventory;
 }
 
@@ -103,29 +128,16 @@ export interface PlayerInventory {
     armor: ItemStack[];
     main: ItemStack[];
     crafting: ItemStack[];
-}
-
-export interface ProxyAdditionResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
-}
-
-export interface ProxyEditResultEvent {
-    proxy: Proxy | null;
-    error: string | null;
+    enderChest: ItemStack[];
 }
 
 export interface ProxyCheckResultEvent {
-    proxy: Proxy;
+    proxy: Proxy | null;
     error: string | null;
 }
 
 export interface SpaceSeperatedNamesChangeEvent {
     value: boolean;
-}
-
-export interface ClickGuiScaleChangeEvent {
-    value: number;
 }
 
 export interface BrowserUrlChangeEvent {

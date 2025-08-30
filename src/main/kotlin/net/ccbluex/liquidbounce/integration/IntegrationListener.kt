@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
+import kotlin.math.min
 
 object IntegrationListener : EventListener {
 
@@ -53,7 +55,7 @@ object IntegrationListener : EventListener {
      */
     lateinit var browser: Browser
         private set
-    lateinit var browserSettings: BrowserSettings
+    lateinit var browserSettings: IntegrationBrowserSettings
         private set
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -105,7 +107,7 @@ object IntegrationListener : EventListener {
         logger.info("Browser is ready.")
 
         // Fires up the client tab
-        browserSettings = BrowserSettings(0, ::restart)
+        browserSettings = IntegrationBrowserSettings(0, ::restart)
         browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         browserIsReady = true
     }
@@ -131,8 +133,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
@@ -144,8 +146,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.CLOSE
             )
         )
     }
@@ -220,6 +222,15 @@ object IntegrationListener : EventListener {
     @Suppress("unused")
     private val worldChangeEvent = handler<WorldChangeEvent> {
         update()
+    }
+
+    @Suppress("unused")
+    private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
+        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+            return@handler
+        }
+
+        event.fps = min(event.fps, browserSettings.currentFps)
     }
 
     @Suppress("unused")
@@ -307,5 +318,12 @@ object IntegrationListener : EventListener {
             }
         }
     }
+
+    /**
+     * Checks if the given screen is an active client screen.
+     */
+    @JvmStatic
+    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is BrowserScreen
 
 }

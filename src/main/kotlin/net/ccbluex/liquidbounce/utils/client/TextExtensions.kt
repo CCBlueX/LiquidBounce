@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
+import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import it.unimi.dsi.fastutil.chars.CharSets
 import net.minecraft.nbt.NbtString
@@ -123,9 +124,7 @@ fun String.translateColorCodes(): String {
     return String(chars)
 }
 
-fun String.toLowerCamelCase() = String(this.toCharArray().apply {
-    this[0] = this[0].lowercaseChar()
-})
+fun String.toLowerCamelCase(): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, this)
 
 fun String.dropPort(): String {
     return this.substringBefore(':')

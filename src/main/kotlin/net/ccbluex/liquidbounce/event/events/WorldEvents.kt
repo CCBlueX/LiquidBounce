@@ -31,13 +31,14 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.shape.VoxelShape
 
 @Nameable("worldChange")
 class WorldChangeEvent(val world: ClientWorld?) : Event()
 
 @Nameable("chunkUnload")
-class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
+class ChunkUnloadEvent(val pos: ChunkPos) : Event()
 
 @Nameable("chunkLoad")
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()

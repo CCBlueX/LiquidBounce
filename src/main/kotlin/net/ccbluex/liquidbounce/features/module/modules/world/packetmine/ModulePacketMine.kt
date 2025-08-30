@@ -125,17 +125,17 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     init {
         mode.onChanged {
             if (mc.world != null && mc.player != null) {
-                disable()
-                enable()
+                onDisabled()
+                onEnabled()
             }
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         interaction.cancelBlockBreaking()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetRenderer.clearSilently()
         _target = null
     }

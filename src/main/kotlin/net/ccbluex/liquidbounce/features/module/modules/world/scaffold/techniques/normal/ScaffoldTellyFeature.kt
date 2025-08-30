@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
@@ -42,10 +42,10 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
 
     val doNotAim: Boolean
-        get() = player.airTicks <= straightTicks && 
+        get() = player.airTicks <= straightTicks &&
                 ticksUntilJump >= jumpTicks &&
                 !(ModuleScaffold.isTowering && aimOnTower)
-                
+
 
     // New val to determine if the player is telly bridging
     val isTellyBridging: Boolean

@@ -41,6 +41,10 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
         post("/logout", ::logoutUser)
     }
 
+    // OS File Functions
+    post("/browsePath", ::postBrowsePath)
+    post("/fileDialog", ::postFileDialog)
+
     // LocalStorage Functions
     get("/localStorage/all", ::getAllLocalStorage)
     put("/localStorage/all", ::putAllLocalStorage)
@@ -103,7 +107,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     delete("/proxy", ::deleteProxy)
     get("/proxies", ::getProxies).apply {
         post("/add", ::postAddProxy)
-        post("/clipboard", ::postClipboardProxy)
+        post("/add/clipboard", ::postClipboardProxy)
         post("/edit", ::postEditProxy)
         post("/check", ::postCheckProxy)
         delete("/remove", ::deleteRemoveProxy)
@@ -151,7 +155,8 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     get("/crosshair", ::getCrosshairData)
 
     // Registry Functions
-    get("/registries", ::getRegistries)
+    get("/registry/:name", ::getRegistry)
+    get("/registry/:name/groups", ::getRegistryGroups)
 
     // ServerList Functions
     get("/servers", ::getServers).apply {

@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -60,7 +59,7 @@ object Esp2DMode : EspMode("2D") {
                 val outlineColor = color.with(a = 255).toARGB()
                 val black = Color4b.BLACK.toARGB()
 
-                val corners = listOf(
+                val corners = arrayOf(
                     Vec3d(box.minX, box.minY, box.minZ),
                     Vec3d(box.minX, box.minY, box.maxZ),
                     Vec3d(box.minX, box.maxY, box.minZ),
@@ -84,8 +83,9 @@ object Esp2DMode : EspMode("2D") {
                 var rectWidth = (maxX - minX)
                 var rectHeight = (maxY - minY)
 
-                with(DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)) {
+                with(event.context) {
                     with(matrices) {
+                        push()
                         translate(minX, minY, minZ)
 
                         if (fill) {
@@ -129,6 +129,7 @@ object Esp2DMode : EspMode("2D") {
                             }
                             drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
                         }
+                        pop()
                     }
                 }
             }
