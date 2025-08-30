@@ -222,8 +222,8 @@ class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): Cancell
 class BrowserUrlChangeEvent(val index: Int, val url: String) : Event(), WebSocketEvent
 
 @Nameable("userLoggedIn")
-class UserLoggedInEvent : Event(), WebSocketEvent
+object UserLoggedInEvent : Event(), WebSocketEvent
 
 @Nameable("userLoggedOut")
-class UserLoggedOutEvent : Event(), WebSocketEvent
+object UserLoggedOutEvent : Event(), WebSocketEvent
 

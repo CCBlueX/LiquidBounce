@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 @file:Suppress("TooManyFunctions")
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
@@ -9,12 +27,12 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient.startAuth
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.httpUnauthorized
 import net.minecraft.util.Util
@@ -46,17 +64,17 @@ fun loginUser(requestObject: RequestObject): FullHttpResponse {
     val clientAccount = ClientAccountManager.clientAccount
 
     if (clientAccount != ClientAccount.EMPTY_ACCOUNT) {
-        return httpOk(emptyJsonObject())
+        return httpNoContent()
     }
 
     withScope {
         val account = startAuth { Util.getOperatingSystem().open(it) }
         ClientAccountManager.clientAccount = account
         ConfigSystem.storeConfigurable(ClientAccountManager)
-        EventManager.callEvent(UserLoggedInEvent())
+        EventManager.callEvent(UserLoggedInEvent)
     }
 
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v2/client/user/logout
@@ -64,11 +82,11 @@ fun loginUser(requestObject: RequestObject): FullHttpResponse {
 fun logoutUser(requestObject: RequestObject): FullHttpResponse {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
-        return httpOk(emptyJsonObject())
+        return httpNoContent()
     }
 
     ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
     ConfigSystem.storeConfigurable(ClientAccountManager)
-    EventManager.callEvent(UserLoggedOutEvent())
-    return httpOk(emptyJsonObject())
+    EventManager.callEvent(UserLoggedOutEvent)
+    return httpNoContent()
 }

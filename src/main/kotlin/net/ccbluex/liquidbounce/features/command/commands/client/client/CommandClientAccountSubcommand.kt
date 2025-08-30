@@ -29,13 +29,7 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.browseUrl
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.joinToText
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 
 object CommandClientAccountSubcommand {
     fun accountCommand() = CommandBuilder.begin("account")
@@ -81,7 +75,7 @@ object CommandClientAccountSubcommand {
             withContext(Dispatchers.IO) {
                 ClientAccountManager.clientAccount = EMPTY_ACCOUNT
                 ConfigSystem.storeConfigurable(ClientAccountManager)
-                EventManager.callEvent(UserLoggedOutEvent())
+                EventManager.callEvent(UserLoggedOutEvent)
                 chat(regular("Successfully logged out."))
             }
         }.build()
@@ -97,7 +91,7 @@ object CommandClientAccountSubcommand {
             val account = startAuth { browseUrl(it) }
             ClientAccountManager.clientAccount = account
             ConfigSystem.storeConfigurable(ClientAccountManager)
-            EventManager.callEvent(UserLoggedInEvent())
+            EventManager.callEvent(UserLoggedInEvent)
             chat(regular("Successfully authorized client."))
         }.build()
 }
