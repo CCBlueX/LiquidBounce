@@ -187,9 +187,9 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             .filter { itemFacet ->
                 when {
                     // A mace's smash attack cannot be blocked by a shield
-                    requiresMace && itemFacet.itemStack.item is MaceItem -> true
+                    requiresMace -> itemFacet.itemStack.item is MaceItem
                     // An axe will stun the target if it is blocking with a shield
-                    requiresShield && itemFacet.itemStack.item is AxeItem -> true
+                    requiresShield -> itemFacet.itemStack.item is AxeItem
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.filter(itemFacet)
                 }
