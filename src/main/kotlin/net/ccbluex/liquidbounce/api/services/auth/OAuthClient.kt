@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.*
+import io.netty.channel.ChannelFutureListener
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -42,6 +45,7 @@ import kotlin.coroutines.suspendCoroutine
  */
 object OAuthClient {
 
+    @Volatile
     private var serverPort: Int? = null
     @Volatile
     private var authCodeContinuation: Continuation<String>? = null
@@ -106,38 +110,43 @@ object OAuthClient {
         }
     }
 
-    class NettyChannelInitializer : ChannelInitializer<SocketChannel>() {
+    private class NettyChannelInitializer : ChannelInitializer<SocketChannel>() {
         override fun initChannel(ch: SocketChannel) {
             ch.pipeline().addLast(HttpServerCodec(), HttpObjectAggregator(65536), NettyAuthHandler())
         }
     }
 
-    class NettyAuthHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
+    private class NettyAuthHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
         override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
             val uri = msg.uri()
             val uriData = QueryStringDecoder(uri)
-            val queryParameters = uriData.parameters().mapValues { it.value[0] }
-            val code = queryParameters["code"]
+            val code = uriData.parameters()["code"]?.firstOrNull()
 
             authCodeContinuation?.let {
                 if (code != null) {
+                    val content = ctx.alloc().buffer()
+                    content.writeCharSequence(SUCCESS_HTML, Charsets.UTF_8)
+
                     val response = DefaultFullHttpResponse(
-                        HttpVersion.HTTP_1_1, HttpResponseStatus.OK
-                    ).apply {
-                        content().writeBytes(SUCCESS_HTML.toByteArray())
-                        headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-                        headers().set(HttpHeaderNames.CONTENT_LENGTH, content().readableBytes())
-                    }
+                        HttpVersion.HTTP_1_1,
+                        HttpResponseStatus.OK,
+                        content
+                    )
+                    response.headers()
+                        .set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
+                        .set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes())
+
                     ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE)
                     it.resume(code)
                 } else {
-                    it.resumeWithException(Exception("No code found in the redirect URL"))
+                    it.resumeWithException(IllegalArgumentException("No code found in the redirect URL"))
                 }
                 authCodeContinuation = null
             }
         }
     }
 
+    @Suppress("NOTHING_TO_INLINE")
     private inline fun buildAuthUrl(codeChallenge: String, state: String, redirectUri: String): String {
         return "$AUTH_AUTHORIZE_URL?client_id=$AUTH_CLIENT_ID&redirect_uri=$redirectUri&" +
             "response_type=code&state=$state&code_challenge=$codeChallenge&code_challenge_method=S256"
