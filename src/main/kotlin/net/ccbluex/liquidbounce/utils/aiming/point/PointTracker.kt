@@ -40,8 +40,8 @@ import kotlin.math.min
 class PointTracker(
     highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
     lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
-    targetExtrapolation: Float = 0.4f,
-    targetExtrapolationScale: ClosedFloatingPointRange<Float> = 0f..2f
+    targetExtrapolation: Int = 0,
+    targetExtrapolationScale: IntRange = 0..2
 ) : Configurable("AimPoint", aliases = arrayOf("PointTracker")), EventListener {
 
     /**
@@ -71,7 +71,7 @@ class PointTracker(
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val targetPositionExtrapolation by float(
+    private val targetPositionExtrapolation by int(
         "TargetPositionExtrapolation",
         targetExtrapolation,
         targetExtrapolationScale,
