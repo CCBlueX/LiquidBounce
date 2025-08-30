@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:OptIn(ExperimentalTime::class)
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -31,16 +29,13 @@ import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.client.render.entity.state.LivingEntityRenderState
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import java.time.Instant
 import java.util.*
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 /**
  * Log off spot
@@ -54,7 +49,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         val entity: Entity
     )
 
-    private val lastSeenPlayers = mutableMapOf<UUID, LoggedOffPlayer>()
+    private val lastSeenPlayers = hashMapOf<UUID, LoggedOffPlayer>()
 
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
@@ -72,9 +67,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         clone.inventory.clone(entity.inventory)
         clone.health = entity.getActualHealth()
         world.addEntity(clone)
-        lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Clock.System.now(), clone)
+        lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Instant.now(), clone)
 
-        val blockPos = entity.pos.toBlockPos()
+        val blockPos = entity.blockPos
         chat(regular(message("disappeared", entity.nameForScoreboard, blockPos.x, blockPos.y, blockPos.z)))
     }
 
@@ -82,7 +77,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     private val tickHandler = handler<GameTickEvent> {
         lastSeenPlayers.entries.removeIf { (id, loggedOffPlayer) ->
             val playerEntity = loggedOffPlayer.entity
-            val blockPos = playerEntity.pos.toBlockPos()
+            val blockPos = playerEntity.blockPos
 
             if (!world.isPosLoaded(blockPos)) {
                 chat(regular(message("unloaded", playerEntity.nameForScoreboard)))

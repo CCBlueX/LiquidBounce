@@ -288,7 +288,7 @@ object InventoryManager : EventListener {
         }.thenByDescending {
             it.priority
         }
-    
+
 }
 
 sealed interface InventoryAction {
@@ -416,7 +416,7 @@ data class ClickInventoryAction(
 }
 
 data class UseInventoryAction(
-    val hotbarItemSlot: HotbarItemSlot
+    val hotbarItemSlot: HotbarItemSlot,
 ) : InventoryAction {
 
     override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
