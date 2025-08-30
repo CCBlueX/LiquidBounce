@@ -28,10 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -194,7 +191,6 @@ fun ClientPlayerEntity.canStep(height: Double = 1.0): Boolean {
     }
 }
 
-
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     val forwards = input.forwards && !input.backwards
     val backwards = input.backwards && !input.forwards
@@ -337,17 +333,6 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
 
     return nearestPointOnSide
 
-}
-
-fun LivingEntity.wouldBlockHit(source: PlayerEntity): Boolean {
-    if (!this.isBlocking) {
-        return false
-    }
-
-    val facingVec = getRotationVec(1.0f)
-    val deltaPos = (pos - source.pos).multiply(1.0, 0.0, 1.0)
-
-    return deltaPos.dotProduct(facingVec) < 0.0
 }
 
 /**
@@ -653,3 +638,7 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
+
+val LivingEntity.wouldBlockHit
+    get() = !isOlderThanOrEqual1_8 &&
+        this.blockedByShield(world.damageSources.playerAttack(player))

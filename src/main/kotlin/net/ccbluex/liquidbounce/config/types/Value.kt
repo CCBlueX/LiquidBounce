@@ -55,7 +55,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
  */
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
-    @SerializedName("name") open val name: String,
+    @SerializedName("name") val name: String,
     @Exclude val aliases: Array<out String> = emptyArray(),
     @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
@@ -308,6 +308,10 @@ open class Value<T : Any>(
         requireNotNull(deserializer) { "Cannot deserialize values of type ${this.valueType} yet." }
 
         set(deserializer.deserializeThrowing(string) as T)
+    }
+
+    override fun toString(): String {
+        return "${javaClass.simpleName}(name=$name, type=${valueType})"
     }
 
 }

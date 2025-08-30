@@ -16,21 +16,36 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.MinecraftClient
-import net.minecraft.util.Util
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+package net.ccbluex.liquidbounce.utils.io
 
-val logger: Logger
-    get() = LogManager.getLogger(CLIENT_NAME)
-
-val inGame: Boolean
-    get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } == true
+import java.io.IOException
+import java.io.RandomAccessFile
 
 /**
- * Open uri in browser
+ * Skips the current line in the file.
+ *
+ * @return The number of bytes skipped.
  */
-fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
+@Throws(IOException::class)
+fun RandomAccessFile.skipLine(): Long {
+    var read = 0L
+    var eol = false
+
+    while (!eol) {
+        when (read()) {
+            -1, '\n'.code -> eol = true
+            '\r'.code -> {
+                eol = true
+                val cur = filePointer
+                if ((read()) != '\n'.code) {
+                    seek(cur)
+                }
+            }
+
+            else -> read++
+        }
+    }
+
+    return read
+}

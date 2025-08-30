@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderLayer
@@ -164,12 +163,13 @@ object ThemeManager : Configurable("theme") {
         }
     }
 
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mousePos: Vec2i, delta: Float): Boolean {
+    @Suppress("LongParameterList")
+    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         if (shaderEnabled) {
             val shader = activeTheme.compiledShaderBackground ?: defaultTheme.compiledShaderBackground
 
             if (shader != null) {
-                shader.draw(mousePos.x, mousePos.y, delta)
+                shader.draw(mouseX, mouseY, delta)
                 return true
             }
         }

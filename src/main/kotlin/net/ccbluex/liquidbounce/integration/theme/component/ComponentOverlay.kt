@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -44,15 +43,15 @@ val customComponents: MutableList<Component> = mutableListOf(
     )
 )
 
-object ComponentOverlay : EventListener {
+object ComponentOverlay {
 
     @JvmStatic
-    fun isTweakEnabled(tweak: FeatureTweak) = this.running && !HideAppearance.isHidingNow &&
+    fun isTweakEnabled(tweak: FeatureTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
         components.filterIsInstance<IntegratedComponent>().any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
     fun getComponentWithTweak(tweak: FeatureTweak): IntegratedComponent? {
-        if (!running || HideAppearance.isHidingNow) {
+        if (!ModuleHud.running || HideAppearance.isHidingNow) {
             return null
         }
 
@@ -71,7 +70,5 @@ object ComponentOverlay : EventListener {
     }
 
     fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components + customComponents))
-
-    override fun parent() = ModuleHud
 
 }

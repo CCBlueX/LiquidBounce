@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -91,8 +90,8 @@ object InventoryManager : EventListener {
             return@tickHandler
         }
 
-        ModuleDebug.debugParameter(this, "Inventory Open", isInventoryOpen)
-        ModuleDebug.debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
+        debugParameter(this, "Inventory Open", isInventoryOpen)
+        debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
 
         var maximumCloseDelay = 0
 
@@ -125,7 +124,7 @@ object InventoryManager : EventListener {
             // 2. With inventory open required actions
             schedule.sortWith(COMPARATOR_ACTION_CHAIN)
 
-            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+            debugParameter(this, "Schedule Size", schedule.size)
             callProgressEvent(schedule.size)
 
             // Handle non-inventory open actions first
@@ -310,6 +309,7 @@ sealed interface InventoryAction {
     fun requiresPlayerInventoryOpen(): Boolean
 }
 
+@JvmRecord
 data class ClickInventoryAction(
     val screen: GenericContainerScreen? = null,
     val slot: ItemSlot,
@@ -319,16 +319,20 @@ data class ClickInventoryAction(
 
     companion object {
 
-        fun click(screen: GenericContainerScreen? = null,
-                  slot: ItemSlot,
-                  button: Int,
-                  actionType: SlotActionType) = ClickInventoryAction(
+        @JvmStatic
+        fun click(
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot,
+            button: Int,
+            actionType: SlotActionType
+        ) = ClickInventoryAction(
             screen,
             slot = slot,
             button = button,
             actionType = actionType
         )
 
+        @JvmStatic
         fun performThrow(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -339,6 +343,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.THROW
         )
 
+        @JvmStatic
         fun performQuickMove(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -349,6 +354,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.QUICK_MOVE
         )
 
+        @JvmStatic
         fun performSwap(
             screen: GenericContainerScreen? = null,
             from: ItemSlot,
@@ -360,6 +366,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.SWAP
         )
 
+        @JvmStatic
         fun performPickupAll(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -370,6 +377,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.PICKUP_ALL
         )
 
+        @JvmStatic
         fun performPickup(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -428,8 +436,9 @@ data class ClickInventoryAction(
 
 }
 
+@JvmRecord
 data class UseInventoryAction(
-    val hotbarItemSlot: HotbarItemSlot
+    val hotbarItemSlot: HotbarItemSlot,
 ) : InventoryAction {
 
     override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
@@ -444,8 +453,9 @@ data class UseInventoryAction(
 
 }
 
+@JvmRecord
 data class CloseContainerAction(
-    val screen: GenericContainerScreen
+    val screen: GenericContainerScreen,
 ) : InventoryAction {
 
     // Check if current handler is the same as the screen we want to close
@@ -461,13 +471,16 @@ data class CloseContainerAction(
 
 }
 
+@JvmRecord
 data class CreativeInventoryAction(
     val itemStack: ItemStack,
-    val slot: ItemSlot? = null
+    val slot: ItemSlot? = null,
 ) : InventoryAction {
 
     companion object {
+        @JvmStatic
         fun performThrow(itemStack: ItemStack) = CreativeInventoryAction(itemStack)
+        @JvmStatic
         fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = CreativeInventoryAction(itemStack, slot)
     }
 
@@ -507,9 +520,10 @@ data class CreativeInventoryAction(
  * A chained inventory action is a list of inventory actions that have to be executed in order
  * and CANNOT be stopped in between
  */
+@JvmRecord
 data class InventoryActionChain(
     val inventoryConstraints: InventoryConstraints,
-    val actions: Array<out InventoryAction>,
+    val actions: List<InventoryAction>,
     val priority: Priority
 ) {
 

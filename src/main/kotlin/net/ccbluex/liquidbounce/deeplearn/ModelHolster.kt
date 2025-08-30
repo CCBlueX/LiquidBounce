@@ -68,7 +68,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      */
     fun load() {
         logger.info("[DeepLearning] Loading models...")
-        val choices = allModels.map { name ->
+        val choices = allModels.mapArray { name ->
             MinaraiModel(name, models)
         }
 
@@ -93,13 +93,8 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      * Unload all models.
      */
     fun unload() {
-        val iterator = models.choices.iterator()
-
-        while (iterator.hasNext()) {
-            val model = iterator.next()
-            model.close()
-            iterator.remove()
-        }
+        models.choices.forEach { it.close() }
+        models.choices.clear()
     }
 
     /**

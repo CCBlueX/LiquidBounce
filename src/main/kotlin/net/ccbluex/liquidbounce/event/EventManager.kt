@@ -67,6 +67,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     BlockVelocityMultiplierEvent::class,
     BlockSlipperinessMultiplierEvent::class,
     EntityMarginEvent::class,
+    EntityHealthUpdateEvent::class,
     HealthUpdateEvent::class,
     DeathEvent::class,
     PlayerTickEvent::class,

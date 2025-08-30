@@ -16,21 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.MinecraftClient
-import net.minecraft.util.Util
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
-val logger: Logger
-    get() = LogManager.getLogger(CLIENT_NAME)
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
-val inGame: Boolean
-    get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } == true
-
-/**
- * Open uri in browser
- */
-fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
+internal data class ExemptContext(val box: Box, val bestHitVector: Vec3d, val worstHitVector: Vec3d)

@@ -21,12 +21,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -63,15 +64,15 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
     }
 
     @Suppress("unused")
-    private val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
+    private val handleServerConnect = handler<ServerConnectEvent> { event ->
         if (isScheduled) {
-            return@sequenceHandler
+            return@handler
         }
 
         // This will stop us from connecting to the server right away
         event.cancelEvent()
 
-        waitFor(Dispatchers.IO) {
+        eventListenerScope.launch {
             try {
                 isScheduled = true
                 val address = event.serverInfo.address.dropPort().rootDomain()

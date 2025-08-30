@@ -62,7 +62,7 @@
         <RegistryListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
-    {:else if setting.valueType === "VECTOR_I" || setting.valueType === "VECTOR_D" }
+    {:else if setting.valueType === "VECTOR3_I" || setting.valueType === "VECTOR3_D" }
         <VectorSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>

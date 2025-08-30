@@ -40,8 +40,10 @@ class Command(
     val executable: Boolean,
     val handler: CommandHandler?,
     val requiresIngame: Boolean,
-    private var parentCommand: Command? = null
 ) : MinecraftShortcuts {
+    var parentCommand: Command? = null
+        private set
+
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
