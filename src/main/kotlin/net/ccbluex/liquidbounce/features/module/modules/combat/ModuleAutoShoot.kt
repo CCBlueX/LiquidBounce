@@ -77,8 +77,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             lowestPointDefault = PreferredBoxPart.HEAD,
             highestPointDefault = PreferredBoxPart.HEAD,
             // The lag on Hypixel is massive
-            timeEnemyOffsetDefault = 3f,
-            timeEnemyOffsetScale = 0f..7f
+            targetExtrapolation = 3f,
+            targetExtrapolationScale = 0f..7f
         )
     )
 

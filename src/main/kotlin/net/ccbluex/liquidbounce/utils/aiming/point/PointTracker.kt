@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.utils.aiming.point.features.LazyPoint
 import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPoint
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -39,8 +40,8 @@ import kotlin.math.min
 class PointTracker(
     highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
     lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
-    timeEnemyOffsetDefault: Float = 0.4f,
-    timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
+    targetExtrapolation: Float = 0.4f,
+    targetExtrapolationScale: ClosedFloatingPointRange<Float> = -1f..1f
 ) : Configurable("AimPoint", aliases = arrayOf("PointTracker")), EventListener {
 
     /**
@@ -70,7 +71,12 @@ class PointTracker(
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", timeEnemyOffsetDefault, timeEnemyOffsetScale)
+    private val targetPositionExtrapolation by float(
+        "TargetPositionExtrapolation",
+        targetExtrapolation,
+        targetExtrapolationScale,
+        "ticks"
+    )
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
@@ -104,9 +110,10 @@ class PointTracker(
         val playerEyes = player.eyePos
         val positionDifference = playerPosition.y - entity.pos.y
 
-        // Predicted target position of the enemy
-        val targetVelocity = entity.pos.subtract(entity.prevPos)
-        var box = entity.box.offset(targetVelocity.multiply(timeEnemyOffset.toDouble()))
+        // Predict target position of the enemy
+        val targetPositionExtrapolation = PositionExtrapolation.getBestForEntity(entity)
+            .getPositionInTicks(targetPositionExtrapolation.toDouble())
+        var box = entity.getBoundingBoxAt(targetPositionExtrapolation)
         if (!situation.isNear && outOfBox) {
             box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)
         }
@@ -118,6 +125,7 @@ class PointTracker(
             .coerceAtMost(box.maxY - 1.0)
             .coerceAtLeast(box.minY)
 
+        val targetVelocity = entity.pos.subtract(entity.prevPos)
         val speedShrinkFactor = min(0.05, max(player.sqrtSpeed * 0.5, targetVelocity.sqrtSpeed * 0.5))
 
         val initialCutoffBox = box
