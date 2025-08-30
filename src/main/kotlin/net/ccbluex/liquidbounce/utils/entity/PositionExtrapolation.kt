@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.fabricmc.fabric.impl.`object`.builder.FabricEntityTypeImpl.Builder.Living
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
@@ -51,6 +50,11 @@ class PlayerSimulationExtrapolation(private val simulation: SimulatedPlayerCache
     constructor(player: PlayerEntity) : this(PlayerSimulationCache.getSimulationForOtherPlayers(player))
 
     override fun getPositionInTicks(ticks: Double): Vec3d {
-        return this.simulation.getSnapshotAt(round(ticks.coerceAtMost(30.0)).toInt()).pos
+        val ticks = round(ticks.coerceAtMost(30.0)).toInt()
+        if (ticks == 0) {
+            return this.simulation.simulatedPlayer.pos
+        }
+
+        return this.simulation.getSnapshotAt(ticks).pos
     }
 }
