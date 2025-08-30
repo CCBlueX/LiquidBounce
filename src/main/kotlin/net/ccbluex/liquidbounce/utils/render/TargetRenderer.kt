@@ -119,6 +119,19 @@ sealed class TargetRenderer<T : RenderEnvironment>(
     }
 }
 
+fun calcFadeAlpha(
+    isFadingOut: Boolean,
+    lastChangeTime: Long,
+    slideTime: Int,
+    fadeOutTime: Int,
+    easing: Easing
+): Float {
+    if (!isFadingOut) return 1f
+    val currentTime = System.currentTimeMillis()
+    val fadeFactor = easing.getFactor(lastChangeTime + slideTime, currentTime, fadeOutTime.toFloat())
+    return (1f - fadeFactor).coerceAtLeast(0f)
+}
+
 class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
 
     override val appearance = choices(module, "Mode", 2) {
@@ -145,16 +158,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             slideTime: Int,
             fadeOutTime: Int
         ) {
-            val currentTime = System.currentTimeMillis()
-
-            val alphaFactor = if (isFadingOut) {
-                val fadeFactor = fadeOutEasing.getFactor(lastChangeTime + slideTime, currentTime, fadeOutTime.toFloat())
-                (1f - fadeFactor).coerceAtLeast(0f)
-            } else {
-                1f
-            }
-
+            val alphaFactor = calcFadeAlpha(isFadingOut, lastChangeTime, slideTime, fadeOutTime, fadeOutEasing)
             if (isFadingOut && alphaFactor <= 0f) return
+
 
             env.matrixStack.push()
             RenderSystem.depthMask(false)
@@ -239,7 +245,11 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 }
 
                 val alpha =
-                    MathHelper.clamp((ghostAlpha * alphaFactor).toInt() - (i * alphaFactorPerParticle), 0, ghostAlpha)
+                    MathHelper.clamp(
+                        (ghostAlpha * alphaFactor).toInt() - (i * alphaFactorPerParticle),
+                        0,
+                        ghostAlpha
+                    )
 
                 val renderColor = when (colorMode.activeChoice) {
                     is GenericRainbowColorMode -> {
@@ -297,7 +307,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private var circleStep = 0.0
         private var lastFrameTime = System.nanoTime()
 
-        private val heightOffset by float("HeightOffset", 1f, 0.25f..1.75f)
+
         private val captureAlpha by int("Alpha", 233, 0..255)
         private val size by float("Size", 1.0f, 0.5f..1.5f)
         private val rotationSpeed by float("RotationSpeed", 180.0f, 180f..360.0f)
@@ -306,6 +316,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val pulseSpeed by float("PulseSpeed", 1f, 0.1f..5f)
         private val pulseRange by float("PulseRange", 0.2f, 0.1f..0.5f)
         private val slideEasing by easing("SlideEasing", Easing.LINEAR)
+        private val heightMode = choices(this, "HeightMode") {
+            arrayOf(RelativeHeight(it))
+        }
 
         private val deltaTime: Double
             get() {
@@ -325,7 +338,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             val timeSinceChange = currentTime - lastChangeTime
 
             val alphaFactor = if (isFadingOut) {
-                val fadeFactor = fadeOutEasing.getFactor(lastChangeTime + slideTime, currentTime, fadeOutTime.toFloat())
+                val fadeFactor = fadeOutEasing.getFactor(
+                    lastChangeTime + slideTime, currentTime,
+                    fadeOutTime.toFloat())
                 (1f - fadeFactor).coerceAtLeast(0f)
             } else {
                 1f
@@ -351,10 +366,14 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 env.matrixStack.translate(-this.x, -this.y, -this.z)
             }
 
-            val interpolatedStep = MathHelper.lerp(partialTicks.toDouble(), prevCircleStep, circleStep)
+            val interpolatedStep = MathHelper.lerp(
+                partialTicks.toDouble(),
+                prevCircleStep,
+                circleStep
+            )
 
             val targetPos = entity.pos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
-                .add(0.0, heightOffset.toDouble(), 0.0)
+                .add(0.0, heightMode.activeChoice.getHeight(entity, partialTicks), 0.0)
 
             val renderPos = if (isFadingOut || previousEntity == null || timeSinceChange >= slideTime) {
                 targetPos
@@ -362,9 +381,11 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 val previousPos = previousEntity!!.pos.interpolate(
                     previousEntity!!.lastRenderPos(), partialTicks.toDouble()
                 )
-                    .add(0.0, heightOffset.toDouble(), 0.0)
+                    .add(0.0, heightMode.activeChoice.getHeight(previousEntity!!, partialTicks), 0.0)
 
-                val factor = slideEasing.getFactor(lastChangeTime, currentTime, slideTime.toFloat()).toDouble()
+                val factor = slideEasing.getFactor(
+                    lastChangeTime, currentTime,
+                    slideTime.toFloat()).toDouble()
                 Vec3d(
                     MathHelper.lerp(factor, previousPos.x, targetPos.x),
                     MathHelper.lerp(factor, previousPos.y, targetPos.y),
@@ -372,9 +393,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 )
             }
 
-            val pulseFactor = (sin(
-                System.currentTimeMillis() * 0.001 * pulseSpeed
-            ) * pulseRange + 1.0).toFloat()
+            val pulseFactor = (sin(System.currentTimeMillis() * 0.001 * pulseSpeed) * pulseRange + 1.0).toFloat()
             val currentSize = size * pulseFactor * alphaFactor
 
             with(renderPos) {
@@ -382,9 +401,18 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 env.matrixStack.translate(this.x, this.y + floatOffset, this.z)
             }
 
-            env.matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-mc.gameRenderer.camera.yaw))
-            env.matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(mc.gameRenderer.camera.pitch))
-            env.matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(interpolatedStep.toFloat()))
+            env.matrixStack.multiply(
+                RotationAxis.POSITIVE_Y.rotationDegrees(
+                    -mc.gameRenderer.camera.yaw)
+            )
+            env.matrixStack.multiply(
+                RotationAxis.POSITIVE_X.rotationDegrees(
+                    mc.gameRenderer.camera.pitch)
+            )
+            env.matrixStack.multiply(
+                RotationAxis.POSITIVE_Z.rotationDegrees(
+                    interpolatedStep.toFloat())
+            )
 
             RenderSystem.setShaderTexture(0, captureTexture)
 
@@ -455,7 +483,12 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val rotationSpeed by float("RotationSpeed", 270f, -360f..360f)
 
         private val heightMode = choices(module, "HeightMode") {
-            arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it), AnimatedHeight(it))
+            arrayOf(FeetHeight(it),
+                TopHeight(it),
+                RelativeHeight(it),
+                HealthHeight(it),
+                AnimatedHeight(it)
+            )
         }
         private val alpha by int("Alpha", 180, 0..255)
         private val glowAlpha by int("GlowAlpha", 0, 0..255)
@@ -471,15 +504,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             slideTime: Int,
             fadeOutTime: Int
         ) {
-            val currentTime = System.currentTimeMillis()
-
-            val alphaFactor = if (isFadingOut) {
-                val fadeFactor = fadeOutEasing.getFactor(lastChangeTime + slideTime, currentTime, fadeOutTime.toFloat())
-                (1f - fadeFactor).coerceAtLeast(0f)
-            } else {
-                1f
-            }
-
+            val alphaFactor = calcFadeAlpha(isFadingOut, lastChangeTime, slideTime, fadeOutTime, fadeOutEasing)
             if (isFadingOut && alphaFactor <= 0f) return
 
             val height = heightMode.activeChoice.getHeight(entity, partialTicks)
@@ -543,7 +568,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             val matrix = matrixStack.peek().positionMatrix
             val tessellator = RenderSystem.renderThreadTesselator()
 
-            val buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
+            val buffer = tessellator.begin(
+                VertexFormat.DrawMode.TRIANGLE_STRIP,
+                VertexFormats.POSITION_COLOR
+            )
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
 
 
@@ -675,16 +703,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
             slideTime: Int,
             fadeOutTime: Int
         ) {
-            val currentTime = System.currentTimeMillis()
-
-
-            val alphaFactor = if (isFadingOut) {
-                val fadeFactor = fadeOutEasing.getFactor(lastChangeTime + slideTime, currentTime, fadeOutTime.toFloat())
-                (1f - fadeFactor).coerceAtLeast(0f)
-            } else {
-                1f
-            }
-
+            val alphaFactor = calcFadeAlpha(isFadingOut, lastChangeTime, slideTime, fadeOutTime, fadeOutEasing)
             if (isFadingOut && alphaFactor <= 0f) return
 
             val pos =

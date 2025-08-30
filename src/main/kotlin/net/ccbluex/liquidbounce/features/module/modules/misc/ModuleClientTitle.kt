@@ -9,7 +9,9 @@ import net.minecraft.SharedConstants
 
 object ModuleClientTitle: ClientModule("ClientTitle", Category.MISC, aliases = arrayOf("ModifyTitle")) {
 
-    private val originTitle = LiquidBounce.CLIENT_NAME + " v" + LiquidBounce.clientVersion + " | " + SharedConstants.getGameVersion().name
+    private val originTitle =
+        LiquidBounce.CLIENT_NAME + " v" +
+        LiquidBounce.clientVersion + " | " + SharedConstants.getGameVersion().name
     private val clientTitle by text("Title", "").onChanged {
         val title = it.ifEmpty {
             originTitle

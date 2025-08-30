@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.minecraft.block.BlockRenderType
 import net.minecraft.block.EntityShapeContext
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.input.Input
@@ -53,6 +54,7 @@ import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.util.Hand
 import net.minecraft.util.PlayerInput
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
 import net.minecraft.util.shape.VoxelShapes
@@ -638,6 +640,33 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
+fun ClientPlayerEntity.canSeeEntity(entity: Entity, samples: Int = 5): Boolean {
+    val eyePos = this.eyePos
+    val box = entity.boundingBox
+    val stepX = (box.maxX - box.minX) / (samples - 1).coerceAtLeast(1)
+    val stepY = (box.maxY - box.minY) / (samples - 1).coerceAtLeast(1)
+    val stepZ = (box.maxZ - box.minZ) / (samples - 1).coerceAtLeast(1)
+
+    fun canSeeAt(i: Int, j: Int, k: Int): Boolean {
+        val target = Vec3d(box.minX + i * stepX, box.minY + j * stepY, box.minZ + k * stepZ)
+        val result = world.raycast(
+            RaycastContext(eyePos, target, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity)
+        )
+        return result.type == HitResult.Type.MISS ||
+            (result is BlockHitResult && world.getBlockState(result.blockPos).let {
+                it.isAir || it.renderType == BlockRenderType.INVISIBLE || it.isTransparent
+            })
+    }
+
+    return (0 until samples).any { i ->
+        (0 until samples).any { j ->
+            (0 until samples).any { k -> canSeeAt(i, j, k) }
+        }
+    }
+}
+
+
+
 
 val LivingEntity.wouldBlockHit
     get() = !isOlderThanOrEqual1_8 &&

@@ -114,7 +114,10 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
                 FileInputStream(file).use { fis ->
                     cachedNativeImage = NativeImage.read(fis)
                 }
-                val id = Identifier.of("liquidbounce", "cape-file-${System.currentTimeMillis().toString(36)}")
+                val id = Identifier.of(
+                    "liquidbounce",
+                    "cape-file-${System.currentTimeMillis().toString(36)}"
+                )
                 mc.textureManager.registerTexture(id, NativeImageBackedTexture(cachedNativeImage))
                 cachedTexture = id
                 cachedPath = path

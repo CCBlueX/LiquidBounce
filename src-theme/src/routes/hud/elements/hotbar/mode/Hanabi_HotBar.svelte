@@ -41,6 +41,9 @@
 
     onMount(async () => {
         await updateClientInfo();
+        setInterval(async () => {
+            await updateClientInfo();
+        }, 1000);
         updatePlayerData(await getPlayerData());
         updateInventory(await getPlayerInventory());
     });
