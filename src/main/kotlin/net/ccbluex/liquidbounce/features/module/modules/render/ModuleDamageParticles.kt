@@ -52,13 +52,19 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_UPDATE)
 
+    // colors
+    private val damageColor by color("DamageColor", Color4b.RED)
+    private val deathColor by color("DeathColor", Color4b.RED)
+    private val healColor by color("HealColor", Color4b.GREEN)
+    private val maxHealthColor by color("MaxHealthColor", Color4b.GREEN)
+
     private enum class TrackMode(override val choiceName: String) : NamedChoice {
         ON_UPDATE("OnUpdate"),
         ON_TICK("OnTick"),
     }
 
     /**
-     * Ordered by startTime
+     * Ordered by [Particle.startTime]
      */
     private val particles = ArrayDeque<Particle>()
 
@@ -70,10 +76,17 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private fun trackEntityHealth(entity: LivingEntity, oldHealth: Float, newHealth: Float, maxHealth: Float) {
         val delta = abs(oldHealth - newHealth)
         if (delta > EPSILON) {
+            val color = when {
+                newHealth <= 0F -> deathColor
+                oldHealth > newHealth -> damageColor
+                newHealth < maxHealth -> healColor
+                else -> maxHealthColor
+            }
+
             particles += Particle(
                 System.currentTimeMillis(),
                 FORMATTER.format(delta),
-                if (oldHealth > newHealth) Color4b.RED else Color4b.GREEN,
+                color,
                 entity.box.center.add(entity.movement),
             )
         }
