@@ -60,7 +60,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
 
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
     private val targetRenderer = tree(WorldTargetRenderer(this))
-    private val pointTracker = tree(PointTracker())
+    private val pointTracker = tree(PointTracker(this))
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
@@ -166,17 +166,13 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
         for (target in targetTracker.targets()) {
-            val pointOnHitbox = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)
-            val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.toPoint)
+            val pointOnHitbox = pointTracker.findPoint(target, 0)
+            val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.pos)
 
             val spot = raytraceBox(
-                pointOnHitbox.fromPoint,
-                pointOnHitbox.cutOffBox,
+                pointOnHitbox.eyes,
+                pointOnHitbox.box,
                 range = targetTracker.maxRange.toDouble(),
-                wallsRange = 0.0,
-                rotationPreference = rotationPreference
-            ) ?: raytraceBox(
-                pointOnHitbox.fromPoint, pointOnHitbox.box, range = targetTracker.maxRange.toDouble(),
                 wallsRange = 0.0,
                 rotationPreference = rotationPreference
             ) ?: continue

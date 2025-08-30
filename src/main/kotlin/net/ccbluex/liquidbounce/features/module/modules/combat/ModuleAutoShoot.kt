@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
-import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -74,11 +73,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     internal val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE, floatRange("Range", 3.0f..6f, 1f..256f)))
     private val pointTracker = tree(
         PointTracker(
-            lowestPointDefault = PreferredBoxPart.HEAD,
-            highestPointDefault = PreferredBoxPart.HEAD,
-            // The lag on Hypixel is massive
-            targetExtrapolation = 3,
-            targetExtrapolationScale = 0..7
+            this
         )
     )
 
@@ -216,14 +211,14 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     }
 
     private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
-        val pointOnHitbox = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
+        val pointOnHitbox = pointTracker.findPoint(target, 1)
 
         return when (gravityType) {
             GravityType.AUTO -> {
                 // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
                 return null
             }
-            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.toPoint, pointOnHitbox.fromPoint)
+            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.pos, pointOnHitbox.eyes)
             // Determines the required yaw and pitch angles to hit a target with a projectile,
             // considering gravity's effect on the projectile's motion.
             GravityType.PROJECTILE -> {
