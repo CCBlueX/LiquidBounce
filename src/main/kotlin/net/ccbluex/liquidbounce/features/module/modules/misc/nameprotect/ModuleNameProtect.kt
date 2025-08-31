@@ -117,12 +117,13 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         friends = { ReplaceFriendNames.colorMode.activeChoice.getColor(Unit) },
         otherPlayers = { ReplaceOthers.colorMode.activeChoice.getColor(Unit) },
     )
-    private const val ALPHABET = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ"
+
     private var lastPlayerNameCheck = 0L
     private const val NAME_CHECK_INTERVAL = 3000L
-
+    private const val ALPHABET =
+        "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿȦȧḂḃĊċḊḋĖėḞḟĠġḢḣḲḳĿŀṀṃṄṅṖṗṘṙŚśṪṫŴŵẌẍŶŷẐẑ"
     fun getGarbledName(baseName: String): String {
-        val nowTick = (System.currentTimeMillis() / 10).toInt()
+        val nowTick = (System.currentTimeMillis()).toInt()
         val seed = baseName.hashCode() xor nowTick
         val rng = Random(seed)
         val sb = StringBuilder(baseName.length)
