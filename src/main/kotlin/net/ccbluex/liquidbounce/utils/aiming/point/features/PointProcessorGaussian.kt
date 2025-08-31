@@ -21,16 +21,15 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
 import kotlin.math.abs
 
-internal class Gaussian(parent: EventListener) : PointProcessor(parent, "Gaussian", false) {
+internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(parent, "Gaussian", false) {
 
     companion object {
 
@@ -127,10 +126,7 @@ internal class Gaussian(parent: EventListener) : PointProcessor(parent, "Gaussia
         }
     }
 
-    override fun process(
-        point: Vec3d,
-        box: Box
-    ): Vec3d {
+    override fun process(point: PointInsideBox): PointInsideBox {
         if (yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance > 0) {
             updateGaussianOffset(point)
         }

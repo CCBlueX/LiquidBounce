@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBestHitVector
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptContext
-import net.ccbluex.liquidbounce.utils.aiming.point.features.Gaussian
-import net.ccbluex.liquidbounce.utils.aiming.point.features.LazyPoint
+import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorDelay
+import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorGaussian
+import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorLazy
 import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -51,24 +51,27 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussian = tree(Gaussian(this))
+    private val gaussian = tree(PointProcessorGaussian(this))
 
     /**
      * This will allow the point to stay at a certain position when the minimum threshold is not reached.
      */
-    private val lazyPoint = tree(LazyPoint(this))
+    private val lazy = tree(PointProcessorLazy(this))
+
+    /**
+     * This will allow the point to be delayed until the ticks expire.
+     */
+    private val delay = tree(PointProcessorDelay(this))
 
     private val processors
-        get() = listOf(gaussian, lazyPoint).filter { processor -> processor.enabled }
+        get() = listOf(delay, lazy, gaussian).filter { processor -> processor.enabled }
 
     /**
      * The point tracker is being used to track a certain point of an entity.
      *
      * @param entity The entity we want to track.
      */
-    fun findPoint(entity: LivingEntity, ticks: Int): AimPoint {
-        val eyes = player.eyePos
-
+    fun findPoint(eyes: Vec3d, entity: LivingEntity, ticks: Int): PointInsideBox {
         // Predict target position
         val targetPos = if (prediction) {
             PositionExtrapolation.getBestForEntity(entity)
@@ -79,6 +82,8 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
 
         // Project points onto box
         val box = entity.getBoundingBoxAt(targetPos)
+            // Support [ModuleHitbox]
+            .expand(entity.targetingMargin.toDouble())
         val points = box.getPoints(eyes)
 
         val bestHitVector = points.minByOrNull { it.squaredDistanceTo(eyes) }
@@ -105,12 +110,13 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
             })
         }
 
-        var pos = pointsWithExempts.minByOrNull { it.distanceTo(eyes) }
+        val pos = pointsWithExempts.minByOrNull { it.distanceTo(eyes) }
             ?: bestHitVector
+        var point = PointInsideBox(pos, box)
         for (processor in processors) {
-            pos = processor.process(pos, box)
+            point = processor.process(point)
         }
-        return AimPoint(eyes, pos, box)
+        return point
     }
 
     private fun Box.getPoints(eyes: Vec3d) = mutableListOf<Vec3d>().apply {
@@ -135,7 +141,5 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
         val worstDistance = worstHitVector.distanceTo(eyes)
         return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).coerceIn(0.0, 1.0)
     }
-
-    data class AimPoint(val eyes: Vec3d, val pos: Vec3d, val box: Box)
 
 }
