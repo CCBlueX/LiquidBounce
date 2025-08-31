@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.api.models.auth
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
@@ -44,19 +42,19 @@ data class ClientAccount(
         session ?: error("No session")
     }
 
-    suspend fun updateInfo(): Unit = withContext(Dispatchers.IO) {
+    suspend fun updateInfo() {
         userInformation = UserApi.getUserInformation(takeSession())
     }
 
-    suspend fun updateCosmetics(): Unit = withContext(Dispatchers.IO) {
+    suspend fun updateCosmetics() {
         cosmetics = UserApi.getCosmetics(takeSession())
     }
 
-    suspend fun transferTemporaryOwnership(uuid: UUID): Unit = withContext(Dispatchers.IO) {
+    suspend fun transferTemporaryOwnership(uuid: UUID) {
         UserApi.transferTemporaryOwnership(takeSession(), uuid)
     }
 
-    suspend fun renew() = withContext(Dispatchers.IO) {
+    suspend fun renew() {
         session = OAuthClient.renewToken(session ?: error("No session"))
     }
 
