@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
+import kotlin.math.max
 import kotlin.math.round
 
 /**
@@ -50,7 +51,7 @@ class PlayerSimulationExtrapolation(private val simulation: SimulatedPlayerCache
     constructor(player: PlayerEntity) : this(PlayerSimulationCache.getSimulationForOtherPlayers(player))
 
     override fun getPositionInTicks(ticks: Double): Vec3d {
-        val ticks = round(ticks.coerceAtMost(30.0)).toInt()
+        val ticks = max(0, round(ticks.coerceAtMost(30.0)).toInt())
         if (ticks == 0) {
             return this.simulation.simulatedPlayer.pos
         }
