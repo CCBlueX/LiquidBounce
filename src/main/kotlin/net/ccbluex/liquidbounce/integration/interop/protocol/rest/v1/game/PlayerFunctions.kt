@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.session.KilledTarget
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -51,17 +51,22 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import java.util.function.Supplier
 import kotlin.math.min
 
 private fun nullableResponse(item: Any?) = item?.let { httpOk(interopGson.toJsonTree(it)) } ?: httpNoContent()
 
+private fun <T> forceMainThread(block: Supplier<T>): T =
+    mc.submit(block).get()
+
 // GET /api/v1/client/player
 @Suppress("UNUSED_PARAMETER")
-fun getPlayerData(requestObject: RequestObject) =
-    nullableResponse(mc.player?.let(PlayerData::fromPlayer))
+fun getPlayerData(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerData::fromPlayer))
+
 // GET /api/v1/client/player/inventory
 @Suppress("UNUSED_PARAMETER")
 fun getPlayerInventory(requestObject: RequestObject) = nullableResponse(mc.player?.let(PlayerInventoryData::fromPlayer))
+
 // GET /api/v1/client/crosshair
 @Suppress("UNUSED_PARAMETER")
 fun getCrosshairData(requestObject: RequestObject) = nullableResponse(mc.crosshairTarget)
@@ -108,7 +113,8 @@ data class PlayerData(
     companion object {
 
         @JvmStatic
-        fun fromPlayer(player: PlayerEntity) = PlayerData(
+        fun fromPlayer(player: PlayerEntity): PlayerData = forceMainThread {
+            PlayerData(
             player.nameForScoreboard,
             player.uuidAsString,
             player.world.registryKey.value,
@@ -148,6 +154,7 @@ data class PlayerData(
 
             )
 
+
         private var wasAliveLastTick = true
         private var localPlayerDeathCounter = 0
         private fun updateDeathCount(player: PlayerEntity): Int {
@@ -161,7 +168,7 @@ data class PlayerData(
 
             return localPlayerDeathCounter
         }
-    }
+
 
 }
 
@@ -190,8 +197,8 @@ data class PlayerInventoryData(
             }
 
         )
-
     }
+
     private infix fun List<ItemStack>.eq(other: List<ItemStack>) =
         this.size == other.size && this.indices.all { ItemStack.areEqual(this[it], other[it]) }
 
@@ -227,15 +234,15 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          * Taken from the Minecraft source code
          */
         @JvmStatic
-        fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
-            scoreboard ?: return null
-            val player = mc.player ?: return null
+        fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? = forceMainThread {
+            scoreboard ?: return@forceMainThread null
+            val player = mc.player ?: return@forceMainThread null
 
             val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
 
             val objective = team?.let {
                 ScoreboardDisplaySlot.fromFormatting(team.color)?.let { scoreboard.getObjectiveForSlot(it) }
-            } ?: scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR) ?: return null
+            } ?: scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR) ?: return@forceMainThread null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED)
@@ -260,7 +267,7 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
                 }
                 .toArray { arrayOfNulls<SidebarEntry>(it) }
 
-            return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
+            ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
         }
     }
 
@@ -275,7 +282,6 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
 
         return true
     }
-
 
     override fun hashCode(): Int {
         var result = header.hashCode()
