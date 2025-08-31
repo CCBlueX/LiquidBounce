@@ -112,51 +112,51 @@ data class PlayerData(
 
     companion object {
 
+        private var wasAliveLastTick = true
+        private var localPlayerDeathCounter = 0
+
         @JvmStatic
         fun fromPlayer(player: PlayerEntity): PlayerData = forceMainThread {
             PlayerData(
-            player.nameForScoreboard,
-            player.uuidAsString,
-            player.world.registryKey.value,
-            player.pos,
-            player.pitch,
-            player.yaw,
-            player.netherPosition,
-            player.blockPos,
-            player.velocity,
-            player.inventory.selectedSlot,
-            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
-            player.health.fixNaN(),
-            player.getActualHealth().fixNaN(),
-            player.maxHealth.fixNaN(),
-            player.absorptionAmount.fixNaN(),
-            player.armor.coerceAtMost(20),
-            min(player.hungerManager.foodLevel, 20),
-            player.air,
-            player.maxAir,
-            player.experienceLevel,
-            player.experienceProgress.fixNaN(),
-            player.ping,
-            mc.currentServerEntry?.address ?: "SingleWorld",
-            player.statusEffects.toList(),
-            player.mainHandStack,
-            if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
-            player.armorItems.toList(),
-            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null,
-            KilledTarget.killsCount,
-            updateDeathCount(player),
-            player.isDead,
-            ModuleAutoBuff.isEating,
-            ModuleAutoBuff.eatingStartTime,
-            ModuleAutoBuff.eatingMaxDuration,
-            GameWins.localWinsCounter,
-            PlayTimeTracker.getPlayTime(),
-
+                ModuleNameProtect.replace(player.nameForScoreboard),
+                player.uuidAsString,
+                player.world.registryKey.value,
+                player.pos,
+                player.pitch,
+                player.yaw,
+                player.netherPosition,
+                player.blockPos,
+                player.velocity,
+                player.inventory.selectedSlot,
+                if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
+                player.health.fixNaN(),
+                player.getActualHealth().fixNaN(),
+                player.maxHealth.fixNaN(),
+                player.absorptionAmount.fixNaN(),
+                player.armor.coerceAtMost(20),
+                min(player.hungerManager.foodLevel, 20),
+                player.air,
+                player.maxAir,
+                player.experienceLevel,
+                player.experienceProgress.fixNaN(),
+                player.ping,
+                mc.currentServerEntry?.address ?: "SingleWorld",
+                player.statusEffects.toList(),
+                player.mainHandStack,
+                if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
+                player.armorItems.toList(),
+                if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null,
+                KilledTarget.killsCount,
+                updateDeathCount(player),
+                player.isDead,
+                ModuleAutoBuff.isEating,
+                ModuleAutoBuff.eatingStartTime,
+                ModuleAutoBuff.eatingMaxDuration,
+                GameWins.localWinsCounter,
+                PlayTimeTracker.getPlayTime(),
             )
+        }
 
-
-        private var wasAliveLastTick = true
-        private var localPlayerDeathCounter = 0
         private fun updateDeathCount(player: PlayerEntity): Int {
             if (player != mc.player) return localPlayerDeathCounter
 
@@ -168,11 +168,10 @@ data class PlayerData(
 
             return localPlayerDeathCounter
         }
-
-
+    }
 }
 
-data class PlayerInventoryData(
+    data class PlayerInventoryData(
     val armor: List<ItemStack>,
     val main: List<ItemStack>,
     val crafting: List<ItemStack>,

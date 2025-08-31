@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -64,9 +64,9 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
     init {
         tree(ImageOffset)
     }
-    private val renderRadius by int("RenderRadius", 80, 50..500)
-    private val pointerSize by float("PointerSize", 15f, 1f..20f)
-    private val pointerAlpha by float("PointerAlpha", 1f, 0f..1f)
+    private val renderRadius by int("RenderRadius", 150, 50..500)
+    private val pointerSize by float("PointerSize", 25f, 1f..50f)
+    private val pointerAlpha by float("PointerAlpha", 0.5f, 0f..1f)
     private val pitchLimit by floatRange("PitchLimit", 30f..90f, 0f..90f).onChanged {
         negativePitchLimit = -it.endInclusive..-it.start
     }
@@ -91,7 +91,7 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val matrices = event.context.matrices
-        val pointers = findRenderedEntities().mapArray {
+        val pointers = RenderedEntities.mapArray {
             val diff = it.interpolateCurrentPosition(event.tickDelta) - player.pos
             val rawAngle = atan2(diff.z, diff.x).toFloat().toDegrees()
             val targetAngle = (player.yaw - 90f - rawAngle).let { theta ->
@@ -141,6 +141,10 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
                 val offsetX = if (ImageOffset.enabled) ImageOffset.offsetX * window.scaledWidth else 0f
                 val offsetY = if (ImageOffset.enabled) ImageOffset.offsetY * window.scaledHeight else 0f
                 val offsetZ = if (ImageOffset.enabled) ImageOffset.offsetZ * 100f else 0f
+                val scale = (window.scaledWidth.coerceAtMost(window.scaledHeight)) / 1000f
+
+                val adaptiveRadius = renderRadius * scale
+                val adaptiveSize = pointerSize * scale
 
                 matrices.translate(
                     (cx + offsetX).toDouble(),
@@ -150,10 +154,9 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
 
                 matrices.multiply(Quaternionf().rotateX(Math.toRadians(p.rotateX.toDouble()).toFloat()))
                 matrices.multiply(Quaternionf().rotateZ(Math.toRadians(p.rotateZ.toDouble()).toFloat()))
+                matrices.translate(0.0, -adaptiveRadius.toDouble(), 0.0)
 
-                matrices.translate(0.0, -p.radius.toDouble(), 0.0)
-
-                matrices.scale(pointerSize, pointerSize, 1f)
+                matrices.scale(adaptiveSize, adaptiveSize, 1f)
                 matrices.translate(-0.5, -0.5, 0.0)
 
                 val color = p.color.with(a = (pointerAlpha * 255f).toInt().coerceIn(0, 255))
@@ -177,24 +180,23 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
         }
 
 
-        pointerData.keys.retainAll(findRenderedEntities().toSet())
+        pointerData.keys.retainAll(RenderedEntities.toSet())
     }
 
     private fun lerp(start: Float, end: Float, alpha: Float): Float {
         return start + alpha * (end - start)
     }
 
-    private fun findRenderedEntities() = world.entities
-        .filterIsInstance<LivingEntity>()
-        .filter { it.shouldBeShown() }
 
     override fun onDisabled() {
         pointerData.clear()
+        RenderedEntities.subscribe(this)
         super.onDisabled()
     }
 
     override fun onEnabled() {
         pointerData.clear()
+        RenderedEntities.unsubscribe(this)
         super.onEnabled()
     }
 }
