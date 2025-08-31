@@ -29,9 +29,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.awaitSuspend
 import java.net.InetSocketAddress
 import java.util.*
@@ -43,7 +44,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * OAuth client for handling the authentication flow
  */
-object OAuthClient {
+object OAuthClient : EventListener {
 
     @Volatile
     private var serverPort: Int? = null
@@ -65,6 +66,7 @@ object OAuthClient {
         }
 
         val redirectUri = "http://127.0.0.1:$serverPort/"
+        logger.info("OAuth server started on port $serverPort.")
         val authUrl = buildAuthUrl(codeChallenge, state, redirectUri)
 
         onUrl(authUrl)
@@ -84,30 +86,26 @@ object OAuthClient {
         return tokenResponse.toAuthSession()
     }
 
-    private suspend fun startNettyServer(): Int = suspendCoroutine { cont ->
-        withScope {
-            runCatching {
-                val bossGroup = NioEventLoopGroup(1)
-                val workerGroup = NioEventLoopGroup()
+    private suspend fun startNettyServer(): Int {
+        val bossGroup = NioEventLoopGroup(1)
+        val workerGroup = NioEventLoopGroup()
 
-                try {
-                    val bootstrap = ServerBootstrap()
-                    bootstrap.group(bossGroup, workerGroup)
-                        .channel(NioServerSocketChannel::class.java)
-                        .childHandler(NettyChannelInitializer())
+        val bootstrap = ServerBootstrap()
+            .group(bossGroup, workerGroup)
+            .channelFactory(::NioServerSocketChannel)
+            .childHandler(NettyChannelInitializer())
 
-                    val channelFuture = bootstrap.bind(0).awaitSuspend()
-                    val localPort = (channelFuture.channel().localAddress() as InetSocketAddress).port
-                    cont.resume(localPort)
+        val channel = bootstrap.bind(0).awaitSuspend().channel()
+        val localPort = (channel.localAddress() as InetSocketAddress).port
 
-                    // Keep server running until closed
-                    channelFuture.channel().closeFuture().awaitSuspend()
-                } finally {
-                    bossGroup.shutdownGracefully()
-                    workerGroup.shutdownGracefully()
-                }
-            }.onFailure { e -> cont.resumeWithException(e) }
+        channel.closeFuture().addListener {
+            // Cleanup
+            bossGroup.shutdownGracefully()
+            workerGroup.shutdownGracefully()
+            logger.info("OAuth server stopped on port $localPort.")
         }
+
+        return localPort
     }
 
     private class NettyChannelInitializer : ChannelInitializer<SocketChannel>() {
@@ -136,7 +134,11 @@ object OAuthClient {
                         .set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
                         .set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes())
 
-                    ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE)
+                    ctx.writeAndFlush(response).addListener(ChannelFutureListener { channelFuture ->
+                        // Close the server channel after sending the response
+                        channelFuture.channel().close()
+                        channelFuture.channel().parent()?.close()
+                    })
                     it.resume(code)
                 } else {
                     it.resumeWithException(IllegalArgumentException("No code found in the redirect URL"))
