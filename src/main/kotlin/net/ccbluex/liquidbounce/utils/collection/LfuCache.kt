@@ -73,12 +73,14 @@ class LfuCache<K : Any, V : Any>(
     private fun incr(key: K) {
         val oldCount = counts.addTo(key, 1)
         val setOfOldCount = countTable.get(oldCount)
-        if (setOfOldCount.size == 1) {
-            countTable.remove(oldCount)
-            setOfOldCount.clear()
-            setPool.add(setOfOldCount)
-        } else {
-            setOfOldCount.remove(key)
+        if (setOfOldCount != null) {
+            if (setOfOldCount.size == 1) {
+                countTable.remove(oldCount)
+                setOfOldCount.clear()
+                setPool.add(setOfOldCount)
+            } else {
+                setOfOldCount.remove(key)
+            }
         }
         countTable.computeIfAbsent(oldCount + 1) { newSet() }.add(key)
     }
@@ -110,6 +112,7 @@ class LfuCache<K : Any, V : Any>(
     /**
      * Gets the key and corresponding value (if exists), and increases its access count.
      */
+    @Synchronized
     operator fun get(key: K): V? {
         return cache[key]?.also { incr(key) }
     }
@@ -117,6 +120,7 @@ class LfuCache<K : Any, V : Any>(
     /**
      * Sets the key and corresponding value, and discards one of the least-used keys if full.
      */
+    @Synchronized
     operator fun set(key: K, value: V): V {
         cache.computeIfPresent(key) { k, oldV ->
             incr(k)

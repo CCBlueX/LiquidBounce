@@ -58,7 +58,6 @@ import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayTimeTracker
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -80,6 +79,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.utils.session.PlayTimeTracker
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -157,21 +157,13 @@ object LiquidBounce : EventListener {
      *
      * The thread should be the main render thread.
      */
-    private val executor = Executors.newSingleThreadScheduledExecutor()
 
-    init {
-        SoundLoader.init()
-        executor.scheduleAtFixedRate(
-            { PlayTimeTracker.update() },
-            0, 1, TimeUnit.SECONDS
-        )
-    }
 
     private fun initializeClient() {
         if (isInitialized) {
             return
         }
-
+        SoundLoader.init()
         // Ensure we are on the render thread
         RenderSystem.assertOnRenderThread()
 
@@ -253,6 +245,11 @@ object LiquidBounce : EventListener {
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
+
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+            { PlayTimeTracker.update()},
+            0, 1, TimeUnit.SECONDS
+        )
     }
 
     /**

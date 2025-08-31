@@ -27,13 +27,14 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.utils.session.GameWins
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.session.GameWins
 import net.ccbluex.liquidbounce.utils.session.KilledTarget
+import net.ccbluex.liquidbounce.utils.session.PlayTimeTracker
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
@@ -51,13 +52,9 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
-import java.util.function.Supplier
 import kotlin.math.min
 
 private fun nullableResponse(item: Any?) = item?.let { httpOk(interopGson.toJsonTree(it)) } ?: httpNoContent()
-
-private fun <T> forceMainThread(block: Supplier<T>): T =
-    mc.submit(block).get()
 
 // GET /api/v1/client/player
 @Suppress("UNUSED_PARAMETER")
@@ -116,46 +113,45 @@ data class PlayerData(
         private var localPlayerDeathCounter = 0
 
         @JvmStatic
-        fun fromPlayer(player: PlayerEntity): PlayerData = forceMainThread {
-            PlayerData(
-                ModuleNameProtect.replace(player.nameForScoreboard),
-                player.uuidAsString,
-                player.world.registryKey.value,
-                player.pos,
-                player.pitch,
-                player.yaw,
-                player.netherPosition,
-                player.blockPos,
-                player.velocity,
-                player.inventory.selectedSlot,
-                if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
-                player.health.fixNaN(),
-                player.getActualHealth().fixNaN(),
-                player.maxHealth.fixNaN(),
-                player.absorptionAmount.fixNaN(),
-                player.armor.coerceAtMost(20),
-                min(player.hungerManager.foodLevel, 20),
-                player.air,
-                player.maxAir,
-                player.experienceLevel,
-                player.experienceProgress.fixNaN(),
-                player.ping,
-                mc.currentServerEntry?.address ?: "SingleWorld",
-                player.statusEffects.toList(),
-                player.mainHandStack,
-                if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
-                player.armorItems.toList(),
-                if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null,
-                KilledTarget.killsCount,
-                updateDeathCount(player),
-                player.isDead,
-                ModuleAutoBuff.isEating,
-                ModuleAutoBuff.eatingStartTime,
-                ModuleAutoBuff.eatingMaxDuration,
-                GameWins.localWinsCounter,
-                PlayTimeTracker.getPlayTime(),
-            )
-        }
+        fun fromPlayer(player: PlayerEntity) = PlayerData(
+            player.nameForScoreboard,
+            player.uuidAsString,
+            player.world.registryKey.value,
+            player.pos,
+            player.pitch,
+            player.yaw,
+            player.netherPosition,
+            player.blockPos,
+            player.velocity,
+            player.inventory.selectedSlot,
+            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
+            player.health.fixNaN(),
+            player.getActualHealth().fixNaN(),
+            player.maxHealth.fixNaN(),
+            player.absorptionAmount.fixNaN(),
+            player.armor.coerceAtMost(20),
+            min(player.hungerManager.foodLevel, 20),
+            player.air,
+            player.maxAir,
+            player.experienceLevel,
+            player.experienceProgress.fixNaN(),
+            player.ping,
+            mc.currentServerEntry?.address ?: "SingleWorld",
+            player.statusEffects.toList(),
+            player.mainHandStack,
+            if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
+            player.armorItems.toList(),
+            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null,
+            KilledTarget.killsCount,
+            updateDeathCount(player),
+            player.isDead,
+            ModuleAutoBuff.isEating,
+            ModuleAutoBuff.eatingStartTime,
+            ModuleAutoBuff.eatingMaxDuration,
+            GameWins.localWinsCounter,
+            PlayTimeTracker.getPlayTime(),
+        )
+
 
         private fun updateDeathCount(player: PlayerEntity): Int {
             if (player != mc.player) return localPlayerDeathCounter
@@ -233,15 +229,15 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          * Taken from the Minecraft source code
          */
         @JvmStatic
-        fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? = forceMainThread {
-            scoreboard ?: return@forceMainThread null
-            val player = mc.player ?: return@forceMainThread null
+        fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
+            scoreboard ?: return null
+            val player = mc.player ?: return null
 
             val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
 
             val objective = team?.let {
                 ScoreboardDisplaySlot.fromFormatting(team.color)?.let { scoreboard.getObjectiveForSlot(it) }
-            } ?: scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR) ?: return@forceMainThread null
+            } ?: scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR) ?: return null
 
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED)
@@ -266,7 +262,7 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
                 }
                 .toArray { arrayOfNulls<SidebarEntry>(it) }
 
-            ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
+            return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
         }
     }
 
@@ -288,36 +284,6 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
         return result
     }
 
-}
-
-object PlayTimeTracker {
-    private val playTimeMap = mutableMapOf<String, Long>()
-    private var lastServer: String? = null
-    private var lastUpdateTime: Long = System.currentTimeMillis()
-    private var leftoverMs: Long = 0
-
-    fun update() {
-        val address = mc.currentServerEntry?.address ?: return
-        val now = System.currentTimeMillis()
-        val deltaMs = now - lastUpdateTime + leftoverMs
-
-        if (deltaMs < 1000) {
-            leftoverMs = deltaMs
-            return
-        }
-
-        val deltaSeconds = deltaMs / 1000
-        leftoverMs = deltaMs % 1000
-
-        playTimeMap[address] = playTimeMap.getOrDefault(address, 0L) + deltaSeconds
-        lastUpdateTime = now
-        lastServer = address
-    }
-
-    fun getPlayTime(): Long {
-        val address = mc.currentServerEntry?.address ?: return 0
-        return playTimeMap[address] ?: 0
-    }
 }
 
 /**

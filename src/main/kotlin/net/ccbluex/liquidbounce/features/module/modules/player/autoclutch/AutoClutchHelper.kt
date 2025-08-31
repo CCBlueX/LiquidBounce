@@ -54,6 +54,7 @@ fun isPredictingFall(): Boolean {
         pos.y <= voidThreshold.toDouble() && box.collideBlockIntersects { it.defaultState.isAir }
     }
 }
+
 fun countAdjacentSafeBlocks(center: BlockPos): Int {
     var count = 0
     for (dx in -1..1) for (dz in -1..1) {
@@ -108,6 +109,7 @@ fun isBlockUnder(height: Double = 5.0): Boolean {
     val box = player.boundingBox.offset(0.0, -height, 0.0)
     return box.collideBlockIntersects { it.defaultState.isAir }
 }
+
 fun simulatePlayerTrajectory(checkCondition: (Vec3d, Box, BlockPos) -> Boolean): Boolean {
     val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
     for (tick in 1..ticksToPredict) {
