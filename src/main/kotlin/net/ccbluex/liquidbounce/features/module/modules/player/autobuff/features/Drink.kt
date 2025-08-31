@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -76,9 +76,9 @@ object Drink : Buff("Drink") {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         forceUseKey = false
-        super.disable()
+        super.onDisabled()
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {

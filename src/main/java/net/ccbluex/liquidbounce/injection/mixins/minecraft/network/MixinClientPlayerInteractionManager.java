@@ -33,7 +33,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,22 +41,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ClientPlayerInteractionManager.class)
 public abstract class MixinClientPlayerInteractionManager {
 
-    @Shadow
-    public abstract void attackEntity(PlayerEntity player, Entity target);
-
     /**
      * Hook attacking entity
      */
-    @Inject(method = "attackEntity", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "attackEntity", at = @At("HEAD"))
     private void hookAttack(PlayerEntity player, Entity target, CallbackInfo callbackInfo) {
-        var attackEvent = EventManager.INSTANCE.callEvent(new AttackEntityEvent(target, () -> {
-            attackEntity(player, target);
-            return null;
-        }));
-
-        if (attackEvent.isCancelled()) {
-            callbackInfo.cancel();
-        }
+        EventManager.INSTANCE.callEvent(new AttackEntityEvent(target));
     }
 
     /**

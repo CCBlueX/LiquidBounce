@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.ints.IntObjectPair
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.ccbluex.liquidbounce.utils.kotlin.isEmpty
 import net.minecraft.block.BedBlock
 import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -133,35 +133,42 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             (blockPos, _) -> blockPos.getSquaredDistance(eyesPos)
         } ?: return@handler
 
+        val mutable = BlockPos.Mutable()
         val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
-            pos.toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
+            mutable.set(pos).toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
         }
 
-        if (placementPositions.isEmpty()) {
+        if (placementPositions.none()) {
             return@handler
         }
 
         val updatePositions = placementPositions.toMutableList().apply {
             // Layer(ASC) Center Distance(DESC)
             sortWith(
-                Comparator.comparingInt(IntObjectPair<BlockPos>::keyInt)
-                    .thenComparingDouble { -it.value().toCenterPos().squaredDistanceTo(eyesPos) }
+                Comparator.comparingInt(IntLongPair::leftInt)
+                    .thenComparingDouble {
+                        -mutable.set(it.rightLong()).getSquaredDistance(eyesPos)
+                    }
             )
         }
 
         debugGeometry("PlacementPosition") {
             ModuleDebug.DebugCollection(
                 updatePositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.with(a = 100))
+                    ModuleDebug.DebuggedPoint(mutable.set(pos).toCenterPos(), Color4b.RED.with(a = 100))
                 }
             )
         }
 
         // Need ordered set (like TreeSet/LinkedHashSet)
-        placer.update(updatePositions.mapTo(linkedSetOf()) { it.value() })
+        placer.update(
+            updatePositions.mapTo(linkedSetOf()) {
+                BlockPos.fromLong(it.rightLong())
+            }
+        )
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         placer.disable()
     }
 

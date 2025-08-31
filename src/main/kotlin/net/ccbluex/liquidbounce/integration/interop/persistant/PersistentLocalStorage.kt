@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.persistant
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 
 object PersistentLocalStorage : Configurable("storage"), MutableMap<String, String> {
 

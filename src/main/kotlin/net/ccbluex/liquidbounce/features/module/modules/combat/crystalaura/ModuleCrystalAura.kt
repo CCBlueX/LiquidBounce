@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -84,15 +84,15 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         CrystalAuraTriggerer.terminateRunningTasks()
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
-        SubmoduleBasePlace.disable()
+        SubmoduleBasePlace.onDisabled()
         CrystalAuraDamageOptions.cacheMap.clear()
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
     }
 

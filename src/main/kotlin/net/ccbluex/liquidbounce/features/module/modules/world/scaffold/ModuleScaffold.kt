@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.ints.IntObjectPair
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -204,7 +204,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
 
-        internal val clicker = tree(Clicker(ModuleScaffold, mc.options.useKey, false, maxCps = 100))
+        internal val clicker = tree(Clicker(ModuleScaffold, mc.options.useKey, null, maxCps = 100))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
@@ -218,6 +218,12 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldBlinkFeature)
     }
+
+    /**
+     * Temporarily turns on [net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed]
+     * while Scaffold is enabled.
+     */
+    val autoSpeed by boolean("AutoSpeed", false)
 
     private var ledge by boolean("Ledge", true)
 
@@ -278,7 +284,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferAverageHardBlocks(neutralRange = false),
         )
 
-    override fun enable() {
+    override fun onEnabled() {
         // Placement Y is the Y coordinate of the block below the player
         placementY = player.blockPos.y - 1
         startY = player.blockPos.y
@@ -287,10 +293,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
 
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)

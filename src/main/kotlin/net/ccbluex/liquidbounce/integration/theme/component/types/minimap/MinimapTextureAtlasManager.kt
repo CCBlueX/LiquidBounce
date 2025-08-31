@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
 
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.math.ChunkPos
+import org.joml.Vector2i
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -208,8 +208,8 @@ class MinimapTextureAtlasManager {
          * @param chunkX x coordinate in the chunk (0-15)
          * @param chunkY y coordinate in the chunk (0-15)
          */
-        fun getPosOnAtlas(chunkX: Int, chunkY: Int): Vec2i {
-            return Vec2i(baseXOnAtlas or chunkX, baseYOnAtlas or chunkY)
+        fun getPosOnAtlas(chunkX: Int, chunkY: Int): Vector2i {
+            return Vector2i(baseXOnAtlas or chunkX, baseYOnAtlas or chunkY)
         }
     }
 }

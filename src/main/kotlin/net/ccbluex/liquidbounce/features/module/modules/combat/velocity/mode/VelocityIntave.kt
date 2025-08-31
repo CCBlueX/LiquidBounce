@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -41,10 +41,6 @@ object VelocityIntave : VelocityMode("Intave") {
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
-            if (event.isCancelled) {
-                return@handler
-            }
-
             if (player.hurtTime in hurtTime && System.currentTimeMillis() - lastAttackTime <= lastAttackTimeToReduce) {
                 player.velocity.x *= reduceFactor
                 player.velocity.z *= reduceFactor

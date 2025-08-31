@@ -18,34 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
+import org.joml.Vector2i
 import kotlin.math.sqrt
 
-open class Vec2i(val x: Int, val y: Int) {
-    operator fun component1() = x
-    operator fun component2() = y
+fun Vector2i.dotProduct(other: Vector2i): Long = dotProduct(other.x, other.y)
 
-    fun add(vec: Vec2i): Vec2i {
-        return Vec2i(this.x + vec.x, this.y + vec.y)
-    }
+fun Vector2i.dotProduct(x: Int, y: Int): Long = this.x.toLong() * x + this.y.toLong() * y
 
-    fun dotProduct(otherVec: Vec2i): Int {
-        return this.x * otherVec.x + this.y * otherVec.y
-    }
-
-    fun similarity(otherVec: Vec2i): Double {
-        return this.dotProduct(otherVec) / sqrt(this.lengthSquared().toDouble() * otherVec.lengthSquared())
-    }
-
-    fun length(): Double {
-        return sqrt(lengthSquared().toDouble())
-    }
-
-    private fun lengthSquared(): Int {
-        return this.x * this.x + this.y * this.y
-    }
-
-    companion object {
-        @JvmStatic
-        val ZERO = Vec2i(0, 0)
-    }
+fun Vector2i.similarity(other: Vector2i): Double {
+    return this.dotProduct(other) / sqrt((this.lengthSquared() * other.lengthSquared()).toDouble())
 }

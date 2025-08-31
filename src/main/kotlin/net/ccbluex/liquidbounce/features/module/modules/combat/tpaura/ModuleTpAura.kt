@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -43,7 +43,7 @@ object ModuleTpAura : ClientModule("TpAura", Category.COMBAT, disableOnQuit = tr
 
     private val attackRange by float("AttackRange", 4.2f, 3f..5f)
 
-    val clicker = tree(Clicker(this, mc.options.attackKey, true))
+    val clicker = tree(Clicker(this, mc.options.attackKey))
     val mode = choices("Mode", AStarMode, arrayOf(AStarMode, ImmediateMode))
     val targetSelector = tree(TargetSelector(TargetPriority.HURT_TIME))
 

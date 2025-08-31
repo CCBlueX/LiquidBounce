@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -39,6 +39,7 @@ import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.SpectralArrowEntity
+import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -101,7 +102,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
-        (entity is ArrowEntity || entity is SpectralArrowEntity) && !entity.isInGround
+        (entity is ArrowEntity || entity is SpectralArrowEntity ||
+                (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(

@@ -20,27 +20,31 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.againstShield
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.prepare
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
 import net.minecraft.item.SwordItem
 import net.minecraft.util.Hand
+import java.util.*
 
 /**
  * AutoWeapon module
@@ -50,14 +54,13 @@ import net.minecraft.util.Hand
 object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     /**
-     * The weapon type to prefer, which is on 1.8 and 1.9+ versions usually a sword,
+     * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,
      * due to the attack speed.
-     *
-     * On 1.9+ we are likely to prefer an axe when the target is blocking with a shield,
-     * which is covered by the [againstShield] weapon type.
      */
     private val preferredWeapon by enumChoice("Preferred", WeaponType.SWORD)
-    private val againstShield by enumChoice("BlockedByShield", WeaponType.AXE)
+
+    private val autoShieldBreak by boolean("AutoShieldBreak", true)
+    private val autoMace by boolean("AutoMace", true)
 
     @Suppress("unused")
     private enum class WeaponType(
@@ -70,27 +73,26 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         MACE("Mace", { it.itemStack.item is MaceItem }),
 
         /**
-         * Do not prefer any weapon type, this is useful to only
-         * use the [againstShield] weapon type.
+         * Do not prefer any weapon type. This is useful if you only
+         * want to make use of either [autoShieldBreak] or [autoMace].
          */
         NONE("None", { false });
     }
 
-    private val prepare by boolean("Prepare", true)
-
-    /**
-     * In Minecraft, even when we send a packet to switch the slot,
-     * before we attack, the server will still calculate damage
-     * based on the slot we were on before the switch.
-     *
-     * This is why we have to wait at least 1 tick before attacking
-     * after switching the slot.
-     *
-     * This is not necessary when we are already on the correct slot,
-     * which should be the case when using [prepare].
-     */
-    private val switchOn by int("SwitchOn", 1, 0..2, "ticks")
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
+
+    private val changeOnActions by multiEnumChoice<ChangeOnAction>(
+        "ChangeOn",
+        EnumSet.of(ChangeOnAction.ON_ATTACK)
+    )
+
+    @Suppress("unused")
+    private enum class ChangeOnAction(
+        override val choiceName: String
+    ): NamedChoice {
+        ON_ATTACK("OnAttack"),
+        ON_TARGET("OnTarget")
+    }
 
     /**
      * Prioritize Auto Buff or consuming an item over Auto Weapon
@@ -102,28 +104,48 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     /**
      * Check if the attack will break the shield
      */
-    fun willBreakShield(): Boolean {
-        if (!this.running || isOlderThanOrEqual1_8) {
-            return false
+    val willShieldBreak: Boolean
+        get() {
+            if (isOlderThanOrEqual1_8) {
+                return false
+            }
+
+            // If we have an axe in our main hand, we will break the shield
+            if (player.mainHandStack.item is AxeItem) {
+                return true
+            }
+
+            // If we are not going to switch to an axe, we will not break the shield
+            return determineWeaponSlot(null, enforceShield = true)?.itemStack?.item is AxeItem
         }
 
-        // If we have an axe in our main hand, we will break the shield
-        if (player.mainHandStack.item is AxeItem) {
-            return true
+    /**
+     * Check if the attack will mace smash
+     */
+    val willMaceSmash: Boolean
+        get() {
+            if (!canMaceSmash) {
+                return false
+            }
+
+            if (player.mainHandStack.item is MaceItem) {
+                return true
+            }
+
+            return determineWeaponSlot(null)?.itemStack?.item is MaceItem
         }
 
-        // If we are not going to switch to an axe, we will not break the shield
-        return determineWeaponSlot(null, enforceShield = true)?.itemStack?.item is AxeItem
-    }
+    // https://minecraft.wiki/w/Mace#Falling
+    private val canMaceSmash
+        get() = !isOlderThanOrEqual1_8 && MaceItem.shouldDealAdditionalDamage(player)
 
     @Suppress("unused")
-    private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
-        val entity = event.entity as? LivingEntity ?: return@sequenceHandler
-        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@sequenceHandler
-        val isOnSwitch = SilentHotbar.serversideSlot != weaponSlot
+    private val attackHandler = handler<AttackEntityEvent> { event ->
+        val entity = event.entity as? LivingEntity ?: return@handler
+        val weaponSlot = determineWeaponSlot(entity)?.hotbarSlot ?: return@handler
 
-        if (isBusy) {
-            return@sequenceHandler
+        if (isBusy || ChangeOnAction.ON_ATTACK !in changeOnActions) {
+            return@handler
         }
 
         SilentHotbar.selectSlotSilently(
@@ -132,26 +154,17 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             switchBack
         )
 
-        // Sync selected slot right now,
-        // we will not sync on this tick otherwise
+        // [ClientPlayerInteractionManager.attackEntity] will sync the selected slot,
+        // so we can do that here already. This is legitimate, but unfortunately, the server seems
+        // to not care about the sync when it occurs in the same tick as the attack.
         interaction.syncSelectedSlot()
-
-        if (isOnSwitch && switchOn > 0) {
-            event.cancelEvent()
-
-            // Re-attack after switch
-            // This should not end up in a recursive loop,
-            // because we switched slot by now
-            waitTicks(switchOn)
-            event.caller()
-        }
     }
 
     /**
-     * Prepare AutoWeapon for given [entity] if [prepare] is enabled
+     * Prepare AutoWeapon for given [entity] if [onTarget] is enabled
      */
-    fun prepare(entity: Entity?) {
-        if (!running || !prepare || entity !is LivingEntity || isBusy) {
+    fun onTarget(entity: Entity?) {
+        if (!running || entity !is LivingEntity || isBusy || ChangeOnAction.ON_TARGET !in changeOnActions) {
             return
         }
 
@@ -166,20 +179,47 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
-        val blockedByShield = enforceShield || !isOlderThanOrEqual1_8 &&
-            target?.blockedByShield(world.damageSources.playerAttack(player)) == true
+        val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
+        val requiresMace = autoMace && canMaceSmash
 
         val bestSlot = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
-            .filter(
+            .filter { itemFacet ->
                 when {
-                    blockedByShield -> againstShield.filter
-                    else -> preferredWeapon.filter
+                    // A mace's smash attack cannot be blocked by a shield
+                    requiresMace -> itemFacet.itemStack.item is MaceItem
+                    // An axe will stun the target if it is blocking with a shield
+                    requiresShield -> itemFacet.itemStack.item is AxeItem
+                    // Fall back to a preferred weapon when no special case applies
+                    else -> preferredWeapon.filter(itemFacet)
                 }
-            )
+            }
             .maxOrNull()
 
         return bestSlot?.itemSlot as HotbarItemSlot?
+    }
+
+    /**
+     * Get the attack speed of the determined weapon, or
+     * return [original] if no weapon is selected
+     * or if [ChangeOnAction] does not contain [ChangeOnAction.ON_ATTACK].
+     *
+     * When we switch our item on the same tick as we attack,
+     * the cooldown progress is not updated.
+     */
+    fun getAttackSpeed(original: Double): Double {
+        debugParameter("Original Attack Speed") { original }
+
+        if (!running || ChangeOnAction.ON_ATTACK !in changeOnActions) {
+            return original
+        }
+
+        val itemStack = determineWeaponSlot(null)?.itemStack ?: return original
+        val itemAttackSpeed = itemStack.attackSpeed
+        debugParameter("Item") { itemStack.itemName.convertToString() }
+        debugParameter("Attack Speed") { itemAttackSpeed }
+
+        return itemAttackSpeed
     }
 
 }

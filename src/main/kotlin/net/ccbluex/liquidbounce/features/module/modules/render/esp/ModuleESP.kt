@@ -55,17 +55,17 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     private val colorModes = choices("ColorMode", 0) {
         arrayOf(
             GenericEntityHealthColorMode(it),
-            GenericStaticColorMode(it, Color4b.Companion.WHITE.with(a = 100)),
+            GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
             GenericRainbowColorMode(it)
         )
     }
-    private val friendColor by color("Friends", Color4b.Companion.GREEN)
+    private val friendColor by color("Friends", Color4b.GREEN)
 
-    override fun enable() {
+    override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
     }
 
@@ -73,7 +73,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
         val baseColor = getBaseColor(entity)
 
         if (entity.hurtTime > 0) {
-            return Color4b.Companion.RED
+            return Color4b.RED
         }
 
         return baseColor

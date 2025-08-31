@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
-import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -42,11 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
@@ -70,19 +65,15 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
-    private val clicker = tree(Clicker(this, mc.options.useKey, showCooldown = false))
+    private val clicker = tree(Clicker(this, mc.options.useKey, itemCooldown = null))
 
     /**
      * The target tracker to find the best enemy to attack.
      */
-    internal val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE, floatRange("Range", 3.0f..6f, 1f..50f)))
+    internal val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE, floatRange("Range", 3.0f..6f, 1f..256f)))
     private val pointTracker = tree(
         PointTracker(
-            lowestPointDefault = PreferredBoxPart.HEAD,
-            highestPointDefault = PreferredBoxPart.HEAD,
-            // The lag on Hypixel is massive
-            timeEnemyOffsetDefault = 3f,
-            timeEnemyOffsetScale = 0f..7f
+            this
         )
     )
 
@@ -163,7 +154,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         )
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetTracker.reset()
     }
 
@@ -220,14 +211,14 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     }
 
     private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
-        val pointOnHitbox = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
+        val pointOnHitbox = pointTracker.findPoint(target, 1)
 
         return when (gravityType) {
             GravityType.AUTO -> {
                 // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
                 return null
             }
-            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.toPoint, pointOnHitbox.fromPoint)
+            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.pos, pointOnHitbox.eyes)
             // Determines the required yaw and pitch angles to hit a target with a projectile,
             // considering gravity's effect on the projectile's motion.
             GravityType.PROJECTILE -> {
