@@ -52,10 +52,6 @@ class PlayerSimulationExtrapolation(private val simulation: SimulatedPlayerCache
 
     override fun getPositionInTicks(ticks: Double): Vec3d {
         val ticks = max(0, round(ticks.coerceAtMost(30.0)).toInt())
-        if (ticks == 0) {
-            return this.simulation.simulatedPlayer.pos
-        }
-
         return this.simulation.getSnapshotAt(ticks).pos
     }
 }
