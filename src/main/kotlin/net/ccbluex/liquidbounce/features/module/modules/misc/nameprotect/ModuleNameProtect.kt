@@ -130,10 +130,10 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             return original
         }
 
-        return stringMappingCache.getOrPut(original) { replace0(original) }
+        return stringMappingCache.getOrPut(original) { uncachedReplace(original) }
     }
 
-    private fun replace0(original: String): String {
+    fun uncachedReplace(original: String): String {
         val replacements = replacementMappings.findReplacements(original)
 
         if (replacements.isEmpty()) {
@@ -172,13 +172,13 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             return original
         }
 
-        return orderedTextMappingCache.getOrPut(original) { wrap0(original) }
+        return orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
     }
 
     /**
      * Wraps an [OrderedText] to apply name protection.
      */
-    private fun wrap0(original: OrderedText): OrderedText {
+    fun uncachedWrap(original: OrderedText): OrderedText {
         val mappedCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
 
         val originalCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
