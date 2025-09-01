@@ -22,4 +22,4 @@ package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
-internal data class ExemptContext(val box: Box, val bestHitVector: Vec3d, val worstHitVector: Vec3d)
+data class ExemptContext(val box: Box, val bestHitVector: Vec3d, val worstHitVector: Vec3d)
