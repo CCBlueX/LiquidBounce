@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.api.services.marketplace
 
 import com.google.gson.JsonObject
-import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
@@ -50,12 +49,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         fun buildQueryString() = buildString {
             append("?page=$page&limit=$limit")
             query?.let { append("&q=$it") }
-            type?.let { type ->
-                val serializedName = type.javaClass.getField(type.name)
-                    .getAnnotation(SerializedName::class.java)?.value
-                    ?: type.name
-                append("&type=$serializedName")
-            }
+            type?.let { type -> append("&type=${publicGson.toJsonTree(type).asString}") }
             uid?.let { append("&uid=$it") }
             branch?.let { append("&branch=$branch") }
             if (unapproved) append("&unapproved=true")

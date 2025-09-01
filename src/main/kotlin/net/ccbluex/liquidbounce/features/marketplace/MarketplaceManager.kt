@@ -38,7 +38,10 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
     fun subscribe(itemId: Int, type: MarketplaceItemType) {
-        if (isSubscribed(itemId)) return
+        if (isSubscribed(itemId)) {
+            return
+        }
+
         subscribedItems.add(SubscribedItem(itemId, type, null))
         ConfigSystem.storeConfigurable(this)
     }
