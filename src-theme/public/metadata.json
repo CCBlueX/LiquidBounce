@@ -548,7 +548,7 @@
       ]
     },
     {
-      "name": "PlayerListHUD",
+      "name": "PlayerList",
       "value": [
         {
           "name": "Enabled",

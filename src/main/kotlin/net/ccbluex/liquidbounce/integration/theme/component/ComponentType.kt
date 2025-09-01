@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.integration.theme.component.types.EffectsComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.HotBarComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.IntegratedComponent
+import net.ccbluex.liquidbounce.integration.theme.component.types.PlayerListComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.TargetHUDComponent
 import net.ccbluex.liquidbounce.integration.theme.component.types.minimap.MinimapComponent
 
@@ -44,10 +45,12 @@ enum class ComponentType(
     SESSIONINFO("SessionInfo"),
     PROGRESS("ProgressBar"),
     PLAYERLIST(
-        "PlayerListHUD",
-        componentTweaks = arrayOf(
-            FeatureTweak.DISABLE_PLAYERLIST_HUD,
-        )
+        "PlayerList",
+        createComponent = {
+            PlayerListComponent(
+                tweaks = arrayOf(FeatureTweak.DISABLE_PLAYERLIST_HUD)
+            )
+        }
     ),
 
     CHAT_HUD(

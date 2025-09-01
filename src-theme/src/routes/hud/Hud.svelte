@@ -23,7 +23,7 @@
     import MotionGraph from "./elements/MotionGraph.svelte";
     import TitleControl from "./elements/TitleControl.svelte";
     import SessionInfo from "./elements/SessionInfo.svelte";
-    import PlayerListHUD from "./elements/PlayerListHUD.svelte";
+    import PlayerList from "./elements/PlayerList.svelte";
     import ChatHUD from "./elements/chat/Chat.svelte";
     import type {Component, ConfigurableSetting, TogglableSetting} from "../../integration/types";
     import type {ClickGuiValueChangeEvent, ComponentsUpdateEvent} from "../../integration/events";
@@ -124,6 +124,8 @@
         <HotBar settings={component.settings}/>
     {:else if component.name === 'Effects'}
         <Effects settings={component.settings}/>
+    {:else if component.name === 'PlayerList'}
+        <PlayerList settings={component.settings}/>
     {:else if component.name === 'Image'}
         <img alt="" src={component.settings.src} style="scale: {component.settings.scale};"/>
     {:else}
@@ -180,9 +182,7 @@
             {#if component.name === 'Notifications'}
                 <Notifications/>
             {/if}
-            {#if component.name === 'PlayerListHUD'}
-                <PlayerListHUD/>
-            {/if}
+
             {#if component.name === 'ProgressBar'}
                 <ProgressBar/>
             {/if}
