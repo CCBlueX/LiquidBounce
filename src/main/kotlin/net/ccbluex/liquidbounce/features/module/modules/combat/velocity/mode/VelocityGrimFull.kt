@@ -38,7 +38,6 @@ import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 
@@ -54,6 +53,16 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private var shouldSkip = false
     private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
 
+    // TODO: replace with PacketQueueManager
+    private fun track(event: PacketEvent) {
+        delayedPacketQueue.add(PacketSnapshot(event.packet, event.origin, System.currentTimeMillis()))
+    }
+
+    private fun flush() {
+        delayedPacketQueue.forEach { handlePacket(it.packet) }
+        delayedPacketQueue.clear()
+    }
+
     private var freezeTicks = 0
     private const val MAX_FREEZE_TICKS = 20 // To prevent freezing
 
@@ -64,38 +73,32 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         waitForUpdate = false
         hitResult = null
         shouldSkip = false
-        delayedPacketQueue.clear()
     }
 
     override fun disable() {
-        delayedPacketQueue.forEach { handlePacket(it.packet) }
-        delayedPacketQueue.clear()
+        flush()
     }
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerInteractEntityC2SPacket || packet is PlayerInteractBlockC2SPacket) {
-            shouldSkip = true
-        }
-
-        if (packet is PlayerMoveC2SPacket && packet.changesPosition() && waitForUpdate) {
-            event.cancelEvent()
-        }
-
-        if (packet is CommonPongC2SPacket && waitForPing) {
-            waitTicks(1)
-            waitForUpdate = false
-            waitForPing = false
-            return@sequenceHandler
+        when (packet) {
+            is PlayerInteractEntityC2SPacket, is PlayerInteractBlockC2SPacket -> shouldSkip = true
+            is PlayerMoveC2SPacket if packet.changesPosition() && waitForUpdate -> event.cancelEvent()
+            is CommonPongC2SPacket if waitForPing -> {
+                waitTicks(1)
+                waitForUpdate = false
+                waitForPing = false
+                return@sequenceHandler
+            }
         }
 
         if (event.isCancelled || event.origin == TransferOrigin.OUTGOING) {
             return@sequenceHandler
         }
 
-        if (waitForUpdate && packet is BlockUpdateS2CPacket && packet.pos.equals(player.blockPos)) {
+        if (packet is BlockUpdateS2CPacket && waitForUpdate && packet.pos.equals(player.blockPos)) {
             waitTicks(1)
             waitForPing = true
             needClick = false
@@ -105,9 +108,10 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         if (waitForUpdate) {
             return@sequenceHandler
         }
+
         // Delay all the packets.
         if (delay) {
-            delayedPacketQueue.add(PacketSnapshot(packet, event.origin, System.currentTimeMillis()))
+            track(event)
             event.cancelEvent()
             return@sequenceHandler
         }
@@ -130,21 +134,18 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
     @Suppress("unused")
     private val playerTickHandle = handler<PlayerTickEvent> { event ->
-        if (needClick) {
-            hitResult = raycast(rotation = Rotation(player.yaw, 90f))
-            val pos = hitResult!!.blockPos.offset(hitResult!!.side)
-            if (!pos.equals(player.blockPos) || shouldSkip || player.isUsingItem) {
-                hitResult = null
+        if (needClick && !shouldSkip && !player.isUsingItem) {
+            hitResult = raycast(rotation = Rotation(player.yaw, 90f)).takeIf {
+                it.blockPos.offset(it.side) == player.blockPos
             }
         }
 
         if (hitResult != null) {
             delay = false
 
-            delayedPacketQueue.forEach { handlePacket(it.packet) }
-            delayedPacketQueue.clear()
+            flush()
 
-            if (interaction.interactBlock(player, Hand.MAIN_HAND, hitResult) == ActionResult.SUCCESS) {
+            if (interaction.interactBlock(player, Hand.MAIN_HAND, hitResult).isAccepted) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
