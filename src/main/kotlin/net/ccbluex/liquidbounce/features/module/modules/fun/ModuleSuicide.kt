@@ -19,7 +19,7 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 
-object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("AutoVoid")) {
+object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("AutoVoid"),disableOnQuit = true) {
 
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0.2f..1.0f)
     private val allowJump by boolean("AllowJump", true)
