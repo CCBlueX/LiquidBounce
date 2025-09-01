@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
@@ -85,6 +86,13 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
             }
 
             scrolledDistance += (sensitivity * it.vertical).toFloat()
+        }
+
+        @Suppress("unused")
+        private val releaseModifierHandler = handler<KeyboardKeyEvent> {
+            if (it.key == modifierKey && it.action == GLFW.GLFW_RELEASE) {
+                reset()
+            }
         }
 
         @Suppress("unused")
