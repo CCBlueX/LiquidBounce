@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.api.services.marketplace
 
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.api.core.API_BRANCH
-import net.ccbluex.liquidbounce.api.core.API_V3_ENDPOINT
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.asJson
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.marketplace.*
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
-import net.ccbluex.liquidbounce.config.gson.GsonInstance
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -36,7 +36,7 @@ import okio.BufferedSource
 import java.io.File
 
 @Suppress("TooManyFunctions")
-object MarketplaceApi : BaseApi(API_V3_ENDPOINT) {
+object MarketplaceApi : BaseApi(config.apiEndpointV3) {
 
     private data class MarketplaceParams(
         val page: Int = 1,
@@ -99,7 +99,7 @@ object MarketplaceApi : BaseApi(API_V3_ENDPOINT) {
         "/marketplace",
         JsonObject().apply {
             addProperty("name", name)
-            add("type", GsonInstance.PUBLIC.gson.toJsonTree(type))
+            add("type", publicGson.toJsonTree(type))
             addProperty("description", description)
         }.toString().asJson(),
         headers = { addAuth(session) }
@@ -115,7 +115,7 @@ object MarketplaceApi : BaseApi(API_V3_ENDPOINT) {
         "/marketplace/$id",
         JsonObject().apply {
             addProperty("name", name)
-            add("type", GsonInstance.PUBLIC.gson.toJsonTree(type))
+            add("type", publicGson.toJsonTree(type))
             addProperty("description", description)
         }.toString().asJson(),
         headers = { addAuth(session) }
