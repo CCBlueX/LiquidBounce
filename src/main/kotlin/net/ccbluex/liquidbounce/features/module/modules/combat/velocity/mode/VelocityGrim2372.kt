@@ -40,9 +40,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 
-internal object VelocityGrimFull : VelocityMode("GrimFull") {
-
-    private val forExplosion by boolean("ForExplosion", true)
+internal object VelocityGrim2372 : VelocityMode("Grim2372") {
 
     private var cancelNextVelocity = false
     private var delay = false
@@ -53,10 +51,6 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
     private var hitResult: BlockHitResult? = null
     private var shouldSkip = false
-
-    private fun flush() {
-        PacketQueueManager.flush(TransferOrigin.INCOMING)
-    }
 
     private var freezeTicks = 0
     private const val MAX_FREEZE_TICKS = 20 // To prevent freezing
@@ -72,7 +66,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     }
 
     override fun disable() {
-        flush()
+        PacketQueueManager.flush(TransferOrigin.INCOMING)
     }
 
     private val Packet<*>.isSelfDamage
@@ -80,7 +74,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
     private val Packet<*>.isSelfVelocity
         get() = this is EntityVelocityUpdateS2CPacket && this.entityId == player.id
-            || this is ExplosionS2CPacket && forExplosion
+            || this is ExplosionS2CPacket
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
@@ -149,7 +143,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         if (hitResult != null) {
             delay = false
 
-            flush()
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
 
             if (interaction.interactBlock(player, Hand.MAIN_HAND, hitResult).isAccepted) {
                 player.swingHand(Hand.MAIN_HAND)
