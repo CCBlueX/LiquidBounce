@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import com.google.common.collect.Queues
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
 import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -40,9 +40,13 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
+import java.util.concurrent.ConcurrentLinkedQueue
 
 internal object VelocityGrimFull : VelocityMode("GrimFull") {
-    private var canCancel = false
+
+    private val forExplosion by boolean("ForExplosion", true)
+
+    private var cancelNextVelocity = false
     private var delay = false
     private var needClick = false
 
@@ -51,7 +55,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
     private var hitResult: BlockHitResult? = null
     private var shouldSkip = false
-    private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
+    private val delayedPacketQueue = ConcurrentLinkedQueue<PacketSnapshot>()
 
     // TODO: replace with PacketQueueManager
     private fun track(event: PacketEvent) {
@@ -67,30 +71,40 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private const val MAX_FREEZE_TICKS = 20 // To prevent freezing
 
     override fun enable() {
-        canCancel = false
+        cancelNextVelocity = false
         delay = false
         needClick = false
         waitForUpdate = false
         hitResult = null
         shouldSkip = false
+        freezeTicks = 0
     }
 
     override fun disable() {
         flush()
     }
 
+    private val Packet<*>.isSelfDamage
+        get() = this is EntityDamageS2CPacket && this.entityId == player.id
+
+    private val Packet<*>.isSelfVelocity
+        get() = this is EntityVelocityUpdateS2CPacket && this.entityId == player.id || this is ExplosionS2CPacket && forExplosion
+
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
         when (packet) {
-            is PlayerInteractEntityC2SPacket, is PlayerInteractBlockC2SPacket -> shouldSkip = true
-            is PlayerMoveC2SPacket if packet.changesPosition() && waitForUpdate -> event.cancelEvent()
+            is PlayerInteractEntityC2SPacket, is PlayerInteractBlockC2SPacket ->
+                shouldSkip = true
+
+            is PlayerMoveC2SPacket if packet.changesPosition() && waitForUpdate ->
+                event.cancelEvent()
+
             is CommonPongC2SPacket if waitForPing -> {
                 waitTicks(1)
                 waitForUpdate = false
                 waitForPing = false
-                return@sequenceHandler
             }
         }
 
@@ -98,7 +112,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             return@sequenceHandler
         }
 
-        if (packet is BlockUpdateS2CPacket && waitForUpdate && packet.pos.equals(player.blockPos)) {
+        if (packet is BlockUpdateS2CPacket && waitForUpdate && packet.pos == player.blockPos) {
             waitTicks(1)
             waitForPing = true
             needClick = false
@@ -109,25 +123,20 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             return@sequenceHandler
         }
 
-        // Delay all the packets.
         if (delay) {
             track(event)
             event.cancelEvent()
             return@sequenceHandler
         }
 
-        // Check for damage to make sure it will only cancel
-        // damage velocity (that all we need) and not affect other types of velocity
-        if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
-            canCancel = true
-        }
-
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
-            && canCancel
-        ) {
+        // Check for damage to make sure it will only cancel damage velocity (that all we need),
+        // and not affect other types of velocity
+        if (packet.isSelfDamage) {
+            cancelNextVelocity = true
+        } else if (cancelNextVelocity && event.packet.isSelfVelocity) {
             event.cancelEvent()
             delay = true
-            canCancel = false
+            cancelNextVelocity = false
             needClick = true
         }
     }
