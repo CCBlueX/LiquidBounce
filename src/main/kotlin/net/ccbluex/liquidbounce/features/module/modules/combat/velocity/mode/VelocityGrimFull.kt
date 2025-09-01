@@ -25,13 +25,11 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityGrimFull.freezeTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
 import net.ccbluex.liquidbounce.utils.client.handlePacket
-import net.minecraft.network.handler.PacketInflater
 import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -49,15 +47,15 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     private var delay = false
     private var needClick = false
 
-    private var waitForPing = false;
+    private var waitForPing = false
     private var waitForUpdate = false
 
-    private var hitResult : BlockHitResult? = null
+    private var hitResult: BlockHitResult? = null
     private var shouldSkip = false
     private val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
 
-    private var freezeTicks = 0;
-    private const val MAX_FREEZE_TICKS = 20; // To prevent freezing
+    private var freezeTicks = 0
+    private const val MAX_FREEZE_TICKS = 20 // To prevent freezing
 
     override fun enable() {
         canCancel = false
@@ -121,7 +119,8 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         }
 
         if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
-            && canCancel) {
+            && canCancel
+        ) {
             event.cancelEvent()
             delay = true
             canCancel = false
@@ -132,7 +131,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     @Suppress("unused")
     private val playerTickHandle = handler<PlayerTickEvent> { event ->
         if (needClick) {
-            hitResult = raycast(rotation = Rotation(player.yaw,90f));
+            hitResult = raycast(rotation = Rotation(player.yaw, 90f))
             val pos = hitResult!!.blockPos.offset(hitResult!!.side)
             if (!pos.equals(player.blockPos) || shouldSkip || player.isUsingItem) {
                 hitResult = null
@@ -145,7 +144,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             delayedPacketQueue.forEach { handlePacket(it.packet) }
             delayedPacketQueue.clear()
 
-            if (interaction.interactBlock(player, Hand.MAIN_HAND,hitResult) == ActionResult.SUCCESS) {
+            if (interaction.interactBlock(player, Hand.MAIN_HAND, hitResult) == ActionResult.SUCCESS) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
