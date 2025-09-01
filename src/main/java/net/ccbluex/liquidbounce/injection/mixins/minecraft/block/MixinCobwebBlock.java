@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CobwebBlock;
 import net.minecraft.client.MinecraftClient;

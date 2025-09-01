@@ -1,8 +1,8 @@
 package net.ccbluex.liquidbounce.integration.backend.browser
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.browserBackend
@@ -42,7 +42,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
 
 }
 
-class BrowserSettings(
+open class BrowserSettings(
     fpsLimit: Int = 0,
     update: () -> Unit
 ) : Configurable("Renderer") {
@@ -62,4 +62,11 @@ class BrowserSettings(
             return if (fpsValue <= 0) refreshRate else fpsValue
         }
 
+}
+
+class IntegrationBrowserSettings(
+    fpsLimit: Int = 0,
+    update: () -> Unit
+) : BrowserSettings(fpsLimit, update) {
+    val syncGameFps by boolean("SyncGameFps", true)
 }

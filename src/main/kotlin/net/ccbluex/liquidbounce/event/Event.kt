@@ -20,19 +20,21 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
 
 /**
  * A callable event
  */
-abstract class Event
+abstract class Event {
+    var isCompleted: Boolean = false
+        internal set
+}
 
 /**
  * A cancellable event
  */
 abstract class CancellableEvent : Event() {
     /**
-     * Let you know if the event is cancelled
+     * Let you know if the event is canceled
      *
      * @return state of cancel
      */
@@ -43,6 +45,8 @@ abstract class CancellableEvent : Event() {
      * Allows you to cancel an event
      */
     fun cancelEvent() {
+        require(!isCompleted) { "Cannot cancel an event that has already been completed." }
+
         isCancelled = true
     }
 
@@ -55,10 +59,12 @@ enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }
 
-fun KClass<out Event>.name(): String = this.findAnnotation<Nameable>()!!.name
-
 /**
  * Retrieves the name that the event is supposed to be associated with in JavaScript.
  */
 val KClass<out Event>.eventName: String
-    get() = this.findAnnotation<Nameable>()!!.name
+    get() = EVENT_CLASS_TO_NAME[this]!!
+
+private val EVENT_CLASS_TO_NAME = ALL_EVENT_CLASSES.associateWith {
+    it.java.getAnnotation(Nameable::class.java)!!.name
+}

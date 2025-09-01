@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config.types.nesting
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -41,6 +40,7 @@ class ChoiceConfigurable<T : Choice>(
     var choices: MutableList<T> = choicesCallback(this).toMutableList()
     private var defaultChoice: T = choices[activeChoiceIndexCallback(choices)]
     var activeChoice: T = defaultChoice
+        private set
 
     init {
         for (choice in choices) {
@@ -48,15 +48,12 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    fun newState(state: Boolean) {
+    internal fun updateChildState(state: Boolean) {
         if (state) {
             this.activeChoice.enable()
         } else {
             this.activeChoice.disable()
         }
-
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
     }
 
     override fun setByString(name: String) {
@@ -115,7 +112,7 @@ class ChoiceConfigurable<T : Choice>(
  */
 abstract class Choice(name: String) : Configurable(name), EventListener, NamedChoice, MinecraftShortcuts {
 
-    override val choiceName: String
+    final override val choiceName: String
         get() = this.name
 
     abstract val parent: ChoiceConfigurable<*>

@@ -125,19 +125,19 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     private var pos: PositionPair? = null
 
-    override fun enable() {
+    override fun onEnabled() {
         updatePosition(Vec3d.ZERO)
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         pos = null
 
         // Reset player rotation
         val rotation = RotationManager.currentRotation ?: RotationManager.serverRotation
         player.yaw = rotation.yaw
         player.pitch = rotation.pitch
-        super.disable()
+        super.onDisabled()
     }
 
     @Suppress("unused")
@@ -150,7 +150,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         }
 
         ModuleDebug.debugParameter(this, "DirectionalInput", event.directionalInput)
-        val velocity = Vec3d.of(Vec3i.ZERO)
+        val velocity = Vec3d.ZERO
             .withStrafe(speed, input = event.directionalInput)
             .withAxis(Direction.Axis.Y, yAxisMovement * speed)
         ModuleDebug.debugParameter(this, "Velocity", velocity.toString())
@@ -184,11 +184,11 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {
-        val camera = mc.gameRenderer.camera
-
         if (!running || entity != player) {
             return
         }
+
+        val camera = mc.gameRenderer.camera
 
         return camera.setPos(pos?.interpolate(tickDelta) ?: return)
     }

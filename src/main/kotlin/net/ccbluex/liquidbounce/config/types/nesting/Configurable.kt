@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.nesting
 
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -28,13 +29,16 @@ import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
+import java.io.File
 import java.util.*
 import kotlin.enums.EnumEntries
 
@@ -275,15 +279,15 @@ open class Configurable(
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
 
-    fun curve(name: String, default: Easing) = enumChoice(name, default)
+    fun easing(name: String, default: Easing) = enumChoice(name, default)
 
     fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
     fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
-    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR_I)
+    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 
-    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
+    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
     fun <C : MutableSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -304,6 +308,29 @@ open class Configurable(
 
     fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
+
+    fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
+        registryList(name, default, ValueType.ENTITY_TYPE)
+
+    @Suppress("LongParameterList")
+    fun curve(
+        name: String,
+        default: MutableList<Vector2f>,
+        xAxis: Axis,
+        yAxis: Axis,
+        tension: Float = 0.4f,
+    ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    fun file(
+        name: String,
+        default: File? = null,
+        dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
+        supportedExtensions: Set<String>? = null
+    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> multiEnumChoice(
         name: String,

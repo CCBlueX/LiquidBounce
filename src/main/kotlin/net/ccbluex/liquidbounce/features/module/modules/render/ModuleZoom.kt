@@ -60,7 +60,7 @@ object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind
         tree(Scroll)
     }
 
-    private val transition by curve("Transition", Easing.QUAD_IN)
+    private val transition by easing("Transition", Easing.QUAD_IN)
     private val durationFactor by float("DurationFactor", 2f, 0f..10f, "x")
 
     private val chronometer = Chronometer()
@@ -69,13 +69,13 @@ object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind
     private var scaledDifference = 0.0
     private var disableAnimationFinished = true
 
-    override fun enable() {
+    override fun onEnabled() {
         targetFov = zoom
         previousFov = getDefaultFov()
         reset()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         previousFov = getFov(true)
         chronometer.reset()
         targetFov = getDefaultFov()

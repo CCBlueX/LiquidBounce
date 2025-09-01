@@ -51,13 +51,13 @@ object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
 
     private val uuidNameCache = hashMapOf<UUID, String>()
 
-    override fun enable() {
+    override fun onEnabled() {
         for (entry in network.playerList) {
             uuidNameCache[entry.profile.id] = entry.profile.name
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         uuidNameCache.clear()
     }
 

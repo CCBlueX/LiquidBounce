@@ -76,9 +76,9 @@ object Drink : Buff("Drink") {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         forceUseKey = false
-        super.disable()
+        super.onDisabled()
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {

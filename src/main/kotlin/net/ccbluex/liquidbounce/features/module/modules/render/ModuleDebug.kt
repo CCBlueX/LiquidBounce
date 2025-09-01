@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.Sequence
@@ -32,12 +33,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.italic
-import net.ccbluex.liquidbounce.utils.client.underline
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
@@ -93,8 +92,75 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     }
 
+    object Graph : ToggleableConfigurable(this, "Graph", false) {
+
+        private val curve = curve(
+            "Curve", mutableListOf(
+                0f vector2f 120f,
+                50f vector2f 60f,
+                140f vector2f 120f,
+                180f vector2f 90f
+            ),
+            xAxis = "X Axis" axis 0f..180f,
+            yAxis = "Y Axis" axis 40f..120f
+        )
+
+        @Suppress("unused")
+        private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+            val context = event.context
+
+            renderEnvironmentForGUI {
+                fontRenderer.withBuffers { buffers ->
+                    with(context) {
+                        draw(
+                            process("Graph".asText()),
+                            120f,
+                            22f,
+                            shadow = true,
+                            scale = 0.3f
+                        )
+
+                        var posX = 300
+                        var posY = 500
+
+                        for (x in curve.xAxis.range step 0.1f) {
+                            var y = curve.transform(x)
+                            this.fill(
+                                posX + x,
+                                posY - y,
+                                posX + x + 1,
+                                posY - y + 1,
+                                0.0f,
+                                Color4b.GREEN.toARGB()
+                            )
+                        }
+
+                        val points = curve.get()
+                        for (point in curve.get()) {
+                            var x = point[0]
+                            var y = point[1]
+
+                            this.fill(
+                                posX + x - 2,
+                                posY - y - 2,
+                                posX + x + 2,
+                                posY - y + 2,
+                                0.0f,
+                                Color4b.WHITE.toARGB()
+                            )
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+    }
+
     init {
         tree(RenderSimulatedPlayer)
+        tree(Graph)
     }
 
     private val debuggedGeometry = hashMapOf<DebuggedOwner, DebuggedGeometry>()
@@ -334,11 +400,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
-        super.disable()
+        super.onDisabled()
     }
 
 }

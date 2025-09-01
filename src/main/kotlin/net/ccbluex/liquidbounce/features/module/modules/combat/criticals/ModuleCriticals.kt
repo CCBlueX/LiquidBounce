@@ -82,10 +82,6 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
         private val attackHandler = handler<AttackEntityEvent>(
             priority = CRITICAL_MODIFICATION
         ) { event ->
-            if (event.isCancelled) {
-                return@handler
-            }
-
             if (stopSprinting == StopSprintingMode.ON_ATTACK && player.lastSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 player.lastSprinting = false
@@ -124,10 +120,6 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
-            if (event.isCancelled) {
-                return@handler
-            }
-
             if (event.entity !is LivingEntity) {
                 return@handler
             }

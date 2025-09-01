@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      # Uncomment the sections below if you want to create GitHub releases
+      # 
+      # - name: Create dist archive
+      #   run: zip -r dist.zip dist/
+      #
+      # - name: Generate version tag
+      #   id: version_tag
+      #   run: |
+      #     COMMIT_HASH=$(git rev-parse --short HEAD)
+      #     TAG="build-$COMMIT_HASH-$(date +'%Y%m%d%H%M%S')"
+      #     echo "version=$TAG" >> $GITHUB_OUTPUT
+      #
+      # - name: Create and push Git tag
+      #   run: |
+      #     git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      #     git config --local user.name "github-actions[bot]"
+      #     git tag ${{ steps.version_tag.outputs.version }}
+      #     git push origin ${{ steps.version_tag.outputs.version }}
+      #
+      # - name: Upload to GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: dist.zip
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag_name: ${{ steps.version_tag.outputs.version }}
+      #     prerelease: false
+      #     name: "Build Release ${{ steps.version_tag.outputs.version }}"

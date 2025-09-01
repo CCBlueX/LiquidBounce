@@ -40,6 +40,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.Item
@@ -51,46 +52,11 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.function.Supplier
-
-/**
- * An enumeration of all GSON instances used in LiquidBounce. Each instance has its own configuration,
- * which is optimized for the specific use case. This enum can be used on e.g. @WebSocketEvent to specify
- * the GSON instance.
- *
- * @param gson The GSON instance.
- */
-enum class GsonInstance(
-    val gson: Gson
-) {
-
-    /**
-     * A GSON instance which is used for local files.
-     */
-    @Suppress("unused")
-    FILE(fileGson),
-
-    /**
-     * A GSON instance which is used for JSON that is distributed to other players.
-     */
-    @Suppress("unused")
-    PUBLIC(publicGson),
-
-    /**
-     * This GSON instance is used for interop communication.
-     */
-    INTEROP(interopGson),
-
-    /**
-     * This GSON instance is used for serializing objects as accessible JSON which means it is READ-ONLY (!)
-     * and often comes with an easier syntax to use in other programming languages like JavaScript.
-     */
-    ACCESSIBLE_INTEROP(accessibleInteropGson),
-}
-
 
 /**
  * A GSON instance which is used for local files.
@@ -146,14 +112,17 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
-        .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, SoundEventAdapter)
-        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, StatusEffectAdapter)
+        .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
+        .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
+        .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
+        .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
+        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
         .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockAdapter)
+        .registerTypeHierarchyAdapter(Vector2fAdapter::class.javaObjectType, Vector2fAdapter)
+        .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
@@ -168,3 +137,4 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
+        .registerTypeAdapterFactory(OptionalAdapter)

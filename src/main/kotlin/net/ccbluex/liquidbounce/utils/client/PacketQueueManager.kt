@@ -252,10 +252,10 @@ object PacketQueueManager : EventListener {
     private fun fireEvent(packet: Packet<*>?, origin: TransferOrigin) =
         EventManager.callEvent(QueuePacketEvent(packet, origin)).action
 
-    enum class Action {
-        QUEUE,
-        PASS,
-        FLUSH,
+    enum class Action(val priority: Int) {
+        FLUSH(0),
+        PASS(1),
+        QUEUE(2)
     }
 
 }

@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.lang.translation
@@ -37,25 +36,26 @@ import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
 typealias ValueListener<T> = (T) -> T
-
 typealias ValueChangedListener<T> = (T) -> Unit
+
+/**
+ * Order by name of [Value] (ignoreCase)
+ */
+val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
 /**
  * Value based on generics and support for readable names and descriptions.
  */
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
-    @SerializedName("name") open val name: String,
+    @SerializedName("name") val name: String,
     @Exclude val aliases: Array<out String> = emptyArray(),
     @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
@@ -310,144 +310,8 @@ open class Value<T : Any>(
         set(deserializer.deserializeThrowing(string) as T)
     }
 
-}
-
-/**
- * Order by name of [Value] (ignoreCase)
- */
-val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-
-/**
- * Ranged value adds support for closed ranges
- */
-class RangedValue<T : Any>(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: T,
-    @Exclude val range: ClosedRange<*>,
-    @Exclude val suffix: String,
-    valueType: ValueType
-) : Value<T>(name, aliases, defaultValue, valueType) {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun setByString(string: String) {
-        if (this.inner is ClosedRange<*>) {
-            val split = string.split("..")
-
-            require(split.size == 2)
-
-            val closedRange = this.inner as ClosedRange<*>
-
-            val newValue = when (closedRange.start) {
-                is Int -> split[0].toInt()..split[1].toInt()
-                is Long -> split[0].toLong()..split[1].toLong()
-                is Float -> split[0].toFloat()..split[1].toFloat()
-                is Double -> split[0].toDouble()..split[1].toDouble()
-                else -> error("unrecognised range value type")
-            }
-
-            set(newValue as T)
-        } else {
-            val translationFunction: (String) -> Any = when (this.inner) {
-                is Int -> String::toInt
-                is Long -> String::toLong
-                is Float -> String::toFloat
-                is Double -> String::toDouble
-                else -> error("unrecognised value type")
-            }
-
-            set(translationFunction(string) as T)
-        }
+    override fun toString(): String {
+        return "${javaClass.simpleName}(name=$name, type=${valueType})"
     }
 
-}
-
-class BindValue(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: InputBind,
-) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
-    override fun setByString(string: String) {
-        get().bind(string)
-    }
-}
-
-class ChooseListValue<T : NamedChoice>(
-    name: String,
-    aliases: Array<String> = emptyArray(),
-    defaultValue: T,
-    @Exclude val choices: Array<T>
-) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
-
-    override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val name = element.asString
-
-        setByString(name)
-    }
-
-    override fun setByString(string: String) {
-        val newValue = choices.firstOrNull { it.choiceName == string }
-
-        if (newValue == null) {
-            throw IllegalArgumentException(
-                "ChooseListValue `${this.name}` has no option named $string" +
-                    " (available options are ${this.choices.joinToString { it.choiceName }})"
-            )
-        }
-
-        set(newValue)
-    }
-
-    @ScriptApiRequired
-    fun getChoicesStrings(): Array<String> {
-        return this.choices.mapArray { it.choiceName }
-    }
-
-}
-
-interface NamedChoice {
-    val choiceName: String
-}
-
-enum class ValueType(
-    val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
-    val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter
-) {
-
-    // Primitive Types
-    BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
-    FLOAT(HumanInputDeserializer.floatDeserializer), FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
-    INT(HumanInputDeserializer.intDeserializer), INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
-    TEXT(HumanInputDeserializer.textDeserializer),
-    COLOR(HumanInputDeserializer.colorDeserializer),
-    BLOCK(HumanInputDeserializer.blockDeserializer),
-    ITEM(HumanInputDeserializer.itemDeserializer),
-    SOUND(HumanInputDeserializer.soundDeserializer),
-    STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
-    CLIENT_PACKET,
-    SERVER_PACKET,
-    KEY(HumanInputDeserializer.keyDeserializer),
-    BIND,
-    VECTOR_I,
-    VECTOR_D,
-
-    // Configuration Types
-    CHOICE(completer = AutoCompletionProvider.choiceCompleter),
-    CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
-    LIST,
-    MUTABLE_LIST,
-    ITEM_LIST,
-    REGISTRY_LIST,
-
-    CONFIGURABLE,
-    TOGGLEABLE,
-
-    // Client Types
-    FRIEND,
-    PROXY,
-    ACCOUNT,
-
-    // Invalid type
-    INVALID;
 }

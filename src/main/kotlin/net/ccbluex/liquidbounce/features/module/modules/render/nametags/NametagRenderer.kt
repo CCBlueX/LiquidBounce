@@ -49,9 +49,11 @@ class NametagRenderer {
             RenderBufferBuilder.TESSELATOR_B,
         )
 
+    private val dc = newDrawContext()
+
     private val fontBuffers = FontRendererBuffers()
 
-    fun drawNametag(env: RenderEnvironment, nametag: Nametag, pos: Vec3) = with(env) {
+    fun RenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         val fontSize = FontManager.DEFAULT_FONT_SIZE
 
         val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
@@ -72,15 +74,15 @@ class NametagRenderer {
         // Make the model view matrix center the text when rendering
         matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
 
-        ModuleNametags.fontRenderer.commit(env, fontBuffers)
+        ModuleNametags.fontRenderer.commit(this@drawNametag, fontBuffers)
 
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
 
-        quadBuffers.drawQuad(env, q1, q2)
+        quadBuffers.drawQuad(this@drawNametag, q1, q2)
 
         if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(env, q1, q2)
+            lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
         }
 
         if (NametagShowOptions.ITEMS.isShowing()) {
@@ -94,7 +96,7 @@ class NametagRenderer {
             val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 
             NametagEnchantmentRenderer.drawEntityEnchantments(
-                env,
+                this@drawNametag,
                 nametag.entity,
                 worldX,
                 worldY,
@@ -105,9 +107,8 @@ class NametagRenderer {
         matrixStack.pop()
     }
 
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack?>) {
-        val dc = newDrawContext()
-
+    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) {
+        dc.matrices.push()
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
         dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
         dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
@@ -125,7 +126,9 @@ class NametagRenderer {
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
 
         itemsToRender.forEachIndexed { index, itemStack ->
-            itemStack ?: return@forEachIndexed
+            if (itemStack.isEmpty) {
+                return@forEachIndexed
+            }
 
             val x = index * ITEM_SIZE
             dc.drawItem(itemStack, x, 0)
@@ -133,6 +136,8 @@ class NametagRenderer {
                 dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
             }
         }
+
+        dc.matrices.pop()
     }
 
     fun commit(env: RenderEnvironment) {

@@ -26,7 +26,6 @@ import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
@@ -69,11 +68,8 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -85,7 +81,6 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
-import org.apache.logging.log4j.LogManager
 import java.io.File
 import kotlin.time.measureTime
 
@@ -107,9 +102,12 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
-        val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
+        val version = text("Version", GitInfo.version())
+            .immutable()
+        val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
+            .immutable()
+        val branch = text("Branch", GitInfo.branch())
+            .immutable()
 
         init {
             ConfigSystem.root(this)
@@ -141,7 +139,7 @@ object LiquidBounce : EventListener {
     /**
      * Client logger to print out console messages
      */
-    val logger = LogManager.getLogger(CLIENT_NAME)!!
+    val logger get() = net.ccbluex.liquidbounce.utils.client.logger
 
     var taskManager: TaskManager? = null
 
@@ -362,7 +360,7 @@ object LiquidBounce : EventListener {
             FontManager.createGlyphManager()
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
-        logger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
+        logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
 
         // Insert default components on HUD
         ComponentOverlay.insertDefaultComponents()

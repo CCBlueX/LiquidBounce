@@ -33,13 +33,13 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
-import net.minecraft.util.math.MathHelper
 
 /**
  * ProjectilePuncher module
@@ -48,7 +48,7 @@ import net.minecraft.util.math.MathHelper
  */
 object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
-    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, false))
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, null))
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
@@ -60,7 +60,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
 
-    override fun disable() {
+    override fun onDisabled() {
         target = null
     }
 
@@ -138,7 +138,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
         // the fireball is moving.
-        if (MathHelper.approximatelyEquals(fireballVelocity.lengthSquared(), 0.0)) {
+        if (fireballVelocity.isLikelyZero) {
             return false
         }
 
