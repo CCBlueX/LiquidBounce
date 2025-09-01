@@ -4,8 +4,12 @@
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import { onMount } from "svelte";
     import { getTextWidth } from '../../../integration/text_measurement';
-    import { getMinecraftKeybinds } from "../../../integration/rest";
-    import type { MinecraftKeybind, TextComponent as TTextComponent } from "../../../integration/types";
+    import {getMinecraftKeybinds, getModuleSettings} from "../../../integration/rest";
+    import type {
+        ConfigurableSetting,
+        MinecraftKeybind, MultiChooseSetting,
+        TextComponent as TTextComponent
+    } from "../../../integration/types";
     import AvatarView from "../common/PlayerView/AvatarView.svelte";
     import { scale } from "svelte/transition";
     import { REST_BASE } from "../../../integration/host";
@@ -16,13 +20,10 @@
     let rows = 1;
     let visible = false;
     let columnWidths: number[] = [];
+    let visibilityKeywords: string[] = [];
     let keyPlayerList: MinecraftKeybind | undefined;
     let overlayPlayList: OverlayPlayListEvent | null = null;
 
-    function isVisible(type: "Header" | "Footer" | "Avatar"): boolean {
-        if (!settings?.visibility) return true;
-        return settings.visibility.includes(type);
-    }
 
     function getTextString(tc: string | TTextComponent): string {
         if (typeof tc === "string") return tc;
@@ -34,6 +35,12 @@
         }
         return str;
     }
+    const setVisibilityKeywords = (configurable: ConfigurableSetting) => {
+        const keywordsSetting = configurable.value.find(v => v.name === "Visibility") as MultiChooseSetting;
+        visibilityKeywords = keywordsSetting?.value ?? [];
+    };
+    const isVisible = (type: string) => visibilityKeywords.includes(type);
+
 
     const calculateLayout = (players: { name: string | TTextComponent, latency: string | TTextComponent, uuid: string, isFriend: boolean, isStaff: boolean, isSelf: boolean }[]) => {
         const playerCount = players.length;
@@ -101,6 +108,8 @@
 
     onMount(async () => {
         await updateKeybinds();
+        const settings = await getModuleSettings("BetterTab");
+        setVisibilityKeywords(settings);
     });
 </script>
 
@@ -125,14 +134,12 @@
                                 class:staff={settings?.highlight.staff && player.isStaff}
                                 class:self={settings?.highlight.self && player.isSelf}
                         >
-                            {#if isVisible("Avatar")}
                                 <div class="avatar">
                                     <div class="avatar-inner">
                                         <AvatarView
                                                 skinUrl={`${REST_BASE}/api/v1/client/resource/skin?uuid=${player.uuid}`}/>
                                     </div>
                                 </div>
-                            {/if}
                             <div class="player-name">
                                 <TextComponent fontSize={20} allowPreformatting={true} textComponent={player.name}/>
                             </div>

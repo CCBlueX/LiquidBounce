@@ -196,19 +196,21 @@ public abstract class MixinPlayerListHud {
         PlayerListHud self = (PlayerListHud) (Object) this;
         List<PlayerEntry> players = collectPlayerEntries().stream().map(entry -> {
             Text originalName = self.getPlayerName(entry);
-            Text fullName = ModuleNameProtect.INSTANCE.replace(originalName);
+            Text fullName = ModuleNameProtect.INSTANCE.replace(
+                    ModuleBetterTab.isVisible(Visibility.NAME_ONLY)
+                            ? Text.of(entry.getProfile().getName())
+                            : originalName
+            );
             Text latency = Text.literal(entry.getLatency() + "ms")
                     .styled(style -> style.withColor(getLatencyColor(entry.getLatency())));
             boolean isFriend = FriendManager.INSTANCE.isFriend(entry.getProfile().getName());
             boolean isStaff = ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName());
-            boolean isSelf = false;
-            if (MinecraftClient.getInstance().player != null) {
-                isSelf = entry.getProfile().getId().equals(MinecraftClient.getInstance().player.getUuid());
-            }
+            boolean isSelf = MinecraftClient.getInstance().player != null
+                    && entry.getProfile().getId().equals(MinecraftClient.getInstance().player.getUuid());
             String uuid = entry.getProfile().getId().toString();
             return new PlayerEntry(fullName, uuid, latency, isFriend, isStaff, isSelf);
-
         }).collect(Collectors.toList());
+
 
         if (hudHeader != null) {
             if (hudFooter != null) {

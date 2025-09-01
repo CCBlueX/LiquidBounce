@@ -19,11 +19,6 @@ class PlayerListComponent (
         val self by boolean("Self",true)
     })
 
-    private val visibility by multiEnumChoice(
-        "Visibility",
-        Visibility.entries
-    )
-
     private val sortBy by enumChoice("SortBy", SortType.VANILLA)
 
     enum class SortType(override val choiceName: String) : NamedChoice {
@@ -32,14 +27,6 @@ class PlayerListComponent (
         NAME_LENGTH("NameLength"),
         ALPHABETICAL("Alphabetical"),
         REVERSE_ALPHABETICAL("ReverseAlphabetical"),
-    }
-
-    enum class Visibility(
-        override val choiceName: String
-    ) : NamedChoice {
-        HEADER("Header"),
-        FOOTER("Footer"),
-        AVATAR("Avatar")
     }
 }
 

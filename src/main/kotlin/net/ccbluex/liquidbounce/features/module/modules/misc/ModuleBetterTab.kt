@@ -90,37 +90,23 @@ object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
 }
 
 class PlayerFilter : Configurable("Filter") {
-    private var filters = setOf<Regex>()
 
-    private val filterBy by multiEnumChoice("FilterBy", Filter.entries)
+    private val filterType by enumChoice("FilterType", FilterType.WHITELIST)
 
-    @Suppress("unused")
-    private val names by textList("Names", mutableListOf()).onChanged { newValue ->
-        filters = newValue.mapTo(HashSet(newValue.size, 1.0F)) {
-            val regexPattern = it
-                .replace("*", ".*")
-                .replace("?", ".")
+    private val players by players("Players", hashSetOf())
 
-            Regex("^$regexPattern\$")
+    enum class FilterType(override val choiceName: String) : NamedChoice {
+        WHITELIST("Whitelist"),
+        BLACKLIST("Blacklist")
+    }
+
+    fun isInFilter(entry: PlayerListEntry): Boolean {
+        val uuid = entry.profile.id.toString()
+
+        return when (filterType) {
+            FilterType.WHITELIST -> players.any { it.equals(uuid, true) }
+            FilterType.BLACKLIST -> players.none { it.equals(uuid, true) }
         }
-    }
-
-    fun isInFilter(entry: PlayerListEntry) = filters.any { regex ->
-        filterBy.any { filter -> filter.matches(entry, regex) }
-    }
-
-    @Suppress("unused")
-    private enum class Filter(
-        override val choiceName: String,
-        val matches: PlayerListEntry.(Regex) -> Boolean
-    ) : NamedChoice {
-        DISPLAY_NAME("DisplayName", { regex ->
-            this.displayName?.string?.let { regex.matches(it) } ?: false
-        }),
-
-        PLAYER_NAME("PlayerName", { regex ->
-            regex.matches(this.profile.name)
-        })
     }
 }
 

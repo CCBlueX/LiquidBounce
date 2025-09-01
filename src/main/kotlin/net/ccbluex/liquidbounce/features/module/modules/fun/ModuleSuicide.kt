@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -14,6 +15,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.Heightmap
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
@@ -22,16 +24,17 @@ import kotlin.math.sin
 object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("AutoVoid"),disableOnQuit = true) {
 
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0.2f..1.0f)
-    private val allowJump by boolean("AllowJump", true)
     private var targetPos: Vec3d? = null
-
+    private var ticksSinceLastSearch: Int = 0
 
     @Suppress("unused")
     private val moveInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
         if (shouldSkipMovement()) return@handler
 
-        if (targetPos == null || player.pos.distanceTo(targetPos!!) < pathStepThreshold) {
+        ticksSinceLastSearch++
+        if (targetPos == null || player.pos.distanceTo(targetPos!!) < pathStepThreshold || ticksSinceLastSearch > 20) {
             targetPos = findDangerousTarget()
+            ticksSinceLastSearch = 0
             ModuleDebug.debugParameter(this, "TargetPos", targetPos ?: "None")
         }
 
@@ -74,10 +77,6 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
             left = rightAmt < -thresh,
             right = rightAmt > thresh
         )
-
-        val shouldJump = allowJump && player.isOnGround && (isObstacleInPath(target) || isJumpNeeded(target))
-        event.jump = shouldJump
-        ModuleDebug.debugParameter(this, "ShouldJump", shouldJump)
     }
     private fun shouldSkipMovement(): Boolean {
         if (player.isCreative || player.isSpectator) return true
@@ -88,27 +87,16 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         val forwardX = -sin(yawRad)
         val forwardZ = cos(yawRad)
         val checkPos = player.pos + Vec3d(forwardX, 0.0, forwardZ)
-        val block = world.getBlockState(BlockPos(checkPos.toVec3i())).block
-        return block != Blocks.AIR && block != Blocks.LAVA && block != Blocks.MAGMA_BLOCK
+        val blockPos = BlockPos(checkPos.toVec3i())
+        val block = world.getBlockState(blockPos).block
+        val blockAbove = world.getBlockState(blockPos.up()).block
+
+        return block != Blocks.AIR && block != Blocks.LAVA && block != Blocks.MAGMA_BLOCK &&
+            blockAbove != Blocks.AIR && blockAbove != Blocks.LAVA && blockAbove != Blocks.MAGMA_BLOCK
     }
 
-    private fun isJumpNeeded(target: Vec3d): Boolean {
-        val playerPos = player.pos
-        val direction = target.subtract(playerPos).normalize()
-        val distance = playerPos.distanceTo(target)
-        val steps = (distance / 0.3).toInt()
 
-        for (i in 1..steps) {
-            val checkPos = playerPos + direction.multiply(i * 0.3)
-            val blockPos = BlockPos(checkPos.toVec3i())
-            val blockBelow = world.getBlockState(blockPos.down()).block
 
-            if (blockBelow == Blocks.AIR) {
-                return true
-            }
-        }
-        return false
-    }
     private fun findDangerousTarget(): Vec3d? {
         val maxRadius = 64
         val playerPos = player.pos
@@ -129,36 +117,30 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         val blockBelow = world.getBlockState(blockPos.down()).block
         val blockAtPos = world.getBlockState(blockPos).block
 
-        val isVoid = blockAtPos == Blocks.AIR && isOverVoid(Vec3d.ofCenter(blockPos))
+        val isVoid = isOverVoid(blockPos)
 
         val isLava = blockAtPos == Blocks.LAVA || blockAtPos == Blocks.MAGMA_BLOCK ||
-                blockBelow == Blocks.LAVA || blockBelow == Blocks.MAGMA_BLOCK
+            blockBelow == Blocks.LAVA || blockBelow == Blocks.MAGMA_BLOCK
 
         return isVoid || isLava
     }
 
-    private fun isOverVoid(pos: Vec3d): Boolean {
-        for (y in pos.y.toInt() downTo -64) {
-            val blockPos = BlockPos(pos.x.toInt(), y, pos.z.toInt())
-            if (!world.getBlockState(blockPos).isAir) {
-                return false
-            }
-        }
-        return true
-    }
-    private fun isObstacleInPath(target: Vec3d): Boolean {
-        val playerPos = player.pos
-        val direction = target.subtract(playerPos).normalize()
-        val steps = (playerPos.distanceTo(target) / 0.3).toInt()
+    private fun isOverVoid(blockPos: BlockPos): Boolean {
+        val x = blockPos.x
+        val z = blockPos.z
+        val worldTopY = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z)
 
-        for (i in 1..steps) {
-            val checkPos = playerPos + direction.multiply(i * 0.3)
-            val blockPos = BlockPos(checkPos.toVec3i())
-            val block = world.getBlockState(blockPos).block
-            if (block != Blocks.AIR && block != Blocks.LAVA && block != Blocks.MAGMA_BLOCK) {
-                return true
-            }
-        }
-        return false
+
+        return worldTopY <= 0
+    }
+
+    override fun onDisabled() {
+        targetPos = null
+        super.onDisabled()
+    }
+
+    override fun onEnabled() {
+        targetPos = null
+        super.onEnabled()
     }
 }
