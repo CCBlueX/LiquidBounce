@@ -18,16 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
-open class ItemCooldown<T>(module: T) : ToggleableConfigurable(
-    module,
-    "ItemCooldown",
-    true,
-    aliases = arrayOf("Cooldown")
-) where T : EventListener {
+open class ItemCooldown : Configurable("ItemCooldown", aliases = arrayOf("Cooldown")) {
 
     private val minimumCooldown by floatRange(
         "Minimum",
@@ -36,10 +31,7 @@ open class ItemCooldown<T>(module: T) : ToggleableConfigurable(
 
     private var nextCooldown = minimumCooldown.random()
 
-    open fun isCooldownPassed(ticks: Int = 0) = when {
-        !this.enabled -> true
-        else -> cooldownProgress(ticks) >= nextCooldown
-    }
+    open fun isCooldownPassed(ticks: Int = 0) = cooldownProgress(ticks) >= nextCooldown
 
     /**
      * Calculates the current cooldown progress.
