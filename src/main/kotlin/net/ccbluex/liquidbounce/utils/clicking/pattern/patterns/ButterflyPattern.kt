@@ -20,14 +20,13 @@ package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
 
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
-import kotlin.random.nextInt
 
 /**
  * Butterfly clicking is a method that is used to bypass the CPS limit of 20.
  *
  * It will often result in double click (very similar to the double click technique - but randomized).
  */
-class ButterflyPattern : ClickPattern {
+object ButterflyPattern : ClickPattern {
     override fun fill(
         clickArray: IntArray,
         cps: IntRange,
@@ -37,13 +36,12 @@ class ButterflyPattern : ClickPattern {
 
         while (clickArray.sum() < clicks) {
             // Increase random index inside click array by 1
-            val indices = clickArray.withIndex()
-                .filter { (_, c) -> c == 0 }
+            val indices = clickArray.indices.filter { clickArray[it] == 0 }
 
             if (indices.isNotEmpty()) {
                 // Increase a random index which is not yet clicked
-                indices.random().let { (index, _) ->
-                    clickArray[index] = kotlin.random.Random.Default.nextInt(1..2)
+                indices.random().let { index ->
+                    clickArray[index] = Clicker.RNG.nextInt(1, 3)
                 }
             } else {
                 // Randomly increase an index

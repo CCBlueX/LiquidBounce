@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinWorldRenderer
 import net.ccbluex.liquidbounce.render.BoxRenderer
 import net.ccbluex.liquidbounce.render.drawBoxSide
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.ShapeContext
@@ -55,7 +55,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
 
     private object Slide : ToggleableConfigurable(this, "Slide", true) {
         val time by int("Time", 150, 1..1000, "ms")
-        val easing by curve("Easing", Easing.LINEAR)
+        val easing by easing("Easing", Easing.LINEAR)
     }
 
     init {

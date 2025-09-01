@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
@@ -64,7 +64,7 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/", ConfigSystem.rootFolder.resolve("themes"))
+                file("/", ThemeManager.themesFolder)
             }
 
             // Add CORS middleware
@@ -72,10 +72,12 @@ object ClientInteropServer {
 
             // Register events with @WebSocketEvent annotation
             socketEventHandler.registerAll()
-        }.onFailure(ErrorHandler::fatal)
+        }.onFailure {
+            ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
+        }
 
         // Start the HTTP server
-        thread(name = "netty-websocket", block = ::startServer)
+        thread(name = "netty-websocket", isDaemon = true, block = ::startServer)
     }
 
     private var attempt = 0
@@ -84,7 +86,7 @@ object ClientInteropServer {
             httpServer.start(port)
         } catch (bindException: BindException) {
             if (attempt >= 5) {
-                ErrorHandler.fatal(bindException)
+                ErrorHandler.fatal(bindException, additionalMessage = "Bind interop server")
                 return
             }
 
@@ -93,7 +95,7 @@ object ClientInteropServer {
             logger.error("Failed to bind to port $port. Falling back to random port.")
             startServer((15001..17000).random())
         } catch (exception: Exception) {
-            ErrorHandler.fatal(exception)
+            ErrorHandler.fatal(exception, additionalMessage = "Start interop server")
         }
     }
 

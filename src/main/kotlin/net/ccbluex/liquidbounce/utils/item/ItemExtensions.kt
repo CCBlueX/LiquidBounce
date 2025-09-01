@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -105,6 +106,9 @@ val ItemStack.isFood: Boolean
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
 
+val ItemStack.isBundle
+    get() = this.item is BundleItem
+
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val MiningToolItem.type: Int
@@ -121,7 +125,7 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
         AttributeModifiersComponent.DEFAULT
     )
-    .modifiers()
+    .modifiers
     .filter { modifier -> modifier.attribute() == attribute }
     .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
 
@@ -136,7 +140,9 @@ val ItemStack.attackDamage: Double
          * see https://bugs.mojang.com/browse/MC-196250
          *
          * We now use the following formula to calculate the damage:
-         * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
+         * https://minecraft.wiki/w/Sharpness
+         * >= 1.9 -> 0.5 * level + 0.5
+         * else -> 1.25 * level
          */
         return entityBaseDamage + baseDamage + getSharpnessDamage()
     }
@@ -144,15 +150,23 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = if (level == 0) 0.0 else 0.5 * level + 0.5
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
+    if (!isOlderThanOrEqual1_8) {
+        when (level) {
+            0 -> 0.0
+            else -> 0.5 * level + 0.5
+        }
+    } else {
+        level * 1.25
+    }
 
-val ItemStack.attackSpeed: Float
+val ItemStack.attackSpeed: Double
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
 
 val ItemStack.durability
     get() = this.maxDamage - this.damage
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Double {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     this.components
@@ -165,7 +179,7 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
             attribInstance.addTemporaryModifier(modifier)
         }
 
-    return attribInstance.value.toFloat()
+    return attribInstance.value
 }
 
 fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {

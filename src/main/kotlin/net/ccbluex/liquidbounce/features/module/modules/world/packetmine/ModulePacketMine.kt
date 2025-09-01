@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Al
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.NeverToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -125,17 +125,17 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     init {
         mode.onChanged {
             if (mc.world != null && mc.player != null) {
-                disable()
-                enable()
+                onDisabled()
+                onEnabled()
             }
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         interaction.cancelBlockBreaking()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         targetRenderer.clearSilently()
         _target = null
     }

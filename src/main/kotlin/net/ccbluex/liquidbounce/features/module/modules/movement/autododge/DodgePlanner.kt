@@ -232,7 +232,7 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
 
 fun getWalkableDistance(basePos: Vec3d, dodgePos: Vec3d): Double {
     val playerY = mc.player!!.y
-    val rayYs = arrayOf(0.6, 1.6)
+    val rayYs = doubleArrayOf(0.6, 1.6)
 
     val worstRay =
         rayYs

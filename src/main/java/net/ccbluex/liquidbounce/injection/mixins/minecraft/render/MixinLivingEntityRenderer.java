@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.ccbluex.liquidbounce.render.engine.Color4b;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.MinecraftClient;
@@ -54,7 +54,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> {
 
     @Unique
-    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 255).alpha(100).toARGB();
+    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 100).toARGB();
 
     @Shadow
     public abstract Identifier getTexture(S state);

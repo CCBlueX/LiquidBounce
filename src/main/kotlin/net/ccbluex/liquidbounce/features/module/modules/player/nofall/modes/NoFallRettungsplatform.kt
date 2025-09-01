@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.item.Items
 
@@ -50,7 +51,7 @@ internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
      * We are not checking for the item name, as there are different language options causing issues.
      */
     private val itemToPlatform
-        get() = Slots.Hotbar.findClosestItem(Items.BLAZE_ROD, Items.MAGMA_CREAM)
+        get() = Slots.Hotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
 
     val repatable = tickHandler {
         if (player.fallDistance > 2f) {

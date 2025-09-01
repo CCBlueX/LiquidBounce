@@ -63,8 +63,8 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
 
             exchanged = desiredSlot
             ClickInventoryAction.performSwap(
-                from = Slots.Hotbar.slots[desiredSlot],
-                to = Slots.Hotbar.slots[selectedSlot]
+                from = Slots.Hotbar[desiredSlot],
+                to = Slots.Hotbar[selectedSlot]
             ).performAction()
         }
 
@@ -73,8 +73,8 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
             val selectedSlot = SilentHotbar.serversideSlot
             exchanged = null
             ClickInventoryAction.performSwap(
-                from = Slots.Hotbar.slots[desiredSlot],
-                to = Slots.Hotbar.slots[selectedSlot]
+                from = Slots.Hotbar[desiredSlot],
+                to = Slots.Hotbar[selectedSlot]
             ).performAction()
         }
 
@@ -89,7 +89,7 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
         override fun switch(slot: IntObjectImmutablePair<ItemStack>, mineTarget: MineTarget) {
             if (!usesViaFabricPlus) {
                 chat(warning(ModulePacketMine.message("noVfp")))
-                ModulePacketMine.disable()
+                ModulePacketMine.onDisabled()
                 return
             }
 

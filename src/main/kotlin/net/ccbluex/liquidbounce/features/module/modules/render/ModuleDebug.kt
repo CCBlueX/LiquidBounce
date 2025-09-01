@@ -18,23 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
@@ -85,11 +92,78 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     }
 
-    init {
-        tree(RenderSimulatedPlayer)
+    object Graph : ToggleableConfigurable(this, "Graph", false) {
+
+        private val curve = curve(
+            "Curve", mutableListOf(
+                0f vector2f 120f,
+                50f vector2f 60f,
+                140f vector2f 120f,
+                180f vector2f 90f
+            ),
+            xAxis = "X Axis" axis 0f..180f,
+            yAxis = "Y Axis" axis 40f..120f
+        )
+
+        @Suppress("unused")
+        private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+            val context = event.context
+
+            renderEnvironmentForGUI {
+                fontRenderer.withBuffers { buffers ->
+                    with(context) {
+                        draw(
+                            process("Graph".asText()),
+                            120f,
+                            22f,
+                            shadow = true,
+                            scale = 0.3f
+                        )
+
+                        var posX = 300
+                        var posY = 500
+
+                        for (x in curve.xAxis.range step 0.1f) {
+                            var y = curve.transform(x)
+                            this.fill(
+                                posX + x,
+                                posY - y,
+                                posX + x + 1,
+                                posY - y + 1,
+                                0.0f,
+                                Color4b.GREEN.toARGB()
+                            )
+                        }
+
+                        val points = curve.get()
+                        for (point in curve.get()) {
+                            var x = point[0]
+                            var y = point[1]
+
+                            this.fill(
+                                posX + x - 2,
+                                posY - y - 2,
+                                posX + x + 2,
+                                posY - y + 2,
+                                0.0f,
+                                Color4b.WHITE.toARGB()
+                            )
+                        }
+                    }
+                }
+            }
+
+
+        }
+
     }
 
-    private val debuggedGeometry = hashMapOf<DebuggedGeometryOwner, DebuggedGeometry>()
+    init {
+        tree(RenderSimulatedPlayer)
+        tree(Graph)
+    }
+
+    private val debuggedGeometry = hashMapOf<DebuggedOwner, DebuggedGeometry>()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -107,9 +181,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     @Suppress("unused")
-    private val scaffoldDebugging = tickHandler {
+    private val scaffoldDebugging = handler<GameTickEvent> {
         if (!ModuleScaffold.running) {
-            return@tickHandler
+            return@handler
         }
 
         val pos0 = Vec3d(77.0, 75.0, -52.0)
@@ -139,11 +213,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     @Suppress("unused")
-    private val expireHandler = tickHandler {
-        val currentTime = System.currentTimeMillis()
+    private val expireHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        val earliest = System.currentTimeMillis() - expireTime * 1000
 
         debugParameters.entries.removeIf { (_, capture) ->
-            currentTime - capture.time >= expireTime * 1000
+            capture.time <= earliest
         }
     }
 
@@ -171,34 +245,37 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                 val currentTime = System.currentTimeMillis()
 
-                debuggedOwners.onEach { (owner, parameter) ->
-                    val ownerName = when (owner) {
-                        is ClientModule -> owner.name
-                        is EventListener -> "${owner.parent()?.javaClass?.simpleName}::${owner.javaClass.simpleName}"
-                        else -> owner.javaClass.simpleName
+                fun ownerName(owner: Any): MutableText {
+                    return when (owner) {
+                        is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
+                        is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
+                        is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
+                                .append("::".asText().formatted(Formatting.GRAY))
+                                .append(
+                                    owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
+                                )
+                        is Sequence -> ownerName(owner.owner)
+                        else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
                     }
+                }
 
-                    textList += Text.literal(ownerName).styled {
-                        it.withColor(Formatting.GOLD).withBold(true)
-                    }
+                debuggedOwners.forEach { (owner, parameter) ->
+                    textList += ownerName(owner)
 
                     parameter.forEach { debuggedParameter ->
                         val parameterName = debuggedParameter.name
                         val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
-                        textList += Text.literal("$parameterName: ").styled {
-                            it.withColor(Formatting.WHITE)
-                        }.append(Text.literal(parameterCapture.value.toString()).styled {
-                            it.withColor(Formatting.GREEN)
-                        }).append(" [${((currentTime - parameterCapture.time) / 1000).toInt()}s ago]").styled {
-                            it.withColor(Formatting.GRAY)
-                        }
+                        val duration = (currentTime - parameterCapture.time) / 1000
+                        textList += "$parameterName: ".asText().formatted(Formatting.WHITE)
+                            .append(parameterCapture.value.toString().asText().formatted(Formatting.GREEN))
+                            .append(" [${duration}s ago]".asText().formatted(Formatting.GRAY))
                     }
                 }
 
                 // Draw
                 with(context) {
                     draw(
-                        process(Text.literal("Debugging")),
+                        process("Debugging".asText()),
                         120f,
                         22f,
                         shadow = true,
@@ -228,7 +305,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return
         }
 
-        debuggedGeometry[DebuggedGeometryOwner(owner, name)] = geometry
+        debuggedGeometry[DebuggedOwner(owner, name)] = geometry
     }
 
     inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
@@ -239,23 +316,21 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugGeometry(owner = this, name, lazyGeometry())
     }
 
-    private data class DebuggedGeometryOwner(val owner: Any, val name: String)
-
-    private data class DebuggedParameter(val owner: Any, val name: String)
+    private data class DebuggedOwner(val owner: Any, val name: String)
 
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
-    private val debugParameters = hashMapOf<DebuggedParameter, ParameterCapture>()
+    private val debugParameters = hashMapOf<DebuggedOwner, ParameterCapture>()
 
     fun debugParameter(owner: Any, name: String, value: Any?) {
         if (!running) {
             return
         }
 
-        debugParameters[DebuggedParameter(owner, name)] = ParameterCapture(value = value)
+        debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
     }
 
-    inline fun Any.debugParameter(name: String, lazyValue: () -> Any) {
+    inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
         if (!ModuleDebug.running) {
             return
         }
@@ -325,11 +400,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
-        super.disable()
+        super.onDisabled()
     }
 
 }

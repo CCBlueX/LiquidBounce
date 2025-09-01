@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -89,10 +89,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
         @Suppress("unused")
         val repeatable = tickHandler {
             interactions.randomOrNull()?.let {
-                it.perform {
-                    waitTicks(delay.random())
-                }
-
+                it.perform(this@tickHandler)
                 waitTicks(delay.random())
             }
         }
@@ -105,10 +102,10 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
         @Suppress("unused", "MagicNumber")
         private enum class Interaction(
             override val choiceName: String,
-            val perform: suspend (wait: suspend () -> Unit) -> Unit,
+            val perform: suspend Sequence.() -> Unit,
         ): NamedChoice {
             JUMP("Jump", {
-                once<MovementInputEvent> { event ->
+                waitNext<MovementInputEvent> { event ->
                     event.jump = true
                 }
             }),
@@ -126,14 +123,14 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             PITCH("Pitch", {
                 player.pitch = ((-5f..5f).random() + player.pitch).coerceIn(-90f, 90f)
             }),
-            RANDOM_DIRECTION("RandomDirection", { wait ->
+            RANDOM_DIRECTION("RandomDirection", {
                 randomDirection = DirectionalInput(
                     Random.nextBoolean(),
                     Random.nextBoolean(),
                     Random.nextBoolean(),
                     Random.nextBoolean()
                 )
-                wait()
+                waitTicks(delay.random())
                 randomDirection = DirectionalInput.NONE
             })
         }
@@ -178,7 +175,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                once<MovementInputEvent> { event ->
+                waitNext<MovementInputEvent> { event ->
                     event.jump = true
                 }
             }

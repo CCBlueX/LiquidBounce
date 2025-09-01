@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.Text
-import kotlin.random.Random
 
 abstract class AbstractFontRenderer<T> {
     abstract val size: Float

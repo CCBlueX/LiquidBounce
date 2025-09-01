@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.utils.render.placement
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.BlockPos
@@ -51,13 +51,13 @@ open class PlacementRenderer(
     val clump by boolean("Clump", clump)
 
     val startSize by float("StartSize", 1f, 0f..2f)
-    val startSizeCurve by curve("StartCurve", Easing.LINEAR)
+    val startSizeCurve by easing("StartCurve", Easing.LINEAR)
 
     val endSize by float("EndSize", 0.8f, 0f..2f)
-    val endSizeCurve by curve("EndCurve", Easing.LINEAR)
+    val endSizeCurve by easing("EndCurve", Easing.LINEAR)
 
-    val fadeInCurve by curve("FadeInCurve", Easing.LINEAR)
-    val fadeOutCurve by curve("FadeOutCurve", Easing.LINEAR)
+    val fadeInCurve by easing("FadeInCurve", Easing.LINEAR)
+    val fadeOutCurve by easing("FadeOutCurve", Easing.LINEAR)
 
     val inTime by int("InTime", 500, 0..5000, "ms")
     val outTime by int("OutTime", 500, 0..5000, "ms")
@@ -98,6 +98,7 @@ open class PlacementRenderer(
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
+     * @param pos The position, can be [BlockPos.Mutable].
      * @param handlerId To which handler the block should be added.
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = pos.outlineBox, handlerId: Int = 0) {
@@ -113,6 +114,7 @@ open class PlacementRenderer(
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
+     * @param pos The position, can be [BlockPos.Mutable].
      * @param handlerId From which handler the block should be removed.
      */
     fun removeBlock(pos: BlockPos, handlerId: Int = 0) {
@@ -165,14 +167,14 @@ open class PlacementRenderer(
      */
     fun clearSilently() {
         if (!enabled) {
-            disable()
+            onDisabled()
         }
 
         placementRenderHandlers.values.forEach { it.clearSilently() }
         outAnimationsFinished = false
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (!enabled) {
             placementRenderHandlers.values.forEach { it.clear() }
         }

@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.*
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.option.KeyBinding
 import java.util.*
@@ -49,8 +51,7 @@ import java.util.*
 open class Clicker<T>(
     val parent: T,
     val keyBinding: KeyBinding,
-
-    showCooldown: Boolean,
+    val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
     name: String = "Clicker"
 ) : Configurable(name, aliases = arrayOf("ClickScheduler")), EventListener where T : EventListener {
@@ -74,10 +75,8 @@ open class Clicker<T>(
             fill()
         }
 
-    val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
-        tree(ItemCooldown(parent))
-    } else {
-        null
+    init {
+        itemCooldown?.let(this::tree)
     }
 
     /**
@@ -87,11 +86,10 @@ open class Clicker<T>(
      * This is useful for anti-cheats that detect if you are ignoring this cooldown.
      * Applies to the FailSwing feature as well.
      */
-    var attackCooldown: Value<Boolean>? = null
-    init {
-        if (keyBinding == mc.options.attackKey) {
-            attackCooldown = boolean("AttackCooldown", true)
-        }
+    private val attackCooldown: Value<Boolean>? = if (keyBinding == mc.options.attackKey) {
+        boolean("AttackCooldown", true)
+    } else {
+        null
     }
 
     private val passesAttackCooldown
@@ -110,33 +108,34 @@ open class Clicker<T>(
     val isClickTick: Boolean
         get() = willClickAt(0)
 
+    val ticksUntilClick: Int
+        get() {
+            for (i in 0 until clickArray.iterations) {
+                if (willClickAt(i)) {
+                    return i
+                }
+            }
+
+            return clickArray.iterations
+        }
+
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
         if (isEnforcedClick()) {
             return 1
         }
-
-        if (itemCooldown?.isCooldownPassed(tick) == false) {
-            return 0
-        }
-
         return clickArray.get(tick)
     }
 
     private fun isEnforcedClick(tick: Int = 0): Boolean {
-        // Check if our last click is over 1000ms ago,
-        if (lastClickPassed + (tick * 50L) >= 1000L) {
+        val hasCooldown = player.hasCooldown
+        debugParameter("HasCooldown") { hasCooldown }
+        if (hasCooldown && itemCooldown?.isCooldownPassed(tick) == true) {
             return true
         }
 
-        // Our cooldown is over, we want to click now!
-        if (itemCooldown?.enabled == true && itemCooldown.isCooldownPassed(tick)) {
-            return true
-        }
-
-        // Otherwise, follow our pattern
-        return false
+        return lastClickPassed + (tick * 50L) >= 1000L
     }
 
     @Suppress("unused")
@@ -159,13 +158,11 @@ open class Clicker<T>(
     fun click(block: () -> Boolean) {
         val clicks = getClickAmount()
 
-        ModuleDebug.apply {
-            debugParameter(this@Clicker, "Current Clicks", clicks)
-            debugParameter(this@Clicker, "Peek Clicks", clickArray.get(1))
-            debugParameter(this@Clicker, "Last Click Passed", lastClickPassed)
-            debugParameter(this@Clicker, "Attack Cooldown", mc.attackCooldown)
-            debugParameter(this@Clicker, "Item Cooldown", itemCooldown?.cooldownProgress() ?: 0.0f)
-        }
+        debugParameter("Current Clicks") { clicks }
+        debugParameter("Peek Clicks") { clickArray.get(1) }
+        debugParameter("Last Click Passed") { lastClickPassed }
+        debugParameter("Attack Cooldown") { mc.attackCooldown }
+        debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
         var clickAmount = 0
 
@@ -196,14 +193,12 @@ open class Clicker<T>(
             clickArray.push(cycleArray)
         }
 
-        ModuleDebug.debugParameter(this@Clicker, "Click Technique", pattern.choiceName)
-        ModuleDebug.debugParameter(
-            this@Clicker,
-            "Click Array",
+        debugParameter("Click Technique") { pattern.choiceName }
+        debugParameter("Click Array") {
             clickArray.array.withIndex().joinToString { (i, v) ->
                 if (i == clickArray.head) "*$v" else v.toString()
             }
-        )
+        }
     }
 
     private fun fill() {
@@ -224,13 +219,13 @@ open class Clicker<T>(
         override val choiceName: String,
         val pattern: ClickPattern
     ) : NamedChoice {
-        STABILIZED("Stabilized", StabilizedPattern()),
-        EFFICIENT("Efficient", EfficientPattern()),
-        SPAMMING("Spamming", SpammingPattern()),
-        DOUBLE_CLICK("DoubleClick", DoubleClickPattern()),
-        DRAG("Drag", DragPattern()),
-        BUTTERFLY("Butterfly", ButterflyPattern()),
-        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern());
+        STABILIZED("Stabilized", StabilizedPattern),
+        EFFICIENT("Efficient", EfficientPattern),
+        SPAMMING("Spamming", SpammingPattern),
+        DOUBLE_CLICK("DoubleClick", DoubleClickPattern),
+        DRAG("Drag", DragPattern),
+        BUTTERFLY("Butterfly", ButterflyPattern),
+        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern);
     }
 
 }

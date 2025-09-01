@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -50,7 +50,7 @@ object CriticalsBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
+        if (event.origin == TransferOrigin.OUTGOING && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
             if (PacketQueueManager.isAboveTime(nextDelay.toLong())) {
                 nextDelay = delay.random()
                 return@handler

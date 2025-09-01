@@ -1,4 +1,5 @@
 .idea/*
+!.idea/copyright/
 *.iml
 *.ipr
 *.iws
@@ -10,3 +11,4 @@
 /mcef/
 /logs/
 /.kotlin/
+.DS_Store

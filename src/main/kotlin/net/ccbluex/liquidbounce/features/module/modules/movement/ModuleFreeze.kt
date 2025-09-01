@@ -18,15 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
@@ -56,12 +55,12 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
     private var missedOutTick = 0
     private var warpInProgress = false
 
-    override fun enable() {
+    override fun onEnabled() {
         missedOutTick = 0
-        super.enable()
+        super.onEnabled()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (balance) {
             warpInProgress = true
             while (missedOutTick > 0) {
@@ -73,7 +72,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
         }
 
         missedOutTick = 0
-        super.disable()
+        super.onDisabled()
     }
 
     /**
@@ -142,13 +141,13 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val origin by multiEnumChoice("Origin", Origin.OUTGOING)
+        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         @Suppress("unused")
         private val fakeLagHandler = handler<QueuePacketEvent>(
             priority = EventPriorityConvention.SAFETY_FEATURE
         ) { event ->
-            if (origin.any { it.origin == event.origin }) {
+            if (origin.any { origin -> origin == event.origin }) {
                 event.action = Action.QUEUE
             }
         }
@@ -160,14 +159,14 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
      */
     object Cancel : Choice("Cancel") {
 
-        private val origin by multiEnumChoice("Origin", Origin.OUTGOING)
+        private val origin by multiEnumChoice("Origin", TransferOrigin.OUTGOING)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
         private val packetHandler = handler<PacketEvent> { event ->
-            if (origin.any { it.origin == event.origin }) {
+            if (origin.any { origin -> origin == event.origin }) {
                 event.cancelEvent()
             }
         }
@@ -195,11 +194,3 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
 
 }
 
-@Suppress("unused")
-private enum class Origin(
-    override val choiceName: String,
-    val origin: TransferOrigin
-) : NamedChoice {
-    INCOMING("Incoming", TransferOrigin.RECEIVE),
-    OUTGOING("Outgoing", TransferOrigin.SEND);
-}

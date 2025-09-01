@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -17,7 +17,7 @@ internal object NoSlowBlockingBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.SEND || !player.isBlockAction) {
+        if (event.origin != TransferOrigin.OUTGOING || !player.isBlockAction) {
             return@handler
         }
 

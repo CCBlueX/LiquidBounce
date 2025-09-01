@@ -60,9 +60,10 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
             VelocityBlocksMC,
 
             // Anti cheat modes
+            VelocityGrim2371,
+            VelocityGrim2344,
             VelocityAAC442,
-            VelocityExemptGrim117,
-            VelocityIntave
+            VelocityIntave,
         )
     ).apply(::tagBy)
 
@@ -99,7 +100,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
                     }
                 }
 
-                val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+                val packetEvent = PacketEvent(TransferOrigin.INCOMING, packet, false)
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {

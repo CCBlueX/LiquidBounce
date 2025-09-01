@@ -58,7 +58,7 @@ object RotationUtil {
         val player = mc.player ?: return 0.0F
         val eyes = player.eyePos
 
-        val rotationToEntity = Rotation.Companion.lookingAt(point = entity.box.center, from = eyes)
+        val rotationToEntity = Rotation.lookingAt(point = entity.box.center, from = eyes)
 
         return player.rotation.angleTo(rotationToEntity)
     }

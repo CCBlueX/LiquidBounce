@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -73,7 +73,7 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
     private val packetHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin != TransferOrigin.RECEIVE) {
+        if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 

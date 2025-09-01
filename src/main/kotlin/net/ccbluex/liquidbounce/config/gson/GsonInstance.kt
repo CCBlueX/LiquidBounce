@@ -28,70 +28,41 @@ import net.ccbluex.liquidbounce.config.gson.adapter.*
 import net.ccbluex.liquidbounce.config.gson.serializer.*
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.*
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
-import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclusionStrategy
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.block.Block
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.EntityType
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.io.File
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Supplier
-
-/**
- * An enumeration of all GSON instances used in LiquidBounce. Each instance has its own configuration,
- * which is optimized for the specific use case. This enum can be used on e.g. @WebSocketEvent to specify
- * the GSON instance.
- *
- * @param gson The GSON instance.
- */
-enum class GsonInstance(
-    val gson: Gson
-) {
-
-    /**
-     * A GSON instance which is used for local files.
-     */
-    @Suppress("unused")
-    FILE(fileGson),
-
-    /**
-     * A GSON instance which is used for JSON that is distributed to other players.
-     */
-    @Suppress("unused")
-    PUBLIC(publicGson),
-
-    /**
-     * This GSON instance is used for interop communication.
-     */
-    INTEROP(interopGson),
-
-    /**
-     * This GSON instance is used for serializing objects as accessible JSON which means it is READ-ONLY (!)
-     * and often comes with an easier syntax to use in other programming languages like JavaScript.
-     */
-    ACCESSIBLE_INTEROP(accessibleInteropGson),
-}
-
 
 /**
  * A GSON instance which is used for local files.
  */
 val fileGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.FILE_SERIALIZER)
     .create()
@@ -101,7 +72,7 @@ val fileGson: Gson = GsonBuilder()
  */
 val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
-    .addSerializationExclusionStrategy(ExcludeStrategy())
+    .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.PUBLIC_SERIALIZER)
     .create()
@@ -110,7 +81,7 @@ val publicGson: Gson = GsonBuilder()
  * This GSON instance is used for interop communication.
  */
 internal val interopGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .create()
@@ -120,7 +91,7 @@ internal val interopGson: Gson = GsonBuilder()
  * and often comes with an easier syntax to use in other programming languages like JavaScript.
  */
 internal val accessibleInteropGson: Gson = GsonBuilder()
-    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .addSerializationExclusionStrategy(ProtocolExcludeStrategy)
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer.INTEROP_SERIALIZER)
     .registerTypeHierarchyAdapter(Component::class.javaObjectType, ReadOnlyComponentSerializer)
@@ -136,14 +107,22 @@ internal val accessibleInteropGson: Gson = GsonBuilder()
  * @see GsonBuilder.registerTypeAdapter
  */
 internal fun GsonBuilder.registerCommonTypeAdapters() =
-    registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
+    registerTypeAdapter(LocalDate::class.java, LocalDateAdapter)
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter)
+        .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
+        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
+        .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
+        .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
+        .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
+        .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
+        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
         .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockAdapter)
+        .registerTypeHierarchyAdapter(Vector2fAdapter::class.javaObjectType, Vector2fAdapter)
+        .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
@@ -155,6 +134,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
         .registerTypeAdapter(GameMode::class.javaObjectType, GameModeSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
-        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierSerializer)
+        .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
+        .registerTypeAdapterFactory(OptionalAdapter)

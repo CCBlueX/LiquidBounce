@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.event.events
 
 import io.netty.channel.ChannelPipeline
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
@@ -36,10 +37,21 @@ class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val origina
 @Nameable("queuePacket")
 class QueuePacketEvent(
     val packet: Packet<*>?,
-    val origin: TransferOrigin,
-    var action: PacketQueueManager.Action = PacketQueueManager.Action.FLUSH
-) : Event()
+    val origin: TransferOrigin
+) : Event() {
 
-enum class TransferOrigin {
-    SEND, RECEIVE
+    var action: PacketQueueManager.Action = PacketQueueManager.Action.FLUSH
+        set(value) {
+            if (field == value || field.priority >= value.priority) {
+                return
+            }
+
+            field = value
+        }
+
+}
+
+enum class TransferOrigin(override val choiceName: String) : NamedChoice {
+    INCOMING("Incoming"),
+    OUTGOING("Outgoing");
 }

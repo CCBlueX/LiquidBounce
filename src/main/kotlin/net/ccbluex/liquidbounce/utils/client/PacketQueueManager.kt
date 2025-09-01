@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * Allows to queue packets and flush them later on demand.
  *
  * Fires [QueuePacketEvent] to determine whether a packet should be queued or not. They can be
- * from origin [TransferOrigin.RECEIVE] or [TransferOrigin.SEND], but will be handled separately.
+ * from origin [TransferOrigin.INCOMING] or [TransferOrigin.OUTGOING], but will be handled separately.
  */
 object PacketQueueManager : EventListener {
 
@@ -75,8 +75,8 @@ object PacketQueueManager : EventListener {
             return@handler
         }
 
-        if (fireEvent(null, TransferOrigin.SEND) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.SEND }
+        if (fireEvent(null, TransferOrigin.OUTGOING) == Action.FLUSH) {
+            flush(TransferOrigin.OUTGOING)
         }
     }
 
@@ -87,8 +87,8 @@ object PacketQueueManager : EventListener {
             return@handler
         }
 
-        if (fireEvent(null, TransferOrigin.RECEIVE) == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == TransferOrigin.RECEIVE }
+        if (fireEvent(null, TransferOrigin.INCOMING) == Action.FLUSH) {
+            flush(TransferOrigin.INCOMING)
         }
     }
 
@@ -105,7 +105,7 @@ object PacketQueueManager : EventListener {
         // If we shouldn't lag, don't do anything
         val lagResult = fireEvent(packet, origin)
         if (lagResult == Action.FLUSH) {
-            flush { snapshot -> snapshot.origin == origin }
+            flush(origin)
             return@handler
         }
 
@@ -126,23 +126,19 @@ object PacketQueueManager : EventListener {
 
             // Flush on teleport or disconnect
             is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
-                flush { snapshot -> snapshot.origin == origin }
+                flush(origin)
                 return@handler
             }
 
             // Ignore own hurt sounds
-            is PlaySoundS2CPacket -> {
-                if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
-                    return@handler
-                }
+            is PlaySoundS2CPacket if packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT -> {
+                return@handler
             }
 
             // Flush on own death
-            is HealthUpdateS2CPacket -> {
-                if (packet.health <= 0) {
-                    flush { snapshot -> snapshot.origin == origin }
-                    return@handler
-                }
+            is HealthUpdateS2CPacket if packet.health <= 0 -> {
+                flush(origin)
+                return@handler
             }
 
         }
@@ -169,11 +165,9 @@ object PacketQueueManager : EventListener {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        // Use LiquidBounce accent color
-        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
-
         renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
+            // Use LiquidBounce accent color
+            withColor(Color4b.LIQUID_BOUNCE) {
                 drawLineStrip(positions = positions.mapArray { vec3d -> Vec3(relativeToCamera(vec3d)) })
             }
         }
@@ -199,22 +193,29 @@ object PacketQueueManager : EventListener {
         }
     }
 
+    fun flush(origin: TransferOrigin) {
+        flush { it.origin == origin }
+    }
+
     fun flush(count: Int) {
         // Take all packets until the counter of move packets reaches count and send them
         var counter = 0
 
-        for (snapshot in packetQueue.iterator()) {
-            val packet = snapshot.packet
+        with(packetQueue.iterator()) {
+            while (hasNext()) {
+                val snapshot = next()
+                val packet = snapshot.packet
 
-            if (packet is PlayerMoveC2SPacket && packet.changePosition) {
-                counter += 1
-            }
+                if (packet is PlayerMoveC2SPacket && packet.changePosition) {
+                    counter += 1
+                }
 
-            flushSnapshot(snapshot)
-            packetQueue.remove(snapshot)
+                flushSnapshot(snapshot)
+                remove()
 
-            if (counter >= count) {
-                break
+                if (counter >= count) {
+                    break
+                }
             }
         }
     }
@@ -246,18 +247,18 @@ object PacketQueueManager : EventListener {
 
     private fun flushSnapshot(snapshot: PacketSnapshot) {
         when (snapshot.origin) {
-            TransferOrigin.SEND -> sendPacketSilently(snapshot.packet)
-            TransferOrigin.RECEIVE -> handlePacket(snapshot.packet)
+            TransferOrigin.OUTGOING -> sendPacketSilently(snapshot.packet)
+            TransferOrigin.INCOMING -> handlePacket(snapshot.packet)
         }
     }
 
     private fun fireEvent(packet: Packet<*>?, origin: TransferOrigin) =
         EventManager.callEvent(QueuePacketEvent(packet, origin)).action
 
-    enum class Action {
-        QUEUE,
-        PASS,
-        FLUSH,
+    enum class Action(val priority: Int) {
+        FLUSH(0),
+        PASS(1),
+        QUEUE(2)
     }
 
 }

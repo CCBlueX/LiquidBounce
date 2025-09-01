@@ -134,11 +134,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     /**
      * Hook entity movement tick event at HEAD and call out PRE tick movement event
      */
-    @Inject(method = "sendMovementPackets", at = @At("HEAD"))
+    @Inject(method = "sendMovementPackets", at = @At("HEAD"), cancellable = true)
     private void hookMovementPre(CallbackInfo callbackInfo) {
         ClientPlayerEntity player = (ClientPlayerEntity) (Object) this;
         eventMotion = new PlayerNetworkMovementTickEvent(EventState.PRE, player.getX(), player.getY(), player.getZ(), player.isOnGround());
         EventManager.INSTANCE.callEvent(eventMotion);
+
+        if (eventMotion.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getX()D"))
@@ -382,6 +386,16 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.NETWORK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
+    }
+
+    @ModifyExpressionValue(method = "sendSneakingPacket", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z")
+    )
+    private boolean hookNetworkSneak(boolean original) {
+        var event = new SneakNetworkEvent(new DirectionalInput(input), original);
+        EventManager.INSTANCE.callEvent(event);
+        return event.getSneak();
     }
 
     @WrapWithCondition(method = "closeScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))

@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
@@ -34,7 +34,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
     override val parent: ChoiceConfigurable<Choice>
         get() = presets
 
-    private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL, SkyWarsGameMode.values())
+    private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL)
 
     private val hasPaper
         get() = Slots.Hotbar.findSlot(Items.PAPER) != null
@@ -50,7 +50,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
         waitTicks(20)
     }
 
-
+    @Suppress("unused")
     enum class SkyWarsGameMode(override val choiceName: String, val joinName: String) : NamedChoice {
         NORMAL("Normal", "solo_normal"),
         INSANE("Insane", "solo_insane");

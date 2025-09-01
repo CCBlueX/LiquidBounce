@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -56,11 +57,12 @@ object RotationManager : EventListener {
      */
     private val rotationTarget
         get() = rotationTargetHandler.getActiveRequestValue()
-    private var rotationTargetHandler = RequestHandler<RotationTarget>()
+    private val rotationTargetHandler = RequestHandler<RotationTarget>()
 
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
     internal var previousRotationTarget: RotationTarget? = null
+        private set
 
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
@@ -203,7 +205,7 @@ object RotationManager : EventListener {
     }
 
     @Suppress("unused")
-    private val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+    private val velocityHandler = handler<PlayerVelocityStrafe>(priority = MODEL_STATE) { event ->
         if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
             val rotation = currentRotation ?: return@handler
 

@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -75,7 +75,7 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
 
     @Suppress("unused")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND) {
+        if (event.origin == TransferOrigin.OUTGOING) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }

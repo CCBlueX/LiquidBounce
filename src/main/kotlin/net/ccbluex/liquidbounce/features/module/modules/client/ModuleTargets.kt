@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.Targets
+import java.util.*
 
 object ModuleTargets : ClientModule(
     name = "Targets",
@@ -33,23 +34,28 @@ object ModuleTargets : ClientModule(
     aliases = arrayOf("Enemies")
 ) {
     val combatConfigurable = multiEnumChoice("Combat",
-        Targets.PLAYERS,
-        Targets.HOSTILE,
-        Targets.ANGERABLE,
-        Targets.WATER_CREATURE,
-        Targets.INVISIBLE,
+        default = EnumSet.of(
+            Targets.PLAYERS,
+            Targets.HOSTILE,
+            Targets.ANGERABLE,
+            Targets.WATER_CREATURE,
+            Targets.INVISIBLE,
+        ),
+        choices = EnumSet.allOf(Targets::class.java).apply { remove(Targets.SELF) }
     )
 
     val visualConfigurable = multiEnumChoice("Visual",
-        Targets.PLAYERS,
-        Targets.HOSTILE,
-        Targets.ANGERABLE,
-        Targets.WATER_CREATURE,
-        Targets.INVISIBLE,
-        Targets.FRIENDS
+        default = EnumSet.of(
+            Targets.PLAYERS,
+            Targets.HOSTILE,
+            Targets.ANGERABLE,
+            Targets.WATER_CREATURE,
+            Targets.INVISIBLE,
+        ),
+        choices = EnumSet.allOf(Targets::class.java)
     )
 
-    inline val combat get() = combatConfigurable.get()
+    inline val combat: EnumSet<Targets> get() = combatConfigurable.get() as EnumSet
 
-    inline val visual get() = visualConfigurable.get()
+    inline val visual: EnumSet<Targets> get() = visualConfigurable.get() as EnumSet
 }

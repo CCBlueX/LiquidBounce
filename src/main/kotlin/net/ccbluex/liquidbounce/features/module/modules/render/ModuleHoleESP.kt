@@ -18,19 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.block.Region.Companion.getBox
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
+import net.ccbluex.liquidbounce.utils.math.box
+import net.ccbluex.liquidbounce.utils.math.from
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -60,11 +61,11 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
     override fun horizontalDistance(): Int = horizontalDistance
     override fun verticalDistance(): Int = verticalDistance
 
-    override fun enable() {
+    override fun onEnabled() {
         HoleManager.subscribe(this)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         HoleManager.unsubscribe(this)
     }
 
@@ -85,16 +86,16 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.from.y) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.from.x) > hDistance ||
-                        abs(pos.z - positions.from.z) > hDistance
+                    val valOutOfRange = abs(pos.y - positions.minY) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
+                        abs(pos.z - positions.minZ) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
 
                     val fade = calculateFade(positions.from)
                     val baseColor = it.color().with(a = 50).fade(fade)
-                    val box = positions.getBox()
+                    val box = positions.box
                     withPositionRelativeToCamera(positions.from.toVec3d()) {
                         withColor(baseColor) {
                             drawSolidBox(box)
@@ -133,9 +134,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                     HoleTracker.holes.forEach {
                         val positions = it.positions
 
-                        val valOutOfRange = abs(pos.y - positions.from.y) > vDistance
-                        val xzOutOfRange = abs(pos.x - positions.from.x) > hDistance ||
-                            abs(pos.z - positions.from.z) > hDistance
+                        val valOutOfRange = abs(pos.y - positions.minY) > vDistance
+                        val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
+                            abs(pos.z - positions.minZ) > hDistance
                         if (valOutOfRange || xzOutOfRange) {
                             return@forEach
                         }
@@ -143,7 +144,7 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                         val fade = calculateFade(positions.from)
                         val baseColor = it.color().with(a = 50).fade(fade)
                         val transparentColor = baseColor.with(a = 0)
-                        val box = positions.getBox()
+                        val box = positions.box
                         withPositionRelativeToCamera(positions.from.toVec3d()) {
                             withColor(baseColor) {
                                 drawSideBox(box, Direction.DOWN)

@@ -22,10 +22,10 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
@@ -33,7 +33,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
 import java.awt.Font
-import java.util.*
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -75,7 +74,7 @@ class FontRenderer(
     private val cache = FontRendererCache()
     override val height: Float = font.styles.firstNotNullOf { it?.height }
     val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
-
+    private val positionCache = Vector3f()
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
@@ -106,13 +105,13 @@ class FontRenderer(
         if (shadow) {
             len = drawInternal(
                 text,
-                pos = Vector3f(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
+                pos = positionCache.set(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
                 scale,
                 overrideColor = Color4b(0, 0, 0, 150)
             )
         }
 
-        return max(len, drawInternal(text, Vector3f(x0, y0, z * 2.0F), scale))
+        return max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
     }
 
     /**
@@ -133,8 +132,9 @@ class FontRenderer(
             return pos.x
         }
 
-        val underlineStack = ArrayList<IntRange>(text.underlines.asReversed())
-        val strikethroughStack = ArrayList<IntRange>(text.strikeThroughs.asReversed())
+        // remove from front
+        val underlineStack = ArrayDeque(text.underlines)
+        val strikethroughStack = ArrayDeque(text.strikeThroughs)
 
         var x = pos.x
         var y = pos.y + this.ascent * scale
@@ -149,10 +149,10 @@ class FontRenderer(
                 ?: fallbackGlyph
             val color = overrideColor ?: processedChar.color
 
-            if (underlineStack.lastOrNull()?.start == charIdx) {
+            if (underlineStack.firstOrNull()?.start == charIdx) {
                 underlineStartX = x
             }
-            if (strikethroughStack.lastOrNull()?.start == charIdx) {
+            if (strikethroughStack.firstOrNull()?.start == charIdx) {
                 strikeThroughStartX = x
             }
 
@@ -182,13 +182,13 @@ class FontRenderer(
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
-            if (underlineStack.lastOrNull()?.endInclusive == charIdx) {
-                underlineStack.removeLast()
+            if (underlineStack.firstOrNull()?.endInclusive == charIdx) {
+                underlineStack.removeFirst()
 
                 drawLine(underlineStartX!!, x, y, pos.z, color, false)
             }
-            if (strikethroughStack.lastOrNull()?.endInclusive == charIdx) {
-                strikethroughStack.removeLast()
+            if (strikethroughStack.firstOrNull()?.endInclusive == charIdx) {
+                strikethroughStack.removeFirst()
 
                 drawLine(strikeThroughStartX!!, x, y, pos.z, color, true)
             }
@@ -304,8 +304,8 @@ class FontRendererBuffers {
     val textBuffers = HashMap<GlyphPage, RenderBufferBuilder<VertexInputType.PosTexColor>>()
 
     fun getTextBufferForGlyphPage(glyphPage: GlyphPage): RenderBufferBuilder<VertexInputType.PosTexColor> {
-        return this.textBuffers.computeIfAbsent(glyphPage) {
-            val tessellator = getTesselatorForGlyphPage(glyphPage)
+        return this.textBuffers.computeIfAbsent(glyphPage) { key ->
+            val tessellator = getTesselatorForGlyphPage(key)
 
             RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, tessellator)
         }

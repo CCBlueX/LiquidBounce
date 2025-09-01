@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.spoofer
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
@@ -35,6 +35,7 @@ object SpooferResourcePack : ToggleableConfigurable(name = "ResourceSpoofer", en
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
+        val network = mc.networkHandler ?: return@handler
 
         if (packet is ResourcePackSendS2CPacket) {
             val id = packet.id

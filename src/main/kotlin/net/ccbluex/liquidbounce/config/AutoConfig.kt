@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
@@ -32,7 +31,7 @@ import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -63,18 +62,27 @@ object AutoConfig {
 
             // After completion of loading, sync ClickGUI
             if (!value) {
-                ModuleClickGui.reloadView()
+                ModuleClickGui.reload()
             }
         }
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
-    val configs by AsyncLazy {
-        runCatching {
-            ClientApi.requestSettingsList()
-        }.onFailure { exception ->
-            logger.error("Failed to load auto configs", exception)
-        }.getOrNull()
+    @Volatile
+    var configs: Array<AutoSettings>? = null
+        private set
+
+    /**
+     * Reloads auto settings list.
+     *
+     * @return successfully reloaded or not
+     */
+    suspend fun reloadConfigs(): Boolean = try {
+        configs = ClientApi.requestSettingsList()
+        true
+    } catch (e: Exception) {
+        logger.error("Failed to load auto configs", e)
+        false
     }
 
     inline fun withLoading(block: () -> Unit) {
@@ -87,9 +95,7 @@ object AutoConfig {
     }
 
     suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettingsScript(autoConfig.settingId).apply {
-            loadAutoConfig(reader())
-        }
+        ClientApi.requestSettingsScript(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**
@@ -97,7 +103,7 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         reader: Reader,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         JsonParser.parseReader(publicGson.newJsonReader(reader))?.let { jsonElement ->
             loadAutoConfig(jsonElement.asJsonObject, modules)
@@ -113,10 +119,10 @@ object AutoConfig {
      */
     fun loadAutoConfig(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
-        chat(regular("Auto Config").styled { it.withFormatting(Formatting.LIGHT_PURPLE).withBold(true) })
+        chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
 
         val name = jsonObject.string("name") ?: throw IllegalArgumentException("Auto Config has no name")
         when (name) {
@@ -265,10 +271,11 @@ object AutoConfig {
 
         val author = mc.session.username
 
+        val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
-        val date = dateFormatter.format(Date())
-        val time = timeFormatter.format(Date())
+        val date = dateFormatter.format(now)
+        val time = timeFormatter.format(now)
 
         val (protocolName, protocolVersion) = protocolVersion
 
@@ -298,7 +305,7 @@ object AutoConfig {
      */
     private fun deserializeModuleConfigurable(
         jsonObject: JsonObject,
-        modules: List<Configurable> = emptyList<Configurable>()
+        modules: Collection<Configurable> = emptyList()
     ) {
         // Deserialize full module configurable
         if (modules.isEmpty()) {

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -85,7 +85,7 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         if (mc.options.mainArm.value != originalHand) {
             switchHand()
         }

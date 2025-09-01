@@ -40,7 +40,7 @@ object CommandTps : CommandFactory {
             .begin("tps")
             .requiresIngame()
             .handler { command, _ ->
-                val tps = TpsObserver.tps
+                val tps = ServerObserver.tps
                 chat(regular(command.result("tpsCheck", variable(
                     if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()
                 ))), command)

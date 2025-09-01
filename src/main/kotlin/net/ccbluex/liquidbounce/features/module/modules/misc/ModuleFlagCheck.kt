@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -66,7 +66,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arra
 
         private val notInFirstPerson by boolean("NotInFirstPerson", true)
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
-        private val fadeOut by curve("FadeOut", Easing.QUAD_OUT)
+        private val fadeOut by easing("FadeOut", Easing.QUAD_OUT)
         private val outTime by int("OutTime", 500, 0..2000, "ms")
         private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
@@ -75,7 +75,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arra
         var creationTime = 0L
         var finished = true
 
-        override fun enable() {
+        override fun onEnabled() {
             finished = true
         }
 

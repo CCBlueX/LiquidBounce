@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler

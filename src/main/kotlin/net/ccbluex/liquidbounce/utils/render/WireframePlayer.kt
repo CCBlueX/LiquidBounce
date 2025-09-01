@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.BoxRenderer
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.minecraft.util.math.Box
@@ -29,18 +29,18 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Quaternionf
 
 // pixels / (16 + 16)
-val LIMB = Box(0.0, 0.0, 0.0, 0.125, 0.375, 0.125)
-val BODY = Box(0.0, 0.0, 0.0, 0.25, 0.375, 0.125)
-val HEAD = Box(0.0, 0.0, 0.0, 0.25, 0.25, 0.25)
+private val LIMB = Box(0.0, 0.0, 0.0, 0.125, 0.375, 0.125)
+private val BODY = Box(0.0, 0.0, 0.0, 0.25, 0.375, 0.125)
+private val HEAD = Box(0.0, 0.0, 0.0, 0.25, 0.25, 0.25)
 
-val RENDER_LEFT_LEG: Box = LIMB.offset(-LIMB.maxX, 0.0, 0.0)
-val RENDER_RIGHT_LEG: Box = LIMB
-val RENDER_BODY: Box = BODY.offset(-LIMB.maxX, LIMB.maxY, 0.0)
-val RENDER_LEFT_ARM: Box = LIMB.offset(-2 * LIMB.maxX, LIMB.maxY, 0.0)
-val RENDER_RIGHT_ARM: Box = LIMB.offset(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
-val RENDER_HEAD: Box = HEAD.offset(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
+private val RENDER_LEFT_LEG: Box = LIMB.offset(-LIMB.maxX, 0.0, 0.0)
+private val RENDER_RIGHT_LEG: Box = LIMB
+private val RENDER_BODY: Box = BODY.offset(-LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_LEFT_ARM: Box = LIMB.offset(-2 * LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_RIGHT_ARM: Box = LIMB.offset(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_HEAD: Box = HEAD.offset(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
 
-data class WireframePlayer(var pos: Vec3d, var yaw: Float, var pitch: Float) {
+data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, private var pitch: Float) {
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {

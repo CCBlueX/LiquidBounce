@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpException
-import net.ccbluex.liquidbounce.api.core.asJson
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.utils.client.logger
 
 const val OPENAI_BASE_URL = "https://api.openai.com/v1"
@@ -68,7 +68,7 @@ class OpenAiApi(
         return try {
             val response: JsonObject = post(
                 "/chat/completions",
-                body = body.toString().asJson()
+                body = body.toRequestBody()
             ) {
                 add("Authorization", "Bearer $openAiKey")
             }
@@ -79,7 +79,7 @@ class OpenAiApi(
                 .asJsonObject["content"]
                 .asString
         } catch (e: HttpException) {
-            val responseJson = JsonParser.parseString(e.message).asJsonObject
+            val responseJson = JsonParser.parseString(e.content).asJsonObject
             val errorJson = responseJson["error"].asJsonObject
 
             logger.error("Failed to send request to OpenAI", e)

@@ -21,14 +21,11 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.ChatSendEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.*
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.*
@@ -40,74 +37,19 @@ import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
+import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.text.MutableText
-import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
+import kotlin.math.min
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.convertToString(), cause)
-
-/**
- * Links minecraft with the command engine
- */
-
-object CommandExecutor : EventListener {
-
-    /**
-     * Handles command execution
-     */
-    @Suppress("unused")
-    val chatEventHandler = handler<ChatSendEvent> {
-        if (!it.message.startsWith(CommandManager.Options.prefix)) {
-            return@handler
-        }
-
-        try {
-            CommandManager.execute(it.message.substring(CommandManager.Options.prefix.length))
-        } catch (e: CommandException) {
-            mc.inGameHud.chatHud.removeMessage("CommandManager#error")
-            val data = MessageMetadata(id = "CommandManager#error", remove = false)
-            chat(e.text.styled { it.withColor(Formatting.RED) }, metadata = data)
-            chat("Usage: ".asText().styled { it.withColor(Formatting.RED) }, metadata = data)
-
-            if (e.usageInfo != null) {
-                var first = true
-
-                // Zip the usage info together, e.g.
-                //  .friend add <name> [<alias>]
-                //  OR .friend remove <name>
-                e.usageInfo.forEach { usage ->
-                    chat(
-                        "${if (first) "" else "OR "}.$usage".asText().styled { it.withColor(Formatting.RED) },
-                        metadata = data
-                    )
-
-                    if (first) {
-                        first = false
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            chat(
-                markAsError(
-                    translation(
-                        "liquidbounce.commandManager.exceptionOccurred",
-                        e::class.simpleName ?: "Class name missing", e.message ?: "No message"
-                    )
-                ),
-                metadata = MessageMetadata(id = "CommandManager#error")
-            )
-            logger.error("An exception occurred while executing a command", e)
-        }
-
-        it.cancelEvent()
-    }
-
-}
 
 private val commands = mutableListOf<Command>()
 
@@ -133,6 +75,10 @@ object CommandManager : Iterable<Command> by commands {
          */
         var prefix by text("prefix", ".")
 
+        /**
+         * How many hints should we give for unknown commands?
+         */
+        val hintCount by int("HintCount", 5, 0..10)
     }
 
     init {
@@ -181,7 +127,10 @@ object CommandManager : Iterable<Command> by commands {
             CommandTeleport,
             CommandPlayerTeleport,
             CommandTps,
+            CommandServerInfo,
             CommandModels,
+            CommandTranslate,
+            CommandAutoTranslate,
             CommandMarketplace
         )
 
@@ -269,7 +218,28 @@ object CommandManager : Iterable<Command> by commands {
             translation(
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
-            )
+            ),
+            usageInfo = if (commands.isEmpty() || Options.hintCount == 0) {
+                null
+            } else {
+                commands.sortedBy { command ->
+                    var distance = levenshtein(args[0], command.name)
+                    if (command.aliases.isNotEmpty()) {
+                        distance = min(
+                            distance,
+                            command.aliases.minOf { levenshtein(args[0], it) }
+                        )
+                    }
+                    distance
+                }.take(Options.hintCount).map { command ->
+                    buildString {
+                        append(command.name)
+                        if (command.aliases.isNotEmpty()) {
+                            command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
+                        }
+                    }
+                }
+            }
         )
         val command = pair.first
 
@@ -363,7 +333,7 @@ object CommandManager : Iterable<Command> by commands {
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
             is ParameterValidationResult.Ok -> {
-                return validationResult.mappedResult!!
+                return validationResult.mappedResult
             }
             is ParameterValidationResult.Error -> {
                 throw CommandException(

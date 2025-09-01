@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,11 +29,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -56,6 +59,7 @@ import java.awt.Color
 object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
     private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
+    private val tracers by multiEnumChoice<ChestType>("Tracers")
 
     private val chestColor by color("Chest", Color4b(0, 100, 255))
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
@@ -67,11 +71,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(StorageScanner)
     }
 
@@ -108,7 +112,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
             val queuedBoxes = mutableListOf<BoxRecord>()
 
-            for ((pos, type) in StorageScanner.trackedBlockMap) {
+            for ((pos, type) in StorageScanner.iterate()) {
                 val color = type.color
 
                 if (color.a <= 0 || !type.shouldRender(pos)) {
@@ -157,13 +161,13 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         @Suppress("unused")
         val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
-                || StorageScanner.trackedBlockMap.isEmpty()) {
+                || StorageScanner.isEmpty()) {
                 return@handler
             }
 
             renderEnvironmentForWorld(event.matrixStack) {
                 BoxRenderer.drawWith(this) {
-                    for ((pos, type) in StorageScanner.trackedBlockMap) {
+                    for ((pos, type) in StorageScanner.iterate()) {
                         val state = pos.getState() ?: continue
 
                         // non-model blocks are already processed by WorldRenderer where we injected code which renders
@@ -189,6 +193,30 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                         }
 
                         event.markDirty()
+                    }
+                }
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        if (StorageScanner.isEmpty() || tracers.isEmpty()) {
+            return@handler
+        }
+
+        renderEnvironmentForWorld(event.matrixStack) {
+            val eyeVector = Vec3(0.0, 0.0, 1.0)
+                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+
+            longLines {
+                for ((blockPos, type) in StorageScanner.iterate()) {
+                    if (type !in tracers) continue
+                    val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
+
+                    withColor(type.color) {
+                        drawLines(eyeVector, pos, pos)
                     }
                 }
             }
@@ -222,32 +250,32 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
     }
 
-    enum class ChestType {
-        CHEST {
+    enum class ChestType(override val choiceName: String) : NamedChoice {
+        CHEST("Chest") {
             override val color get() = chestColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        ENDER_CHEST {
+        ENDER_CHEST("EnderChest") {
             override val color get() = enderChestColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        FURNACE {
+        FURNACE("Furnace") {
             override val color get() = furnaceColor
         },
-        DISPENSER {
+        DISPENSER("Dispenser") {
             override val color get() = dispenserColor
         },
-        HOPPER {
+        HOPPER("Hopper") {
             override val color get() = hopperColor
         },
-        SHULKER_BOX {
+        SHULKER_BOX("ShulkerBox") {
             override val color get() = shulkerColor
 
             override fun shouldRender(pos: BlockPos) = pos !in FeatureChestAura.interactedBlocksSet
         },
-        POT {
+        POT("Pot") {
             override val color get() = potColor
         };
 
@@ -256,7 +284,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         open fun shouldRender(pos: BlockPos): Boolean = true
     }
 
-    private object StorageScanner : AbstractBlockLocationTracker<ChestType>() {
+    private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             val chunk = mc.world?.getChunk(pos) ?: return null
             return chunk.getBlockEntity(pos)?.categorize()

@@ -27,7 +27,6 @@ import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -35,8 +34,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurabl
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import java.io.StringReader
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("name", name)
@@ -104,7 +103,7 @@ fun postPanic(requestObject: RequestObject): FullHttpResponse {
             }
         }
     }
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 data class ModuleRequest(val name: String) {
@@ -127,7 +126,7 @@ data class ModuleRequest(val name: String) {
                 logger.error("Failed to toggle module $name", it)
             }
         }
-        return httpOk(emptyJsonObject())
+        return httpNoContent()
     }
 
     fun acceptGetSettingsRequest(): FullHttpResponse {
@@ -137,13 +136,9 @@ data class ModuleRequest(val name: String) {
 
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-
-        StringReader(content).use {
-            ConfigSystem.deserializeConfigurable(module, it)
-        }
-
+        ConfigSystem.deserializeConfigurable(module, content.reader())
         ConfigSystem.storeConfigurable(modulesConfigurable)
-        return httpOk(emptyJsonObject())
+        return httpNoContent()
     }
 
 }

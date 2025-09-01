@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import java.awt.Font
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import kotlin.random.Random
 
 /**

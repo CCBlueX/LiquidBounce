@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration.task
 
-import net.ccbluex.liquidbounce.integration.browser.BrowserManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.asText
@@ -160,7 +160,7 @@ class TaskProgressScreen(
     }
 
     override fun tick() {
-        if (taskManager.isCompleted && BrowserManager.browser?.isInitialized() == true) {
+        if (taskManager.isCompleted && BrowserBackendManager.browserBackend?.isInitialized == true) {
             mc.setScreen(TitleScreen())
         }
     }

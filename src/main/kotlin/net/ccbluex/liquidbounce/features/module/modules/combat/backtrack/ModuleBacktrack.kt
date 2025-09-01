@@ -19,17 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
 import com.google.common.collect.Queues
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.drawSolidBox
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -104,7 +104,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin != TransferOrigin.RECEIVE || event.isCancelled) {
+        if (event.origin != TransferOrigin.INCOMING || event.isCancelled) {
             return@handler
         }
 
@@ -313,11 +313,11 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         target = enemy
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         clear(false)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         clear(true)
     }
 

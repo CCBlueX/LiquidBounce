@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -65,7 +65,6 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
      */
-    @Suppress("ReturnCount")
     private fun isInClientPlayersTeam(entity: LivingEntity) =
         matches.any { it.testMatches(entity) } || checkArmor(entity)
 
@@ -118,7 +117,6 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
                 ?.string
                 ?.stripMinecraftColorCodes()
                 ?.split(" ")
-
 
             targetSplit != null
                 && clientSplit != null

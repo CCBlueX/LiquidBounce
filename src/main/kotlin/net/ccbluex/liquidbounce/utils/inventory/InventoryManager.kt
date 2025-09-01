@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -64,8 +64,8 @@ object InventoryManager : EventListener {
             field = value
         }
 
-    var lastClickedSlot: Int = 0
-        private set
+    var lastClickedSlot: Int = -1
+        internal set
 
     private var recentInventoryOpen = false
 
@@ -86,8 +86,8 @@ object InventoryManager : EventListener {
             return@tickHandler
         }
 
-        ModuleDebug.debugParameter(this, "Inventory Open", isInventoryOpen)
-        ModuleDebug.debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
+        debugParameter(this, "Inventory Open", isInventoryOpen)
+        debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
 
         var maximumCloseDelay = 0
 
@@ -104,28 +104,26 @@ object InventoryManager : EventListener {
             requiresUpdate = false
 
             val event = EventManager.callEvent(ScheduleInventoryActionEvent())
-
-            // Schedule of actions that have to be executed
-            // The schedule is sorted by
-            // 1. With Non-inventory open required actions
-            // 2. With inventory open required actions
             val schedule = event.schedule
-                .filter { actionChain -> actionChain.canPerformAction() && actionChain.actions.isNotEmpty() }
-                .groupBy(InventoryActionChain::requiresInventoryOpen)
-                .map { it.value.sortedByDescending { actionChain -> actionChain.priority } }
-                .reduceOrNull { acc, inventoryActionChains ->
-                    acc + inventoryActionChains
-                } ?: break
-
-            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
+                .filterTo(mutableListOf()) { actionChain ->
+                    actionChain.canPerformAction() && actionChain.actions.isNotEmpty()
+                }
 
             // If the schedule is empty, we can break the loop
             if (schedule.isEmpty()) {
                 break
             }
 
+            // Schedule of actions that have to be executed
+            // The schedule is sorted by
+            // 1. With Non-inventory open required actions
+            // 2. With inventory open required actions
+            schedule.sortWith(COMPARATOR_ACTION_CHAIN)
+
+            debugParameter(this, "Schedule Size", schedule.size)
+
             // Handle non-inventory open actions first
-            for (chained in schedule) {
+            for ((scheduleIndex, chained) in schedule.withIndex()) {
                 // Do not continue if we need to update the schedule
                 if (requiresUpdate) {
                     break
@@ -133,7 +131,10 @@ object InventoryManager : EventListener {
 
                 // These are chained actions that have to be executed in order
                 // We cannot interrupt them
+                debugParameter("Schedule Index") { scheduleIndex }
+                debugParameter("Action Size") { chained.actions.size }
                 for ((index, action) in chained.actions.withIndex()) {
+                    debugParameter("Action Index") { index }
                     val constraints = chained.inventoryConstraints
 
                     // Update close delay maximum
@@ -203,7 +204,7 @@ object InventoryManager : EventListener {
             closeInventorySilently()
         }
 
-        lastClickedSlot = 0
+        lastClickedSlot = -1
     }
 
     /**
@@ -280,14 +281,22 @@ object InventoryManager : EventListener {
         isInventoryOpenServerSide = false
     }
 
+    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryActionChain> =
+        compareBy<InventoryActionChain> {
+            it.requiresInventoryOpen()
+        }.thenByDescending {
+            it.priority
+        }
+
 }
 
-interface InventoryAction {
+sealed interface InventoryAction {
     fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean
     fun performAction(): Boolean
     fun requiresPlayerInventoryOpen(): Boolean
 }
 
+@JvmRecord
 data class ClickInventoryAction(
     val screen: GenericContainerScreen? = null,
     val slot: ItemSlot,
@@ -297,16 +306,20 @@ data class ClickInventoryAction(
 
     companion object {
 
-        fun click(screen: GenericContainerScreen? = null,
-                  slot: ItemSlot,
-                  button: Int,
-                  actionType: SlotActionType) = ClickInventoryAction(
+        @JvmStatic
+        fun click(
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot,
+            button: Int,
+            actionType: SlotActionType
+        ) = ClickInventoryAction(
             screen,
             slot = slot,
             button = button,
             actionType = actionType
         )
 
+        @JvmStatic
         fun performThrow(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -317,6 +330,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.THROW
         )
 
+        @JvmStatic
         fun performQuickMove(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -327,6 +341,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.QUICK_MOVE
         )
 
+        @JvmStatic
         fun performSwap(
             screen: GenericContainerScreen? = null,
             from: ItemSlot,
@@ -338,6 +353,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.SWAP
         )
 
+        @JvmStatic
         fun performPickupAll(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -348,6 +364,7 @@ data class ClickInventoryAction(
             actionType = SlotActionType.PICKUP_ALL
         )
 
+        @JvmStatic
         fun performPickup(
             screen: GenericContainerScreen? = null,
             slot: ItemSlot
@@ -380,6 +397,7 @@ data class ClickInventoryAction(
     override fun performAction(): Boolean {
         val slotId = slot.getIdForServer(screen) ?: return false
         interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
+        InventoryManager.lastClickedSlot = slotId
 
         return true
     }
@@ -395,8 +413,9 @@ data class ClickInventoryAction(
             .filter { it.itemStack.isEmpty }
             .minByOrNull { slot.distance(it) } ?: return false
 
-        interaction.clickSlot(screen.syncId, closestEmptySlot.getIdForServer(screen), 0,
-            SlotActionType.PICKUP, player)
+        val slotId = closestEmptySlot.getIdForServer(screen)
+        interaction.clickSlot(screen.syncId, slotId, 0, SlotActionType.PICKUP, player)
+        InventoryManager.lastClickedSlot = slotId
         return true
     }
 
@@ -404,8 +423,9 @@ data class ClickInventoryAction(
 
 }
 
+@JvmRecord
 data class UseInventoryAction(
-    val hotbarItemSlot: HotbarItemSlot
+    val hotbarItemSlot: HotbarItemSlot,
 ) : InventoryAction {
 
     override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
@@ -420,8 +440,9 @@ data class UseInventoryAction(
 
 }
 
+@JvmRecord
 data class CloseContainerAction(
-    val screen: GenericContainerScreen
+    val screen: GenericContainerScreen,
 ) : InventoryAction {
 
     // Check if current handler is the same as the screen we want to close
@@ -437,13 +458,16 @@ data class CloseContainerAction(
 
 }
 
+@JvmRecord
 data class CreativeInventoryAction(
     val itemStack: ItemStack,
-    val slot: ItemSlot? = null
+    val slot: ItemSlot? = null,
 ) : InventoryAction {
 
     companion object {
+        @JvmStatic
         fun performThrow(itemStack: ItemStack) = CreativeInventoryAction(itemStack)
+        @JvmStatic
         fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = CreativeInventoryAction(itemStack, slot)
     }
 
@@ -468,6 +492,7 @@ data class CreativeInventoryAction(
         if (slot != null) {
             val slotId = slot.getIdForServer(null) ?: return false
             interaction.clickCreativeStack(itemStack, slotId)
+            InventoryManager.lastClickedSlot = slotId
         } else {
             interaction.dropCreativeStack(itemStack)
         }
@@ -482,9 +507,10 @@ data class CreativeInventoryAction(
  * A chained inventory action is a list of inventory actions that have to be executed in order
  * and CANNOT be stopped in between
  */
+@JvmRecord
 data class InventoryActionChain(
     val inventoryConstraints: InventoryConstraints,
-    val actions: Array<out InventoryAction>,
+    val actions: List<InventoryAction>,
     val priority: Priority
 ) {
 
@@ -492,6 +518,6 @@ data class InventoryActionChain(
         return actions.all { action -> action.canPerformAction(inventoryConstraints) }
     }
 
-    fun requiresInventoryOpen() = actions.filterIsInstance<ClickInventoryAction>().any { it.screen == null }
+    fun requiresInventoryOpen() = actions.any { it is ClickInventoryAction && it.screen == null }
 
 }

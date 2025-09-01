@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 
 import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.block.isBreakable

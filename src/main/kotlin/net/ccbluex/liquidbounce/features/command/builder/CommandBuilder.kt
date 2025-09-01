@@ -36,37 +36,27 @@ class CommandBuilder private constructor(val name: String) {
         fun begin(name: String): CommandBuilder = CommandBuilder(name)
     }
 
-    fun alias(vararg aliases: String): CommandBuilder {
+    fun alias(vararg aliases: String) = apply {
         this.aliases = aliases
-
-        return this
     }
 
-    fun parameter(parameter: Parameter<*>): CommandBuilder {
+    fun parameter(parameter: Parameter<*>) = apply {
         this.parameters.add(parameter)
-
-        return this
     }
 
-    fun subcommand(subcommand: Command): CommandBuilder {
+    fun subcommand(subcommand: Command) = apply {
         this.subcommands.add(subcommand)
-
-        return this
     }
 
-    fun handler(handler: CommandHandler): CommandBuilder {
+    fun handler(handler: CommandHandler) = apply {
         this.handler = handler
-
-        return this
     }
 
     /**
      * Doesn't allow the command do be executed if either the world or the player are `null`.
      */
-    fun requiresIngame(): CommandBuilder {
+    fun requiresIngame() = apply {
         this.ingame = true
-
-        return this
     }
 
     /**
@@ -77,10 +67,8 @@ class CommandBuilder private constructor(val name: String) {
      * The command _friend_ would not be executable since it just acts as a
      * hub for its subcommands
      */
-    fun hub(): CommandBuilder {
+    fun hub() = apply {
         this.executable = false
-
-        return this
     }
 
     fun build(): Command {

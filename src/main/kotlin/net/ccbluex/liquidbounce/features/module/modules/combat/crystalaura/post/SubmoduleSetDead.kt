@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.minecraft.entity.Entity
 import net.minecraft.entity.decoration.EndCrystalEntity

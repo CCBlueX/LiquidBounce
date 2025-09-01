@@ -21,14 +21,13 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
-import net.ccbluex.liquidbounce.features.Reconnect
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.netty.http.util.httpNoContent
 
 // POST /api/v1/client/reconnect
 @Suppress("UNUSED_PARAMETER")
 fun postReconnect(requestObject: RequestObject): FullHttpResponse {
-    Reconnect.reconnectNow()
-    return httpOk(emptyJsonObject())
+    ServerObserver.reconnect()
+    return httpNoContent()
 }

@@ -38,11 +38,11 @@ object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
 
     private var prevModelParts = emptySet<PlayerModelPart>()
 
-    override fun enable() {
+    override fun onEnabled() {
         prevModelParts = mc.options.enabledPlayerModelParts.toSet()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Disable all current model parts
         for (modelPart in PlayerModelPart.entries) {
             mc.options.setPlayerModelPart(modelPart, false)

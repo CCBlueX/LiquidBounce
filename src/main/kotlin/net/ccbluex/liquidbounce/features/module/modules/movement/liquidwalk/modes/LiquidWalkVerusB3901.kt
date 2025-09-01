@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
@@ -62,7 +62,7 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.SEND && packet is PlayerMoveC2SPacket) {
+        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
             if (!mc.options.sneakKey.isPressed &&
                 !player.isTouchingWater &&
                 standingOnWater() &&

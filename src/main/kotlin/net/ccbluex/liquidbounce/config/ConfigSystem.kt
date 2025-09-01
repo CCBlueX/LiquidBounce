@@ -24,13 +24,14 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.Configurable
-import net.ccbluex.liquidbounce.config.types.DynamicConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
+import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -69,8 +70,18 @@ object ConfigSystem {
         }
     }
 
+    internal val backupFolder = File(
+        rootFolder, "backups"
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
+        if (!exists()) {
+            mkdir()
+        }
+    }
+
     // A mutable list of all root configurable classes (and their subclasses)
-    private val configurables = ArrayList<Configurable>()
+    val configurables = ArrayList<Configurable>()
 
     /**
      * Create new root configurable
@@ -107,8 +118,25 @@ object ConfigSystem {
     /**
      * Create a ZIP file of root configurable files
      */
-    fun backup(fileName: String) {
-        configurables.map { it.jsonFile }.createZipArchive(File(rootFolder, fileName))
+    fun backup(fileName: String, configurables: Collection<Configurable> = this.configurables) {
+        val zipFile = File(backupFolder, "$fileName.zip")
+        check(!zipFile.exists()) { "Backup file already exists" }
+
+        configurables.map { configurable -> configurable.jsonFile }.createZipArchive(zipFile)
+    }
+
+    /**
+     * Restore a backup from a ZIP file to the root configurable files
+     */
+    fun restore(fileName: String) {
+        val zipFile = File(backupFolder, "$fileName.zip")
+        check(zipFile.exists()) { "Backup file does not exist" }
+
+        // Store all configurables to make sure they are up to date,
+        // before we overwrite some of them through [extractZip]
+        storeAll()
+        extractZip(zipFile, rootFolder)
+        loadAll()
     }
 
     /**
@@ -284,5 +312,8 @@ object ConfigSystem {
         }
     }
 
+    fun getConfigurableByName(name: String): Configurable? {
+        return configurables.firstOrNull { it.name.equals(name, true) }
+    }
 
 }

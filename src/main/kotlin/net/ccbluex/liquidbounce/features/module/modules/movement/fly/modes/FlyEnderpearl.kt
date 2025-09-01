@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
-import net.ccbluex.liquidbounce.config.types.Choice
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -63,7 +63,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val repeatable = tickHandler {
-        val slot = Slots.Hotbar.findSlotIndex(Items.ENDER_PEARL)
+        val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlot
 
         if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
             return@tickHandler
@@ -107,7 +107,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket
+        if (event.origin == TransferOrigin.OUTGOING && event.packet is TeleportConfirmC2SPacket
             && isABitAboveGround() && threwPearl) {
             threwPearl = false
             canFly = true
