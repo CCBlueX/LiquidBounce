@@ -325,6 +325,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoBreak,
             ModuleAutoFish,
             ModuleAutoRespawn,
+            ModuleAutoWindCharge,
             ModuleOffhand,
             ModuleAutoShop,
             ModuleAutoWalk,
