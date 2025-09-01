@@ -1,21 +1,4 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
+
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -196,15 +179,14 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         if (!running) {
             return original
         }
-
-        return stringMappingCache.getOrPut(original) { replace0(original) }
+        return stringMappingCache.getOrPut(original) { uncachedReplace(original) }
     }
     fun replace(original: Text): Text {
         if (!running) return original
         val degenerated = LegacyTextSanitizer.SanitizedLegacyText(original)
         return wrap(degenerated).toText()
     }
-    private fun replace0(original: String): String {
+    fun uncachedReplace(original: String): String {
         val replacements = replacementMappings.findReplacements(original)
 
         if (replacements.isEmpty()) {
@@ -243,13 +225,13 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             return original
         }
 
-        return orderedTextMappingCache.getOrPut(original) { wrap0(original) }
+        return orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
     }
 
     /**
      * Wraps an [OrderedText] to apply name protection.
      */
-    private fun wrap0(original: OrderedText): OrderedText {
+    fun uncachedWrap(original: OrderedText): OrderedText {
         val mappedCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
 
         val originalCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
