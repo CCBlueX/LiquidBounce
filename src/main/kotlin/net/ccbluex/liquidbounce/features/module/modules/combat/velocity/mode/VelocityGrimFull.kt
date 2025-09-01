@@ -21,14 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
-import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
@@ -40,7 +39,6 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
-import java.util.concurrent.ConcurrentLinkedQueue
 
 internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
@@ -55,16 +53,9 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
 
     private var hitResult: BlockHitResult? = null
     private var shouldSkip = false
-    private val delayedPacketQueue = ConcurrentLinkedQueue<PacketSnapshot>()
-
-    // TODO: replace with PacketQueueManager
-    private fun track(event: PacketEvent) {
-        delayedPacketQueue.add(PacketSnapshot(event.packet, event.origin, System.currentTimeMillis()))
-    }
 
     private fun flush() {
-        delayedPacketQueue.forEach { handlePacket(it.packet) }
-        delayedPacketQueue.clear()
+        PacketQueueManager.flush(TransferOrigin.INCOMING)
     }
 
     private var freezeTicks = 0
@@ -108,7 +99,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             }
         }
 
-        if (event.isCancelled || event.origin == TransferOrigin.OUTGOING) {
+        if (event.isCancelled) {
             return@sequenceHandler
         }
 
@@ -119,13 +110,7 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
             return@sequenceHandler
         }
 
-        if (waitForUpdate) {
-            return@sequenceHandler
-        }
-
-        if (delay) {
-            track(event)
-            event.cancelEvent()
+        if (waitForUpdate || delay) {
             return@sequenceHandler
         }
 
@@ -142,9 +127,20 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
     }
 
     @Suppress("unused")
-    private val playerTickHandle = handler<PlayerTickEvent> { event ->
+    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+        if (waitForUpdate || !delay || event.origin != TransferOrigin.INCOMING) {
+            return@handler
+        }
+
+        event.action = PacketQueueManager.Action.QUEUE
+    }
+
+    @Suppress("unused")
+    private val playerTickHandler = handler<PlayerTickEvent> { event ->
         if (needClick && !shouldSkip && !player.isUsingItem) {
-            hitResult = raycast(rotation = Rotation(player.yaw, 90f)).takeIf {
+            hitResult = raycast(
+                rotation = RotationManager.serverRotation.copy(pitch = 90F)
+            ).takeIf {
                 it.blockPos.offset(it.side) == player.blockPos
             }
         }
