@@ -79,7 +79,8 @@ internal object VelocityGrimFull : VelocityMode("GrimFull") {
         get() = this is EntityDamageS2CPacket && this.entityId == player.id
 
     private val Packet<*>.isSelfVelocity
-        get() = this is EntityVelocityUpdateS2CPacket && this.entityId == player.id || this is ExplosionS2CPacket && forExplosion
+        get() = this is EntityVelocityUpdateS2CPacket && this.entityId == player.id
+            || this is ExplosionS2CPacket && forExplosion
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
