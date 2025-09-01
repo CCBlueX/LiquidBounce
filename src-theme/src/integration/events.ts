@@ -110,6 +110,7 @@ export interface PlayerEntry {
     latency: TextComponent | string;
     isFriend: boolean;
     isStaff: boolean;
+    isSelf: boolean;
 }
 
 export interface OverlayPlayListEvent {

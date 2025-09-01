@@ -201,8 +201,13 @@ public abstract class MixinPlayerListHud {
                     .styled(style -> style.withColor(getLatencyColor(entry.getLatency())));
             boolean isFriend = FriendManager.INSTANCE.isFriend(entry.getProfile().getName());
             boolean isStaff = ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName());
+            boolean isSelf = false;
+            if (MinecraftClient.getInstance().player != null) {
+                isSelf = entry.getProfile().getId().equals(MinecraftClient.getInstance().player.getUuid());
+            }
             String uuid = entry.getProfile().getId().toString();
-            return new PlayerEntry(fullName, uuid, latency, isFriend, isStaff);
+            return new PlayerEntry(fullName, uuid, latency, isFriend, isStaff, isSelf);
+
         }).collect(Collectors.toList());
 
         if (hudHeader != null) {

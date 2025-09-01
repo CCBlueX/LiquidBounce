@@ -220,7 +220,8 @@ data class PlayerEntry(
     val uuid: String,
     val latency: Text,
     val isFriend: Boolean,
-    val isStaff: Boolean
+    val isStaff: Boolean,
+    val isSelf:Boolean,
 )
 
 @Nameable("overlayChatMessage")

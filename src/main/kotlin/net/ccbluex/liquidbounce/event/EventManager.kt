@@ -134,7 +134,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ScheduleInventoryActionEvent::class,
     SelectHotbarSlotSilentlyEvent::class,
     SpaceSeperatedNamesChangeEvent::class,
-    BetterTabChangeEvent::class,
     HudValueChangeEvent::class,
     HudLayoutEditorValueChangeEvent::class,
     BrowserUrlChangeEvent::class,

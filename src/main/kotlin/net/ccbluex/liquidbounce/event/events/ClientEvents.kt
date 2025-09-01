@@ -52,9 +52,6 @@ class HudValueChangeEvent(val configurable: Configurable) : Event(),WebSocketEve
 @Nameable("hudLayoutEditorValueChange")
 class HudLayoutEditorValueChangeEvent(val configurable: Configurable) : Event(),WebSocketEvent
 
-@Nameable("betterTabValueChange")
-class BetterTabChangeEvent(val configurable: Configurable) : Event(),WebSocketEvent
-
 @Nameable("nameProtectValueChange")
 class NameProtectEvent(val configurable: Configurable) : Event(),WebSocketEvent
 
