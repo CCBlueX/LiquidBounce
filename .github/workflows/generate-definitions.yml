@@ -1,11 +1,9 @@
 name: Generate TypeScript Definitions
 
 on:
-  push:
-    branches: [ nextgen ]
-  # remove after testing
-  pull_request:
-    branches: [ nextgen ]
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
