@@ -41,10 +41,14 @@ abstract class ComponentFactory {
                 enabled,
                 // todo: replace with deserialization
                 Alignment(
-                    Alignment.ScreenAxisX.entries.find { it.choiceName == alignment.get("horizontalAlignment").asString }!!,
+                    Alignment.ScreenAxisX.entries.find {
+                        it.choiceName == alignment.get("horizontalAlignment").asString
+                    }!!,
 //                    publicGson.fromJson(alignment.get("horizontalAlignment"), Alignment.ScreenAxisX::class.java),
                     alignment.get("horizontalOffset").asInt,
-                    Alignment.ScreenAxisY.entries.find { it.choiceName == alignment.get("verticalAlignment").asString }!!,
+                    Alignment.ScreenAxisY.entries.find {
+                        it.choiceName == alignment.get("verticalAlignment").asString
+                    }!!,
 //                    publicGson.fromJson(alignment.get("verticalAlignment"), Alignment.ScreenAxisY::class.java),
                     alignment.get("verticalOffset").asInt,
                 ),

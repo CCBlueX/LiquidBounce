@@ -65,6 +65,7 @@ class WebComponent(
  *
  * @param valueObject JsonObject
  */
+@Suppress("LongMethod")
 private fun configureConfigurable(configurable: Configurable, valueObject: JsonObject) {
     val type = valueObject["type"].asString
     val name = valueObject["name"].asString
