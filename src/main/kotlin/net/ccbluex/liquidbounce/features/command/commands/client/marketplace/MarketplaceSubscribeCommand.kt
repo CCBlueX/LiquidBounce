@@ -53,7 +53,7 @@ object MarketplaceSubscribeCommand : CommandFactory {
                 return@suspendHandler
             }
 
-            try {
+            runCatching {
                 // Verify the item exists and is not pending
                 val item = MarketplaceApi.getMarketplaceItem(id)
                 if (item.status != MarketplaceItemStatus.ACTIVE) {
@@ -62,9 +62,15 @@ object MarketplaceSubscribeCommand : CommandFactory {
 
                 MarketplaceManager.subscribe(item)
                 chat(regular(command.result("success", variable(id.toString()))))
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 logger.error("Failed to subscribe to marketplace item", e)
-                throw CommandException(translation("liquidbounce.command.marketplace.error.installFailed", id, e.message ?: "Unknown error"))
+                throw CommandException(
+                    translation(
+                        "liquidbounce.command.marketplace.error.installFailed",
+                        id,
+                        e.message ?: "Unknown error"
+                    )
+                )
             }
         }
         .build()

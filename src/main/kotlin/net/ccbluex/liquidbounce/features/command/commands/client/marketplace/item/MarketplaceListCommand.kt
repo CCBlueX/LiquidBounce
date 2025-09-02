@@ -34,6 +34,7 @@ import net.minecraft.text.HoverEvent
 /**
  * List marketplace items
  */
+@Suppress("LongMethod", "CognitiveComplexMethod")
 object MarketplaceListCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("list")

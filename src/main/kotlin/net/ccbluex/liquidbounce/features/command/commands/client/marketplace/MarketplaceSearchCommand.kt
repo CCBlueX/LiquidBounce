@@ -31,6 +31,7 @@ import net.minecraft.text.HoverEvent
 /**
  * Search marketplace items
  */
+@Suppress("LongMethod", "CognitiveComplexMethod")
 object MarketplaceSearchCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("search")
