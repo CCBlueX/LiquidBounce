@@ -168,7 +168,7 @@ function work(path, packageName) {
         `"types": "ambient/ambient.d.ts"`, null);
         npmPack.writePackageTo(
         // @ts-expect-error
-        Paths_1.Paths.get(path + "/types-gen"));
+        Paths_1.Paths.get(path + "/liquidbounce-script-api"));
         Client.displayChatMessage("print embedded script types, see log for more info, those are for maintainace use");
         const embeddedDefinition = `
 // ambient.ts
@@ -227,13 +227,13 @@ ${eventEntries.map((entry) => `on(eventName: "${entry[0]}", handler: (${entry[0]
 
 `;
         Client.displayChatMessage("Generated TypeScript definitions successfully!");
-        Client.displayChatMessage(`Output path: ${path}/types-gen`);
+        Client.displayChatMessage(`Output path: ${path}/liquidbounce-script-api`);
         // Output the generated content to console for debugging
         console.log(embeddedDefinition);
         // @ts-expect-error
         const Files = Java.type('java.nio.file.Files');
         // @ts-expect-error
-        const filePath = Paths_1.Paths.get(`${path}/types-gen/${packageName}/ambient/ambient.d.ts`);
+        const filePath = Paths_1.Paths.get(`${path}/liquidbounce-script-api/${packageName}/ambient/ambient.d.ts`);
         // @ts-expect-error
         Files.createDirectories(filePath.getParent());
         Files.writeString(filePath, embeddedDefinition, 
@@ -257,7 +257,7 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
 }
 `;
         // @ts-expect-error
-        const augmentationFilePath = Paths_1.Paths.get(`${path}/types-gen/${packageName}/augmentations/ScriptModule.augmentation.d.ts`);
+        const augmentationFilePath = Paths_1.Paths.get(`${path}/liquidbounce-script-api/${packageName}/augmentations/ScriptModule.augmentation.d.ts`);
         // @ts-expect-error
         Files.createDirectories(augmentationFilePath.getParent());
         Files.writeString(augmentationFilePath, augmentationContent, 
