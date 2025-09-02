@@ -104,6 +104,13 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         this.autocompletionHandler = autocompletionHandler
     }
 
+    inline fun autocompletedFrom(
+        ignoreCase: Boolean = true,
+        crossinline placeholdersProvider: () -> Iterable<String>,
+    ) = autocompletedWith { begin, _ ->
+        placeholdersProvider().filter { it.startsWith(begin, ignoreCase) }
+    }
+
     fun build(): Parameter<T> {
         return Parameter(
             this.name,
