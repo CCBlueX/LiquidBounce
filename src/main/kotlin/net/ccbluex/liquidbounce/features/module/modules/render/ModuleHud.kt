@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.components
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.themes
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -78,6 +80,22 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     val components = tree(Configurable("Components")).apply {
         nativeComponents.forEach(this::tree)
+    }
+
+    /**
+     * Updates [components] content
+     */
+    fun updateComponents() {
+        components.inner.clear()
+        nativeComponents.forEach { component ->
+            components.tree(component)
+        }
+
+        for (theme in themes) {
+            val themeConfigurable = Configurable(theme.metadata.name, theme.components.toMutableList())
+            components.tree(themeConfigurable)
+            themeConfigurable.initConfigurable()
+        }
     }
 
     override fun onEnabled() {

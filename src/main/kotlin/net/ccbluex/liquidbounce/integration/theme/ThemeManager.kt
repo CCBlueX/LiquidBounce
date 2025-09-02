@@ -133,16 +133,7 @@ object ThemeManager : Configurable("theme") {
 
         themes.add(includedTheme)
 
-        ModuleHud.components.inner.clear()
-        ModuleHud.nativeComponents.forEach { component ->
-            ModuleHud.components.tree(component)
-        }
-        for (theme in themes) {
-            val themeConfigurable = Configurable(theme.metadata.name, theme.components.toMutableList())
-            ModuleHud.components.tree(themeConfigurable)
-            themeConfigurable.initConfigurable()
-        }
-
+        ModuleHud.updateComponents()
         if (LiquidBounce.isInitialized) {
             IntegrationListener.update()
             ModuleHud.reopen()

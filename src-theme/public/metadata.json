@@ -35,10 +35,10 @@
     "Taco",
     "Text"
   ],
-  "fonts": ["fontname.ttf"],
+  "fonts": [],
   "background": [
     {
-      "name": "hills",
+      "name": "background",
       "types": ["frag", "png"]
     }
   ]

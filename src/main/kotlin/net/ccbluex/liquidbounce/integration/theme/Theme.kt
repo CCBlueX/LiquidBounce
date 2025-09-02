@@ -85,9 +85,16 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
             return true
         }
 
+        // todo: allow multiple backgrounds later on
+        val background = metadata.background.firstOrNull() ?: return false
+        if ("frag" !in background.types) {
+            // not supported
+            return false
+        }
+
         val vertexShader = resourceToString("/resources/liquidbounce/shaders/vertex.vert")
         val fragmentShader = runCatching {
-            get<String>("/background.frag")
+            get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
 
         themeBackgroundShader = ThemeBackground.shader(CanvasShader(
@@ -103,8 +110,15 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
             return true
         }
 
+        // todo: allow multiple backgrounds later on
+        val background = metadata.background.firstOrNull() ?: return false
+        if ("png" !in background.types) {
+            // not supported
+            return false
+        }
+
         val image = runCatching {
-            get<NativeImageBackedTexture>("/background.png")
+            get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
         val id = Identifier.of("liquidbounce",

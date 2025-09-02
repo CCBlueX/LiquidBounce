@@ -27,7 +27,7 @@ data class ThemeMetadata(
     val overlays: List<String>,
     val components: List<String>,
     val fonts: List<String>,
-    val themeBackground: List<ThemeBackground>
+    val background: List<Background>
 )
 
 data class Background(
