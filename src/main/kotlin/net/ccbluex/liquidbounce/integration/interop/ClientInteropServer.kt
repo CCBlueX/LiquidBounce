@@ -42,7 +42,7 @@ import java.net.Socket
 object ClientInteropServer {
 
     internal val httpServer = HttpServer()
-    private var socketEventHandler = SocketEventListener()
+    private val socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
 

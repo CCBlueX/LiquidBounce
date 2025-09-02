@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
@@ -261,37 +261,37 @@ object LiquidBounce : EventListener {
         // Lookup API config
         ApiConfig.config
 
-        listOf(
-            scope.async {
+        scope.launch {
+            async {
                 // Load translations
                 LanguageManager.loadDefault()
-            },
-            scope.async {
+            }
+            async {
                 val update = update ?: return@async
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
-            },
-            scope.async {
+            }
+            async {
                 // Load cosmetics
                 CosmeticService.refreshCarriers(force = true) {
                     logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
-            },
-            scope.async {
+            }
+            async {
                 // Download player heads
                 heads
-            },
-            scope.async {
+            }
+            async {
                 // Load configs
                 AutoConfig.reloadConfigs()
-            },
-            scope.async {
+            }
+            async {
                 // IPC configuration
                 ipcConfiguration
-            },
-            scope.async {
+            }
+            async {
                 IpInfoApi.original
-            },
-            scope.async {
+            }
+            async {
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -303,8 +303,8 @@ object LiquidBounce : EventListener {
                         ConfigSystem.store(ClientAccountManager)
                     }
                 }
-            },
-            scope.async {
+            }
+            async {
                 ThemeManager.themesFolder.listFiles()
                     ?.filter { file -> file.isDirectory }
                     ?.forEach { file ->
@@ -320,7 +320,7 @@ object LiquidBounce : EventListener {
                         }
                     }
             }
-        ).awaitAll()
+        }.join()
     }
 
     /**
