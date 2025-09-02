@@ -34,7 +34,7 @@ jobs:
 
       - name: Copy ts-defgen.js to LiquidBounce scripts
         run: |
-          cp typegen-scripts/ts-defgen.js run/LiquidBounce/scripts/
+          cp ts-defgen.js run/LiquidBounce/scripts/
 
       - name: Install Xvfb
         run: sudo apt-get install -y xvfb
