@@ -441,7 +441,7 @@
   "liquidbounce.command.marketplace.subcommand.revisions.parameter.id.description": "The ID of the item.",
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.noRevisions": "No revisions found for this item.",
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.header": "=== Item #%s Revisions ===",
-  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.revision": "v%s (%s)",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.revision": "%s (%s)",
 
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.description": "Upload a new revision for a marketplace item.",
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.id.description": "The ID of the item.",
@@ -449,7 +449,7 @@
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.version.description": "The version number.",
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.changelog.description": "The changelog message (optional).",
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.dependencies.description": "Comma-separated list of revision IDs this revision depends on (optional).",
-  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.result.success": "Successfully uploaded revision v%s for item #%s",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.result.success": "Successfully uploaded revision %s for item #%s",
 
   "liquidbounce.command.marketplace.error.notLoggedIn": "You must be logged in to perform this action.",
   "liquidbounce.command.marketplace.error.invalidItemType": "Invalid item type. Available types: config, script, theme, other",
