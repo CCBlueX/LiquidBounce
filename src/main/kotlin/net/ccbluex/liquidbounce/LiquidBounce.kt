@@ -328,10 +328,6 @@ object LiquidBounce : EventListener {
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
-        if (System.getenv("SKIP_GUI") == "true") {
-            return
-        }
-
         // Load theme and component overlay
         ThemeManager
         BrowserBackendManager
