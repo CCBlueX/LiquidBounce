@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
 
-enum class MarketplaceItemType {
-    @SerializedName("Script")
-    SCRIPT,
+enum class MarketplaceItemType(val isListable: Boolean, val isSubscribable: Boolean) {
     @SerializedName("Config")
-    CONFIG,
+    CONFIG(false, false),
+    @SerializedName("Script")
+    SCRIPT(true, true),
     @SerializedName("Theme")
-    THEME,
+    THEME(true, true),
     @SerializedName("Other")
-    OTHER
+    OTHER(true, true)
 }

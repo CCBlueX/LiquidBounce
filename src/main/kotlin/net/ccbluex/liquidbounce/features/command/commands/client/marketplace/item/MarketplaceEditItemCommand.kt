@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Edit marketplace item
  */
-object EditItemCommand : CommandFactory {
+object MarketplaceEditItemCommand : CommandFactory {
 
     @Suppress("LongMethod")
     override fun createCommand() = CommandBuilder.begin("edit")
@@ -72,7 +72,7 @@ object EditItemCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val clientAccount = ClientAccountManager.clientAccount
             if (clientAccount == EMPTY_ACCOUNT) {
                 throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
@@ -89,25 +89,23 @@ object EditItemCommand : CommandFactory {
                 throw CommandException(translation("liquidbounce.command.marketplace.error.invalidItemType"))
             }
 
-            withScope {
-                val response = MarketplaceApi.updateMarketplaceItem(
-                    clientAccount.takeSession(),
-                    id,
-                    name,
-                    type,
-                    description
-                )
+            val response = MarketplaceApi.updateMarketplaceItem(
+                clientAccount.takeSession(),
+                id,
+                name,
+                type,
+                description
+            )
 
-                chat(
-                    regular(
-                        command.result(
-                            "success",
-                            variable(response.id.toString()),
-                            variable(response.name)
-                        )
+            chat(
+                regular(
+                    command.result(
+                        "success",
+                        variable(response.id.toString()),
+                        variable(response.name)
                     )
                 )
-            }
+            )
         }
         .build()
 }

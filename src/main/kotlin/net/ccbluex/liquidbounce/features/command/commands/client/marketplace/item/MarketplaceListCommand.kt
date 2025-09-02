@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * List marketplace items
  */
-object ListCommand : CommandFactory {
+object MarketplaceListCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("list")
         .parameter(
@@ -42,8 +42,10 @@ object ListCommand : CommandFactory {
                 .begin<String>("type")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedWith { begin, _ ->
-                    MarketplaceItemType.entries.map { it.name.lowercase() }
-                        .filter { it.startsWith(begin, ignoreCase = true) }
+                    MarketplaceItemType.entries
+                        .filter { type -> type.isListable }
+                        .map { type -> type.name.lowercase() }
+                        .filter { name -> name.startsWith(begin, ignoreCase = true) }
                 }
                 .required()
                 .build()
@@ -55,7 +57,7 @@ object ListCommand : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val typeStr = args[0] as String
             val page = args.getOrNull(1) as? Int ?: 1
 
@@ -65,33 +67,31 @@ object ListCommand : CommandFactory {
                 throw CommandException(translation("liquidbounce.command.marketplace.error.invalidItemType"))
             }
 
-            withScope {
-                val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type)
+            val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type)
 
-                if (response.items.isEmpty()) {
-                    chat(regular(command.result("noItems")))
-                    return@withScope
-                }
+            if (response.items.isEmpty()) {
+                chat(regular(command.result("noItems")))
+                return@suspendHandler
+            }
 
-                chat(regular(command.result("header",
-                    variable(page.toString()),
-                    variable(response.pagination.pages.toString())
-                )))
+            chat(regular(command.result("header",
+                variable(page.toString()),
+                variable(response.pagination.pages.toString())
+            )))
 
-                for (item in response.items) {
-                    val subscribed = if (MarketplaceManager.isSubscribed(item.id)) "*" else ""
-                    chat(
-                        regular(
-                            command.result(
-                                "item",
-                                variable(item.id.toString()),
-                                variable(item.name),
-                                variable(item.type.toString().lowercase()),
-                                variable(subscribed)
-                            )
+            for (item in response.items) {
+                val subscribed = if (MarketplaceManager.isSubscribed(item.id)) "*" else ""
+                chat(
+                    regular(
+                        command.result(
+                            "item",
+                            variable(item.id.toString()),
+                            variable(item.name),
+                            variable(item.type.toString().lowercase()),
+                            variable(subscribed)
                         )
                     )
-                }
+                )
             }
         }
         .build()

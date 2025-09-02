@@ -16,24 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
+package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.CreateItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.DeleteItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.EditItemCommand
 
 /**
- * Manage marketplace items
+ * Manage marketplace item revisions
  */
-object ItemCommand : CommandFactory {
+object MarketplaceRevisionsCommand : CommandFactory {
 
-    override fun createCommand() = CommandBuilder.begin("item")
+    override fun createCommand() = CommandBuilder.begin("revisions")
         .hub()
-        .subcommand(CreateItemCommand.createCommand())
-        .subcommand(EditItemCommand.createCommand())
-        .subcommand(DeleteItemCommand.createCommand())
+        .subcommand(MarketplaceListRevisionsCommand.createCommand())
+        // Uploading revision is disabled until proven stable
+        // .subcommand(UploadRevisionCommand.createCommand())
         .build()
-
 }

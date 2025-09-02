@@ -16,27 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
+package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.api.core.withScope
-import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
-import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
-import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
- * Delete marketplace item
+ * Unsubscribe from a marketplace item
  */
-object DeleteItemCommand : CommandFactory {
+object MarketplaceUnsubscribeCommand : CommandFactory {
 
-    override fun createCommand() = CommandBuilder.begin("delete")
+    override fun createCommand() = CommandBuilder.begin("unsubscribe")
         .parameter(
             ParameterBuilder
                 .begin<Int>("id")
@@ -44,18 +40,17 @@ object DeleteItemCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
-            val clientAccount = ClientAccountManager.clientAccount
-            if (clientAccount == EMPTY_ACCOUNT) {
-                throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
-            }
-
+        .suspendHandler { command, args ->
             val id = args[0] as Int
 
-            withScope {
-                MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), id)
-                chat(regular(command.result("success", variable(id.toString()))))
+            if (!MarketplaceManager.isSubscribed(id)) {
+                chat(regular(command.result("notSubscribed", variable(id.toString()))))
+                return@suspendHandler
             }
+
+            MarketplaceManager.unsubscribe(id)
+            chat(regular(command.result("success", variable(id.toString()))))
         }
         .build()
+
 }

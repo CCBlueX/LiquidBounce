@@ -16,87 +16,111 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
+package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import java.io.File
 
 /**
- * Create marketplace item
+ * Upload marketplace item revision
  */
-object CreateItemCommand : CommandFactory {
+object MarketplaceUploadRevisionCommand : CommandFactory {
 
-    override fun createCommand() = CommandBuilder.begin("create")
+    @Suppress("LongMethod")
+    override fun createCommand() = CommandBuilder
+        .begin("upload")
         .parameter(
             ParameterBuilder
-                .begin<String>("name")
+                .begin<Int>("id")
+                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                .required()
+                .build()
+        )
+        .parameter(
+            ParameterBuilder
+                .begin<String>("file")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
                 .build()
         )
         .parameter(
             ParameterBuilder
-                .begin<String>("type")
+                .begin<String>("version")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
-                    MarketplaceItemType.entries.map { it.name.lowercase() }
-                        .filter { it.startsWith(begin, ignoreCase = true) }
-                }
                 .required()
                 .build()
         )
         .parameter(
             ParameterBuilder
-                .begin<String>("description")
+                .begin<String>("changelog")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .vararg()
-                .required()
+                .optional()
                 .build()
         )
-        .handler { command, args ->
+        .parameter(
+            ParameterBuilder
+                .begin<String>("dependencies")
+                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .optional()
+                .build()
+        )
+        .suspendHandler { command, args ->
             val clientAccount = ClientAccountManager.clientAccount
             if (clientAccount == EMPTY_ACCOUNT) {
                 throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
             }
 
-            val name = args[0] as String
-            val typeStr = args[1] as String
-            val description = (args[2] as Array<*>).joinToString(" ")
+            val id = args[0] as Int
+            val filePath = args[1] as String
+            val version = args[2] as String
+            val changelog = (args.getOrNull(3) as? Array<*>)?.joinToString(" ")
+            val dependencies = args.getOrNull(4) as? String
 
-            val type = try {
-                MarketplaceItemType.valueOf(typeStr.uppercase())
-            } catch (_: IllegalArgumentException) {
-                throw CommandException(translation("liquidbounce.command.marketplace.error.invalidItemType"))
+            val file = File(filePath)
+            if (!file.exists()) {
+                throw CommandException(translation("liquidbounce.command.marketplace.error.fileNotFound", filePath))
             }
 
-            withScope {
-                val response = MarketplaceApi.createMarketplaceItem(
+            try {
+                MarketplaceApi.createMarketplaceItemRevision(
                     clientAccount.takeSession(),
-                    name,
-                    type,
-                    description
+                    id,
+                    file,
+                    version,
+                    changelog,
+                    dependencies
                 )
 
                 chat(
                     regular(
                         command.result(
                             "success",
-                            variable(response.id.toString()),
-                            variable(response.name)
+                            variable(version),
+                            variable(id.toString())
                         )
                     )
                 )
+            } catch (@Suppress("SwallowedException") e: Exception) {
+                logger.error("Failed to upload marketplace item revision", e)
+
+                throw CommandException(translation(
+                    "liquidbounce.command.marketplace.error.updateFailed",
+                    id.toString(),
+                    e.message ?: "Unknown error"
+                ))
             }
         }
         .build()

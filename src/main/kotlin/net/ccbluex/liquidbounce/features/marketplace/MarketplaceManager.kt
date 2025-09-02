@@ -53,6 +53,8 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
     }
 
     suspend fun subscribe(itemId: Int, type: MarketplaceItemType) {
+        check(!type.isSubscribable) { "Type $type is not subscribable" }
+
         if (isSubscribed(itemId)) {
             return
         }
@@ -63,13 +65,12 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         ConfigSystem.storeConfigurable(this)
     }
 
-    fun unsubscribe(itemId: Int) {
-        subscribedItems.removeIf { it.id == itemId }
+    suspend fun unsubscribe(itemId: Int) {
+        val item = subscribedItems.find { item -> item.id == itemId } ?: error("Item $itemId not found")
 
-        val itemFolder = File(marketplaceRoot, itemId.toString())
-        if (itemFolder.exists()) {
-            itemFolder.deleteRecursively()
-        }
+        check(!item.itemDir.exists() || !item.itemDir.deleteRecursively()) { "Failed to delete item directory" }
+
+        subscribedItems.remove(item)
         ConfigSystem.storeConfigurable(this)
     }
 

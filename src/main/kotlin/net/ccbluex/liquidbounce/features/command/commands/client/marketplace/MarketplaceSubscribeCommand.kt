@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Subscribe to marketplace item
  */
-object SubscribeCommand : CommandFactory {
+object MarketplaceSubscribeCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("subscribe")
         .parameter(
@@ -44,30 +44,28 @@ object SubscribeCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val id = args[0] as Int
 
             if (MarketplaceManager.isSubscribed(id)) {
                 chat(regular(command.result("alreadySubscribed", variable(id.toString()))))
-                return@handler
+                return@suspendHandler
             }
 
-            withScope {
-                try {
-                    // Verify item exists and is not pending
-                    val item = MarketplaceApi.getMarketplaceItem(id)
-                    if (item.status != MarketplaceItemStatus.ACTIVE) {
-                        throw CommandException(translation("liquidbounce.command.marketplace.error.itemPending"))
-                    }
-
-                    MarketplaceManager.subscribe(id, item.type)
-                    chat(regular(command.result("success", variable(id.toString()))))
-                } catch (e: Exception) {
-                    chat(regular(command.result("error.updateFailed",
-                        variable(id.toString()),
-                        variable(e.message ?: "Unknown error")
-                    )))
+            try {
+                // Verify the item exists and is not pending
+                val item = MarketplaceApi.getMarketplaceItem(id)
+                if (item.status != MarketplaceItemStatus.ACTIVE) {
+                    throw CommandException(translation("liquidbounce.command.marketplace.error.itemPending"))
                 }
+
+                MarketplaceManager.subscribe(id, item.type)
+                chat(regular(command.result("success", variable(id.toString()))))
+            } catch (e: Exception) {
+                chat(regular(command.result("error.updateFailed",
+                    variable(id.toString()),
+                    variable(e.message ?: "Unknown error")
+                )))
             }
         }
         .build()

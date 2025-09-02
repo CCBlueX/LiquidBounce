@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * List marketplace item revisions
  */
-object ListRevisionsCommand : CommandFactory {
+object MarketplaceListRevisionsCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("list")
         .parameter(
@@ -41,33 +41,31 @@ object ListRevisionsCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .suspendHandler { command, args ->
             val id = args[0] as Int
 
-            withScope {
-                val response = MarketplaceApi.getMarketplaceItemRevisions(id)
+            val response = MarketplaceApi.getMarketplaceItemRevisions(id)
 
-                // Filter out pending revisions
-                val activeRevisions = response.items.filter { it.status != MarketplaceItemStatus.PENDING }
+            // Filter out pending revisions
+            val activeRevisions = response.items.filter { it.status != MarketplaceItemStatus.PENDING }
 
-                if (activeRevisions.isEmpty()) {
-                    chat(regular(command.result("noRevisions")))
-                    return@withScope
-                }
+            if (activeRevisions.isEmpty()) {
+                chat(regular(command.result("noRevisions")))
+                return@suspendHandler
+            }
 
-                chat(regular(command.result("header", variable(id.toString()))))
+            chat(regular(command.result("header", variable(id.toString()))))
 
-                for (revision in activeRevisions) {
-                    chat(
-                        regular(
-                            command.result(
-                                "revision",
-                                variable(revision.version),
-                                variable(revision.createdAt)
-                            )
+            for (revision in activeRevisions) {
+                chat(
+                    regular(
+                        command.result(
+                            "revision",
+                            variable(revision.version),
+                            variable(revision.createdAt)
                         )
                     )
-                }
+                )
             }
         }
         .build()
