@@ -20,11 +20,7 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -394,6 +390,8 @@ object LiquidBounce : EventListener {
         }
         isInitialized = false
         logger.info("Shutting down client...")
+
+        ThemeManager.shutdown()
 
         // Unregister all event listener and stop all running tasks
         ChunkScanner.ChunkScannerThread.stopThread()

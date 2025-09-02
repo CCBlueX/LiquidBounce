@@ -213,6 +213,17 @@ object ThemeManager : Configurable("theme") {
         activeTheme = Theme(name)
     }
 
+    fun shutdown() {
+        try {
+            if (activeTheme != defaultTheme) {
+                activeTheme.close()
+                activeTheme = defaultTheme
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to close active theme", e)
+        }
+    }
+
     data class Route(val theme: Theme, val url: String)
 
 }
