@@ -36,9 +36,9 @@ import java.io.File
 
 object CommandScript : CommandFactory {
 
-    private val listScriptFiles = AutoCompletionProvider { prefix: String, _ ->
-        ScriptManager.scripts.filter { it.file.name.startsWith(prefix) }
-            .map { it.file.name.removeSuffix(".js") }
+    private val listFilesInScriptFolder = AutoCompletionProvider { prefix: String, _ ->
+        ScriptManager.root.listFiles()?.filter { it.name.startsWith(prefix) }
+            ?.map { it.name } ?: emptyList()
     }
 
     override fun createCommand(): Command {
@@ -56,11 +56,11 @@ object CommandScript : CommandFactory {
 
     private fun editSubcommand() = CommandBuilder.begin("edit").parameter(
         ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listScriptFiles)
+            .autocompletedWith(listFilesInScriptFolder)
             .build()
     ).handler { command, args ->
         val name = args[0] as String
-        val scriptFile = ScriptManager.root.resolve("$name.js")
+        val scriptFile = ScriptManager.root.resolve(name)
 
         if (!scriptFile.exists()) {
             chat(regular(command.result("notFound", variable(name))))
@@ -93,7 +93,7 @@ object CommandScript : CommandFactory {
             ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
-                .autocompletedWith(listScriptFiles)
+                .autocompletedWith(listFilesInScriptFolder)
                 .build()
 
         )
@@ -132,7 +132,7 @@ object CommandScript : CommandFactory {
         )
         .handler { command, args ->
             val name = args[0] as String
-            val scriptFile = ScriptManager.root.resolve("$name.js")
+            val scriptFile = ScriptManager.root.resolve(name)
 
             if (!scriptFile.exists()) {
                 chat(regular(command.result("notFound", variable(name))))
@@ -216,11 +216,11 @@ object CommandScript : CommandFactory {
 
     private fun loadSubcommand() = CommandBuilder.begin("load").parameter(
         ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listScriptFiles)
+            .autocompletedWith(listFilesInScriptFolder)
             .build()
     ).handler { command, args ->
         val name = args[0] as String
-        val scriptFile = ScriptManager.root.resolve("$name.js")
+        val scriptFile = ScriptManager.root.resolve(name)
 
         if (!scriptFile.exists()) {
             chat(regular(command.result("notFound", variable(name))))

@@ -64,6 +64,8 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
             VelocityBlocksMC,
 
             // Anti cheat modes
+            VelocityGrim2371,
+            VelocityGrim2344,
             VelocityAAC442,
             VelocityKarhu,
             VelocityExemptGrim117,

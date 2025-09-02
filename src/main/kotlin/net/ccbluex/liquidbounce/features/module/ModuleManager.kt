@@ -207,7 +207,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         }
 
         // Store modules configuration after world change, happens on disconnect as well
-        ConfigSystem.storeConfigurable(modulesConfigurable)
+        ConfigSystem.store(modulesConfigurable)
     }
 
     /**
@@ -377,6 +377,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoBreak,
             ModuleAutoFish,
             ModuleAutoRespawn,
+            ModuleAutoWindCharge,
             ModuleOffhand,
             ModuleAutoShop,
             ModuleAutoWalk,

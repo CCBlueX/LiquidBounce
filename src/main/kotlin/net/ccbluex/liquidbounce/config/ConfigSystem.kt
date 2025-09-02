@@ -24,10 +24,10 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
@@ -144,23 +144,27 @@ object ConfigSystem {
      */
     fun loadAll() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
-            configurable.jsonFile.runCatching {
-                if (!exists()) {
-                    // Do not try to load a non-existing file
-                    return@runCatching
-                }
+            load(configurable)
+        }
+    }
 
-                logger.debug("Reading config ${configurable.loweredName}...")
-                deserializeConfigurable(configurable, bufferedReader())
-            }.onSuccess {
-                logger.info("Successfully loaded config '${configurable.loweredName}'.")
-            }.onFailure {
-                logger.error("Unable to load config ${configurable.loweredName}", it)
+    fun load(configurable: Configurable) {
+        configurable.jsonFile.runCatching {
+            if (!exists()) {
+                // Do not try to load a non-existing file
+                return@runCatching
             }
 
-            // After loading the config, we need to store it again to make sure all values are up to date
-            storeConfigurable(configurable)
+            logger.debug("Reading config ${configurable.loweredName}...")
+            deserializeConfigurable(configurable, bufferedReader())
+        }.onSuccess {
+            logger.info("Successfully loaded config '${configurable.loweredName}'.")
+        }.onFailure {
+            logger.error("Unable to load config ${configurable.loweredName}", it)
         }
+
+        // After loading the config, we need to store it again to make sure all values are up to date
+        store(configurable)
     }
 
     /**
@@ -170,15 +174,15 @@ object ConfigSystem {
      * These configurables are root configurables, which always create a new file with their name.
      */
     fun storeAll() {
-        configurables.forEach(::storeConfigurable)
+        configurables.forEach(::store)
     }
 
     /**
-     * Store a configurable to a file (will be created if not exists).
+     * Store configurable to a file (will be created if not exists).
      *
      * The configurable should be known to the config system.
      */
-    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
+    fun store(configurable: Configurable) { // Make a new .json file to save our root configurable
         configurable.jsonFile.runCatching {
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }

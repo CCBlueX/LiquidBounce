@@ -49,7 +49,7 @@ object ClientItemGroups : Configurable("tabs") {
         }
 
         containers.add(compoundString)
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
 
         RenderSystem.recordRenderCall {
             chat("§aAdded container to creative inventory")
@@ -62,12 +62,12 @@ object ClientItemGroups : Configurable("tabs") {
 
     fun clearContainers() {
         containers.clear()
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
     }
 
     fun removeContainer(index: Int) {
         containers.removeAt(index)
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
     }
 
     /**

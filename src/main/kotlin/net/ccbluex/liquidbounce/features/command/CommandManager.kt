@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.*
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.*
@@ -131,6 +132,7 @@ object CommandManager : Iterable<Command> by commands {
             CommandModels,
             CommandTranslate,
             CommandAutoTranslate,
+            CommandMarketplace
         )
 
         commands.forEach {

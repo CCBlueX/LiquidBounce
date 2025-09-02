@@ -35,6 +35,9 @@ object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
+    val isSkippingBrowser = System.getenv("SKIP_BROWSER") == "true"
+        || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
+
     init {
         PersistentLocalStorage
     }
@@ -44,6 +47,10 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
+        if (isSkippingBrowser) {
+            logger.warn("Environment variable 'SKIP_BROWSER' is set to 'true'.")
+            return
+        }
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }
 

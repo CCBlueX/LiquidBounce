@@ -21,11 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.clickablePath
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Util
 
 object CommandClientThemeSubcommand {
@@ -46,11 +42,11 @@ object CommandClientThemeSubcommand {
             ParameterBuilder.begin<String>("theme")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                 .autocompletedWith { s, _ ->
-                    ThemeManager.themes().filter { it.startsWith(s, true) }
+                    ThemeManager.themes.filter { it.startsWith(s, true) }
                 }
                 .build()
         )
-        .handler { command, args ->
+        .handler { _, args ->
             val name = args[0] as String
 
             if (name.equals("default", true)) {
@@ -73,7 +69,7 @@ object CommandClientThemeSubcommand {
             @Suppress("SpreadOperator")
             (chat(
                 regular("Available themes: "),
-                *ThemeManager.themes().flatMapIndexed { index, name ->
+                *ThemeManager.themes.flatMapIndexed { index, name ->
                     listOf(
                         regular(if (index == 0) "" else ", "),
                         variable(name)

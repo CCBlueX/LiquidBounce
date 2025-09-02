@@ -296,6 +296,10 @@
   "liquidbounce.command.script.subcommand.unload.result.notFound": "Script named %s does not exist.",
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "Script named %s is not loaded.",
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.script.subcommand.debug.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.script.subcommand.debug.result.alreadyLoaded": "Script named %s is already loaded",
+  "liquidbounce.command.script.subcommand.debug.result.failedToLoad": "Failed to load script with debug option enabled due to '%s'.",
+  "liquidbounce.command.script.subcommand.debug.result.loaded": "Script named %s has been loaded with debug option enabled.",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
   "liquidbounce.command.skull.parameter.name.description": "Name of the player.",
   "liquidbounce.command.skull.result.mustBeCreative": "Creative mode required!",
@@ -360,6 +364,7 @@
   "liquidbounce.command.autodisable.subcommand.add.result.moduleAdded": "Module \"%s\" has been added.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleNotPresent": "Module \"%s\" is not present.",
   "liquidbounce.command.autodisable.subcommand.remove.result.moduleRemoved": "Module \"%s\" has been removed.",
+
   "liquidbounce.command.models.subcommand.create.result.modelExists": "❌ Model %s already exists.",
   "liquidbounce.command.models.subcommand.create.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.create.result.samplesLoaded": "✔ Loaded %s samples in %s.",
@@ -368,6 +373,7 @@
   "liquidbounce.command.models.subcommand.create.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.create.result.trainingFailed": "❌ Training failed with error: %s",
   "liquidbounce.command.models.subcommand.create.result.invalidName": "❌ Invalid model name. Model name must be alphanumeric and contain no spaces.",
+
   "liquidbounce.command.models.subcommand.improve.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.improve.result.trainingStart": "⚡ Starting training for model %s...",
   "liquidbounce.command.models.subcommand.improve.result.noSamples": "❌ No samples found for model %s.",
@@ -375,11 +381,91 @@
   "liquidbounce.command.models.subcommand.improve.result.preparedData": "✔ Prepared dataset in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingEnd": "✔ Model %s trained and saved successfully in %s.",
   "liquidbounce.command.models.subcommand.improve.result.trainingFailed": "❌ Training failed with error: %s",
+
   "liquidbounce.command.models.subcommand.reload.result.modelsReloaded": "✔ Models reloaded.",
+
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ Model %s not found.",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ Model %s deleted.",
+
+  "liquidbounce.command.marketplace.description": "Manage marketplace items and interact with the LiquidBounce marketplace.",
+
+  "liquidbounce.command.marketplace.subcommand.list.description": "Lists all available marketplace items.",
+  "liquidbounce.command.marketplace.subcommand.list.parameter.page.description": "The page number to display.",
+  "liquidbounce.command.marketplace.subcommand.list.result.noItems": "No items found in the marketplace.",
+  "liquidbounce.command.marketplace.subcommand.list.result.header": "=== Marketplace Items (Page %s/%s) ===",
+  "liquidbounce.command.marketplace.subcommand.list.result.item": "#%s %s [%s] %s",
+  "liquidbounce.command.marketplace.subcommand.list.result.hover": "Click to %s item #%s.",
+
+  "liquidbounce.command.marketplace.subcommand.search.description": "Search for marketplace items.",
+  "liquidbounce.command.marketplace.subcommand.search.parameter.query.description": "The search query.",
+  "liquidbounce.command.marketplace.subcommand.search.result.noResults": "No items found matching your search.",
+  "liquidbounce.command.marketplace.subcommand.search.result.searching": "Searching marketplace items...",
+  "liquidbounce.command.marketplace.subcommand.search.result.header": "=== Marketplace Items (Page %s/%s) ===",
+  "liquidbounce.command.marketplace.subcommand.search.result.item": "#%s %s [%s] %s",
+  "liquidbounce.command.marketplace.subcommand.search.result.hover": "Click to %s item #%s.",
+
+  "liquidbounce.command.marketplace.subcommand.subscribe.description": "Subscribe to a marketplace item to receive updates.",
+  "liquidbounce.command.marketplace.subcommand.subscribe.parameter.id.description": "The ID of the item to subscribe to.",
+  "liquidbounce.command.marketplace.subcommand.subscribe.result.success": "Successfully subscribed to item #%s. Updates will be automatically downloaded.",
+  "liquidbounce.command.marketplace.subcommand.subscribe.result.alreadySubscribed": "You are already subscribed to item #%s.",
+
+  "liquidbounce.command.marketplace.subcommand.unsubscribe.description": "Unsubscribe from a marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.unsubscribe.parameter.id.description": "The ID of the item to unsubscribe from.",
+  "liquidbounce.command.marketplace.subcommand.unsubscribe.result.success": "Successfully unsubscribed from item #%s.",
+  "liquidbounce.command.marketplace.subcommand.unsubscribe.result.notSubscribed": "You are not subscribed to item #%s.",
+
+  "liquidbounce.command.marketplace.subcommand.update.description": "Either update all subscribed items or update a specific item.",
+  "liquidbounce.command.marketplace.subcommand.update.parameter.id.description": "The ID of the item to update.",
+  "liquidbounce.command.marketplace.subcommand.update.result.success": "Successfully updated item #%s to version #%s.",
+  "liquidbounce.command.marketplace.subcommand.update.result.noUpdate": "Item #%s is already up to date.",
+  "liquidbounce.command.marketplace.subcommand.update.result.updating": "Updating item #%s...",
+  "liquidbounce.command.marketplace.subcommand.update.result.updatingAll": "Updating all subscribed items...",
+  "liquidbounce.command.marketplace.subcommand.update.result.updatedAll": "Successfully updated all subscribed items.",
+  "liquidbounce.command.marketplace.subcommand.update.result.noSubscribedItems": "You are not subscribed to any items.",
+
+  "liquidbounce.command.marketplace.subcommand.item.description": "Manage marketplace items.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.create.description": "Create a new marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.create.parameter.name.description": "The name of the item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.create.parameter.type.description": "The type of the item (config, script, theme, other).",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.create.parameter.description.description": "The description of the item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.create.result.success": "Created marketplace item #%s: %s",
+
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.description": "Edit an existing marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.parameter.id.description": "The ID of the item to edit.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.parameter.name.description": "The new name of the item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.parameter.type.description": "The new type of the item (config, script, theme, other).",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.parameter.description.description": "The new description of the item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.edit.result.success": "Updated marketplace item #%s: %s",
+
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.delete.description": "Delete a marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.delete.parameter.id.description": "The ID of the item to delete.",
+  "liquidbounce.command.marketplace.subcommand.item.subcommand.delete.result.success": "Successfully deleted marketplace item #%s",
+
+  "liquidbounce.command.marketplace.subcommand.revisions.description": "List revisions of a marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.revisions.parameter.id.description": "The ID of the item.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.noRevisions": "No revisions found for this item.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.header": "=== Item #%s Revisions ===",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.list.result.revision": "%s (%s)",
+
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.description": "Upload a new revision for a marketplace item.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.id.description": "The ID of the item.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.file.description": "The file to upload.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.version.description": "The version number.",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.changelog.description": "The changelog message (optional).",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.parameter.dependencies.description": "Comma-separated list of revision IDs this revision depends on (optional).",
+  "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.result.success": "Successfully uploaded revision %s for item #%s",
+
+  "liquidbounce.command.marketplace.error.notLoggedIn": "You must be logged in to perform this action.",
+  "liquidbounce.command.marketplace.error.invalidItemType": "Invalid item type. Available types: config, script, theme, other",
+  "liquidbounce.command.marketplace.error.itemNotFound": "Item #%s not found.",
+  "liquidbounce.command.marketplace.error.fileNotFound": "File not found: %s",
+  "liquidbounce.command.marketplace.error.fileReadError": "Failed to read file: %s",
+  "liquidbounce.command.marketplace.error.installFailed": "Failed to install item #%s: %s",
+  "liquidbounce.command.marketplace.error.updateFailed": "Failed to update item #%s: %s",
+
   "liquidbounce.unsupportedDeepLearning": "❌ The deep learning engine has not been initialized. Your system might not be supported.",
   "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "The deep learning engine is required by Minarai, therefore falling back to %s angle smoothing.",
+
   "liquidbounce.commandManager.commandExecuting": "Command \"%s\" is already executing, please wait...",
   "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
@@ -724,7 +810,6 @@
   "liquidbounce.module.noEntityInteract.description": "Prevents you from interacting with entities.",
   "liquidbounce.module.autoPearl.description": "Aims and throws a pearl at an enemies pearl trajectory.",
   "liquidbounce.module.replenish.description": "Automatically refills your hotbar with items from your inventory when the count drops to a certain threshold.",
-  "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
   "liquidbounce.module.capes.description": "Display a cape visible only to you.",
   "liquidbounce.module.halo.description": "Displays a BlueArchive character aura above the player's head.",
   "liquidbounce.module.packetQueueColor.description": "Set the player model color in PacketQueue.",
@@ -762,4 +847,6 @@
   "liquidbounce.module.autoReport.description": "Automatically report players who defeat you.",
   "liquidbounce.module.clientTitle.description":"Allows you to customize the title of the client window.",
   "liquidbounce.module.autoSwap.description": "Auto switches the off-hand to GoldenApple or Throwable"
+  "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
+  "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump."
 }

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
@@ -33,18 +33,16 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import java.net.BindException
 import java.net.Socket
-import kotlin.concurrent.thread
 
 /**
  * A client server implementation.
  *
  * Allows the browser to communicate with the client. (e.g. for UIs)
  */
-
 object ClientInteropServer {
 
-    internal var httpServer = HttpServer()
-    private var socketEventHandler = SocketEventListener()
+    internal val httpServer = HttpServer()
+    private val socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
 
@@ -66,7 +64,8 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/", ThemeManager.themesFolder)
+                file("/theme", ThemeManager.themesFolder)
+                file("/marketplace", MarketplaceManager.marketplaceRoot)
             }
 
             // Add CORS middleware
@@ -78,7 +77,8 @@ object ClientInteropServer {
             ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
         }
 
-        thread(name = "netty-websocket", isDaemon = true, block = ::startServer)
+        // Start the HTTP server
+        startServer()
     }
 
     private var attempt = 0

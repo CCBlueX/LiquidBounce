@@ -20,9 +20,12 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
@@ -45,6 +48,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.heads
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
@@ -157,8 +161,6 @@ object LiquidBounce : EventListener {
      *
      * The thread should be the main render thread.
      */
-
-
     private fun initializeClient() {
         if (isInitialized) {
             return
@@ -179,11 +181,9 @@ object LiquidBounce : EventListener {
 
         // Check for AMD Vega iGPU
         if (HAS_AMD_VEGA_APU) {
-            logger.info(
-                "AMD Vega iGPU detected, enabling different line smooth handling. " +
-                    "If you believe this is a mistake, please create an issue at " +
-                    "https://github.com/CCBlueX/LiquidBounce/issues."
-            )
+            logger.info("AMD Vega iGPU detected, enabling different line smooth handling. " +
+                "If you believe this is a mistake, please create an issue at " +
+                "https://github.com/CCBlueX/LiquidBounce/issues.")
         }
 
         // Do backup before loading configs
@@ -242,6 +242,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
@@ -271,38 +272,42 @@ object LiquidBounce : EventListener {
      * such as translations, cosmetics, player heads, configs and so on,
      * which do not rely on the main thread.
      */
-    private fun initializeResources() = runBlocking {
-        listOf(
-            scope.async {
+    private fun initializeResources() = runBlocking(Dispatchers.IO + CoroutineName("Resource Initializer")) {
+        logger.info("Initializing API...")
+        // Lookup API config
+        ApiConfig.config
+
+        supervisorScope {
+            launch {
                 // Load translations
                 LanguageManager.loadDefault()
-            },
-            scope.async {
-                val update = update ?: return@async
+            }
+            launch {
+                val update = update ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
-            },
-            scope.async {
+            }
+            launch {
                 // Load cosmetics
                 CosmeticService.refreshCarriers(force = true) {
                     logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
-            },
-            scope.async {
+            }
+            launch {
                 // Download player heads
                 heads
-            },
-            scope.async {
+            }
+            launch {
                 // Load configs
                 AutoConfig.reloadConfigs()
-            },
-            scope.async {
+            }
+            launch {
                 // IPC configuration
                 ipcConfiguration
-            },
-            scope.async {
+            }
+            launch {
                 IpInfoApi.original
-            },
-            scope.async {
+            }
+            launch {
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -311,11 +316,11 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.storeConfigurable(ClientAccountManager)
+                        ConfigSystem.store(ClientAccountManager)
                     }
                 }
-            },
-            scope.async {
+            }
+            launch {
                 ThemeManager.themesFolder.listFiles()
                     ?.filter { file -> file.isDirectory }
                     ?.forEach { file ->
@@ -331,12 +336,14 @@ object LiquidBounce : EventListener {
                         }
                     }
             }
-        ).awaitAll()
+        }
+
+        logger.info("API initialization done.")
     }
 
     /**
      * Prepares the GUI stage of the client.
-     * This will load [ThemeManager], as well as the  [BrowserBackendManager] and [ClientInteropServer].
+     * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
         // Load theme and component overlay
@@ -365,6 +372,19 @@ object LiquidBounce : EventListener {
                     // and we don't want to crash the client if it fails.
                     logger.info("Failed to initialize deep learning.", exception)
                 }
+            }
+
+            launch("Marketplace") { task ->
+                runCatching {
+                    // Preload marketplace items
+                    ConfigSystem.load(MarketplaceManager)
+                    MarketplaceManager.updateAll(task)
+                    ConfigSystem.store(MarketplaceManager)
+                }.onFailure { exception ->
+                    logger.error("Failed to update marketplace items.", exception)
+                }
+
+                task.isCompleted = true
             }
         }
 
@@ -396,8 +416,11 @@ object LiquidBounce : EventListener {
         // Save all configurations
         ConfigSystem.storeAll()
 
-        // Shutdown browser as last step
+        // Shutdown browser
         BrowserBackendManager.stop()
+
+        // Stop backend server
+        ClientInteropServer.httpServer.stop()
     }
 
     /**

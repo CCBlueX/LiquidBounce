@@ -38,7 +38,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
  *
  * https://github.com/GrimAnticheat/Grim/issues/1133
  */
-internal object VelocityExemptGrim117 : VelocityMode("ExemptGrim117") {
+internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
 
     private var alternativeBypass by boolean("AlternativeBypass", true)
 

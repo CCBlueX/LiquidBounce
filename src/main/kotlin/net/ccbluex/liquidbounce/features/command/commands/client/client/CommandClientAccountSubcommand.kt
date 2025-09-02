@@ -26,11 +26,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
-import net.ccbluex.liquidbounce.utils.client.browseUrl
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 
 object CommandClientAccountSubcommand {
     fun accountCommand() = CommandBuilder.begin("account")
@@ -72,7 +68,7 @@ object CommandClientAccountSubcommand {
             chat(regular("Logging out..."))
             withContext(Dispatchers.IO) {
                 ClientAccountManager.clientAccount = EMPTY_ACCOUNT
-                ConfigSystem.storeConfigurable(ClientAccountManager)
+                ConfigSystem.store(ClientAccountManager)
                 chat(regular("Successfully logged out."))
             }
         }.build()
@@ -87,7 +83,7 @@ object CommandClientAccountSubcommand {
             chat(regular("Starting OAuth authorization process..."))
             val account = startAuth { browseUrl(it) }
             ClientAccountManager.clientAccount = account
-            ConfigSystem.storeConfigurable(ClientAccountManager)
+            ConfigSystem.store(ClientAccountManager)
             chat(regular("Successfully authorized client."))
         }.build()
 }
