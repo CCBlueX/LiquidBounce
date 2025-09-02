@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.io.File
 
@@ -70,6 +71,11 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         item.install(item.getNewestRevisionId() ?: return)
         subscribedItems.add(item)
         ConfigSystem.storeConfigurable(this)
+
+        when (item.type) {
+            MarketplaceItemType.SCRIPT -> ScriptManager.reload()
+            else -> {}
+        }
     }
 
     suspend fun unsubscribe(itemId: Int) {
@@ -79,6 +85,11 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
 
         subscribedItems.remove(item)
         ConfigSystem.storeConfigurable(this)
+
+        when (item.type) {
+            MarketplaceItemType.SCRIPT -> ScriptManager.reload()
+            else -> {}
+        }
     }
 
 }
