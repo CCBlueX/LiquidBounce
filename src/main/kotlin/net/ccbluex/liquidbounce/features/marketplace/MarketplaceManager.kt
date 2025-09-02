@@ -66,15 +66,29 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         item.install(updateRevisionId, subTask)
         subTask?.isCompleted = true
         logger.info("Successfully updated item ${item.id} (${item.type})")
-        command?.run { chat(regular(command.result("success", variable(item.id.toString()), variable(updateRevisionId.toString())))) }
+        command?.run {
+            chat(
+                regular(
+                    command.result(
+                        "success",
+                        variable(item.id.toString()),
+                        variable(updateRevisionId.toString())
+                    )
+                )
+            )
+        }
     }.onFailure { e ->
         logger.error("Failed to update item ${item.id}", e)
         if (command != null) {
-            chat(markAsError((translation(
-                "liquidbounce.command.marketplace.error.updateFailed",
-                item.id,
-                e.message ?: "Unknown error"
-            ))))
+            chat(
+                markAsError(
+                    (translation(
+                        "liquidbounce.command.marketplace.error.updateFailed",
+                        item.id,
+                        e.message ?: "Unknown error"
+                    ))
+                )
+            )
         }
     }
 

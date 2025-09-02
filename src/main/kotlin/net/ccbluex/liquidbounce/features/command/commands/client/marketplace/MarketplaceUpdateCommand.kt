@@ -52,7 +52,12 @@ object MarketplaceUpdateCommand : CommandFactory {
 
             if (id != null) {
                 val item = MarketplaceManager.getItem(id)
-                    ?: throw CommandException(translation("command.marketplace.error.itemNotFound", variable(id.toString())))
+                    ?: throw CommandException(
+                        translation(
+                            "command.marketplace.error.itemNotFound",
+                            variable(id.toString())
+                        )
+                    )
 
                 MarketplaceManager.update(item, command = command)
             } else {
