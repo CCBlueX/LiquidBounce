@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.theme.component.components.WebComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
@@ -48,7 +49,7 @@ abstract class ComponentFactory {
         override fun createComponent(): WebComponent = WebComponent(
             name,
             enabled,
-            Alignment.fromJson(alignment),
+            accessibleInteropGson.fromJson(alignment, Alignment::class.java),
             tweaks ?: emptyArray(),
             values ?: emptyArray()
         )

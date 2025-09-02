@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
@@ -34,24 +33,6 @@ class Alignment(
     companion object {
         @JvmStatic
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
-
-        /**
-         * Deserialize an alignment from a JSON object.
-         *
-         * TODO: Deserialize alignment using GSON Deserializer
-         */
-        fun fromJson(alignment: JsonObject) = Alignment(
-            ScreenAxisX.entries.find {
-                it.choiceName == alignment.get("horizontalAlignment").asString
-            }!!,
-            alignment.get("horizontalOffset").asInt,
-            ScreenAxisY.entries.find {
-                it.choiceName == alignment.get("verticalAlignment").asString
-            }!!,
-            alignment.get("verticalOffset").asInt
-        )
-
-
     }
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
@@ -66,21 +47,19 @@ class Alignment(
         val screenWidth = mc.window.scaledWidth.toFloat()
         val screenHeight = mc.window.scaledHeight.toFloat()
 
-        val x =
-            when (horizontalAlignment) {
-                ScreenAxisX.LEFT -> horizontalOffset.toFloat()
-                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
-                ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
-                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
-            }
+        val x = when (horizontalAlignment) {
+            ScreenAxisX.LEFT -> horizontalOffset.toFloat()
+            ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
+            ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
+            ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
+        }
 
-        val y =
-            when (verticalAlignment) {
-                ScreenAxisY.TOP -> verticalOffset.toFloat()
-                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
-                ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-                ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
-            }
+        val y = when (verticalAlignment) {
+            ScreenAxisY.TOP -> verticalOffset.toFloat()
+            ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
+            ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
+            ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
+        }
 
         return BoundingBox2f(x, y, x + width, y + height)
     }
@@ -98,28 +77,5 @@ class Alignment(
         CENTER_TRANSLATED("CenterTranslated"),
         BOTTOM("Bottom"),
     }
-
-    /**
-     * Converts the alignement configurable to style (CSS)
-     */
-    fun toStyle() = """
-        position: fixed;
-        ${when (horizontalAlignment) {
-        ScreenAxisX.LEFT -> "left: ${horizontalOffset}px"
-        ScreenAxisX.RIGHT -> "right: ${horizontalOffset}px"
-        ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalOffset}px)"
-        ScreenAxisX.CENTER_TRANSLATED -> "left: calc(50% + ${horizontalOffset}px)"
-    }};
-        ${when (verticalAlignment) {
-        ScreenAxisY.TOP -> "top: ${verticalOffset}px"
-        ScreenAxisY.BOTTOM -> "bottom: ${verticalOffset}px"
-        ScreenAxisY.CENTER -> "top: calc(50% + ${verticalOffset}px)"
-        ScreenAxisY.CENTER_TRANSLATED -> "top: calc(50% + ${verticalOffset}px)"
-    }};
-        transform: translate(
-            ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "-50%" else "0"},
-            ${if (verticalAlignment == ScreenAxisY.CENTER_TRANSLATED) "-50%" else "0"}
-        );
-    """.trimIndent().replace("\n", "")
 
 }
