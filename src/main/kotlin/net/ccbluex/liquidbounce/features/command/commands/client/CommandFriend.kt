@@ -123,14 +123,7 @@ object CommandFriend : CommandFactory {
                 ParameterBuilder
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith { begin, _ ->
-                        FriendManager.friends.filter {
-                            it.name.startsWith(
-                                begin,
-                                true
-                            )
-                        }.map { it.name }
-                    }
+                    .autocompletedFrom { FriendManager.friends.map { it.name } }
                     .required()
                     .build()
             )

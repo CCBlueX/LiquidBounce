@@ -46,7 +46,7 @@ object CommandBind : CommandFactory {
                 ParameterBuilder
                     .begin<String>("key")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith { begin, _ -> availableInputKeys.filter { it.startsWith(begin) } }
+                    .autocompletedFrom { availableInputKeys }
                     .required()
                     .build()
             )

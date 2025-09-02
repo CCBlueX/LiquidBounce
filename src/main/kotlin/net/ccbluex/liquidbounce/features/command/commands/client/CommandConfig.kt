@@ -144,7 +144,7 @@ object CommandConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autocompleteConfigs(begin) }
+                .autocompletedFrom { configs?.map { it.settingId } ?: emptyList() }
                 .required()
                 .build()
         )
@@ -184,9 +184,5 @@ object CommandConfig : CommandFactory {
             }
         }
         .build()
-
-    private fun autocompleteConfigs(begin: String): List<String> {
-        return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
-    }
 
 }

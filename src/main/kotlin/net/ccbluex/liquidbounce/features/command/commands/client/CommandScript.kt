@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
@@ -36,10 +35,8 @@ import java.io.File
 
 object CommandScript : CommandFactory {
 
-    private val listFilesInScriptFolder = AutoCompletionProvider { prefix: String, _ ->
-        ScriptManager.root.listFiles()?.filter { it.name.startsWith(prefix) }
-            ?.map { it.name } ?: emptyList()
-    }
+    private fun ParameterBuilder<*>.autocompletedFromScriptNames() =
+        autocompletedFrom { ScriptManager.root.listFiles()?.map { it.name } ?: emptyList() }
 
     override fun createCommand(): Command {
         return CommandBuilder.begin("script")
@@ -55,8 +52,10 @@ object CommandScript : CommandFactory {
     }
 
     private fun editSubcommand() = CommandBuilder.begin("edit").parameter(
-        ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listFilesInScriptFolder)
+        ParameterBuilder.begin<String>("name")
+            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+            .required()
+            .autocompletedFromScriptNames()
             .build()
     ).handler { command, args ->
         val name = args[0] as String
@@ -93,7 +92,7 @@ object CommandScript : CommandFactory {
             ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
-                .autocompletedWith(listFilesInScriptFolder)
+                .autocompletedFromScriptNames()
                 .build()
 
         )
@@ -107,8 +106,8 @@ object CommandScript : CommandFactory {
                     }
                 }
                 .optional()
-                .autocompletedWith { prefix, _ ->
-                    DebugProtocol.entries.map { it.toString() }.filter { it.startsWith(prefix) }
+                .autocompletedFrom {
+                    DebugProtocol.entries.map { it.toString() }
                 }
                 .build()
         )
@@ -191,8 +190,8 @@ object CommandScript : CommandFactory {
 
     private fun unloadSubcommand() = CommandBuilder.begin("unload").parameter(
         ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith { prefix, _ ->
-                ScriptManager.scripts.filter { it.scriptName.startsWith(prefix) }.map { it.scriptName }
+            .autocompletedFrom {
+                ScriptManager.scripts.map { it.scriptName }
             }
             .build()
     ).handler { command, args ->
@@ -215,8 +214,10 @@ object CommandScript : CommandFactory {
     }.build()
 
     private fun loadSubcommand() = CommandBuilder.begin("load").parameter(
-        ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listFilesInScriptFolder)
+        ParameterBuilder.begin<String>("name")
+            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+            .required()
+            .autocompletedFromScriptNames()
             .build()
     ).handler { command, args ->
         val name = args[0] as String

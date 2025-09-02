@@ -41,9 +41,7 @@ object CommandClientThemeSubcommand {
         .parameter(
             ParameterBuilder.begin<String>("theme")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .autocompletedWith { s, _ ->
-                    ThemeManager.themes.filter { it.startsWith(s, true) }
-                }
+                .autocompletedFrom { ThemeManager.themes }
                 .build()
         )
         .handler { _, args ->

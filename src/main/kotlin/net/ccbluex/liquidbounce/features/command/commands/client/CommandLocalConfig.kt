@@ -70,9 +70,7 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { s, _ ->
-                    arrayOf("binds", "hidden").filter { it.startsWith(s) }
-                }
+                .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
                 .optional()
                 .build()
@@ -199,8 +197,7 @@ object CommandLocalConfig : CommandFactory {
         .build()
 
     private fun autoComplete(begin: String): List<String> {
-        return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
-            ?.filter { it.startsWith(begin) } ?: emptyList()
+        return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension } ?: emptyList()
     }
 
 }

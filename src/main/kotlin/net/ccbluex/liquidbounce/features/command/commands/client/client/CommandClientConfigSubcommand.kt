@@ -85,10 +85,9 @@ object CommandClientConfigSubcommand {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
+                .autocompletedFrom {
                     ConfigSystem.backupFolder.listFiles()
                         ?.map { file -> file.nameWithoutExtension }
-                        ?.filter { file -> file.startsWith(begin) }
                         ?: emptyList()
                 }
                 .required()
