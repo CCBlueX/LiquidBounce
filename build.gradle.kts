@@ -105,6 +105,14 @@ repositories {
         url = uri("https://jitpack.io")
     }
     maven {
+        name = "MeteorDevelopment"
+        url = uri("https://maven.meteordev.org/releases")
+    }
+    maven {
+        name = "MeteorSnapshots"
+        url = uri("https://maven.meteordev.org/snapshots")
+    }
+    maven {
         name = "TerraformersMC"
         url = uri("https://maven.terraformersmc.com/")
     }
@@ -134,6 +142,7 @@ dependencies {
     // Minecraft
     minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
     mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
+    modCompileOnly("meteordevelopment:baritone:${project.property("baritone_version")}-SNAPSHOT")
 
     // Fabric
     modApi("net.fabricmc:fabric-loader:${project.property("loader_version")}")

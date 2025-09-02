@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.pathing.BaritonePathManager
+import net.ccbluex.liquidbounce.utils.pathing.PathManagers
 import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
 import net.minecraft.block.Blocks
 import net.minecraft.entity.effect.StatusEffects
@@ -20,10 +22,13 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("AutoVoid"),disableOnQuit = true) {
 
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0.2f..1.0f)
+    private val settingsImpl = tree(BaritonePathManager(this))
+
     private var targetPos: Vec3d? = null
     private var ticksSinceLastSearch: Int = 0
 
@@ -39,6 +44,11 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         }
 
         val target = targetPos ?: return@handler
+        if (settingsImpl.useBaritone) {
+            PathManagers.init()
+            PathManagers.get().moveTo(BlockPos(target.x.toInt(), target.y.toInt(), target.z.toInt()), true)
+            return@handler
+        }
         val dir = Vec3d(target.x - player.pos.x, 0.0, target.z - player.pos.z)
         val distance = dir.length()
 
@@ -56,7 +66,7 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
 
         val desiredX = dir.x
         val desiredZ = dir.z
-        val desiredLen = kotlin.math.sqrt(desiredX * desiredX + desiredZ * desiredZ)
+        val desiredLen = sqrt(desiredX * desiredX + desiredZ * desiredZ)
         val nx = if (desiredLen > 1e-6) desiredX / desiredLen else 0.0
         val nz = if (desiredLen > 1e-6) desiredZ / desiredLen else 0.0
 
@@ -134,13 +144,15 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         return worldTopY <= 0
     }
 
-    override fun onDisabled() {
-        targetPos = null
-        super.onDisabled()
-    }
-
     override fun onEnabled() {
+        PathManagers.init()
         targetPos = null
         super.onEnabled()
+    }
+
+    override fun onDisabled() {
+        PathManagers.get().stop()
+        targetPos = null
+        super.onDisabled()
     }
 }
