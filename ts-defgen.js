@@ -276,7 +276,7 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
 const packageName = "liquidbounce-script-api";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
-if (Java.type("java.lang.System").getenv("CI_BUILD")) {
+if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
     work(path, packageName);
     mc.close();
 }
