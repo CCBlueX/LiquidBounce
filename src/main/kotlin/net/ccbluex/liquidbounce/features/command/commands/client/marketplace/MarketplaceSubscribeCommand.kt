@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
@@ -62,10 +63,8 @@ object MarketplaceSubscribeCommand : CommandFactory {
                 MarketplaceManager.subscribe(id, item.type)
                 chat(regular(command.result("success", variable(id.toString()))))
             } catch (e: Exception) {
-                chat(regular(command.result("error.updateFailed",
-                    variable(id.toString()),
-                    variable(e.message ?: "Unknown error")
-                )))
+                logger.error("Failed to subscribe to marketplace item", e)
+                throw CommandException(translation("liquidbounce.command.marketplace.error.installFailed", id, e.message ?: "Unknown error"))
             }
         }
         .build()

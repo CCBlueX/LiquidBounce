@@ -53,7 +53,7 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
     }
 
     suspend fun subscribe(itemId: Int, type: MarketplaceItemType) {
-        check(!type.isSubscribable) { "Type $type is not subscribable" }
+        check(type.isSubscribable) { "Type $type is not subscribable" }
 
         if (isSubscribed(itemId)) {
             return

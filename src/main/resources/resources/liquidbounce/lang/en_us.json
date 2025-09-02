@@ -445,6 +445,7 @@
   "liquidbounce.command.marketplace.error.itemNotFound": "Item #%s not found.",
   "liquidbounce.command.marketplace.error.fileNotFound": "File not found: %s",
   "liquidbounce.command.marketplace.error.fileReadError": "Failed to read file: %s",
+  "liquidbounce.command.marketplace.error.installFailed": "Failed to install item #%s: %s",
   "liquidbounce.command.marketplace.error.updateFailed": "Failed to update item #%s: %s",
 
   "liquidbounce.unsupportedDeepLearning": "❌ The deep learning engine has not been initialized. Your system might not be supported.",
