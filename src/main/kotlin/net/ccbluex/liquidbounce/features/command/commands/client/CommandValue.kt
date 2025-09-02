@@ -20,8 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.*
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -48,17 +47,17 @@ object CommandValue : CommandFactory {
     private fun setSubCommand() = CommandBuilder
         .begin("set")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueName()
+            ParameterBuilder.valueName()
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueType()
+            ParameterBuilder.valueType()
                 .required()
                 .build()
         )
@@ -89,12 +88,12 @@ object CommandValue : CommandFactory {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueName()
+            ParameterBuilder.valueName()
                 .required()
                 .build()
         )
@@ -119,7 +118,7 @@ object CommandValue : CommandFactory {
     private fun resetAllSubCommand() = CommandBuilder
         .begin("reset-all")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )

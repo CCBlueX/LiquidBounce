@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -38,7 +38,7 @@ object MarketplaceListCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("list")
         .parameter(
-            Parameters.enumChoice<MarketplaceItemType>("type") { it.isListable }
+            ParameterBuilder.enumChoice<MarketplaceItemType>("type") { it.isListable }
                 .required()
                 .build()
         )

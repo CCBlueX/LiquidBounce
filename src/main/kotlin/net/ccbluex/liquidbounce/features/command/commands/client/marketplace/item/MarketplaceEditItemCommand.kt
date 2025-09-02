@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -53,7 +53,7 @@ object MarketplaceEditItemCommand : CommandFactory {
                 .build()
         )
         .parameter(
-            Parameters.enumChoice<MarketplaceItemType>("type")
+            ParameterBuilder.enumChoice<MarketplaceItemType>("type")
                 .required()
                 .build()
         )
