@@ -108,7 +108,12 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         ignoreCase: Boolean = true,
         crossinline placeholdersProvider: () -> Iterable<String>,
     ) = autocompletedWith { begin, _ ->
-        placeholdersProvider().filter { it.startsWith(begin, ignoreCase) }
+        val placeholders = placeholdersProvider()
+        if (placeholders.none()) {
+            emptyList()
+        } else {
+            placeholders.filter { it.startsWith(begin, ignoreCase) }
+        }
     }
 
     fun build(): Parameter<T> {
