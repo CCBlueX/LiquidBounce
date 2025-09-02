@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -64,7 +65,8 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/", ThemeManager.themesFolder)
+                file("/theme", ThemeManager.themesFolder)
+                file("/marketplace", MarketplaceManager.marketplaceRoot)
             }
 
             // Add CORS middleware
