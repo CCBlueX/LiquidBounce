@@ -1,0 +1,10 @@
+{
+  "name": "TabGui",
+  "enabled": false,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 15,
+    "verticalAlignment": "Top",
+    "verticalOffset": 90
+  }
+}

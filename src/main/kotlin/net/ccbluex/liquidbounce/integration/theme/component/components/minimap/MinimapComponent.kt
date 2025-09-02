@@ -19,14 +19,14 @@
  *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
+package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeComponent
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.VertexFormat
@@ -54,14 +55,19 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-object MinimapComponent : Component("Minimap", true) {
+object MinimapComponent : NativeComponent("Minimap", false, Alignment(
+    horizontalAlignment = Alignment.ScreenAxisX.LEFT,
+    horizontalOffset = 7,
+    verticalAlignment = Alignment.ScreenAxisY.TOP,
+    verticalOffset = 180,
+)) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
 
     init {
         ChunkRenderer
-        registerComponentListen()
+        registerComponentListen(this)
     }
 
     override fun onEnabled() {
@@ -135,7 +141,7 @@ object MinimapComponent : Component("Minimap", true) {
                 VertexFormat.DrawMode.TRIANGLES,
                 VertexFormats.POSITION_COLOR,
                 ShaderProgramKeys.POSITION_COLOR,
-            ) { matrix ->
+            ) {
                 for (renderedEntity in RenderedEntities) {
                     drawEntityOnMinimap(
                         this, matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())

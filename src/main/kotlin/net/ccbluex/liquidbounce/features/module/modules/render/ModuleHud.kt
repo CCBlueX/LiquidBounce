@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -35,8 +34,6 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components
-import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -76,12 +73,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private var browserSettings: BrowserSettings? = null
 
-    init {
-        @Suppress("UNCHECKED_CAST")
-        tree(Configurable("In-built", value = components as MutableList<Value<*>>))
-        @Suppress("UNCHECKED_CAST")
-        tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
-    }
+    val components = tree(Configurable("Components"))
 
     override fun onEnabled() {
         if (isHidingNow) {

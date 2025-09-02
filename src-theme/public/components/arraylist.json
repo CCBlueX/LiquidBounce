@@ -1,0 +1,10 @@
+{
+  "name": "ArrayList",
+  "enabled": true,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Top",
+    "verticalOffset": 0
+  }
+}

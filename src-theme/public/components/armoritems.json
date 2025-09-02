@@ -1,0 +1,10 @@
+{
+  "name": "ArmorItems",
+  "enabled": false,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 225,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 15
+  }
+}

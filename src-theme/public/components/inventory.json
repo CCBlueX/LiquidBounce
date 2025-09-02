@@ -1,0 +1,10 @@
+{
+  "name": "Inventory",
+  "enabled": false,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 35,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 35
+  }
+}

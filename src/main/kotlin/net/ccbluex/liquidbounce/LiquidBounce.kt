@@ -20,11 +20,7 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -62,7 +58,6 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
@@ -332,12 +327,9 @@ object LiquidBounce : EventListener {
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
-        // Load theme and component overlay
-        ThemeManager
         BrowserBackendManager
-
-        // Start Interop Server
         ClientInteropServer.start()
+        ThemeManager.load()
         IntegrationListener
 
         taskManager = TaskManager(scope).apply {
@@ -380,9 +372,6 @@ object LiquidBounce : EventListener {
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
         logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
-
-        // Insert default components on HUD
-        ComponentOverlay.insertDefaultComponents()
     }
 
     /**

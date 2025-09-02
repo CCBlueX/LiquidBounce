@@ -49,14 +49,13 @@ object CommandClientThemeSubcommand {
         .handler { _, args ->
             val name = args[0] as String
 
-            if (name.equals("default", true)) {
-                ThemeManager.activeTheme = ThemeManager.defaultTheme
+            if (name.equals("default", true) || name.equals("liquidbounce", true)) {
+                ThemeManager.theme = ThemeManager.liquidBounceTheme
                 chat(regular("Switching theme to default..."))
                 return@handler
             }
 
             runCatching {
-                ThemeManager.chooseTheme(name)
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
             }.onSuccess {
@@ -65,7 +64,7 @@ object CommandClientThemeSubcommand {
         }.build()
 
     private fun listSubcommand() = CommandBuilder.begin("list")
-        .handler { command, args ->
+        .handler { _, _ ->
             @Suppress("SpreadOperator")
             (chat(
                 regular("Available themes: "),
