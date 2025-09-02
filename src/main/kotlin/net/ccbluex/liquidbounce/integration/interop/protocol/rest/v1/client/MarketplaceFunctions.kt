@@ -48,12 +48,10 @@ fun getMarketplaceItems(requestObject: RequestObject) = runBlocking {
 
     val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)
 
-    // Enhance items with subscription status
     val items = response.items.map { item ->
         JsonObject().apply {
             add("item", interopGson.toJsonTree(item))
             addProperty("isSubscribed", MarketplaceManager.isSubscribed(item.id))
-            addProperty("hasUpdate", false) // TODO: Implement version check
         }
     }
 
@@ -118,7 +116,7 @@ fun subscribeMarketplaceItem(requestObject: RequestObject) = runBlocking {
             return@runBlocking httpForbidden("Item is not active")
         }
 
-        MarketplaceManager.subscribe(id, item.type)
+        MarketplaceManager.subscribe(item)
         httpOk(interopGson.toJsonTree(item))
     } catch (e: Exception) {
         logger.error("Failed to subscribe to marketplace item", e)

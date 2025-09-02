@@ -37,6 +37,13 @@ object MarketplaceUnsubscribeCommand : CommandFactory {
             ParameterBuilder
                 .begin<Int>("id")
                 .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                .autocompletedWith { begin, _ ->
+                    MarketplaceManager.subscribedItems.map { item ->
+                        item.id.toString()
+                    }.filter { idStr ->
+                        idStr.startsWith(begin, true)
+                    }
+                }
                 .required()
                 .build()
         )

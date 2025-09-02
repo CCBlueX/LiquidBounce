@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.integration.task.type.Task
@@ -31,35 +33,40 @@ import java.io.File
  */
 object MarketplaceManager : Configurable("marketplace"), EventListener {
 
-    private val subscribedItems by value("subscribed", mutableListOf<SubscribedItem>())
+    val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 
     val marketplaceRoot = File(ConfigSystem.rootFolder, "marketplace").apply {
         mkdirs()
     }
+
+    fun getSubscribedItemsOfType(itemType: MarketplaceItemType) = subscribedItems.filter { it.type == itemType }
+
+    fun getItem(itemId: Int) = subscribedItems.find { it.id == itemId }
 
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
     suspend fun updateAll(task: Task) {
          subscribedItems.forEach { item ->
              runCatching {
+                 logger.info("Checking for updates for item ${item.id} (${item.type})")
                  val updateRevisionId = item.checkUpdate() ?: return@forEach
+                 logger.info("Updating item ${item.id} (${item.type})...")
                  val subTask = task.getOrCreateFileTask(item.id.toString())
                  item.install(updateRevisionId, subTask)
                  subTask.isCompleted = true
+                 logger.info("Successfully updated item ${item.id} (${item.type})")
              }.onFailure {
                  logger.error("Failed to update item ${item.id}", it)
              }
          }
     }
 
-    suspend fun subscribe(itemId: Int, type: MarketplaceItemType) {
-        check(type.isSubscribable) { "Type $type is not subscribable" }
-
-        if (isSubscribed(itemId)) {
+    suspend fun subscribe(item: MarketplaceItem) {
+        if (isSubscribed(item.id)) {
             return
         }
 
-        val item = SubscribedItem(itemId, type, null)
+        val item = SubscribedItem(item)
         item.install(item.getNewestRevisionId() ?: return)
         subscribedItems.add(item)
         ConfigSystem.storeConfigurable(this)
