@@ -37,8 +37,14 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.minecraft.util.Util
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.utils.IOUtils
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
+import java.util.zip.GZIPInputStream
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -82,32 +88,92 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                 librariesDirectory = librariesFolder
             }
 
-            val resourceManager = MCEF.INSTANCE.newResourceManager()
+            val osName = System.getProperty("os.name").lowercase()
+            val osArch = System.getProperty("os.arch").lowercase()
 
-            // Check if system is compatible with MCEF (JCEF)
-            if (!resourceManager.isSystemCompatible) {
-                throw JcefIsntCompatible
-            }
-
-            HashValidator.validateFolder(resourceManager.commitDirectory)
-
-            if (resourceManager.requiresDownload()) {
+            if (osName.contains("linux") && (osArch == "aarch64" || osArch == "arm64")) {
                 taskManager.launch("MCEF") { task ->
-                    resourceManager.registerProgressListener(MCEFProgressForwarder(task))
+                    try {
+                        val url = "https://github.com/jcefmaven/jcefbuild/releases/download/1.0.66/linux-arm64.tar.gz"
+                        val downloadTarget = mcefFolder.resolve("linux-arm64.tar.gz")
+                        val connection = URL(url).openConnection()
+                        connection.setRequestProperty("User-Agent", "Mozilla/5.0")
+                        val totalSize = connection.contentLengthLong
+                        var downloaded = 0L
 
-                    runCatching {
-                        resourceManager.downloadJcef()
+                        connection.getInputStream().use { input ->
+                            FileOutputStream(downloadTarget).use { output ->
+                                val buffer = ByteArray(8192)
+                                var bytesRead: Int
+                                while (input.read(buffer).also { bytesRead = it } != -1) {
+                                    output.write(buffer, 0, bytesRead)
+                                    downloaded += bytesRead
+                                    task.progress = (downloaded * 100 / totalSize).toInt()
+                                    task.detail = "Downloading " + downloaded.formatAsCapacity() + " / " + totalSize.formatAsCapacity()
+                                }
+                            }
+                        }
+
+                        task.detail = "Extracting..."
+
+                        val tarGz = downloadTarget
+                        val destDir = librariesFolder
+                        destDir.mkdirs()
+
+                        TarArchiveInputStream(GZIPInputStream(tarGz.inputStream())).use { tarInput ->
+                            var entry = tarInput.nextTarEntry
+                            while (entry != null) {
+                                val destPath = File(destDir, entry.name)
+                                if (entry.isDirectory) {
+                                    destPath.mkdirs()
+                                } else {
+                                    destPath.parentFile.mkdirs()
+                                    destPath.outputStream().use {
+                                        IOUtils.copy(tarInput, it)
+                                    }
+                                }
+                                entry = tarInput.nextTarEntry
+                            }
+                        }
+
+                        downloadTarget.delete()
                         RenderSystem.recordRenderCall(whenAvailable)
-                    }.onFailure {
+                    } catch (e: Exception) {
                         ErrorHandler.fatal(
-                            error = it,
+                            error = e,
                             quickFix = QuickFix.DOWNLOAD_JCEF_FAILED,
                             additionalMessage = "Downloading jcef"
                         )
                     }
                 }
             } else {
-                whenAvailable()
+                val resourceManager = MCEF.INSTANCE.newResourceManager()
+
+                // Check if system is compatible with MCEF (JCEF)
+                if (!resourceManager.isSystemCompatible) {
+                    throw JcefIsntCompatible
+                }
+
+                HashValidator.validateFolder(resourceManager.commitDirectory)
+
+                if (resourceManager.requiresDownload()) {
+                    taskManager.launch("MCEF") { task ->
+                        resourceManager.registerProgressListener(MCEFProgressForwarder(task))
+
+                        runCatching {
+                            resourceManager.downloadJcef()
+                            RenderSystem.recordRenderCall(whenAvailable)
+                        }.onFailure {
+                            ErrorHandler.fatal(
+                                error = it,
+                                quickFix = QuickFix.DOWNLOAD_JCEF_FAILED,
+                                additionalMessage = "Downloading jcef"
+                            )
+                        }
+                    }
+                } else {
+                    whenAvailable()
+                }
             }
         }
     }
