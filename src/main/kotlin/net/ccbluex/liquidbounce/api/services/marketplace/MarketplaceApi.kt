@@ -41,7 +41,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         val limit: Int = 10,
         val query: String? = null,
         val type: MarketplaceItemType? = null,
-        val featured: Boolean = true,
+        val featured: Boolean = false,
         val uid: String? = null,
         val branch: String? = API_BRANCH,
     ) {
@@ -62,7 +62,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         limit: Int = 10,
         query: String? = null,
         type: MarketplaceItemType? = null,
-        featured: Boolean = true,
+        featured: Boolean = false,
         uid: String? = null,
         branch: String? = null
     ): PaginatedResponse<MarketplaceItem> {
