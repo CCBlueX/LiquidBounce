@@ -184,70 +184,22 @@ enum class SuspendHandlerBehavior {
     /**
      * Starts a new job for each event.
      */
-    PARALLEL {
-        override fun <T : Event> createHandler(
-            eventListener: EventListener,
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
-        ): EventHook<T> {
-            TODO("Not yet implemented")
-        }
-    },
+    PARALLEL,
 
     /**
      * Suspends the new event if a job is active. Thus, all events will be handled one by one.
      */
-    SUSPEND {
-        override fun <T : Event> createHandler(
-            eventListener: EventListener,
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
-        ): EventHook<T> {
-            TODO("Not yet implemented")
-        }
-    },
+    SUSPEND,
 
     /**
      * Cancels the previous job if it's active.
      */
-    CANCEL_PREVIOUS {
-        override fun <T : Event> createHandler(
-            eventListener: EventListener,
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
-        ): EventHook<T> {
-            TODO("Not yet implemented")
-        }
-    },
+    CANCEL_PREVIOUS,
 
     /**
      * Discards the new event if a job is active.
      */
-    DISCARD_LATEST {
-        override fun <T : Event> createHandler(
-            eventListener: EventListener,
-            eventClass: Class<T>,
-            wrappedContext: CoroutineContext,
-            priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
-        ): EventHook<T> {
-            TODO("Not yet implemented")
-        }
-    };
-
-    protected abstract fun <T : Event> createHandler(
-        eventListener: EventListener,
-        eventClass: Class<T>,
-        wrappedContext: CoroutineContext,
-        priority: Short,
-        handler: suspend CoroutineScope.(T) -> Unit
-    ): EventHook<T>
+    DISCARD_LATEST,
 }
 
 /**
