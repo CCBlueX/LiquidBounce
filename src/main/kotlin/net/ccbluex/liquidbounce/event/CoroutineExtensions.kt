@@ -86,68 +86,95 @@ fun <T : Event> EventListener.`@internal-suspendHandler`(
     // Support auto-cancel
     val context = context[ContinuationInterceptor]?.let { context + continuationInterceptor(it) } ?: context
     return when (behavior) {
-        SuspendHandlerBehavior.PARALLEL -> handler(eventClass, priority) { event ->
-            eventListenerScope.launch(context) {
+        SuspendHandlerBehavior.PARALLEL -> suspendHandlerParallel(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.SUSPEND -> suspendHandlerSuspend(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.CANCEL_PREVIOUS -> suspendHandlerCancelPrevious(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.DISCARD_LATEST -> suspendHandlerDiscardLatest(eventClass, context, priority, handler)
+    }
+}
+
+private fun <T : Event> EventListener.suspendHandlerParallel(
+    eventClass: Class<T>,
+    wrappedContext: CoroutineContext,
+    priority: Short,
+    handler: suspend CoroutineScope.(T) -> Unit
+): EventHook<T> = handler(eventClass, priority) { event ->
+    eventListenerScope.launch(wrappedContext) {
+        handler(event)
+    }
+}
+
+private fun <T : Event> EventListener.suspendHandlerSuspend(
+    eventClass: Class<T>,
+    wrappedContext: CoroutineContext,
+    priority: Short,
+    handler: suspend CoroutineScope.(T) -> Unit
+): EventHook<T> {
+    var channel: Channel<T>? = null
+
+    fun restartReceiver() {
+        channel = Channel(Channel.BUFFERED) // Default buffered
+        eventListenerScope.launch(wrappedContext) {
+            for (event in channel ?: error("Channel is null")) {
                 handler(event)
             }
+        }.invokeOnCompletion {
+            channel?.close(it) ?: error("Channel is null")
+            channel = null
         }
-        SuspendHandlerBehavior.SUSPEND -> {
-            // FIXME: This branch is broken now
-            var channel: Channel<T> = Channel(Channel.BUFFERED) // Default buffered
+    }
 
-            fun restartReceiver() {
-                eventListenerScope.launch(context) {
-                    for (event in channel) {
-                        handler(event)
-                    }
-                }.invokeOnCompletion(channel::close)
+    restartReceiver()
+
+    // Producer
+    return handler(eventClass, priority) { event ->
+        channel?.let {
+            eventListenerScope.launch(wrappedContext) {
+                it.send(event)
             }
+        } ?: restartReceiver() // Old consumer has been closed
+    }
+}
 
-            restartReceiver()
+private fun <T : Event> EventListener.suspendHandlerCancelPrevious(
+    eventClass: Class<T>,
+    wrappedContext: CoroutineContext,
+    priority: Short,
+    handler: suspend CoroutineScope.(T) -> Unit
+): EventHook<T> {
+    val jobRef = AtomicReference<Job?>(null)
+    return handler(eventClass, priority) { event ->
+        jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
+            handler(event)
+        })?.cancel()
+    }
+}
 
-            // Producer
-            handler(eventClass, priority) { event ->
-                @OptIn(DelicateCoroutinesApi::class)
-                if (channel.isClosedForSend) { // Old consumer has been closed
-                    channel = Channel(Channel.BUFFERED)
-                    restartReceiver()
-                } else {
-                    eventListenerScope.launch(context) {
-                        channel.send(event)
-                    }
-                }
-            }
-        }
-        SuspendHandlerBehavior.CANCEL_PREVIOUS -> {
-            val jobRef = AtomicReference<Job?>(null)
-            handler(eventClass, priority) { event ->
-                jobRef.getAndSet(eventListenerScope.launch(context) {
+private fun <T : Event> EventListener.suspendHandlerDiscardLatest(
+    eventClass: Class<T>,
+    wrappedContext: CoroutineContext,
+    priority: Short,
+    handler: suspend CoroutineScope.(T) -> Unit
+): EventHook<T> {
+    val jobRef = AtomicReference<Job?>(null)
+    return handler(eventClass, priority) { event ->
+        var newJob: Job? = null
+
+        while (true) {
+            val currentJob = jobRef.get()
+            if (currentJob?.isActive == true) break
+
+            if (newJob == null) {
+                newJob = eventListenerScope.launch(wrappedContext, start = CoroutineStart.LAZY) {
                     handler(event)
-                })?.cancel()
-            }
-        }
-        SuspendHandlerBehavior.DISCARD_LATEST -> {
-            val jobRef = AtomicReference<Job?>(null)
-            handler(eventClass, priority) { event ->
-                var newJob: Job? = null
-
-                while (true) {
-                    val currentJob = jobRef.get()
-                    if (currentJob?.isActive == true) break
-
-                    if (newJob == null) {
-                        newJob = eventListenerScope.launch(context, start = CoroutineStart.LAZY) {
-                            handler(event)
-                        }
-                    }
-
-                    if (jobRef.compareAndSet(currentJob, newJob)) {
-                        newJob.start()
-                        break
-                    } else {
-                        newJob.cancel()
-                    }
                 }
+            }
+
+            if (jobRef.compareAndSet(currentJob, newJob)) {
+                newJob.start()
+                break
+            } else {
+                newJob.cancel()
             }
         }
     }
@@ -157,19 +184,70 @@ enum class SuspendHandlerBehavior {
     /**
      * Starts a new job for each event.
      */
-    PARALLEL,
+    PARALLEL {
+        override fun <T : Event> createHandler(
+            eventListener: EventListener,
+            eventClass: Class<T>,
+            wrappedContext: CoroutineContext,
+            priority: Short,
+            handler: suspend CoroutineScope.(T) -> Unit
+        ): EventHook<T> {
+            TODO("Not yet implemented")
+        }
+    },
+
     /**
      * Suspends the new event if a job is active. Thus, all events will be handled one by one.
      */
-    SUSPEND,
+    SUSPEND {
+        override fun <T : Event> createHandler(
+            eventListener: EventListener,
+            eventClass: Class<T>,
+            wrappedContext: CoroutineContext,
+            priority: Short,
+            handler: suspend CoroutineScope.(T) -> Unit
+        ): EventHook<T> {
+            TODO("Not yet implemented")
+        }
+    },
+
     /**
      * Cancels the previous job if it's active.
      */
-    CANCEL_PREVIOUS,
+    CANCEL_PREVIOUS {
+        override fun <T : Event> createHandler(
+            eventListener: EventListener,
+            eventClass: Class<T>,
+            wrappedContext: CoroutineContext,
+            priority: Short,
+            handler: suspend CoroutineScope.(T) -> Unit
+        ): EventHook<T> {
+            TODO("Not yet implemented")
+        }
+    },
+
     /**
-     * Discards the latest event if a job is active.
+     * Discards the new event if a job is active.
      */
-    DISCARD_LATEST,
+    DISCARD_LATEST {
+        override fun <T : Event> createHandler(
+            eventListener: EventListener,
+            eventClass: Class<T>,
+            wrappedContext: CoroutineContext,
+            priority: Short,
+            handler: suspend CoroutineScope.(T) -> Unit
+        ): EventHook<T> {
+            TODO("Not yet implemented")
+        }
+    };
+
+    protected abstract fun <T : Event> createHandler(
+        eventListener: EventListener,
+        eventClass: Class<T>,
+        wrappedContext: CoroutineContext,
+        priority: Short,
+        handler: suspend CoroutineScope.(T) -> Unit
+    ): EventHook<T>
 }
 
 /**
