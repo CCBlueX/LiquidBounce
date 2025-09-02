@@ -94,7 +94,6 @@ object CommandScript : CommandFactory {
                 .required()
                 .autocompletedFromScriptNames()
                 .build()
-
         )
         .parameter(
             ParameterBuilder.begin<String>("protocol")
