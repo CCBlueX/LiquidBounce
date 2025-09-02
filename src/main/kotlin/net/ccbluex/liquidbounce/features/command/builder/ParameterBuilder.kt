@@ -98,6 +98,9 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         this.autocompletionHandler = autocompletionHandler
     }
 
+    /**
+     * Filter from given strings provided by [placeholdersProvider].
+     */
     inline fun autocompletedFrom(
         ignoreCase: Boolean = true,
         crossinline placeholdersProvider: () -> Iterable<String>?,
