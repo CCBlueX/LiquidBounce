@@ -28,43 +28,52 @@ abstract class ComponentFactory {
     abstract val name: String
     abstract val enabled: Boolean
 
+    /**
+     * Factory for creating components from JSON deserialization.
+     *
+     * @param name Component name
+     * @param enabled Whether the component is enabled
+     * @param alignment JSON alignment data
+     * @param tweaks Optional tweaks array
+     * @param values Optional values array
+     */
     class JsonComponentFactory(
         override val name: String,
         override val enabled: Boolean,
         private val alignment: JsonObject,
         private val tweaks: Array<ComponentTweak>?,
-        private val values: Array<JsonObject>?,
+        private val values: Array<JsonObject>?
     ) : ComponentFactory() {
-        override fun createComponent(): WebComponent =
-            WebComponent(
-                name,
-                enabled,
-                // todo: replace with deserialization
-                Alignment(
-                    Alignment.ScreenAxisX.entries.find {
-                        it.choiceName == alignment.get("horizontalAlignment").asString
-                    }!!,
-//                    publicGson.fromJson(alignment.get("horizontalAlignment"), Alignment.ScreenAxisX::class.java),
-                    alignment.get("horizontalOffset").asInt,
-                    Alignment.ScreenAxisY.entries.find {
-                        it.choiceName == alignment.get("verticalAlignment").asString
-                    }!!,
-//                    publicGson.fromJson(alignment.get("verticalAlignment"), Alignment.ScreenAxisY::class.java),
-                    alignment.get("verticalOffset").asInt,
-                ),
-                tweaks ?: emptyArray(),
-                values ?: emptyArray()
-            )
+
+        override fun createComponent(): WebComponent = WebComponent(
+            name,
+            enabled,
+            Alignment.fromJson(alignment),
+            tweaks ?: emptyArray(),
+            values ?: emptyArray()
+        )
+
     }
 
+    /**
+     * Factory for creating native components from a function.
+     *
+     * @param name Component name
+     * @param enabled Whether the component is enabled
+     * @param function Function producing the component
+     */
     class NativeComponentFactory(
         override val name: String,
         override val enabled: Boolean = false,
-        private val function: () -> Component,
+        private val function: () -> Component
     ) : ComponentFactory() {
         override fun createComponent() = function()
     }
 
+    /**
+     * Creates the component instance.
+     *
+     * @return Component instance
+     */
     abstract fun createComponent(): Component
-
 }

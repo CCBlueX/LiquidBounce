@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -33,6 +34,24 @@ class Alignment(
     companion object {
         @JvmStatic
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
+
+        /**
+         * Deserialize an alignment from a JSON object.
+         *
+         * TODO: Deserialize alignment using GSON Deserializer
+         */
+        fun fromJson(alignment: JsonObject) = Alignment(
+            ScreenAxisX.entries.find {
+                it.choiceName == alignment.get("horizontalAlignment").asString
+            }!!,
+            alignment.get("horizontalOffset").asInt,
+            ScreenAxisY.entries.find {
+                it.choiceName == alignment.get("verticalAlignment").asString
+            }!!,
+            alignment.get("verticalOffset").asInt
+        )
+
+
     }
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
