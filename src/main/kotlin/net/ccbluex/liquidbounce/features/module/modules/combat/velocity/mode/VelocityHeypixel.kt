@@ -22,7 +22,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
 import net.minecraft.util.Hand
 
-internal object VelocityGrimACNoXZ : VelocityMode("Heypixel") {
+internal object VelocityHeypixel : VelocityMode("Heypixel") {
         private val attackCount by int("AttackCount", 6, 0..20)
         private val jumpReset by boolean("JumpReset", true)
         private val chance by int("Chance", 100, 0..100, "%")

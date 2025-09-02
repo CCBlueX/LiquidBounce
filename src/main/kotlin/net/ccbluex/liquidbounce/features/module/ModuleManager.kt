@@ -405,8 +405,9 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleFireballFly,
             ModuleAutoSwap,
             ModuleAutoPath,
+            ModuleAdvancedJumpReset,
 
-                // Render
+            // Render
             ModuleAnimations,
             ModuleAntiBlind,
             ModuleBetterInventory,

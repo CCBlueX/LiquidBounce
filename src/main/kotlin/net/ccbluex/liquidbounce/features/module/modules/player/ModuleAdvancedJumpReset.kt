@@ -1,6 +1,5 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
+package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -8,6 +7,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -22,11 +23,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * By _0x16z Code with KotlinModule
+ * @author _0x16z
  */
 
 @Suppress("TooManyFunctions")
-internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
+object ModuleAdvancedJumpReset: ClientModule("AdvancedJumpReset", Category.PLAYER) {
 
     private object TriggerSettings : ToggleableConfigurable(ModuleVelocity, "TriggerSettings", true) {
         val mode by enumChoice("Mode", TriggerMode.Tick)
@@ -39,16 +40,15 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
         val motionHeight by float("MotionHeight", 0.42f, 0f..2f)
         val allowJumpInAir by boolean("AllowJumpInAir", false)
         val jumpInInv by boolean("JumpInInv", false)
-        val hurtMin by int("HurtMin", 5, 1..10)
-        val hurtMax by int("HurtMax", 8, 1..10)
+        val hurtTime by intRange("HurtMin", 5..8, 1..10)
     }
 
     private object ReduceSettings : ToggleableConfigurable(ModuleVelocity, "ReduceSettings", true) {
         val enable by boolean("Enabled", false)
         val mode by enumChoice("Mode", ReduceMode.Smooth)
         val event by enumChoice("Event", ReduceEvent.HurtTime)
-        val min by int("MinHurt", 8, 1..10)
-        val max by int("MaxHurt", 8, 1..10)
+        val hurtTime by intRange("HurtTime", 8..8, 1..10)
+
         val baseFactor by float("BaseFactor", 0.6f, 0f..1f)
         val sprintFactor by float("SprintFactor", 0.6f, 0f..1f)
         val hitFactor by float("HitFactor", 0.6f, 0f..1f)
@@ -76,13 +76,6 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
         val combatTick by int("CombatTick", 8, 1..100)
     }
 
-    private object DebugSettings : ToggleableConfigurable(ModuleVelocity, "Debug", true) {
-        val packetMotion by boolean("PacketMotion", true)
-        val jump by boolean("Jump", false)
-        val reduce by boolean("Reduce", false)
-        val advanced by boolean("Advanced", true)
-    }
-
 
     init {
         tree(TriggerSettings)
@@ -91,12 +84,10 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
         tree(CheckSettings)
         tree(BlockCheckSettings)
         tree(PauseSettings)
-        tree(DebugSettings)
     }
 
     private val moduleChecks by multiEnumChoice("ModuleChecks", ModuleCheck.WHILE_SPEED)
 
-    // State variables
     private var valid = false
     private var jumpTicks = 0
     private var flagTicks = 0
@@ -139,14 +130,14 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
             tryJump()
 
             if (ReduceSettings.enable && ReduceSettings.event == ReduceEvent.HurtTime &&
-                checkInRange(player.hurtTime, ReduceSettings.min, ReduceSettings.max) && wasJumped
+                (player.hurtTime in ReduceSettings.hurtTime) && wasJumped
             ) {
                 reduceMotion()
             }
         }
 
         if (wasJumped && ReduceSettings.enable && ReduceSettings.event == ReduceEvent.Update &&
-            checkInRange(player.hurtTime, ReduceSettings.min, ReduceSettings.max)
+            (player.hurtTime in ReduceSettings.hurtTime)
         ) {
             reduceMotion()
         }
@@ -159,20 +150,6 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
                 if (event.packet.entityId == player.id) {
                     allowJump = Math.random() <= TriggerSettings.chance / 100
                     valid = event.packet.velocityX != 0 || event.packet.velocityZ != 0
-
-                    if (DebugSettings.packetMotion) {
-                        val msg = if (!DebugSettings.advanced) {
-                            "Received S12Packet, MotionX=${event.packet.velocityX} MotionY=${event.packet.velocityY}" +
-                                " MotionZ=${event.packet.velocityZ}"
-                        } else {
-                            "Received S12Packet, MotionX=${event.packet.velocityX} MotionY=${event.packet.velocityY} " +
-                                "MotionZ=${event.packet.velocityZ} OnGround=${player.isOnGround} " +
-                                "IsValid=$valid Forwarding=${mc.options.forwardKey.isPressed} " +
-                                "Clicking=${attackTicks <= 1}"
-                        }
-                        debug(msg)
-                    }
-
                     wasJumped = false
                 }
             }
@@ -205,8 +182,6 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
             JumpMode.WTF -> performWTFJump()
             else -> {}
         }
-
-        logJumpAttempt()
 
         if (ReduceSettings.enable && ReduceSettings.event == ReduceEvent.Jump) {
             reduceMotion()
@@ -241,7 +216,7 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
     }
 
     private fun checkHurtTimeRange(): Boolean {
-        return checkInRange(player.hurtTime, JumpSettings.hurtMin, JumpSettings.hurtMax)
+        return player.hurtTime in JumpSettings.hurtTime
     }
 
     private fun checkJumpConditions(): Boolean {
@@ -307,18 +282,6 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
         )
     }
 
-    private fun logJumpAttempt() {
-        if (DebugSettings.jump) {
-            val msg = if (!DebugSettings.advanced) {
-                "Jumped"
-            } else {
-                "Jumped, OnGround=${player.isOnGround} Sprinting=${player.isSprinting} " +
-                    "Blocking=${player.isBlocking} HurtTime=${player.hurtTime} " +
-                    "Forwarding=${mc.options.forwardKey.isPressed}"
-            }
-            debug(msg)
-        }
-    }
 
     private fun isValidToJump(): Boolean {
         if (BlockCheckSettings.ladder && player.isClimbing) return false
@@ -361,24 +324,6 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
                 )
             }
         }
-
-        if (DebugSettings.reduce) {
-            val msg = if (!DebugSettings.advanced) {
-                "Reduced, Now MotionX=${"%.3f".format(player.velocity.x)} " +
-                    "Now MotionZ=${"%.3f".format(player.velocity.z)} " +
-                    "Factor=${"%.4f".format(factor)}"
-            } else {
-                "Reduced, Now MotionX=${"%.3f".format(player.velocity.x)} " +
-                    "Now MotionZ=${"%.3f".format(player.velocity.z)} " +
-                    "Factor=${"%.4f".format(factor)} " +
-                    "Clicking=${attackTicks <= 1} " +
-                    "Sprinting=${player.isSprinting} " +
-                    "IsInAir=${!player.isOnGround} " +
-                    "AirTick=${player.fallDistance} " +
-                    "HurtTime=${player.hurtTime}"
-            }
-            debug(msg)
-        }
     }
 
     @Suppress("unused")
@@ -392,14 +337,5 @@ internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
         WHILE_FLY("WhileFly", { !ModuleFly.running }),
         WHILE_SPEED("WhileSpeed", { !ModuleSpeed.running }),
         WHILE_NO_SLOW("WhileNoSlow", { !ModuleNoSlow.running })
-    }
-
-
-    private fun checkInRange(target: Int, min: Int, max: Int): Boolean {
-        return target in min..max
-    }
-
-    private fun debug(message: String) {
-        logger.info("[AdvancedJumpReset] $message")
     }
 }

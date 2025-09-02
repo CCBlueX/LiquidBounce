@@ -41,6 +41,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 
 internal object VelocityGrim2371 : VelocityMode("Grim2371") {
+    private val onlyOnGround by boolean("OnlyOnGround", true)
 
     private var cancelNextVelocity = false
     private var delay = false
@@ -113,7 +114,9 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
         // and not affect other types of velocity
         if (packet.isSelfDamage) {
             cancelNextVelocity = true
-        } else if (cancelNextVelocity && event.packet.isSelfVelocity) {
+        } else if (cancelNextVelocity
+            && event.packet.isSelfVelocity
+            && (!onlyOnGround || player.isOnGround)) {
             event.cancelEvent()
             delay = true
             cancelNextVelocity = false

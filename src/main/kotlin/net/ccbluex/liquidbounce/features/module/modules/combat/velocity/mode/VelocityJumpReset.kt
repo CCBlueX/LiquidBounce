@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -32,8 +33,11 @@ import kotlin.random.Random
  */
 internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
-    private val chance by float("Chance", 100f, 0f..100f, "%")
-
+    private object TriggerSettings : ToggleableConfigurable(ModuleVelocity, "TriggerSettings", true) {
+        val mode by enumChoice("Mode", TriggerMode.Tick)
+        val tick by int("JumpTick", 8, 1..20)
+        val chance by float("Chance", 60f, 0f..100f, "%")
+    }
     private object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
         val hitsUntilJump by intRange("HitsUntilJump", 2..2, 0..10)
     }
@@ -46,7 +50,6 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
         tree(JumpByReceivedHits)
         tree(JumpByDelay)
     }
-
     private var limitUntilJump = 0
     private var isFallDamage = false
 
@@ -57,7 +60,7 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
         if (player.hurtTime != 9 || !player.isOnGround || !player.isSprinting ||
-            isFallDamage || !isCooldownOver() || chance != 100f && Random.nextInt(100) > chance
+            isFallDamage || !isCooldownOver() || canJump()
         ) {
             updateLimit()
             return@handler
@@ -111,5 +114,20 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
         limitUntilJump++
     }
+    private fun canJump(): Boolean {
+        if (!isCooldownOver()) return false
 
+        return when (TriggerSettings.mode) {
+            TriggerMode.Matrix -> player.age % 4 == 3
+            TriggerMode.Intave14 -> player.age % 2 == 0
+            TriggerMode.Chance -> Random.nextInt(100) < TriggerSettings.chance.toInt()
+            TriggerMode.Tick -> limitUntilJump >= TriggerSettings.tick
+        }
+    }
+    private enum class TriggerMode(override val choiceName: String) : NamedChoice {
+        Tick("Tick"),
+        Chance("Chance"),
+        Matrix("Matrix"),
+        Intave14("Intave14");
+    }
 }
