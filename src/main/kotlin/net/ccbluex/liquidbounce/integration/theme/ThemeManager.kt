@@ -47,7 +47,6 @@ object ThemeManager : Configurable("theme") {
     val themes = mutableListOf<Theme>()
     val themeNames get() = themes.map { theme -> theme.metadata.name }
 
-    // TODO: Replace with choices so we can have a dropdown
     var currentTheme by text("Theme", "LiquidBounce").onChanged {
         // Update integration browser
         RenderSystem.recordRenderCall {

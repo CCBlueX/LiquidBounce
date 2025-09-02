@@ -33,7 +33,7 @@ object ComponentManager {
     val nativeComponents = listOf(MinimapComponent)
 
     val components: List<Component>
-        get() = nativeComponents + ThemeManager.theme?.components.orEmpty()
+        get() = nativeComponents + ThemeManager.theme.components
 
     @JvmStatic
     fun isTweakEnabled(tweak: ComponentTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
