@@ -19,9 +19,11 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
 import kotlin.time.Duration
 
@@ -58,19 +60,116 @@ val EventListener.eventListenerScope: CoroutineScope
  * Start a [Job] on event.
  *
  * It's fully async, so modifying the [Event] instance makes no sense.
+ *
+ * @param context the coroutine context to use for the job, defaults to [EmptyCoroutineContext].
+ * @param priority the priority of the event hook, defaults to 0.
+ * @param behavior the behavior of the event handler, defaults to [SuspendHandlerBehavior.PARALLEL].
  */
 inline fun <reified T : Event> EventListener.suspendHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     priority: Short = 0,
-    crossinline handler: suspend CoroutineScope.(T) -> Unit
+    behavior: SuspendHandlerBehavior = SuspendHandlerBehavior.PARALLEL,
+    noinline handler: suspend CoroutineScope.(T) -> Unit
+): EventHook<T> = `@internal-suspendHandler`(T::class.java, context, priority, behavior, handler)
+
+/**
+ * To prevent bytecode explosion, we use this method to register event hooks.
+ */
+@Suppress("FunctionName") // Exclude from normal auto-completion
+fun <T : Event> EventListener.`@internal-suspendHandler`(
+    eventClass: Class<T>,
+    context: CoroutineContext,
+    priority: Short,
+    behavior: SuspendHandlerBehavior,
+    handler: suspend CoroutineScope.(T) -> Unit
 ): EventHook<T> {
     // Support auto-cancel
     val context = context[ContinuationInterceptor]?.let { context + continuationInterceptor(it) } ?: context
-    return handler<T>(priority) { event ->
-        eventListenerScope.launch(context) {
-            handler(event)
+    return when (behavior) {
+        SuspendHandlerBehavior.PARALLEL -> handler(eventClass, priority) { event ->
+            eventListenerScope.launch(context) {
+                handler(event)
+            }
+        }
+        SuspendHandlerBehavior.SUSPEND -> {
+            // FIXME: This branch is broken now
+            var channel: Channel<T> = Channel(Channel.BUFFERED) // Default buffered
+
+            fun restartReceiver() {
+                eventListenerScope.launch(context) {
+                    for (event in channel) {
+                        handler(event)
+                    }
+                }.invokeOnCompletion(channel::close)
+            }
+
+            restartReceiver()
+
+            // Producer
+            handler(eventClass, priority) { event ->
+                @OptIn(DelicateCoroutinesApi::class)
+                if (channel.isClosedForSend) { // Old consumer has been closed
+                    channel = Channel(Channel.BUFFERED)
+                    restartReceiver()
+                } else {
+                    eventListenerScope.launch(context) {
+                        channel.send(event)
+                    }
+                }
+            }
+        }
+        SuspendHandlerBehavior.CANCEL_PREVIOUS -> {
+            val jobRef = AtomicReference<Job?>(null)
+            handler(eventClass, priority) { event ->
+                jobRef.getAndSet(eventListenerScope.launch(context) {
+                    handler(event)
+                })?.cancel()
+            }
+        }
+        SuspendHandlerBehavior.DISCARD_LATEST -> {
+            val jobRef = AtomicReference<Job?>(null)
+            handler(eventClass, priority) { event ->
+                var newJob: Job? = null
+
+                while (true) {
+                    val currentJob = jobRef.get()
+                    if (currentJob?.isActive == true) break
+
+                    if (newJob == null) {
+                        newJob = eventListenerScope.launch(context, start = CoroutineStart.LAZY) {
+                            handler(event)
+                        }
+                    }
+
+                    if (jobRef.compareAndSet(currentJob, newJob)) {
+                        newJob.start()
+                        break
+                    } else {
+                        newJob.cancel()
+                    }
+                }
+            }
         }
     }
+}
+
+enum class SuspendHandlerBehavior {
+    /**
+     * Starts a new job for each event.
+     */
+    PARALLEL,
+    /**
+     * Suspends the new event if a job is active. Thus, all events will be handled one by one.
+     */
+    SUSPEND,
+    /**
+     * Cancels the previous job if it's active.
+     */
+    CANCEL_PREVIOUS,
+    /**
+     * Discards the latest event if a job is active.
+     */
+    DISCARD_LATEST,
 }
 
 /**
@@ -136,7 +235,7 @@ suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
  * the listener's running state at suspension
  * to determine whether to resume the continuation.
  */
-fun EventListener.continuationInterceptor(original: ContinuationInterceptor? = null): ContinuationInterceptor =
+private fun EventListener.continuationInterceptor(original: ContinuationInterceptor?): ContinuationInterceptor =
     original as? EventListenerRunningContinuationInterceptor
         ?: EventListenerRunningContinuationInterceptor(original, this)
 
@@ -162,7 +261,7 @@ class EventListenerNotListeningException(val eventListener: EventListener) :
  *
  * This means the cancellation will not be **immediate** like [Thread.interrupt].
  *
- * @param original The original [ContinuationInterceptor] such as a [kotlinx.coroutines.CoroutineDispatcher],
+ * @param original The original [ContinuationInterceptor] such as a [CoroutineDispatcher],
  * because one [CoroutineContext] can only contain one value for a same key.
  *
  * @author MukjepScarlet
