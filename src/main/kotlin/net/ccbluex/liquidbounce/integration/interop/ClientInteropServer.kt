@@ -21,6 +21,9 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
@@ -33,16 +36,15 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import java.net.BindException
 import java.net.Socket
-import kotlin.concurrent.thread
 
 /**
  * A client server implementation.
  *
  * Allows the browser to communicate with the client. (e.g. for UIs)
  */
-object ClientInteropServer {
+object ClientInteropServer : EventListener {
 
-    internal var httpServer = HttpServer()
+    internal val httpServer = HttpServer()
     private var socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
@@ -79,7 +81,12 @@ object ClientInteropServer {
         }
 
         // Start the HTTP server
-        thread(name = "netty-websocket", isDaemon = true, block = ::startServer)
+        startServer()
+    }
+
+    @Suppress("unused")
+    private val shutdownHandler = handler<ClientShutdownEvent> {
+        httpServer.stop()
     }
 
     private var attempt = 0
