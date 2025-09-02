@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -125,7 +125,7 @@ object Parameters {
         }
         .autocompletedWith { begin, _ ->
             enumValues<T>().mapNotNull { v ->
-                v.choiceName.takeIf { it.startsWith(begin, true) }
+                v.choiceName.takeIf { predicate(v) && it.startsWith(begin, true) }
             }
         }
 
@@ -148,8 +148,8 @@ object Parameters {
             val splitAt = begin.lastIndexOf(',') + 1
             val prefix = begin.substring(0, splitAt)
             val choicePrefix = begin.substring(splitAt)
-            enumValues<T>().filter {
-                it.choiceName.startsWith(choicePrefix, true)
+            enumValues<T>().filter { v ->
+                predicate(v) && v.choiceName.startsWith(choicePrefix, true)
             }.map {
                 prefix + it.choiceName
             }
