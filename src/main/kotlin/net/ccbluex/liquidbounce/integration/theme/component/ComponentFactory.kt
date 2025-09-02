@@ -38,7 +38,7 @@ abstract class ComponentFactory {
         override fun createComponent(): WebComponent =
             WebComponent(
                 name,
-                true,
+                enabled,
                 // todo: replace with deserialization
                 Alignment(
                     Alignment.ScreenAxisX.entries.find { it.choiceName == alignment.get("horizontalAlignment").asString }!!,
