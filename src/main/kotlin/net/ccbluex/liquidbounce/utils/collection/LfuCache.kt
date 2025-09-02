@@ -35,87 +35,107 @@ class LfuCache<K : Any, V : Any>(
         require(capacity > 0) { "capacity should be positive" }
     }
 
+    /**
+     * [Map] backend.
+     */
     private val cache = Object2ObjectOpenHashMap<K, V>()
+
+    /**
+     * Access count of each key.
+     *
+     * The key set of [counts] is same as [cache]:
+     * `counts.keys == cache.keys`
+     */
     private val counts = Object2IntOpenHashMap<K>()
+
+    /**
+     * The access count and keys with this count. Sorted ascending for discarding the least used ones.
+     *
+     * This matches:
+     * `countTable.values.flatten() == counts.keys`
+     * `countTable.keys == counts.values`
+     */
     private val countTable = Int2ObjectRBTreeMap<MutableSet<K>>()
+
     private val setPool = ArrayDeque<MutableSet<K>>(8)
 
-    @PublishedApi
-    internal val lock = Any()
-
+    /**
+     * Creates a [MutableSet] (or get from the pool) for [countTable].
+     */
     private fun newSet() = if (setPool.isEmpty()) ObjectOpenHashSet() else setPool.removeFirst()
 
     @get:JvmName("size")
-    val size: Int get() = synchronized(lock) { cache.size }
+    val size: Int get() = cache.size
 
+    /**
+     * Increases the access count of [key].
+     */
     private fun incr(key: K) {
-
-        synchronized(lock) {
-            val oldCount = counts.addTo(key, 1)
-            val setOfOldCount = countTable.get(oldCount)
-            if (setOfOldCount != null) {
-                if (setOfOldCount.size == 1) {
-                    countTable.remove(oldCount)
-                    setOfOldCount.clear()
-                    setPool.add(setOfOldCount)
-                } else {
-                    setOfOldCount.remove(key)
-                }
-            }
-            countTable.computeIfAbsent(oldCount + 1) { newSet() }.add(key)
+        val oldCount = counts.addTo(key, 1)
+        val setOfOldCount = countTable.get(oldCount)
+        if (setOfOldCount.size == 1) {
+            countTable.remove(oldCount)
+            setOfOldCount.clear()
+            setPool.add(setOfOldCount)
+        } else {
+            setOfOldCount.remove(key)
         }
+        countTable.computeIfAbsent(oldCount + 1) { newSet() }.add(key)
     }
 
+    /**
+     * Discards one of the least-used keys.
+     */
     private fun discard() {
-        synchronized(lock) {
-            val entryIter = countTable.int2ObjectEntrySet().iterator()
-            while (entryIter.hasNext()) {
-                val entry = entryIter.next()
-                val set = entry.value
-                if (set.isNotEmpty()) {
-                    val iter = set.iterator()
-                    val toRemove = iter.next()
-                    iter.remove()
-                    cache.remove(toRemove)
-                    counts.removeInt(toRemove)
-                    if (!iter.hasNext()) {
-                        setPool.add(set)
-                        entryIter.remove()
-                    }
-                    break
+        val entryIter = countTable.int2ObjectEntrySet().iterator()
+        while (entryIter.hasNext()) {
+            val entry = entryIter.next()
+            val set = entry.value
+            val iter = set.iterator()
+            if (iter.hasNext()) {
+                val toRemove = iter.next()
+                iter.remove()
+                cache.remove(toRemove)
+                counts.removeInt(toRemove)
+                if (!iter.hasNext()) {
+                    setPool.add(set)
+                    entryIter.remove()
                 }
+
+                break
             }
         }
     }
 
+    /**
+     * Gets the key and corresponding value (if exists), and increases its access count.
+     */
     operator fun get(key: K): V? {
-        synchronized(lock) {
-            return cache[key]?.also { incr(key) }
-        }
+        return cache[key]?.also { incr(key) }
     }
 
+    /**
+     * Sets the key and corresponding value, and discards one of the least-used keys if full.
+     */
     operator fun set(key: K, value: V): V {
-        synchronized(lock) {
-            cache.computeIfPresent(key) { k, oldV ->
-                counts.addTo(k, 1)
-                value
-            }?.let { return value }
+        cache.computeIfPresent(key) { k, _ ->
+            incr(k)
+            value
+        }?.let { return value }
 
-            if (cache.size >= capacity) {
-                discard()
-            }
-
-            cache.put(key, value)
-            counts.put(key, 1)
-            countTable.computeIfAbsent(1) { newSet() }.add(key)
-
-            return value
+        if (cache.size >= capacity) {
+            discard()
         }
+
+        cache.put(key, value)
+        counts.put(key, 1)
+        countTable.computeIfAbsent(1) { newSet() }.add(key)
+
+        return value
     }
 
     inline fun getOrPut(key: K, value: () -> V): V {
-        synchronized(lock) {
-            return get(key) ?: set(key, value())
-        }
+        return get(key) ?: set(key, value())
     }
+
 }

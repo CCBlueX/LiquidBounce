@@ -1,4 +1,21 @@
-
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -175,18 +192,18 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
     private val orderedTextMappingCache = LfuCache<OrderedText, OrderedText>(DEFAULT_CACHE_SIZE)
 
-    fun replace(original: String): String {
-        if (!running) {
-            return original
+    fun replace(original: String): String =
+        when {
+            !running -> original
+            mc.isOnThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
+            else -> uncachedReplace(original)
         }
-        return stringMappingCache.getOrPut(original) { uncachedReplace(original) }
-    }
     fun replace(original: Text): Text {
         if (!running) return original
         val degenerated = LegacyTextSanitizer.SanitizedLegacyText(original)
         return wrap(degenerated).toText()
     }
-    fun uncachedReplace(original: String): String {
+    private  fun uncachedReplace(original: String): String {
         val replacements = replacementMappings.findReplacements(original)
 
         if (replacements.isEmpty()) {
@@ -220,18 +237,17 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         return output.toString()
     }
 
-    fun wrap(original: OrderedText): OrderedText {
-        if (!running) {
-            return original
+    fun wrap(original: OrderedText): OrderedText =
+        when {
+            !running -> original
+            mc.isOnThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
+            else -> uncachedWrap(original)
         }
-
-        return orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
-    }
 
     /**
      * Wraps an [OrderedText] to apply name protection.
      */
-    fun uncachedWrap(original: OrderedText): OrderedText {
+    private fun uncachedWrap(original: OrderedText): OrderedText {
         val mappedCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
 
         val originalCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
