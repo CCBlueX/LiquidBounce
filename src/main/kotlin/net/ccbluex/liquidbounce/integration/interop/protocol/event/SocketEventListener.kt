@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
