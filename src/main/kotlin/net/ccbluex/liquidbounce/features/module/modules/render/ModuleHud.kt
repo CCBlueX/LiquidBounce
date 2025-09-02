@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -92,10 +93,12 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         }
 
         for (theme in themes) {
-            val themeConfigurable = Configurable(theme.metadata.name, theme.components.toMutableList())
+            val themeConfigurable = Configurable(theme.metadata.name, theme.components as MutableList<Value<*>>)
             components.tree(themeConfigurable)
-            themeConfigurable.initConfigurable()
         }
+
+        components.initConfigurable()
+        components.walkKeyPath()
     }
 
     override fun onEnabled() {

@@ -68,7 +68,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }
     }
 
-    val components: List<Component> = runBlocking {
+    val components: MutableList<Component> = runBlocking {
         metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
@@ -81,6 +81,13 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
             }.onFailure {
                 logger.warn("Failed to create component $name", it)
             }.getOrNull()
+        }.toMutableList()
+    }
+
+    init {
+        // Check for duplicated component names
+        components.groupBy { component -> component.name }.forEach { (name, components) ->
+            check(components.size == 1) { "Found duplicated component name '$name'" }
         }
     }
 
