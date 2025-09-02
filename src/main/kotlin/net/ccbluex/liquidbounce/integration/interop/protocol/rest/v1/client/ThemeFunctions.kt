@@ -62,7 +62,7 @@ fun postSetShaderEnabled(requestObject: RequestObject): FullHttpResponse {
 
     ThemeManager.shaderEnabled = enabled
     ThemeManager.initializeBackground()
-    ConfigSystem.storeConfigurable(ThemeManager)
+    ConfigSystem.store(ThemeManager)
 
     return httpOk(emptyJsonObject())
 }

@@ -91,6 +91,7 @@ object ThemeManager : Configurable("theme") {
             // Update integration browser
             IntegrationListener.update()
             ModuleHud.reopen()
+            ModuleHudEditor.reload(true)
             ModuleClickGui.reload(true)
         }
 

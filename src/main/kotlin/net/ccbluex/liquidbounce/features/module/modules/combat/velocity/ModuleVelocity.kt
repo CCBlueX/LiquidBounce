@@ -68,7 +68,6 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
             VelocityGrim2344,
             VelocityAAC442,
             VelocityKarhu,
-            VelocityExemptGrim117,
             VelocityGrimFull,
             VelocityGrimAttacked,
             VelocityIntave,

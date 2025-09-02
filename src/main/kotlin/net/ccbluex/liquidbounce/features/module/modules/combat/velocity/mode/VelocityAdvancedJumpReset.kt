@@ -21,6 +21,10 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * By _0x16z Code with KotlinModule
+ */
+
 @Suppress("TooManyFunctions")
 internal object VelocityAdvancedJumpReset : VelocityMode("AdvancedJumpReset") {
 
