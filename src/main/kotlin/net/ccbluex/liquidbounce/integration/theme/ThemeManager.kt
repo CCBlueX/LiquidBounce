@@ -85,7 +85,7 @@ object ThemeManager : Configurable("theme") {
 
     fun init() {
         // Load default theme
-        Theme("theme", Theme.extractFromResources("liquidbounce")).apply {
+        Theme(Theme.Origin.LOCAL, Theme.extractFromResources("liquidbounce")).apply {
             includedTheme = this
         }
     }
@@ -102,7 +102,7 @@ object ThemeManager : Configurable("theme") {
                 }
 
                 runCatching {
-                    val theme = Theme("theme", file.relativeTo(themesFolder))
+                    val theme = Theme(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
                     if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
                         logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")
                         return@forEach
@@ -119,7 +119,7 @@ object ThemeManager : Configurable("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                val theme = Theme("marketplace", relativeFile)
+                val theme = Theme(Theme.Origin.MARKETPLACE, relativeFile)
 
                 if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
                     logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")

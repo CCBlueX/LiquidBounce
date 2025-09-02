@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
@@ -41,14 +42,22 @@ import java.util.*
  *
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
-class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
+class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), Closeable {
 
     val id: UUID = UUID.randomUUID()
 
+    enum class Origin(override val choiceName: String) : NamedChoice {
+        LOCAL("local"),
+        MARKETPLACE("marketplace"),
+        REMOTE("remote")
+    }
+
+    constructor(url: String) : this(Origin.REMOTE, url)
+
     constructor(
-        prefix: String,
+        origin: Origin,
         file: File
-    ) : this("${ClientInteropServer.url}/$prefix/${file.invariantSeparatorsPath}/")
+    ) : this(origin, "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/")
 
     val metadata: ThemeMetadata = runBlocking {
         try {

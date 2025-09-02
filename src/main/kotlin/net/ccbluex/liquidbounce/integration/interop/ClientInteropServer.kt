@@ -64,7 +64,7 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/theme", ThemeManager.themesFolder)
+                file("/local", ThemeManager.themesFolder)
                 file("/marketplace", MarketplaceManager.marketplaceRoot)
             }
 

@@ -82,6 +82,8 @@ object CommandClientThemeSubcommand {
                     .append(regular(")"))
                     .append(regular(" by "))
                     .append(variable(theme.metadata.author.joinToString(separator = ", ")).copyable())
+                    .append(regular(" from "))
+                    .append(variable(theme.origin.choiceName))
             }
         )
 
