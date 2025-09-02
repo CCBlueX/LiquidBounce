@@ -81,7 +81,7 @@ const script = registerScript.apply({
     version: "1.0.0",
     authors: ["commandblock2", "CCBlueX"],
 });
-function generate(path, organization, packageName) {
+function generate(path, packageName) {
     try {
         const loader = createClassLoaderFromJar(path + "/ts-generator.jar");
         const NPMGen = loadClassFromJar(loader, "me.commandblock2.tsGenerator.NPMPackageGenerator");
@@ -159,13 +159,7 @@ function generate(path, organization, packageName) {
         const formatter = DateTimeFormatter_1.DateTimeFormatter.ofPattern('y.M.d');
         Client.displayChatMessage("writing types");
         // @ts-expect-error
-        let npmName;
-        if (organization) {
-            npmName = `@${organization}/${packageName}`;
-        } else {
-            npmName = packageName;
-        }
-        const npmPack = new NPMGen(generated, npmName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`,
+        const npmPack = new NPMGen(generated, packageName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`,
             // extraFiles - add the ambient and augmentations files
             `"augmentations/**/*.d.ts", "ambient/ambient.d.ts"`,
             // extraTypesVersion - add the augmentations and ambient paths
@@ -279,12 +273,11 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
         throw e;
     }
 }
-const packageName = "liquidbounce-script-api";
-const organization = "ccbluex";
+const packageName = "@ccbluex/liquidbounce-script-api";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
 if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
-    generate(path, organization, packageName);
+    generate(path, packageName);
     mc.close();
 }
 script.registerCommand({
@@ -293,6 +286,6 @@ script.registerCommand({
     parameters: [],
     onExecute() {
         // @ts-expect-error
-        UnsafeThread.run(() => generate(path, organization, packageName));
+        UnsafeThread.run(() => generate(path, packageName));
     }
 });
