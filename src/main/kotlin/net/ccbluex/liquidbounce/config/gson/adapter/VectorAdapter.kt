@@ -22,6 +22,7 @@ import com.google.gson.*
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Vector2f
 import java.lang.reflect.Type
 
 /**
@@ -72,3 +73,18 @@ object Vec2fAdapter : JsonSerializer<Vec2f>, JsonDeserializer<Vec2f> {
     )
 
 }
+
+object Vector2fAdapter : JsonSerializer<Vector2f>, JsonDeserializer<Vector2f> {
+
+    override fun serialize(src: Vector2f, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
+        addProperty("x", src.x)
+        addProperty("y", src.y)
+    }
+
+    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vector2f(
+        json.asJsonObject["x"].asFloat,
+        json.asJsonObject["y"].asFloat
+    )
+
+}
+

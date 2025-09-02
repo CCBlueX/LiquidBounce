@@ -84,7 +84,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         object Distance : ClusterSizeMode("Distance") {
             private val size by floatRange("Size", 1F..16F, 0.1F..32F)
             private val range by floatRange("Range", 32F..64F, 1F..256F)
-            private val curve by curve("Curve", Easing.LINEAR)
+            private val curve by easing("Curve", Easing.LINEAR)
 
             override fun size(entity: ItemEntity): Float {
                 val playerDistance = player.distanceTo(entity)

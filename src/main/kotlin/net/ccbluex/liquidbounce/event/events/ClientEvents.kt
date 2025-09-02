@@ -195,7 +195,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         action: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        schedule.add(InventoryActionChain(constrains, arrayOf(action), priority))
+        schedule.add(InventoryActionChain(constrains, listOf(action), priority))
     }
 
     fun schedule(
@@ -203,7 +203,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         vararg actions: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions, priority))
+        this.schedule.add(InventoryActionChain(constrains, actions.asList(), priority))
     }
 
     fun schedule(
@@ -211,7 +211,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         actions: List<InventoryAction>,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray(), priority))
+        this.schedule.add(InventoryActionChain(constrains, actions, priority))
     }
 }
 

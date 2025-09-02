@@ -28,10 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -44,6 +41,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.TntEntity
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
@@ -102,6 +100,12 @@ val ClientPlayerEntity.onGroundTicks: Int
 
 val ClientPlayerEntity.direction: Float
     get() = getMovementDirectionOfInput(DirectionalInput(input))
+
+/**
+ * Check if the attack speed is below 1 tick. If so, we have a cooldown.
+ */
+val ClientPlayerEntity.hasCooldown: Boolean
+    get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(EntityAttributes.ATTACK_SPEED) < 20.0
 
 fun ClientPlayerEntity.getMovementDirectionOfInput(input: DirectionalInput): Float {
     return getMovementDirectionOfInput(this.yaw, input)
@@ -193,7 +197,6 @@ fun ClientPlayerEntity.canStep(height: Double = 1.0): Boolean {
         shape != VoxelShapes.empty()
     }
 }
-
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     val forwards = input.forwards && !input.backwards
@@ -337,17 +340,6 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
 
     return nearestPointOnSide
 
-}
-
-fun LivingEntity.wouldBlockHit(source: PlayerEntity): Boolean {
-    if (!this.isBlocking) {
-        return false
-    }
-
-    val facingVec = getRotationVec(1.0f)
-    val deltaPos = (pos - source.pos).multiply(1.0, 0.0, 1.0)
-
-    return deltaPos.dotProduct(facingVec) < 0.0
 }
 
 /**
@@ -653,3 +645,7 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
+
+val LivingEntity.wouldBlockHit
+    get() = !isOlderThanOrEqual1_8 &&
+        this.blockedByShield(world.damageSources.playerAttack(player))

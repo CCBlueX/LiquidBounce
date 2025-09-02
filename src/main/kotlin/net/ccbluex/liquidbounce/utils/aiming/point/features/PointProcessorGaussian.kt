@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.LivingEntity
@@ -28,7 +29,7 @@ import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
 import kotlin.math.abs
 
-internal class Gaussian(parent: EventListener) : ToggleableConfigurable(parent, "Gaussian", false) {
+internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(parent, "Gaussian", false) {
 
     companion object {
 
@@ -66,10 +67,6 @@ internal class Gaussian(parent: EventListener) : ToggleableConfigurable(parent, 
     private val dynamic = tree(Dynamic())
 
     private fun interpolate(start: Double, end: Double, f: Double) = start + (end - start) * f
-
-    fun factorCheck(): Boolean {
-        return yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance > 0
-    }
 
     private fun gaussianHasReachedTarget(vec1: Vec3d, vec2: Vec3d, tolerance: Float): Boolean {
         return abs(vec1.x - vec2.x) < tolerance &&
@@ -127,6 +124,14 @@ internal class Gaussian(parent: EventListener) : ToggleableConfigurable(parent, 
                 )
             )
         }
+    }
+
+    override fun process(point: PointInsideBox): PointInsideBox {
+        if (yawFactor.random() > 0.0f && pitchFactor.random() > 0.0f && chance > 0) {
+            updateGaussianOffset(point)
+        }
+
+        return point + currentOffset
     }
 
 }

@@ -19,40 +19,40 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.math.sq
 
 /**
  * Lazy Point allows you to set a threshold when the point is going to be updated.
  * If the new point is below this threshold, we return the current point instead
  */
-internal class LazyPoint(parent: EventListener) : ToggleableConfigurable(parent, "Lazy", false) {
+internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent, "Lazy", false) {
 
-    private val threshold by floatRange("Threshold", 0.0f..0.2f, 0.01f..1f).onChanged { range ->
+    private val threshold by floatRange(
+        "Threshold",
+        0.1f..0.2f,
+        0.01f..0.4f,
+        "m"
+    ).onChanged { range ->
         currentThreshold = range.random()
     }
 
     private var currentThreshold: Float = threshold.random()
-    private var currentPoint: Vec3d? = null
+    private var currentPoint: PointInsideBox? = null
 
-    /**
-     * Update the point if the distance is greater than the threshold
-     */
-    fun update(point: Vec3d): Vec3d {
-        if (!enabled) {
-            return point
-        }
-
+    override fun process(point: PointInsideBox): PointInsideBox {
         val currentPoint = currentPoint ?: run {
             this.currentPoint = point
             return point
         }
 
-        val distance = point.distanceTo(currentPoint)
-        ModuleDebug.debugParameter(this, "Distance", distance)
+        val distance = point.squaredDistanceTo(currentPoint)
+        val currentThreshold = currentThreshold.sq()
+        debugParameter("Threshold") { currentThreshold }
+        debugParameter("Distance") { distance }
 
         // Check if the current point has not reached the minimum threshold to move
         if (distance < currentThreshold) {
@@ -61,7 +61,8 @@ internal class LazyPoint(parent: EventListener) : ToggleableConfigurable(parent,
 
         this.currentPoint = point
         this.currentThreshold = threshold.random()
-        return point
+
+        return currentPoint
     }
 
 

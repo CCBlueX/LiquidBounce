@@ -22,9 +22,11 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -43,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderLayer
@@ -93,6 +94,19 @@ object ThemeManager : Configurable("theme") {
         }
 
     private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
+
+    val themes: List<String>
+        get() {
+            val folderList = themesFolder.listFiles()
+                ?.filter(File::isDirectory)
+                ?.mapNotNull { it.name }
+                ?: emptyList()
+
+            val marketplaceItemList = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.THEME)
+                .map { item -> "${item.id}_${item.name}" }
+
+            return folderList + marketplaceItemList
+        }
 
     init {
         ConfigSystem.root(this)
@@ -164,12 +178,13 @@ object ThemeManager : Configurable("theme") {
         }
     }
 
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mousePos: Vec2i, delta: Float): Boolean {
+    @Suppress("LongParameterList")
+    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         if (shaderEnabled) {
             val shader = activeTheme.compiledShaderBackground ?: defaultTheme.compiledShaderBackground
 
             if (shader != null) {
-                shader.draw(mousePos.x, mousePos.y, delta)
+                shader.draw(mouseX, mouseY, delta)
                 return true
             }
         }
@@ -198,21 +213,27 @@ object ThemeManager : Configurable("theme") {
         activeTheme = Theme(name)
     }
 
-    fun themes() = themesFolder.listFiles()?.filter { it.isDirectory }?.mapNotNull { it.name } ?: emptyList()
-
     data class Route(val theme: Theme, val url: String)
 
 }
 
 class Theme(val name: String) : Closeable {
 
-    private val folder = File(ThemeManager.themesFolder, name)
-
-    init {
-        if (!exists) {
-            error("Theme $name does not exist")
+    val folder = File(ThemeManager.themesFolder, name)
+        .takeIf { it.exists() && it.isDirectory }
+        ?: run {
+            val (id, folderName) = name.split("_", limit = 2)
+                .takeIf { it.size == 2 }
+                ?: error("Theme $name does not exist")
+            val intId = id.toIntOrNull() ?: error("Theme $name does not exist")
+            val item = MarketplaceManager.getItem(intId) ?: error("Theme $name does not exist")
+            check(item.name == folderName) { "Theme $name does not exist" }
+            isMarketplaceItem = true
+            item.getInstallationFolder() ?: error("Theme $name does not exist")
         }
-    }
+
+    var isMarketplaceItem = false
+        private set
 
     private val metadata: ThemeMetadata = run {
         val metadataFile = File(folder, "metadata.json")
@@ -227,7 +248,12 @@ class Theme(val name: String) : Closeable {
         get() = folder.exists()
 
     private val url: String
-        get() = "${ClientInteropServer.url}/$name/#/"
+        get() = if (isMarketplaceItem) {
+            val relativePath = folder.relativeTo(MarketplaceManager.marketplaceRoot).path
+            "${ClientInteropServer.url}/marketplace/$relativePath/#/"
+        } else {
+            "${ClientInteropServer.url}/theme/$name/#/"
+        }
 
     private val backgroundShader: File
         get() = File(folder, "background.frag")

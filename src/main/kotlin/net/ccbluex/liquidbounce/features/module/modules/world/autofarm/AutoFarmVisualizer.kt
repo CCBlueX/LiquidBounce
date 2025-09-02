@@ -35,7 +35,11 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
     private object Path : ToggleableConfigurable(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        override val running: Boolean
+            get() = super.running && AutoFarmAutoWalk.running
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(color) {
                     AutoFarmAutoWalk.walkTarget?.let { target ->
@@ -80,8 +84,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             }
         }
 
-
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
@@ -94,18 +98,23 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
 
                     withPositionRelativeToCamera(pos.toVec3d()) {
-                        if (type == AutoFarmTrackedStates.Destroy) {
-                            withColor(fillColor) {
-                                drawSolidBox(FULL_BOX)
+                        when (type) {
+                            AutoFarmTrackedState.SHOULD_BE_DESTROYED -> {
+                                withColor(fillColor) {
+                                    drawSolidBox(FULL_BOX)
+                                }
                             }
-                        } else {
-                            withColor(placeColor) {
-                                drawSideBox(FULL_BOX, Direction.UP)
+                            AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
+                                withColor(placeColor) {
+                                    drawSideBox(FULL_BOX, Direction.UP)
+                                }
                             }
-
+                            AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
+                                // NOOP
+                            }
                         }
 
-                        if (outline && type == AutoFarmTrackedStates.Destroy) {
+                        if (outline && type == AutoFarmTrackedState.SHOULD_BE_DESTROYED) {
                             withColor(outlineColor) {
                                 drawOutlinedBox(FULL_BOX)
                             }

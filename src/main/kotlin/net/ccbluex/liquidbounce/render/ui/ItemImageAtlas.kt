@@ -2,24 +2,27 @@ package net.ccbluex.liquidbounce.render.ui
 
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
-import net.ccbluex.liquidbounce.utils.math.Vec2i
+import net.ccbluex.liquidbounce.utils.render.toBufferedImage
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.util.math.Rect2i
 import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
+import org.joml.Vector2i
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -27,7 +30,7 @@ import kotlin.math.sqrt
 private const val NATIVE_ITEM_SIZE: Int = 16
 
 private class Atlas(
-    val map: Map<Item, Pair<Vec2i, Vec2i>>,
+    val map: Map<Item, Rect2i>,
     val image: BufferedImage,
     /**
      * Contains aliases. For example `minecraft:blue_wall_banner` -> `minecraft:wall_banner` which is necessary since
@@ -49,25 +52,17 @@ object ItemImageAtlas : EventListener {
         }
 
         val renderer = ItemFramebufferRenderer(
-            Registries.ITEM.stream().toTypedArray(),
+            Registries.ITEM,
             4
         )
 
         val items = renderer.render(drawContext)
 
-        val image = renderer.getImage()
-
-        val img = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
-
-        for (x in 0 until image.width) {
-            for (y in 0 until image.height) {
-                img.setRGB(x, y, image.getColorArgb(x, y))
-            }
-        }
+        val image = renderer.getImage().toBufferedImage()
 
         renderer.deleteFramebuffer()
 
-        this.atlas = Atlas(items, img, findAliases())
+        this.atlas = Atlas(items, image, findAliases())
     }
 
     private fun findAliases(): Map<Identifier, Identifier> {
@@ -101,39 +96,34 @@ object ItemImageAtlas : EventListener {
 
     fun getItemImage(item: Item): BufferedImage? {
         val atlas = requireNotNull(this.atlas) { "Atlas is not available yet" }
-        val (atlasStart, atlasEnd) = atlas.map[item] ?: return null
+        val rect = atlas.map[item] ?: return null
 
         return atlas.image.getSubimage(
-            atlasStart.x,
-            atlasStart.y,
-            atlasEnd.x - atlasStart.x,
-            atlasEnd.y - atlasStart.y,
+            rect.x,
+            rect.y,
+            rect.width,
+            rect.height,
         )!!
     }
 }
 
-
 private class ItemFramebufferRenderer(
-    val items: Array<Item>,
+    val items: Registry<Item>,
     val scale: Int,
-): MinecraftShortcuts {
-    val itemsPerDimension = ceil(sqrt(items.size.toDouble())).toInt()
+) : MinecraftShortcuts {
+    private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
 
-    val framebuffer: Framebuffer = run {
-        val fb = SimpleFramebuffer(
-            NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-            NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-            true
-        )
-
-        fb.setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-
-        fb
+    private val framebuffer: Framebuffer = SimpleFramebuffer(
+        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
+        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
+        true
+    ).apply {
+        setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
     }
 
-    val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
+    private val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
 
-    fun render(ctx: DrawContext): Map<Item, Pair<Vec2i, Vec2i>> {
+    fun render(ctx: DrawContext): Map<Item, Rect2i> {
         this.framebuffer.beginWrite(true)
 
         ctx.matrices.push()
@@ -156,22 +146,20 @@ private class ItemFramebufferRenderer(
         RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.ORTHOGRAPHIC)
         GlobalFramebuffer.push(framebuffer)
 
-        val map = this.items.mapIndexed { idx, item ->
-            val from = Vec2i(
-                (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE,
-                (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
+        val map = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
+        this.items.forEachIndexed { idx, item ->
+            val fromX = (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE
+            val fromY = (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
+
+            ctx.drawItem(item.defaultStack, fromX, fromY)
+
+            map[item] = Rect2i(
+                fromX * this.scale,
+                fromY * this.scale,
+                this.itemPixelSizeOnFramebuffer,
+                this.itemPixelSizeOnFramebuffer
             )
-
-            ctx.drawItem(ItemStack(item), from.x, from.y)
-
-            val fbFrom = Vec2i(from.x * this.scale, from.y * this.scale)
-            val fbTo = Vec2i(
-                fbFrom.x + this.itemPixelSizeOnFramebuffer,
-                fbFrom.y + this.itemPixelSizeOnFramebuffer
-            )
-
-            item to (fbFrom to fbTo)
-        }.toMap()
+        }
 
         ctx.matrices.pop()
 
@@ -183,16 +171,7 @@ private class ItemFramebufferRenderer(
         return map
     }
 
-    fun getImage(): NativeImage {
-        val ss = NativeImage(this.framebuffer.textureWidth, this.framebuffer.textureHeight, false)
-
-        RenderSystem.bindTexture(this.framebuffer.colorAttachment)
-
-        ss.loadFromTextureImage(0, false)
-        ss.mirrorVertically()
-
-        return ss
-    }
+    fun getImage(): NativeImage = framebuffer.toNativeImage()
 
     fun deleteFramebuffer() {
         this.framebuffer.delete()

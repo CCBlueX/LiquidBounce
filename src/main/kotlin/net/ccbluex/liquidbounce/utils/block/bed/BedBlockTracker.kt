@@ -41,6 +41,8 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
 
     private val subscribers = ReferenceOpenHashSet<Subscriber>()
 
+    private val CACHE = ThreadLocal.withInitial(BlockPos::Mutable)
+
     internal fun triggerRescan() {
         val newMaxLayers = if (subscribers.isEmpty()) 0 else subscribers.maxOf { it.maxLayers }
         if (newMaxLayers == maxLayers) {
@@ -87,36 +89,37 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         Blocks.BLACK_STAINED_GLASS,
     )
 
-    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): Set<SurroundingBlock> {
-        val layers = Array<Reference2IntOpenHashMap<Block>>(maxLayers, ::Reference2IntOpenHashMap)
+    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): Collection<SurroundingBlock> {
+        val layers = Array<Reference2IntOpenHashMap<Block>>(maxLayers) { Reference2IntOpenHashMap() }
 
-        searchBedLayer(blockState, maxLayers)
-            .forEach { (layer, pos) ->
-                val state = pos.getState()
+        val pos = CACHE.get()
+        for ((layer, longValue) in searchBedLayer(blockState, maxLayers)) {
+            val state = pos.set(longValue).getState()
 
-                // Ignore empty positions
-                if (state == null || state.isAir) {
-                    return@forEach
-                }
-
-                val block = state.block
-                if (state.isSolidBlock(world, pos) || block in WHITELIST_NON_SOLID) {
-                    // Count blocks (getInt default = 0)
-                    with(layers[layer - 1]) {
-                        put(block, getInt(block) + 1)
-                    }
-                }
+            // Ignore empty positions
+            if (state == null || state.isAir) {
+                continue
             }
 
-        val result = sortedSetOf<SurroundingBlock>()
-
-        layers.forEachIndexed { i, map ->
-            map.reference2IntEntrySet().forEach { (block, count) ->
-                result += SurroundingBlock(block, count, i + 1)
+            val block = state.block
+            if (state.isSolidBlock(world, pos) || block in WHITELIST_NON_SOLID) {
+                // Count blocks (default = 0)
+                layers[layer - 1].addTo(block, 1)
             }
         }
 
-        return result
+        val result = arrayOfNulls<SurroundingBlock>(layers.sumOf { it.size })
+        var idx = 0
+
+        layers.forEachIndexed { i, map ->
+            map.reference2IntEntrySet().forEach { (block, count) ->
+                result[idx++] = SurroundingBlock(block, count, i + 1)
+            }
+        }
+        result.sort()
+
+        @Suppress("UNCHECKED_CAST")
+        return result.asList() as Collection<SurroundingBlock>
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {

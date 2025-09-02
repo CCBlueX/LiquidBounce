@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.FakePlayer;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
@@ -213,6 +214,15 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Inject(method = "equipStack", at = @At("HEAD"))
     private void hookPlayerEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new PlayerEquipmentChangeEvent((PlayerEntity) (Object) this, slot, stack));
+    }
+
+    @ModifyExpressionValue(method = "getAttackCooldownProgressPerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
+    private double hookAutoWeaponAttackSpeed(double original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+            return original;
+        }
+
+        return ModuleAutoWeapon.INSTANCE.getAttackSpeed(original);
     }
 
     /*

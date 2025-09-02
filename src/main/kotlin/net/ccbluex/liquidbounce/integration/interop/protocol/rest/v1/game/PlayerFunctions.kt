@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -96,7 +96,7 @@ data class PlayerData(
 
         @JvmStatic
         fun fromPlayer(player: PlayerEntity) = PlayerData(
-            ModuleNameProtect.replace(player.nameForScoreboard),
+            ModuleNameProtect.uncachedReplace(player.nameForScoreboard),
             player.uuidAsString,
             player.world.registryKey.value,
             player.pos,

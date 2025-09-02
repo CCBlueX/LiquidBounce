@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.event.handler
 object ProxyManager : Configurable("proxy"), EventListener {
 
     var proxy by value("selectedProxy", Proxy.NONE, valueType = ValueType.PROXY).onChanged {
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
     }
     internal val proxies by list(name, mutableListOf<Proxy>(), valueType = ValueType.PROXY)
 
@@ -75,7 +75,7 @@ object ProxyManager : Configurable("proxy"), EventListener {
                 // If no index is provided, we are adding a new proxy
                 proxies.add(proxy)
             }
-            ConfigSystem.storeConfigurable(this)
+            ConfigSystem.store(this)
 
             if (isConnected) {
                 this@ProxyManager.proxy = proxy

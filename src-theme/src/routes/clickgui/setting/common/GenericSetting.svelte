@@ -16,9 +16,11 @@
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";
+    import FileSetting from "../FileSetting.svelte";
     import MutableListSetting from "../list/MutableListSetting.svelte";
     import ItemListSetting from "../list/ItemListSetting.svelte";
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
+    import CurveSetting from "../CurveSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -30,6 +32,8 @@
         <BooleanSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOICE"}
         <ChoiceSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "FILE"}
+        <FileSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOOSE"}
         <ChooseSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "MULTI_CHOOSE"}
@@ -58,10 +62,12 @@
         <RegistryListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
-    {:else if setting.valueType === "VECTOR_I" || setting.valueType === "VECTOR_D" }
+    {:else if setting.valueType === "VECTOR3_I" || setting.valueType === "VECTOR3_D" }
         <VectorSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "CURVE"}
+        <CurveSetting {path} bind:setting={setting} on:change/>
     {:else}
         <div style="color: white">Unsupported setting {setting.valueType}</div>
     {/if}

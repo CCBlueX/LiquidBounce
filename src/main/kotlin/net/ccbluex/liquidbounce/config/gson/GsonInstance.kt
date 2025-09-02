@@ -52,6 +52,7 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import net.minecraft.world.GameMode
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -111,6 +112,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter)
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
+        .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
         .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
@@ -119,6 +121,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
         .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
+        .registerTypeHierarchyAdapter(Vector2fAdapter::class.javaObjectType, Vector2fAdapter)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
@@ -134,3 +137,4 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
+        .registerTypeAdapterFactory(OptionalAdapter)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-package net.ccbluex.liquidbounce.utils.aiming.point.preference
+import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.minecraft.util.math.Box
+/**
+ * Manage marketplace item revisions
+ */
+object MarketplaceRevisionsCommand : CommandFactory {
 
-enum class PreferredBoxPart(override val choiceName: String, val cutOff: (Box) -> Double) : NamedChoice {
-    HEAD("Head", { box -> box.maxY }),
-    BODY("Body", { box -> box.center.y }),
-    FEET("Feet", { box -> box.minY });
-
-    /**
-     * Check if this part of the box is higher than the other by the index of the enum.
-     * So please DO NOT change the order of the enum.
-     */
-    fun isHigherThan(other: PreferredBoxPart) = entries.indexOf(this) < entries.indexOf(other)
-
+    override fun createCommand() = CommandBuilder.begin("revisions")
+        .hub()
+        .subcommand(MarketplaceListRevisionsCommand.createCommand())
+        // Uploading revision is disabled until proven stable
+        // .subcommand(UploadRevisionCommand.createCommand())
+        .build()
 }

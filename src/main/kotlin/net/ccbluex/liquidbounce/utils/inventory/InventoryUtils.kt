@@ -22,8 +22,8 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
@@ -39,6 +39,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import java.util.*
 
@@ -88,7 +89,7 @@ internal enum class InventoryRequirements(
     val testRequirement: (action: InventoryAction) -> Boolean
 ) : NamedChoice {
     NO_MOVEMENT("NoMovement", { _ ->
-        player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f
+        player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
     }),
 
     NO_ROTATION("NoRotation", { _ ->
@@ -157,12 +158,13 @@ fun findItemsInContainer(screen: GenericContainerScreen) =
         .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
         .map { ContainerItemSlot(it.id) }
 
+@JvmOverloads
 fun useHotbarSlotOrOffhand(
     item: HotbarItemSlot,
     ticksUntilReset: Int = 1,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
-) = when (item) {
+): ActionResult = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch)
     else -> {
         SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
@@ -170,18 +172,23 @@ fun useHotbarSlotOrOffhand(
     }
 }
 
+@JvmOverloads
 fun interactItem(
     hand: Hand,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
-) {
-    interaction.interactItem(player, hand, yaw, pitch).takeIf { it.isAccepted }?.let {
-        if (it.shouldSwingHand()) {
+): ActionResult {
+    val result = interaction.interactItem(player, hand, yaw, pitch)
+
+    if (result.isAccepted) {
+        if (result.shouldSwingHand()) {
             player.swingHand(hand)
         }
 
         mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
     }
+
+    return result
 }
 
 fun findBlocksEndingWith(vararg targets: String) =

@@ -23,8 +23,8 @@ import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
@@ -38,6 +38,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
 import java.util.concurrent.TimeUnit
+import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -83,12 +84,14 @@ object HttpClient {
         }
         .build().also(McefFileUtils::setOkHttpClient)
 
+    @Suppress("LongParameterList")
     suspend fun request(
         url: String,
         method: HttpMethod,
         agent: String = DEFAULT_AGENT,
         headers: Headers.Builder.() -> Unit = {},
-        body: RequestBody? = null
+        body: RequestBody? = null,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ): Response = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url(url)
@@ -97,11 +100,22 @@ object HttpClient {
             .header("User-Agent", agent)
             .build()
 
-        client.newCall(request).execute()
+        if (progressListener == null) {
+            client.newCall(request).execute()
+        } else {
+            client.newBuilder()
+                .addNetworkInterceptor(OkHttpProgressInterceptor(progressListener))
+                .build()
+                .newCall(request).execute()
+        }
     }
 
-    suspend fun download(url: String, file: File, agent: String = DEFAULT_AGENT) =
-        request(url, HttpMethod.GET, agent).toFile(file)
+    suspend fun download(
+        url: String,
+        file: File,
+        agent: String = DEFAULT_AGENT,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
+    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
 
 }
 

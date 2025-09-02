@@ -110,11 +110,31 @@ object Parameters {
         paramName = name, typeName = "Configurable", all = ConfigSystem.configurables, predicate = predicate
     )
 
-    inline fun <reified T> enumChoices(
-        name: String = "enums"
-    ) where T : Enum<T>, T : NamedChoice = ParameterBuilder.begin<Set<T>>(name)
+    inline fun <reified T> enumChoice(
+        name: String = "enum",
+        crossinline predicate: (T) -> Boolean = { true },
+    ) where T : Enum<T>, T : NamedChoice = ParameterBuilder.begin<T>(name)
         .verifiedBy { sourceText ->
             val values = enumValues<T>()
+            val choice = values.firstOrNull { v -> v.choiceName.equals(sourceText, true) && predicate(v) }
+            if (choice == null) {
+                ParameterValidationResult.error("$sourceText is not a valid choice")
+            } else {
+                ParameterValidationResult.ok(choice)
+            }
+        }
+        .autocompletedWith { begin, _ ->
+            enumValues<T>().mapNotNull { v ->
+                v.choiceName.takeIf { it.startsWith(begin, true) }
+            }
+        }
+
+    inline fun <reified T> enumChoices(
+        name: String = "enums",
+        crossinline predicate: (T) -> Boolean = { true },
+    ) where T : Enum<T>, T : NamedChoice = ParameterBuilder.begin<Set<T>>(name)
+        .verifiedBy { sourceText ->
+            val values = enumValues<T>().filterTo(emptyEnumSet(), predicate)
             val choices = sourceText.split(',').mapNotNullTo(emptyEnumSet<T>()) {
                 values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
             }
@@ -127,9 +147,9 @@ object Parameters {
         .autocompletedWith { begin, _ ->
             val splitAt = begin.lastIndexOf(',') + 1
             val prefix = begin.substring(0, splitAt)
-            val modulePrefix = begin.substring(splitAt)
+            val choicePrefix = begin.substring(splitAt)
             enumValues<T>().filter {
-                it.choiceName.startsWith(modulePrefix, true)
+                it.choiceName.startsWith(choicePrefix, true)
             }.map {
                 prefix + it.choiceName
             }
