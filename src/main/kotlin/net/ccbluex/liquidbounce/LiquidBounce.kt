@@ -300,7 +300,7 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.storeConfigurable(ClientAccountManager)
+                        ConfigSystem.store(ClientAccountManager)
                     }
                 }
             },
@@ -361,6 +361,7 @@ object LiquidBounce : EventListener {
                     // Preload marketplace items
                     ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
+                    ConfigSystem.store(MarketplaceManager)
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
                 }

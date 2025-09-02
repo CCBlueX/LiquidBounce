@@ -39,7 +39,7 @@ fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonOb
 @Suppress("UNUSED_PARAMETER")
 fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
-    ConfigSystem.storeConfigurable(ThemeManager)
+    ConfigSystem.store(ThemeManager)
     return httpNoContent()
 }
 

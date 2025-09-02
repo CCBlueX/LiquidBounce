@@ -410,6 +410,12 @@
   "liquidbounce.command.marketplace.subcommand.unsubscribe.result.success": "Successfully unsubscribed from item #%s.",
   "liquidbounce.command.marketplace.subcommand.unsubscribe.result.notSubscribed": "You are not subscribed to item #%s.",
 
+  "liquidbounce.command.marketplace.subcommand.update.description": "Either update all subscribed items or update a specific item.",
+  "liquidbounce.command.marketplace.subcommand.update.parameter.id.description": "The ID of the item to update.",
+  "liquidbounce.command.marketplace.subcommand.update.result.success": "Successfully updated item #%s to version #%s.",
+  "liquidbounce.command.marketplace.subcommand.update.result.noUpdate": "Item #%s is already up to date.",
+  "liquidbounce.command.marketplace.subcommand.update.result.updating": "Updating item #%s...",
+
   "liquidbounce.command.marketplace.subcommand.item.description": "Manage marketplace items.",
   "liquidbounce.command.marketplace.subcommand.item.subcommand.create.description": "Create a new marketplace item.",
   "liquidbounce.command.marketplace.subcommand.item.subcommand.create.parameter.name.description": "The name of the item.",

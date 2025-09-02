@@ -66,7 +66,7 @@ object CommandClientConfigSubcommand {
             runCatching {
                 chat(regular(command.result("backingUp", variable(formattedNames))))
                 for (configurable in configurables) {
-                    ConfigSystem.storeConfigurable(configurable)
+                    ConfigSystem.store(configurable)
                 }
 
                 val fileName = "manual-${LocalDateTime.now().toUnderlinedString()}"

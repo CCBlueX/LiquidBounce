@@ -36,6 +36,7 @@ object CommandMarketplace : CommandFactory {
         .subcommand(MarketplaceSearchCommand.createCommand())
         .subcommand(MarketplaceSubscribeCommand.createCommand())
         .subcommand(MarketplaceUnsubscribeCommand.createCommand())
+        .subcommand(MarketplaceUpdateCommand.createCommand())
         .subcommand(MarketplaceRevisionsCommand.createCommand())
         // Editing items is disabled until proven stable
         // .subcommand(MarketplaceItemCommand.createCommand())

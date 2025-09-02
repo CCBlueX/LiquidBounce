@@ -164,7 +164,7 @@ object ConfigSystem {
         }
 
         // After loading the config, we need to store it again to make sure all values are up to date
-        storeConfigurable(configurable)
+        store(configurable)
     }
 
     /**
@@ -174,15 +174,15 @@ object ConfigSystem {
      * These configurables are root configurables, which always create a new file with their name.
      */
     fun storeAll() {
-        configurables.forEach(::storeConfigurable)
+        configurables.forEach(::store)
     }
 
     /**
-     * Store a configurable to a file (will be created if not exists).
+     * Store configurable to a file (will be created if not exists).
      *
      * The configurable should be known to the config system.
      */
-    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
+    fun store(configurable: Configurable) { // Make a new .json file to save our root configurable
         configurable.jsonFile.runCatching {
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }

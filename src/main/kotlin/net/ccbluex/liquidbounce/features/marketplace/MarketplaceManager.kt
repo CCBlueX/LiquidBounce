@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptManager
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.*
 import java.io.File
 
 /**
@@ -46,20 +48,34 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
 
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
-    suspend fun updateAll(task: Task) {
+    suspend fun updateAll(task: Task? = null, command: Command? = null) {
          subscribedItems.forEach { item ->
-             runCatching {
-                 logger.info("Checking for updates for item ${item.id} (${item.type})")
-                 val updateRevisionId = item.checkUpdate() ?: return@forEach
-                 logger.info("Updating item ${item.id} (${item.type})...")
-                 val subTask = task.getOrCreateFileTask(item.id.toString())
-                 item.install(updateRevisionId, subTask)
-                 subTask.isCompleted = true
-                 logger.info("Successfully updated item ${item.id} (${item.type})")
-             }.onFailure {
-                 logger.error("Failed to update item ${item.id}", it)
-             }
+             update(item, task, command)
          }
+    }
+
+    suspend fun update(item: SubscribedItem, task: Task? = null, command: Command? = null) = runCatching {
+        logger.info("Checking for updates for item ${item.id} (${item.type})")
+        val updateRevisionId = item.checkUpdate() ?: run {
+            command?.run { chat(regular(command.result("noUpdate", variable(item.id.toString())))) }
+            return@runCatching
+        }
+        logger.info("Updating item ${item.id} (${item.type})...")
+        command?.run { chat(regular(command.result("updating", variable(item.id.toString())))) }
+        val subTask = task?.getOrCreateFileTask(item.id.toString())
+        item.install(updateRevisionId, subTask)
+        subTask?.isCompleted = true
+        logger.info("Successfully updated item ${item.id} (${item.type})")
+        command?.run { chat(regular(command.result("success", variable(item.id.toString()), variable(updateRevisionId.toString())))) }
+    }.onFailure { e ->
+        logger.error("Failed to update item ${item.id}", e)
+        if (command != null) {
+            chat(markAsError((translation(
+                "liquidbounce.command.marketplace.error.updateFailed",
+                item.id,
+                e.message ?: "Unknown error"
+            ))))
+        }
     }
 
     suspend fun subscribe(item: MarketplaceItem) {
@@ -70,7 +86,7 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         val item = SubscribedItem(item)
         item.install(item.getNewestRevisionId() ?: return)
         subscribedItems.add(item)
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
 
         when (item.type) {
             MarketplaceItemType.SCRIPT -> ScriptManager.reload()
@@ -84,7 +100,7 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         check(!item.itemDir.exists() || item.itemDir.deleteRecursively()) { "Failed to delete item directory" }
 
         subscribedItems.remove(item)
-        ConfigSystem.storeConfigurable(this)
+        ConfigSystem.store(this)
 
         when (item.type) {
             MarketplaceItemType.SCRIPT -> ScriptManager.reload()
