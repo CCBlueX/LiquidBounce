@@ -6,7 +6,9 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
+import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 
@@ -109,6 +111,13 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             extractZip(revisionArchiveFile, revisionDir)
 
             installedRevisionId = revisionId
+
+            // Update type's manager
+            when (type) {
+                MarketplaceItemType.SCRIPT -> ScriptManager.reload()
+                MarketplaceItemType.THEME -> ThemeManager.load()
+                else -> {}
+            }
         } catch (exception: Exception) {
             if (revisionDir.exists()) {
                 revisionDir.deleteRecursively()

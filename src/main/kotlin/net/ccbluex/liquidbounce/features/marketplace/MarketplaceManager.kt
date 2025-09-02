@@ -101,11 +101,6 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         item.install(item.getNewestRevisionId() ?: return)
         subscribedItems.add(item)
         ConfigSystem.store(this)
-
-        when (item.type) {
-            MarketplaceItemType.SCRIPT -> ScriptManager.reload()
-            else -> {}
-        }
     }
 
     suspend fun unsubscribe(itemId: Int) {
