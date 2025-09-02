@@ -44,35 +44,9 @@ fun getMarketplaceItems(requestObject: RequestObject) = runBlocking {
     val query = requestObject.queryParams["query"]
     val typeStr = requestObject.queryParams["type"]
     val type = typeStr?.let { MarketplaceItemType.valueOf(it.uppercase()) }
+    val featured = requestObject.queryParams["featured"]?.toBoolean() ?: true
 
-    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type)
-
-    // Enhance items with subscription status
-    val items = response.items.map { item ->
-        JsonObject().apply {
-            add("item", interopGson.toJsonTree(item))
-            addProperty("isSubscribed", MarketplaceManager.isSubscribed(item.id))
-            addProperty("hasUpdate", false) // TODO: Implement version check
-        }
-    }
-
-    JsonObject().apply {
-        add("items", interopGson.toJsonTree(items))
-        add("pagination", interopGson.toJsonTree(response.pagination))
-    }.let { httpOk(it) }
-}
-
-/**
- * GET /api/v1/marketplace/featured
- */
-fun getFeaturedMarketplaceItems(requestObject: RequestObject) = runBlocking {
-    val page = requestObject.queryParams.getOrDefault("page", "1").toInt()
-    val limit = requestObject.queryParams.getOrDefault("limit", "12").toInt()
-    val query = requestObject.queryParams["query"]
-    val typeStr = requestObject.queryParams["type"]
-    val type = typeStr?.let { MarketplaceItemType.valueOf(it.uppercase()) }
-
-    val response = MarketplaceApi.getFeaturedMarketplaceItems(page, limit, query, type)
+    val response = MarketplaceApi.getMarketplaceItems(page, limit, query, type, featured)
 
     // Enhance items with subscription status
     val items = response.items.map { item ->

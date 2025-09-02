@@ -177,7 +177,6 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
 
     // Marketplace Functions
     get("/marketplace", ::getMarketplaceItems).apply {
-        get("/featured", ::getFeaturedMarketplaceItems)
         get("/:id", ::getMarketplaceItem)
         get("/:id/revisions", ::getMarketplaceItemRevisions)
         get("/:id/revisions/:revisionId", ::getMarketplaceItemRevision)

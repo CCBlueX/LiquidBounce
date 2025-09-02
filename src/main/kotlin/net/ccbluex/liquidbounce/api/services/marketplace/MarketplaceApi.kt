@@ -41,9 +41,9 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         val limit: Int = 10,
         val query: String? = null,
         val type: MarketplaceItemType? = null,
+        val featured: Boolean = true,
         val uid: String? = null,
         val branch: String? = API_BRANCH,
-        val unapproved: Boolean = false
     ) {
         fun buildQueryString() = buildString {
             append("?page=$page&limit=$limit")
@@ -51,7 +51,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
             type?.let { type -> append("&type=${publicGson.toJsonTree(type).asString}") }
             uid?.let { append("&uid=$it") }
             branch?.let { append("&branch=$branch") }
-            if (unapproved) append("&unapproved=true")
+            append("&featured=$featured")
         }
     }
 
@@ -62,25 +62,12 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         limit: Int = 10,
         query: String? = null,
         type: MarketplaceItemType? = null,
-        uid: String? = null,
-        branch: String? = null,
-        unapproved: Boolean = false
-    ): PaginatedResponse<MarketplaceItem> {
-        val params = MarketplaceParams(page, limit, query, type, uid, branch, unapproved)
-        return get("/marketplace${params.buildQueryString()}")
-    }
-
-    @Suppress("LongParameterList")
-    suspend fun getFeaturedMarketplaceItems(
-        page: Int = 1,
-        limit: Int = 10,
-        query: String? = null,
-        type: MarketplaceItemType? = null,
+        featured: Boolean = true,
         uid: String? = null,
         branch: String? = null
     ): PaginatedResponse<MarketplaceItem> {
-        val params = MarketplaceParams(page, limit, query, type, uid, branch)
-        return get("/marketplace/featured${params.buildQueryString()}")
+        val params = MarketplaceParams(page, limit, query, type, featured, uid, branch)
+        return get("/marketplace${params.buildQueryString()}")
     }
 
     suspend fun createMarketplaceItem(
@@ -153,7 +140,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     suspend fun deleteMarketplaceItemRevision(session: OAuthSession, id: Int, revisionId: Int) =
         delete<Unit>("/marketplace/$id/revisions/$revisionId", headers = { addAuth(session) })
 
-    fun downloadRevision(id: Int, revisionId: Int) = "/marketplace/$id/revisions/$revisionId/download"
+    fun downloadRevision(id: Int, revisionId: Int) = "$baseUrl/marketplace/$id/revisions/$revisionId/download"
 
     // Dependencies
     suspend fun getRevisionDependencies(id: Int, revisionId: Int) =
