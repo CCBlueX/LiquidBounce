@@ -47,6 +47,7 @@ abstract class ThemeBackground : Closeable {
             delta: Float
         ): Boolean = false // Show default Minecraft wallpaper
 
+        @Suppress("EmptyFunctionBlock")
         override fun close() { }
     }
 
@@ -113,6 +114,7 @@ abstract class ThemeBackground : Closeable {
      * @param delta Time delta for animations
      * @return true if background was drawn, false to use default Minecraft background
      */
+    @Suppress("LongParameterList")
     abstract fun draw(
         context: DrawContext,
         width: Int,
