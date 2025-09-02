@@ -729,7 +729,7 @@
   "liquidbounce.module.iQBoost.description": "允許你提高自己的IQ。",
   "liquidbounce.module.setbackOnRespawn.description": "重生時將你傳送到你死亡的位置。",
   "liquidbounce.module.autoStuck.description": "在进入虚空娘的怀抱之前将你卡住。",
-  "liquidbounce.module.autoClutch.description ":  "基於類比退火算法的自動珍珠自救。 " ,
+  "liquidbounce.module.autoClutch.description ":  "基於退火算法的自動珍珠自救。 " ,
   "liquidbounce.module.noweb.mode.grim.messages.Protocol ":  "請使用1.18.2以上的協定以繞過Grim高版本弱檢測！ " ,
   "liquidbounce.module.autoRod.description ":  "自動使用魚竿控距，需要準星指向對方。 " ,
   "liquidbounce.module.autoScreenShot.description ":  "自動在勝利時執行某些動作並截圖。 ",

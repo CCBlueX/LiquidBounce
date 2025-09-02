@@ -816,7 +816,7 @@
   "liquidbounce.module.replenish.description": "自动用物品栏中的物品填充快捷栏，使物品数量保持设定的阈值。",
   "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。",
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。",
-  "liquidbounce.module.autoWindCharge.description": "在按下跳跃键时自动用风弹加速跳跃。"
+  "liquidbounce.module.autoWindCharge.description": "在按下跳跃键时自动用风弹加速跳跃。",
   "liquidbounce.module.capes.description": "显示一个仅你可见的披风。",
   "liquidbounce.module.halo.description": "在玩家头顶显示一个蔚蓝档案人物的光环。",
   "liquidbounce.module.packetQueueColor.description": "设置PacketQueue的玩家模型颜色。",
@@ -851,7 +851,10 @@
   "liquidbounce.module.suicide.description":"我有抑郁症。",
   "liquidbounce.module.autoEz.description":"自动扣字。",
   "liquidbounce.module.godMode.description":"无效化所有攻击，只能在无反作弊的情况下工作。",
-  "liquidbounce.module.auroraAntiCheat.description":"基于数据分析运动预测的客户端模拟反作弊。",
+  "liquidbounce.module.auroraAntiCheat.description":"基于数据分析的简易客户端反作弊-半成品。",
   "liquidbounce.module.clientTitle.description":"允许你自定义客户端窗口的标题。",
-  "liquidbounce.module.autoSwap.description": "自动切换副手为金苹果或者投掷物"
+  "liquidbounce.module.autoSwap.description": "切换副手为金苹果或者投掷物。",
+  "liquidbounce.module.autoSex.description": "性骚扰其他玩家。",
+  "liquidbounce.module.autoPath.description": "单击鼠标中键选择坐标后，将你移动到那个位置。需要Baritone",
+  "liquidbounce.module.advancedJumpReset.description": "垃圾待删除。"
 }
