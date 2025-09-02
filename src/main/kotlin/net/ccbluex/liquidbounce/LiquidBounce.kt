@@ -358,7 +358,10 @@ object LiquidBounce : EventListener {
 
             launch("Marketplace") { task ->
                 runCatching {
+                    // Preload marketplace items
+                    ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
+                    task.isCompleted = true
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
                 }
