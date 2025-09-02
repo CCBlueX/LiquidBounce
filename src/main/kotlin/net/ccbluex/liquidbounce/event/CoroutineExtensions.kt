@@ -21,13 +21,11 @@ package net.ccbluex.liquidbounce.event
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
 import kotlin.time.Duration
-
-private val RenderThreadDispatcher = mc.asCoroutineDispatcher()
 
 /**
  * Simple cache.
@@ -52,7 +50,7 @@ val EventListener.eventListenerScope: CoroutineScope
             }
             + CoroutineName(it.toString()) // Name
             // Render thread + Auto cancel on not listening
-            + it.continuationInterceptor(RenderThreadDispatcher)
+            + it.continuationInterceptor(MinecraftDispatcher)
         )
     }
 
