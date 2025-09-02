@@ -161,7 +161,7 @@ function generate(path, organization, packageName) {
         // @ts-expect-error
         let npmName;
         if (organization) {
-            npmName = `${organization}/${packageName}`;
+            npmName = `@${organization}/${packageName}`;
         } else {
             npmName = packageName;
         }
@@ -280,10 +280,11 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
     }
 }
 const packageName = "liquidbounce-script-api";
+const organization = "ccbluex";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
 if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
-    generate(path, "ccbluex", packageName);
+    generate(path, organization, packageName);
     mc.close();
 }
 script.registerCommand({
@@ -292,6 +293,6 @@ script.registerCommand({
     parameters: [],
     onExecute() {
         // @ts-expect-error
-        UnsafeThread.run(() => generate(path, "ccbluex", packageName));
+        UnsafeThread.run(() => generate(path, organization, packageName));
     }
 });
