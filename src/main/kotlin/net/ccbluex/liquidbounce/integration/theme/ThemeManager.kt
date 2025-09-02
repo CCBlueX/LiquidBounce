@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.render.RenderLayer
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
@@ -215,33 +214,14 @@ object ThemeManager : Configurable("theme") {
 
     @Suppress("LongParameterList")
     fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
-        if (shaderEnabled) {
-            val shader = theme.backgroundShader ?: includedTheme.backgroundShader
+        val background = if (shaderEnabled) {
+            theme.themeBackgroundShader ?: includedTheme.themeBackgroundShader
+        } else {
+            theme.themeBackgroundTexture ?: includedTheme.themeBackgroundTexture
+        } ?: return false
 
-            if (shader != null) {
-                shader.draw(mouseX, mouseY, delta)
-                return true
-            }
-        }
-
-        val image = theme.backgroundTexture ?: includedTheme.backgroundTexture
-        if (image != null) {
-            context.drawTexture(
-                RenderLayer::getGuiTextured,
-                image,
-                0,
-                0,
-                0f,
-                0f,
-                width,
-                height,
-                width,
-                height
-            )
-            return true
-        }
-
-        return false
+        background.draw(context, width, height, mouseX, mouseY, delta)
+        return true
     }
 
     data class ScreenLocation(val theme: Theme, val url: String)

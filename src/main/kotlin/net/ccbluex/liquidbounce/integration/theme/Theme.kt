@@ -75,13 +75,13 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
         }
     }
 
-    var backgroundShader: CanvasShader? = null
+    var themeBackgroundShader: ThemeBackground? = null
         private set
-    var backgroundTexture: Identifier? = null
+    var themeBackgroundTexture: ThemeBackground? = null
         private set
 
     suspend fun compileShader(): Boolean {
-        if (backgroundShader != null) {
+        if (themeBackgroundShader != null) {
             return true
         }
 
@@ -90,16 +90,16 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
             get<String>("/background.frag")
         }.getOrNull() ?: return false
 
-        backgroundShader = CanvasShader(
+        themeBackgroundShader = ThemeBackground.shader(CanvasShader(
             vertexShader,
             fragmentShader,
-        )
+        ))
         logger.info("Compiled shader background for theme ${metadata.name}")
         return true
     }
 
     suspend fun loadBackgroundImage(): Boolean {
-        if (backgroundTexture != null) {
+        if (themeBackgroundTexture != null) {
             return true
         }
 
@@ -107,9 +107,10 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
             get<NativeImageBackedTexture>("/background.png")
         }.getOrNull() ?: return false
 
-        backgroundTexture = Identifier.of("liquidbounce",
+        val id = Identifier.of("liquidbounce",
             "theme-bg-${metadata.name.lowercase(Locale.US)}")
-        mc.textureManager.registerTexture(backgroundTexture, image)
+        themeBackgroundTexture = ThemeBackground.image(id)
+        mc.textureManager.registerTexture(id, image)
         logger.info("Loaded background image for theme ${metadata.name}")
         return true
     }
@@ -132,7 +133,8 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
     override fun close() {
-        mc.textureManager.destroyTexture(backgroundTexture)
+        themeBackgroundShader?.close()
+        themeBackgroundTexture?.close()
     }
 
     companion object {
