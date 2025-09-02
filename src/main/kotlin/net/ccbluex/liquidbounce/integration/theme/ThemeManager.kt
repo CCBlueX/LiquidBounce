@@ -50,9 +50,11 @@ object ThemeManager : Configurable("theme") {
     // TODO: Replace with choices so we can have a dropdown
     var currentTheme by text("Theme", "LiquidBounce").onChanged {
         // Update integration browser
-        IntegrationListener.update()
-        ModuleHud.reopen()
-        ModuleClickGui.reload(true)
+        RenderSystem.recordRenderCall {
+            IntegrationListener.update()
+            ModuleHud.reopen()
+            ModuleClickGui.reload(true)
+        }
     }
 
     internal lateinit var includedTheme: Theme
