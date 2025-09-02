@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Parameter
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 
@@ -35,11 +35,11 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
     companion object {
         @JvmField
         val STRING_VALIDATOR: Parameter.Verificator<String> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ok(sourceText)
+            Result.Ok(sourceText)
         }
         @JvmField
         val MODULE_VALIDATOR: Parameter.Verificator<ClientModule> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ofNullable(
+            Result.ofNullable(
                 ModuleManager.find { it.name.equals(sourceText, true) }
             ) {
                 "Module '$sourceText' not found"
@@ -47,7 +47,7 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         }
         @JvmField
         val INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ofNullable(
+            Result.ofNullable(
                 sourceText.toIntOrNull()
             ) {
                 "'$sourceText' is not a valid integer"
@@ -56,25 +56,25 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         @JvmField
         val POSITIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
             val integer = sourceText.toIntOrNull() ?:
-                return@Verificator ParameterValidationResult.error("'$sourceText' is not a valid integer")
+                return@Verificator Result.Error("'$sourceText' is not a valid integer")
 
             if (integer >= 0) {
-                ParameterValidationResult.ok(integer)
+                Result.Ok(integer)
             } else {
-                ParameterValidationResult.error("The integer must be positive")
+                Result.Error("The integer must be positive")
             }
         }
         @JvmField
         val BOOLEAN_VALIDATOR: Parameter.Verificator<Boolean> = Parameter.Verificator { sourceText ->
             when (sourceText.lowercase()) {
-                "yes", "on", "true" -> ParameterValidationResult.ok(true)
-                "no", "off", "false" -> ParameterValidationResult.ok(false)
-                else -> ParameterValidationResult.error("'$sourceText' is not a valid boolean")
+                "yes", "on", "true" -> Result.Ok(true)
+                "no", "off", "false" -> Result.Ok(false)
+                else -> Result.Error("'$sourceText' is not a valid boolean")
             }
         }
 
         @JvmStatic
-        fun <T: Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
+        fun <T : Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
     }
 
     fun verifiedBy(verifier: Parameter.Verificator<T>): ParameterBuilder<T> = apply {

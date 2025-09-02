@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -45,7 +45,7 @@ private fun <V : Value<*>> ParameterBuilder.Companion.value(
     predicate: (V) -> Boolean,
 ) = begin<V>(paramName)
     .verifiedBy { sourceText ->
-        ParameterValidationResult.ofNullable(
+        Result.ofNullable(
             all.firstOrNull { v -> v.name.equals(sourceText, true) && predicate(v) }
         ) {
             "'$sourceText' is not a valid $typeName"
@@ -70,9 +70,9 @@ private fun <V : Value<*>> ParameterBuilder.Companion.values(
             all.firstOrNull { v -> v.name.equals(it, true) && predicate(v) }
         }
         if (values.isEmpty()) {
-            ParameterValidationResult.error("'$sourceText' contains no valid $typeName")
+            Result.Error("'$sourceText' contains no valid $typeName")
         } else {
-            ParameterValidationResult.ok(values)
+            Result.Ok(values)
         }
     }
     .autocompletedWith { begin, _ ->
@@ -117,9 +117,9 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoice(
         val values = enumValues<T>()
         val choice = values.firstOrNull { v -> v.choiceName.equals(sourceText, true) && predicate(v) }
         if (choice == null) {
-            ParameterValidationResult.error("$sourceText is not a valid choice")
+            Result.Error("$sourceText is not a valid choice")
         } else {
-            ParameterValidationResult.ok(choice)
+            Result.Ok(choice)
         }
     }
     .autocompletedWith { begin, _ ->
@@ -138,9 +138,9 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoices(
             values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
         }
         if (choices.isEmpty()) {
-            ParameterValidationResult.error("$sourceText contains no valid choice")
+            Result.Error("$sourceText contains no valid choice")
         } else {
-            ParameterValidationResult.ok(choices)
+            Result.Ok(choices)
         }
     }
     .autocompletedWith { begin, _ ->
@@ -161,9 +161,9 @@ private fun <T : Any> ParameterBuilder.Companion.fromRegistry(
 ) = begin<T>(paramName)
     .verifiedBy { sourceText ->
         val id = Identifier.tryParse(sourceText)
-            ?: return@verifiedBy ParameterValidationResult.error("'$paramName' is not a valid Identifier")
+            ?: return@verifiedBy Result.Error("'$paramName' is not a valid Identifier")
 
-        ParameterValidationResult.ofNullable(registry.getOptionalValue(id).getOrNull()) {
+        Result.ofNullable(registry.getOptionalValue(id).getOrNull()) {
             "$sourceText is not a valid $typeName"
         }
     }

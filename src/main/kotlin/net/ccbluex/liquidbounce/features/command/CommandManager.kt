@@ -328,10 +328,10 @@ object CommandManager : Iterable<Command> by commands {
         }
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
-            is ParameterValidationResult.Ok -> {
+            is Parameter.Verificator.Result.Ok -> {
                 return validationResult.mappedResult
             }
-            is ParameterValidationResult.Error -> {
+            is Parameter.Verificator.Result.Error -> {
                 throw CommandException(
                     translation(
                         "liquidbounce.commandManager.invalidParameterValue",

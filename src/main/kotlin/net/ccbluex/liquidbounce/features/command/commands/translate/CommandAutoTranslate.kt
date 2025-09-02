@@ -51,9 +51,7 @@ object CommandAutoTranslate : Configurable("AutoTranslate"), CommandFactory {
         .parameter(
             ParameterBuilder.begin<String>("languageCode")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom {
-                    languageCodes.keys
-                }
+                .autocompletedFrom { languageCodes.keys }
                 .required()
                 .build()
         )

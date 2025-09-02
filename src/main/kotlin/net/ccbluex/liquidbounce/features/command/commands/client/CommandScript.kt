@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.script.DebugProtocol
 import net.ccbluex.liquidbounce.script.ScriptDebugOptions
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -96,18 +96,8 @@ object CommandScript : CommandFactory {
                 .build()
         )
         .parameter(
-            ParameterBuilder.begin<String>("protocol")
-                .verifiedBy {
-                    try {
-                        ParameterValidationResult.ok(DebugProtocol.valueOf(it).name)
-                    } catch (_: IllegalArgumentException) {
-                        ParameterValidationResult.error("")
-                    }
-                }
+            ParameterBuilder.enumChoice<DebugProtocol>("protocol")
                 .optional()
-                .autocompletedFrom {
-                    DebugProtocol.entries.map { it.toString() }
-                }
                 .build()
         )
         .parameter(
@@ -148,8 +138,7 @@ object CommandScript : CommandFactory {
         command: Command,
         name: String
     ) {
-        val protocol =
-            args.getOrNull(1)?.let { DebugProtocol.valueOf((it as String).uppercase()) } ?: DebugProtocol.INSPECT
+        val protocol = args.getOrNull(1) as DebugProtocol? ?: DebugProtocol.INSPECT
 
         runCatching {
             ScriptManager.loadScript(
