@@ -1,18 +1,43 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import java.io.File
 
-data class SubscribedItem(val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
+data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
 
-    @Exclude
-    val itemDir = MarketplaceManager.marketplaceRoot.resolve("items/$id")
+    constructor(item: MarketplaceItem) : this(item.name, item.id, item.type, null) {
+        require(item.type.isSubscribable) { "Type ${item.type} is not subscribable" }
+    }
+
+    val itemDir
+        get() = MarketplaceManager.marketplaceRoot.resolve("items/$id")
+
+    /**
+     * Get the installation folder of the item.
+     *
+     * Walks down the revision folder until it finds a file,
+     * which returns the parent folder of that file,
+     * as the installation folder.
+     *
+     * This ensures instead of e.g., /marketplace/items/265/1713, it returns /marketplace/items/265/1713/dist
+     */
+    fun getInstallationFolder(): File? {
+        val installedRevisionId = installedRevisionId ?: return null
+        val folder = itemDir.resolve(installedRevisionId.toString())
+        if (!folder.exists() || !folder.isDirectory) {
+            return null
+        }
+
+        val file = folder.walkTopDown().filter { file -> file.isFile }
+        return file.firstOrNull()?.parentFile ?: folder
+    }
 
     suspend fun checkUpdate(): Int? {
         val newestRevisionId = getNewestRevisionId()

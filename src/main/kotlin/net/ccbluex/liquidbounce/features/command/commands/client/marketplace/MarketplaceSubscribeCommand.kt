@@ -60,7 +60,7 @@ object MarketplaceSubscribeCommand : CommandFactory {
                     throw CommandException(translation("liquidbounce.command.marketplace.error.itemPending"))
                 }
 
-                MarketplaceManager.subscribe(id, item.type)
+                MarketplaceManager.subscribe(item)
                 chat(regular(command.result("success", variable(id.toString()))))
             } catch (e: Exception) {
                 logger.error("Failed to subscribe to marketplace item", e)

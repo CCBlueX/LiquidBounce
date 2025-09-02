@@ -66,6 +66,7 @@ enum class ValueType(
     FRIEND,
     PROXY,
     ACCOUNT,
+    SUBSCRIBED_ITEM,
 
     // Invalid type
     INVALID;
