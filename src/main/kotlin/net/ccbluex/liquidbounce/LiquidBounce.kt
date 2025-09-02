@@ -398,8 +398,11 @@ object LiquidBounce : EventListener {
         // Save all configurations
         ConfigSystem.storeAll()
 
-        // Shutdown browser as last step
+        // Shutdown browser
         BrowserBackendManager.stop()
+
+        // Stop backend server
+        ClientInteropServer.httpServer.stop()
     }
 
     /**

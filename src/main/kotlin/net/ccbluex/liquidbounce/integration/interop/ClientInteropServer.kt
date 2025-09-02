@@ -21,9 +21,6 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
@@ -42,7 +39,7 @@ import java.net.Socket
  *
  * Allows the browser to communicate with the client. (e.g. for UIs)
  */
-object ClientInteropServer : EventListener {
+object ClientInteropServer {
 
     internal val httpServer = HttpServer()
     private var socketEventHandler = SocketEventListener()
@@ -82,11 +79,6 @@ object ClientInteropServer : EventListener {
 
         // Start the HTTP server
         startServer()
-    }
-
-    @Suppress("unused")
-    private val shutdownHandler = handler<ClientShutdownEvent> {
-        httpServer.stop()
     }
 
     private var attempt = 0
