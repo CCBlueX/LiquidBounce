@@ -100,10 +100,10 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     inline fun autocompletedFrom(
         ignoreCase: Boolean = true,
-        crossinline placeholdersProvider: () -> Iterable<String>,
+        crossinline placeholdersProvider: () -> Iterable<String>?,
     ) = autocompletedWith { begin, _ ->
         val placeholders = placeholdersProvider()
-        if (placeholders.none()) {
+        if (placeholders == null || placeholders.none()) {
             emptyList()
         } else {
             placeholders.filter { it.startsWith(begin, ignoreCase) }

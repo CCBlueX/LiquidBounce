@@ -33,10 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
 import java.io.File
 
-object CommandScript : CommandFactory {
+private fun ParameterBuilder<*>.autocompletedFromScriptNames() =
+    autocompletedFrom { ScriptManager.root.listFiles()?.map { it.name } }
 
-    private fun ParameterBuilder<*>.autocompletedFromScriptNames() =
-        autocompletedFrom { ScriptManager.root.listFiles()?.map { it.name } ?: emptyList() }
+object CommandScript : CommandFactory {
 
     override fun createCommand(): Command {
         return CommandBuilder.begin("script")

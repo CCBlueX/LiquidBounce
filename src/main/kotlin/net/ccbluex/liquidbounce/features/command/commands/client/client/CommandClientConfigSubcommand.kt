@@ -88,7 +88,6 @@ object CommandClientConfigSubcommand {
                 .autocompletedFrom {
                     ConfigSystem.backupFolder.listFiles()
                         ?.map { file -> file.nameWithoutExtension }
-                        ?: emptyList()
                 }
                 .required()
                 .build()

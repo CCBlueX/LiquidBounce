@@ -144,7 +144,7 @@ object CommandConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom { configs?.map { it.settingId } ?: emptyList() }
+                .autocompletedFrom { configs?.map { it.settingId } }
                 .required()
                 .build()
         )

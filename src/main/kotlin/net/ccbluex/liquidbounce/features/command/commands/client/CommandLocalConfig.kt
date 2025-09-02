@@ -163,7 +163,9 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autoComplete(begin) }
+                .autocompletedFrom {
+                    ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
+                }
                 .required()
                 .build()
         )
@@ -195,9 +197,5 @@ object CommandLocalConfig : CommandFactory {
             }
         }
         .build()
-
-    private fun autoComplete(begin: String): List<String> {
-        return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension } ?: emptyList()
-    }
 
 }

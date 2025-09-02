@@ -77,6 +77,8 @@ class Parameter<T : Any>(
             class Ok<T : Any>(val mappedResult: T) : Result<T>
 
             class Error(val errorMessage: String) : Result<Nothing>
+
         }
+
     }
 }
