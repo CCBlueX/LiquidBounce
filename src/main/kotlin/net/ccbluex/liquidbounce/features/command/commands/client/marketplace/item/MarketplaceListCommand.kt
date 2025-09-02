@@ -57,9 +57,17 @@ object MarketplaceListCommand : CommandFactory {
                 .optional()
                 .build()
         )
+        .parameter(
+            ParameterBuilder
+                .begin<Boolean>("featured")
+                .verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
+                .optional()
+                .build()
+        )
         .suspendHandler { command, args ->
             val typeStr = args[0] as String
             val page = args.getOrNull(1) as? Int ?: 1
+            val featured = args.getOrNull(2) as? Boolean ?: false
 
             val type = try {
                 MarketplaceItemType.valueOf(typeStr.uppercase())
@@ -67,7 +75,7 @@ object MarketplaceListCommand : CommandFactory {
                 throw CommandException(translation("liquidbounce.command.marketplace.error.invalidItemType"))
             }
 
-            val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type)
+            val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
 
             if (response.items.isEmpty()) {
                 chat(regular(command.result("noItems")))
