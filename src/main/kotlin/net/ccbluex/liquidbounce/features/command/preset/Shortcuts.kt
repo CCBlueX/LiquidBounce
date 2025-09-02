@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.lang.translation
 
-fun ClientAccountManager.accountOrException(): ClientAccount {
+internal fun ClientAccountManager.accountOrException(): ClientAccount {
     val clientAccount = clientAccount
     if (clientAccount == EMPTY_ACCOUNT) {
         throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
