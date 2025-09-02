@@ -415,6 +415,9 @@
   "liquidbounce.command.marketplace.subcommand.update.result.success": "Successfully updated item #%s to version #%s.",
   "liquidbounce.command.marketplace.subcommand.update.result.noUpdate": "Item #%s is already up to date.",
   "liquidbounce.command.marketplace.subcommand.update.result.updating": "Updating item #%s...",
+  "liquidbounce.command.marketplace.subcommand.update.result.updatingAll": "Updating all subscribed items...",
+  "liquidbounce.command.marketplace.subcommand.update.result.updatedAll": "Successfully updated all subscribed items.",
+  "liquidbounce.command.marketplace.subcommand.update.result.noSubscribedItems": "You are not subscribed to any items.",
 
   "liquidbounce.command.marketplace.subcommand.item.description": "Manage marketplace items.",
   "liquidbounce.command.marketplace.subcommand.item.subcommand.create.description": "Create a new marketplace item.",

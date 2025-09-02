@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
@@ -61,7 +63,13 @@ object MarketplaceUpdateCommand : CommandFactory {
 
                 MarketplaceManager.update(item, command = command)
             } else {
+                if (MarketplaceManager.subscribedItems.isEmpty()) {
+                    throw CommandException(command.result("noSubscribedItems"))
+                }
+
+                chat(regular(command.result("updatingAll")))
                 MarketplaceManager.updateAll(command = command)
+                chat(regular(command.result("updatedAll")))
             }
         }
         .build()
