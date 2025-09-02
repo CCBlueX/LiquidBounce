@@ -355,6 +355,14 @@ object LiquidBounce : EventListener {
                     logger.info("Failed to initialize deep learning.", exception)
                 }
             }
+
+            launch("Marketplace") { task ->
+                runCatching {
+                    MarketplaceManager.updateAll(task)
+                }.onFailure { exception ->
+                    logger.error("Failed to update marketplace items.", exception)
+                }
+            }
         }
 
         // Prepare glyph manager

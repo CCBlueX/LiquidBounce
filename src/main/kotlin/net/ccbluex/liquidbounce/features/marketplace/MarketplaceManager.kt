@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.utils.client.logger
 import java.io.File
 
 /**
@@ -37,12 +39,27 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
 
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
-    fun subscribe(itemId: Int, type: MarketplaceItemType) {
+    suspend fun updateAll(task: Task) {
+         subscribedItems.forEach { item ->
+             runCatching {
+                 val updateRevisionId = item.checkUpdate() ?: return@forEach
+                 val subTask = task.getOrCreateFileTask(item.id.toString())
+                 item.install(updateRevisionId, subTask)
+                 subTask.isCompleted = true
+             }.onFailure {
+                 logger.error("Failed to update item ${item.id}", it)
+             }
+         }
+    }
+
+    suspend fun subscribe(itemId: Int, type: MarketplaceItemType) {
         if (isSubscribed(itemId)) {
             return
         }
 
-        subscribedItems.add(SubscribedItem(itemId, type, null))
+        val item = SubscribedItem(itemId, type, null)
+        item.install(item.getNewestRevisionId() ?: return)
+        subscribedItems.add(item)
         ConfigSystem.storeConfigurable(this)
     }
 

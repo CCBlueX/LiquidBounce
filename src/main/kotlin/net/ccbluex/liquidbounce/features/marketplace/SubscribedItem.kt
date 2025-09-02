@@ -1,18 +1,23 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
+import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
+import net.ccbluex.liquidbounce.utils.io.extractZip
 
 data class SubscribedItem(val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
 
-    /**
-     * Check if the item has an update available and install it.
-     * This can also be the first-time installation of the item.
-     */
-    suspend fun update() {
-        val updateRevisionId = checkForUpdate() ?: return
-        install(updateRevisionId)
+    val itemDir = MarketplaceManager.marketplaceRoot.resolve("items/$id")
+
+    suspend fun checkUpdate(): Int? {
+        val newestRevisionId = getNewestRevisionId()
+        if (installedRevisionId == newestRevisionId) {
+            return null
+        }
+        return newestRevisionId
     }
 
     /**
@@ -22,7 +27,7 @@ data class SubscribedItem(val id: Int, val type: MarketplaceItemType, var instal
      * by the Marketplace API as first item. We do not
      * use versioning here, therefore it could also work as downgrade.
      */
-    suspend fun checkForUpdate(): Int? {
+    suspend fun getNewestRevisionId(): Int? {
         val item = MarketplaceApi.getMarketplaceItem(id)
 
         // If the [item] is not active, we don't want to update it.
@@ -46,15 +51,46 @@ data class SubscribedItem(val id: Int, val type: MarketplaceItemType, var instal
         }
     }
 
-    suspend fun install(revision: Int) {
+    suspend fun install(revisionId: Int, subTask: ResourceTask? = null) {
         // The revision is already installed, no need to install it again.
-        if (revision == installedRevisionId) {
+        if (revisionId == installedRevisionId) {
             return
         }
 
+        check(itemDir.exists() && !itemDir.isFile || itemDir.mkdirs()) {
+            itemDir.delete()
+            "Failed to create item root directory"
+        }
 
+        val revisionUrl = MarketplaceApi.downloadRevision(id, revisionId)
+        val revisionArchiveFile = itemDir.resolve("$id.zip")
+        check(!revisionArchiveFile.exists() || revisionArchiveFile.delete()) {
+            "Failed to delete existing revision file"
+        }
 
-        installedRevisionId = revision
+        val revisionDir = itemDir.resolve(revisionId.toString())
+
+        try {
+            val taskProgressUpdater = subTask?.let { subTask ->
+                OkHttpProgressInterceptor.ProgressListener { bytesRead, contentLength, _ ->
+                    subTask.update(bytesRead, contentLength)
+                }
+            }
+
+            download(revisionUrl, revisionArchiveFile, progressListener = taskProgressUpdater)
+            // TODO: Check checksum
+            extractZip(revisionArchiveFile, revisionDir)
+
+            installedRevisionId = revisionId
+        } catch (exception: Exception) {
+            if (revisionDir.exists()) {
+                revisionDir.deleteRecursively()
+            }
+
+            throw exception
+        }finally {
+            revisionArchiveFile.delete()
+        }
     }
 
 
