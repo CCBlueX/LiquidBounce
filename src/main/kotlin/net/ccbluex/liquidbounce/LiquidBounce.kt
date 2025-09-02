@@ -302,8 +302,9 @@ object LiquidBounce : EventListener {
                 }
             }
             launch {
+                // TODO: Replace and load through Metadata
                 ThemeManager.themesFolder.listFiles()
-                    ?.filter { file -> file.isDirectory }
+                    ?.filter(File::isDirectory)
                     ?.forEach { file ->
                         runCatching {
                             val assetsFolder = File(file, "assets")
@@ -329,6 +330,7 @@ object LiquidBounce : EventListener {
     private fun prepareGuiStage() {
         BrowserBackendManager
         ClientInteropServer.start()
+        ThemeManager.init()
         ThemeManager.load()
         IntegrationListener
 

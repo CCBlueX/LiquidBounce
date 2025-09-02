@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -73,7 +74,11 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private var browserSettings: BrowserSettings? = null
 
-    val components = tree(Configurable("Components"))
+    val nativeComponents = listOf(MinimapComponent)
+
+    val components = tree(Configurable("Components")).apply {
+        nativeComponents.forEach(this::tree)
+    }
 
     override fun onEnabled() {
         if (isHidingNow) {

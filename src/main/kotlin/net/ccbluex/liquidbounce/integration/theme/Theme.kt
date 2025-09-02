@@ -24,9 +24,14 @@ import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
+import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
+import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.io.File
 import java.util.*
@@ -70,36 +75,44 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
         }
     }
 
-//
-//    fun compileShader(): Boolean {
-//        if (compiledShaderBackground != null) {
-//            return true
-//        }
-//
-//        readShaderBackground()?.let { shaderBackground ->
-//            compiledShaderBackground = CanvasShader(resourceToString("/resources/liquidbounce/shaders/vertex.vert"),
-//                shaderBackground)
-//            logger.info("Compiled background shader for theme $name")
-//            return true
-//        }
-//        return false
-//    }
-//
-//    private fun readShaderBackground() = backgroundShader.takeIf { it.exists() }?.readText()
-//    private fun readBackgroundImage() = backgroundImage.takeIf { it.exists() }
-//        ?.inputStream()?.use { NativeImage.read(it) }
-//
-//    fun loadBackgroundImage(): Boolean {
-//        if (loadedBackgroundImage != null) {
-//            return true
-//        }
-//
-//        val image = NativeImageBackedTexture(readBackgroundImage() ?: return false)
-//        loadedBackgroundImage = Identifier.of("liquidbounce", "theme-bg-${name.lowercase()}")
-//        mc.textureManager.registerTexture(loadedBackgroundImage, image)
-//        logger.info("Loaded background image for theme $name")
-//        return true
-//    }
+    var backgroundShader: CanvasShader? = null
+        private set
+    var backgroundTexture: Identifier? = null
+        private set
+
+    suspend fun compileShader(): Boolean {
+        if (backgroundShader != null) {
+            return true
+        }
+
+        val vertexShader = resourceToString("/resources/liquidbounce/shaders/vertex.vert")
+        val fragmentShader = runCatching {
+            get<String>("/background.frag")
+        }.getOrNull() ?: return false
+
+        backgroundShader = CanvasShader(
+            vertexShader,
+            fragmentShader,
+        )
+        logger.info("Compiled shader background for theme ${metadata.name}")
+        return true
+    }
+
+    suspend fun loadBackgroundImage(): Boolean {
+        if (backgroundTexture != null) {
+            return true
+        }
+
+        val image = runCatching {
+            get<NativeImageBackedTexture>("/background.png")
+        }.getOrNull() ?: return false
+
+        backgroundTexture = Identifier.of("liquidbounce",
+            "theme-bg-${metadata.name.lowercase(Locale.US)}")
+        mc.textureManager.registerTexture(backgroundTexture, image)
+        logger.info("Loaded background image for theme ${metadata.name}")
+        return true
+    }
 
     /**
      * Get the URL to the given page name in the theme.
@@ -119,7 +132,7 @@ class Theme(url: String) : BaseApi(url.removeSuffix("/")), Closeable {
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
     override fun close() {
-//        mc.textureManager.destroyTexture(loadedBackgroundImage)
+        mc.textureManager.destroyTexture(backgroundTexture)
     }
 
     companion object {
