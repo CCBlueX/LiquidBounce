@@ -22,13 +22,13 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.core.asJson
+import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.marketplace.*
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import net.ccbluex.liquidbounce.config.gson.publicGson
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
@@ -81,7 +81,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
             addProperty("name", name)
             add("type", publicGson.toJsonTree(type))
             addProperty("description", description)
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 
@@ -97,7 +97,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
             addProperty("name", name)
             add("type", publicGson.toJsonTree(type))
             addProperty("description", description)
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 
@@ -124,7 +124,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         dependencies: String? = null
     ) {
         val multipartBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart("file", file.name, file.asRequestBody("application/octet-stream".toMediaType()))
+            .addFormDataPart("file", file.name, file.asRequestBody(HttpClient.MediaTypes.OCTET_STREAM))
             .addFormDataPart("version", version)
 
         changelog?.let { multipartBuilder.addFormDataPart("changelog", it) }
@@ -155,7 +155,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         "/marketplace/$id/revisions/$revisionId/dependencies",
         JsonObject().apply {
             addProperty("dependency_revision_id", dependencyRevisionId)
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 
@@ -168,7 +168,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         "/marketplace/$id/revisions/$revisionId/dependencies",
         JsonObject().apply {
             addProperty("dependency_revision_id", dependencyRevisionId)
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 
@@ -186,7 +186,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         JsonObject().apply {
             addProperty("rating", rating)
             review?.let { addProperty("review", it) }
-        }.toString().asJson(),
+        }.toRequestBody(),
         headers = { addAuth(session) }
     )
 
@@ -199,7 +199,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
             .addFormDataPart(
                 "thumbnail",
                 thumbnailFile.name,
-                thumbnailFile.asRequestBody("image/png".toMediaType())
+                thumbnailFile.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG)
             )
             .build()
 
