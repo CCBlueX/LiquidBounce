@@ -11,50 +11,81 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SequenceManager
 import net.ccbluex.liquidbounce.event.TickSequence
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.entity.Entity
+import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
 import java.util.function.Predicate
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-object ModuleBaritone : ClientModule("Baritone", Category.MOVEMENT) {
+class BaritonePathManager(val parent: EventListener) : Configurable("Pathing"), EventListener {
 
-    // Configuration settings
-    private val pathingConfig = tree(PathingConfig(this))
-    private var directionGoal: GoalDirection? = null
-    private var pathingPaused = false
+    override fun parent() = parent
 
-    // Properties for querying Baritone state
-    val isPathing: Boolean
-        get() = BaritoneAPI.getProvider().primaryBaritone.pathingBehavior.isPathing
+    // Existing movement settings
+    val allowSprint by boolean("AllowSprint", true)
+    val allowBreak by boolean("AllowBreak", false)
+    val allowPlace by boolean("AllowPlace", false)
+    val ignoreY by boolean("IgnoreY", false)
+    val maxFallHeight by int("MaxFallHeight", 3, 2..10, "blocks")
+    val allowWaterBucketFall by boolean("AllowWaterBucketFall", true)
+    val allowParkour by boolean("AllowParkour", false)
+    val allowParkourPlace by boolean("AllowParkourPlace", false)
 
-    val targetYaw: Float
-        get() = BaritoneAPI.getProvider().primaryBaritone.playerContext.playerRotations().yaw
+    // New movement settings
+    val allowInventory by boolean("AllowInventory", false)
+    val autoTool by boolean("AutoTool", true)
+    val allowDiagonalAscend by boolean("AllowDiagonalAscend", false)
+    val allowDiagonalDescend by boolean("AllowDiagonalDescend", false)
+    val sprintInWater by boolean("SprintInWater", true)
+    val antiCheatCompatibility by boolean("AntiCheatCompatibility", true)
 
-    val targetPitch: Float
-        get() = BaritoneAPI.getProvider().primaryBaritone.playerContext.playerRotations().pitch
+    // Existing block settings
+    val avoidBlocks by blocks("AvoidBlocks", mutableSetOf())
+    val avoidUpdatingFallingBlocks by boolean("AvoidUpdatingFallingBlocks", true)
+    val blocksToAvoidBreaking by blocks("BlocksToAvoidBreaking", mutableSetOf())
+
+    // New block settings
+    val acceptableThrowawayItems by items("AcceptableThrowawayItems", mutableSetOf(
+      Items.DIRT, Items.COBBLESTONE, Items.NETHERRACK, Items.STONE
+    ))
+
+    val pathCutoffFactor by float("PathCutoffFactor", 0.9f, 0.5f..1.0f)
+    val primaryTimeoutMS by int("PrimaryTimeoutMS", 500, 200..2000, "ms")
+    val failureTimeoutMS by int("FailureTimeoutMS", 2000, 1000..5000, "ms")
+
+    // New performance settings
+    val costHeuristic by float("CostHeuristic", 3.563f, 3.5f..4.6f)
+    val planningTickLookahead by int("PlanningTickLookahead", 150, 50..500, "ticks")
+
+    // New rendering settings
+    val renderPath by boolean("RenderPath", true)
+    val renderGoal by boolean("RenderGoal", true)
+    val pathRenderLineWidth by float("PathRenderLineWidth", 5f, 1f..10f, "pixels")
+    val goalRenderLineWidth by float("GoalRenderLineWidth", 3f, 1f..10f, "pixels")
+    val colorCurrentPath by color("ColorCurrentPath", Color4b.RED)
+    val colorGoalBox by color("ColorGoalBox", Color4b.GREEN)
 
     init {
-        // Register tick handler for updating direction goals
+        applyBaritoneSettings()
         SequenceManager.sequences += TickSequence(this) { directionGoal?.tick() }
     }
 
-    override fun onEnabled() {
-        super.onEnabled()
-        pathingPaused = false
-        applyBaritoneSettings()
-    }
+    private var directionGoal: GoalDirection? = null
+    private var pathingPaused = false
 
-    override fun onDisabled() {
-        super.onDisabled()
-        stop()
-        directionGoal = null
-        pathingPaused = false
-    }
+    val isPathing: Boolean
+        get() = BaritoneAPI.getProvider().primaryBaritone?.pathingBehavior?.isPathing ?: false
+
+    val targetYaw: Float
+        get() = BaritoneAPI.getProvider().primaryBaritone?.playerContext?.playerRotations()?.yaw ?: 0f
+
+    val targetPitch: Float
+        get() = BaritoneAPI.getProvider().primaryBaritone?.playerContext?.playerRotations()?.pitch ?: 0f
 
     fun pause() {
         pathingPaused = true
@@ -65,39 +96,67 @@ object ModuleBaritone : ClientModule("Baritone", Category.MOVEMENT) {
     }
 
     fun stop() {
-        BaritoneAPI.getProvider().primaryBaritone.pathingBehavior.cancelEverything()
+        BaritoneAPI.getProvider().primaryBaritone?.pathingBehavior?.cancelEverything()
     }
 
-    fun moveTo(pos: BlockPos, ignoreY: Boolean = pathingConfig.ignoreY) {
-        if (!running) return
-        val baritone = BaritoneAPI.getProvider().primaryBaritone
+    fun moveTo(pos: BlockPos, ignoreY: Boolean = this.ignoreY) {
+        val baritone = BaritoneAPI.getProvider().primaryBaritone ?: return
         val goal = if (ignoreY) GoalXZ(pos.x, pos.z) else GoalGetToBlock(pos)
         baritone.customGoalProcess.setGoalAndPath(goal)
     }
 
     fun moveInDirection(yaw: Float) {
-        if (!running) return
+        val baritone = BaritoneAPI.getProvider().primaryBaritone ?: return
         directionGoal = GoalDirection(yaw)
-        BaritoneAPI.getProvider().primaryBaritone.customGoalProcess.setGoalAndPath(directionGoal)
+        baritone.customGoalProcess.setGoalAndPath(directionGoal)
     }
 
     fun mine(vararg blocks: Block) {
-        if (!running) return
-        BaritoneAPI.getProvider().primaryBaritone.mineProcess.mine(*blocks)
+        BaritoneAPI.getProvider().primaryBaritone?.mineProcess?.mine(*blocks)
     }
 
     fun follow(entity: Predicate<Entity>) {
-        if (!running) return
-        BaritoneAPI.getProvider().primaryBaritone.followProcess.follow(entity)
+        BaritoneAPI.getProvider().primaryBaritone?.followProcess?.follow(entity)
     }
 
     private fun applyBaritoneSettings() {
-        val baritoneSettings = BaritoneAPI.getSettings()
-        baritoneSettings.allowSprint.value = pathingConfig.allowSprint
-        baritoneSettings.allowBreak.value = pathingConfig.allowBreak
-        baritoneSettings.allowPlace.value = pathingConfig.allowPlace
-        baritoneSettings.allowWaterBucket.value = pathingConfig.allowWaterBucket
-        baritoneSettings.maxFallHeightNoWater.value = pathingConfig.maxFallHeight
+        val baritoneSettings = BaritoneAPI.getSettings() ?: return
+
+        // Core movement settings
+        baritoneSettings.allowSprint.value = allowSprint
+        baritoneSettings.allowBreak.value = allowBreak
+        baritoneSettings.allowPlace.value = allowPlace
+        baritoneSettings.maxFallHeightNoWater.value = maxFallHeight
+        baritoneSettings.allowWaterBucketFall.value = allowWaterBucketFall
+        baritoneSettings.allowParkour.value = allowParkour
+        baritoneSettings.allowParkourPlace.value = allowParkourPlace
+        baritoneSettings.allowInventory.value = allowInventory
+        baritoneSettings.autoTool.value = autoTool
+        baritoneSettings.allowDiagonalAscend.value = allowDiagonalAscend
+        baritoneSettings.allowDiagonalDescend.value = allowDiagonalDescend
+        baritoneSettings.sprintInWater.value = sprintInWater
+        baritoneSettings.antiCheatCompatibility.value = antiCheatCompatibility
+
+        // Block interaction settings
+        baritoneSettings.blocksToAvoid.value = avoidBlocks.toList()
+        baritoneSettings.avoidUpdatingFallingBlocks.value = avoidUpdatingFallingBlocks
+        baritoneSettings.blocksToAvoidBreaking.value = blocksToAvoidBreaking.toList()
+        baritoneSettings.acceptableThrowawayItems.value = acceptableThrowawayItems.toList()
+
+        // Performance settings
+        baritoneSettings.pathCutoffFactor.value = pathCutoffFactor.toDouble()
+        baritoneSettings.primaryTimeoutMS.value = primaryTimeoutMS.toLong()
+        baritoneSettings.failureTimeoutMS.value = failureTimeoutMS.toLong()
+        baritoneSettings.costHeuristic.value = costHeuristic.toDouble()
+        baritoneSettings.planningTickLookahead.value = planningTickLookahead
+
+        // Rendering settings
+        baritoneSettings.renderPath.value = renderPath
+        baritoneSettings.renderGoal.value = renderGoal
+        baritoneSettings.pathRenderLineWidthPixels.value = pathRenderLineWidth
+        baritoneSettings.goalRenderLineWidthPixels.value = goalRenderLineWidth
+        baritoneSettings.colorCurrentPath.value = colorCurrentPath.toAwtColor()
+        baritoneSettings.colorGoalBox.value = colorGoalBox.toAwtColor()
     }
 
     private class GoalDirection(private val yaw: Float) : Goal {
@@ -138,19 +197,5 @@ object ModuleBaritone : ClientModule("Baritone", Category.MOVEMENT) {
         override fun onLostControl() {}
         override fun priority(): Double = 0.0
         override fun displayName0(): String = "LiquidBounce"
-    }
-
-    class PathingConfig(parent: EventListener) : Configurable("Pathing") {
-        val allowSprint by boolean("AllowSprint", true)
-        val allowBreak by boolean("AllowBreak", true)
-        val allowPlace by boolean("AllowPlace", true)
-        val allowWaterBucket by boolean("AllowWaterBucket", false)
-        val maxFallHeight by int("MaxFallHeight", 3, 2..10, "blocks")
-        val ignoreY by boolean("IgnoreY", false)
-        val avoidBlocks by blocks("AvoidBlocks", mutableSetOf())
-
-        init {
-            parent(parent)
-        }
     }
 }
