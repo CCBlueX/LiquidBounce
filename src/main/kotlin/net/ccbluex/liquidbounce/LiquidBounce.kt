@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -256,42 +258,42 @@ object LiquidBounce : EventListener {
      * such as translations, cosmetics, player heads, configs and so on,
      * which do not rely on the main thread.
      */
-    private fun initializeResources() = runBlocking {
+    private fun initializeResources() = runBlocking(Dispatchers.IO + CoroutineName("Resource Initializer")) {
         logger.info("Initializing API...")
         // Lookup API config
         ApiConfig.config
 
-        scope.launch {
-            async {
+        supervisorScope {
+            launch {
                 // Load translations
                 LanguageManager.loadDefault()
             }
-            async {
-                val update = update ?: return@async
+            launch {
+                val update = update ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
             }
-            async {
+            launch {
                 // Load cosmetics
                 CosmeticService.refreshCarriers(force = true) {
                     logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
             }
-            async {
+            launch {
                 // Download player heads
                 heads
             }
-            async {
+            launch {
                 // Load configs
                 AutoConfig.reloadConfigs()
             }
-            async {
+            launch {
                 // IPC configuration
                 ipcConfiguration
             }
-            async {
+            launch {
                 IpInfoApi.original
             }
-            async {
+            launch {
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -304,7 +306,7 @@ object LiquidBounce : EventListener {
                     }
                 }
             }
-            async {
+            launch {
                 ThemeManager.themesFolder.listFiles()
                     ?.filter { file -> file.isDirectory }
                     ?.forEach { file ->
@@ -320,7 +322,9 @@ object LiquidBounce : EventListener {
                         }
                     }
             }
-        }.join()
+        }
+
+        logger.info("API initialization done.")
     }
 
     /**
