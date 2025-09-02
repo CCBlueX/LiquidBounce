@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.pathing.BaritonePathManager
 import net.ccbluex.liquidbounce.utils.pathing.PathManagers
 import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
 import net.minecraft.block.Blocks
@@ -32,8 +31,6 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
     }
     private val algorithm by enumChoice("Algorithm", Algorithm.AStar)
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0f..1.0f)
-    private val settingsImpl = tree(BaritonePathManager(this))
-
     private var targetPos: Vec3d? = null
     private var ticksSinceLastSearch: Int = 0
 

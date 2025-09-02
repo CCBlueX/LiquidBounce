@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -20,8 +21,9 @@ import net.minecraft.util.math.MathHelper
 object EspAvatarMode : EspMode("Avatar", requiresTrueSight = true) {
 
     private val size by float("ImageSize", 1f, 0.5f..2f)
-    private val opacity by float("Opacity", 0.8f, 0f..1f)
+    private val opacity by float("Opacity", 1f, 0.5f..1f)
     private val samples by int("Samples",2,2..5)
+    
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val entities = RenderedEntities.filter { it is PlayerEntity && it != mc.player }
@@ -56,7 +58,7 @@ object EspAvatarMode : EspMode("Avatar", requiresTrueSight = true) {
             }
 
             val alpha = MathHelper.clamp((255 * opacity).toInt(), 0, 255)
-            val color = getColor(entity).with(a = alpha)
+            val color = Color4b.WHITE.withAlpha(alpha)
 
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,

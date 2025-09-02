@@ -1,3 +1,4 @@
+@file:Suppress("detekt:all")
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -19,7 +20,7 @@ import kotlin.math.floor
 class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPrediction"), EventListener {
     override fun parent() = parent
 
-    private val voidThreshold by int("VoidLevel", 0, -256..0)
+    private val voidThreshold by int("VoidLevel", -64, -256..0)
     private val ticksToPredict by int("TicksToPredict", 75, 30..120)
 
     var isVoidFallImminent = false
@@ -91,7 +92,9 @@ class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPredicti
             val playerBox = player.boundingBox.offset(pos.subtract(player.pos))
             val blockPos = BlockPos(pos.x.toInt(), (pos.y - 0.5).toInt(), pos.z.toInt())
             val belowPos = blockPos.down()
-            if (belowPos.canStandOn() && countAdjacentSafeBlocks(blockPos) >= 0 && !playerBox.collideBlockIntersects { it.defaultState.isAir }) {
+            if (belowPos.canStandOn()
+                && countAdjacentSafeBlocks(blockPos) >= 0
+                && !playerBox.collideBlockIntersects { it.defaultState.isAir }) {
                 return true
             }
         }
@@ -102,11 +105,18 @@ class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPredicti
         val xRange = mutableListOf(0)
         val zRange = mutableListOf(0)
 
-        if (pos.x - floor(pos.x) <= 0.3) xRange.add(-1)
-        else if (ceil(pos.x) - pos.x <= 0.3) xRange.add(1)
+        if (pos.x - floor(pos.x) <= 0.3) {
+            xRange.add(-1)
+        } else if (ceil(pos.x) - pos.x <= 0.3) {
+            xRange.add(1)
+        }
 
-        if (pos.z - floor(pos.z) <= 0.3) zRange.add(-1)
-        else if (ceil(pos.z) - pos.z <= 0.3) zRange.add(1)
+        if (pos.z - floor(pos.z) <= 0.3) {
+            zRange.add(-1)
+        } else if (ceil(pos.z) - pos.z <= 0.3) {
+            zRange.add(1)
+        }
+
 
         val minY = if (voidDistance == -1) -64 else pos.y.toInt() - voidDistance
         val maxY = pos.y.toInt()

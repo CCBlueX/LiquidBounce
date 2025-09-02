@@ -1,3 +1,4 @@
+@file:Suppress("detekt:all")
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import com.mojang.blaze3d.systems.RenderSystem
@@ -130,6 +131,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         val initialTemperature by float("InitialTemp", 20f, 5f..50f)
         val temperatureDecayRate by float("TemperatureDecayRate", 0.97f, 0.80f..0.99f)
     }
+
     private val annealingConfig = SimulatedAnnealing()
     init {
         tree(annealingConfig)
@@ -288,7 +290,9 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
 
     private fun pruneCache() {
         while (blockPositionScoreCache.size > 2560) {
-            blockPositionScoreCache.entries.take(100).forEach { blockPositionScoreCache.remove(it.key) }
+            blockPositionScoreCache.entries.take(100).forEach {
+                blockPositionScoreCache.remove(it.key)
+            }
         }
     }
 
@@ -300,7 +304,9 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             return
         }
 
-        if (voidFallPrediction.isPlayerSafe() || voidFallPrediction.canReachSafeBlockFrom() || voidFallPrediction.isBlockUnder(2.0)) {
+        if (voidFallPrediction.isPlayerSafe()
+            || voidFallPrediction.canReachSafeBlockFrom()
+            || voidFallPrediction.isBlockUnder(2.0)) {
             resetAllVariables()
             return
         }
@@ -331,7 +337,11 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         }
 
         val camera = mc.entityRenderDispatcher.camera ?: return
-        val currentPlayerState = Triple(player.pos, player.velocity, DirectionalInput(player.input))
+        val currentPlayerState = Triple(
+            player.pos,
+            player.velocity,
+            DirectionalInput(player.input)
+        )
         val now = System.currentTimeMillis()
 
         val needsUpdate = cachedTrajectory == null
@@ -348,7 +358,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
             val points = List(PlayerTrajectory.trajectoryLength) { tick ->
                 val snapshot = cache.getSnapshotAt(tick)
-                val isSafe = voidFallPrediction.canReachSafeBlockFrom() && !voidFallPrediction.isInVoid(snapshot.pos)
+                val isSafe = voidFallPrediction.canReachSafeBlockFrom()
+                    && !voidFallPrediction.isInVoid(snapshot.pos)
                 snapshot.pos to isSafe
             }
 
@@ -425,7 +436,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         }
         state = State.CALCULATING
         val endTime = System.currentTimeMillis()
-        averageCalculationTimeSeconds = (averageCalculationTimeSeconds * 0.9 + (endTime - startTime) / 1000.0 * 0.1).toFloat()
+        averageCalculationTimeSeconds = (
+            averageCalculationTimeSeconds * 0.9 + (endTime - startTime) / 1000.0 * 0.1).toFloat()
     }
 
     private fun calculateSolutionBackground() {
@@ -433,7 +445,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         val batchSize = 1000
         while (iterations < annealingConfig.maxIterations && temperature >= annealingConfig.minTemperature) {
             repeat(batchSize) {
-                if (iterations >= annealingConfig.maxIterations || temperature < annealingConfig.minTemperature || bestEnergy < 1000.0) {
+                if (iterations >= annealingConfig.maxIterations ||
+                    temperature < annealingConfig.minTemperature || bestEnergy < 1000.0) {
                     return@repeat
                 }
                 val newSolution = Rotation(
@@ -529,7 +542,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 newPos,
                 Box(pos, newPos).expand(trajectoryInfo.hitboxRadius)
             ) { entity ->
-                entity.isAlive && !entity.isSpectator && entity.canHit() && entity != player && !pearlEntity.isConnectedThroughVehicle(entity)
+                entity.isAlive && !entity.isSpectator && entity.canHit()
+                    && entity != player && !pearlEntity.isConnectedThroughVehicle(entity)
             }
 
             val blockPos = newPos.toBlockPos()
@@ -596,8 +610,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 state = State.ROTATING
                 return@repeat
             }
-            val newSolution = Rotation(
-                (currentSolution.yaw + getRandomInRange(-temperature * 18f, temperature * 18f)),
+            val newSolution = Rotation((
+                currentSolution.yaw + getRandomInRange(-temperature * 18f, temperature * 18f)),
                 (currentSolution.pitch + getRandomInRange(-temperature * 9f, temperature * 9f)).coerceIn(pitchRange)
             )
             val newEnergy = assessRotation(newSolution)
@@ -665,15 +679,21 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 val testPos = pos.add(offsetChecks[i])
                 val playerBox = playerBoxCache[i]
                 val hasSpace = !world.getBlockCollisions(player, playerBox).any()
-                val entityCollisions = world.getEntitiesByClass(Entity::class.java, playerBox) { e -> e != player && e.isCollidable }.isNotEmpty()
+                val entityCollisions = world.getEntitiesByClass(
+                    Entity::class.java, playerBox) { e -> e != player && e.isCollidable }.isNotEmpty()
                 if (!hasSpace || entityCollisions) {
                     allPositionsSafe = false
                     break
                 }
 
-                val belowTestPos = BlockPos(testPos.x.toInt(), (testPos.y - 0.5).toInt(), testPos.z.toInt()).down()
+                val belowTestPos = BlockPos(
+                    testPos.x.toInt(),
+                    (testPos.y - 0.5).toInt(),
+                    testPos.z.toInt()
+                ).down()
                 val belowTestState = world.getBlockState(belowTestPos)
-                if (belowTestState.isAir || belowTestState.block in unsafeBlocks || (belowTestState.block == Blocks.CAMPFIRE && belowTestState.get(
+                if (belowTestState.isAir || belowTestState.block in unsafeBlocks
+                    || (belowTestState.block == Blocks.CAMPFIRE && belowTestState.get(
                         Properties.LIT))) {
                     allPositionsSafe = false
                     break
@@ -682,7 +702,10 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 if (ensureCompleteSpace) {
                     val abovePos = belowTestPos.up(2)
                     val aboveState = world.getBlockState(abovePos)
-                    if (!aboveState.isAir || world.getBlockCollisions(player, playerBox.offset(0.0, 2.0, 0.0)).any()) {
+                    if (!aboveState.isAir || world.getBlockCollisions(
+                            player,
+                            playerBox.offset(0.0, 2.0, 0.0)).any()
+                        ) {
                         allPositionsSafe = false
                         break
                     }
@@ -788,7 +811,12 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             return
         }
         Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.let {
-            useHotbarSlotOrOffhand(it, 0, bestSolution?.yaw ?: 0f, bestSolution?.pitch ?: 0f)
+            useHotbarSlotOrOffhand(
+                it,
+                0,
+                bestSolution?.yaw ?: 0f,
+                bestSolution?.pitch ?: 0f
+            )
             lastPearlThrowTime = currentTime
             isPearlInFlight = true
             pearlThrownTick = player.age.toLong()

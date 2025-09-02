@@ -12,7 +12,8 @@ internal enum class NametagShowOptions(
     ITEMS("Items"),
     ITEM_INFO("ItemInfo"),
     ENCHANTMENTS("Enchantments"),
-    BORDER("Border");
+    BORDER("Border"),
+    TEXT_SHADOW("TextShadow");
 
     fun isShowing() = this in ModuleNametags.show
 }

@@ -182,7 +182,11 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val pearlReady = !onlyWithPearl || hasPearlInHotbar()
 
         val airReady = !player.isOnGround
-        val voidReady = if (alwaysInVoid) voidFallPrediction.isVoidFallImminent else player.y <= lastGroundY + 1 - fallDistance
+        val voidReady = if (alwaysInVoid) {
+            voidFallPrediction.isVoidFallImminent
+        } else {
+            player.y <= lastGroundY + 1 - fallDistance
+        }
         return combatReady && pearlReady && airReady && voidReady && receiveHitReady
     }
 

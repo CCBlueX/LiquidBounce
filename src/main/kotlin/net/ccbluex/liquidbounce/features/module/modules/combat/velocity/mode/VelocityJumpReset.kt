@@ -36,7 +36,7 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private object TriggerSettings : ToggleableConfigurable(ModuleVelocity, "TriggerSettings", true) {
         val mode by enumChoice("Mode", TriggerMode.Tick)
         val tick by int("JumpTick", 8, 1..20)
-        val chance by float("Chance", 60f, 0f..100f, "%")
+        val chance by float("Chance", 100f, 0f..100f, "%")
     }
     private object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
         val hitsUntilJump by intRange("HitsUntilJump", 2..2, 0..10)
@@ -47,6 +47,7 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     }
 
     init {
+        tree(TriggerSettings)
         tree(JumpByReceivedHits)
         tree(JumpByDelay)
     }

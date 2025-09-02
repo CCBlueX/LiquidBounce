@@ -67,7 +67,7 @@ class NametagRenderer {
                 ModuleNametags.fontRenderer.process(nametag.text),
                 0f,
                 0f,
-                shadow = true,
+                shadow = NametagShowOptions.TEXT_SHADOW.isShowing(),
                 z = 0.001f,
             )
 
