@@ -4,12 +4,14 @@ import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
 
 data class SubscribedItem(val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
 
+    @Exclude
     val itemDir = MarketplaceManager.marketplaceRoot.resolve("items/$id")
 
     suspend fun checkUpdate(): Int? {
