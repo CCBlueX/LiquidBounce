@@ -68,7 +68,7 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
     suspend fun unsubscribe(itemId: Int) {
         val item = subscribedItems.find { item -> item.id == itemId } ?: error("Item $itemId not found")
 
-        check(!item.itemDir.exists() || !item.itemDir.deleteRecursively()) { "Failed to delete item directory" }
+        check(!item.itemDir.exists() || item.itemDir.deleteRecursively()) { "Failed to delete item directory" }
 
         subscribedItems.remove(item)
         ConfigSystem.storeConfigurable(this)
