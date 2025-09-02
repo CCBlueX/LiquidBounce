@@ -18,15 +18,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'  # Updated to JDK 21
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm install
+          java-version: '21'
 
       - name: Create Mods Directory
         run: mkdir -p run/mods
@@ -54,11 +46,6 @@ jobs:
           chmod +x ./gradlew
           timeout 60m xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" ./gradlew runClient -Dfabric.headless=true || exit 0
 
-      - name: Copy Generated Definitions
-        run: |
-          mkdir -p generated-modules
-          cp -r run/LiquidBounce/scripts/types-gen generated-modules/
-
       - name: Find JVM Types Directory
         id: find_jvm_types
         run: |
@@ -66,32 +53,11 @@ jobs:
           JVM_DIR=$(ls -d generated-modules/types-gen/liquidbounce-script-api* | head -n 1)
           echo "jvm_dir=$JVM_DIR" >> $GITHUB_OUTPUT # Output the found path
 
-      - name: Copy Augmentations
-        run: |
-          # Use the found directory path
-          cp -r augmentations/* ${{ steps.find_jvm_types.outputs.jvm_dir }}/augmentations
-
-      - name: Install Generated Definitions
-        run: |
-          # Use the found directory path for npm install
-          npm install file:${{ steps.find_jvm_types.outputs.jvm_dir }} --no-save
-
-      - name: Compile TypeScript
-        run: |
-          mkdir -p dist
-          tsc || exit 0
-
       - name: Upload TypeScript Definitions
         uses: actions/upload-artifact@v4
         with:
           name: 'liquidbounce-script-api'
           path: ${{ steps.find_jvm_types.outputs.jvm_dir }}
-
-      - name: Upload Compiled Scripts
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-scripts
-          path: dist
 
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v3
