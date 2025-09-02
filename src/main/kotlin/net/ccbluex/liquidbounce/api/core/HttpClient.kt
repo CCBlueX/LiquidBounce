@@ -84,6 +84,7 @@ object HttpClient {
         }
         .build().also(McefFileUtils::setOkHttpClient)
 
+    @Suppress("LongParameterList")
     suspend fun request(
         url: String,
         method: HttpMethod,
@@ -114,7 +115,7 @@ object HttpClient {
         file: File,
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
-    ) = request(url, HttpMethod.GET, agent).toFile(file)
+    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
 
 }
 
