@@ -165,18 +165,16 @@ private fun <T : Any> ParameterBuilder.Companion.fromRegistry(
             registry.getOptionalValue(id).getOrNull()
         ) { "$sourceText is not a valid $typeName" }
     }
-    .autocompletedWith { begin, _ ->
-        registry.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
+    .autocompletedFrom {
+        registry.ids.map { it.toString() }
     }
 
 fun ParameterBuilder.Companion.enchantment(
     name: String = "enchantment",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
-    .autocompletedWith { begin, _ ->
-        world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map {
-            it.idAsString
-        }.filter { it.startsWith(begin, ignoreCase = true) }
+    .autocompletedFrom {
+        world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map { it.idAsString }
     }
 
 fun ParameterBuilder.Companion.block(
@@ -187,16 +185,16 @@ fun ParameterBuilder.Companion.item(
     name: String = "item",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
-    .autocompletedWith { begin, _ ->
-        Registries.ITEM.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
+    .autocompletedFrom {
+        Registries.ITEM.ids.map { it.toString() }
     }
 
 fun ParameterBuilder.Companion.playerName(
     name: String = "playerName",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
-    .autocompletedWith { begin, _ ->
-        mc.networkHandler?.playerList?.map { it.profile.name }?.filter { it.startsWith(begin, true) } ?: emptyList()
+    .autocompletedFrom {
+        mc.networkHandler?.playerList?.map { it.profile.name }
     }
 
 fun ParameterBuilder.Companion.valueName(
