@@ -28,5 +28,5 @@ enum class MarketplaceItemType(val isListable: Boolean, val isSubscribable: Bool
     @SerializedName("Theme")
     THEME(true, true),
     @SerializedName("Other")
-    OTHER(true, true)
+    OTHER(false, false)
 }
