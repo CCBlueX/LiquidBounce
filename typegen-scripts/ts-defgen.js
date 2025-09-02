@@ -106,48 +106,48 @@ function work(path, packageName) {
             "kotlin.jvm.JvmClassMappingKt"
         ]
             .concat(allClassInfos.map((entry) => {
-            try {
-                return entry.getName();
-            }
-            catch (e) {
-                return null;
-            }
-        }));
+                try {
+                    return entry.getName();
+                }
+                catch (e) {
+                    return null;
+                }
+            }));
         const jvmClasses = classNames
             .map((entry) => {
-            try {
-                return ReflectionUtil.classByName(entry);
-            }
-            catch (e) {
-                return null;
-            }
-        })
+                try {
+                    return ReflectionUtil.classByName(entry);
+                }
+                catch (e) {
+                    return null;
+                }
+            })
             .filter((entry) => entry != undefined);
         const jvmClassesInKotlin = jvmClasses
             .map((entry) => {
-            try {
-                return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
-            }
-            catch (e) {
-                return null;
-            }
-        })
+                try {
+                    return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
+                }
+                catch (e) {
+                    return null;
+                }
+            })
             .filter((entry) => entry != null);
         Client.displayChatMessage(`converted to ${jvmClassesInKotlin.length} kotlin classes`);
         const kotlinClasses = javaClasses
             .concat([
-            // Using the imported class from @embedded
-            ReflectionUtil.classByName("net.ccbluex.liquidbounce.script.bindings.features.ScriptModule")
-        ])
+                // Using the imported class from @embedded
+                ReflectionUtil.classByName("net.ccbluex.liquidbounce.script.bindings.features.ScriptModule")
+            ])
             .concat(eventEntries.map((entry) => entry[1]))
             .map(entry => {
-            try {
-                return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
-            }
-            catch (e) {
-                return null;
-            }
-        })
+                try {
+                    return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
+                }
+                catch (e) {
+                    return null;
+                }
+            })
             .filter((entry) => entry != undefined)
             .concat(jvmClassesInKotlin);
         const classes = new ArrayList_1.ArrayList(kotlinClasses);
@@ -159,16 +159,16 @@ function work(path, packageName) {
         const formatter = DateTimeFormatter_1.DateTimeFormatter.ofPattern('y.M.d');
         Client.displayChatMessage("writing types");
         // @ts-expect-error
-        const npmPack = new NPMGen(generated, packageName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`, 
-        // extraFiles - add the ambient and augmentations files
-        `"augmentations/**/*.d.ts", "ambient/ambient.d.ts"`, 
-        // extraTypesVersion - add the augmentations and ambient paths  
-        `"./augmentations/*", "ambient/ambient.d.ts"`, 
-        // otherExtras - add the types field
-        `"types": "ambient/ambient.d.ts"`, null);
+        const npmPack = new NPMGen(generated, packageName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`,
+            // extraFiles - add the ambient and augmentations files
+            `"augmentations/**/*.d.ts", "ambient/ambient.d.ts"`,
+            // extraTypesVersion - add the augmentations and ambient paths
+            `"./augmentations/*", "ambient/ambient.d.ts"`,
+            // otherExtras - add the types field
+            `"types": "ambient/ambient.d.ts"`, null);
         npmPack.writePackageTo(
-        // @ts-expect-error
-        Paths_1.Paths.get(path + "/liquidbounce-script-api"));
+            // @ts-expect-error
+            Paths_1.Paths.get(path));
         Client.displayChatMessage("print embedded script types, see log for more info, those are for maintainace use");
         const embeddedDefinition = `
 // ambient.ts
@@ -176,8 +176,8 @@ function work(path, packageName) {
 import "../augmentations/index.d.ts"
 ${javaClasses
             .map((clazz) => {
-            return `import { ${getName(clazz)} as ${getName(clazz)}_ } from "../types/${clazz.name.replaceAll(".", "/")}";`;
-        })
+                return `import { ${getName(clazz)} as ${getName(clazz)}_ } from "../types/${clazz.name.replaceAll(".", "/")}";`;
+            })
             .join("\n")}
 declare global {
 
@@ -192,23 +192,23 @@ ${globalEntries
 
 ${javaClasses
             .map((clazz) => {
-            var _a, _b;
-            // Check if this class is exported as a constructor (appears in globalEntries as Class)
-            const isExportedAsClass = globalEntries.some(([name, value]) => value instanceof Class_1.Class && value === clazz);
-            if (isExportedAsClass) {
-                const exportName = (_a = globalEntries.find(([name, value]) => value instanceof Class_1.Class && value === clazz)) === null || _a === void 0 ? void 0 : _a[0];
-                // Determine if it's a concrete class or interface
-                // You might need to adjust this logic based on how you distinguish them
-                const isInterface = ((_b = clazz.isInterface) === null || _b === void 0 ? void 0 : _b.call(clazz)) || false; // Adjust this condition as needed
-                if (isInterface) {
-                    return `    export const ${exportName}: ${getName(clazz)}_;`;
+                var _a, _b;
+                // Check if this class is exported as a constructor (appears in globalEntries as Class)
+                const isExportedAsClass = globalEntries.some(([name, value]) => value instanceof Class_1.Class && value === clazz);
+                if (isExportedAsClass) {
+                    const exportName = (_a = globalEntries.find(([name, value]) => value instanceof Class_1.Class && value === clazz)) === null || _a === void 0 ? void 0 : _a[0];
+                    // Determine if it's a concrete class or interface
+                    // You might need to adjust this logic based on how you distinguish them
+                    const isInterface = ((_b = clazz.isInterface) === null || _b === void 0 ? void 0 : _b.call(clazz)) || false; // Adjust this condition as needed
+                    if (isInterface) {
+                        return `    export const ${exportName}: ${getName(clazz)}_;`;
+                    }
+                    else {
+                        return `    export const ${exportName}: typeof ${getName(clazz)}_;`;
+                    }
                 }
-                else {
-                    return `    export const ${exportName}: typeof ${getName(clazz)}_;`;
-                }
-            }
-            return null;
-        })
+                return null;
+            })
             .filter((entry) => entry !== null)
             .join("\n\n")}
 
@@ -227,18 +227,18 @@ ${eventEntries.map((entry) => `on(eventName: "${entry[0]}", handler: (${entry[0]
 
 `;
         Client.displayChatMessage("Generated TypeScript definitions successfully!");
-        Client.displayChatMessage(`Output path: ${path}/liquidbounce-script-api`);
+        Client.displayChatMessage(`Output path: ${path}`);
         // Output the generated content to console for debugging
         console.log(embeddedDefinition);
         // @ts-expect-error
         const Files = Java.type('java.nio.file.Files');
         // @ts-expect-error
-        const filePath = Paths_1.Paths.get(`${path}/liquidbounce-script-api/${packageName}/ambient/ambient.d.ts`);
+        const filePath = Paths_1.Paths.get(`${path}/${packageName}/ambient/ambient.d.ts`);
         // @ts-expect-error
         Files.createDirectories(filePath.getParent());
-        Files.writeString(filePath, embeddedDefinition, 
-        // @ts-expect-error
-        Java.type("java.nio.charset.StandardCharsets").UTF_8);
+        Files.writeString(filePath, embeddedDefinition,
+            // @ts-expect-error
+            Java.type("java.nio.charset.StandardCharsets").UTF_8);
         // Write the ScriptModule augmentation file
         const augmentationContent = `// ScriptModule augmentation - adds event handler interfaces
 
@@ -257,12 +257,12 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
 }
 `;
         // @ts-expect-error
-        const augmentationFilePath = Paths_1.Paths.get(`${path}/liquidbounce-script-api/${packageName}/augmentations/ScriptModule.augmentation.d.ts`);
+        const augmentationFilePath = Paths_1.Paths.get(`${path}/${packageName}/augmentations/ScriptModule.augmentation.d.ts`);
         // @ts-expect-error
         Files.createDirectories(augmentationFilePath.getParent());
-        Files.writeString(augmentationFilePath, augmentationContent, 
-        // @ts-expect-error
-        Java.type("java.nio.charset.StandardCharsets").UTF_8);
+        Files.writeString(augmentationFilePath, augmentationContent,
+            // @ts-expect-error
+            Java.type("java.nio.charset.StandardCharsets").UTF_8);
         console.log(importsForScriptEventPatch);
         console.log(onEventsForScriptPatch);
     }
