@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 
 /**
  * Search marketplace items
@@ -72,15 +72,26 @@ object MarketplaceSearchCommand : CommandFactory {
             )))
 
             for (item in response.items) {
-                val subscribed = if (MarketplaceManager.isSubscribed(item.id)) "*" else ""
+                val isSubscribed = MarketplaceManager.isSubscribed(item.id)
+                val action = if (isSubscribed) "unsubscribe" else "subscribe"
                 chat(
                     regular(
                         command.result(
                             "item",
                             variable(item.id.toString()),
-                            variable(item.name),
+                            variable("${item.name}${if (isSubscribed) "*" else ""}"),
                             variable(item.type.toString().lowercase()),
-                            variable(subscribed)
+                            variable(if (item.featured) "★" else "")
+                        ).onClick(
+                            ClickEvent(
+                                ClickEvent.Action.SUGGEST_COMMAND,
+                                ".marketplace $action ${item.id}"
+                            )
+                        ).onHover(
+                            HoverEvent(
+                                HoverEvent.Action.SHOW_TEXT,
+                                variable(command.result("hover", variable(action), item.id))
+                            )
                         )
                     )
                 )

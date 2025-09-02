@@ -389,14 +389,16 @@
   "liquidbounce.command.marketplace.subcommand.list.parameter.page.description": "The page number to display.",
   "liquidbounce.command.marketplace.subcommand.list.result.noItems": "No items found in the marketplace.",
   "liquidbounce.command.marketplace.subcommand.list.result.header": "=== Marketplace Items (Page %s/%s) ===",
-  "liquidbounce.command.marketplace.subcommand.list.result.item": "#%s %s [%s]%s",
+  "liquidbounce.command.marketplace.subcommand.list.result.item": "#%s %s [%s] %s",
+  "liquidbounce.command.marketplace.subcommand.list.result.hover": "Click to %s item #%s.",
 
   "liquidbounce.command.marketplace.subcommand.search.description": "Search for marketplace items.",
   "liquidbounce.command.marketplace.subcommand.search.parameter.query.description": "The search query.",
   "liquidbounce.command.marketplace.subcommand.search.result.noResults": "No items found matching your search.",
   "liquidbounce.command.marketplace.subcommand.search.result.searching": "Searching marketplace items...",
   "liquidbounce.command.marketplace.subcommand.search.result.header": "=== Marketplace Items (Page %s/%s) ===",
-  "liquidbounce.command.marketplace.subcommand.search.result.item": "#%s %s [%s]%s",
+  "liquidbounce.command.marketplace.subcommand.search.result.item": "#%s %s [%s] %s",
+  "liquidbounce.command.marketplace.subcommand.search.result.hover": "Click to %s item #%s.",
 
   "liquidbounce.command.marketplace.subcommand.subscribe.description": "Subscribe to a marketplace item to receive updates.",
   "liquidbounce.command.marketplace.subcommand.subscribe.parameter.id.description": "The ID of the item to subscribe to.",
