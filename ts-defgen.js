@@ -79,9 +79,9 @@ function getName(javaClass) {
 const script = registerScript.apply({
     name: "ts-defgen",
     version: "1.0.0",
-    authors: ["commandblock2"],
+    authors: ["commandblock2", "CCBlueX"],
 });
-function work(path, packageName) {
+function generate(path, organization, packageName) {
     try {
         const loader = createClassLoaderFromJar(path + "/ts-generator.jar");
         const NPMGen = loadClassFromJar(loader, "me.commandblock2.tsGenerator.NPMPackageGenerator");
@@ -159,7 +159,13 @@ function work(path, packageName) {
         const formatter = DateTimeFormatter_1.DateTimeFormatter.ofPattern('y.M.d');
         Client.displayChatMessage("writing types");
         // @ts-expect-error
-        const npmPack = new NPMGen(generated, packageName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`,
+        let npmName;
+        if (organization) {
+            npmName = `${organization}/${packageName}`;
+        } else {
+            npmName = packageName;
+        }
+        const npmPack = new NPMGen(generated, npmName, `${inDev ? today.format(formatter) : LiquidBounce_1.LiquidBounce.INSTANCE.clientVersion}+${LiquidBounce_1.LiquidBounce.INSTANCE.clientBranch}.${LiquidBounce_1.LiquidBounce.INSTANCE.clientCommit}`,
             // extraFiles - add the ambient and augmentations files
             `"augmentations/**/*.d.ts", "ambient/ambient.d.ts"`,
             // extraTypesVersion - add the augmentations and ambient paths
@@ -277,7 +283,7 @@ const packageName = "liquidbounce-script-api";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
 if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
-    work(path, packageName);
+    generate(path, "ccbluex", packageName);
     mc.close();
 }
 script.registerCommand({
@@ -286,6 +292,6 @@ script.registerCommand({
     parameters: [],
     onExecute() {
         // @ts-expect-error
-        UnsafeThread.run(() => work(path, packageName));
+        UnsafeThread.run(() => generate(path, "ccbluex", packageName));
     }
 });
