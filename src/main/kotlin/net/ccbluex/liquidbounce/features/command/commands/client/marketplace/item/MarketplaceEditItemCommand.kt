@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
-import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -73,10 +73,7 @@ object MarketplaceEditItemCommand : CommandFactory {
                 .build()
         )
         .suspendHandler { command, args ->
-            val clientAccount = ClientAccountManager.clientAccount
-            if (clientAccount == EMPTY_ACCOUNT) {
-                throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
-            }
+            val clientAccount = ClientAccountManager.accountOrException()
 
             val id = args[0] as Int
             val name = args[1] as String
