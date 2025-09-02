@@ -125,15 +125,14 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
     private val orderedTextMappingCache = LfuCache<OrderedText, OrderedText>(DEFAULT_CACHE_SIZE)
 
-    fun replace(original: String): String {
-        if (!running) {
-            return original
+    fun replace(original: String): String =
+        when {
+            !running -> original
+            mc.isOnThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
+            else -> uncachedReplace(original)
         }
 
-        return stringMappingCache.getOrPut(original) { uncachedReplace(original) }
-    }
-
-    fun uncachedReplace(original: String): String {
+    private fun uncachedReplace(original: String): String {
         val replacements = replacementMappings.findReplacements(original)
 
         if (replacements.isEmpty()) {
@@ -167,18 +166,17 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         return output.toString()
     }
 
-    fun wrap(original: OrderedText): OrderedText {
-        if (!running) {
-            return original
+    fun wrap(original: OrderedText): OrderedText =
+        when {
+            !running -> original
+            mc.isOnThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
+            else -> uncachedWrap(original)
         }
-
-        return orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
-    }
 
     /**
      * Wraps an [OrderedText] to apply name protection.
      */
-    fun uncachedWrap(original: OrderedText): OrderedText {
+    private fun uncachedWrap(original: OrderedText): OrderedText {
         val mappedCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)
 
         val originalCharacters = ObjectArrayList<MappedCharacter>(DEFAULT_BUFFER_SIZE)

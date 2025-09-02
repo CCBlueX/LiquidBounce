@@ -20,12 +20,16 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.reflect.KProperty
 
 inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KProperty<*>): T = get()
 
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
 
-inline fun Array<Thread>.joinAll() = forEach { it.join() }
+@JvmField
+internal val MinecraftDispatcher = mc.asCoroutineDispatcher()
 
-inline fun Iterable<Thread>.joinAll() = forEach { it.join() }
+internal inline val Dispatchers.Minecraft get() = MinecraftDispatcher
