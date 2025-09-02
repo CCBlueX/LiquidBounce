@@ -1,17 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch.isVoidFallImminent
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoClutchHelper
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -20,17 +15,18 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.BlockPos
-import kotlin.math.floor
+
 
 @Suppress("TooManyFunctions")
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
+
+    private val voidFallPrediction = tree(VoidFallPrediction(this))
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
     private val fallDistance by int("FallDistance", 5, 0..25, "blocks")
-    private val onlyPearl by boolean("OnlyPearl", true)
+    private val onlyWithPearl by boolean("OnlyWithPearl", false)
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
+    private val onlyReceiveHit by boolean("OnlyReceiveHit", false)
     val alwaysInVoid by boolean("AlwaysInVoid", true)
-
 
     private const val LOWEST_Y = -64
     private var stuckTicks = 0
@@ -100,53 +96,29 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
 
     private fun shouldDisableStuck(): Boolean =
-        player.isInsideWaterOrBubbleColumn || hasSolidBlockBelow()
-
-    @Suppress("NestedBlockDepth")
-    private fun hasSolidBlockBelow(): Boolean {
-        val checkDepth = 3
-        val bb = player.boundingBox
-        val minX = floor(bb.minX).toInt()
-        val maxX = floor(bb.maxX).toInt()
-        val minZ = floor(bb.minZ).toInt()
-        val maxZ = floor(bb.maxZ).toInt()
-
-        for (dy in 0..checkDepth) {
-            val y = floor(bb.minY).toInt() - dy
-            for (x in minX..maxX) {
-                for (z in minZ..maxZ) {
-                    val state = BlockPos(x, y, z).getState()
-                    if (state != null && !state.isAir) {
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
+        player.isInsideWaterOrBubbleColumn || voidFallPrediction.hasSolidBlockBelow()
 
     @Suppress("unused")
     private val worldChangeEventHandler = handler<WorldChangeEvent> {
         lastGroundY = LOWEST_Y
     }
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        val world = mc.world ?: return@tickHandler
-        val player = mc.player ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val world = mc.world ?: return@handler
+        val player = mc.player ?: return@handler
 
         if (player.isSpectator || ignoreTicks > 0 || player.y <= 0) {
             ignoreTicks--
             shouldEnableStuck = false
             shouldActivate = false
-            return@tickHandler
+            return@handler
         }
 
         if (!alwaysInVoid && player.isOnGround) lastGroundY = player.y.toInt() - 1
 
         if (stuckCooldown > 0) {
             stuckCooldown--
-            return@tickHandler
+            return@handler
         }
 
         if (shouldEnableStuck) {
@@ -194,7 +166,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
         val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyReceiveHit || CombatManager.isReceiveHit
             return alwaysInVoid
-                && isVoidFallImminent
+                && voidFallPrediction.isVoidFallImminent
                 && ScaffoldAutoClutchHelper.enabled
                 && scaffoldCombatReady
                 && scaffoldReceiveHit
@@ -206,11 +178,12 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     private fun isReadyToActivate(): Boolean {
         val combatReady = !onlyDuringCombat || CombatManager.isInCombat
-        val pearlReady = !onlyPearl || hasPearlInHotbar()
+        val receiveHitReady = !onlyReceiveHit || CombatManager.isReceiveHit
+        val pearlReady = !onlyWithPearl || hasPearlInHotbar()
 
         val airReady = !player.isOnGround
-        val voidReady = if (alwaysInVoid) isVoidFallImminent else player.y <= lastGroundY + 1 - fallDistance
-        return combatReady && pearlReady && airReady && voidReady
+        val voidReady = if (alwaysInVoid) voidFallPrediction.isVoidFallImminent else player.y <= lastGroundY + 1 - fallDistance
+        return combatReady && pearlReady && airReady && voidReady && receiveHitReady
     }
 
     override fun onEnabled() {

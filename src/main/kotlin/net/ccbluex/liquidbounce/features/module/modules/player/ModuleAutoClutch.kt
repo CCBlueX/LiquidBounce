@@ -1,19 +1,20 @@
-@file:Suppress("detekt:all")
-
-package net.ccbluex.liquidbounce.features.module.modules.player.autoclutch
+package net.ccbluex.liquidbounce.features.module.modules.player
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -59,13 +61,23 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Util
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.sin
 import kotlin.random.Random
+
+/**
+ * By KotlinModule With ChatGPT4.0 And Gork3/4
+ */
 
 object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
 
@@ -73,13 +85,12 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     enum class Algorithm(override val choiceName: String) : NamedChoice {
         SimulatedAnnealing("SimulatedAnnealing")
     }
+
     @Suppress("unused")
     private val algorithm by enumChoice("Algorithm", Algorithm.SimulatedAnnealing)
 
-    val voidThreshold by int("VoidLevel", 0, -256..0)
-    val ticksToPredict by  int("TicksToPredict", 30, 30..100)
-    val adjacentSafeBlocks by int("AdjacentSafeBlocks", 0, 0..3)
-
+    private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val adjacentSafeBlocks by int("AdjacentSafeBlocks", 0, 0..3)
     private val aimPrecision by float("AimPrecision", 0.1f, 0.1f..1f)
     private val pitchRange by floatRange("PitchLimit", -90f..0f, -90f..45f)
     private val pearlTrajectorySteps by int("PearlTrajectorySteps", 40, 20..100)
@@ -89,9 +100,9 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
 
     object PlayerTrajectory: ToggleableConfigurable(this,"PlayerTrajectory",false) {
-        val trajectoryLength by int("TrajectoryLength", 30, 30..200)
-        val securitySection by color("Security", Color4b.CYAN.withAlpha(75))
-        val hazardSection by color("Hazard", Color4b.RED.withAlpha(75))
+        val trajectoryLength by int("TrajectoryLength", 30, 30..100)
+        val securitySection by color("Security", Color4b.Companion.CYAN.withAlpha(75))
+        val hazardSection by color("Hazard", Color4b.Companion.RED.withAlpha(75))
     }
     init {
 
@@ -125,7 +136,6 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     }
 
     var state = State.IDLE
-    var isVoidFallImminent = false
 
     private val blockPositionScoreCache = ConcurrentHashMap<BlockPos, Double>()
     private var currentSolution = Rotation(0f, 0f)
@@ -171,7 +181,6 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             else -> handleStateMachine()
         }
         checkPlayerMovement()
-        checkVoidFall()
     }
 
     @Suppress("unused")
@@ -204,7 +213,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 "Pearl landed, resuming calculations.",
                 NotificationEvent.Severity.INFO
             )
-            if (!isPlayerSafe()) {
+            if (!voidFallPrediction.isPlayerSafe()) {
                 triggerPosition = player.pos
                 state = State.FINDING_PEARL
             } else {
@@ -223,7 +232,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             if (safetyCheckCounter <= 0) {
                 safetyCheckActive = false
                 manualPearlThrown = false
-                state = if (isPlayerSafe()) {
+                state = if (voidFallPrediction.isPlayerSafe()) {
                     State.IDLE
                 } else {
                     triggerPosition = player.pos
@@ -239,7 +248,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             safetyCheckCounter--
             if (safetyCheckCounter <= 0) {
                 safetyCheckActive = false
-                state = if (isPlayerSafe()) {
+                state = if (voidFallPrediction.isPlayerSafe()) {
                     State.IDLE
                 } else {
                     triggerPosition = player.pos
@@ -291,12 +300,12 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             return
         }
 
-        if (isPlayerSafe() || canReachSafeBlockFrom() || isBlockUnder(2.0)) {
+        if (voidFallPrediction.isPlayerSafe() || voidFallPrediction.canReachSafeBlockFrom() || voidFallPrediction.isBlockUnder(2.0)) {
             resetAllVariables()
             return
         }
 
-        if (isVoidFallImminent) {
+        if (voidFallPrediction.isVoidFallImminent) {
             triggerPosition = player.pos
             state = State.FINDING_PEARL
             if (allowClutchWithStuck && !ModuleAutoStuck.enabled) {
@@ -339,7 +348,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             val cache = PlayerSimulationCache.getSimulationForLocalPlayer()
             val points = List(PlayerTrajectory.trajectoryLength) { tick ->
                 val snapshot = cache.getSnapshotAt(tick)
-                val isSafe = canReachSafeBlockFrom() && !isInVoid(snapshot.pos)
+                val isSafe = voidFallPrediction.canReachSafeBlockFrom() && !voidFallPrediction.isInVoid(snapshot.pos)
                 snapshot.pos to isSafe
             }
 
@@ -359,9 +368,19 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
 
                 val camPos = camera.pos
                 cachedTrajectory?.forEach { (start, end, color) ->
-                    buffer.vertex(matrix, start.x - camPos.x.toFloat(), start.y - camPos.y.toFloat(), start.z - camPos.z.toFloat())
+                    buffer.vertex(
+                        matrix,
+                        start.x - camPos.x.toFloat(),
+                        start.y - camPos.y.toFloat(),
+                        start.z - camPos.z.toFloat()
+                    )
                         .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-                    buffer.vertex(matrix, end.x - camPos.x.toFloat(), end.y - camPos.y.toFloat(), end.z - camPos.z.toFloat())
+                    buffer.vertex(
+                        matrix,
+                        end.x - camPos.x.toFloat(),
+                        end.y - camPos.y.toFloat(),
+                        end.z - camPos.z.toFloat()
+                    )
                         .color(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
                 }
 
@@ -378,9 +397,6 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         blockPositionScoreCache.clear()
     }
 
-    private fun checkVoidFall() {
-        isVoidFallImminent = isPredictingFall() && !canReachSafeBlock() && !isBlockUnder(2.0) && !isPlayerSafe()
-    }
 
     private fun findPearl() {
         val startTime = System.currentTimeMillis()
@@ -426,7 +442,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
                 )
                 val newEnergy = assessRotation(newSolution)
                 val delta = newEnergy - currentEnergy
-                if (delta < 0 || Random.nextDouble() < exp(-delta / temperature)) {
+                if (delta < 0 || Random.Default.nextDouble() < exp(-delta / temperature)) {
                     currentSolution = newSolution
                     currentEnergy = newEnergy
                     if (currentEnergy < bestEnergy) {
@@ -469,7 +485,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         val yawRad = Math.toRadians(rotation.yaw.toDouble())
         val pitchRad = Math.toRadians(rotation.pitch.toDouble())
 
-        val trajectoryInfo = TrajectoryInfo.GENERIC
+        val trajectoryInfo = TrajectoryInfo.Companion.GENERIC
         val velocity = trajectoryInfo.initialVelocity
         var motion = Vec3d(
             -sin(yawRad) * cos(pitchRad) * velocity,
@@ -494,7 +510,13 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             motion = motion.add(0.0, -trajectoryInfo.gravity, 0.0)
 
             val blockHitResult = world.raycast(
-                RaycastContext(pos, newPos, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, pearlEntity),
+                RaycastContext(
+                    pos,
+                    newPos,
+                    RaycastContext.ShapeType.COLLIDER,
+                    RaycastContext.FluidHandling.NONE,
+                    pearlEntity
+                ),
                 exclude = null,
                 include = null,
                 maxBlastResistance = null
@@ -651,7 +673,8 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
 
                 val belowTestPos = BlockPos(testPos.x.toInt(), (testPos.y - 0.5).toInt(), testPos.z.toInt()).down()
                 val belowTestState = world.getBlockState(belowTestPos)
-                if (belowTestState.isAir || belowTestState.block in unsafeBlocks || (belowTestState.block == Blocks.CAMPFIRE && belowTestState.get(Properties.LIT))) {
+                if (belowTestState.isAir || belowTestState.block in unsafeBlocks || (belowTestState.block == Blocks.CAMPFIRE && belowTestState.get(
+                        Properties.LIT))) {
                     allPositionsSafe = false
                     break
                 }
@@ -718,7 +741,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             return
         }
 
-        if (player.isSneaking || isPlayerSafe()) {
+        if (player.isSneaking || voidFallPrediction.isPlayerSafe()) {
             state = State.IDLE
             resetAllVariables()
             return
@@ -757,7 +780,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             state = State.IDLE
             return
         }
-        if (!isVoidFallImminent) {
+        if (!voidFallPrediction.isVoidFallImminent) {
             state = State.IDLE
             return
         }
@@ -790,7 +813,6 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         iterations = 0
         triggerPosition = null
         pearlSlot = null
-        isVoidFallImminent = false
         safetyCheckCounter = 0
         safetyCheckActive = false
         predictedThrowPosition = null

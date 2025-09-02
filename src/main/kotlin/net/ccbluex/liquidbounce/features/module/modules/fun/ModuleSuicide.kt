@@ -30,9 +30,8 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         AStar("AStar"),
         Immediate("Immediate"),
     }
-
     private val algorithm by enumChoice("Algorithm", Algorithm.AStar)
-    private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0.2f..1.0f)
+    private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0f..1.0f)
     private val settingsImpl = tree(BaritonePathManager(this))
 
     private var targetPos: Vec3d? = null
@@ -43,66 +42,86 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
         if (shouldSkipMovement()) return@handler
 
         ticksSinceLastSearch++
-        if (targetPos == null || player.pos.distanceTo(targetPos!!) < pathStepThreshold || ticksSinceLastSearch > 20) {
+        if (targetPos != null && player.pos.distanceTo(targetPos!!) < pathStepThreshold) {
+            PathManagers.get().stop()
+            ModuleDebug.debugParameter(this, "TargetReached", true)
+            targetPos = null
+            return@handler
+        }
+
+
+        if (targetPos == null || ticksSinceLastSearch > 20) {
             targetPos = findDangerousTarget()
             ticksSinceLastSearch = 0
             ModuleDebug.debugParameter(this, "TargetPos", targetPos ?: "None")
         }
+
 
         val target = targetPos ?: return@handler
 
         when (algorithm) {
             Algorithm.AStar -> {
                 PathManagers.init()
-                PathManagers.get().moveTo(BlockPos(target.x.toInt(), 0, target.z.toInt()), ignoreY = true)
-                ModuleDebug.debugParameter(this, "BaritoneIsPathing", PathManagers.get().isPathing)
-                ModuleDebug.debugParameter(this, "TargetYaw", PathManagers.get().targetYaw)
-                ModuleDebug.debugParameter(this, "TargetPitch", PathManagers.get().targetPitch)
+                val blockTarget = BlockPos(target.x.toInt(), 0, target.z.toInt())
+                val distance = player.pos.distanceTo(target)
+
+                if (distance <= 3.0) {
+                    doImmediateMove(target, event)
+                } else {
+                    if (PathManagers.get().currentTarget != blockTarget) {
+                        PathManagers.get().moveTo(blockTarget, ignoreY = true)
+                    }
+                }
                 return@handler
             }
+
             Algorithm.Immediate -> {
-                val dir = Vec3d(target.x - player.pos.x, 0.0, target.z - player.pos.z)
-                val distance = dir.length()
-
-                ModuleDebug.debugParameter(this, "DistanceToTarget", distance)
-                ModuleDebug.debugParameter(this, "PlayerPos", player.pos)
-
-                if (distance < pathStepThreshold) {
-                    targetPos = null
-                    ModuleDebug.debugParameter(this, "TargetReached", true)
-                    return@handler
-                }
-
-                val yaw = atan2(dir.z, dir.x) * 180.0 / Math.PI - 90.0
-                player.yaw = yaw.toFloat()
-
-                val desiredX = dir.x
-                val desiredZ = dir.z
-                val desiredLen = sqrt(desiredX * desiredX + desiredZ * desiredZ)
-                val nx = if (desiredLen > 1e-6) desiredX / desiredLen else 0.0
-                val nz = if (desiredLen > 1e-6) desiredZ / desiredLen else 0.0
-
-                val yawRad = Math.toRadians(player.yaw.toDouble())
-                val forwardVecX = -sin(yawRad)
-                val forwardVecZ = cos(yawRad)
-                val rightVecX = cos(yawRad)
-                val rightVecZ = sin(yawRad)
-
-                val forwardAmt = nx * forwardVecX + nz * forwardVecZ
-                val rightAmt = nx * rightVecX + nz * rightVecZ
-
-                val thresh = 0.15
-
-                event.directionalInput = DirectionalInput(
-                    forwards = forwardAmt > thresh,
-                    backwards = forwardAmt < -thresh,
-                    left = rightAmt < -thresh,
-                    right = rightAmt > thresh
-                )
+                doImmediateMove(target, event)
             }
         }
 
+
     }
+    private fun doImmediateMove(target: Vec3d, event: MovementInputEvent) {
+        val dir = Vec3d(target.x - player.pos.x, 0.0, target.z - player.pos.z)
+        val distance = dir.length()
+
+        ModuleDebug.debugParameter(this, "DistanceToTarget", distance)
+        ModuleDebug.debugParameter(this, "PlayerPos", player.pos)
+
+        if (distance < pathStepThreshold) {
+            targetPos = null
+            ModuleDebug.debugParameter(this, "TargetReached", true)
+            return
+        }
+
+        val yaw = atan2(dir.z, dir.x) * 180.0 / Math.PI - 90.0
+        player.yaw = yaw.toFloat()
+
+        val desiredX = dir.x
+        val desiredZ = dir.z
+        val desiredLen = sqrt(desiredX * desiredX + desiredZ * desiredZ)
+        val nx = if (desiredLen > 1e-6) desiredX / desiredLen else 0.0
+        val nz = if (desiredLen > 1e-6) desiredZ / desiredLen else 0.0
+
+        val yawRad = Math.toRadians(player.yaw.toDouble())
+        val forwardVecX = -sin(yawRad)
+        val forwardVecZ = cos(yawRad)
+        val rightVecX = cos(yawRad)
+        val rightVecZ = sin(yawRad)
+
+        val forwardAmt = nx * forwardVecX + nz * forwardVecZ
+        val rightAmt = nx * rightVecX + nz * rightVecZ
+
+        val thresh = 0.15
+        event.directionalInput = DirectionalInput(
+            forwards = forwardAmt > thresh,
+            backwards = forwardAmt < -thresh,
+            left = rightAmt < -thresh,
+            right = rightAmt > thresh
+        )
+    }
+
     private fun shouldSkipMovement(): Boolean {
         if (player.isCreative || player.isSpectator) return true
         if (OnGlass) return true

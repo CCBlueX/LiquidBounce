@@ -83,7 +83,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpbow.ModuleBowAura
-import net.ccbluex.liquidbounce.features.module.modules.player.autoclutch.ModuleAutoClutch
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoClutch
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
@@ -403,6 +403,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleDelayBlink,
             ModuleFireballFly,
             ModuleAutoSwap,
+            ModuleAutoPath,
 
                 // Render
             ModuleAnimations,
