@@ -49,11 +49,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: 'liquidbounce-script-api'
-          path: run/LiquidBounce/scripts/liquidbounce-script-api/
+          path: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/
 
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          package: run/LiquidBounce/scripts/liquidbounce-script-api/package.json
+          package: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/package.json
           access: public
