@@ -157,11 +157,12 @@ fun <T> CommandBuilder.pagedQuery(
     return parameter(
         ParameterBuilder.begin<Int>("page")
             .verifiedBy {
-                val input =
-                    it.toIntOrNull() ?: return@verifiedBy Result.Error("'$it' is not an integer")
+                val input = it.toIntOrNull() ?: return@verifiedBy Result.Error("'$it' is not an integer")
                 val maxPage = maxPage()
-                Result.ofNullable(input.takeIf { i -> i in 1..maxPage }) {
-                    "'$it' is not in range 1..$maxPage"
+                if (input in 1..maxPage) {
+                    Result.Ok(input)
+                } else {
+                    Result.Error("'$it' is not in range 1..$maxPage")
                 }
             }.optional().build()
     ).handler { command, args ->

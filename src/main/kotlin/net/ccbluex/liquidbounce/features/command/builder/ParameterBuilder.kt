@@ -41,27 +41,21 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         val MODULE_VALIDATOR: Parameter.Verificator<ClientModule> = Parameter.Verificator { sourceText ->
             Result.ofNullable(
                 ModuleManager.find { it.name.equals(sourceText, true) }
-            ) {
-                "Module '$sourceText' not found"
-            }
+            ) { "Module '$sourceText' not found" }
         }
         @JvmField
         val INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
             Result.ofNullable(
                 sourceText.toIntOrNull()
-            ) {
-                "'$sourceText' is not a valid integer"
-            }
+            ) { "'$sourceText' is not a valid integer" }
         }
         @JvmField
         val POSITIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
-            val integer = sourceText.toIntOrNull() ?:
-                return@Verificator Result.Error("'$sourceText' is not a valid integer")
-
-            if (integer >= 0) {
-                Result.Ok(integer)
-            } else {
-                Result.Error("The integer must be positive")
+            val integer = sourceText.toIntOrNull()
+            when {
+                integer == null -> Result.Error("'$sourceText' is not a valid integer")
+                integer >= 0 -> Result.Ok(integer)
+                else -> Result.Error("The integer must be positive")
             }
         }
         @JvmField

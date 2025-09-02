@@ -47,9 +47,7 @@ private fun <V : Value<*>> ParameterBuilder.Companion.value(
     .verifiedBy { sourceText ->
         Result.ofNullable(
             all.firstOrNull { v -> v.name.equals(sourceText, true) && predicate(v) }
-        ) {
-            "'$sourceText' is not a valid $typeName"
-        }
+        ) { "'$sourceText' is not a valid $typeName" }
     }
     .autocompletedWith { begin, _ ->
         all.filter {
@@ -163,9 +161,9 @@ private fun <T : Any> ParameterBuilder.Companion.fromRegistry(
         val id = Identifier.tryParse(sourceText)
             ?: return@verifiedBy Result.Error("'$paramName' is not a valid Identifier")
 
-        Result.ofNullable(registry.getOptionalValue(id).getOrNull()) {
-            "$sourceText is not a valid $typeName"
-        }
+        Result.ofNullable(
+            registry.getOptionalValue(id).getOrNull()
+        ) { "$sourceText is not a valid $typeName" }
     }
     .autocompletedWith { begin, _ ->
         registry.ids.map { it.toString() }.filter { it.startsWith(begin, ignoreCase = true) }
