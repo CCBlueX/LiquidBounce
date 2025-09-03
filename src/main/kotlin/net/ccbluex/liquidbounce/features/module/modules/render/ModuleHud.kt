@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.themes
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.SpeedometerComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -77,7 +78,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private var browserSettings: BrowserSettings? = null
 
-    val nativeComponents = listOf(MinimapComponent)
+    val nativeComponents = listOf(MinimapComponent, SpeedometerComponent)
 
     val components = tree(Configurable("Components")).apply {
         nativeComponents.forEach(this::tree)

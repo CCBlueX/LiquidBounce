@@ -1,0 +1,27 @@
+{
+    "name": "Speedometer",
+    "type": "net.ccbluex.liquidbounce.integration.theme.component.components.SpeedometerComponent",
+    "settings": {
+        "enabled": true,
+        "alignment": {
+            "type": "center"
+        },
+        "unit": "km/h",
+        "average": false,
+        "color": -1,
+        "font": "Inter",
+        "fontSize": 14,
+        "shadow": {
+            "enabled": false,
+            "offsetX": 0,
+            "offsetY": 0,
+            "blurRadius": 0,
+            "color": -16777216
+        },
+        "glow": {
+            "enabled": false,
+            "radius": 5,
+            "color": -1
+        }
+    }
+}

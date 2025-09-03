@@ -20,6 +20,7 @@
     import Text from "./elements/Text.svelte";
     import CraftingInput from "./elements/inventory/CraftingInput.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import Speedometer from "./elements/Speedometer.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -76,6 +77,8 @@
                     <Effects/>
                 {:else if c.name === "Text"}
                     <Text settings={c.settings} />
+                {:else if c.name === "Speedometer"}
+                    <Speedometer settings={c.settings} />
                 {:else if c.name === "Image"}
                     <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
                 {/if}
