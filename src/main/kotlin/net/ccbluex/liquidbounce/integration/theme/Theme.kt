@@ -159,7 +159,10 @@ class Theme private constructor(
 
         constructor(url: String) : this(Origin.REMOTE, url)
 
-        constructor(origin: Origin, file: File) : this(origin, "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/")
+        constructor(origin: Origin, file: File) : this(
+            origin,
+            url = "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/"
+        )
 
         suspend fun loadMetadata() = apply {
             try {
