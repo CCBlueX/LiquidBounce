@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -45,45 +44,18 @@ import java.util.*
  *
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
-class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), Closeable {
+class Theme private constructor(
+    baseUrl: String,
+    val origin: Origin,
+    val metadata: ThemeMetadata,
+    val components: MutableList<Component>,
+): BaseApi(baseUrl), Closeable {
 
     enum class Origin(override val choiceName: String) : NamedChoice {
         RESOURCE("resource"),
         LOCAL("local"),
         MARKETPLACE("marketplace"),
         REMOTE("remote")
-    }
-
-    constructor(url: String) : this(Origin.REMOTE, url)
-
-    constructor(
-        origin: Origin,
-        file: File
-    ) : this(origin, "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/")
-
-    val metadata: ThemeMetadata = runBlocking {
-        try {
-            get<ThemeMetadata>("/metadata.json")
-        } catch (e: Exception) {
-            logger.error("Failed to load theme metadata", e)
-            throw IllegalStateException("Failed to load theme metadata", e)
-        }
-    }
-
-    val components: MutableList<Component> = runBlocking {
-        metadata.components.mapNotNull { name ->
-            val componentFactory = runCatching {
-                get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
-            }.onFailure {
-                logger.warn("Failed to load component $name", it)
-            }.getOrNull() ?: return@mapNotNull null
-
-            runCatching {
-                componentFactory.createComponent()
-            }.onFailure {
-                logger.warn("Failed to create component $name", it)
-            }.getOrNull()
-        }.toMutableList()
     }
 
     val settings = Configurable(metadata.id.capitalize()).apply {
@@ -93,32 +65,9 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
             }
         }
 
+        @Suppress("UNCHECKED_CAST")
         val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
         tree(componentSettings)
-    }
-
-    init {
-        metadata.checkNotNull()
-
-        // Check for duplicated component names
-        components.groupBy { component -> component.name }.forEach { (name, components) ->
-            check(components.size == 1) { "Found duplicated component name '$name'" }
-        }
-
-        // Load fonts
-        for (font in metadata.fonts) {
-            runCatching {
-                runBlocking {
-                    get<InputStream>("/fonts/$font").use { stream ->
-                        FontManager.queueFontFromStream(stream)
-                    }
-
-                    logger.info("Loaded font $font for theme ${metadata.name}")
-                }
-            }.onFailure {
-                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
-            }
-        }
     }
 
     var themeBackgroundShader: ThemeBackground? = null
@@ -198,6 +147,77 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
+
+    class Builder private constructor(val origin: Origin, url: String): BaseApi(url.removeSuffix("/")) {
+        private var _metadata: ThemeMetadata? = null
+
+        val metadata: ThemeMetadata get() = requireNotNull(_metadata) { "Metadata not loaded" }
+
+        private var _components: MutableList<Component>? = null
+
+        val components: MutableList<Component> get() = requireNotNull(_components) { "Components not loaded" }
+
+        constructor(url: String) : this(Origin.REMOTE, url)
+
+        constructor(origin: Origin, file: File) : this(origin, "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/")
+
+        suspend fun loadMetadata() = apply {
+            try {
+                _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            } catch (e: Exception) {
+                logger.error("Failed to load theme metadata", e)
+                throw IllegalStateException("Failed to load theme metadata", e)
+            }
+        }
+
+        suspend fun loadComponents() = apply {
+            _components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
+                val componentFactory = runCatching {
+                    get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
+                }.onFailure {
+                    logger.warn("Failed to load component $name", it)
+                }.getOrNull() ?: return@mapNotNullTo null
+
+                runCatching {
+                    componentFactory.createComponent()
+                }.onFailure {
+                    logger.warn("Failed to create component $name", it)
+                }.getOrNull()
+            }
+
+            // Check for duplicated component names
+            components.groupingBy { component -> component.name }.eachCount().forEach { (name, count) ->
+                check(count == 1) { "Found duplicated component name '$name'" }
+            }
+        }
+
+        suspend fun loadFonts() = apply {
+            for (font in metadata.fonts) {
+                runCatching {
+                    get<InputStream>("/fonts/$font").use { stream ->
+                        FontManager.queueFontFromStream(stream)
+                    }
+
+                    logger.info("Loaded font $font for theme ${metadata.name}")
+                }.onFailure {
+                    logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+                }
+            }
+        }
+
+        suspend fun loadAll() = apply {
+            loadMetadata()
+            loadComponents()
+            loadFonts()
+        }
+
+        fun build() = Theme(
+            baseUrl,
+            origin,
+            metadata,
+            components,
+        )
+    }
 
 }
 

@@ -37,7 +37,7 @@ enum class MarketplaceItemType(
     @SerializedName("Other")
     OTHER("Other", false, false);
 
-    fun reload() = when (this) {
+    suspend fun reload() = when (this) {
         THEME -> ThemeManager.load()
         SCRIPT -> ScriptManager.reload()
         else -> { }

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
@@ -95,7 +96,7 @@ object CommandClientThemeSubcommand {
         )
 
     private fun reloadSubcommand() = CommandBuilder.begin("reload")
-        .handler { _, _ ->
+        .suspendHandler { _, _ ->
             val prevCount = ThemeManager.themes.size
 
             ThemeManager.load()
