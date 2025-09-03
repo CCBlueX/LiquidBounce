@@ -8,16 +8,19 @@ import net.ccbluex.liquidbounce.render.GenericSyncColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
-object TargetHudComponent  : NativeComponent("TargetHud", true, Alignment(
-    horizontalAlignment = Alignment.ScreenAxisX.LEFT,
-    horizontalOffset = 7,
-    verticalAlignment = Alignment.ScreenAxisY.TOP,
-    verticalOffset = 180,
-)) {
+object TargetHudComponent : NativeComponent(
+    "TargetHud", true, Alignment(
+        horizontalAlignment = Alignment.ScreenAxisX.CENTER,
+        horizontalOffset = 100,
+        verticalAlignment = Alignment.ScreenAxisY.CENTER_TRANSLATED,
+        verticalOffset = 50,
+    )
+) {
     init {
         registerComponentListen(this)
     }
-    val modes = choices(this,"Mode", NovolineMode, arrayOf(NovolineMode))
+
+    val modes = choices(this, "Mode", NovolineMode, arrayOf(NovolineMode))
 
     val colorModes = choices(this, "ColorMode", 2) {
         arrayOf(
@@ -26,11 +29,22 @@ object TargetHudComponent  : NativeComponent("TargetHud", true, Alignment(
             GenericSyncColorMode(it)
         )
     }
-    val xOffsetRatio by float("X-Offset", 0.55f, 0f..1f)
-    val yOffsetRatio by float("Y-Offset", 0.6f, 0f..1f)
     val backgroundColor by color("Background", Color4b.DARK_GRAY.withAlpha(125))
     val borderColor by color("Border", Color4b.TRANSPARENT)
     val textColor by color("Name", Color4b.WHITE)
+    val size by float("Size", 1f, 0.8f..1.5f)
+
+    fun applyAdaptiveScale(baseW: Float, baseH: Float, block: (scale: Float, cx: Float, cy: Float) -> Unit) {
+        val window = mc.window
+        val s = size.coerceAtLeast(0.1f)
+        val scale = (window.scaledWidth.coerceAtMost(window.scaledHeight)) / 500f * s
+
+        val bounds = alignment.getBounds(baseW * scale, baseH * scale)
+        val cx = bounds.xMin + (baseW * scale) / 2f
+        val cy = bounds.yMin + (baseH * scale) / 2f
+
+        block(scale, cx, cy)
+    }
 
     override fun onEnabled() {
         modes.activeChoice.enable()
@@ -39,6 +53,5 @@ object TargetHudComponent  : NativeComponent("TargetHud", true, Alignment(
     override fun onDisabled() {
         modes.activeChoice.disable()
     }
-
 
 }

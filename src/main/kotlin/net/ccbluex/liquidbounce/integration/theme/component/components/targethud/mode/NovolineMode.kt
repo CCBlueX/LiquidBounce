@@ -1,45 +1,35 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
-
 package net.ccbluex.liquidbounce.integration.theme.component.components.targethud.mode
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent.applyAdaptiveScale
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
+import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.client.util.SkinTextures
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.Identifier
 import java.util.function.Function
 import kotlin.math.min
 
-object NovolineMode : TargetInfoMode("Novoline") {
+object NovolineMode : TargetHudMode("Novoline") {
 
     private const val HOLD_TICKS = 10
+    private val fontRenderer
+        get() = FontManager.FONT_RENDERER
 
     private var easingHealth = 0f
     private var previousEasingHealth = 0f
@@ -49,15 +39,14 @@ object NovolineMode : TargetInfoMode("Novoline") {
     private var lastKnownHealth = 0f
     private var lastKnownMax = 1f
 
-    @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> { event ->
+    private fun selectTargetRender(): Pair<PlayerEntity?, Boolean> {
         if (HideAppearance.isHidingNow) {
-            return@handler
+            return null to false
         }
         val currentTarget = (ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target)
             ?.takeIf { it is PlayerEntity } as? PlayerEntity
 
-        var hasActive = false
+        var hasActive: Boolean
         if (currentTarget != null) {
             lastTarget = currentTarget
             lastKnownHealth = currentTarget.getActualHealth(true)
@@ -72,46 +61,132 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
         updateAnimationStates(lastTarget, hasActive)
 
-        val entity = lastTarget as? PlayerEntity
-        if (alpha > 0 && entity != null) {
-            renderTargetHUD(event.context, entity)
-        } else if (!hasActive) {
-            lastTarget = null
-            delayCounter = 0
-            easingHealth = 0f
-            previousEasingHealth = 0f
+        return if (alpha > 0 && lastTarget is PlayerEntity) {
+            lastTarget as PlayerEntity to true
+        } else {
+            if (!hasActive) {
+                lastTarget = null
+                delayCounter = 0
+                easingHealth = 0f
+                previousEasingHealth = 0f
+            }
+            null to false
         }
     }
+
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
+        val (entity, shouldRender) = selectTargetRender()
+        if (shouldRender && entity != null) {
+            renderTargetHUD(event.context, entity)
+        }
+    }
+
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     private fun renderTargetHUD(ctx: DrawContext, entity: PlayerEntity) {
-        val nameWidth = mc.textRenderer.getWidth(entity.name.string) * 0.3f
-        val width = 106f + nameWidth
-        val x = mc.window.scaledWidth * TargetHudComponent.xOffsetRatio
-        val y = mc.window.scaledHeight * TargetHudComponent.yOffsetRatio
+        val nameProcessedForWidth = fontRenderer.process(
+            entity.name.string,
+            TargetHudComponent.textColor.fade(0.1f)
+        )
+        val nameWidth = (fontRenderer.getStringWidth(nameProcessedForWidth) * 0.3f)
+        val baseW = 106f + nameWidth
+        val baseH = 36f
 
-        fun Color4b.fade() = withAlpha((a * alpha / 255f).toInt())
+        applyAdaptiveScale(baseW, baseH) { scale, cx, cy ->
+            ctx.matrices.push()
+            ctx.matrices.translate(cx, cy, 0f)
+            ctx.matrices.scale(scale, scale, 1f)
+            ctx.matrices.translate(-baseW / 2f, -baseH / 2f, 0f)
 
-        ctx.fill(x.toInt(), y.toInt(),
-            (x + width).toInt(), (y + 36).toInt(),
-            TargetHudComponent.backgroundColor.fade().toARGB())
+            val x = 0f
+            val y = 0f
+            val w = baseW
+            val h = baseH
 
-        listOf(
-            floatArrayOf(x - 1, y - 1, x + width + 1, y),
-            floatArrayOf(x - 1, y + 36, x + width + 1, y + 37),
-            floatArrayOf(x - 1, y, x, y + 36),
-            floatArrayOf(x + width, y, x + width + 1, y + 36)
-        ).forEach { arr ->
-            val (sx, sy, ex, ey) = arr
+            fun Color4b.fade() = withAlpha((a * alpha / 255f).toInt())
+
             ctx.fill(
-                sx.toInt(), sy.toInt(),
-                ex.toInt(), ey.toInt(),
-                TargetHudComponent.borderColor.fade().toARGB()
+                x.toInt(), y.toInt(),
+                (x + w).toInt(), (y + h).toInt(),
+                TargetHudComponent.backgroundColor.fade().toARGB()
             )
-        }
 
-        drawHealthBar(ctx, width, x, y)
-        drawPlayerHead(ctx, x.toInt(), y.toInt())
-        drawText(ctx, entity, TargetHudComponent.textColor.fade(), width, x, y)
+            listOf(
+                floatArrayOf(x - 1, y - 1, x + w + 1, y),
+                floatArrayOf(x - 1, y + h, x + w + 1, y + h + 1),
+                floatArrayOf(x - 1, y, x, y + h),
+                floatArrayOf(x + w, y, x + w + 1, y + h)
+            ).forEach { arr ->
+                val (sx, sy, ex, ey) = arr
+                ctx.fill(
+                    sx.toInt(), sy.toInt(),
+                    ex.toInt(), ey.toInt(),
+                    TargetHudComponent.borderColor.fade().toARGB()
+                )
+            }
+
+            drawHealthBar(ctx, w, x, y)
+            drawPlayerHead(ctx, x.toInt(), y.toInt())
+            drawText(entity, TargetHudComponent.textColor.fade(), w, x, y, scale, cx, cy, baseW, baseH)
+
+            ctx.matrices.pop()
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun drawText(
+        target: PlayerEntity,
+        color: Color4b,
+        width: Float,
+        x: Float,
+        y: Float,
+        scale: Float,
+        cx: Float,
+        cy: Float,
+        baseW: Float,
+        baseH: Float
+    ) {
+        val max = lastKnownMax.coerceAtLeast(1f)
+        val percent = (if (max > 0f) (easingHealth / max * 100).toInt().coerceIn(0, 100) else 0).toString() + "%"
+
+        val percentColor = Color4b.WHITE.with(a = (Color4b.WHITE.a * alpha / 255f).toInt())
+        val processedPercent = fontRenderer.process(percent, percentColor)
+        val percentUnscaledW = fontRenderer.getStringWidth(processedPercent)
+        val percentLocalW = percentUnscaledW * 0.3f
+        val percentLocalX = x + 38f + ((width - 40f) - percentLocalW) / 2f
+        val percentLocalY = y + 24f + 4f - (fontRenderer.height * 0.3f / 2f) - 1f
+
+        val maxNameUnscaled = (width - 44f) / 0.3f
+        var nameStr = target.name.string
+        while (nameStr.isNotEmpty() && fontRenderer.getStringWidth(
+                fontRenderer.process(nameStr, color)) > maxNameUnscaled) {
+            nameStr = nameStr.substring(0, nameStr.length - 1)
+        }
+        val processedName = fontRenderer.process(nameStr, color)
+
+        val nameLocalX = x + 38f
+        val nameLocalY = y + 6f
+
+        val percentScreenX = cx + (percentLocalX - baseW / 2f) * scale
+        val percentScreenY = cy + (percentLocalY - baseH / 2f) * scale
+        val nameScreenX = cx + (nameLocalX - baseW / 2f) * scale
+        val nameScreenY = cy + (nameLocalY - baseH / 2f) * scale
+
+        renderEnvironmentForGUI {
+            fontRenderer.withBuffers { buf ->
+                fun drawTextWithTransform(text: TextProcessor.ProcessedText, screenX: Float, screenY: Float) {
+                    matrixStack.push()
+                    matrixStack.translate(screenX, screenY, 0f)
+                    matrixStack.scale(0.3f * scale, 0.3f * scale, 1f)
+                    fontRenderer.draw(text, 0f, 0f, shadow = false, z = 0.001f)
+                    fontRenderer.commit(this@renderEnvironmentForGUI, buf)
+                    matrixStack.pop()
+                }
+
+                drawTextWithTransform(processedName, nameScreenX, nameScreenY)
+                drawTextWithTransform(processedPercent, percentScreenX, percentScreenY)
+            }
+        }
     }
 
     private fun updateAnimationStates(entity: LivingEntity?, hasActive: Boolean) {
@@ -141,37 +216,7 @@ object NovolineMode : TargetInfoMode("Novoline") {
         }
     }
 
-    @Suppress("LongParameterList")
-    private fun drawText(ctx: DrawContext, target: PlayerEntity, color: Color4b, width: Float, x: Float, y: Float) {
-        val max = lastKnownMax.coerceAtLeast(1f)
-        val percent = (if (max > 0f) (easingHealth / max * 100).toInt().coerceIn(0, 100) else 0).toString() + "%"
-        val percentWidth = mc.textRenderer.getWidth(percent) * 0.3f
-        val percentX = x + 38f + ((width - 40f) - percentWidth) / 2f
-        val percentY = y + 24f + 4f - (mc.textRenderer.fontHeight * 0.3f / 2f) - 1f
-
-        val name = mc.textRenderer.trimToWidth(target.name.string, ((width - 44f) / 0.3f).toInt())
-
-        ctx.drawText(
-            mc.textRenderer,
-            name,
-            (x + 38f).toInt(),
-            (y + 6f).toInt(),
-            color.toARGB(),
-            false
-        )
-        val percentColor = Color4b.WHITE.with(a = (Color4b.WHITE.a * alpha / 255f).toInt()).toARGB()
-        ctx.drawText(
-            mc.textRenderer,
-            percent,
-            percentX.toInt(),
-            percentY.toInt(),
-            percentColor,
-            false
-        )
-    }
-
     private fun drawHealthBar(ctx: DrawContext, width: Float, x: Float, y: Float) {
-
         val barX = x + 38f
         val barY = y + 24f
         val barW = (width - 40f).coerceAtLeast(0f)
@@ -215,7 +260,7 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
     private fun drawPlayerHead(ctx: DrawContext, x: Int, y: Int) {
         val target = lastTarget as? PlayerEntity ?: return
-        val id = mc.skinProvider.getSkinTextures(target.gameProfile).texture()
+        val skinId: SkinTextures = (target as? AbstractClientPlayerEntity)?.skinTextures ?: return
         val centerX = x + 8f
         val centerY = y + 8f
         val alphaMask = (alpha.coerceIn(0, 255) shl 24) or 0xFFFFFF
@@ -226,25 +271,33 @@ object NovolineMode : TargetInfoMode("Novoline") {
         ctx.matrices.translate(-centerX, -centerY, 0f)
 
         val layer = Function<Identifier, RenderLayer> { RenderLayer.getGuiTextured(it) }
+        RenderSystem.enableBlend()
+        RenderSystem.defaultBlendFunc()
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
+        RenderSystem.setShaderTexture(0, skinId.texture)
 
-        ctx.drawTexture(layer,
-            id, (x + 6), (y + 6),
+        ctx.drawTexture(
+            layer,
+            skinId.texture, (x + 6), (y + 6),
             8f,
             8f,
             8,
             8,
             64,
             64,
-            alphaMask)
-        ctx.drawTexture(layer,
-            id, (x + 6), (y + 6),
+            alphaMask
+        )
+        ctx.drawTexture(
+            layer,
+            skinId.texture, (x + 6), (y + 6),
             40f,
             8f,
             8,
             8,
             64,
             64,
-            alphaMask)
+            alphaMask
+        )
 
         ctx.matrices.pop()
     }

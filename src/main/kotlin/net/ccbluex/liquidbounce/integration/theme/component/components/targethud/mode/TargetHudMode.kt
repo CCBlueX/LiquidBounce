@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.targethu
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
 
-abstract class TargetInfoMode (
+abstract class TargetHudMode (
     name: String
 ) : Choice(name) {
     override val parent

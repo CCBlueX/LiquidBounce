@@ -832,7 +832,6 @@
   "liquidbounce.module.particleCosmetics.description": "Create a particle-based cosmetic effect around you.",
   "liquidbounce.module.treasureManager.description": "Automatically store valuable items in chests.",
   "liquidbounce.module.instakillAxeFucker.description": "Automatically select the instakill axe in KKCraft SkyWars with 100% chance.",
-  "liquidbounce.module.targetInfo.description": "Displays target information.",
   "liquidbounce.module.antiExplosion.description": "Automatically build protective walls against nearby explosions.",
   "liquidbounce.module.bowBomb.description": "Shoot an infinitely powerful arrow using a OneShot bug.",
   "liquidbounce.module.potionAura.description": "Automatically throw harmful and side-effect potions at targets.",
