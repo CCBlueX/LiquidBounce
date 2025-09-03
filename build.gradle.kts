@@ -51,6 +51,7 @@ val includeModDependency: Configuration by configurations.creating
  */
 fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
 
     exclude(group = "com.google.code.gson", module = "gson")
     exclude(group = "net.java.dev.jna", module = "jna")
@@ -179,6 +180,7 @@ dependencies {
 
     // HTTP library
     includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
+    includeDependency("com.squareup.okhttp3:okhttp-coroutines:5.1.0")
 
     // SOCKS5 & HTTP Proxy Support
     includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
