@@ -216,7 +216,6 @@ dependencies {
                 isTransitive = false
             }
 
-            dependencies.runtimeOnly(apiDependency)
             dependencies.include(apiDependency)
         }
     }
