@@ -52,8 +52,19 @@ object ComponentManager {
         }
     }
 
+    fun getComponents(id: String?): List<Component> {
+        if (id == null) {
+            return components
+        }
+
+        val theme = ThemeManager.themes.find { it.metadata.id == id } ?: return emptyList()
+        return theme.components
+    }
+
     fun updateComponents() {
-        EventManager.callEvent(ComponentsUpdate(components))
+        // Might be necessary later on.
+        // EventManager.callEvent(ComponentsUpdate(null, components))
+        EventManager.callEvent(ComponentsUpdate(ThemeManager.theme.metadata.id, ThemeManager.theme.components))
     }
 
 }

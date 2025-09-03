@@ -20,15 +20,29 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 data class ThemeMetadata(
+    val id: String,
     val name: String,
-    val author: List<String>,
     val version: String,
+    val authors: List<String>,
     val screens: List<String>,
     val overlays: List<String>,
     val components: List<String>,
     val fonts: List<String>,
-    val background: List<Background>
-)
+    val backgrounds: List<Background>
+) {
+    @Suppress("RedundantRequireNotNullCall")
+    fun checkNotNull() {
+        checkNotNull(id)
+        checkNotNull(name)
+        checkNotNull(version)
+        checkNotNull(authors)
+        checkNotNull(screens)
+        checkNotNull(overlays)
+        checkNotNull(components)
+        checkNotNull(fonts)
+        checkNotNull(backgrounds)
+    }
+}
 
 data class Background(
     val name: String,

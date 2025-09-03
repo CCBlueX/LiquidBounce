@@ -25,7 +25,10 @@ import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
-// GET /api/v1/client/components
+// GET /api/v1/client/components/:id
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) =
-    httpOk(accessibleInteropGson.toJsonTree(ComponentManager.components).asJsonArray)
+    httpOk(accessibleInteropGson.toJsonTree(
+        ComponentManager.getComponents(requestObject.params["id"])).asJsonArray
+    )
+

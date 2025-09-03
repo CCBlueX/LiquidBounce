@@ -93,7 +93,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         }
 
         for (theme in themes) {
-            val themeConfigurable = Configurable(theme.metadata.name, theme.components as MutableList<Value<*>>)
+            val themeConfigurable = Configurable(theme.metadata.id, theme.components as MutableList<Value<*>>)
             components.tree(themeConfigurable)
         }
 

@@ -67,6 +67,7 @@ export interface ScaleFactorChangeEvent {
 }
 
 export interface ComponentsUpdateEvent {
+    id: string | null;
     components: Component[];
 }
 
