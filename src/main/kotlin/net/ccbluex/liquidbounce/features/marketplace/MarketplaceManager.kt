@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.*
 import java.io.File
 
@@ -98,8 +97,8 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         }
 
         val item = SubscribedItem(item)
-        item.install(item.getNewestRevisionId() ?: return)
         subscribedItems.add(item)
+        item.install(item.getNewestRevisionId() ?: return)
         ConfigSystem.store(this)
     }
 
@@ -111,10 +110,8 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
         subscribedItems.remove(item)
         ConfigSystem.store(this)
 
-        when (item.type) {
-            MarketplaceItemType.SCRIPT -> ScriptManager.reload()
-            else -> {}
-        }
+        // Reload the item type's manager.
+        item.type.reload()
     }
 
 }
