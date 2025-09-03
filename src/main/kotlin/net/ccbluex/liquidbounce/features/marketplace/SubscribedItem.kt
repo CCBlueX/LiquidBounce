@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
@@ -8,6 +9,7 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 
 data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
@@ -129,8 +131,10 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             revisionArchiveFile.delete()
         }
 
-        // Reload the item type's manager.
-        type.reload()
+        // Reload the item type's manager on render thread.
+        withContext(MinecraftDispatcher) {
+            type.reload()
+        }
     }
 
 
