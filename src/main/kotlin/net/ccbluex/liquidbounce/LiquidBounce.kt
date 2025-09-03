@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
-import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -342,7 +341,6 @@ object LiquidBounce : EventListener {
                     // Preload marketplace items
                     ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
-                    ConfigSystem.store(MarketplaceManager)
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
                 }
