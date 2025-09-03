@@ -77,9 +77,7 @@ object FontManager {
     /**
      * The active font renderer that all text rendering will be based on.
      *
-     * TODO: Because PR #3884 is not merged yet, we have to define the active font renderer manually.
-     *    This will be removed once the PR is merged, because after the PR is merged, the font renderer
-     *    can be selected through the module settings instead.
+     * TODO: Replaces this with Module-based Font Selection
      */
     val FONT_RENDERER
         get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
