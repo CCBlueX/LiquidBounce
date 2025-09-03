@@ -44,6 +44,9 @@ val includeDependency: Configuration by configurations.creating
 /** Includes mod in the JAR file */
 val includeModDependency: Configuration by configurations.creating
 
+/** Includes native-only dependency in the JAR file */
+val includeNative: Configuration by configurations.creating
+
 /**
  * Provided by:
  * - Minecraft
@@ -83,9 +86,13 @@ includeModDependency.excludeProvidedLibs()
 configurations {
     include.configure {
         extendsFrom(includeModDependency)
+        extendsFrom(includeNative)
     }
     modApi.configure {
         extendsFrom(includeModDependency)
+    }
+    runtimeOnly.configure {
+        extendsFrom(includeNative)
     }
 }
 
@@ -159,8 +166,8 @@ dependencies {
     includeDependency("net.ccbluex:netty-httpserver:2.3.2")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    includeDependency("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    includeDependency("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
