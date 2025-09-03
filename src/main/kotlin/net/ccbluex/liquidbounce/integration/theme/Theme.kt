@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.shader.CanvasShader
+import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
@@ -85,7 +86,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }.toMutableList()
     }
 
-    val settings = Configurable(metadata.id).apply {
+    val settings = Configurable(metadata.id.capitalize()).apply {
         metadata.values?.let { values ->
             for (value in values) {
                 json(value)
