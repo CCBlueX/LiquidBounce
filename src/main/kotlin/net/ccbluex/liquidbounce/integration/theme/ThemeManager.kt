@@ -97,7 +97,7 @@ object ThemeManager : Configurable("theme") {
         themesFolder.listFiles()
             ?.filter(File::isDirectory)
             ?.forEach { file ->
-                if (file.name.equals("liquidbounce", true)) {
+                if (file.name.equals("default", true)) {
                     return@forEach
                 }
 
