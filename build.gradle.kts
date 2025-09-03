@@ -179,11 +179,11 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
-    includeDependency("com.squareup.okhttp3:okhttp-coroutines:5.1.0")
+    includeDependency("com.squareup.okhttp3:okhttp:${project.property("okhttp_version")}")
+    includeDependency("com.squareup.okhttp3:okhttp-coroutines:${project.property("okhttp_version")}")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
+    includeDependency("io.netty:netty-handler-proxy:${project.property("netty_version")}")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
