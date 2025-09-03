@@ -32,6 +32,7 @@ import net.minecraft.util.Util
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.coroutines.executeAsync
 import okio.BufferedSource
 import okio.sink
 import java.io.File
@@ -106,7 +107,7 @@ object HttpClient {
         headers: Headers.Builder.() -> Unit = {},
         body: RequestBody? = null,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
-    ): Response = withContext(Dispatchers.IO) {
+    ): Response {
         val request = Request.Builder()
             .url(url)
             .method(method.name, body)
@@ -114,13 +115,13 @@ object HttpClient {
             .header("User-Agent", agent)
             .build()
 
-        if (progressListener == null) {
-            client.newCall(request).execute()
+        return if (progressListener == null) {
+            client.newCall(request).executeAsync()
         } else {
             client.newBuilder()
                 .addNetworkInterceptor(OkHttpProgressInterceptor(progressListener))
                 .build()
-                .newCall(request).execute()
+                .newCall(request).executeAsync()
         }
     }
 
