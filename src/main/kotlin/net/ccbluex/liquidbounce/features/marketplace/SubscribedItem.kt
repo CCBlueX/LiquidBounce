@@ -35,22 +35,18 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             return null
         }
 
-        folder.listFiles()?.let { children ->
-            if (children.any(File::isFile)) {
-                return folder
-            }
+        fun File.containsFile(): Boolean {
+            return this.isDirectory && !this.listFiles(File::isFile).isNullOrEmpty()
+        }
 
-            children.filter(File::isDirectory).forEach { subFolder ->
-                subFolder.listFiles()?.let { subChildren ->
-                    if (subChildren.any(File::isFile)) {
-                        return subFolder
-                    }
-                }
-            }
+        if (folder.containsFile()) {
+            return folder
         }
 
         // Return null if no files found at folder or one level below
-        return null
+        return folder.listFiles(File::isDirectory)?.firstOrNull { subFolder ->
+            subFolder.containsFile()
+        }
     }
 
     suspend fun checkUpdate(): Int? {
