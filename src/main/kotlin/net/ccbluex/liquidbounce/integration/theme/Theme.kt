@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -33,6 +34,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.io.File
+import java.io.InputStream
 import java.util.*
 
 /**
@@ -87,6 +89,21 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         // Check for duplicated component names
         components.groupBy { component -> component.name }.forEach { (name, components) ->
             check(components.size == 1) { "Found duplicated component name '$name'" }
+        }
+
+        // Load fonts
+        for (font in metadata.fonts) {
+            runCatching {
+                runBlocking {
+                    get<InputStream>("/fonts/$font").use { stream ->
+                        FontManager.queueFontFromStream(stream)
+                    }
+
+                    logger.info("Loaded font $font for theme ${metadata.name}")
+                }
+            }.onFailure {
+                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+            }
         }
     }
 

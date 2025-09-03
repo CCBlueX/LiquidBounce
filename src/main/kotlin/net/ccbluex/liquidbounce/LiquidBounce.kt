@@ -79,7 +79,6 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
-import java.io.File
 import kotlin.time.measureTime
 
 /**
@@ -300,23 +299,6 @@ object LiquidBounce : EventListener {
                         ConfigSystem.store(ClientAccountManager)
                     }
                 }
-            }
-            launch {
-                // TODO: Replace and load through Metadata
-                ThemeManager.themesFolder.listFiles()
-                    ?.filter(File::isDirectory)
-                    ?.forEach { file ->
-                        runCatching {
-                            val assetsFolder = File(file, "assets")
-                            if (!assetsFolder.exists()) {
-                                return@forEach
-                            }
-
-                            FontManager.queueFolder(assetsFolder)
-                        }.onFailure {
-                            logger.error("Failed to queue fonts from theme '${file.name}'.", it)
-                        }
-                    }
             }
         }
 
