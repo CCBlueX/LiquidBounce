@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.render
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -40,30 +43,34 @@ object FontManager {
     /**
      * As fallback, we can use a common font that is available on all systems.
      */
-    private val COMMON_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Segoe UI")
-            OSX -> systemFont("Helvetica")
-            LINUX -> systemFont("DejaVu Sans")
-            else -> systemFont("Arial")
-        }
-    }.onFailure { throwable ->
-        logger.error("Failed to load common font.", throwable)
-    }.getOrNull() ?: systemFont("Arial")
+    private val COMMON_FONT by AsyncLazy {
+        runCatching {
+            when (Util.getOperatingSystem()) {
+                WINDOWS -> systemFont("Segoe UI")
+                OSX -> systemFont("Helvetica")
+                LINUX -> systemFont("DejaVu Sans")
+                else -> systemFont("Arial")
+            }
+        }.onFailure { throwable ->
+            logger.error("Failed to load common font.", throwable)
+        }.getOrNull() ?: systemFont("Arial")
+    }
 
     /**
      * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
      */
-    private val CJK_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Microsoft YaHei")
-            OSX -> systemFont("PingFang SC")
-            LINUX -> systemFont("Noto Sans CJK")
-            else -> null // No default CJK font available
-        }
-    }.onFailure { throwable ->
-        logger.error("Failed to load CJK font.", throwable)
-    }.getOrNull()
+    private val CJK_FONT  by AsyncLazy {
+        runCatching {
+            when (Util.getOperatingSystem()) {
+                WINDOWS -> systemFont("Microsoft YaHei")
+                OSX -> systemFont("PingFang SC")
+                LINUX -> systemFont("Noto Sans CJK")
+                else -> null // No default CJK font available
+            }
+        }.onFailure { throwable ->
+            logger.error("Failed to load CJK font.", throwable)
+        }.getOrNull()
+    }
 
     /**
      * All font faces that are known to the font manager.
@@ -107,7 +114,7 @@ object FontManager {
         )
     }
 
-    internal fun queueFontFromFile(file: File) {
+    internal suspend fun queueFontFromFile(file: File) {
         try {
             if (!file.exists()) {
                 logger.warn("Font file ${file.absolutePath} does not exist.")
@@ -139,7 +146,7 @@ object FontManager {
         }
     }
 
-    internal fun queueFontFromStream(stream: InputStream) {
+    internal suspend fun queueFontFromStream(stream: InputStream) {
         val font = Font.createFont(Font.TRUETYPE_FONT, stream)
             .deriveFont(DEFAULT_FONT_SIZE)
         val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, null)
@@ -147,7 +154,7 @@ object FontManager {
         addFontFace(fontFace)
     }
 
-    private fun systemFont(name: String): FontFace {
+    private suspend fun systemFont(name: String): FontFace {
         val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
 
         STYLES.forEachIndexed { index, style ->
@@ -188,7 +195,7 @@ object FontManager {
         /**
          * Fills the font style at the given index.
          */
-        fun fillStyle(font: Font, index: Int) {
+        suspend fun fillStyle(font: Font, index: Int) = withContext(Dispatchers.Default) {
             val metrics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
                 setFont(font)
             }.fontMetrics

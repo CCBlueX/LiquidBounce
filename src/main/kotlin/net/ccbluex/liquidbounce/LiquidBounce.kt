@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -316,7 +317,7 @@ object LiquidBounce : EventListener {
         ThemeManager.load()
         IntegrationListener
 
-        taskManager = TaskManager(scope).apply {
+        taskManager = TaskManager(eventListenerScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)
