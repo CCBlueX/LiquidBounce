@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
+import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -187,6 +187,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.loadAll()
 
         isInitialized = true
+        logger.info("Client has been successfully initialized.")
     }
 
     /**
@@ -318,7 +319,7 @@ object LiquidBounce : EventListener {
         ThemeManager.load()
         IntegrationListener
 
-        taskManager = TaskManager(eventListenerScope).apply {
+        taskManager = TaskManager(scope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)
