@@ -35,8 +35,22 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             return null
         }
 
-        val file = folder.walkTopDown().filter { file -> file.isFile }
-        return file.firstOrNull()?.parentFile ?: folder
+        folder.listFiles()?.let { children ->
+            if (children.any(File::isFile)) {
+                return folder
+            }
+
+            children.filter(File::isDirectory).forEach { subFolder ->
+                subFolder.listFiles()?.let { subChildren ->
+                    if (subChildren.any(File::isFile)) {
+                        return subFolder
+                    }
+                }
+            }
+        }
+
+        // Return null if no files found at folder or one level below
+        return null
     }
 
     suspend fun checkUpdate(): Int? {
