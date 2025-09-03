@@ -313,6 +313,8 @@ object LiquidBounce : EventListener {
         BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
         ThemeManager.load()
         IntegrationListener
 
@@ -338,8 +340,6 @@ object LiquidBounce : EventListener {
 
             launch("Marketplace") { task ->
                 runCatching {
-                    // Preload marketplace items
-                    ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
