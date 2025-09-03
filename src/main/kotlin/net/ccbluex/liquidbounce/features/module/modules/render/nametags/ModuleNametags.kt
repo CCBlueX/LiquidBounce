@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -41,7 +42,9 @@ import kotlin.math.abs
 @Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
-    val scale by float("Scale", 2F, 0.25F..4F)
+    val scale by float("Scale", 2F, 0.25F..40000F)
+    val heightOffset by float("HeightOffset", 0.55F, -1F..1F)
+    val scaleMode by enumChoice("ScaleMode",Mode.EQUAL)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
     internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
@@ -133,5 +136,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
         list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
-
+    enum class Mode(override val choiceName: String) : NamedChoice {
+        EQUAL("Equal"),
+        TEST("Test")
+    }
 }

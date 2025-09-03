@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags.heightOffset
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -45,7 +46,7 @@ class Nametag private constructor(
 
     fun calculatePosition(tickDelta: Float) {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
-            .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
+            .add(0.0, entity.getEyeHeight(entity.pose) + heightOffset.toDouble(), 0.0)
 
         position = WorldToScreen.calculateScreenPos(nametagPos)
     }

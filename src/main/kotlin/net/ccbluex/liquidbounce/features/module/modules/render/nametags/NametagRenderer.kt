@@ -19,14 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import com.mojang.blaze3d.systems.RenderSystem
+import kotlin.math.hypot
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.render.VertexFormat
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11
 
 private const val NAMETAG_PADDING: Int = 5
@@ -53,10 +57,39 @@ class NametagRenderer {
 
     private val fontBuffers = FontRendererBuffers()
 
-    fun RenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
+    fun getNametagScale(
+        nametag: Entity,
+        scaleMode: ModuleNametags.Mode,
+        baseScale: Float = 1.0f
+    ): Float {
         val fontSize = FontManager.DEFAULT_FONT_SIZE
 
-        val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
+        val worldOffset = 0.5f
+        val pos = nametag.pos
+        val above = Vec3d(pos.x, pos.y + worldOffset, pos.z)
+
+        val s1 = WorldToScreen.calculateScreenPos(pos) ?: return 0f
+        val s2 = WorldToScreen.calculateScreenPos(above) ?: return 0f
+
+        val pixelDist = hypot((s2.x - s1.x).toDouble(), (s2.y - s1.y).toDouble()).toFloat()
+        if (pixelDist <= 0f) return 0f
+
+        val ppu = pixelDist / worldOffset
+
+        val scale = ((ppu / fontSize) * baseScale) / 4
+
+        return when (scaleMode) {
+            ModuleNametags.Mode.EQUAL -> 1f / (fontSize * 0.15f) * baseScale
+            ModuleNametags.Mode.TEST -> {
+                scale
+            }
+        }
+    }
+
+
+    fun RenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
+        val fontSize = FontManager.DEFAULT_FONT_SIZE
+        val scale = getNametagScale(nametag.entity, ModuleNametags.scaleMode, ModuleNametags.scale)
 
         matrixStack.push()
         matrixStack.translate(pos.x, pos.y, pos.z)

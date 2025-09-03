@@ -20,10 +20,10 @@ import net.minecraft.util.math.MathHelper
 
 object EspAvatarMode : EspMode("Avatar", requiresTrueSight = true) {
 
-    private val size by float("ImageSize", 1f, 0.5f..2f)
+    private val size by float("ImageSize", 1f, 0.25f..1f)
     private val opacity by float("Opacity", 1f, 0.5f..1f)
     private val samples by int("Samples",2,2..5)
-    
+
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val entities = RenderedEntities.filter { it is PlayerEntity && it != mc.player }
