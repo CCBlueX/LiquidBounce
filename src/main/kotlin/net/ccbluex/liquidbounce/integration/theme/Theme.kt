@@ -28,8 +28,6 @@ import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.Jso
 import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.extractZip
-import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
@@ -47,6 +45,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
     val id: UUID = UUID.randomUUID()
 
     enum class Origin(override val choiceName: String) : NamedChoice {
+        RESOURCE("resource"),
         LOCAL("local"),
         MARKETPLACE("marketplace"),
         REMOTE("remote")
@@ -165,24 +164,6 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
     override fun close() {
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
-    }
-
-    companion object {
-
-        fun extractFromResources(name: String) = ThemeManager.themesFolder.resolve(name).run {
-            deleteOnExit()
-
-            if (exists()) {
-                deleteRecursively()
-            }
-
-            resource("/resources/liquidbounce/themes/$name.zip").use { stream ->
-                extractZip(stream, this)
-            }
-
-            relativeTo(ThemeManager.themesFolder)
-        }
-
     }
 
 }

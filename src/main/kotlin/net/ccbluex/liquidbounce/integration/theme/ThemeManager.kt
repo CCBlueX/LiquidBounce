@@ -85,7 +85,7 @@ object ThemeManager : Configurable("theme") {
 
     fun init() {
         // Load default theme
-        Theme(Theme.Origin.LOCAL, Theme.extractFromResources("liquidbounce")).apply {
+        Theme(Theme.Origin.RESOURCE, File("liquidbounce")).apply {
             includedTheme = this
         }
     }
