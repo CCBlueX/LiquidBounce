@@ -71,7 +71,7 @@
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}
-                    <Keystrokes/>
+                    <Keystrokes settings={c.settings}/>
                 {:else if c.name === "Effects"}
                     <Effects/>
                 {:else if c.name === "Text"}

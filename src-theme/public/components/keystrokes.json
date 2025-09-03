@@ -7,5 +7,22 @@
     "horizontalOffset": 15,
     "verticalAlignment": "Bottom",
     "verticalOffset": 15
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "ShowJumpKey",
+      "value": true
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "ShowAttackAndUseKey",
+      "value": true
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "ShowSprintAndSneakKey",
+      "value": true
+    }
+  ]
 }

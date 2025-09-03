@@ -5,6 +5,12 @@
     import type {MinecraftKeybind} from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
 
+    export let settings: { [name: string]: any };
+
+    onMount(() => {
+        console.log(settings);
+    })
+
     let keyForward: MinecraftKeybind | undefined;
     let keyBack: MinecraftKeybind | undefined;
     let keyLeft: MinecraftKeybind | undefined;
@@ -41,11 +47,17 @@
     <Key key={keyLeft} showName/>
     <Key key={keyBack} showName/>
     <Key key={keyRight} showName/>
-    <Key key={keyJump} flexBasis="100%" showName/>
-    <Key key={keyAttack} flexBasis="calc(50% - 2.5px)" showCPS/>
-    <Key key={keyUse} flexBasis="calc(50% - 2.5px)" showCPS/>
-    <Key key={keySprint} flexBasis="calc(50% - 2.5px)" showName/>
-    <Key key={keySneak} flexBasis="calc(50% - 2.5px)" showName/>
+    {#if settings.showJumpKey}
+        <Key key={keyJump} flexBasis="100%" showName/>
+    {/if}
+    {#if settings.showAttackKey}
+        <Key key={keyAttack} flexBasis="calc(50% - 2.5px)" showCPS/>
+        <Key key={keyUse} flexBasis="calc(50% - 2.5px)" showCPS/>
+    {/if}
+    {#if settings.showSprintAndSneakKey}
+        <Key key={keySprint} flexBasis="calc(50% - 2.5px)" showName/>
+        <Key key={keySneak} flexBasis="calc(50% - 2.5px)" showName/>
+    {/if}
 </div>
 
 <style lang="scss">
