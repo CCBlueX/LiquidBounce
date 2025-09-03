@@ -310,7 +310,7 @@ object LiquidBounce : EventListener {
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
     private fun prepareGuiStage() {
-        BrowserBackendManager
+        BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
         ThemeManager.load()

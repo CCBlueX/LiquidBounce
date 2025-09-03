@@ -38,7 +38,7 @@ object BrowserBackendManager : EventListener {
     val isSkippingBrowser = System.getenv("SKIP_BROWSER") == "true"
         || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
 
-    init {
+    fun init() {
         PersistentLocalStorage
     }
 
