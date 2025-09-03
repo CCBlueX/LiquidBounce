@@ -158,9 +158,9 @@ dependencies {
     includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.3.2")
     // MacOS native (Linux native is included in game)
-    include("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    include("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    include("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
+    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
+    includeDependency("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
+    includeDependency("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
@@ -209,6 +209,7 @@ dependencies {
                 isTransitive = false
             }
 
+            dependencies.runtimeOnly(apiDependency)
             dependencies.include(apiDependency)
         }
     }
