@@ -195,21 +195,18 @@ object ThemeManager : Configurable("theme") {
     }
 
     fun loadBackground() = runBlocking {
-        if (!theme.loadBackgroundImage()) {
-            includedTheme.loadBackgroundImage()
-        }
-
-        if (shaderEnabled && !theme.compileShader()) {
-            includedTheme.compileShader()
+        theme.loadBackgroundImage()
+        if (shaderEnabled) {
+            theme.compileShader()
         }
     }
 
     @Suppress("LongParameterList")
     fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
-            theme.themeBackgroundShader ?: includedTheme.themeBackgroundShader
+            theme.themeBackgroundShader
         } else {
-            theme.themeBackgroundTexture ?: includedTheme.themeBackgroundTexture
+            theme.themeBackgroundTexture
         } ?: return false
 
         background.draw(context, width, height, mouseX, mouseY, delta)
