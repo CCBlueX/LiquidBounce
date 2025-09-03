@@ -354,6 +354,12 @@ export interface GameWindow {
     guiScale: number;
 }
 
+export interface Theme {
+    name: string;
+    id: string;
+    settings: { [name: string]: any };
+}
+
 export interface Component {
     name: string;
     id: string;

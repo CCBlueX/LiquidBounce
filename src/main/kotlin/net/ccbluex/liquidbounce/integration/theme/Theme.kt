@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.integration.theme
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
@@ -43,8 +45,6 @@ import java.util.*
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
 class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), Closeable {
-
-    val id: UUID = UUID.randomUUID()
 
     enum class Origin(override val choiceName: String) : NamedChoice {
         RESOURCE("resource"),
@@ -83,6 +83,17 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
                 logger.warn("Failed to create component $name", it)
             }.getOrNull()
         }.toMutableList()
+    }
+
+    val settings = Configurable(metadata.id).apply {
+        metadata.values?.let { values ->
+            for (value in values) {
+                json(value)
+            }
+        }
+
+        val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
+        tree(componentSettings)
     }
 
     init {

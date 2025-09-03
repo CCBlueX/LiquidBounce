@@ -134,7 +134,7 @@ object ThemeManager : Configurable("theme") {
 
         themes.add(includedTheme)
 
-        ModuleHud.updateComponents()
+        ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
             IntegrationListener.update()
             ModuleHud.reopen()

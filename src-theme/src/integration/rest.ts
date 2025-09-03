@@ -22,6 +22,7 @@ import type {
     RegistryItem,
     Server,
     Session,
+    Theme,
     VirtualScreen,
     World
 } from "./types";
@@ -592,6 +593,17 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
+/**
+ * @param id Use the ID from [getMetadata].
+ */
+export async function getTheme(id: string): Promise<Theme> {
+    const response = await fetch(`${API_BASE}/client/theme/${id}`);
+    return await response.json();
+}
+
+/**
+ * @param id Use the ID from [getMetadata].
+ */
 export async function getComponents(id: string): Promise<Component[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
