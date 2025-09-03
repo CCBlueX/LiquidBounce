@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.preset
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
@@ -157,11 +157,12 @@ fun <T> CommandBuilder.pagedQuery(
     return parameter(
         ParameterBuilder.begin<Int>("page")
             .verifiedBy {
-                val input =
-                    it.toIntOrNull() ?: return@verifiedBy ParameterValidationResult.error("'$it' is not an integer")
+                val input = it.toIntOrNull() ?: return@verifiedBy Result.Error("'$it' is not an integer")
                 val maxPage = maxPage()
-                ParameterValidationResult.ofNullable(input.takeIf { i -> i in 1..maxPage }) {
-                    "'$it' is not in range 1..$maxPage"
+                if (input in 1..maxPage) {
+                    Result.Ok(input)
+                } else {
+                    Result.Error("'$it' is not in range 1..$maxPage")
                 }
             }.optional().build()
     ).handler { command, args ->

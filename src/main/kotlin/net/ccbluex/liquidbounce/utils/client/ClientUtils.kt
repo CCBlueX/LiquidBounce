@@ -24,8 +24,7 @@ import net.minecraft.util.Util
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
-val logger: Logger
-    get() = LogManager.getLogger(CLIENT_NAME)
+val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
 val inGame: Boolean
     get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } == true

@@ -30,13 +30,14 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.components
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components
-import net.ccbluex.liquidbounce.integration.theme.component.customComponents
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.themes
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -76,11 +77,28 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private var browserSettings: BrowserSettings? = null
 
-    init {
-        @Suppress("UNCHECKED_CAST")
-        tree(Configurable("In-built", value = components as MutableList<Value<*>>))
-        @Suppress("UNCHECKED_CAST")
-        tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
+    val nativeComponents = listOf(MinimapComponent)
+
+    val components = tree(Configurable("Components")).apply {
+        nativeComponents.forEach(this::tree)
+    }
+
+    /**
+     * Updates [components] content
+     */
+    fun updateComponents() {
+        components.inner.clear()
+        nativeComponents.forEach { component ->
+            components.tree(component)
+        }
+
+        for (theme in themes) {
+            val themeConfigurable = Configurable(theme.metadata.name, theme.components as MutableList<Value<*>>)
+            components.tree(themeConfigurable)
+        }
+
+        components.initConfigurable()
+        components.walkKeyPath()
     }
 
     override fun onEnabled() {

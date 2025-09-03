@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
@@ -84,7 +85,7 @@ object CommandAutoDisable : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.modules(all = ModuleAutoDisable.listOfModules)
+            ParameterBuilder.modules(all = ModuleAutoDisable.listOfModules)
                 .required()
                 .build()
         )
@@ -112,7 +113,7 @@ object CommandAutoDisable : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.modules()
+            ParameterBuilder.modules()
                 .required()
                 .build()
         )

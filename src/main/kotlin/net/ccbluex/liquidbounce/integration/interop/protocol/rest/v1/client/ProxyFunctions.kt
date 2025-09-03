@@ -211,7 +211,7 @@ fun putFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.proxies[body.id].favorite = true
-    ConfigSystem.storeConfigurable(ProxyManager)
+    ConfigSystem.store(ProxyManager)
     return httpNoContent()
 }
 
@@ -227,6 +227,6 @@ fun deleteFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
     }
 
     ProxyManager.proxies[body.id].favorite = false
-    ConfigSystem.storeConfigurable(ProxyManager)
+    ConfigSystem.store(ProxyManager)
     return httpNoContent()
 }

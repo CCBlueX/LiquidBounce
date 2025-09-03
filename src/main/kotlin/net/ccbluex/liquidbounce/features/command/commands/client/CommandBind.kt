@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.module
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
@@ -39,14 +39,14 @@ object CommandBind : CommandFactory {
         return CommandBuilder
             .begin("bind")
             .parameter(
-                Parameters.module()
+                ParameterBuilder.module()
                     .required()
                     .build()
             ).parameter(
                 ParameterBuilder
                     .begin<String>("key")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith { begin, _ -> availableInputKeys.filter { it.startsWith(begin) } }
+                    .autocompletedFrom { availableInputKeys }
                     .required()
                     .build()
             )

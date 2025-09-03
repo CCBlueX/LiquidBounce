@@ -340,7 +340,29 @@ export interface GameWindow {
 
 export interface Component {
     name: string;
+    id: string;
     settings: { [name: string]: any };
+}
+
+export interface Alignment {
+    horizontalAlignment: HorizontalAlignment;
+    verticalAlignment: VerticalAlignment;
+    horizontalOffset: number;
+    verticalOffset: number;
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
 }
 
 export interface ClientInfo {

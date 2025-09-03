@@ -24,7 +24,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoices
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
 import kotlin.time.Duration.Companion.seconds
@@ -58,7 +59,7 @@ object CommandServerInfo : CommandFactory, EventListener {
             .begin("serverinfo")
             .requiresIngame()
             .parameter(
-                Parameters.enumChoices<DetectionType>("detect")
+                ParameterBuilder.enumChoices<DetectionType>("detect")
                     .optional()
                     .build()
             )

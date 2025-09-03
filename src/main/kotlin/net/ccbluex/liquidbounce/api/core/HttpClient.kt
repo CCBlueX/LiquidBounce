@@ -21,10 +21,11 @@ package net.ccbluex.liquidbounce.api.core
 import com.google.gson.JsonElement
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
@@ -38,6 +39,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
 import java.util.concurrent.TimeUnit
+import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -45,12 +47,24 @@ fun withScope(block: suspend CoroutineScope.() -> Unit) = scope.launch { block()
 
 object HttpClient {
 
+    @JvmField
     val DEFAULT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion}" +
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
-    val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-    val FORM_MEDIA_TYPE = "application/x-www-form-urlencoded".toMediaType()
+    object MediaTypes {
+        @JvmField
+        val JSON = "application/json; charset=utf-8".toMediaType()
+
+        @JvmField
+        val FORM = "application/x-www-form-urlencoded".toMediaType()
+
+        @JvmField
+        val IMAGE_PNG = "image/png".toMediaType()
+
+        @JvmField
+        val OCTET_STREAM = "application/octet-stream".toMediaType()
+    }
 
     /**
      * Client default [OkHttpClient]
@@ -63,6 +77,7 @@ object HttpClient {
         .writeTimeout(20, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
+        .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
         .addInterceptor { chain ->
             val request = chain.request()
             try {
@@ -83,12 +98,14 @@ object HttpClient {
         }
         .build().also(McefFileUtils::setOkHttpClient)
 
+    @Suppress("LongParameterList")
     suspend fun request(
         url: String,
         method: HttpMethod,
         agent: String = DEFAULT_AGENT,
         headers: Headers.Builder.() -> Unit = {},
-        body: RequestBody? = null
+        body: RequestBody? = null,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ): Response = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url(url)
@@ -97,11 +114,22 @@ object HttpClient {
             .header("User-Agent", agent)
             .build()
 
-        client.newCall(request).execute()
+        if (progressListener == null) {
+            client.newCall(request).execute()
+        } else {
+            client.newBuilder()
+                .addNetworkInterceptor(OkHttpProgressInterceptor(progressListener))
+                .build()
+                .newCall(request).execute()
+        }
     }
 
-    suspend fun download(url: String, file: File, agent: String = DEFAULT_AGENT) =
-        request(url, HttpMethod.GET, agent).toFile(file)
+    suspend fun download(
+        url: String,
+        file: File,
+        agent: String = DEFAULT_AGENT,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
+    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
 
 }
 
@@ -154,13 +182,15 @@ fun Response.toFile(file: File) = use { response ->
     file.sink().use(response.body.source()::readAll)
 }
 
+/**
+ * Creates request body from JSON.
+ */
 fun JsonElement.toRequestBody(): RequestBody {
     return accessibleInteropGson.toJson(this)
-        .toRequestBody(HttpClient.JSON_MEDIA_TYPE)
+        .toRequestBody(HttpClient.MediaTypes.JSON)
 }
 
-fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)
-fun String.asForm() = toRequestBody(HttpClient.FORM_MEDIA_TYPE)
+fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
 
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
     : Exception("${method.name} $url failed with code $code: $content")

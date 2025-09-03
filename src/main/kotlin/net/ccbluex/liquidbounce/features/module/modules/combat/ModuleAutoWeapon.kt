@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -210,7 +211,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     fun getAttackSpeed(original: Double): Double {
         debugParameter("Original Attack Speed") { original }
 
-        if (!running || ChangeOnAction.ON_ATTACK !in changeOnActions) {
+        if (!running || ChangeOnAction.ON_ATTACK !in changeOnActions || !player.hasCooldown) {
             return original
         }
 

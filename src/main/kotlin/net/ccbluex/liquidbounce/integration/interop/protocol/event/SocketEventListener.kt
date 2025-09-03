@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 import kotlin.reflect.KClass
 
@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
  */
 private const val EVENT_JSON_BYTE_COUNT = 64
 
-class SocketEventListener : EventListener {
+internal class SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
         .filter { WebSocketEvent::class.java.isAssignableFrom(it.java) }
@@ -71,7 +71,7 @@ class SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass.java, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = withScope {
+    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
         val json = runCatching {
             StringBuilderWriter(EVENT_JSON_BYTE_COUNT).use {
                 JsonWriter(it).use { writer ->
@@ -85,10 +85,10 @@ class SocketEventListener : EventListener {
             }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return@withScope
+        }.getOrNull() ?: return@execute
 
         httpServer.webSocketController.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed", t)
+            logger.error("WebSocket event broadcast failed, JSON: $json", t)
         }
     }
 

@@ -145,7 +145,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             return@handler
         }
 
-        val rotation = generateRotation(target, GravityType.from(slot))
+        val rotation = findRotation(target, GravityType.from(slot))
 
         // Set the rotation with the usage priority of 2.
         RotationManager.setRotationTarget(
@@ -176,7 +176,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             return@tickHandler
         }
 
-        val rotation = generateRotation(target, GravityType.from(slot))
+        val rotation = findRotation(target, GravityType.from(slot))
 
         // Check the difference between server and client rotation
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
@@ -210,19 +210,24 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
     }
 
-    private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
-        val pointOnHitbox = pointTracker.findPoint(target, 1)
-
+    private fun findRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
         return when (gravityType) {
             GravityType.AUTO -> {
                 // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
                 return null
             }
-            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.pos, pointOnHitbox.eyes)
+            GravityType.LINEAR -> {
+                // On linear we likely don't need to care about gravity,
+                // but instead aim exactly at the hitbox of the target.
+                val eyes = player.eyePos
+                val point = pointTracker.findPoint(eyes, target, 1)
+                Rotation.lookingAt(point.pos, eyes)
+            }
             // Determines the required yaw and pitch angles to hit a target with a projectile,
             // considering gravity's effect on the projectile's motion.
             GravityType.PROJECTILE -> {
-                SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.GENERIC, target)
+                SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.GENERIC,
+                    target)
             }
         }
     }

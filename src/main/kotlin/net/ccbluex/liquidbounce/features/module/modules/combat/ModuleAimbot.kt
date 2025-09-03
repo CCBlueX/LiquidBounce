@@ -166,11 +166,12 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
         for (target in targetTracker.targets()) {
-            val pointOnHitbox = pointTracker.findPoint(target, 0)
+            val eyes = player.eyePos
+            val pointOnHitbox = pointTracker.findPoint(eyes, target, 0)
             val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.pos)
 
             val spot = raytraceBox(
-                pointOnHitbox.eyes,
+                eyes,
                 pointOnHitbox.box,
                 range = targetTracker.maxRange.toDouble(),
                 wallsRange = 0.0,

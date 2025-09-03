@@ -24,7 +24,6 @@ import ai.djl.util.Utils;
 import net.ccbluex.liquidbounce.api.core.HttpClient;
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine;
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -55,13 +54,7 @@ public class MixinUtils {
                 var url = CURRENT_URL.get();
                 var mainTask = DeepLearningEngine.getTask();
 
-                if (mainTask == null) {
-                    ClientUtilsKt.getLogger().warn("Intercepted progress while no main task is running.");
-                    return;
-                }
-
-                if (url == null) {
-                    ClientUtilsKt.getLogger().warn("Intercepted progress while no URL is set.");
+                if (mainTask == null || url == null) {
                     return;
                 }
 

@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.module
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -87,7 +88,7 @@ object CommandBinds : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.modules { mod -> !mod.bind.isUnbound }
+            ParameterBuilder.modules { mod -> !mod.bind.isUnbound }
                 .required()
                 .build()
         )
@@ -114,14 +115,14 @@ object CommandBinds : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.module()
+            ParameterBuilder.module()
                 .required()
                 .build()
         ).parameter(
             ParameterBuilder
                 .begin<String>("key")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> availableInputKeys.filter { it.startsWith(begin) } }
+                .autocompletedFrom { availableInputKeys }
                 .required()
                 .build()
         )

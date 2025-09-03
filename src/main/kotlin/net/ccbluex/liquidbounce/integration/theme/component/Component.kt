@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import java.util.*
 
 /**
  * Represents a HUD component
@@ -32,18 +33,20 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 abstract class Component(
     name: String,
     enabled: Boolean,
-    alignment: Alignment = Alignment.center()
+    alignment: Alignment = Alignment.center(),
+    val tweaks: Array<ComponentTweak> = emptyArray()
 ) : ToggleableConfigurable(parent = ModuleHud, name = name, enabled = enabled) {
 
+    val id: UUID = UUID.randomUUID()
     val alignment = tree(alignment)
 
-    protected fun registerComponentListen(cfg: Configurable = this) {
-        for (v in cfg.inner) {
+    protected fun registerComponentListen(configurable: Configurable) {
+        for (v in configurable.inner) {
             if (v is Configurable) {
                 registerComponentListen(v)
             } else {
                 v.onChanged {
-                    ComponentOverlay.fireComponentsUpdate()
+                    ComponentManager.updateComponents()
                 }
             }
         }

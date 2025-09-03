@@ -52,7 +52,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     KillAuraClickerItemCooldown()
 ) {
 
-    class KillAuraClickerItemCooldown : ItemCooldown<ModuleKillAura>(ModuleKillAura) {
+    class KillAuraClickerItemCooldown : ItemCooldown() {
 
         private val ignoreOnShieldBreak by boolean("IgnoreOnShieldBreak", true)
         private val ignoreOnMaceSmash by boolean("IgnoreOnMaceSmash", true)

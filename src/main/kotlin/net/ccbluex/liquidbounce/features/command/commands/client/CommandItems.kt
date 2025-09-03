@@ -22,14 +22,10 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.block
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
 import net.minecraft.block.Block
 import net.minecraft.registry.Registries
@@ -83,7 +79,7 @@ object CommandItems : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )
@@ -100,7 +96,7 @@ object CommandItems : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )

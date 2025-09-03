@@ -97,7 +97,7 @@ fun postPanic(requestObject: RequestObject): FullHttpResponse {
                     module.enabled = false
                 }
 
-                ConfigSystem.storeConfigurable(modulesConfigurable)
+                ConfigSystem.store(modulesConfigurable)
             }.onFailure {
                 logger.error("Failed to panic disable modules", it)
             }
@@ -121,7 +121,7 @@ data class ModuleRequest(val name: String) {
             runCatching {
                 module.enabled = supposedNew
 
-                ConfigSystem.storeConfigurable(modulesConfigurable)
+                ConfigSystem.store(modulesConfigurable)
             }.onFailure {
                 logger.error("Failed to toggle module $name", it)
             }
@@ -137,7 +137,7 @@ data class ModuleRequest(val name: String) {
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
         ConfigSystem.deserializeConfigurable(module, content.reader())
-        ConfigSystem.storeConfigurable(modulesConfigurable)
+        ConfigSystem.store(modulesConfigurable)
         return httpNoContent()
     }
 

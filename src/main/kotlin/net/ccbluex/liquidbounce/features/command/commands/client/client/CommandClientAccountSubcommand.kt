@@ -74,7 +74,7 @@ object CommandClientAccountSubcommand {
             chat(regular("Logging out..."))
             withContext(Dispatchers.IO) {
                 ClientAccountManager.clientAccount = EMPTY_ACCOUNT
-                ConfigSystem.storeConfigurable(ClientAccountManager)
+                ConfigSystem.store(ClientAccountManager)
                 EventManager.callEvent(UserLoggedOutEvent)
                 chat(regular("Successfully logged out."))
             }
@@ -90,7 +90,7 @@ object CommandClientAccountSubcommand {
             chat(regular("Starting OAuth authorization process..."))
             val account = startAuth { browseUrl(it) }
             ClientAccountManager.clientAccount = account
-            ConfigSystem.storeConfigurable(ClientAccountManager)
+            ConfigSystem.store(ClientAccountManager)
             EventManager.callEvent(UserLoggedInEvent)
             chat(regular("Successfully authorized client."))
         }.build()

@@ -19,6 +19,7 @@
     import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
     import Text from "./elements/Text.svelte";
     import CraftingInput from "./elements/inventory/CraftingInput.svelte";
+    import DraggableComponent from "./elements/DraggableComponent.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -44,7 +45,7 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         {#if c.settings.enabled}
-            <div style="{c.settings.alignment}">
+            <DraggableComponent name={c.name} id={c.id} alignment={c.settings.alignment} >
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
@@ -76,9 +77,9 @@
                 {:else if c.name === "Text"}
                     <Text settings={c.settings} />
                 {:else if c.name === "Image"}
-                    <img alt="" src="{c.settings.src}" style="scale: {c.settings.scale};">
+                    <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
                 {/if}
-            </div>
+            </DraggableComponent>
         {/if}
     {/each}
 </div>
