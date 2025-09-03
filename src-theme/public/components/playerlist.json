@@ -8,5 +8,5 @@
     "verticalAlignment": "Top",
     "verticalOffset": 0
   },
-"tweak": ["DISABLE_PLAYER_LIST_HUD"]
+"tweaks": ["DISABLE_PLAYER_LIST_HUD"]
 }
