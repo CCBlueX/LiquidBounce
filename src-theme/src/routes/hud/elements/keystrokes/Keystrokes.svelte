@@ -7,10 +7,6 @@
 
     export let settings: { [name: string]: any };
 
-    onMount(() => {
-        console.log(settings);
-    })
-
     let keyForward: MinecraftKeybind | undefined;
     let keyBack: MinecraftKeybind | undefined;
     let keyLeft: MinecraftKeybind | undefined;
