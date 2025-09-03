@@ -18,6 +18,7 @@
     import ConnectionScreen from "./routes/menu/connected/ConnectionScreen.svelte";
     import SpareModule from "./routes/menu/common/SpareModule.svelte";
     import Inventory from "./routes/menu/inventory/Inventory.svelte";
+    import ConfigManager from "./routes/clickgui/ConfigManager.svelte";
 
     const routes = {
         "/loginmenu": LoginMenu,
@@ -26,6 +27,7 @@
         "/hud": Hud,
         "/layouteditor": Hud,
         "/inventory": Inventory,
+        "/game_menu": ConfigManager,
         "/chest": SpareModule,
         "/title": Title,
         "/multiplayer": Multiplayer,
@@ -35,8 +37,6 @@
         "/disconnected": Disconnected,
         "/connecting": ConnectionScreen,
         "/browser": Browser,
-
-
     };
 
     const url = window.location.href;

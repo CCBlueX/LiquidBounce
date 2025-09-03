@@ -3,9 +3,9 @@
   "enabled": true,
   "singleton": true,
   "alignment": {
-    "horizontalAlignment": "Left",
+    "horizontalAlignment": "Right",
     "horizontalOffset": 15,
-    "verticalAlignment": "CenterTranslated",
+    "verticalAlignment": "Top",
     "verticalOffset": 0
   },
   "tweaks": ["DISABLE_SCOREBOARD"]

@@ -98,14 +98,13 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         val scoreboardIP by text("ScoreboardIP", "").onChanged {
             EventManager.callEvent(HudValueChangeEvent(ModuleHud))
         }
-        val primaryColor by color("Primary", Color4b(40, 100, 180, 255)).onChanged {
+        val primaryColor by color("Primary", Color4b.fromHex("#666666")).onChanged {
             EventManager.callEvent(HudValueChangeEvent(ModuleHud))
         }
-        val secondaryColor by color("Secondary", Color4b(200, 140, 255, 255)).onChanged {
+        val secondaryColor by color("Secondary", Color4b.fromHex("#A270FF")).onChanged {
             EventManager.callEvent(HudValueChangeEvent(ModuleHud))
         }
-
-        val shadowColor by color("Shadow", Color4b(20, 20, 20, 150)).onChanged {
+        val shadowColor by color("Shadow", Color4b.fromHex("#232323")).onChanged {
             EventManager.callEvent(HudValueChangeEvent(ModuleHud))
         }
         val arraylistPrefixRender = multiEnumChoice(

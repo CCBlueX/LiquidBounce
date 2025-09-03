@@ -21,6 +21,7 @@
     "container",
     "browser",
     "chat",
+    "game_menu",
     "connecting",
     "disconnected"
   ],

@@ -1,6 +1,6 @@
 {
   "name": "Island",
-  "enabled": true,
+  "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",
