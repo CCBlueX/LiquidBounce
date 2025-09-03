@@ -183,5 +183,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         themeBackgroundTexture?.close()
     }
 
+    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
+
 }
 
