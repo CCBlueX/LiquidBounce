@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.session.GameWins
 import net.ccbluex.liquidbounce.utils.session.KilledTarget
 import net.ccbluex.liquidbounce.utils.session.PlayTimeTracker
+import net.ccbluex.liquidbounce.utils.session.PlayerDeadEventListener
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
@@ -109,8 +110,6 @@ data class PlayerData(
 
     companion object {
 
-        private var wasAliveLastTick = true
-        private var localPlayerDeathCounter = 0
 
         @JvmStatic
         fun fromPlayer(player: PlayerEntity) = PlayerData(
@@ -143,7 +142,7 @@ data class PlayerData(
             player.armorItems.toList(),
             if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null,
             KilledTarget.killsCount,
-            updateDeathCount(player),
+            PlayerDeadEventListener.deathCount,
             player.isDead,
             ModuleAutoBuff.isEating,
             ModuleAutoBuff.eatingStartTime,
@@ -153,17 +152,7 @@ data class PlayerData(
         )
 
 
-        private fun updateDeathCount(player: PlayerEntity): Int {
-            if (player != mc.player) return localPlayerDeathCounter
 
-            val isNowDead = player.isRemoved || !player.isAlive
-            if (wasAliveLastTick && isNowDead) {
-                localPlayerDeathCounter++
-            }
-            wasAliveLastTick = !isNowDead
-
-            return localPlayerDeathCounter
-        }
     }
 }
 
