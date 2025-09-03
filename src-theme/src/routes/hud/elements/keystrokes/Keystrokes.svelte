@@ -50,7 +50,7 @@
     {#if settings.showJumpKey}
         <Key key={keyJump} flexBasis="100%" showName/>
     {/if}
-    {#if settings.showAttackKey}
+    {#if settings.showAttackAndUseKey}
         <Key key={keyAttack} flexBasis="calc(50% - 2.5px)" showCPS/>
         <Key key={keyUse} flexBasis="calc(50% - 2.5px)" showCPS/>
     {/if}
