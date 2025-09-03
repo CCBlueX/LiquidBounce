@@ -157,6 +157,8 @@ dependencies {
     // JCEF Support
     includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.3.2")
+    // MacOS native (Linux native is included in game)
+    includeDependency("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
