@@ -1,0 +1,11 @@
+{
+  "name": "SilentHand",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": -40,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 300
+  }
+}

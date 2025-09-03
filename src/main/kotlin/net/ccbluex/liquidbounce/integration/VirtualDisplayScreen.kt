@@ -29,7 +29,7 @@ import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.glfw.GLFW
 
 class VirtualDisplayScreen(
-    private val screenType: VirtualScreenType,
+    val screenType: VirtualScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
     val parentScreen: Screen? = mc.currentScreen

@@ -1,0 +1,11 @@
+{
+  "name": "Logo",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 20,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 50
+  }
+}

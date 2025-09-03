@@ -1,0 +1,12 @@
+{
+  "name": "ChatHUD",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 5,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 100
+  },
+  "tweaks": ["DISABLE_CHAT_HUD"]
+}

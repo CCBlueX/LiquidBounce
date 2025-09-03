@@ -1,11 +1,11 @@
 {
-  "name": "Hotbar",
-  "enabled": true,
+  "name": "ItemColumnHUD",
+  "enabled": false,
   "singleton": true,
   "alignment": {
-    "horizontalAlignment": "CenterTranslated",
-    "horizontalOffset": 0,
-    "verticalAlignment": "Bottom",
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 10,
+    "verticalAlignment": "Top",
     "verticalOffset": 15
   },
   "tweaks": [

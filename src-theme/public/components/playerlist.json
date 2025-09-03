@@ -1,0 +1,12 @@
+{
+  "name": "PlayerList",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Top",
+    "verticalOffset": 0
+  },
+"tweak": ["DISABLE_PLAYER_LIST_HUD"]
+}

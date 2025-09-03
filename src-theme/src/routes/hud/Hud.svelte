@@ -39,7 +39,7 @@
     import SilentHand from "./elements/SilentHand.svelte";
     import TargetHud from "./elements/targethud/TargetHud.svelte";
     import Effects from "./elements/effects/Effects.svelte";
-
+    import DraggableComponent from "./elements/DraggableComponent.svelte";
 
     const {width, height, destroy} = WindowSize();
     let components: Component[] = [];
@@ -108,111 +108,75 @@
 <div class="snap" class:grid={$showGrid}
      style="background-size: {$gridSize}px {$gridSize}px;width: { $width }px; height: { $height }px;">
     <div class="hud" style="--hud-zoom: {$ScaleFactor}">
-        {#each components as c (c.name)}
+        {#each components as c (c.id)}
             {#if c.settings.enabled}
-                <div style={c.settings.alignment}>
-                    {@render componentWrapper({component: c})}
-                </div>
+                <DraggableComponent name={c.name} id={c.id} alignment={c.settings.alignment}>
+                    {#if c.name === 'Text'}
+                        <Text settings={c.settings}/>
+                    {:else if c.name === 'Hotbar'}
+                        <HotBar settings={c.settings}/>
+                    {:else if c.name === 'Effects'}
+                        <Effects settings={c.settings}/>
+                    {:else if c.name === 'Image'}
+                        <img alt="" src={c.settings.uRL} style="scale: {c.settings.scale};"/>
+                    {:else if c.name === 'ArmorItems'}
+                        <ArmorItems/>
+                    {:else if c.name === 'ArrayList'}
+                        <ArrayList/>
+                    {:else if c.name === 'BlockCounter'}
+                        <BlockCounter/>
+                    {:else if c.name === 'ChatHUD'}
+                        <ChatHUD/>
+                    {:else if c.name === "CraftingInventory"}
+                        <CraftingInput/>
+                    {:else if c.name === 'HealthBar'}
+                        <HealthBar/>
+                    {:else if c.name === 'Information'}
+                        <Information/>
+                    {:else if c.name === 'Inventory'}
+                        <InventoryContainer/>
+                    {:else if c.name === 'Island'}
+                        <Island/>
+                    {:else if c.name === 'ItemColumnHUD'}
+                        <ItemColumnHUD/>
+                    {:else if c.name === 'KeyBinds'}
+                        <KeyBinds/>
+                    {:else if c.name === 'Keystrokes'}
+                        <Keystrokes/>
+                    {:else if c.name === 'Logo'}
+                        <Logo/>
+                    {:else if c.name === 'Message'}
+                        <Message/>
+                    {:else if c.name === 'MotionGraph'}
+                        <MotionGraph/>
+                    {:else if c.name === 'Notifications'}
+                        <Notifications/>
+                    {:else if c.name === 'ProgressBar'}
+                        <ProgressBar/>
+                    {:else if c.name === 'PlayerList'}
+                        <PlayerList/>
+                    {:else if c.name === 'Scoreboard'}
+                        <Scoreboard/>
+                    {:else if c.name === 'SessionInfo'}
+                        <SessionInfo/>
+                    {:else if c.name === 'SilentHand'}
+                        <SilentHand/>
+                    {:else if c.name === 'StatusBar'}
+                        <StatusBar/>
+                    {:else if c.name === 'TabGui'}
+                        <TabGui/>
+                    {:else if c.name === 'TargetHUD'}
+                        <TargetHud settings={c.settings}/>
+                    {:else if c.name === 'TitleControl'}
+                        <TitleControl/>
+                    {:else if c.name === 'Watermark'}
+                        <Watermark/>
+                    {/if}
+                </DraggableComponent>
             {/if}
         {/each}
     </div>
 </div>
-{#snippet componentWrapper({component}: ComponentWrapperParams)}
-    {#if component.name === 'Text'}
-        <Text settings={component.settings}/>
-    {:else if component.name === 'HotBar'}
-        <HotBar settings={component.settings}/>
-    {:else if component.name === 'Effects'}
-        <Effects settings={component.settings}/>
-    {:else if component.name === 'PlayerList'}
-        <PlayerList settings={component.settings}/>
-    {:else if component.name === 'Image'}
-        <img alt="" src={component.settings.src} style="scale: {component.settings.scale};"/>
-    {:else}
-        <LayoutEditor
-                componentId={component.name.toLowerCase()}
-                defaultPosition={{ x: component.settings.x ?? 0, y: component.settings.y ?? 0 }}
-        >
-            {#if component.name === 'ArmorItems'}
-                <ArmorItems/>
-            {/if}
-            {#if component.name === 'ArrayList'}
-                <ArrayList/>
-            {/if}
-            {#if component.name === 'BlockCounter'}
-                <BlockCounter/>
-            {/if}
-            {#if component.name === 'ChatHUD'}
-                <ChatHUD/>
-            {/if}
-            {#if component.name === 'CraftingInput'}
-                <CraftingInput/>
-            {/if}
-
-            {#if component.name === 'HealthBar'}
-                <HealthBar/>
-            {/if}
-            {#if component.name === 'Information'}
-                <Information/>
-            {/if}
-            {#if component.name === 'InventoryContainer'}
-                <InventoryContainer/>
-            {/if}
-            {#if component.name === 'Island'}
-                <Island/>
-            {/if}
-            {#if component.name === 'ItemColumnHUD'}
-                <ItemColumnHUD/>
-            {/if}
-            {#if component.name === 'KeyBinds'}
-                <KeyBinds/>
-            {/if}
-            {#if component.name === 'Keystrokes'}
-                <Keystrokes/>
-            {/if}
-            {#if component.name === 'Logo'}
-                <Logo/>
-            {/if}
-            {#if component.name === 'Message'}
-                <Message/>
-            {/if}
-            {#if component.name === 'MotionGraph'}
-                <MotionGraph/>
-            {/if}
-            {#if component.name === 'Notifications'}
-                <Notifications/>
-            {/if}
-
-            {#if component.name === 'ProgressBar'}
-                <ProgressBar/>
-            {/if}
-            {#if component.name === 'Scoreboard'}
-                <Scoreboard/>
-            {/if}
-            {#if component.name === 'SessionInfo'}
-                <SessionInfo/>
-            {/if}
-            {#if component.name === 'SilentHand'}
-                <SilentHand/>
-            {/if}
-            {#if component.name === 'StatusBar'}
-                <StatusBar/>
-            {/if}
-            {#if component.name === 'TabGui'}
-                <TabGui/>
-            {/if}
-            {#if component.name === 'TargetHUD'}
-                <TargetHud settings={component.settings}/>
-            {/if}
-            {#if component.name === 'TitleControl'}
-                <TitleControl/>
-            {/if}
-            {#if component.name === 'Watermark'}
-                <Watermark/>
-            {/if}
-        </LayoutEditor>
-    {/if}
-{/snippet}
 <Vignette/>
 
 

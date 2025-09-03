@@ -22,8 +22,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayChatEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay;
-import net.ccbluex.liquidbounce.integration.theme.component.FeatureTweak;
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
 import net.minecraft.client.MinecraftClient;
@@ -105,7 +105,7 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void hookRenderChat(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CHAT_HUD)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_CHAT_HUD)) {
             ci.cancel();
         }
     }

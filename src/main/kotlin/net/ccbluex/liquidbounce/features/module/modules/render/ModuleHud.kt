@@ -33,8 +33,6 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components
-import net.ccbluex.liquidbounce.integration.theme.component.customComponents
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.themes
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
@@ -146,7 +144,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         }
 
         for (theme in themes) {
-            val themeConfigurable = Configurable(theme.metadata.name, theme.components as MutableList<Value<*>>)
+            val themeConfigurable = Configurable(
+                theme.metadata.name, theme.components as MutableList<Value<*>>)
             components.tree(themeConfigurable)
         }
 

@@ -1,20 +1,14 @@
 <script lang="ts">
     import { listen } from "../../../integration/ws";
-    import type {OverlayPlayListEvent, KeyEvent, EventMap, PlayerEntry} from "../../../integration/events";
+    import type { OverlayPlayListEvent, KeyEvent, EventMap } from "../../../integration/events";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import { onMount } from "svelte";
-    import { getTextWidth } from '../../../integration/text_measurement';
-    import {getMinecraftKeybinds, getModuleSettings} from "../../../integration/rest";
-    import type {
-        ConfigurableSetting,
-        MinecraftKeybind, MultiChooseSetting,
-        TextComponent as TTextComponent
-    } from "../../../integration/types";
+    import {getTextWidth} from '../../../integration/text_measurement';
+    import { getMinecraftKeybinds, getModuleSettings } from "../../../integration/rest";
+    import type { ConfigurableSetting, MinecraftKeybind, MultiChooseSetting, TextComponent as TTextComponent } from "../../../integration/types";
     import AvatarView from "../common/PlayerView/AvatarView.svelte";
     import { scale } from "svelte/transition";
     import { REST_BASE } from "../../../integration/host";
-
-    export let settings: { [name: string]: any };
 
     let columns = 1;
     let rows = 1;
@@ -23,7 +17,28 @@
     let visibilityKeywords: string[] = [];
     let keyPlayerList: MinecraftKeybind | undefined;
     let overlayPlayList: OverlayPlayListEvent | null = null;
+    const maxColumns = 4;
 
+    const calculateLayout = (players: { name: string | TTextComponent }[]) => {
+        const playerCount = players.length;
+        const maxRows = Math.min(20, Math.floor(600 / 20));
+        rows = Math.min(maxRows, playerCount);
+        columns = Math.min(Math.ceil(playerCount / rows), maxColumns);
+
+        while (columns > maxColumns && rows < maxRows) {
+            rows++;
+            columns = Math.ceil(playerCount / rows);
+        }
+
+        columnWidths = Array(columns).fill(0);
+        for (const [index, player] of players.entries()) {
+            const col = Math.floor(index / rows);
+            const nameStr = getTextString(player.name);
+            const buffer = 32 + 8 + 50 + 8;
+            columnWidths[col] = Math.max(columnWidths[col], getTextWidth(nameStr,"20px Alibaba") + buffer, 360);
+
+        }
+    };
 
     function getTextString(tc: string | TTextComponent): string {
         if (typeof tc === "string") return tc;
@@ -35,74 +50,33 @@
         }
         return str;
     }
-    const setVisibilityKeywords = (configurable: ConfigurableSetting) => {
-        const keywordsSetting = configurable.value.find(v => v.name === "Visibility") as MultiChooseSetting;
-        visibilityKeywords = keywordsSetting?.value ?? [];
-    };
-    const isVisible = (type: string) => visibilityKeywords.includes(type);
 
 
-    const calculateLayout = (players: { name: string | TTextComponent, latency: string | TTextComponent, uuid: string, isFriend: boolean, isStaff: boolean, isSelf: boolean }[]) => {
-        const playerCount = players.length;
-        const maxRows = Math.min(20, Math.floor(600 / 20));
-        rows = Math.min(maxRows, playerCount);
-        columns = Math.min(Math.ceil(playerCount / rows),4);
-
-        while (columns > 4 && rows < maxRows) {
-            rows++;
-            columns = Math.ceil(playerCount / rows);
-        }
-
-        columnWidths = Array(columns).fill(0);
-        for (const [index, player] of players.entries()) {
-            const col = Math.floor(index / rows);
-            const nameStr = getTextString(player.name);
-            const buffer = 32 + 8 + 50 + 8;
-            columnWidths[col] = Math.max(columnWidths[col],
-                getTextWidth(
-                    nameStr,
-                    "normal 500 20px 'Inter', system-ui, sans-serif") + buffer, 360
-            );
-        }
-    };
-
-    const sortPlayers = (players: PlayerEntry[]) => {
-        if (!settings?.sortBy) return players;
-        const sorted = [...players];
-        switch (settings.sortBy) {
-            case "Latency":
-                sorted.sort((a, b) => parseInt(getTextString(a.latency)) - parseInt(getTextString(b.latency)));
-                break;
-            case "NameLength":
-                sorted.sort((a, b) => getTextString(a.name).length - getTextString(b.name).length);
-                break;
-            case "Alphabetical":
-                sorted.sort((a, b) => getTextString(a.name).localeCompare(getTextString(b.name)));
-                break;
-            case "ReverseAlphabetical":
-                sorted.sort((a, b) => getTextString(b.name).localeCompare(getTextString(a.name)));
-                break;
-            case "Vanilla":
-                break;
-            default:
-                break;
-        }
-        return sorted;
-    };
     const handleKeyDown = ({ key, action }: KeyEvent) => {
         if (key === keyPlayerList?.key.translationKey) {
             visible = action === 1 || action === 2;
         }
     };
+
+    const setVisibilityKeywords = (configurable: ConfigurableSetting) => {
+        const keywordsSetting = configurable.value.find(v => v.name === "Visibility") as MultiChooseSetting;
+        visibilityKeywords = keywordsSetting?.value ?? [];
+    };
+
     const updateKeybinds = async () => {
         const keybinds = await getMinecraftKeybinds();
         keyPlayerList = keybinds.find(k => k.bindName === "key.playerlist");
     };
 
+    const isVisible = (type: string) => visibilityKeywords.includes(type);
+
+
     listen("keybindChange" as keyof EventMap, updateKeybinds);
+
     listen("key", handleKeyDown);
+
     listen("overlayPlayList", ({ players, ...rest }: OverlayPlayListEvent) => {
-        overlayPlayList = { players: sortPlayers(players), ...rest };
+        overlayPlayList = { players, ...rest };
         players && calculateLayout(players);
     });
 
@@ -110,36 +84,43 @@
         await updateKeybinds();
         const settings = await getModuleSettings("BetterTab");
         setVisibilityKeywords(settings);
+        setInterval(async () => {
+            setVisibilityKeywords(settings);
+        }, 1000);
     });
 </script>
+
 
 {#if visible}
     <div class="tab-overlay" transition:scale={{duration:300}}>
         {#if overlayPlayList}
             <div class="tab-container hud-container">
+                <!-- Header - only show if HEADER is selected in visibility settings -->
                 {#if overlayPlayList.header && isVisible("Header")}
                     <div class="tab-header">
                         <TextComponent fontSize={20} allowPreformatting={true} textComponent={overlayPlayList.header}/>
                     </div>
                 {/if}
 
+                <!-- Player Grid - always visible when tab is open -->
                 <div
                         class="player-grid"
                         style="grid-template-columns: {columnWidths.map(w => `minmax(${w}px, 1fr)`).join(' ')};"
                 >
                     {#each overlayPlayList.players as player}
-                        <div
-                                class="player-entry"
-                                class:friend={settings?.highlight.friend && player.isFriend}
-                                class:staff={settings?.highlight.staff && player.isStaff}
-                                class:self={settings?.highlight.self && player.isSelf}
+                        <div class="player-entry"
+                             class:friend={player.isFriend}
+                             class:staff={player.isStaff}
+                             class:self={player.isSelf}
                         >
+                            {#if !isVisible("NameOnly")}
                                 <div class="avatar">
                                     <div class="avatar-inner">
                                         <AvatarView
                                                 skinUrl={`${REST_BASE}/api/v1/client/resource/skin?uuid=${player.uuid}`}/>
                                     </div>
                                 </div>
+                            {/if}
                             <div class="player-name">
                                 <TextComponent fontSize={20} allowPreformatting={true} textComponent={player.name}/>
                             </div>
@@ -150,6 +131,7 @@
                     {/each}
                 </div>
 
+                <!-- Footer - only show if FOOTER is selected in visibility settings -->
                 {#if overlayPlayList.footer && isVisible("Footer")}
                     <div class="tab-footer">
                         <TextComponent fontSize={20} allowPreformatting={true} textComponent={overlayPlayList.footer}/>

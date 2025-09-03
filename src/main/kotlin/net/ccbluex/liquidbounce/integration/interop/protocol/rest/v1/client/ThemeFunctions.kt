@@ -41,7 +41,6 @@ fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonOb
 @Suppress("UNUSED_PARAMETER")
 fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
-    ThemeManager.initializeBackground()
     ConfigSystem.store(ThemeManager)
     return httpNoContent()
 }
@@ -61,7 +60,6 @@ fun postSetShaderEnabled(requestObject: RequestObject): FullHttpResponse {
     val enabled = json.get("enabled")?.asBoolean ?: return httpBadRequest("Missing 'enabled' field")
 
     ThemeManager.shaderEnabled = enabled
-    ThemeManager.initializeBackground()
     ConfigSystem.store(ThemeManager)
 
     return httpOk(emptyJsonObject())

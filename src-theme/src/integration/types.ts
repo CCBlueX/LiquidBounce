@@ -14,7 +14,7 @@ export interface GroupedModules {
 }
 
 export type ModuleSetting =
-    SearchSetting
+    BlocksSetting
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting

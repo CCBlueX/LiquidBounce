@@ -1,0 +1,11 @@
+{
+  "name": "MotionGraph",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 400,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 0
+  }
+}

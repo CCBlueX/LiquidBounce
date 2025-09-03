@@ -149,7 +149,6 @@
 
 <style lang="scss">
   .health-bar {
-    display: flex;
     justify-content: center;
     margin-bottom: 6px;
     align-items: center;

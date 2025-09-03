@@ -1,8 +1,8 @@
 {
   "name": "JMcomicFix",
   "version": "1.9.2",
-  "author": "KotlinModule",
-  "supports": [
+  "author": ["KotlinModule"],
+  "screens": [
     "clickgui",
     "layouteditor",
     "title",
@@ -25,23 +25,38 @@
     "disconnected"
   ],
   "components": [
-    "Watermark",
-    "TabGui",
-    "ArrayList",
-    "Notifications",
-    "Hotbar",
-    "Scoreboard",
     "ArmorItems",
-    "Inventory",
-    "CraftingInventory",
-    "TargetHud",
+    "ArrayList",
     "BlockCounter",
+    "CraftingInventory",
     "Effects",
-    "Keystrokes",
-    "Taco",
+    "HealthBar",
+    "Hotbar",
     "Image",
-    "Text"
+    "Information",
+    "Inventory",
+    "Island",
+    "ItemColumnHUD",
+    "KeyBinds",
+    "Keystrokes",
+    "Logo",
+    "Message",
+    "MotionGraph",
+    "PlayerList",
+    "ProgressBar",
+    "Scoreboard",
+    "SessionInfo",
+    "SilentHand",
+    "StatusBar",
+    "TabGui",
+    "TitleControl",
+    "Text",
+    "TargetHud",
+    "Watermark",
+    "Notifications",
+    "ChatHUD"
   ],
+
   "fonts": [
     "Inter-Black.ttf",
     "Inter-Bold.ttf",
@@ -51,8 +66,17 @@
     "Inter-Medium.ttf",
     "Inter-Regular.ttf",
     "Inter-SemiBold.ttf",
-    "Inter-Thin.ttf"
+    "Inter-Thin.ttf",
+    "Product-Sans-Medium.ttf",
+    "hk4e_zh-cn.ttf",
+    "Minecraftia.ttf",
+    "neverlose.ttf",
+    "tenacity-bold.ttf",
+    "tenacity.ttf",
+    "Dreamscape.ttf",
+    "Alibaba-PuHuiTi-Bold.ttf"
   ],
+
   "background": [
     {
       "name": "background",

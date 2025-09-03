@@ -1,0 +1,11 @@
+{
+  "name": "ProgressBar",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  }
+}

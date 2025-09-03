@@ -105,7 +105,6 @@
   }
 
   .title {
-
     font-size: 26px;
     color: $text;
     font-family: 'DreamScape', serif;

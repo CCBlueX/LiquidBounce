@@ -1,11 +1,11 @@
 {
-  "name": "Taco",
-  "enabled": false,
+  "name": "Information",
+  "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
     "horizontalOffset": 0,
     "verticalAlignment": "Bottom",
-    "verticalOffset": 65
+    "verticalOffset": 0
   }
 }

@@ -1,0 +1,11 @@
+{
+  "name": "Island",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Top",
+    "verticalOffset": 50
+  }
+}

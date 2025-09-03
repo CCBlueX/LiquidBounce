@@ -46,8 +46,6 @@ enum class ComponentTweak(override val choiceName: String) : NamedChoice {
     DISABLE_TITLE("disableTitle"),
     DISABLE_STATUS_EFFECT_OVERLAY("disableStatusEffectOverlay"),
     DISABLE_CHAT_HUD("disableChat"),
-    DISABLE_PLAYERLIST_HUD("disablePlayerList"),
+    DISABLE_PLAYER_LIST_HUD("disablePlayerListHud"),
     DISABLE_ALL_GAME_HUD("disableAllGameHud");
-
-
 }

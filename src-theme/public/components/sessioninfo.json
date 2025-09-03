@@ -1,0 +1,11 @@
+{
+  "name": "SessionInfo",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 5,
+    "verticalAlignment": "Top",
+    "verticalOffset": 200
+  }
+}

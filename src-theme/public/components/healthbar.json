@@ -1,19 +1,18 @@
 {
-  "name": "Hotbar",
+  "name": "HealthBar",
   "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",
-    "horizontalOffset": 0,
+    "horizontalOffset": -200,
     "verticalAlignment": "Bottom",
-    "verticalOffset": 15
+    "verticalOffset": 70
   },
   "tweaks": [
-    "TWEAK_HOTBAR",
+
     "DISABLE_STATUS_BAR",
     "DISABLE_EXP_BAR",
     "DISABLE_HELD_ITEM_TOOL_TIP",
-    "DISABLE_OVERLAY_MESSAGE",
-    "DISABLE_ITEM_ICONS"
+    "DISABLE_OVERLAY_MESSAGE"
   ]
 }

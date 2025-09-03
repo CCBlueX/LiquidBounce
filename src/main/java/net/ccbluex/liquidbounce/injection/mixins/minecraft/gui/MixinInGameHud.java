@@ -73,10 +73,10 @@ public abstract class MixinInGameHud {
     private MinecraftClient client;
     @Shadow
     @Nullable
-    private Text title;
+    public Text title;
     @Shadow
     @Nullable
-    private Text subtitle;
+    public Text subtitle;
     @Unique
     private Text cachedTitle = null;
     @Unique
@@ -224,7 +224,12 @@ public abstract class MixinInGameHud {
     private boolean hookOffhandItem(boolean original) {
         return original || ModuleSwordBlock.INSTANCE.shouldHideOffhand() && ModuleSwordBlock.INSTANCE.getHideShieldSlot();
     }
-
+    @Inject(method = "renderHotbarItem", at = @At("HEAD"), cancellable = true)
+    private void hookRenderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed, CallbackInfo ci) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_ITEM_ICONS)) {
+            ci.cancel();
+        }
+    }
     @Unique
     private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
         var playerEntity = this.getCameraPlayer();
@@ -240,21 +245,18 @@ public abstract class MixinInGameHud {
         var y = bounds.getYMin() - 12;
 
         int l = 1;
-        boolean disableItemIcons = ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_ITEM_ICONS);
-
         for (int m = 0; m < 9; ++m) {
             var x = center - offset + m * itemWidth;
-            if (!disableItemIcons) {
-                this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
-                        playerEntity.getInventory().main.get(m), l++);
-            }
+            this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
+                    playerEntity.getInventory().main.get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffHandStack();
-        if (!disableItemIcons && !hookOffhandItem(offHandStack.isEmpty())) {
+        if (!hookOffhandItem(offHandStack.isEmpty())) {
             this.renderHotbarItem(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
         }
     }
+
 
     @ModifyExpressionValue(method = "renderCrosshair",
             at = @At(
@@ -280,8 +282,7 @@ public abstract class MixinInGameHud {
 
     private void hookRenderTitleAndSubtitle(CallbackInfo ci) {
 
-        if (!ModuleAntiBlind.canRender(DoRender.TITLE)
-                || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_TITLE)) {
+        if (!ModuleAntiBlind.canRender(DoRender.TITLE) || ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_TITLE)) {
             ci.cancel();
         }
     }
@@ -322,7 +323,7 @@ public abstract class MixinInGameHud {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void hookRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_ALL_GAME_HUD)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_ALL_GAME_HUD)) {
             ci.cancel();
         }
     }
