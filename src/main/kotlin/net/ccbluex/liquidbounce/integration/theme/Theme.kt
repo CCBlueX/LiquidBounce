@@ -68,8 +68,10 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
     }
 
     private var _components: MutableList<Component>? = null
+    private var _settings: Configurable? = null
 
     val components: MutableList<Component> get() = requireNotNull(_components) { "Components not loaded" }
+    val settings: Configurable get() = requireNotNull(_settings) { "Settings not loaded" }
 
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
@@ -89,6 +91,18 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
         // Check for duplicated component names
         components.groupingBy { component -> component.name }.eachCount().forEach { (name, count) ->
             check(count == 1) { "Found duplicated component name '$name'" }
+        }
+
+        _settings = Configurable(metadata.id.capitalize()).apply {
+            metadata.values?.let { values ->
+                for (value in values) {
+                    json(value)
+                }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
+            tree(componentSettings)
         }
     }
 
@@ -110,18 +124,6 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
         loadMetadata()
         loadComponents()
         loadFonts()
-    }
-
-    val settings = Configurable(metadata.id.capitalize()).apply {
-        metadata.values?.let { values ->
-            for (value in values) {
-                json(value)
-            }
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
-        tree(componentSettings)
     }
 
     var themeBackgroundShader: ThemeBackground? = null
