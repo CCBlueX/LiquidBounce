@@ -54,11 +54,5 @@
       "types": ["frag", "png"]
     }
   ],
-  "values": [
-    {
-      "type": "TEXT",
-      "name": "Test",
-      "value": "This is a test value."
-    }
-  ]
+  "values": []
 }
