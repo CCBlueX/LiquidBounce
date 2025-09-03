@@ -85,9 +85,7 @@ object ThemeManager : Configurable("theme") {
 
     fun init() = runBlocking {
         // Load default theme
-        includedTheme = Theme.Builder(Theme.Origin.RESOURCE, File("liquidbounce"))
-            .loadAll()
-            .build()
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
     }
 
     suspend fun load() {
@@ -110,9 +108,7 @@ object ThemeManager : Configurable("theme") {
                 }
 
                 runCatching {
-                    Theme.Builder(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
-                        .loadAll()
-                        .build()
+                    Theme.load(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
                         .addIfUnloaded()
                 }.onFailure { err ->
                     logger.error("Failed to load theme '${file.name}'.", err)
@@ -124,9 +120,7 @@ object ThemeManager : Configurable("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                Theme.Builder(Theme.Origin.MARKETPLACE, relativeFile)
-                    .loadAll()
-                    .build()
+                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
                     .addIfUnloaded()
             }.onFailure { err ->
                 logger.error("Failed to load theme '${item.name}'.", err)
