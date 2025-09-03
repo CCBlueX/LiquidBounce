@@ -34,7 +34,7 @@ object CommandItemStack : CommandFactory, MinecraftShortcuts {
     private val amountParameter = ParameterBuilder
         .begin<Int>("amount")
         .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
-        .autocompletedWith { begin, _ -> mutableListOf("16", "32", "64").filter { it.startsWith(begin) } }
+        .autocompletedFrom { listOf("16", "32", "64") }
         .optional()
         .build()
 

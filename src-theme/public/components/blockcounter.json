@@ -1,0 +1,11 @@
+{
+  "name": "BlockCounter",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Center",
+    "horizontalOffset": -20,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  }
+}

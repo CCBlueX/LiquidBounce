@@ -39,16 +39,16 @@ object CommandTranslate : CommandFactory {
         .parameter(
             ParameterBuilder.begin<String>("sourceLanguage")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
-                    (listOf("auto") + languageCodes.keys).filter { it.startsWith(begin, ignoreCase = true) }
-                }
+                .autocompletedFrom { listOf("auto") + languageCodes.keys }
                 .required()
                 .build()
         )
         .parameter(
             ParameterBuilder.begin<String>("targetLanguage")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompleteWithLanguageCodes()
+                .autocompletedFrom {
+                    languageCodes.keys
+                }
                 .required()
                 .build()
         )

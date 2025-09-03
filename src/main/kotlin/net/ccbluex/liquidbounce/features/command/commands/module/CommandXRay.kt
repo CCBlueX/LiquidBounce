@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.block
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.*
@@ -93,7 +94,7 @@ object CommandXRay : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )
@@ -113,7 +114,7 @@ object CommandXRay : CommandFactory {
     private fun andSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )

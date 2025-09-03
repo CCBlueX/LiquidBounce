@@ -200,6 +200,7 @@ object ActiveServerList : EventListener {
     private fun cancelTasks() {
         pingTasks.forEach { it.cancel(true) }
         pingTasks.clear()
+        serverListPinger.cancel()
     }
 
     internal fun pingThemAll() {

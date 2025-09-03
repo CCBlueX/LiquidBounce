@@ -73,7 +73,7 @@ export interface CurveSetting extends Setting<Vector2f[]> {
     tension: number;
 }
 
-export interface SearchSetting extends Setting<string[]> {
+export interface BlocksSetting extends Setting<string[]> {
 }
 
 export interface KeySetting extends Setting<string> {
@@ -394,8 +394,29 @@ export interface GameWindow {
 
 export interface Component {
     name: string;
-    mode: string;
+    id: string;
     settings: { [name: string]: any };
+}
+
+export interface Alignment {
+    horizontalAlignment: HorizontalAlignment;
+    verticalAlignment: VerticalAlignment;
+    horizontalOffset: number;
+    verticalOffset: number;
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
 }
 
 export interface ClientInfo {

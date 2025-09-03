@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.rootConfigurables
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.*
@@ -36,7 +36,7 @@ object CommandClientConfigSubcommand {
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
-            Parameters.rootConfigurables()
+            ParameterBuilder.rootConfigurables()
                 .optional()
                 .build()
         )
@@ -68,11 +68,9 @@ object CommandClientConfigSubcommand {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
+                .autocompletedFrom {
                     ConfigSystem.backupFolder.listFiles()
                         ?.map { file -> file.nameWithoutExtension }
-                        ?.filter { file -> file.startsWith(begin) }
-                        ?: emptyList()
                 }
                 .required()
                 .build()
@@ -97,7 +95,7 @@ object CommandClientConfigSubcommand {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            Parameters.rootConfigurables()
+            ParameterBuilder.rootConfigurables()
                 .optional()
                 .build()
         )

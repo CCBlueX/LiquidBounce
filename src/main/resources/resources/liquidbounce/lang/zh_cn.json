@@ -457,7 +457,6 @@
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.result.success": "成功上传修订版本 %s 到物品 #%s",
 
   "liquidbounce.command.marketplace.error.notLoggedIn": "您必须登录才能执行此操作。",
-  "liquidbounce.command.marketplace.error.invalidItemType": "无效的物品类型。可用类型：config, script, theme, other",
   "liquidbounce.command.marketplace.error.itemNotFound": "物品 #%s 未找到。",
   "liquidbounce.command.marketplace.error.fileNotFound": "文件未找到：%s",
   "liquidbounce.command.marketplace.error.fileReadError": "读取文件失败：%s",

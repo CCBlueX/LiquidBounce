@@ -20,17 +20,26 @@ package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.script.ScriptManager
 
 enum class MarketplaceItemType(
     override val choiceName: String,
     val isListable: Boolean,
     val isSubscribable: Boolean
 ) : NamedChoice {
+    @SerializedName("Config")
     CONFIG("Config", false, false),
     @SerializedName("Script")
     SCRIPT("Script", true, true),
     @SerializedName("Theme")
     THEME("Theme", true, true),
     @SerializedName("Other")
-    OTHER("Other", false, false)
+    OTHER("Other", false, false);
+
+    fun reload() = when (this) {
+        THEME -> ThemeManager.load()
+        SCRIPT -> ScriptManager.reload()
+        else -> { }
+    }
 }

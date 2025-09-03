@@ -33,6 +33,7 @@ class CommandBuilder private constructor(val name: String) {
     private var ingame = false
 
     companion object {
+        @JvmStatic
         fun begin(name: String): CommandBuilder = CommandBuilder(name)
     }
 
@@ -43,6 +44,9 @@ class CommandBuilder private constructor(val name: String) {
     fun parameter(parameter: Parameter<*>) = apply {
         this.parameters.add(parameter)
     }
+
+    inline fun parameter(block: ParameterBuilder.Companion.() -> ParameterBuilder<*>) =
+        parameter(ParameterBuilder.block().build())
 
     fun subcommand(subcommand: Command) = apply {
         this.subcommands.add(subcommand)

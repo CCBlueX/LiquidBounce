@@ -29,8 +29,8 @@ import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.glfw.GLFW
 
 class VirtualDisplayScreen(
-    val screenType: VirtualScreenType,
-    private val theme: Theme = ThemeManager.route(screenType).theme,
+    private val screenType: VirtualScreenType,
+    private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
     val parentScreen: Screen? = mc.currentScreen
 ) : Screen("VS-${screenType.routeName.uppercase()}".asText()) {
@@ -56,6 +56,7 @@ class VirtualDisplayScreen(
     }
 
     override fun shouldPause(): Boolean {
+        // preventing game pause
         return false
     }
 

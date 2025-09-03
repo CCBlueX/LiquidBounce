@@ -212,7 +212,7 @@
             {/if}
         </LayoutEditor>
     {/if}
-{/snippet} 
+{/snippet}
 <Vignette/>
 
 

@@ -28,13 +28,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(InactivityFpsLimiter.class)
+@Mixin(value = InactivityFpsLimiter.class, priority = 100)
 public abstract class MixinInactivityFpsLimiter {
 
     /**
      * Removes frame rate limit
      */
-    @ModifyConstant(method = "update", constant = @Constant(intValue = 60))
+    @ModifyConstant(method = "update", constant = @Constant(intValue = 60), require = 0)
     private int getFramerateLimit(int original) {
         return RefreshRateKt.getRefreshRate();
     }

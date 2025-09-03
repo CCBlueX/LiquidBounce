@@ -60,7 +60,7 @@ object IntegrationListener : EventListener {
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
 
-    var runningTheme = ThemeManager.activeTheme
+    var theme: Theme? = null
         private set
 
     /**
@@ -117,14 +117,14 @@ object IntegrationListener : EventListener {
         virtualOpen(type = type)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme = ThemeManager.theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
         }
 
-        if (runningTheme != theme) {
-            runningTheme = theme
+        if (this.theme != theme) {
+            this.theme = theme
             ThemeManager.updateImmediate(browser, type)
         }
 
@@ -183,7 +183,7 @@ object IntegrationListener : EventListener {
 
         logger.info(
             "Reloading integration browser ${browser.javaClass.simpleName} " +
-                "to ${ThemeManager.route()}"
+                "to ${ThemeManager.getScreenLocation()}"
         )
         ThemeManager.updateImmediate(browser, momentaryVirtualScreen?.type)
     }
@@ -287,7 +287,7 @@ object IntegrationListener : EventListener {
 
         val name = virtualScreenType.routeName
         val route = runCatching {
-            ThemeManager.route(virtualScreenType, false)
+            ThemeManager.getScreenLocation(virtualScreenType, false)
         }.getOrNull()
 
         if (route == null) {
@@ -298,12 +298,12 @@ object IntegrationListener : EventListener {
         val theme = route.theme
 
         return when {
-            theme.doesSupport(name) -> {
+            theme.isScreenSupported(name) -> {
                 mc.setScreen(VirtualDisplayScreen(virtualScreenType, theme, originalScreen = virtScreen))
 
                 true
             }
-            theme.doesOverlay(name) -> {
+            theme.isOverlaySupported(name) -> {
                 virtualOpen(theme, virtualScreenType)
 
                 false

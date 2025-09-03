@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
@@ -8,6 +9,7 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 
 data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
@@ -35,8 +37,18 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             return null
         }
 
-        val file = folder.walkTopDown().filter { file -> file.isFile }
-        return file.firstOrNull()?.parentFile ?: folder
+        fun File.containsFile(): Boolean {
+            return this.isDirectory && !this.listFiles(File::isFile).isNullOrEmpty()
+        }
+
+        if (folder.containsFile()) {
+            return folder
+        }
+
+        // Return null if no files found at folder or one level below
+        return folder.listFiles(File::isDirectory)?.firstOrNull { subFolder ->
+            subFolder.containsFile()
+        }
     }
 
     suspend fun checkUpdate(): Int? {
@@ -115,8 +127,13 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             }
 
             throw exception
-        }finally {
+        } finally {
             revisionArchiveFile.delete()
+        }
+
+        // Reload the item type's manager on render thread.
+        withContext(MinecraftDispatcher) {
+            type.reload()
         }
     }
 

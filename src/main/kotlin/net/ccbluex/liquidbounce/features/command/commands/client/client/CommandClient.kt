@@ -41,7 +41,6 @@ object CommandClient : CommandFactory {
             .subcommand(CommandClientIntegrationSubcommand.integrationCommand())
             .subcommand(CommandClientLanguageSubcommand.languageCommand())
             .subcommand(CommandClientThemeSubcommand.themeCommand())
-            .subcommand(CommandClientComponentSubcommand.componentCommand())
             .subcommand(CommandClientAppearanceSubcommand.appearanceCommand())
             .subcommand(CommandClientPrefixSubcommand.prefixCommand())
             .subcommand(CommandClientDestructSubcommand.destructCommand())

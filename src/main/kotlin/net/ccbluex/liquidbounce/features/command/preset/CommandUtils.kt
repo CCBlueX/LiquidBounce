@@ -15,21 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.types
+package net.ccbluex.liquidbounce.features.command.preset
 
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
+import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.lang.translation
 
-class ImageComponent(src: String, enabled: Boolean = true) : Component("Image", enabled) {
-
-    val src by text("Src", src)
-    val scale by float("Scale", 1.0f, 0.0f..10.0f)
-
-    init {
-        registerComponentListen()
+internal fun ClientAccountManager.accountOrException(): ClientAccount {
+    val clientAccount = clientAccount
+    if (clientAccount == EMPTY_ACCOUNT) {
+        throw CommandException(translation("liquidbounce.command.marketplace.error.notLoggedIn"))
     }
-
+    return clientAccount
 }

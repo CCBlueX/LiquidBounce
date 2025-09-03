@@ -18,7 +18,7 @@
  *
  *
  */
-package net.ccbluex.liquidbounce.integration.theme.component.types.minimap
+package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -26,7 +26,6 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.Heightmap
 import net.minecraft.world.chunk.Chunk
 import java.util.concurrent.ConcurrentHashMap
 

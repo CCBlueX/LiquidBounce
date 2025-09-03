@@ -20,13 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.it
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -39,15 +38,7 @@ object MarketplaceListCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("list")
         .parameter(
-            ParameterBuilder
-                .begin<String>("type")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
-                    MarketplaceItemType.entries
-                        .filter { type -> type.isListable }
-                        .map { type -> type.name.lowercase() }
-                        .filter { name -> name.startsWith(begin, ignoreCase = true) }
-                }
+            ParameterBuilder.enumChoice<MarketplaceItemType>("type") { it.isListable }
                 .required()
                 .build()
         )
@@ -66,15 +57,9 @@ object MarketplaceListCommand : CommandFactory {
                 .build()
         )
         .suspendHandler { command, args ->
-            val typeStr = args[0] as String
+            val type = args[0] as MarketplaceItemType
             val page = args.getOrNull(1) as? Int ?: 1
             val featured = args.getOrNull(2) as? Boolean ?: false
-
-            val type = try {
-                MarketplaceItemType.valueOf(typeStr.uppercase())
-            } catch (_: IllegalArgumentException) {
-                throw CommandException(translation("liquidbounce.command.marketplace.error.invalidItemType"))
-            }
 
             val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
 

@@ -456,7 +456,6 @@
   "liquidbounce.command.marketplace.subcommand.revisions.subcommand.upload.result.success": "Successfully uploaded revision %s for item #%s",
 
   "liquidbounce.command.marketplace.error.notLoggedIn": "You must be logged in to perform this action.",
-  "liquidbounce.command.marketplace.error.invalidItemType": "Invalid item type. Available types: config, script, theme, other",
   "liquidbounce.command.marketplace.error.itemNotFound": "Item #%s not found.",
   "liquidbounce.command.marketplace.error.fileNotFound": "File not found: %s",
   "liquidbounce.command.marketplace.error.fileReadError": "Failed to read file: %s",

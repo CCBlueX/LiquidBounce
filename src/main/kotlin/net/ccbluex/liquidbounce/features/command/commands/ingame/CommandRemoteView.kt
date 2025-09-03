@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.playerName
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -51,7 +52,7 @@ object CommandRemoteView : CommandFactory, MinecraftShortcuts {
     private fun viewSubcommand() = CommandBuilder
         .begin("view")
         .parameter(
-            Parameters.playerName()
+            ParameterBuilder.playerName()
                 .required()
                 .build()
         )

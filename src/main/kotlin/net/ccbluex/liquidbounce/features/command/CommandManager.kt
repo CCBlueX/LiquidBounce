@@ -42,14 +42,10 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTrans
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.levenshtein
-import net.minecraft.text.MutableText
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
-
-class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(text.convertToString(), cause)
 
 private val commands = mutableListOf<Command>()
 
@@ -333,10 +329,10 @@ object CommandManager : Iterable<Command> by commands {
         }
 
         when (val validationResult = parameter.verifier.verifyAndParse(argument)) {
-            is ParameterValidationResult.Ok -> {
+            is Parameter.Verificator.Result.Ok -> {
                 return validationResult.mappedResult
             }
-            is ParameterValidationResult.Error -> {
+            is Parameter.Verificator.Result.Error -> {
                 throw CommandException(
                     translation(
                         "liquidbounce.commandManager.invalidParameterValue",

@@ -44,9 +44,7 @@ object CommandClientLanguageSubcommand {
     private fun setSubcommand() = CommandBuilder.begin("set")
         .parameter(
             ParameterBuilder.begin<String>("language")
-                .autocompletedWith { begin, _ ->
-                    LanguageManager.knownLanguages.filter { it.startsWith(begin, true) }
-                }
+                .autocompletedFrom { LanguageManager.knownLanguages }
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                 .build()
         ).handler { command, args ->

@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import java.util.Locale
+import java.util.*
 
 /**
  * All language codes like `en`, `en-US`, `de`, `zh-CN`
@@ -36,8 +35,4 @@ internal val languageCodes: Map<String, Locale> = Locale.getAvailableLocales().f
         it.country.isEmpty() -> it.language
         else -> "${it.language}-${it.country}"
     }
-}
-
-fun ParameterBuilder<*>.autocompleteWithLanguageCodes() = autocompletedWith { begin, _ ->
-    languageCodes.keys.filter { it.startsWith(begin, ignoreCase = true) }
 }

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.playerName
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -123,14 +123,7 @@ object CommandFriend : CommandFactory {
                 ParameterBuilder
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith { begin, _ ->
-                        FriendManager.friends.filter {
-                            it.name.startsWith(
-                                begin,
-                                true
-                            )
-                        }.map { it.name }
-                    }
+                    .autocompletedFrom { FriendManager.friends.map { it.name } }
                     .required()
                     .build()
             )
@@ -188,7 +181,7 @@ object CommandFriend : CommandFactory {
         return CommandBuilder
             .begin("add")
             .parameter(
-                Parameters.playerName()
+                ParameterBuilder.playerName()
                     .required()
                     .build()
             )
