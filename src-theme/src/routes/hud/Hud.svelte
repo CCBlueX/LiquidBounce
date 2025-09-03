@@ -77,7 +77,7 @@
                 {:else if c.name === "Text"}
                     <Text settings={c.settings} />
                 {:else if c.name === "Image"}
-                    <img alt="" src="{c.settings.src}" style="scale: {c.settings.scale};">
+                    <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
                 {/if}
             </DraggableComponent>
         {/if}
