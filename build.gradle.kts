@@ -388,6 +388,7 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
+        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
     }
 }
 

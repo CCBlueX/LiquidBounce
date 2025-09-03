@@ -54,27 +54,32 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
         REMOTE("remote")
     }
 
-    private var _metadata: ThemeMetadata? = null
-
-    val metadata: ThemeMetadata get() = requireNotNull(_metadata) { "Metadata not loaded" }
+    var metadata: ThemeMetadata
+        field: ThemeMetadata? = null
+        private set
+        get() = requireNotNull(field) { "Metadata not loaded" }
 
     private suspend fun loadMetadata() {
         try {
-            _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
         } catch (e: Exception) {
             logger.error("Failed to load theme metadata", e)
             throw IllegalStateException("Failed to load theme metadata", e)
         }
     }
 
-    private var _components: MutableList<Component>? = null
-    private var _settings: Configurable? = null
+    var components: MutableList<Component>
+        field: MutableList<Component>? = null
+        private set
+        get() = requireNotNull(field) { "components not loaded" }
 
-    val components: MutableList<Component> get() = requireNotNull(_components) { "Components not loaded" }
-    val settings: Configurable get() = requireNotNull(_settings) { "Settings not loaded" }
+    var settings: Configurable
+        field: Configurable? = null
+        private set
+        get() = requireNotNull(field) { "settings not loaded" }
 
     private suspend fun loadComponents() {
-        _components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
+        components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
@@ -93,7 +98,7 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
             check(count == 1) { "Found duplicated component name '$name'" }
         }
 
-        _settings = Configurable(metadata.id.capitalize()).apply {
+        settings = Configurable(metadata.id.capitalize()).apply {
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
