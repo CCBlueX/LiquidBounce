@@ -1,6 +1,7 @@
 {
   "name": "BlockCounter",
   "enabled": true,
+  "singleton": true,
   "alignment": {
     "horizontalAlignment": "Center",
     "horizontalOffset": -20,

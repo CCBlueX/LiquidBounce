@@ -1,6 +1,7 @@
 {
   "name": "Keystrokes",
   "enabled": true,
+  "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
     "horizontalOffset": 15,

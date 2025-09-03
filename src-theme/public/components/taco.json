@@ -1,6 +1,7 @@
 {
   "name": "Taco",
   "enabled": false,
+  "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
     "horizontalOffset": 0,

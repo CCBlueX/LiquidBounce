@@ -28,6 +28,7 @@ abstract class ComponentFactory {
 
     abstract val name: String
     abstract val enabled: Boolean
+    abstract val singleton: Boolean
 
     /**
      * Factory for creating components from JSON deserialization.
@@ -41,6 +42,7 @@ abstract class ComponentFactory {
     class JsonComponentFactory(
         override val name: String,
         override val enabled: Boolean,
+        override val singleton: Boolean,
         private val alignment: JsonObject,
         private val tweaks: Array<ComponentTweak>?,
         private val values: Array<JsonObject>?
@@ -66,6 +68,7 @@ abstract class ComponentFactory {
     class NativeComponentFactory(
         override val name: String,
         override val enabled: Boolean = false,
+        override val singleton: Boolean = false,
         private val function: () -> Component
     ) : ComponentFactory() {
         override fun createComponent() = function()

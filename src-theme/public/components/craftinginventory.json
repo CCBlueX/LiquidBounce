@@ -1,6 +1,7 @@
 {
   "name": "CraftingInventory",
   "enabled": false,
+  "singleton": true,
   "alignment": {
     "horizontalAlignment": "Right",
     "horizontalOffset": 15,

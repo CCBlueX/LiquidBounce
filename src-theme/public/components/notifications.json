@@ -1,6 +1,7 @@
 {
   "name": "Notifications",
   "enabled": true,
+  "singleton": true,
   "alignment": {
     "horizontalAlignment": "Right",
     "horizontalOffset": 15,

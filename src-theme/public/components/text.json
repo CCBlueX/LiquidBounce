@@ -1,6 +1,7 @@
 {
   "name": "Text",
   "enabled": false,
+  "singleton": false,
   "alignment": {
     "horizontalAlignment": "Center",
     "horizontalOffset": 0,
