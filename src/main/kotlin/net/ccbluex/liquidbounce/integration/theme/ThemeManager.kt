@@ -45,9 +45,9 @@ object ThemeManager : Configurable("theme") {
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
     val themes = mutableListOf<Theme>()
-    val themeNames get() = themes.map { theme -> theme.metadata.name }
+    val themeIds get() = themes.map { theme -> theme.metadata.id }
 
-    var currentTheme by text("Theme", "LiquidBounce").onChanged {
+    var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
         RenderSystem.recordRenderCall {
             IntegrationListener.update()
@@ -60,7 +60,7 @@ object ThemeManager : Configurable("theme") {
         private set
 
     val theme: Theme
-        get() = themes.find { theme -> theme.metadata.name.equals(currentTheme, true) }
+        get() = themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
             ?: includedTheme
 
     private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
@@ -103,8 +103,8 @@ object ThemeManager : Configurable("theme") {
 
                 runCatching {
                     val theme = Theme(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
-                    if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
-                        logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")
+                    if (themes.any { it.metadata.id.equals(theme.metadata.id, true) }) {
+                        logger.warn("Theme with ID '${theme.metadata.id}' is already loaded, skipping duplicate.")
                         return@forEach
                     }
 
@@ -121,8 +121,8 @@ object ThemeManager : Configurable("theme") {
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
                 val theme = Theme(Theme.Origin.MARKETPLACE, relativeFile)
 
-                if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
-                    logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")
+                if (themes.any { it.metadata.id.equals(theme.metadata.id, true) }) {
+                    logger.warn("Theme with ID '${theme.metadata.id}' is already loaded, skipping duplicate.")
                     return@forEach
                 }
 

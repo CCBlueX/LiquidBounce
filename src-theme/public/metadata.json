@@ -1,7 +1,8 @@
 {
+  "id": "liquidbounce",
   "name": "LiquidBounce",
   "version": "0.1.0",
-  "author": ["CCBlueX"],
+  "authors": ["CCBlueX"],
   "screens": [
     "clickgui",
     "title",
@@ -47,7 +48,7 @@
     "Inter-SemiBold.ttf",
     "Inter-Thin.ttf"
   ],
-  "background": [
+  "backgrounds": [
     {
       "name": "background",
       "types": ["frag", "png"]

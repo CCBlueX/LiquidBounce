@@ -86,6 +86,8 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
     }
 
     init {
+        metadata.checkNotNull()
+
         // Check for duplicated component names
         components.groupBy { component -> component.name }.forEach { (name, components) ->
             check(components.size == 1) { "Found duplicated component name '$name'" }
@@ -118,7 +120,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }
 
         // todo: allow multiple backgrounds later on
-        val background = metadata.background.firstOrNull() ?: return false
+        val background = metadata.backgrounds.firstOrNull() ?: return false
         if ("frag" !in background.types) {
             // not supported
             return false
@@ -143,7 +145,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }
 
         // todo: allow multiple backgrounds later on
-        val background = metadata.background.firstOrNull() ?: return false
+        val background = metadata.backgrounds.firstOrNull() ?: return false
         if ("png" !in background.types) {
             // not supported
             return false

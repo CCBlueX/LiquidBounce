@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.netty.http.model.RequestObject
@@ -30,8 +31,13 @@ import net.ccbluex.netty.http.util.*
 
 // GET /api/v1/client/theme
 @Suppress("UNUSED_PARAMETER")
-fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
-    addProperty("activeTheme", ThemeManager.theme.metadata.name)
+fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(
+    publicGson.toJsonTree(ThemeManager.theme.metadata)
+)
+
+// GET /api/v1/client/shader
+@Suppress("UNUSED_PARAMETER")
+fun getToggleShaderInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
     addProperty("shaderEnabled", ThemeManager.shaderEnabled)
 })
 
