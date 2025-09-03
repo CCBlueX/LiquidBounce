@@ -120,7 +120,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera
-import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -468,7 +467,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModulePointerESP,
             ModuleParticleCosmetics,
             ModulePenisESP,
-            ModuleTargetInfo,
 
             // World
             ModuleAutoBuild,

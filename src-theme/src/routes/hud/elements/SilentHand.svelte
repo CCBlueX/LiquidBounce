@@ -34,7 +34,7 @@
 
 {#if silentHotbarEnabled && selectingHotbar}
     {#if count === undefined && playerData?.mainHandStack && playerData.mainHandStack.identifier !== "minecraft:air"}
-        <div class="silent-hand-container" out:FadeOut|global={{ duration: 150 }}>
+        <div class="silent-hand-container" out:FadeOut|global={{ duration: 200 }}>
             <div class="item-icon hud-container">
                 <img
                         class="icon"
@@ -54,10 +54,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    position: absolute;
   }
 
   .item-icon {

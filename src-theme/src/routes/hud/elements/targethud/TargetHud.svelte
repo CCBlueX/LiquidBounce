@@ -15,9 +15,10 @@ let target: PlayerData | null = null;
 
     };
 let hideTimeout: ReturnType<typeof setTimeout>;
-    let ModeComponent: any;
 
-    $: ModeComponent = modes[settings?.mode] ?? ModernTargetHud;
+let ModeComponent: any;
+
+$: ModeComponent = modes[settings?.mode] ?? ModernTargetHud;
 function startHideTimeout(settings: { [name: string]: any }) {
     clearTimeout(hideTimeout);
     hideTimeout = setTimeout(() => visible.set(false), settings?.timeout ?? 2000);

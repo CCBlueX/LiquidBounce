@@ -1,16 +1,23 @@
-package net.ccbluex.liquidbounce.features.module.modules.render.targetinfo
+package net.ccbluex.liquidbounce.integration.theme.component.components.targethud
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.mode.NovolineMode
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.mode.NovolineMode
 import net.ccbluex.liquidbounce.render.GenericCustomColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.GenericSyncColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.Alignment
 
-object ModuleTargetInfo : ClientModule("TargetInfo", Category.RENDER, aliases = arrayOf("TargetHUD")) {
-
-    val modes = choices("Mode", NovolineMode, arrayOf(NovolineMode))
+object TargetHudComponent  : NativeComponent("TargetHud", true, Alignment(
+    horizontalAlignment = Alignment.ScreenAxisX.LEFT,
+    horizontalOffset = 7,
+    verticalAlignment = Alignment.ScreenAxisY.TOP,
+    verticalOffset = 180,
+)) {
+    init {
+        registerComponentListen(this)
+    }
+    val modes = choices(this,"Mode", NovolineMode, arrayOf(NovolineMode))
 
     val colorModes = choices(this, "ColorMode", 2) {
         arrayOf(
@@ -21,8 +28,6 @@ object ModuleTargetInfo : ClientModule("TargetInfo", Category.RENDER, aliases = 
     }
     val xOffsetRatio by float("X-Offset", 0.55f, 0f..1f)
     val yOffsetRatio by float("Y-Offset", 0.6f, 0f..1f)
-
-
     val backgroundColor by color("Background", Color4b.DARK_GRAY.withAlpha(125))
     val borderColor by color("Border", Color4b.TRANSPARENT)
     val textColor by color("Name", Color4b.WHITE)
@@ -34,5 +39,6 @@ object ModuleTargetInfo : ClientModule("TargetInfo", Category.RENDER, aliases = 
     override fun onDisabled() {
         modes.activeChoice.disable()
     }
+
 
 }

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.themes
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -127,7 +128,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private val customization = tree(Customization())
 
-    val nativeComponents = listOf(MinimapComponent)
+    val nativeComponents = listOf(MinimapComponent, TargetHudComponent)
 
     val components = tree(Configurable("Components")).apply {
         nativeComponents.forEach(this::tree)

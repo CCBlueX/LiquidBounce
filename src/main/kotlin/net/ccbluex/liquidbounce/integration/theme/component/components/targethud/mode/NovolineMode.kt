@@ -1,12 +1,30 @@
-package net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.mode
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.integration.theme.component.components.targethud.mode
 
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo
-import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.ModuleTargetInfo.colorModes
-import net.ccbluex.liquidbounce.features.module.modules.render.targetinfo.TargetInfoMode
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -33,6 +51,9 @@ object NovolineMode : TargetInfoMode("Novoline") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
+        if (HideAppearance.isHidingNow) {
+            return@handler
+        }
         val currentTarget = (ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target)
             ?.takeIf { it is PlayerEntity } as? PlayerEntity
 
@@ -65,14 +86,14 @@ object NovolineMode : TargetInfoMode("Novoline") {
     private fun renderTargetHUD(ctx: DrawContext, entity: PlayerEntity) {
         val nameWidth = mc.textRenderer.getWidth(entity.name.string) * 0.3f
         val width = 106f + nameWidth
-        val x = mc.window.scaledWidth * ModuleTargetInfo.xOffsetRatio
-        val y = mc.window.scaledHeight * ModuleTargetInfo.yOffsetRatio
+        val x = mc.window.scaledWidth * TargetHudComponent.xOffsetRatio
+        val y = mc.window.scaledHeight * TargetHudComponent.yOffsetRatio
 
         fun Color4b.fade() = withAlpha((a * alpha / 255f).toInt())
 
         ctx.fill(x.toInt(), y.toInt(),
             (x + width).toInt(), (y + 36).toInt(),
-            ModuleTargetInfo.backgroundColor.fade().toARGB())
+            TargetHudComponent.backgroundColor.fade().toARGB())
 
         listOf(
             floatArrayOf(x - 1, y - 1, x + width + 1, y),
@@ -84,13 +105,13 @@ object NovolineMode : TargetInfoMode("Novoline") {
             ctx.fill(
                 sx.toInt(), sy.toInt(),
                 ex.toInt(), ey.toInt(),
-                ModuleTargetInfo.borderColor.fade().toARGB()
+                TargetHudComponent.borderColor.fade().toARGB()
             )
         }
 
         drawHealthBar(ctx, width, x, y)
         drawPlayerHead(ctx, x.toInt(), y.toInt())
-        drawText(ctx, entity, ModuleTargetInfo.textColor.fade(), width, x, y)
+        drawText(ctx, entity, TargetHudComponent.textColor.fade(), width, x, y)
     }
 
     private fun updateAnimationStates(entity: LivingEntity?, hasActive: Boolean) {
@@ -159,7 +180,7 @@ object NovolineMode : TargetInfoMode("Novoline") {
         val currentHealth = (easingHealth / maxHealth).coerceIn(0f, 1f) * barW
         val previousHealth = (previousEasingHealth / maxHealth).coerceIn(0f, 1f) * barW
 
-        val (start, end) = when (val mode = colorModes.activeChoice) {
+        val (start, end) = when (val mode = TargetHudComponent.colorModes.activeChoice) {
             is GenericStaticColorMode,
             is GenericRainbowColorMode -> mode.getColors(mc.player).first.let { it to it }
             else -> mode.getColors(mc.player)

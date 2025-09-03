@@ -27,10 +27,11 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
 
 object ComponentManager {
 
-    val nativeComponents = listOf(MinimapComponent)
+    val nativeComponents = listOf(MinimapComponent, TargetHudComponent)
 
     val components: List<Component>
         get() = nativeComponents + ThemeManager.theme.components
