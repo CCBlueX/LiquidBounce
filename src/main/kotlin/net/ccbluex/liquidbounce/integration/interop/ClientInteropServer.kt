@@ -21,18 +21,19 @@ package net.ccbluex.liquidbounce.integration.interop
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import java.net.BindException
 import java.net.Socket
-import kotlin.concurrent.thread
 
 /**
  * A client server implementation.
@@ -41,8 +42,8 @@ import kotlin.concurrent.thread
  */
 object ClientInteropServer {
 
-    internal var httpServer = HttpServer()
-    private var socketEventHandler = SocketEventListener()
+    internal val httpServer = HttpServer()
+    private val socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
 
@@ -64,7 +65,12 @@ object ClientInteropServer {
             httpServer.routeController.apply {
                 get("/", ::getRootResponse)
                 registerInteropFunctions(this)
-                file("/", ThemeManager.themesFolder)
+
+                resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
+                    zip("/resource/liquidbounce", stream)
+                }
+                file("/local", ThemeManager.themesFolder)
+                file("/marketplace", MarketplaceManager.marketplaceRoot)
             }
 
             // Add CORS middleware
@@ -77,7 +83,7 @@ object ClientInteropServer {
         }
 
         // Start the HTTP server
-        thread(name = "netty-websocket", isDaemon = true, block = ::startServer)
+        startServer()
     }
 
     private var attempt = 0

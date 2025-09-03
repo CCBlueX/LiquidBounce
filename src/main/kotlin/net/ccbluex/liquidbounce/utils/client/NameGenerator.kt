@@ -41,7 +41,7 @@ private fun loadLines(name: String): List<String> {
         LiquidBounce::class.java.getResourceAsStream(resourceName)
             ?: error("Failed to load resource $resourceName")
 
-    return inputStream.bufferedReader().readLines()
+    return inputStream.bufferedReader().use { it.readLines() }
 }
 
 /**
@@ -49,7 +49,7 @@ private fun loadLines(name: String): List<String> {
  * (x = random separator character (0-9_))
  */
 fun randomUsername(
-    maxLength: Int = Random.Default.nextInt(8, 17),
+    maxLength: Int = Random.nextInt(8, 17),
     rng: Random = Random.Default
 ): String {
     val (firstWordList, secondWordList) = if (rng.nextBoolean()) {

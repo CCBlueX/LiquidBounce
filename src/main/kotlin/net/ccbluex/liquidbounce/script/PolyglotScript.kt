@@ -31,12 +31,7 @@ import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupC
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.underline
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -62,8 +57,14 @@ class PolyglotScript(
         .allowCreateThread(true) // Enable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
-        .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
-        .option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+        .apply {
+            if (language == "js") {
+                option("js.nashorn-compat", "true") // Enable Nashorn compatibility
+                option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+                option("js.commonjs-require", "true")
+                option("js.commonjs-require-cwd", file.parentFile.absolutePath)
+            }
+        }
         .apply {
             if (debugOptions.enabled) {
                 val protocolString = debugOptions.protocol.toString().lowercase()
@@ -80,12 +81,15 @@ class PolyglotScript(
 
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(variable(devtoolURL)
-                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                    ))
-                                    .underline(true)
+                                .append(
+                                    variable(devtoolURL)
+                                        .copyable(
+                                            copyContent = devtoolURL, hover = HoverEvent(
+                                                HoverEvent.Action.SHOW_TEXT,
+                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                            )
+                                        )
+                                        .underline(true)
                                 )
                         )
                     }
@@ -99,10 +103,15 @@ class PolyglotScript(
                         }
 
                         chat(
-                            regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
-                                translation("liquidbounce.scripts.debug.dap", variable(debugOptions.port.toString()))
+                            regular(
+                                translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
+                                    translation(
+                                        "liquidbounce.scripts.debug.dap",
+                                        variable(debugOptions.port.toString())
+                                    )
+                                )
                             )
-                        ))
+                        )
                     }
                 }
             }
@@ -140,18 +149,24 @@ class PolyglotScript(
      * Initialization of scripts
      */
     fun initScript() {
-        // Evaluate script
-        context.eval(Source.newBuilder(language, file).build())
+        try{
+            // Evaluate script
+            context.eval(Source.newBuilder(language, file).build())
 
-        // Call load event
-        callGlobalEvent("load")
+            // Call load event
+            callGlobalEvent("load")
 
-        if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
-            logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
-            error("Script '${file.name}' is missing required information!")
+            if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+                logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
+                error("Script '${file.name}' is missing required information!")
+            }
+
+            logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
+        } catch (e: Exception) {
+            logger.error("[ScriptAPI] Failed to load script '${file.name}'.", e)
+            context.close()
+            throw e
         }
-
-        logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")

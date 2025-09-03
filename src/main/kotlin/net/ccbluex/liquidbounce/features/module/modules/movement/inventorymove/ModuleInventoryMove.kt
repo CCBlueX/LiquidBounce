@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
+import it.unimi.dsi.fastutil.objects.Reference2BooleanArrayMap
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -59,9 +61,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
-    private val movementKeys = mc.options.run {
-        arrayOf(forwardKey, leftKey, backKey, rightKey, jumpKey, sneakKey).associateWith { false }.toMutableMap()
-    }
+    private val movementKeys = Reference2BooleanArrayMap<KeyBinding>(
+        mc.options.run {
+            arrayOf(forwardKey, leftKey, backKey, rightKey, jumpKey, sneakKey)
+        },
+        BooleanArray(6),
+        6
+    )
 
     /**
      * Restricts user from clicking while moving in inventory.
@@ -81,7 +87,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     fun shouldHandleInputs(keyBinding: KeyBinding): Boolean {
         val screen = mc.currentScreen ?: return true
 
-        if (!running || screen is ChatScreen || isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
+        if (!running || screen is ChatScreen || screen.isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
             return false
         }
 
@@ -99,7 +105,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         val key = movementKeys.keys.find { it.matchesKey(event.keyCode, event.scanCode) }
             ?: return@handler
         val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
-        movementKeys[key] = pressed
+        movementKeys.put(key, pressed)
 
         if (behavior == Behaviour.SAFE && isInInventoryScreen && InventoryManager.isInventoryOpenServerSide
             && pressed) {
@@ -110,8 +116,8 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     /**
      * Checks if the player is in the creative search field
      */
-    private fun isInCreativeSearchField() =
-        mc.currentScreen is CreativeInventoryScreen &&
+    private fun Screen.isInCreativeSearchField() =
+        this is CreativeInventoryScreen &&
             CreativeInventoryScreen.selectedTab == ItemGroups.getSearchGroup()
 
 }

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -70,9 +70,7 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { s, _ ->
-                    arrayOf("binds", "hidden").filter { it.startsWith(s) }
-                }
+                .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
                 .optional()
                 .build()
@@ -165,12 +163,14 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autoComplete(begin) }
+                .autocompletedFrom {
+                    ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
+                }
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.modules()
+            ParameterBuilder.modules()
                 .optional()
                 .build()
         )
@@ -197,10 +197,5 @@ object CommandLocalConfig : CommandFactory {
             }
         }
         .build()
-
-    private fun autoComplete(begin: String): List<String> {
-        return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
-            ?.filter { it.startsWith(begin) } ?: emptyList()
-    }
 
 }

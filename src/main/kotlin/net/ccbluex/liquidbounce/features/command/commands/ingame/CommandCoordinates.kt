@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.playerName
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
 import org.apache.commons.lang3.StringUtils
@@ -42,7 +43,7 @@ object CommandCoordinates : CommandFactory {
             .subcommand(
                 CommandBuilder.begin("whisper")
                     .parameter(
-                        Parameters.playerName()
+                        ParameterBuilder.playerName()
                             .required()
                             .build()
                     )

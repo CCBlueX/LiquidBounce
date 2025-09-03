@@ -1,0 +1,59 @@
+name: Generate TypeScript Definitions
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Create Mods Directory
+        run: mkdir -p run/mods
+
+      - name: Download ts-generator
+        run: |
+          mkdir -p run/LiquidBounce/scripts
+          LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/CCBlueX/ts-generator/releases/latest | jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url')
+          curl -L $LATEST_RELEASE_URL -o run/LiquidBounce/scripts/ts-generator.zip
+          unzip run/LiquidBounce/scripts/ts-generator.zip -d run/LiquidBounce/scripts/
+          # Look specifically for the main jar file (excluding source jars)
+          find run/LiquidBounce/scripts/ -name "*.jar" -not -name "*-sources.jar" -not -name "*-src.jar" -exec mv {} run/LiquidBounce/scripts/ts-generator.jar \; || echo "Main JAR file not found in the zip, check contents"
+
+      - name: Copy ts-defgen.js to LiquidBounce scripts
+        run: |
+          cp ts-defgen.js run/LiquidBounce/scripts/
+
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
+
+      - name: Run LiquidBounce with Gradle
+        env:
+          SCRIPT_TYPEGEN_BUILD: "true"  # Set the CI_BUILD flag to auto-execute ts-defgen
+          SKIP_BROWSER: "true"
+        run: |
+          chmod +x ./gradlew
+          timeout 60m xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" ./gradlew runClient -Dfabric.headless=true || exit 0
+
+      - name: Upload TypeScript Definitions
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'liquidbounce-script-api'
+          path: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/
+
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: run/LiquidBounce/scripts/@ccbluex/liquidbounce-script-api/package.json
+          access: public

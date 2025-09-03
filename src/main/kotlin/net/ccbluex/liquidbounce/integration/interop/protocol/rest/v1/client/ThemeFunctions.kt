@@ -31,7 +31,7 @@ import net.ccbluex.netty.http.util.*
 // GET /api/v1/client/theme
 @Suppress("UNUSED_PARAMETER")
 fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonObject().apply {
-    addProperty("activeTheme", ThemeManager.activeTheme.name)
+    addProperty("activeTheme", ThemeManager.theme.metadata.name)
     addProperty("shaderEnabled", ThemeManager.shaderEnabled)
 })
 
@@ -39,7 +39,7 @@ fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(JsonOb
 @Suppress("UNUSED_PARAMETER")
 fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
     ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
-    ConfigSystem.storeConfigurable(ThemeManager)
+    ConfigSystem.store(ThemeManager)
     return httpNoContent()
 }
 

@@ -38,15 +38,13 @@ object CommandClientLanguageSubcommand {
         .handler { command, args ->
             chat(regular("Unset override language..."))
             LanguageManager.overrideLanguage = ""
-            ConfigSystem.storeConfigurable(LanguageManager)
+            ConfigSystem.store(LanguageManager)
         }.build()
 
     private fun setSubcommand() = CommandBuilder.begin("set")
         .parameter(
             ParameterBuilder.begin<String>("language")
-                .autocompletedWith { begin, _ ->
-                    LanguageManager.knownLanguages.filter { it.startsWith(begin, true) }
-                }
+                .autocompletedFrom { LanguageManager.knownLanguages }
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                 .build()
         ).handler { command, args ->
@@ -59,7 +57,7 @@ object CommandClientLanguageSubcommand {
             chat(regular("Setting language to ${language}..."))
             LanguageManager.overrideLanguage = language
 
-            ConfigSystem.storeConfigurable(LanguageManager)
+            ConfigSystem.store(LanguageManager)
         }.build()
 
     private fun listSubcommand() = CommandBuilder.begin("list")

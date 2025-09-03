@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.enchantment
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -51,9 +51,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
     private val levelParameter = ParameterBuilder
         .begin<String>("level")
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { begin, _ ->
-            mutableListOf("max", "1", "2", "3", "4", "5").filter { it.startsWith(begin) }
-        }
+        .autocompletedFrom { listOf("max", "1", "2", "3", "4", "5") }
         .required()
 
     @Suppress("LongMethod")
@@ -65,7 +63,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
             .subcommand(
                 CommandBuilder
                     .begin("add")
-                    .parameter(Parameters.enchantment().required().build())
+                    .parameter(ParameterBuilder.enchantment().required().build())
                     .parameter(levelParameter.build())
                     .handler { command, args ->
                         val enchantmentName = args[0] as String
@@ -88,7 +86,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
             .subcommand(
                 CommandBuilder
                     .begin("remove")
-                    .parameter(Parameters.enchantment().required().build())
+                    .parameter(ParameterBuilder.enchantment().required().build())
                     .handler { command, args ->
                         val enchantmentName = args[0] as String
 

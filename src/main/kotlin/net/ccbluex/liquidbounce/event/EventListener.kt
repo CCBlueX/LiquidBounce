@@ -70,12 +70,16 @@ interface EventListener {
 
 }
 
+fun <T : Event> EventListener.handler(
+    eventClass: Class<T>,
+    priority: Short = 0,
+    handler: Handler<T>,
+): EventHook<T> = EventManager.registerEventHook(eventClass, EventHook(this, handler, priority))
+
 inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
     noinline handler: Handler<T>
-): EventHook<T> {
-    return EventManager.registerEventHook(T::class.java, EventHook(this, handler, priority))
-}
+): EventHook<T> = handler(T::class.java, priority, handler)
 
 inline fun <reified T : Event> EventListener.until(
     priority: Short = 0,

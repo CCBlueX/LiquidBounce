@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.util.Formatting
 
 /**
@@ -81,7 +81,7 @@ object CommandHide : CommandFactory {
     private fun unhideSubommand() = CommandBuilder
         .begin("unhide")
         .parameter(
-            Parameters.modules { it.hidden }
+            ParameterBuilder.modules { it.hidden }
                 .required()
                 .build()
         )
@@ -102,7 +102,7 @@ object CommandHide : CommandFactory {
     private fun hideSubcommand() = CommandBuilder
         .begin("hide")
         .parameter(
-            Parameters.modules { !it.hidden }
+            ParameterBuilder.modules { !it.hidden }
                 .required()
                 .build()
         )

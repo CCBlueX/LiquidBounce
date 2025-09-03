@@ -26,6 +26,7 @@ import net.minecraft.util.Util.OperatingSystem.*
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 
 object FontManager {
 
@@ -76,9 +77,7 @@ object FontManager {
     /**
      * The active font renderer that all text rendering will be based on.
      *
-     * TODO: Because PR #3884 is not merged yet, we have to define the active font renderer manually.
-     *    This will be removed once the PR is merged, because after the PR is merged, the font renderer
-     *    can be selected through the module settings instead.
+     * TODO: Replaces this with Module-based Font Selection
      */
     val FONT_RENDERER
         get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
@@ -108,16 +107,7 @@ object FontManager {
         )
     }
 
-    internal fun queueFolder(path: File) {
-        try {
-            path.listFiles { file -> file.extension == "ttf" }
-                ?.forEach(::queueFile)
-        } catch (e: Exception) {
-            throw IllegalStateException("Failed to load font from folder $path", e)
-        }
-    }
-
-    internal fun queueFile(file: File) {
+    internal fun queueFontFromFile(file: File) {
         try {
             if (!file.exists()) {
                 logger.warn("Font file ${file.absolutePath} does not exist.")
@@ -147,6 +137,14 @@ object FontManager {
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
         }
+    }
+
+    internal fun queueFontFromStream(stream: InputStream) {
+        val font = Font.createFont(Font.TRUETYPE_FONT, stream)
+            .deriveFont(DEFAULT_FONT_SIZE)
+        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, null)
+        fontFace.fillStyle(font, 0)
+        addFontFace(fontFace)
     }
 
     private fun systemFont(name: String): FontFace {
