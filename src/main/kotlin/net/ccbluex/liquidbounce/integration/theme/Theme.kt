@@ -57,7 +57,7 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
     var metadata: ThemeMetadata
         field: ThemeMetadata? = null
         private set
-        get() = requireNotNull(field) { "Metadata not loaded" }
+        get() = requireNotNull(field) { "metadata not loaded" }
 
     private suspend fun loadMetadata() {
         try {
