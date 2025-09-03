@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -62,12 +63,20 @@ public abstract class MixinScreen {
 
     @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initializeBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackground();
     }
 
     @Inject(method = "init()V", at = @At("TAIL"))
     protected void init(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initializeBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackground();
     }
 
     @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
@@ -80,6 +89,10 @@ public abstract class MixinScreen {
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
     private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
+            if (!LiquidBounce.INSTANCE.isInitialized()) {
+                return;
+            }
+
             if (ThemeManager.INSTANCE.drawBackground(context, width, height, mouseX, mouseY, delta)) {
                 ci.cancel();
             }

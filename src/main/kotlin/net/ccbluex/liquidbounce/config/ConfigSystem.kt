@@ -246,7 +246,7 @@ object ConfigSystem {
                 }
 
                 for ((name, value) in values) {
-                    val valueInstance = configurable.factory(name, value)
+                    val valueInstance = configurable.factory(name, value) ?: continue
                     configurable.value(valueInstance)
 
                     deserializeValue(valueInstance, value)

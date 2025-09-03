@@ -15,21 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.types
+package net.ccbluex.liquidbounce.integration.theme.component.components
 
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
+import net.ccbluex.liquidbounce.utils.render.Alignment
 
-class ImageComponent(src: String, enabled: Boolean = true) : Component("Image", enabled) {
-
-    val src by text("Src", src)
-    val scale by float("Scale", 1.0f, 0.0f..10.0f)
-
-    init {
-        registerComponentListen()
-    }
-
-}
+abstract class NativeComponent(
+    name: String,
+    enabled: Boolean,
+    alignment: Alignment,
+    tweaks: Array<ComponentTweak> = emptyArray()
+) : Component(name, enabled, alignment, tweaks)

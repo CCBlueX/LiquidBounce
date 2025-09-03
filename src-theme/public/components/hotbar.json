@@ -1,0 +1,18 @@
+{
+  "name": "Hotbar",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 15
+  },
+  "tweaks": [
+    "TWEAK_HOTBAR",
+    "DISABLE_STATUS_BAR",
+    "DISABLE_EXP_BAR",
+    "DISABLE_HELD_ITEM_TOOL_TIP",
+    "DISABLE_OVERLAY_MESSAGE"
+  ]
+}

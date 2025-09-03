@@ -15,28 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.types
+package net.ccbluex.liquidbounce.integration.theme
 
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.FeatureTweak
+data class ThemeMetadata(
+    val name: String,
+    val author: List<String>,
+    val version: String,
+    val screens: List<String>,
+    val overlays: List<String>,
+    val components: List<String>,
+    val fonts: List<String>,
+    val background: List<Background>
+)
 
-/**
- * Unlike other components integrated are built into the theme and are being configured
- * by the metadata of the theme
- *
- * TODO: These should be serializable from the Metadata JSON
- */
-class IntegratedComponent(
-    name: String,
-    val tweaks: Array<FeatureTweak> = emptyArray()
-) : Component(name, true) {
-
-    init {
-        registerComponentListen()
-    }
-
-}
+data class Background(
+    val name: String,
+    val types: List<String>
+)

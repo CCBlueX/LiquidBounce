@@ -155,7 +155,7 @@ dependencies {
 
     // JCEF Support
     includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
-    includeDependency("net.ccbluex:netty-httpserver:2.2.2")
+    includeDependency("net.ccbluex:netty-httpserver:2.3.2")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
@@ -298,7 +298,7 @@ tasks.register<NodeTask>("bundleTheme") {
     inputs.dir("src-theme/src")
     inputs.dir("src-theme/public")
     inputs.dir("src-theme/dist")
-    outputs.files("src-theme/resources/assets/liquidbounce/default_theme.zip")
+    outputs.files("src-theme/resources/assets/liquidbounce/themes/liquidbounce.zip")
 }
 
 sourceSets {

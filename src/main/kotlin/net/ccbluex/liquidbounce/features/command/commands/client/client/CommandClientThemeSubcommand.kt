@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 
 object CommandClientThemeSubcommand {
@@ -30,6 +33,7 @@ object CommandClientThemeSubcommand {
         .subcommand(listSubcommand())
         .subcommand(setSubcommand())
         .subcommand(browseSubcommand())
+        .subcommand(reloadSubcommand())
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
@@ -41,38 +45,60 @@ object CommandClientThemeSubcommand {
         .parameter(
             ParameterBuilder.begin<String>("theme")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .autocompletedFrom { ThemeManager.themes }
+                .autocompletedFrom { ThemeManager.themeNames }
                 .build()
         )
         .handler { _, args ->
             val name = args[0] as String
-
-            if (name.equals("default", true)) {
-                ThemeManager.activeTheme = ThemeManager.defaultTheme
-                chat(regular("Switching theme to default..."))
-                return@handler
-            }
+            val theme = ThemeManager.themes.find { it.metadata.name.equals(name, true) } ?:
+                throw CommandException("No theme found with name \"$name\"!".asText())
 
             runCatching {
-                ThemeManager.chooseTheme(name)
+                ThemeManager.currentTheme = theme.metadata.name
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
             }.onSuccess {
-                chat(regular("Switched theme to $name."))
+                chat(regular("Switched theme to "), variable(theme.metadata.name).copyable(), regular("."))
             }
         }.build()
 
     private fun listSubcommand() = CommandBuilder.begin("list")
-        .handler { command, args ->
-            @Suppress("SpreadOperator")
-            (chat(
-                regular("Available themes: "),
-                *ThemeManager.themes.flatMapIndexed { index, name ->
-                    listOf(
-                        regular(if (index == 0) "" else ", "),
-                        variable(name)
-                    )
-                }.toTypedArray()
-            ))
+        .pagedQuery(
+            pageSize = 8,
+            header = {
+                "Available themes".asText().withColor(Formatting.RED).bold(true)
+            },
+            items = {
+                ThemeManager.themes
+            },
+            eachRow = { _, theme ->
+                "\u2B25 ".asText()
+                    .formatted(Formatting.BLUE)
+                    .append(variable(theme.metadata.name).copyable())
+                    .append(regular(" ("))
+                    .append(variable(theme.metadata.version).copyable())
+                    .append(regular(")"))
+                    .append(regular(" by "))
+                    .append(variable(theme.metadata.author.joinToString(separator = ", ")).copyable())
+                    .append(regular(" from "))
+                    .append(variable(theme.origin.choiceName))
+            }
+        )
+
+    private fun reloadSubcommand() = CommandBuilder.begin("reload")
+        .handler { _, _ ->
+            val prevCount = ThemeManager.themes.size
+
+            ThemeManager.load()
+            chat(regular("Reloaded themes. "))
+            val diff = ThemeManager.themes.size - prevCount
+            if (diff > 0) {
+                chat(regular("Added "), variable(diff.toString()), regular(" new theme(s)."))
+            } else if (diff < 0) {
+                chat(regular("Removed "), variable((-diff).toString()), regular(" theme(s)."))
+            } else {
+                chat(regular("No new themes added."))
+            }
         }.build()
+
 }

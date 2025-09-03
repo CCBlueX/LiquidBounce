@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.IntegrationListener.browser
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
@@ -32,7 +30,6 @@ object CommandClientIntegrationSubcommand {
     fun integrationCommand() = CommandBuilder.begin("integration")
         .hub()
         .subcommand(menuSubcommand())
-        .subcommand(overrideSubcommand())
         .subcommand(resetSubcommand())
         .build()
 
@@ -42,21 +39,11 @@ object CommandClientIntegrationSubcommand {
             IntegrationListener.update()
         }.build()
 
-    private fun overrideSubcommand() = CommandBuilder.begin("override")
-        .parameter(
-            ParameterBuilder.begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .build()
-        ).handler { _, args ->
-            chat(regular("Overrides client JCEF browser..."))
-            browser.url = args[0] as String
-        }.build()
-
     private fun menuSubcommand() = CommandBuilder.begin("menu")
         .alias("url")
         .handler { _, _ ->
             chat(variable("Client Integration"))
-            val baseUrl = ThemeManager.route().url
+            val baseUrl = ThemeManager.getScreenLocation().url
 
             chat(
                 regular("Base URL: ")
@@ -80,7 +67,7 @@ object CommandClientIntegrationSubcommand {
             chat(regular("Integration Menu:"))
             for (screenType in VirtualScreenType.entries) {
                 val url = runCatching {
-                    ThemeManager.route(screenType, true)
+                    ThemeManager.getScreenLocation(screenType, true)
                 }.getOrNull()?.url ?: continue
                 val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
 
