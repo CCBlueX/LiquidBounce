@@ -34,6 +34,7 @@ import net.minecraft.text.HoverEvent
 /**
  * List marketplace items
  */
+@Suppress("CognitiveComplexMethod")
 fun marketplaceListCommand() = buildCommand("list") {
 
     val type = parameter {
