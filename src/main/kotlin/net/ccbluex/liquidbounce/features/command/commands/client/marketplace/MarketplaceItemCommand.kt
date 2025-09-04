@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceCreateItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceDeleteItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceEditItemCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceCreateItemCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceDeleteItemCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceEditItemCommand
 
 /**
  * Manage marketplace items
@@ -31,9 +31,9 @@ object MarketplaceItemCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("item")
         .hub()
-        .subcommand(MarketplaceCreateItemCommand)
-        .subcommand(MarketplaceEditItemCommand)
-        .subcommand(MarketplaceDeleteItemCommand)
+        .subcommand(marketplaceCreateItemCommand())
+        .subcommand(marketplaceEditItemCommand())
+        .subcommand(marketplaceDeleteItemCommand())
         .build()
 
 }

@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.it
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.commandFactory
 import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Delete marketplace item
  */
-internal val MarketplaceDeleteItemCommand = commandFactory("delete") {
+fun marketplaceDeleteItemCommand() = buildCommand("delete") {
 
     val id = parameter("id") {
         verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)

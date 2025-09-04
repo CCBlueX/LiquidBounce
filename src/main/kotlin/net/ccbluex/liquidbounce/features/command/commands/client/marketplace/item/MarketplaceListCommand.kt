@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
+import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.commandFactory
 import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.*
@@ -34,7 +34,7 @@ import net.minecraft.text.HoverEvent
 /**
  * List marketplace items
  */
-internal val MarketplaceListCommand = commandFactory("list") {
+fun marketplaceListCommand() = buildCommand("list") {
 
     val type = parameter {
         enumChoice<MarketplaceItemType>("type") { it.isListable }
