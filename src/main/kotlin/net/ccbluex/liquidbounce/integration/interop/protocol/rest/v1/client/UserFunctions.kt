@@ -70,7 +70,7 @@ fun loginUser(requestObject: RequestObject): FullHttpResponse {
     withScope {
         val account = startAuth { Util.getOperatingSystem().open(it) }
         ClientAccountManager.clientAccount = account
-        ConfigSystem.storeConfigurable(ClientAccountManager)
+        ConfigSystem.store(ClientAccountManager)
         EventManager.callEvent(UserLoggedInEvent)
     }
 
@@ -86,7 +86,7 @@ fun logoutUser(requestObject: RequestObject): FullHttpResponse {
     }
 
     ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
-    ConfigSystem.storeConfigurable(ClientAccountManager)
+    ConfigSystem.store(ClientAccountManager)
     EventManager.callEvent(UserLoggedOutEvent)
     return httpNoContent()
 }
