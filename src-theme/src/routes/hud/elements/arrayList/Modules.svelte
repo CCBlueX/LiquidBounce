@@ -15,6 +15,7 @@
         destroyGradient,
         subscribeRenderSettings
     } from './arraylist';
+    import type {EventMap} from "../../../../integration/events";
 
     let enabledModules: Array<Module & { prefix: string; formattedName: string; width: number }> = [];
     let intervalId: number;
@@ -66,7 +67,7 @@
         await updateEnabledModules();
 
         listen('moduleToggle', () => updateEnabledModules());
-        listen('refreshArrayList', () => updateEnabledModules());
+        listen('refreshArrayList'as keyof EventMap, () => updateEnabledModules());
         listen('hudValueChange', () => updateEnabledModules());
         spaceSeperatedNames.subscribe(() => updateEnabledModules());
 
@@ -93,7 +94,7 @@
             animate:flip={{ duration: 200 }}
             in:fly={{ x: 50, duration: 200 }}
     >
-        {formattedName}&nbsp;
+        {$spaceSeperatedNames ? convertToSpacedString(formattedName) : formattedName}
         {#if prefix}<span class="prefix">{prefix}</span>{/if}
         <span class="side-bar" id="side-bar"></span>
     </div>

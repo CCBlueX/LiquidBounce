@@ -6,6 +6,7 @@
     import { expoInOut } from "svelte/easing";
     import { fly } from "svelte/transition";
     import Line from "../common/Trims/Line.svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
@@ -132,6 +133,8 @@
 
     onMount(async () => {
         await updateBindings();
+        spaceSeperatedNames.subscribe(() => updateBindings);
+
         loaded = true;
     });
 
@@ -152,7 +155,7 @@
         <Line />
         {#each bindings as binding (binding.moduleName)}
             <div class:disabled={!binding.enabled} class="binding-item">
-                <span class="module-name">{binding.moduleName}</span>
+                <span class="module-name">       {$spaceSeperatedNames ? convertToSpacedString(binding.moduleName ) : binding.moduleName}</span>
                 <span class="key-info">
                     {#if binding.keyName}
                         {#each binding.modifiers as modifier (modifier)}
