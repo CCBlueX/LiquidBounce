@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.command.commands.module
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
@@ -39,7 +38,7 @@ import java.util.*
  *
  * Module: [ModuleInventoryTracker]
  */
-object CommandInvsee : CommandFactory {
+object CommandInvsee : Command.Factory {
 
     var viewedPlayer: UUID? = null
 
@@ -52,7 +51,7 @@ object CommandInvsee : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val inputName = args[0] as String
                 val playerID = network.playerList.find { it.profile.name.equals(inputName, true) }?.profile?.id
                 val player = { world.getPlayerByUuid(playerID) ?: ModuleInventoryTracker.playerMap[playerID] }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+@file:Suppress("NOTHING_TO_INLINE")
+package net.ccbluex.liquidbounce.utils.kotlin
 
-/**
- * Manage marketplace item revisions
- */
-object MarketplaceRevisionsCommand : Command.Factory {
+import java.util.*
 
-    override fun createCommand() = CommandBuilder.begin("revisions")
-        .hub()
-        .subcommand(MarketplaceListRevisionsCommand)
-        // Uploading revision is disabled until proven stable
-        // .subcommand(UploadRevisionCommand)
-        .build()
-}
+inline fun <T> Set<T>.unmodifiable(): Set<T> = Collections.unmodifiableSet(this)
+
+inline fun <T> List<T>.unmodifiable(): List<T> = Collections.unmodifiableList(this)
+
+inline fun <T> Array<out T>?.unmodifiable(): List<T> =
+    when {
+        isNullOrEmpty() -> emptyList()
+        size == 1 -> Collections.singletonList(this[0])
+        else -> this.asList().unmodifiable()
+    }

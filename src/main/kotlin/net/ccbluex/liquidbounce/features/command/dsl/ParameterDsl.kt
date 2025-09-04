@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.features.command.Command
+package net.ccbluex.liquidbounce.features.command.dsl
+
+import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
-/**
- * Manage marketplace item revisions
- */
-object MarketplaceRevisionsCommand : Command.Factory {
+inline fun <T : Any> CommandBuilder.addParam(
+    block: ParameterBuilder.Companion.() -> ParameterBuilder<T>
+): Parameter<T> = ParameterBuilder.block().build().also { parameter(it) }
 
-    override fun createCommand() = CommandBuilder.begin("revisions")
-        .hub()
-        .subcommand(MarketplaceListRevisionsCommand)
-        // Uploading revision is disabled until proven stable
-        // .subcommand(UploadRevisionCommand)
-        .build()
-}
+inline fun <T : Any> CommandBuilder.addParam(
+    name: String,
+    block: ParameterBuilder<T>.() -> ParameterBuilder<T>
+): Parameter<T> = ParameterBuilder.begin<T>(name).block().build().also { parameter(it) }

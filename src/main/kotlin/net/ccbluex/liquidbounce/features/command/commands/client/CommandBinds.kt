@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandExecutor
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.module
@@ -34,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
-import net.minecraft.text.HoverEvent
 import net.minecraft.util.Formatting
 
 /**
@@ -43,28 +40,28 @@ import net.minecraft.util.Formatting
  * Allows you to manage the bindings of modules to keys.
  * It provides subcommands to add, remove, list and clear bindings.
  */
-object CommandBinds : CommandFactory {
+object CommandBinds : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("binds")
             .hub()
-            .subcommand(addSubcommand)
-            .subcommand(removeSubcommand)
-            .subcommand(listSubcommand)
-            .subcommand(clearSubcommand)
+            .subcommand(addSubcommand())
+            .subcommand(removeSubcommand())
+            .subcommand(listSubcommand())
+            .subcommand(clearSubcommand())
             .build()
     }
 
-    private val clearSubcommand = CommandBuilder
+    private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleManager.forEach { it.bind.unbind() }
             chat(command.result("bindsCleared"), metadata = MessageMetadata(id = "Binds#global"))
         }
         .build()
 
-    private val listSubcommand = CommandBuilder
+    private fun listSubcommand() = CommandBuilder
         .begin("list")
         .pagedQuery(
             pageSize = 8,
@@ -77,69 +74,44 @@ object CommandBinds : CommandFactory {
             eachRow = { _, module ->
                 "\u2B25 ".asText()
                     .formatted(Formatting.BLUE)
-                    .append(
-                        markAsError("[\u2715] ")
-                            .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    "Unbind ".asText().append(variable(module.name))
-                                )
-                            )
-                            .onClick {
-                                runCatching {
-                                    handleRemoveBind(setOf(module))
-                                }.onFailure(CommandExecutor::handleExceptions)
-                            }
-                    )
+                    .append(variable(module.name).copyable())
                     .append(regular(": "))
-                    .append(
-                        inputByName(module.bind.keyName).let { key ->
-                            variable(key.localizedText.copy()).bold(true)
-                                .copyable(copyContent = key.translationKey)
-                        }
-                    )
-                    .apply {
-                        module.bind.modifiers.forEach {
-                            append(regular(" + "))
-                            append(variable(it.platformRenderName))
-                        }
-                    }
-                    .append(regular(" ("))
+                    .append(regular(module.bind.keyName).copyable())
+                    .append(regular("("))
                     .append(variable(module.bind.action.choiceName))
                     .append(regular(")"))
             }
         )
 
-    private fun handleRemoveBind(modules: Set<ClientModule>) {
-        modules.forEach { module ->
-            if (module.bind.isUnbound) {
-                throw CommandException(removeSubcommand.result("moduleNotBound"))
-            }
 
-            module.bind.unbind()
-
-            chat(
-                regular(removeSubcommand.result("bindRemoved", variable(module.name))),
-                metadata = MessageMetadata(id = "Binds#${module.name}")
-            )
-        }
-
-        ModuleClickGui.reload()
-    }
-    private val removeSubcommand = CommandBuilder
+    private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
             ParameterBuilder.modules { mod -> !mod.bind.isUnbound }
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
-            handleRemoveBind(modules)
+
+            modules.forEach { module ->
+                if (module.bind.isUnbound) {
+                    throw CommandException(command.result("moduleNotBound"))
+                }
+
+                module.bind.unbind()
+
+                chat(
+                    regular(command.result("bindRemoved", variable(module.name))),
+                    metadata = MessageMetadata(id = "Binds#${module.name}")
+                )
+            }
+
+            ModuleClickGui.reload()
         }
         .build()
 
-    private val addSubcommand = CommandBuilder
+    private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
             ParameterBuilder.module()
@@ -153,7 +125,7 @@ object CommandBinds : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val keyName = args[1] as String
 

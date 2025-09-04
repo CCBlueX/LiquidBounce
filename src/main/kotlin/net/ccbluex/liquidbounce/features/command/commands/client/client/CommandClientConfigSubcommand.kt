@@ -40,7 +40,7 @@ object CommandClientConfigSubcommand {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
@@ -75,7 +75,7 @@ object CommandClientConfigSubcommand {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val fileName = args[0] as String
 
             AutoConfig.withLoading {
@@ -99,7 +99,7 @@ object CommandClientConfigSubcommand {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
@@ -131,7 +131,7 @@ object CommandClientConfigSubcommand {
         }
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ConfigSystem.backupFolder)
         chat(regular(command.result("browse", variable(ConfigSystem.backupFolder.absolutePath))))
     }.build()

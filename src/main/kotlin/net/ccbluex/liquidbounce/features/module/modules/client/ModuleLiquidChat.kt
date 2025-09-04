@@ -68,7 +68,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
                 .vararg()
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
@@ -91,7 +91,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler { _, _ ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),

@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
@@ -36,7 +36,7 @@ import java.io.File
 /**
  * Upload marketplace item revision
  */
-object MarketplaceUploadRevisionCommand : CommandFactory {
+object MarketplaceUploadRevisionCommand : Command.Factory {
 
     @Suppress("LongMethod")
     override fun createCommand() = CommandBuilder
@@ -77,7 +77,7 @@ object MarketplaceUploadRevisionCommand : CommandFactory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val clientAccount = ClientAccountManager.accountOrException()
 
             val id = args[0] as Int

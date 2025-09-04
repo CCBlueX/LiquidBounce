@@ -39,7 +39,7 @@ object CommandClientThemeSubcommand {
         .subcommand(reloadSubcommand())
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ThemeManager.themesFolder)
         chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
     }.build()
@@ -51,7 +51,7 @@ object CommandClientThemeSubcommand {
                 .autocompletedFrom { ThemeManager.themeIds }
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             val id = args[0] as String
             val theme = ThemeManager.themes.find { it.metadata.id.equals(id, true) } ?:
                 throw CommandException("No theme found with name \"$id\"!".asText())
@@ -102,7 +102,7 @@ object CommandClientThemeSubcommand {
         )
 
     private fun reloadSubcommand() = CommandBuilder.begin("reload")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             val prevCount = ThemeManager.themes.size
 
             ThemeManager.load()

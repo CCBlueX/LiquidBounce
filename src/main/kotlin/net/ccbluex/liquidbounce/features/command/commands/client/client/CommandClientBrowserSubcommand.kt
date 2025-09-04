@@ -37,7 +37,7 @@ object CommandClientBrowserSubcommand {
             ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                 .build()
-        ).handler { command, args ->
+        ).handler {
             chat(regular("Opening browser..."))
             RenderSystem.recordRenderCall {
                 mc.setScreen(BrowserScreen(args[0] as String))

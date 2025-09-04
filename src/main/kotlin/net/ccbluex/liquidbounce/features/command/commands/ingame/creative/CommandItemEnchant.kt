@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enchantment
@@ -46,7 +45,7 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
-object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
+object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
     private val levelParameter = ParameterBuilder
         .begin<String>("level")
@@ -65,7 +64,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
                     .begin("add")
                     .parameter(ParameterBuilder.enchantment().required().build())
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         val enchantmentName = args[0] as String
                         val level = getLevel(args[1] as String)
 
@@ -87,7 +86,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("remove")
                     .parameter(ParameterBuilder.enchantment().required().build())
-                    .handler { command, args ->
+                    .handler {
                         val enchantmentName = args[0] as String
 
                         creativeOrThrow(command)
@@ -108,7 +107,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .handler { command, _ ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
@@ -122,7 +121,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("all")
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
@@ -142,7 +141,7 @@ object CommandItemEnchant : CommandFactory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("all_possible")
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 

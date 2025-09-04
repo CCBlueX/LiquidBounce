@@ -21,10 +21,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.it
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
+import net.ccbluex.liquidbounce.features.command.dsl.addParam
+import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
+import net.ccbluex.liquidbounce.features.command.dsl.cast
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -33,71 +34,66 @@ import net.minecraft.text.HoverEvent
 /**
  * List marketplace items
  */
-@Suppress("LongMethod", "CognitiveComplexMethod")
-object MarketplaceListCommand : CommandFactory {
+@Suppress("CognitiveComplexMethod")
+fun marketplaceListCommand() = buildCommand("list") {
 
-    override fun createCommand() = CommandBuilder.begin("list")
-        .parameter(
-            ParameterBuilder.enumChoice<MarketplaceItemType>("type") { it.isListable }
-                .required()
-                .build()
-        )
-        .parameter(
-            ParameterBuilder
-                .begin<Int>("page")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .parameter(
-            ParameterBuilder
-                .begin<Boolean>("featured")
-                .verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .suspendHandler { command, args ->
-            val type = args[0] as MarketplaceItemType
-            val page = args.getOrNull(1) as? Int ?: 1
-            val featured = args.getOrNull(2) as? Boolean ?: false
+    val type = addParam {
+        enumChoice<MarketplaceItemType>("type") { it.isListable }
+            .required()
+    }
 
-            val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
+    val page = addParam("page") {
+        verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+            .optional(1)
+    }
 
-            if (response.items.isEmpty()) {
-                chat(regular(command.result("noItems")))
-                return@suspendHandler
-            }
+    val featured = addParam("featured") {
+        verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
+            .optional(false)
+    }
 
-            chat(regular(command.result("header",
-                variable(page.toString()),
-                variable(response.pagination.pages.toString())
-            )))
+    suspendHandler {
+        val type = type.cast()
+        val page = page.cast()
+        val featured = featured.cast()
 
-            for (item in response.items) {
-                val isSubscribed = MarketplaceManager.isSubscribed(item.id)
-                val action = if (isSubscribed) "unsubscribe" else "subscribe"
-                chat(
-                    regular(
-                        command.result(
-                            "item",
-                            variable(item.id.toString()),
-                            variable("${item.name}${if (isSubscribed) "*" else ""}"),
-                            variable(item.type.toString().lowercase()),
-                            variable(if (item.featured) "★" else "")
-                        ).onClick(
-                            ClickEvent(
-                                ClickEvent.Action.SUGGEST_COMMAND,
-                                ".marketplace $action ${item.id}"
-                            )
-                        ).onHover(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
-                                variable(command.result("hover", variable(action), item.id))
-                            )
+        val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
+
+        if (response.items.isEmpty()) {
+            chat(regular(command.result("noItems")))
+            return@suspendHandler
+        }
+
+        chat(regular(command.result("header",
+            variable(page.toString()),
+            variable(response.pagination.pages.toString())
+        )))
+
+        for (item in response.items) {
+            val isSubscribed = MarketplaceManager.isSubscribed(item.id)
+            val action = if (isSubscribed) "unsubscribe" else "subscribe"
+            chat(
+                regular(
+                    command.result(
+                        "item",
+                        variable(item.id.toString()),
+                        variable("${item.name}${if (isSubscribed) "*" else ""}"),
+                        variable(item.type.toString().lowercase()),
+                        variable(if (item.featured) "★" else "")
+                    ).onClick(
+                        ClickEvent(
+                            ClickEvent.Action.SUGGEST_COMMAND,
+                            ".marketplace $action ${item.id}"
+                        )
+                    ).onHover(
+                        HoverEvent(
+                            HoverEvent.Action.SHOW_TEXT,
+                            variable(command.result("hover", variable(action), item.id))
                         )
                     )
                 )
-            }
+            )
         }
-        .build()
+    }
+
 }
