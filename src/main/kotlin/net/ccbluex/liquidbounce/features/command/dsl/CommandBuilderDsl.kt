@@ -22,27 +22,16 @@ package net.ccbluex.liquidbounce.features.command.dsl
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
 @DslMarker
 annotation class CommandBuilderDsl
 
-inline fun buildCommand(name: String, block: CommandBuilder.() -> Unit): Command {
-    return CommandBuilder.begin(name).apply(block).build()
-}
-
-inline fun commandFactory(name: String, crossinline block: CommandBuilder.() -> Unit): Command.Factory {
-    return Command.Factory { buildCommand(name, block) }
-}
-
-inline fun <T : Any> CommandBuilder.parameter(
-    block: ParameterBuilder.Companion.() -> ParameterBuilder<T>
-): Parameter<T> = ParameterBuilder.block().build().also { parameter(it) }
-
-inline fun <T : Any> CommandBuilder.parameter(
+inline fun commandFactory(
     name: String,
-    block: ParameterBuilder<T>.() -> ParameterBuilder<T>
-): Parameter<T> = ParameterBuilder.begin<T>(name).block().build().also { parameter(it) }
+    crossinline block: CommandBuilder.() -> Unit,
+): Command.Factory {
+    return Command.Factory { CommandBuilder.begin(name).apply(block).build() }
+}
 
 fun <T : Any> Parameter<T>.cast(command: Command, args: Array<out Any>): T {
     requireOwner(command)

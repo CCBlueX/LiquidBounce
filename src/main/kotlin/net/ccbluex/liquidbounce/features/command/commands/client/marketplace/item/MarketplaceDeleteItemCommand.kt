@@ -19,10 +19,11 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.dsl.cast
+import net.ccbluex.liquidbounce.features.command.dsl.commandFactory
+import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -32,22 +33,18 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Delete marketplace item
  */
-object MarketplaceDeleteItemCommand : Command.Factory {
+internal val MarketplaceDeleteItemCommand = commandFactory("delete") {
 
-    override fun createCommand() = CommandBuilder.begin("delete")
-        .parameter(
-            ParameterBuilder
-                .begin<Int>("id")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .required()
-                .build()
-        )
-        .suspendHandler { command, args ->
-            val clientAccount = ClientAccountManager.accountOrException()
+    val id = parameter("id") {
+        verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+        required()
+    }
 
-            val id = args[0] as Int
-            MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), id)
-            chat(regular(command.result("success", variable(id.toString()))))
-        }
-        .build()
+    suspendHandler { command, args ->
+        val clientAccount = ClientAccountManager.accountOrException()
+
+        val id = id.cast(command, args)
+        MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), id)
+        chat(regular(command.result("success", variable(id.toString()))))
+    }
 }
