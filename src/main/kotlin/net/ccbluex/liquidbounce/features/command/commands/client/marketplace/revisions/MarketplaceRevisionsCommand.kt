@@ -28,8 +28,8 @@ object MarketplaceRevisionsCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("revisions")
         .hub()
-        .subcommand(MarketplaceListRevisionsCommand.createCommand())
+        .subcommand(MarketplaceListRevisionsCommand)
         // Uploading revision is disabled until proven stable
-        // .subcommand(UploadRevisionCommand.createCommand())
+        // .subcommand(UploadRevisionCommand)
         .build()
 }

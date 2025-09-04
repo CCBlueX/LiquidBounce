@@ -32,14 +32,14 @@ object CommandMarketplace : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("marketplace")
         .hub()
-        .subcommand(MarketplaceListCommand.createCommand())
-        .subcommand(MarketplaceSearchCommand.createCommand())
-        .subcommand(MarketplaceSubscribeCommand.createCommand())
-        .subcommand(MarketplaceUnsubscribeCommand.createCommand())
-        .subcommand(MarketplaceUpdateCommand.createCommand())
-        .subcommand(MarketplaceRevisionsCommand.createCommand())
+        .subcommand(MarketplaceListCommand)
+        .subcommand(MarketplaceSearchCommand)
+        .subcommand(MarketplaceSubscribeCommand)
+        .subcommand(MarketplaceUnsubscribeCommand)
+        .subcommand(MarketplaceUpdateCommand)
+        .subcommand(MarketplaceRevisionsCommand)
         // Editing items is disabled until proven stable
-        // .subcommand(MarketplaceItemCommand.createCommand())
+        // .subcommand(MarketplaceItemCommand)
         .build()
 
 }

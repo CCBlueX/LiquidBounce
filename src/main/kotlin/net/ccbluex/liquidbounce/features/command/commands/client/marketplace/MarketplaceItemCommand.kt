@@ -31,9 +31,9 @@ object MarketplaceItemCommand : CommandFactory {
 
     override fun createCommand() = CommandBuilder.begin("item")
         .hub()
-        .subcommand(MarketplaceCreateItemCommand.createCommand())
-        .subcommand(MarketplaceEditItemCommand.createCommand())
-        .subcommand(MarketplaceDeleteItemCommand.createCommand())
+        .subcommand(MarketplaceCreateItemCommand)
+        .subcommand(MarketplaceEditItemCommand)
+        .subcommand(MarketplaceDeleteItemCommand)
         .build()
 
 }
