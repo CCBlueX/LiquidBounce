@@ -25,11 +25,10 @@
     import SessionInfo from "./elements/SessionInfo.svelte";
     import PlayerList from "./elements/PlayerList.svelte";
     import ChatHUD from "./elements/chat/Chat.svelte";
-    import type {Component, ConfigurableSetting, TogglableSetting} from "../../integration/types";
+    import type {Component, ConfigurableSetting, Metadata, TogglableSetting} from "../../integration/types";
     import type {ClickGuiValueChangeEvent, ComponentsUpdateEvent} from "../../integration/events";
-    import {getComponents, getModuleSettings} from "../../integration/rest";
+    import {getComponents, getMetadata, getModuleSettings} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import LayoutEditor from "./LayoutEditor.svelte";
     import Vignette from "./elements/Vignette.svelte";
     import {gridSize, snappingEnabled, showGrid,ScaleFactor} from "./Hud_store";
     import {WindowSize} from "../../util/WindowSize";
@@ -47,11 +46,11 @@
 
     $: ScaleFactor.set($hudScaleFactor * calcResolutionCoefficient());
 
-
+    /*
     type ComponentWrapperParams = {
         component: Component;
-
     };
+    */
     const applyValues = (configurable: ConfigurableSetting) => {
 
         const snappingValue = configurable.value.find(v => v.name === "Snapping") as TogglableSetting;
@@ -65,10 +64,10 @@
     }
 
     async function preloadComponents() {
-        const serverComponents = await getComponents();
+        metadata = await getMetadata();
+        components = await getComponents(metadata.id);
 
-
-        for (const component of serverComponents) {
+        for (const component of components) {
             const key = `hud-pos-${component.name.toLowerCase()}`;
             if (!localStorage.getItem(key)) {
 
@@ -79,7 +78,7 @@
             }
         }
 
-        components = serverComponents;
+        components = components ;
     }
 
 
@@ -91,8 +90,6 @@
             const clickGuiSettings = await getModuleSettings("HudLayoutEditor");
             applyValues(clickGuiSettings);
             await preloadComponents();
-            metadata = await getMetadata();
-            components = await getComponents(metadata.id);
             window.addEventListener("resize", updateZoom);
         })();
 
@@ -187,10 +184,32 @@
         {/each}
     </div>
 </div>
+<Vignette/>
+
+
 
 <style lang="scss">
+  @use "../../colors" as *;
+
+  $GRID_SIZE: 10px;
   .hud {
     height: 100vh;
     width: 100vw;
+    zoom: var(--hud-zoom);
+  }
+
+  .snap {
+    overflow: hidden;
+    position: absolute;
+    will-change: opacity;
+    top: 0;
+    left: 0;
+    transform-origin: left top;
+
+    &.grid {
+      background-image: linear-gradient(to right, rgba($clickgui-grid-color, 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba($clickgui-grid-color, 0.3) 1px, transparent 1px);
+      background-size: #{$GRID_SIZE}px #{$GRID_SIZE}px;
+    }
   }
 </style>

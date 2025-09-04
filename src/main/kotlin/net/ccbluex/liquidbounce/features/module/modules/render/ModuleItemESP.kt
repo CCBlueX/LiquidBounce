@@ -47,7 +47,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     override val baseKey: String
         get() = "liquidbounce.module.itemEsp"
 
-    private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode,NametagsMode))
+    private val modes = choices("Mode", NametagsMode, arrayOf(GlowMode, OutlineMode, BoxMode,NametagsMode))
     private val colorMode = choices("ColorMode", 2) {
         arrayOf(
             GenericStaticColorMode(it, Color4b(255, 179, 72, 255)),

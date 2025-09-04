@@ -42,7 +42,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
+object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true,
     aliases = arrayOf("GlobalChat", "IRC")) {
 
     private var jwtToken by text("JwtToken", "")

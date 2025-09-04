@@ -13,12 +13,12 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import java.io.FileInputStream
 
-object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
+object ModuleCapes : ClientModule("Capes", Category.CLIENT, hide = true, state = true) {
 
     internal val capeMode = choices(
         "Mode",
-        ClientMode,
-        arrayOf(ClientMode, FileImageMode)
+        NativeMode,
+        arrayOf(NativeMode, FileImageMode)
     )
 
     sealed class CapeMode(name: String) : Choice(name) {
@@ -31,7 +31,7 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
         localCapeIdentifier?.let { mc.textureManager.destroyTexture(it) }
         localCapeIdentifier = null
     }
-    object ClientMode : CapeMode("Client") {
+    object NativeMode : CapeMode("Client") {
 
         private val image by enumChoice("Image",
             ClientCape.JMcomicFix).onChanged {
@@ -79,7 +79,7 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT) {
 
     object FileImageMode : CapeMode("File") {
         private val customImage by file("CustomImage").onChanged {
-            ClientMode.clearCache()
+            NativeMode.clearCache()
             invalidateLocalCache()
         }
         private var cachedTexture: Identifier? = null

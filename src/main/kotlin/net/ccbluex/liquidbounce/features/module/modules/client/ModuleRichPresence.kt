@@ -58,7 +58,7 @@ val ipcConfiguration by AsyncLazy {
 }
 
 object ModuleRichPresence : ClientModule(
-    "RichPresence", Category.CLIENT, state = true, hide = true,
+    "RichPresence", Category.CLIENT,hide = true,
     aliases = arrayOf("DiscordPresence")
 ) {
 

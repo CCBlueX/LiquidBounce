@@ -43,7 +43,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
         get() = "liquidbounce.module.esp"
 
     val modes = choices(
-        "Mode", EspGlowMode, arrayOf(
+        "Mode", EspImageMode, arrayOf(
             EspBoxMode,
             EspOutlineMode,
             Esp2DMode,

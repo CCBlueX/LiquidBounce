@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Protects you from potentially annoying screen effects that block your view.
  */
 @Suppress("MagicNumber")
-object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = arrayOf("NoRender")) {
+object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, hide = true, aliases = arrayOf("NoRender")) {
     private val render = multiEnumChoice(
         "DoRender",
         DoRender.ARMOR,
