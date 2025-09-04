@@ -59,7 +59,7 @@ object CommandExecutor : EventListener {
         handler: suspend (command: Command, args: Array<Any>) -> Unit,
     ) = if (allowParallel) {
         this.handler { command, args ->
-            commandCoroutineScope.launch {
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
                 handler.invoke(command, args)
             }
         }
@@ -78,7 +78,7 @@ object CommandExecutor : EventListener {
 
             // Progress message job
             val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
-            val progressJob = commandCoroutineScope.launch {
+            val progressJob = commandCoroutineScope.launch(CoroutineName("${command.name} Progress")) {
                 val startAt = System.currentTimeMillis()
                 var n = 0
                 val chars = charArrayOf('|', '/', '-', '\\')
@@ -99,7 +99,7 @@ object CommandExecutor : EventListener {
             }
 
             // Handler job
-            commandCoroutineScope.launch {
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
                 handler.invoke(command, args)
             }.invokeOnCompletion {
                 running.set(false)
@@ -124,7 +124,7 @@ object CommandExecutor : EventListener {
      * Render thread scope
      */
     private val commandCoroutineScope = CoroutineScope(
-        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
+        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
     )
 
     private fun handleExceptions(e: Throwable) {

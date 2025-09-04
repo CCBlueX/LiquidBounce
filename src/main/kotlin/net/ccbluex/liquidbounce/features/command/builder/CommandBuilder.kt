@@ -48,9 +48,6 @@ class CommandBuilder private constructor(val name: String) {
         this.parameters.add(parameter)
     }
 
-    inline fun parameter(block: ParameterBuilder.Companion.() -> ParameterBuilder<*>) =
-        parameter(ParameterBuilder.block().build())
-
     fun subcommand(subcommand: Command) = apply {
         this.subcommands.add(subcommand)
     }
