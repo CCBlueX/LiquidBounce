@@ -20,14 +20,13 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-typealias Handler<T> = (T) -> Unit
-
 class EventHook<T : Event>(
     val handlerClass: EventListener,
-    val handler: Handler<T>,
+    val handler: Consumer<T>,
     val priority: Short = 0
 )
 
@@ -73,12 +72,12 @@ interface EventListener {
 fun <T : Event> EventListener.handler(
     eventClass: Class<T>,
     priority: Short = 0,
-    handler: Handler<T>,
+    handler: Consumer<T>,
 ): EventHook<T> = EventManager.registerEventHook(eventClass, EventHook(this, handler, priority))
 
 inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
-    noinline handler: Handler<T>
+    handler: Consumer<T>,
 ): EventHook<T> = handler(T::class.java, priority, handler)
 
 inline fun <reified T : Event> EventListener.until(
@@ -96,7 +95,7 @@ inline fun <reified T : Event> EventListener.until(
 
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
-    crossinline handler: Handler<T>
+    crossinline handler: (T) -> Unit
 ): EventHook<T> = until(priority) { event ->
     handler(event)
     true // This will unregister the handler after the first call

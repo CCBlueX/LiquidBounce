@@ -27,7 +27,7 @@ import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 import kotlin.reflect.KClass
 
-internal class SocketEventListener : EventListener {
+internal object SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
         .filter { WebSocketEvent::class.java.isAssignableFrom(it.java) }
