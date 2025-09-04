@@ -48,7 +48,7 @@ object CommandHide : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleManager.forEach { it.hidden = false }
             chat(
                 regular(command.result("modulesUnhidden")),
@@ -84,7 +84,7 @@ object CommandHide : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
             modules.forEach { it.hidden = false }
 
@@ -105,7 +105,7 @@ object CommandHide : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
             modules.forEach { it.hidden = true }
 

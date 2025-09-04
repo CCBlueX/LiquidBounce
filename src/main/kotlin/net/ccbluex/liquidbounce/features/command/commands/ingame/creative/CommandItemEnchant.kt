@@ -64,7 +64,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                     .begin("add")
                     .parameter(ParameterBuilder.enchantment().required().build())
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         val enchantmentName = args[0] as String
                         val level = getLevel(args[1] as String)
 
@@ -86,7 +86,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("remove")
                     .parameter(ParameterBuilder.enchantment().required().build())
-                    .handler { command, args ->
+                    .handler {
                         val enchantmentName = args[0] as String
 
                         creativeOrThrow(command)
@@ -107,7 +107,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
             .subcommand(
                 CommandBuilder
                     .begin("clear")
-                    .handler { command, _ ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
@@ -121,7 +121,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("all")
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
@@ -141,7 +141,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                 CommandBuilder
                     .begin("all_possible")
                     .parameter(levelParameter.build())
-                    .handler { command, args ->
+                    .handler {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 

@@ -56,16 +56,16 @@ object CommandExecutor : EventListener {
      */
     fun CommandBuilder.suspendHandler(
         allowParallel: Boolean = false,
-        handler: suspend (command: Command, args: Array<Any>) -> Unit,
+        handler: Command.Handler.Suspend,
     ) = if (allowParallel) {
-        this.handler { command, args ->
+        this.handler {
             commandCoroutineScope.launch(CoroutineName(command.name)) {
-                handler.invoke(command, args)
+                with(handler) { this@handler() }
             }
         }
     } else {
         val running = AtomicBoolean(false)
-        this.handler { command, args ->
+        this.handler {
             if (!running.compareAndSet(false, true)) {
                 chat(
                     markAsError(
@@ -100,7 +100,7 @@ object CommandExecutor : EventListener {
 
             // Handler job
             commandCoroutineScope.launch(CoroutineName(command.name)) {
-                handler.invoke(command, args)
+                with(handler) { this@handler() }
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()

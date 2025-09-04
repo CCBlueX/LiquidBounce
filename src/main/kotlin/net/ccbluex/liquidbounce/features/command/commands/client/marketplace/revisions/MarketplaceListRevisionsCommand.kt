@@ -41,7 +41,7 @@ object MarketplaceListRevisionsCommand : Command.Factory {
                 .required()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val id = args[0] as Int
 
             val response = MarketplaceApi.getMarketplaceItemRevisions(id)

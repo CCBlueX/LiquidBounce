@@ -33,7 +33,7 @@ object CommandPing : Command.Factory {
         return CommandBuilder
             .begin("ping")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val ping = network.getPlayerListEntry(player.uuid)!!.latency
                 chat(regular(command.result("pingCheck", variable(ping.toString()))), command)
             }

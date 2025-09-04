@@ -59,7 +59,7 @@ val MarketplaceEditItemCommand = commandFactory("edit") {
             .vararg()
     }
 
-    suspendHandler { command, args ->
+    suspendHandler {
         val clientAccount = ClientAccountManager.accountOrException()
 
         val id = id.cast(command, args)

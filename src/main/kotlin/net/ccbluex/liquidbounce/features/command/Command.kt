@@ -252,7 +252,13 @@ class Command(
     }
 
     fun interface Handler {
-        operator fun invoke(command: Command, args: Array<Any>)
+        operator fun Context.invoke()
+
+        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>)
+
+        fun interface Suspend {
+            suspend operator fun Context.invoke()
+        }
     }
 
     /**

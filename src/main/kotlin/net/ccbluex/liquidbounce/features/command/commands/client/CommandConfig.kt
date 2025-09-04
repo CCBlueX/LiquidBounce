@@ -62,14 +62,14 @@ object CommandConfig : Command.Factory {
 
     private fun browseSubcommand() = CommandBuilder
         .begin("browse")
-        .handler { _, _ ->
+        .handler {
             browseUrl(CONFIGS_URL)
         }
         .build()
 
     private fun reloadSubcommand() = CommandBuilder
         .begin("reload")
-        .suspendHandler { command, _ ->
+        .suspendHandler {
             if (AutoConfig.reloadConfigs()) {
                 chat(regular("Reloaded ${configs?.size} settings info from API"))
             } else {
@@ -79,7 +79,7 @@ object CommandConfig : Command.Factory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .handler { command, _ ->
+        .handler {
             runCatching {
                 chat(regular(command.result("loading")))
                 val widthOfSpace = mc.textRenderer.getWidth(" ")
@@ -152,7 +152,7 @@ object CommandConfig : Command.Factory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val name = args[0] as String
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 

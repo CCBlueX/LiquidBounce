@@ -53,7 +53,7 @@ object CommandXRay : Command.Factory {
 
     private fun resetSubcommand() = CommandBuilder
         .begin("reset")
-        .handler { command, _ ->
+        .handler {
             ModuleXRay.applyDefaults()
             chat(
                 regular(command.result("Reset the blocks to the default values")),
@@ -64,7 +64,7 @@ object CommandXRay : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleXRay.blocks.clear()
             chat(
                 regular(command.result("blocksCleared")),
@@ -97,7 +97,7 @@ object CommandXRay : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!ModuleXRay.blocks.remove(block)) {
                 throw CommandException(command.result("blockNotFound", block.name))
@@ -117,7 +117,7 @@ object CommandXRay : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!ModuleXRay.blocks.add(block)) {
                 throw CommandException(command.result("blockIsPresent", block.name))

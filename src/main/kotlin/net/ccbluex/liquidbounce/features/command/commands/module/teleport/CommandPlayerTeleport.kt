@@ -53,7 +53,7 @@ object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val player = world.players.find { it.gameProfile.name.equals(args[0] as String, true) }
                     ?: throw CommandException(command.result("playerNotFound"))
 

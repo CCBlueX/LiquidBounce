@@ -61,7 +61,7 @@ object CommandTargets : Command.Factory {
             subcommand(
                 CommandBuilder
                     .begin(entry.choiceName.lowercase())
-                    .handler { command, _ ->
+                    .handler {
                         val state = targets.toggle(entry)
 
                         val localizedState = if (state) {

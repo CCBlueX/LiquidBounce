@@ -44,7 +44,7 @@ object CommandToggle : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val module = args[0] as ClientModule
 
                 val newState = !module.running

@@ -165,9 +165,8 @@ fun <T> CommandBuilder.pagedQuery(
                     Result.Error("'$it' is not in range 1..$maxPage")
                 }
             }.optional().build()
-    ).handler { command, args ->
+    ).handler {
         val currentPage = args.getOrNull(0) as Int? ?: 1
         command.sendPage(currentPage)
-    }
-        .build()
+    }.build()
 }

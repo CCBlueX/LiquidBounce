@@ -54,7 +54,7 @@ internal val MarketplaceCreateItemCommand = commandFactory("create") {
             .required()
     }
 
-    suspendHandler { command, args ->
+    suspendHandler {
         val clientAccount = ClientAccountManager.accountOrException()
 
         val name = name.cast(command, args)

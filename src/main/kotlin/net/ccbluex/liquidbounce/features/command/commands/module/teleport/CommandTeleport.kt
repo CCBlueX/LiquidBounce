@@ -57,7 +57,7 @@ object CommandTeleport : Command.Factory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val x = (args[0] as String).toDoubleOrNull()
                 val z = (args[args.size - 1] as String).toDoubleOrNull()
                 val y = if (args.size == 3) {

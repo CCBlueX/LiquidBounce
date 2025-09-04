@@ -48,7 +48,7 @@ object CommandItemRename : Command.Factory {
                     .vararg()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 if (!interaction.hasCreativeInventory()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }

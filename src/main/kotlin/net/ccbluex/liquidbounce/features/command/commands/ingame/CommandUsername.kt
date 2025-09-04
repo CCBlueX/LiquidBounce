@@ -35,7 +35,7 @@ object CommandUsername : Command.Factory, MinecraftShortcuts {
         return CommandBuilder
             .begin("username")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val username = player.name.string
                 val formattedUsernameWithEvents = variable(username)
                     .bypassNameProtection()

@@ -38,7 +38,7 @@ object CommandTps : Command.Factory {
         return CommandBuilder
             .begin("tps")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val tps = ServerObserver.tps
                 chat(regular(command.result("tpsCheck", variable(
                     if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()

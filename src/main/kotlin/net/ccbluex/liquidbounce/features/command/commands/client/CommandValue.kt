@@ -61,7 +61,7 @@ object CommandValue : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
             val valueString = args[2] as String
@@ -97,7 +97,7 @@ object CommandValue : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
 
@@ -122,7 +122,7 @@ object CommandValue : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
 
             module.getContainedValuesRecursively()

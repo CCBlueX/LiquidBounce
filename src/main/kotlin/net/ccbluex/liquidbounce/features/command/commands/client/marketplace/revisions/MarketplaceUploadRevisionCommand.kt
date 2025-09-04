@@ -77,7 +77,7 @@ object MarketplaceUploadRevisionCommand : Command.Factory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val clientAccount = ClientAccountManager.accountOrException()
 
             val id = args[0] as Int

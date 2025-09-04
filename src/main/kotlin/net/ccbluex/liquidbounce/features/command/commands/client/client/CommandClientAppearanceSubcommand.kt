@@ -31,7 +31,7 @@ object CommandClientAppearanceSubcommand {
         .build()
 
     private fun showSubcommand() = CommandBuilder.begin("show")
-        .handler { command, _ ->
+        .handler {
             if (!HideAppearance.isHidingNow) {
                 chat(regular(command.result("alreadyShowingAppearance")))
                 return@handler
@@ -42,7 +42,7 @@ object CommandClientAppearanceSubcommand {
         }.build()
 
     private fun hideSubcommand() = CommandBuilder.begin("hide")
-        .handler { command, _ ->
+        .handler {
             if (HideAppearance.isHidingNow) {
                 chat(regular(command.result("alreadyHidingAppearance")))
                 return@handler

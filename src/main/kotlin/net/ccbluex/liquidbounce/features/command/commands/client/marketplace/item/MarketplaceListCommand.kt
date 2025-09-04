@@ -51,7 +51,7 @@ internal val MarketplaceListCommand = commandFactory("list") {
             .optional(false)
     }
 
-    suspendHandler { command, args ->
+    suspendHandler {
         val type = type.cast(command, args)
         val page = page.cast(command, args)
         val featured = featured.cast(command, args)

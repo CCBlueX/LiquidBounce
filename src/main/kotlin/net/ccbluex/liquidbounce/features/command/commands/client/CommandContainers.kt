@@ -45,7 +45,7 @@ object CommandContainers : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ClientItemGroups.clearContainers()
             chat(command.result("cleared"))
         }
@@ -53,7 +53,7 @@ object CommandContainers : Command.Factory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .handler { command, _ ->
+        .handler {
             val itemStacks = ClientItemGroups.containersAsItemStacks()
 
             if (itemStacks.isEmpty()) {
@@ -76,7 +76,7 @@ object CommandContainers : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val index = args[0] as Int
 
             if (index >= ClientItemGroups.containers.size) {
@@ -97,7 +97,7 @@ object CommandContainers : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val tag = args[0] as String
             val nbtCompound = StringNbtReader.parse(tag)
 

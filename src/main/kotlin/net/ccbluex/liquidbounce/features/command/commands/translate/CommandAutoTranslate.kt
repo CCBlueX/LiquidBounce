@@ -41,7 +41,7 @@ object CommandAutoTranslate : Configurable("AutoTranslate"), Command.Factory {
         .build()
 
     private fun languageCommand() = CommandBuilder.begin("language")
-        .handler { command, _ ->
+        .handler {
             chat(command.result("code", languageCode, languageCodes[languageCode]?.displayName ?: "Unknown"), command)
         }
         .subcommand(setLanguageCommand())
@@ -55,7 +55,7 @@ object CommandAutoTranslate : Configurable("AutoTranslate"), Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val code = args[0] as String
             val name = languageCodes[code]?.displayName ?: throw CommandException(command.result("unrecognized", code))
             languageCode = code

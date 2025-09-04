@@ -56,7 +56,7 @@ object CommandScript : Command.Factory {
             .required()
             .autocompletedFromScriptNames()
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
         val scriptFile = ScriptManager.root.resolve(name)
 
@@ -69,12 +69,12 @@ object CommandScript : Command.Factory {
         chat(regular(command.result("opened", variable(name))))
     }.build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ScriptManager.root)
         chat(regular(command.result("browse", clickablePath(ScriptManager.root))))
     }.build()
 
-    private fun listSubcommand() = CommandBuilder.begin("list").handler { command, _ ->
+    private fun listSubcommand() = CommandBuilder.begin("list").handler {
         val scripts = ScriptManager.scripts
         val scriptNames = scripts.map { script -> "${script.scriptName} (${script.language})" }
 
@@ -117,7 +117,7 @@ object CommandScript : Command.Factory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             val scriptFile = ScriptManager.root.resolve(name)
 
@@ -132,7 +132,7 @@ object CommandScript : Command.Factory {
         .build()
 
     private fun loadScriptWithDebug(
-        args: Array<Any>,
+        args: Array<out Any>,
         scriptFile: File,
         command: Command,
         name: String
@@ -181,7 +181,7 @@ object CommandScript : Command.Factory {
                 ScriptManager.scripts.map { it.scriptName }
             }
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
 
         val script = ScriptManager.scripts.find { it.scriptName.equals(name, true) }
@@ -206,7 +206,7 @@ object CommandScript : Command.Factory {
             .required()
             .autocompletedFromScriptNames()
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
         val scriptFile = ScriptManager.root.resolve(name)
 
@@ -231,7 +231,7 @@ object CommandScript : Command.Factory {
 
     }.build()
 
-    private fun reloadSubcommand() = CommandBuilder.begin("reload").handler { command, _ ->
+    private fun reloadSubcommand() = CommandBuilder.begin("reload").handler {
         runCatching {
             ScriptManager.reload()
         }.onSuccess {

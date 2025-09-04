@@ -47,7 +47,7 @@ object MarketplaceUpdateCommand : Command.Factory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val id = args.getOrNull(0) as Int?
 
             if (id != null) {

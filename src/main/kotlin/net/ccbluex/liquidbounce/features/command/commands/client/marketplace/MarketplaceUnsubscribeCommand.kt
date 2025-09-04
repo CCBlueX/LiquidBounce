@@ -45,7 +45,7 @@ object MarketplaceUnsubscribeCommand : Command.Factory {
                 .required()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val id = args[0] as Int
 
             if (!MarketplaceManager.isSubscribed(id)) {

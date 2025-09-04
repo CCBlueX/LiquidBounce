@@ -52,7 +52,7 @@ object CommandAutoDisable : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleAutoDisable.listOfModules.clear()
             chat(
                 command.result("modulesCleared"),
@@ -88,7 +88,7 @@ object CommandAutoDisable : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
@@ -116,7 +116,7 @@ object CommandAutoDisable : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->

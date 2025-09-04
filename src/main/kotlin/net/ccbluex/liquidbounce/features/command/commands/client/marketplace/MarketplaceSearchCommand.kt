@@ -50,7 +50,7 @@ object MarketplaceSearchCommand : Command.Factory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val query = (args[0] as Array<*>).joinToString(" ")
             val page = args.getOrNull(1) as? Int ?: 1
 

@@ -47,7 +47,7 @@ object CommandPanic : Command.Factory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 var modules = ModuleManager.filter { it.running }
                 val msg: MutableText
 

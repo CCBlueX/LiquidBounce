@@ -49,7 +49,7 @@ object CommandBind : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val module = args[0] as ClientModule
                 val keyName = args[1] as String
 

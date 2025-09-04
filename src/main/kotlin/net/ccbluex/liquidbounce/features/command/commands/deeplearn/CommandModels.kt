@@ -68,7 +68,7 @@ object CommandModels : Command.Factory {
                     .required()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val name = args[0] as String
 
                 // Check if model exists
@@ -98,7 +98,7 @@ object CommandModels : Command.Factory {
                     .required()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val name = args[0] as String
                 val model = models.choices.find { model -> model.name.equals(name, true) } ?:
                     throw CommandException(command.result("modelNotFound", name))
@@ -120,7 +120,7 @@ object CommandModels : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val name = args[0] as String
                 val model = models.choices.find { model -> model.name.equals(name, true) }
 
@@ -140,7 +140,7 @@ object CommandModels : Command.Factory {
     private fun reloadModelCommand(): Command {
         return CommandBuilder
             .begin("reload")
-            .handler { command, _ ->
+            .handler {
                 ModelHolster.reload()
                 chat(command.result("modelsReloaded"))
             }
@@ -150,7 +150,7 @@ object CommandModels : Command.Factory {
     private fun browseModelCommand(): Command {
         return CommandBuilder
             .begin("browse")
-            .handler { command, _ ->
+            .handler {
                 Util.getOperatingSystem().open(modelsFolder)
                 chat(regular("Location: "), clickablePath(modelsFolder))
             }

@@ -46,7 +46,7 @@ object CommandCoordinates : Command.Factory {
                             .required()
                             .build()
                     )
-                    .handler { _, args ->
+                    .handler {
                         val name = args[0] as String
                         network.sendChatMessage("/msg $name ${getCoordinates(fancy = true)}")
                     }
@@ -54,7 +54,7 @@ object CommandCoordinates : Command.Factory {
             )
             .subcommand(
                 CommandBuilder.begin("copy")
-                    .handler { command, _ ->
+                    .handler {
                         mc.keyboard.clipboard = getCoordinates()
                         chat(command.result("success"), command)
                     }
@@ -62,7 +62,7 @@ object CommandCoordinates : Command.Factory {
             )
             .subcommand(
                 CommandBuilder.begin("info")
-                    .handler { command, _ ->
+                    .handler {
                         chat(getCoordinates().asText().styled { it.withColor(Formatting.GRAY) }, command)
                     }
                     .build()

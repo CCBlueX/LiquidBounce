@@ -82,7 +82,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { _, args ->
+            .handler {
                 checkInGame()
                 spawn(args, false)
             }
@@ -99,7 +99,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 checkInGame()
 
                 if (fakePlayers.isEmpty()) {
@@ -146,7 +146,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
     private fun clearCommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .handler { _, _ ->
+            .handler {
                 checkInGame()
 
                 if (fakePlayers.isEmpty()) {
@@ -165,7 +165,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
     private fun startRecordingCommand(): Command {
         return CommandBuilder
             .begin("startrecording")
-            .handler { command, _ ->
+            .handler {
                 checkInGame()
 
                 if (recording) {
@@ -197,7 +197,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 checkInGame()
 
                 if (!recording) {
@@ -221,7 +221,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
      *
      * @param moving true if the fake player should play a recording.
      */
-    private fun spawn(args: Array<Any>, moving: Boolean) {
+    private fun spawn(args: Array<out Any>, moving: Boolean) {
         val nameArg = args.getOrNull(0)?.toString() ?: "FakePlayer"
         val fakePlayer: FakePlayer
 

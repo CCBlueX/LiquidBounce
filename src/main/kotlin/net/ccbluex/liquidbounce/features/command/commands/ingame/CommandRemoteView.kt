@@ -55,7 +55,7 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             for (entity in mc.world!!.entities) {
                 if (name.equals(entity.nameForScoreboard, true)) {
@@ -86,7 +86,7 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
 
     private fun offSubcommand() = CommandBuilder
         .begin("off")
-        .handler { command, _ ->
+        .handler {
             if (mc.getCameraEntity() != player) {
                 mc.setCameraEntity(player)
                 chat(

@@ -58,7 +58,7 @@ object CommandVClip : Command.Factory {
                             .required()
                             .build()
                     )
-                    .handler { command, args ->
+                    .handler {
                         val dy = (args[0] as String).toDoubleOrNull()
                             ?: run {
                                 chat(
@@ -90,13 +90,13 @@ object CommandVClip : Command.Factory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 performAutomaticClip(args, command, direction)
             }
             .build()
     }
 
-    private fun performAutomaticClip(args: Array<Any>, command: Command, direction: Direction) {
+    private fun performAutomaticClip(args: Array<out Any>, command: Command, direction: Direction) {
         val max = if (args.isNotEmpty()) {
             abs((args[0] as String).toIntOrNull() ?: run {
                 chat(markAsError(translation("liquidbounce.command.vclip.result.invalidDistance")), command)

@@ -51,7 +51,7 @@ object CommandInvsee : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val inputName = args[0] as String
                 val playerID = network.playerList.find { it.profile.name.equals(inputName, true) }?.profile?.id
                 val player = { world.getPlayerByUuid(playerID) ?: ModuleInventoryTracker.playerMap[playerID] }

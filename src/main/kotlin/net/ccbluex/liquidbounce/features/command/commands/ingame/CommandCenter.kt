@@ -41,7 +41,7 @@ object CommandCenter : Command.Factory, EventListener {
         return CommandBuilder
             .begin("center")
             .requiresIngame()
-            .handler { _, _ -> state = CenterHandlerState.APPLY_ON_NEXT_EVENT }
+            .handler { state = CenterHandlerState.APPLY_ON_NEXT_EVENT }
             .build()
     }
 

@@ -55,7 +55,7 @@ object CommandFriend : Command.Factory {
     private fun createClearSubcommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .handler { command, _ ->
+            .handler {
                 if (FriendManager.friends.isEmpty()) {
                     throw CommandException(command.result(MSG_NO_FRIENDS))
                 } else {
@@ -73,7 +73,7 @@ object CommandFriend : Command.Factory {
     private fun createListSubcommand(): Command {
         return CommandBuilder
             .begin("list")
-            .handler { command, _ ->
+            .handler {
                 if (FriendManager.friends.isEmpty()) {
                     chat(
                         command.result(MSG_NO_FRIENDS),
@@ -133,7 +133,7 @@ object CommandFriend : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val name = args[0] as String
                 val friend = FriendManager.friends.firstOrNull { it.name == name }
 
@@ -161,7 +161,7 @@ object CommandFriend : Command.Factory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val friend = FriendManager.Friend(args[0] as String, null)
 
                 if (FriendManager.friends.remove(friend)) {
@@ -191,7 +191,7 @@ object CommandFriend : Command.Factory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val friend = FriendManager.Friend(args[0] as String, args.getOrNull(1) as String?)
 
                 if (FriendManager.friends.add(friend)) {

@@ -50,7 +50,7 @@ object CommandItems : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             DISALLOWED_BLOCKS_TO_PLACE.clear()
             chat(regular(command.result("blocksCleared")))
         }
@@ -82,7 +82,7 @@ object CommandItems : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.remove(block)) {
                 throw CommandException(command.result("blockNotFound", block.name))
@@ -99,7 +99,7 @@ object CommandItems : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.add(block)) {
                 throw CommandException(command.result("blockIsPresent", block.name))

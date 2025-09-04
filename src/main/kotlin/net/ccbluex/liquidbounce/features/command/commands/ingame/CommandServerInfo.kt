@@ -62,7 +62,7 @@ object CommandServerInfo : Command.Factory, EventListener {
                     .optional()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
 
                 if (!detectionTypes.isNullOrEmpty()) {

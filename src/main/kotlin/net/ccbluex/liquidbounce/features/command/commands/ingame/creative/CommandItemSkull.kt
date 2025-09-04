@@ -47,7 +47,7 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val name = args[0] as String
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {

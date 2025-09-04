@@ -44,7 +44,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
             .begin("stack")
             .requiresIngame()
             .parameter(amountParameter)
-            .handler { command, args ->
+            .handler {
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException(command.result("mustBeCreative"))
                 }

@@ -55,7 +55,7 @@ object CommandBinds : Command.Factory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleManager.forEach { it.bind.unbind() }
             chat(command.result("bindsCleared"), metadata = MessageMetadata(id = "Binds#global"))
         }
@@ -91,7 +91,7 @@ object CommandBinds : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
@@ -125,7 +125,7 @@ object CommandBinds : Command.Factory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val keyName = args[1] as String
 

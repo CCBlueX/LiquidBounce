@@ -33,7 +33,7 @@ object CommandClear : Command.Factory {
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .handler { _, _ ->
+            .handler {
                 ModuleBetterChat.antiChatClearPaused = true
                 mc.inGameHud.chatHud.clear(true)
                 ModuleBetterChat.antiChatClearPaused = false

@@ -74,7 +74,7 @@ object CommandLocalConfig : Command.Factory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
 
             @Suppress("UNCHECKED_CAST")
@@ -102,7 +102,7 @@ object CommandLocalConfig : Command.Factory {
         }
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
         chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
@@ -116,7 +116,7 @@ object CommandLocalConfig : Command.Factory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configFiles = ConfigSystem.userConfigsFolder.listFiles { file, name ->
                 name.endsWith(".json", ignoreCase = true)
             }
@@ -173,7 +173,7 @@ object CommandLocalConfig : Command.Factory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 

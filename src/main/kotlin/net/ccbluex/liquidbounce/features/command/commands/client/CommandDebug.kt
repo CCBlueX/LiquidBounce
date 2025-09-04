@@ -65,7 +65,7 @@ object CommandDebug : Command.Factory {
         .create()
 
     override fun createCommand() = CommandBuilder.begin("debug")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             chat("§7Collecting debug information...")
 
             val buffer = okio.Buffer()
