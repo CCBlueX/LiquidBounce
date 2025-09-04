@@ -22,9 +22,11 @@ package net.ccbluex.liquidbounce.features.command.builder
 import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
+import net.ccbluex.liquidbounce.features.command.dsl.CommandBuilderDsl
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 
+@CommandBuilderDsl
 class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     private var verifier: Parameter.Verificator<T>? = null

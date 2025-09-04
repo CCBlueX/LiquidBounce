@@ -22,8 +22,10 @@ package net.ccbluex.liquidbounce.features.command.builder
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.features.command.dsl.CommandBuilderDsl
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 
+@CommandBuilderDsl
 class CommandBuilder private constructor(val name: String) {
 
     private var aliases: Array<out String>? = null

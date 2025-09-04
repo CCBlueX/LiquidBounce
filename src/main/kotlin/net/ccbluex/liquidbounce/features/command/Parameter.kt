@@ -48,6 +48,9 @@ class Parameter<T : Any>(
     val autocompletionHandler: AutoCompletionProvider?,
 ) {
     var command: Command? = null
+        internal set
+    var index: Int = -1
+        internal set
 
     private val translationBaseKey: String
         get() = "${command?.translationBaseKey}.parameter.$name"

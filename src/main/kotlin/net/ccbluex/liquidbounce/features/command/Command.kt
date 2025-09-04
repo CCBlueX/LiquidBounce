@@ -39,6 +39,8 @@ class Command(
 ) : MinecraftShortcuts {
     var parentCommand: Command? = null
         private set
+    var index: Int = -1
+        internal set
 
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
@@ -47,20 +49,22 @@ class Command(
         get() = translation("$translationBaseKey.description").convertToString()
 
     init {
-        subcommands.forEach {
-            check(it.parentCommand == null) {
+        subcommands.forEachIndexed { i, command ->
+            check(command.parentCommand == null) {
                 "Subcommand already has parent command"
             }
 
-            it.parentCommand = this
+            command.index = i
+            command.parentCommand = this
         }
 
-        parameters.forEach {
-            check(it.command == null) {
+        parameters.forEachIndexed { i, param ->
+            check(param.command == null) {
                 "Parameter already has a command"
             }
 
-            it.command = this
+            param.index = i
+            param.command = this
         }
     }
 
