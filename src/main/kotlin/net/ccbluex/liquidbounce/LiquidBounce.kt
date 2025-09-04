@@ -316,7 +316,9 @@ object LiquidBounce : EventListener {
         ThemeManager.init()
         // Preload marketplace items
         ConfigSystem.load(MarketplaceManager)
-        ThemeManager.load()
+        runBlocking {
+            ThemeManager.load()
+        }
         IntegrationListener
 
         taskManager = TaskManager(scope).apply {

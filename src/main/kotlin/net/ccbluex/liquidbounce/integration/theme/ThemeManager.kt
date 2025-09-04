@@ -83,14 +83,20 @@ object ThemeManager : Configurable("theme") {
         ConfigSystem.root(this)
     }
 
-    fun init() {
+    fun init() = runBlocking {
         // Load default theme
-        Theme(Theme.Origin.RESOURCE, File("liquidbounce")).apply {
-            includedTheme = this
-        }
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
     }
 
-    fun load() {
+    suspend fun load() {
+        fun Theme.addIfUnloaded() {
+            if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
+                themes += this
+            } else {
+                logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
+            }
+        }
+
         themes.clear()
 
         // 1st priority
@@ -102,13 +108,8 @@ object ThemeManager : Configurable("theme") {
                 }
 
                 runCatching {
-                    val theme = Theme(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
-                    if (themes.any { it.metadata.id.equals(theme.metadata.id, true) }) {
-                        logger.warn("Theme with ID '${theme.metadata.id}' is already loaded, skipping duplicate.")
-                        return@forEach
-                    }
-
-                    themes += theme
+                    Theme.load(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
+                        .addIfUnloaded()
                 }.onFailure { err ->
                     logger.error("Failed to load theme '${file.name}'.", err)
                 }
@@ -119,14 +120,8 @@ object ThemeManager : Configurable("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                val theme = Theme(Theme.Origin.MARKETPLACE, relativeFile)
-
-                if (themes.any { it.metadata.id.equals(theme.metadata.id, true) }) {
-                    logger.warn("Theme with ID '${theme.metadata.id}' is already loaded, skipping duplicate.")
-                    return@forEach
-                }
-
-                themes += theme
+                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
+                    .addIfUnloaded()
             }.onFailure { err ->
                 logger.error("Failed to load theme '${item.name}'.", err)
             }
@@ -134,7 +129,7 @@ object ThemeManager : Configurable("theme") {
 
         themes.add(includedTheme)
 
-        ModuleHud.updateComponents()
+        ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
             IntegrationListener.update()
             ModuleHud.reopen()

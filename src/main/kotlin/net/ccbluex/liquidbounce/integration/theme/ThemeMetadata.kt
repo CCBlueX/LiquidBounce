@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.google.gson.JsonObject
+
 data class ThemeMetadata(
     val id: String,
     val name: String,
@@ -28,7 +30,9 @@ data class ThemeMetadata(
     val overlays: List<String>,
     val components: List<String>,
     val fonts: List<String>,
-    val backgrounds: List<Background>
+    val backgrounds: List<Background>,
+    @Suppress("ArrayInDataClass")
+    val values: Array<JsonObject>? = null
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {

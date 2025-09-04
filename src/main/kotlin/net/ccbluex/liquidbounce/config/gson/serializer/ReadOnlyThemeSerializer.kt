@@ -25,21 +25,19 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.ConfigurableSerializer.Companion.serializeReadOnly
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.Theme
 import java.lang.reflect.Type
 
-object ReadOnlyComponentSerializer : JsonSerializer<Component> {
+object ReadOnlyThemeSerializer : JsonSerializer<Theme> {
 
     override fun serialize(
-        src: Component,
+        src: Theme,
         typeOfSrc: Type,
         context: JsonSerializationContext
     ) = JsonObject().apply {
-        addProperty("name", src.name)
-        addProperty("id", src.id.toString())
-        add("settings", serializeReadOnly(src, context))
+        addProperty("name", src.metadata.name)
+        addProperty("id", src.metadata.id)
+        add("settings", serializeReadOnly(src.settings, context))
     }
-
-
 
 }

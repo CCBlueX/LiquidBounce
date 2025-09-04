@@ -23,17 +23,24 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.*
 
-// GET /api/v1/client/theme
+// GET /api/v1/client/theme/:id
 @Suppress("UNUSED_PARAMETER")
-fun getThemeInfo(requestObject: RequestObject): FullHttpResponse = httpOk(
-    publicGson.toJsonTree(ThemeManager.theme.metadata)
-)
+fun getTheme(requestObject: RequestObject): FullHttpResponse {
+    val id = requestObject.params["id"]
+    val theme = if (id != null) {
+        ThemeManager.themes.find { it.metadata.id == id } ?: return httpNotFound(id, "Theme not found")
+    } else {
+        ThemeManager.theme
+    }
+
+    return httpOk(accessibleInteropGson.toJsonTree(theme))
+}
 
 // GET /api/v1/client/shader
 @Suppress("UNUSED_PARAMETER")
