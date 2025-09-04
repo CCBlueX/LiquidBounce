@@ -47,7 +47,8 @@ inline fun <T : Any> CommandBuilder.parameter(
 fun <T : Any> Parameter<T>.cast(command: Command, args: Array<out Any>): T {
     requireOwner(command)
     @Suppress("UNCHECKED_CAST")
-    return args[index] as T
+    return args.getOrNull(index) as T?
+        ?: requireNotNull(this.default) { "Parameter '$name' has no default value." }
 }
 
 fun <T : Any> Parameter<T>.castVararg(command: Command, args: Array<out Any>): Array<out T> {

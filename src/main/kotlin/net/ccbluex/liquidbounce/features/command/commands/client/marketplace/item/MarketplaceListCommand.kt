@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.castNotRequired
 import net.ccbluex.liquidbounce.features.command.dsl.commandFactory
 import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -45,18 +44,18 @@ internal val MarketplaceListCommand = commandFactory("list") {
 
     val page = parameter("page") {
         verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-            .optional()
+            .optional(1)
     }
 
     val featured = parameter("featured") {
         verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
-            .optional()
+            .optional(false)
     }
 
     suspendHandler { command, args ->
         val type = type.cast(command, args)
-        val page = page.castNotRequired(command, args, 1)
-        val featured = featured.castNotRequired(command, args, false)
+        val page = page.cast(command, args)
+        val featured = featured.cast(command, args)
 
         val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
 

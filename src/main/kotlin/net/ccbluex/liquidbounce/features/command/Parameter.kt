@@ -41,8 +41,13 @@ fun interface AutoCompletionProvider {
 }
 
 class Parameter<T : Any>(
+    /** Name of the parameter. */
     val name: String,
+    /** Whether the parameter is required. */
     val required: Boolean,
+    /** Default value if optional. */
+    val default: T?,
+    /** Whether the parameter is a vararg. Parsed result will be an Array if true. */
     val vararg: Boolean,
     val verifier: Verificator<T>?,
     val autocompletionHandler: AutoCompletionProvider?,
