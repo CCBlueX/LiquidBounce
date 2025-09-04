@@ -19,14 +19,16 @@
 
 package net.ccbluex.liquidbounce.features.command.builder
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 
 class CommandBuilder private constructor(val name: String) {
 
-    private var aliases: Array<out String> = emptyArray()
-    private var parameters: ArrayList<Parameter<*>> = ArrayList()
-    private var subcommands: ArrayList<Command> = ArrayList()
+    private var aliases: Array<out String>? = null
+    private var parameters: MutableList<Parameter<*>> = ObjectArrayList()
+    private var subcommands: MutableList<Command> = ObjectArrayList()
     private var handler: Command.Handler? = null
     private var executable = true
     private var ingame = false
@@ -101,11 +103,9 @@ class CommandBuilder private constructor(val name: String) {
 
         return Command(
             this.name,
-            this.aliases,
-            this.parameters.toArray(emptyArray()),
-            this.subcommands.toArray(
-                emptyArray()
-            ),
+            this.aliases.unmodifiable(),
+            this.parameters.unmodifiable(),
+            this.subcommands.unmodifiable(),
             executable,
             this.handler,
             ingame

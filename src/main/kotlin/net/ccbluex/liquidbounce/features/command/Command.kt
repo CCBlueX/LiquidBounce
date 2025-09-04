@@ -30,9 +30,9 @@ import java.util.*
 @Suppress("LongParameterList")
 class Command(
     val name: String,
-    val aliases: Array<out String>,
-    val parameters: Array<Parameter<*>>,
-    val subcommands: Array<Command>,
+    val aliases: List<String>,
+    val parameters: List<Parameter<*>>,
+    val subcommands: List<Command>,
     val executable: Boolean,
     val handler: Handler?,
     val requiresIngame: Boolean,
