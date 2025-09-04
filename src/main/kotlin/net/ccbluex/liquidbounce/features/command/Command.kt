@@ -27,10 +27,6 @@ import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
 import java.util.*
 
-fun interface CommandHandler {
-    operator fun invoke(command: Command, args: Array<Any>)
-}
-
 @Suppress("LongParameterList")
 class Command(
     val name: String,
@@ -38,7 +34,7 @@ class Command(
     val parameters: Array<Parameter<*>>,
     val subcommands: Array<Command>,
     val executable: Boolean,
-    val handler: CommandHandler?,
+    val handler: Handler?,
     val requiresIngame: Boolean,
 ) : MinecraftShortcuts {
     var parentCommand: Command? = null
@@ -249,5 +245,9 @@ class Command(
         val suggestions = handler.autocomplete(begin = args.getOrElse(idx) { "" }, args = args)
 
         suggestions.forEach(builder::suggest)
+    }
+
+    fun interface Handler {
+        operator fun invoke(command: Command, args: Array<Any>)
     }
 }

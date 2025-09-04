@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.CommandHandler
 import net.ccbluex.liquidbounce.features.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
@@ -29,7 +28,7 @@ class CommandBuilder private constructor(val name: String) {
     private var aliases: Array<out String> = emptyArray()
     private var parameters: ArrayList<Parameter<*>> = ArrayList()
     private var subcommands: ArrayList<Command> = ArrayList()
-    private var handler: CommandHandler? = null
+    private var handler: Command.Handler? = null
     private var executable = true
     private var ingame = false
 
@@ -55,7 +54,7 @@ class CommandBuilder private constructor(val name: String) {
 
     fun subcommand(subcommandFactory: CommandFactory) = subcommand(subcommandFactory.createCommand())
 
-    fun handler(handler: CommandHandler) = apply {
+    fun handler(handler: Command.Handler) = apply {
         this.handler = handler
     }
 
