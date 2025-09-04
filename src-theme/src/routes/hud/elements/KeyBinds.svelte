@@ -103,10 +103,7 @@
                     const bindSetting = settings.value.find(isBindSetting);
 
                     if (bindSetting && bindSetting.value.boundKey !== UNKNOWN_KEY) {
-
-                        let boundKey = bindSetting.value.boundKey
-                            .replace(/^(Right|Left)/, "")
-                            .trim();
+                        let boundKey = bindSetting.value.boundKey.replace(/^(Right|Left)/, "").trim();
                         const printable = await getCachedPrintableKeyName(boundKey);
 
                         const modifiers: BindModifier[] = (bindSetting.value.modifiers || [])
@@ -126,17 +123,19 @@
                 })
             );
 
-            bindings = results.sort((a, b) => a.moduleName.localeCompare(b.moduleName));
+            bindings = [...results.sort((a, b) => a.moduleName.localeCompare(b.moduleName))];
         } catch (error) {
             bindings = [];
         }
     }
+
 
     onMount(async () => {
         await updateBindings();
         loaded = true;
     });
 
+    listen("moduleBindChange", updateBindings);
     listen("moduleToggle", updateBindings);
     listen("clickGuiValueChange", updateBindings);
 </script>

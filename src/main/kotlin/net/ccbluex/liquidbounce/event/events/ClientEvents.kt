@@ -34,13 +34,13 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
-
 
 
 @Nameable("clickGuiValueChange")
@@ -69,6 +69,13 @@ class ClientLanguageChangedEvent : Event(), WebSocketEvent
 
 @Nameable("valueChanged")
 class ValueChangedEvent(val value: Value<*>) : Event(), WebSocketEvent
+
+@Nameable("moduleBindChange")
+class ModuleBindChangeEvent(
+    val moduleName: String,
+    val bind: InputBind
+) : Event(), WebSocketEvent
+
 
 @Nameable("moduleActivation")
 class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
+import net.ccbluex.liquidbounce.event.events.ModuleBindChangeEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
@@ -72,11 +73,18 @@ open class ClientModule(
 
     val bind by bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
-        .independentDescription().apply {
+        .independentDescription()
+        .apply {
             if (notActivatable) {
                 notAnOption()
             }
         }
+        .onChange {
+            EventManager.callEvent(ModuleBindChangeEvent(this@ClientModule.name, it))
+            it
+        }
+
+
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .independentDescription()

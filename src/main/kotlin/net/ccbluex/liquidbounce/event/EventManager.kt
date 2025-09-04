@@ -157,7 +157,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     NameProtectEvent::class,
     SelectingHotbarSlotSilentlyEvent::class,
     ResetHotbarSlotSilentlyEvent::class,
-    HeypixelSWKillEvent::class
+    HeypixelSWKillEvent::class,
+    ModuleBindChangeEvent::class,
 )
 
 /**
