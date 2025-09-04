@@ -16,19 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  */
 
-package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
+package net.ccbluex.liquidbounce.config.gson.serializer
 
-import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpOk
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.config.gson.serializer.ConfigurableSerializer.Companion.serializeReadOnly
+import net.ccbluex.liquidbounce.integration.theme.Theme
+import java.lang.reflect.Type
 
-// GET /api/v1/client/components/:id
-@Suppress("UNUSED_PARAMETER")
-fun getComponents(requestObject: RequestObject) =
-    httpOk(accessibleInteropGson.toJsonTree(
-        ComponentManager.getComponents(requestObject.params["id"])).asJsonArray
-    )
+object ReadOnlyThemeSerializer : JsonSerializer<Theme> {
 
+    override fun serialize(
+        src: Theme,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ) = JsonObject().apply {
+        addProperty("name", src.metadata.name)
+        addProperty("id", src.metadata.id)
+        add("settings", serializeReadOnly(src.settings, context))
+    }
+
+}

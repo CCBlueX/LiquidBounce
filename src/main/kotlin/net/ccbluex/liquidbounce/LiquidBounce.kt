@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -195,6 +194,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.loadAll()
 
         isInitialized = true
+        logger.info("Client has been successfully initialized.")
     }
 
     /**
@@ -329,10 +329,14 @@ object LiquidBounce : EventListener {
         BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
-        ThemeManager.load()
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        runBlocking {
+            ThemeManager.load()
+        }
         IntegrationListener
 
-        taskManager = TaskManager(eventListenerScope).apply {
+        taskManager = TaskManager(scope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)
@@ -354,10 +358,7 @@ object LiquidBounce : EventListener {
 
             launch("Marketplace") { task ->
                 runCatching {
-                    // Preload marketplace items
-                    ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
-                    ConfigSystem.store(MarketplaceManager)
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
                 }

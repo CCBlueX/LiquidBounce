@@ -124,6 +124,10 @@ fun String.translateColorCodes(): String {
     return String(chars)
 }
 
+fun String.capitalize(): String = replaceFirstChar {
+    if (it.isLowerCase()) it.titlecase() else it.toString()
+}
+
 fun String.toLowerCamelCase(): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, this)
 
 fun String.dropPort(): String {

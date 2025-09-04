@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.components
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
@@ -130,30 +130,22 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     val nativeComponents = listOf(MinimapComponent, TargetHudComponent)
 
-    val components = tree(Configurable("Components")).apply {
-        nativeComponents.forEach(this::tree)
-    }
+    val themes = tree(Configurable("Themes"))
+
+    val components = tree(Configurable("AdditionalComponents")).apply {
+        tree(MinimapComponent)
 
     /**
-     * Updates [components] content
+     * Updates [themes] content
      */
-    fun updateComponents() {
-        components.inner.clear()
-        nativeComponents.forEach { component ->
-            components.tree(component)
+    fun updateThemes() {
+        themes.inner.clear()
+        for (theme in ThemeManager.themes) {
+            themes.tree(theme.settings)
         }
-
-        for (theme in themes) {
-            val themeConfigurable = Configurable(
-                theme.metadata.name, theme.components as MutableList<Value<*>>)
-            components.tree(themeConfigurable)
-        }
-
-        components.initConfigurable()
-        components.walkKeyPath()
+        themes.initConfigurable()
+        themes.walkKeyPath()
     }
-    val clientName: String
-        get() = customization.clientName
 
 
     override fun onEnabled() {
@@ -216,6 +208,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         }
     }
 
+        val clientName: String
+        get() = customization.clientName
 
 
     fun getThemeColor(): Pair<Color4b, Color4b> =

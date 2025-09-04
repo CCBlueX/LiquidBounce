@@ -42,6 +42,7 @@
     import DraggableComponent from "./elements/DraggableComponent.svelte";
 
     const {width, height, destroy} = WindowSize();
+    let metadata: Metadata;
     let components: Component[] = [];
 
     $: ScaleFactor.set($hudScaleFactor * calcResolutionCoefficient());
@@ -90,6 +91,8 @@
             const clickGuiSettings = await getModuleSettings("HudLayoutEditor");
             applyValues(clickGuiSettings);
             await preloadComponents();
+            metadata = await getMetadata();
+            components = await getComponents(metadata.id);
             window.addEventListener("resize", updateZoom);
         })();
 
@@ -98,8 +101,15 @@
 
     onDestroy(destroy);
 
-    listen("componentsUpdate", (e: ComponentsUpdateEvent) => {
-        components = e.components;
+    listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
+        if (data.id != metadata.id) {
+            // reject
+            return;
+        }
+
+        // force update to re-render
+        components = [];
+        components = data.components;
     });
     listen("hudLayoutEditorValueChange", (e: ClickGuiValueChangeEvent) => {
         applyValues(e.configurable);
@@ -177,32 +187,10 @@
         {/each}
     </div>
 </div>
-<Vignette/>
-
-
 
 <style lang="scss">
-  @use "../../colors" as *;
-
-  $GRID_SIZE: 10px;
   .hud {
     height: 100vh;
     width: 100vw;
-    zoom: var(--hud-zoom);
-  }
-
-  .snap {
-    overflow: hidden;
-    position: absolute;
-    will-change: opacity;
-    top: 0;
-    left: 0;
-    transform-origin: left top;
-
-    &.grid {
-      background-image: linear-gradient(to right, rgba($clickgui-grid-color, 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba($clickgui-grid-color, 0.3) 1px, transparent 1px);
-      background-size: #{$GRID_SIZE}px #{$GRID_SIZE}px;
-    }
   }
 </style>

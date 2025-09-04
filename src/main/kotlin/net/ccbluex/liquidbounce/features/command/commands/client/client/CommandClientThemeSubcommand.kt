@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 
@@ -45,16 +48,16 @@ object CommandClientThemeSubcommand {
         .parameter(
             ParameterBuilder.begin<String>("theme")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                .autocompletedFrom { ThemeManager.themeNames }
+                .autocompletedFrom { ThemeManager.themeIds }
                 .build()
         )
         .handler { _, args ->
-            val name = args[0] as String
-            val theme = ThemeManager.themes.find { it.metadata.name.equals(name, true) } ?:
-                throw CommandException("No theme found with name \"$name\"!".asText())
+            val id = args[0] as String
+            val theme = ThemeManager.themes.find { it.metadata.id.equals(id, true) } ?:
+                throw CommandException("No theme found with name \"$id\"!".asText())
 
             runCatching {
-                ThemeManager.currentTheme = theme.metadata.name
+                ThemeManager.currentTheme = theme.metadata.id
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
             }.onSuccess {
@@ -72,21 +75,34 @@ object CommandClientThemeSubcommand {
                 ThemeManager.themes
             },
             eachRow = { _, theme ->
-                "\u2B25 ".asText()
+                regular("\u2B25 ".asText()
                     .formatted(Formatting.BLUE)
-                    .append(variable(theme.metadata.name).copyable())
+                    .append(variable(theme.metadata.name))
                     .append(regular(" ("))
-                    .append(variable(theme.metadata.version).copyable())
+                    .append(variable(theme.metadata.id))
+                    .append(regular(" "))
+                    .append(variable(theme.metadata.version))
                     .append(regular(")"))
                     .append(regular(" by "))
-                    .append(variable(theme.metadata.author.joinToString(separator = ", ")).copyable())
+                    .append(variable(theme.metadata.authors.joinToString(separator = ", ")).copyable())
                     .append(regular(" from "))
                     .append(variable(theme.origin.choiceName))
+                ).onClick(
+                    ClickEvent(
+                        ClickEvent.Action.SUGGEST_COMMAND,
+                        ".client theme set ${theme.metadata.id}"
+                    )
+                ).onHover(
+                    HoverEvent(
+                        HoverEvent.Action.SHOW_TEXT,
+                        variable("Click to set theme \"${theme.metadata.name}\".")
+                    )
+                )
             }
         )
 
     private fun reloadSubcommand() = CommandBuilder.begin("reload")
-        .handler { _, _ ->
+        .suspendHandler { _, _ ->
             val prevCount = ThemeManager.themes.size
 
             ThemeManager.load()

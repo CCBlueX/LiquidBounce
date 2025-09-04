@@ -10,7 +10,7 @@
     import {Tween} from "svelte/motion";
 
     let playerData: PlayerData | null = null;
-    let count: number | undefined;
+    let count = $state<number | undefined>(undefined);
     let contentElement: HTMLDivElement;
     let firstAppear = true;
 

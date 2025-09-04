@@ -19,14 +19,16 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.shader.CanvasShader
+import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
@@ -42,9 +44,8 @@ import java.util.*
  *
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
-class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), Closeable {
-
-    val id: UUID = UUID.randomUUID()
+@Suppress("TooManyFunctions")
+class Theme private constructor(val origin: Origin, url: String): BaseApi(url.removeSuffix("/")), Closeable {
 
     enum class Origin(override val choiceName: String) : NamedChoice {
         RESOURCE("resource"),
@@ -53,58 +54,81 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         REMOTE("remote")
     }
 
-    constructor(url: String) : this(Origin.REMOTE, url)
+    var metadata: ThemeMetadata
+        field: ThemeMetadata? = null
+        private set
+        get() = requireNotNull(field) { "metadata not loaded" }
 
-    constructor(
-        origin: Origin,
-        file: File
-    ) : this(origin, "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/")
-
-    val metadata: ThemeMetadata = runBlocking {
+    private suspend fun loadMetadata() {
         try {
-            get<ThemeMetadata>("/metadata.json")
+            metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
         } catch (e: Exception) {
             logger.error("Failed to load theme metadata", e)
             throw IllegalStateException("Failed to load theme metadata", e)
         }
     }
 
-    val components: MutableList<Component> = runBlocking {
-        metadata.components.mapNotNull { name ->
+    var components: MutableList<Component>
+        field: MutableList<Component>? = null
+        private set
+        get() = requireNotNull(field) { "components not loaded" }
+
+    var settings: Configurable
+        field: Configurable? = null
+        private set
+        get() = requireNotNull(field) { "settings not loaded" }
+
+    private suspend fun loadComponents() {
+        components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
-            }.getOrNull() ?: return@mapNotNull null
+            }.getOrNull() ?: return@mapNotNullTo null
 
             runCatching {
                 componentFactory.createComponent()
             }.onFailure {
                 logger.warn("Failed to create component $name", it)
             }.getOrNull()
-        }.toMutableList()
-    }
-
-    init {
-        // Check for duplicated component names
-        components.groupBy { component -> component.name }.forEach { (name, components) ->
-            check(components.size == 1) { "Found duplicated component name '$name'" }
         }
 
-        // Load fonts
+        // Check for duplicated component names
+        components.groupingBy { component -> component.name }.eachCount().forEach { (name, count) ->
+            check(count == 1) { "Found duplicated component name '$name'" }
+        }
+
+        settings = Configurable(metadata.id.capitalize()).apply {
+            metadata.values?.let { values ->
+                for (value in values) {
+                    json(value)
+                }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            val componentSettings = Configurable("Components", components as MutableList<Value<*>>)
+            tree(componentSettings)
+        }
+    }
+
+    private suspend fun loadFonts() {
         for (font in metadata.fonts) {
             runCatching {
-                runBlocking {
-                    get<InputStream>("/fonts/$font").use { stream ->
-                        FontManager.queueFontFromStream(stream)
-                    }
-
-                    logger.info("Loaded font $font for theme ${metadata.name}")
+                get<InputStream>("/fonts/$font").use { stream ->
+                    FontManager.queueFontFromStream(stream)
                 }
+
+                logger.info("Loaded font $font for theme ${metadata.name}")
             }.onFailure {
                 logger.warn("Failed to load font $font for theme ${metadata.name}", it)
             }
         }
+    }
+
+    private suspend fun loadAll() = apply {
+        loadMetadata()
+        loadComponents()
+        loadFonts()
     }
 
     var themeBackgroundShader: ThemeBackground? = null
@@ -118,7 +142,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }
 
         // todo: allow multiple backgrounds later on
-        val background = metadata.background.firstOrNull() ?: return false
+        val background = metadata.backgrounds.firstOrNull() ?: return false
         if ("frag" !in background.types) {
             // not supported
             return false
@@ -143,7 +167,7 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
         }
 
         // todo: allow multiple backgrounds later on
-        val background = metadata.background.firstOrNull() ?: return false
+        val background = metadata.backgrounds.firstOrNull() ?: return false
         if ("png" !in background.types) {
             // not supported
             return false
@@ -181,6 +205,19 @@ class Theme(val origin: Origin, url: String) : BaseApi(url.removeSuffix("/")), C
     override fun close() {
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
+    }
+
+    override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
+
+    companion object {
+        @JvmStatic
+        suspend fun load(url: String) = Theme(Origin.REMOTE, url).loadAll()
+
+        @JvmStatic
+        suspend fun load(origin: Origin, file: File) = Theme(
+            origin,
+            url = "${ClientInteropServer.url}/${origin.choiceName}/${file.invariantSeparatorsPath}/"
+        ).loadAll()
     }
 
 }

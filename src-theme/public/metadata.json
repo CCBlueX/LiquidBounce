@@ -1,4 +1,5 @@
 {
+  "id": "jmcomicfix",
   "name": "JMcomicFix",
   "version": "1.9.2",
   "author": ["KotlinModule"],
@@ -77,11 +78,11 @@
     "Dreamscape.ttf",
     "Alibaba-PuHuiTi-Bold.ttf"
   ],
-
-  "background": [
+  "backgrounds": [
     {
       "name": "background",
       "types": ["frag", "png"]
     }
-  ]
+  ],
+  "values": []
 }

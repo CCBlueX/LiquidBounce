@@ -68,15 +68,21 @@ class CefBrowser(
             // To ensure the texture is updated, we clear the renderer. This call invalidates the
             // current UI.
             mcefBrowser.clear()
-//
-//            logger.info("Browser $this viewport updated: $value," +
-//                " scaled to $scaledWidth x $scaledHeight at zoom level $zoomLevel")
+
+            logger.debug(
+                "Browser {} viewport updated: {}, scaled to {} x {} at zoom level {}",
+                this,
+                value,
+                scaledWidth,
+                scaledHeight,
+                zoomLevel
+            )
         }
     override var visible = true
     private val mcefBrowser: MCEFBrowser
 
     private val renderer = BrowserRenderer(this)
-    private val inputListener: InputListener? = inputAcceptor?.let { inputChecker ->
+    private val inputListener: InputListener? = inputAcceptor?.let { _ ->
         InputListener(this, this, inputAcceptor)
     }
 
