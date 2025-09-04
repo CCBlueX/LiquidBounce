@@ -467,6 +467,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModulePointerESP,
             ModuleParticleCosmetics,
             ModulePenisESP,
+            ModuleProjectileESP,
 
             // World
             ModuleAutoBuild,

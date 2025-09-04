@@ -854,5 +854,6 @@
   "liquidbounce.module.autoSwap.description": "切换副手为金苹果或者投掷物。",
   "liquidbounce.module.autoSex.description": "性骚扰其他玩家。",
   "liquidbounce.module.autoPath.description": "单击鼠标中键选择坐标后，将你移动到那个位置。需要Baritone",
-  "liquidbounce.module.advancedJumpReset.description": "垃圾待删除。"
+  "liquidbounce.module.advancedJumpReset.description": "垃圾待删除。",
+  "liquidbounce.module.projectileESP.description": "高亮显示飞行中的投掷物图标，便于快速判断位置。"
 }
