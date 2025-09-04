@@ -36,10 +36,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyBinding.class)
-public class MixinKeyBinding implements KeyBindingAdditions {
+public abstract class MixinKeyBinding implements KeyBindingAdditions {
 
     @Shadow
     public InputUtil.Key boundKey;
+
     /**
      * Records clicks in latest 20 ticks (1 sec)
      */
@@ -58,15 +59,8 @@ public class MixinKeyBinding implements KeyBindingAdditions {
     @Unique
     private int liquidbounce$currentCount = 0;
 
-    @Inject(
-            method = "setPressed",
-            at = @At("HEAD")
-    )
-    private void trackPressedState(boolean pressed, CallbackInfo ci) {
-        if (pressed) {
-            liquidbounce$currentCount++;
-        }
-    }
+    @Unique
+    private boolean liquidbounce$wasPressed = false;
 
     @Override
     public void liquidbounce$triggerTickEnd() {
@@ -95,7 +89,11 @@ public class MixinKeyBinding implements KeyBindingAdditions {
 
     @ModifyReturnValue(method = "isPressed", at = @At("RETURN"))
     private boolean isPressed(boolean original) {
-        return EventManager.INSTANCE.callEvent(new KeybindIsPressedEvent((KeyBinding) (Object) this, original)).isPressed();
+        boolean pressed = EventManager.INSTANCE.callEvent(new KeybindIsPressedEvent((KeyBinding) (Object) this, original)).isPressed();
+        if (!liquidbounce$wasPressed && pressed) {
+            liquidbounce$currentCount++;
+        }
+        return liquidbounce$wasPressed = pressed;
     }
 
 }
