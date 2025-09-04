@@ -822,7 +822,7 @@
   "liquidbounce.module.autoClutch.description": "Automatic pearl clutch using a simulated annealing algorithm.",
   "liquidbounce.module.killEffects.description": "Show an effect when you kill a target.",
   "liquidbounce.module.noweb.mode.grim.messages.Protocol": "Use protocol 1.18.2 or later to bypass Grim high-version weak detection!",
-  "liquidbounce.module.autoRod.description": "Automatically use a rod to control distance; crosshair must point at the target.",
+  "liquidbounce.module.autoRod.description": "Automatically use a rod to control distance.",
   "liquidbounce.module.autoScreenShot.description": "Automatically perform actions and take screenshots on victory.",
   "liquidbounce.module.noBooks.description": "Intercept and close book GUIs opened by the server.",
   "liquidbounce.module.pointerESP.description": "Display pointers around targets.",

@@ -710,15 +710,18 @@ inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true })
 /**
  * Determines whether the trajectory from start to entity target has any sample rays that are not blocked by blocks.
  *
- * Principle: Grid sampling in the three-axis direction in the bracketing box of the target entity (samplesPerAxis^3 points),
+ * Principle: Grid sampling in the three-axis direction in the bracketing box of the target entity,
  * Do a world.raycast for each sample point (using COLLIDER), if either ray misses the block (MISS),
- * is considered shootable (allowed through fences/gaps). samplesPerAxis is best between 1..5; 1 indicates that only the center point of the bracketing box is detected.
+ * is considered shootable (allowed through fences/gaps). samplesPerAxis is best between 1..5;
+ * 1 indicates that only the center point of the bracketing box is detected.
  *
  * @param start starting point (usually player.eyePos)
  * @param target entity
  * @param samplesPerAxis Sample Points per Axis (>=1)
- * @return true if there is at least one ray that is not blocked by the block; false means that all sample point directions are blocked by blocks
+ * @return true if there is at least one ray that is not blocked by the block;
+ * false means that all sample point directions are blocked by blocks.
  */
+@Suppress("CognitiveComplexMethod","NestedBlockDepth","ReturnCount")
 fun isPathClearToEntity(start: Vec3d, target: Entity, samplesPerAxis: Int = 3): Boolean {
     val world = mc.world ?: return false
     val bbox: Box = target.boundingBox
@@ -736,7 +739,10 @@ fun isPathClearToEntity(start: Vec3d, target: Entity, samplesPerAxis: Int = 3): 
 
     if (clampedSamples == 1) {
         val center = Vec3d((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0)
-        val ctx = RaycastContext(realStart, center, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+        val ctx = RaycastContext(realStart, center,
+            RaycastContext.ShapeType.COLLIDER,
+            RaycastContext.FluidHandling.NONE,
+            mc.player)
         val hit = world.raycast(ctx)
         if (hit.type == HitResult.Type.MISS) return true
         if (hit.type != HitResult.Type.BLOCK) return true
@@ -754,7 +760,11 @@ fun isPathClearToEntity(start: Vec3d, target: Entity, samplesPerAxis: Int = 3): 
                 val z = minZ + (maxZ - minZ) * fz
 
                 val sampleTarget = Vec3d(x, y, z)
-                val ctx = RaycastContext(realStart, sampleTarget, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+                val ctx = RaycastContext(realStart,
+                    sampleTarget,
+                    RaycastContext.ShapeType.COLLIDER,
+                    RaycastContext.FluidHandling.NONE,
+                    mc.player)
                 val hit = world.raycast(ctx)
                 if (hit.type == HitResult.Type.MISS) {
                     return true

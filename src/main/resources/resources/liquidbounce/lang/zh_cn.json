@@ -827,7 +827,7 @@
   "liquidbounce.module.autoStuck.description": "在进入虚空娘的怀抱之前将你冻结在半空。",
   "liquidbounce.module.autoClutch.description": "基于模拟退火算法的自动珍珠自救。",
   "liquidbounce.module.noweb.mode.grim.messages.Protocol": "请使用1.18.2以上的协议以绕过Grim高版本弱检测！",
-  "liquidbounce.module.autoRod.description": "自动使用鱼竿控距，需要准星指向对方。",
+  "liquidbounce.module.autoRod.description": "自动使用鱼竿控距。",
   "liquidbounce.module.hudLayoutEditor.description": "显示HUD编辑界面，用于快捷配置HUD布局。",
   "liquidbounce.module.killEffects.description": "在你击杀目标时显示一种效果。",
   "liquidbounce.module.autoScreenShot.description": "自动在胜利时执行某些动作并截图。",
