@@ -2,7 +2,7 @@
   "id": "jmcomicfix",
   "name": "JMcomicFix",
   "version": "1.9.2",
-  "author": ["KotlinModule"],
+  "authors": ["CCBlueX","KotlinModule","JiangYu"],
   "screens": [
     "clickgui",
     "layouteditor",

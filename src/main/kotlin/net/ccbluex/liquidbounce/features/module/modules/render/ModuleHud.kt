@@ -134,17 +134,18 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     val components = tree(Configurable("AdditionalComponents")).apply {
         tree(MinimapComponent)
-
-    /**
-     * Updates [themes] content
-     */
+    }
+        /**
+         * Updates [themes] content
+         */
     fun updateThemes() {
+
         themes.inner.clear()
-        for (theme in ThemeManager.themes) {
-            themes.tree(theme.settings)
-        }
-        themes.initConfigurable()
-        themes.walkKeyPath()
+            for (theme in ThemeManager.themes) {
+                themes.tree(theme.settings)
+            }
+            themes.initConfigurable()
+            themes.walkKeyPath()
     }
 
 

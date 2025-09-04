@@ -138,6 +138,7 @@
     });
 
     listen("moduleToggle", updateBindings);
+    listen("clickGuiValueChange", updateBindings);
 </script>
 
 {#if loaded}

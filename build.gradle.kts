@@ -409,10 +409,23 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
-        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        freeCompilerArgs.addAll(
+            "-XXLanguage:+ExplicitBackingFields",
+            "-Xnon-local-break-continue",
+            "-Xwhen-guards"
+        )
     }
 }
 
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-XXLanguage:+ExplicitBackingFields",
+            "-Xnon-local-break-continue",
+            "-Xwhen-guards"
+        )
+    }
+}
 tasks.jar {
     val archivesBaseName = providers.gradleProperty("archives_base_name")
     val modVersion = providers.gradleProperty("mod_version")
@@ -498,13 +511,4 @@ tasks.named("sourcesJar") {
 
 tasks.named("build") {
     dependsOn("copyZipInclude")
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.compilerOptions {
-    freeCompilerArgs.set(listOf("-Xnon-local-break-continue"))
-}
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        freeCompilerArgs.set(listOf("-Xwhen-guards"))
-    }
 }

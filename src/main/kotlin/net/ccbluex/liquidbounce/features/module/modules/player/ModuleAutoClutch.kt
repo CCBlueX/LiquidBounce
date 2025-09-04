@@ -166,7 +166,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     override val running: Boolean
         get() =
             super.running
-                && !(ModuleAutoStuck.shouldActivate && ModuleAutoStuck.alwaysInVoid)
+                && !(ModuleAutoStuck.shouldActivate || ModuleAutoStuck.alwaysInVoid)
                 && !(onlyDuringCombat && !CombatManager.isInCombat)
                 && !ModuleScaffold.running
                 && !ModuleFreeze.running

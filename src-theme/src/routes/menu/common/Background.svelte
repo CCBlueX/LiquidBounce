@@ -20,7 +20,7 @@
   .background {
     position: absolute;
     inset: 0;
-    background: url('/background.png') center / 100% 100%;
+    background: url('/backgrounds/background.png') center / 100% 100%;
     filter: blur(4px);
     transform: scale(1);
     transition: transform 0.5s ease, filter 0.5s ease;

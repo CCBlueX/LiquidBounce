@@ -9,9 +9,9 @@
     import {cubicOut} from "svelte/easing";
     import {Tween} from "svelte/motion";
 
-    let playerData: PlayerData | null = null;
+    let playerData = $state<PlayerData | null>(null);
     let count = $state<number | undefined>(undefined);
-    let contentElement: HTMLDivElement;
+    let contentElement = $state<HTMLDivElement | null>(null);
     let firstAppear = true;
 
     const maxWidth = new Tween(0, { duration: 150, easing: cubicOut });
@@ -32,19 +32,23 @@
         }
     });
 
-    $: if (contentElement && count !== undefined) {
-        updateMaxWidth(firstAppear);
-        firstAppear = false;
-    } else if (count === undefined) {
-        maxWidth.set(0);
-        firstAppear = true; // 重置标志
-    }
+    $effect(() => {
+        if (contentElement && count !== undefined) {
+            updateMaxWidth(firstAppear);
+            firstAppear = false;
+        } else if (count === undefined) {
+            maxWidth.set(0);
+            firstAppear = true;
+        }
+    });
+
 
     async function updateMaxWidth(isFirstAppear = false) {
+        if (!contentElement) return;
+
         if (isFirstAppear) {
-            // 首次出现时强制从0开始
             await maxWidth.set(0, { duration: 0 });
-            await tick(); // 等待DOM更新
+            await tick();
         }
 
         const style = getComputedStyle(contentElement);
