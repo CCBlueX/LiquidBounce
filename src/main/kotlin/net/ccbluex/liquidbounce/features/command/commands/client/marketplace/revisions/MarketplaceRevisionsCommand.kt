@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 
 /**
  * Manage marketplace item revisions
  */
-object MarketplaceRevisionsCommand : CommandFactory {
+object MarketplaceRevisionsCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("revisions")
         .hub()

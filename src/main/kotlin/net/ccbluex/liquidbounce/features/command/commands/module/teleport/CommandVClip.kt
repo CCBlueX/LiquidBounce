@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
@@ -44,7 +43,7 @@ import kotlin.math.abs
  *
  * Module: [ModuleTeleport]
  */
-object CommandVClip : CommandFactory {
+object CommandVClip : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder

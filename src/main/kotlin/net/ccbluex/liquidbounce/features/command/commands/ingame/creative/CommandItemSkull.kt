@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -35,7 +34,7 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
  *
  * Allows you to create a player skull item with a specified name.
  */
-object CommandItemSkull : CommandFactory, MinecraftShortcuts {
+object CommandItemSkull : Command.Factory, MinecraftShortcuts {
 
     override fun createCommand(): Command {
         return CommandBuilder

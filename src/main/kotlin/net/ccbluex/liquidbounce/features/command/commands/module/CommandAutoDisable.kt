@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.module
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
@@ -38,7 +37,7 @@ import net.minecraft.util.Formatting
  *
  * Module: [ModuleAutoDisable]
  */
-object CommandAutoDisable : CommandFactory {
+object CommandAutoDisable : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder

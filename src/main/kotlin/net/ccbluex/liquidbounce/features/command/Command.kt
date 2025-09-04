@@ -250,4 +250,16 @@ class Command(
     fun interface Handler {
         operator fun invoke(command: Command, args: Array<Any>)
     }
+
+    /**
+     * Provides a [Command] to the [CommandManager].
+     */
+    fun interface Factory {
+
+        /**
+         * Creates the [Command] and is run only once by the [CommandManager].
+         */
+        fun createCommand(): Command
+    }
+
 }

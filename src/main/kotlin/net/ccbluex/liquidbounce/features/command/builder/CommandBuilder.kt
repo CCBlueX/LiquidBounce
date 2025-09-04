@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.Parameter
 
 class CommandBuilder private constructor(val name: String) {
@@ -52,7 +51,7 @@ class CommandBuilder private constructor(val name: String) {
         this.subcommands.add(subcommand)
     }
 
-    fun subcommand(subcommandFactory: CommandFactory) = subcommand(subcommandFactory.createCommand())
+    fun subcommand(subcommandFactory: Command.Factory) = subcommand(subcommandFactory.createCommand())
 
     fun handler(handler: Command.Handler) = apply {
         this.handler = handler

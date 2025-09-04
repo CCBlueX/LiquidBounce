@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
@@ -32,7 +31,7 @@ import org.apache.commons.lang3.StringUtils
  *
  * Copies your coordinates to your clipboard.
  */
-object CommandCoordinates : CommandFactory {
+object CommandCoordinates : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder

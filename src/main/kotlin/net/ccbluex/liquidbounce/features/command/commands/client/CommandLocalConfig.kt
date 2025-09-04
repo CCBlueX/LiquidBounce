@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
@@ -43,7 +42,7 @@ import java.time.ZoneId
  *
  * Allows you to load, list, and create local configurations.
  */
-object CommandLocalConfig : CommandFactory {
+object CommandLocalConfig : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder

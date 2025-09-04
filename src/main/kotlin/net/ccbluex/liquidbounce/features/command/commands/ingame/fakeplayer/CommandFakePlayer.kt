@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
@@ -47,7 +46,7 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
-object CommandFakePlayer : CommandFactory, EventListener {
+object CommandFakePlayer : Command.Factory, EventListener {
 
     /**
      * Stores all fake players.

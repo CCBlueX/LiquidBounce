@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
@@ -36,7 +35,7 @@ import java.io.File
 private fun ParameterBuilder<*>.autocompletedFromScriptNames() =
     autocompletedFrom { ScriptManager.root.listFiles()?.map { it.name } }
 
-object CommandScript : CommandFactory {
+object CommandScript : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder.begin("script")

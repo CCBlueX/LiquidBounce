@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.re
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * List marketplace item revisions
  */
-object MarketplaceListRevisionsCommand : CommandFactory {
+object MarketplaceListRevisionsCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("list")
         .parameter(

@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.it
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Edit marketplace item
  */
-object MarketplaceEditItemCommand : CommandFactory {
+object MarketplaceEditItemCommand : Command.Factory {
 
     @Suppress("LongMethod")
     override fun createCommand() = CommandBuilder.begin("edit")
