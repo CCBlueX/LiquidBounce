@@ -132,6 +132,14 @@ repositories {
         name = "Lenni0451"
         url = uri("https://maven.lenni0451.net/everything")
     }
+    maven {
+        name = "MeteorDevelopment"
+        url = uri("https://maven.meteordev.org/releases")
+    }
+    maven {
+        name = "MeteorSnapshots"
+        url = uri("https://maven.meteordev.org/snapshots")
+    }
 }
 
 loom {
@@ -210,7 +218,8 @@ dependencies {
 
     // Fix nullable annotations
     compileOnlyApi("com.google.code.findbugs:jsr305:3.0.2")
-
+    //baritone api
+    modCompileOnly("meteordevelopment:baritone:${project.property("baritone_version")}-SNAPSHOT")
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
             val apiDependency = dependencies.api(it.requested.toString()) {

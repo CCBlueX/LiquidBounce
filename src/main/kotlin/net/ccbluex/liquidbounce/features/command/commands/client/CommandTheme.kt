@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
@@ -13,11 +12,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import java.io.File
 
-object CommandTheme : CommandFactory {
+object CommandTheme : Command.Factory  {
     private val themesFolder = File(ConfigSystem.rootFolder, "hud").apply {
         if (!exists()) mkdir()
     }
-
 
     private fun getThemeFiles(): List<File> {
         return themesFolder.listFiles { file ->
@@ -25,10 +23,10 @@ object CommandTheme : CommandFactory {
         }?.toList() ?: emptyList()
     }
 
-
     private fun getThemeNames(): List<String> {
         return getThemeFiles().map { it.nameWithoutExtension }
     }
+
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("theme")
@@ -60,7 +58,7 @@ object CommandTheme : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             val themeFile = themesFolder.resolve("$name.json")
             @Suppress("UNCHECKED_CAST")
@@ -70,14 +68,13 @@ object CommandTheme : CommandFactory {
                 includeBinds = include.contains("binds"),
                 includeHidden = include.contains("hidden")
             )
-            themeFile.runCatching {
-                if (exists()) {
-                    delete()
+
+            runCatching {
+                if (themeFile.exists()) themeFile.delete()
+                themeFile.createNewFile()
+                themeFile.bufferedWriter().use { writer ->
+                    serializeAutoConfig(writer, includeConfiguration, modulesToInclude = listOf(ModuleHud))
                 }
-
-                createNewFile()
-                serializeAutoConfig(bufferedWriter(), includeConfiguration, modulesToInclude = listOf(ModuleHud))
-
                 chat(regular("§a'$name'保存成功!"))
             }.onFailure {
                 chat(regular("§c保存失败: ${it.message}"))
@@ -91,20 +88,17 @@ object CommandTheme : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
-                    getThemeNames().filter { it.startsWith(begin) }
-                }
+                .autocompletedWith { begin, _ -> getThemeNames().filter { it.startsWith(begin) } }
                 .required()
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             val name = args[0] as String
             val themeFile = themesFolder.resolve("$name.json")
 
-            themeFile.runCatching {
-                check(exists()) { "配置不存在" }
-                bufferedReader().use { reader ->
-
+            runCatching {
+                check(themeFile.exists()) { "配置不存在" }
+                themeFile.bufferedReader().use { reader ->
                     loadAutoConfig(reader, listOf(ModuleHud), silent = true)
                 }
                 chat(regular("§a'$name'加载成功!"))
@@ -113,9 +107,10 @@ object CommandTheme : CommandFactory {
             }
         }
         .build()
+
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .handler { _, _ ->
+        .handler {
             val themes = getThemeNames()
             if (themes.isEmpty()) {
                 chat(regular("§7未找到任何HUD配置！"))
