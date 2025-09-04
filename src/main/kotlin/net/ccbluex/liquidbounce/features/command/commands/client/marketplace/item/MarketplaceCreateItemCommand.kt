@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
+import net.ccbluex.liquidbounce.features.command.dsl.addParam
 import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
 import net.ccbluex.liquidbounce.features.command.dsl.castVararg
-import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -38,17 +38,17 @@ import net.ccbluex.liquidbounce.utils.client.variable
  */
 fun marketplaceCreateItemCommand() = buildCommand("create") {
 
-    val name = parameter("name") {
+    val name = addParam("name") {
         verifiedBy(ParameterBuilder.STRING_VALIDATOR)
             .required()
     }
 
-    val type = parameter {
+    val type = addParam {
         enumChoice<MarketplaceItemType>("type")
             .required()
     }
 
-    val description = parameter("description") {
+    val description = addParam("description") {
         verifiedBy(ParameterBuilder.STRING_VALIDATOR)
             .vararg()
             .required()

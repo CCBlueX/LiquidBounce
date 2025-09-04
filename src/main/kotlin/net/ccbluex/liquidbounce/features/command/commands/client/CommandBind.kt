@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.module
+import net.ccbluex.liquidbounce.features.command.dsl.addParam
 import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
@@ -36,11 +36,11 @@ import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 object CommandBind : Command.Factory {
 
     override fun createCommand() = buildCommand("bind") {
-        val module = parameter {
+        val module = addParam {
             module().required()
         }
 
-        val key = parameter("key") {
+        val key = addParam("key") {
             verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedFrom { availableInputKeys }
                 .required()

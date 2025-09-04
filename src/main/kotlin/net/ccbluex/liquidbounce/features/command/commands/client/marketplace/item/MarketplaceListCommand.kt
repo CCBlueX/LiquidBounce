@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
+import net.ccbluex.liquidbounce.features.command.dsl.addParam
 import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -37,17 +37,17 @@ import net.minecraft.text.HoverEvent
 @Suppress("CognitiveComplexMethod")
 fun marketplaceListCommand() = buildCommand("list") {
 
-    val type = parameter {
+    val type = addParam {
         enumChoice<MarketplaceItemType>("type") { it.isListable }
             .required()
     }
 
-    val page = parameter("page") {
+    val page = addParam("page") {
         verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
             .optional(1)
     }
 
-    val featured = parameter("featured") {
+    val featured = addParam("featured") {
         verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
             .optional(false)
     }

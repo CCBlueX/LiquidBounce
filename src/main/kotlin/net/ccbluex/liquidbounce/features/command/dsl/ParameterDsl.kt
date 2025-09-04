@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
-inline fun <T : Any> CommandBuilder.parameter(
+inline fun <T : Any> CommandBuilder.addParam(
     block: ParameterBuilder.Companion.() -> ParameterBuilder<T>
 ): Parameter<T> = ParameterBuilder.block().build().also { parameter(it) }
 
-inline fun <T : Any> CommandBuilder.parameter(
+inline fun <T : Any> CommandBuilder.addParam(
     name: String,
     block: ParameterBuilder<T>.() -> ParameterBuilder<T>
 ): Parameter<T> = ParameterBuilder.begin<T>(name).block().build().also { parameter(it) }
