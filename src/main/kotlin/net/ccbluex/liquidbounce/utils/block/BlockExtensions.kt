@@ -44,6 +44,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.function.BooleanBiFunction
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
@@ -51,6 +52,7 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.RaycastContext
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.max
 
 @JvmField
 val DEFAULT_BLOCK_STATE: BlockState = Blocks.AIR.defaultState
@@ -705,7 +707,69 @@ inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true })
             include.invoke(it)
     }
 }
+/**
+ * Determines whether the trajectory from start to entity target has any sample rays that are not blocked by blocks.
+ *
+ * Principle: Grid sampling in the three-axis direction in the bracketing box of the target entity (samplesPerAxis^3 points),
+ * Do a world.raycast for each sample point (using COLLIDER), if either ray misses the block (MISS),
+ * is considered shootable (allowed through fences/gaps). samplesPerAxis is best between 1..5; 1 indicates that only the center point of the bracketing box is detected.
+ *
+ * @param start starting point (usually player.eyePos)
+ * @param target entity
+ * @param samplesPerAxis Sample Points per Axis (>=1)
+ * @return true if there is at least one ray that is not blocked by the block; false means that all sample point directions are blocked by blocks
+ */
+fun isPathClearToEntity(start: Vec3d, target: Entity, samplesPerAxis: Int = 3): Boolean {
+    val world = mc.world ?: return false
+    val bbox: Box = target.boundingBox
+    val clampedSamples = max(1, samplesPerAxis)
 
+    val eps = 1e-3
+    val realStart = Vec3d(start.x + eps, start.y + eps, start.z + eps)
+
+    val minX = bbox.minX
+    val maxX = bbox.maxX
+    val minY = bbox.minY
+    val maxY = bbox.maxY
+    val minZ = bbox.minZ
+    val maxZ = bbox.maxZ
+
+    if (clampedSamples == 1) {
+        val center = Vec3d((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0)
+        val ctx = RaycastContext(realStart, center, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+        val hit = world.raycast(ctx)
+        if (hit.type == HitResult.Type.MISS) return true
+        if (hit.type != HitResult.Type.BLOCK) return true
+        return false
+    }
+
+    for (xi in 0 until clampedSamples) {
+        val fx = xi.toDouble() / (clampedSamples - 1)
+        val x = minX + (maxX - minX) * fx
+        for (yi in 0 until clampedSamples) {
+            val fy = yi.toDouble() / (clampedSamples - 1)
+            val y = minY + (maxY - minY) * fy
+            for (zi in 0 until clampedSamples) {
+                val fz = zi.toDouble() / (clampedSamples - 1)
+                val z = minZ + (maxZ - minZ) * fz
+
+                val sampleTarget = Vec3d(x, y, z)
+                val ctx = RaycastContext(realStart, sampleTarget, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+                val hit = world.raycast(ctx)
+                if (hit.type == HitResult.Type.MISS) {
+                    return true
+                }
+
+                if (hit.type != HitResult.Type.BLOCK) {
+                    return true
+                }
+
+            }
+        }
+    }
+
+    return false
+}
 /**
  * Like [isBlockedByEntities] but it returns a blocking end crystal if present.
  */

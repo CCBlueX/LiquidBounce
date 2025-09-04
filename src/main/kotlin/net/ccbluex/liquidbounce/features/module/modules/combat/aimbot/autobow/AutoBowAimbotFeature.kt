@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.block.isPathClearToEntity
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -22,12 +23,9 @@ import net.minecraft.item.TridentItem
  * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
  */
 object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot", true) {
+    private val rotationConfigurable = RotationsConfigurable(this)
 
-    // Target
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
-
-    // Rotation
-    val rotationConfigurable = RotationsConfigurable(this)
 
     init {
         tree(targetTracker)
@@ -54,6 +52,15 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
 
         var rotation: Rotation? = null
         targetTracker.selectFirst { enemy ->
+            val pathClear = isPathClearToEntity(
+                player.eyePos,
+                enemy,
+                3
+                )
+            if (!pathClear) {
+                return@selectFirst false
+            }
+
             rotation = SituationalProjectileAngleCalculator.calculateAngleForEntity(projectileInfo, enemy)
             rotation != null
         } ?: return@tickHandler

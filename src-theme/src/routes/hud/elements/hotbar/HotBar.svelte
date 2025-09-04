@@ -14,7 +14,7 @@
 
     let ModeComponent: any;
 
-    $: ModeComponent = modes[settings?.mode] ?? ModernHotBar;
+    $: ModeComponent = modes[settings?.mode] ?? RiseHotBar;
 </script>
 
 <svelte:component this={ModeComponent} {settings} />
