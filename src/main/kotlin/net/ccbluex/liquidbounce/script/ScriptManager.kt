@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptAsyncUtil
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.Util
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.Source
 import java.io.File
+import java.util.concurrent.CompletableFuture
 
 /**
  * The ScriptManager allows to extend the client by loading supported scripts at runtime.
@@ -79,23 +81,26 @@ object ScriptManager {
             item.getInstallationFolder()
         }
 
-        files.forEach { file ->
-            if (file.isDirectory) {
-                // If a directory is found, look for a main script file inside it.
-                val mainFile = file.listFiles { dirFile ->
-                    dirFile.nameWithoutExtension == "main" && Source.findLanguage(dirFile) != null
-                }?.firstOrNull()
+        files.map { file ->
+            CompletableFuture.supplyAsync({
+                if (file.isDirectory) {
+                    // If a directory is found, look for a main script file inside it.
+                    val mainFile = file.listFiles { dirFile ->
+                        dirFile.nameWithoutExtension == "main" && Source.findLanguage(dirFile) != null
+                    }?.firstOrNull()
 
-                if (mainFile != null) {
-                    loadCatched(mainFile)
+                    if (mainFile != null) {
+                        loadCatched(mainFile)
+                    } else {
+                        logger.warn("Unable to find main inside the directory ${file.name}.")
+                        null
+                    }
                 } else {
-                    logger.warn("Unable to find main inside the directory ${file.name}.")
+                    // If the file is a script, load it immediately.
+                    loadCatched(file)
                 }
-            } else {
-                // If the file is a script, load it immediately.
-                loadCatched(file)
-            }
-        }
+            }, Util.getMainWorkerExecutor())
+        }.mapNotNullTo(scripts) { it.get() }
 
         // After loading, enable all the scripts.
         enableAll()
@@ -115,11 +120,12 @@ object ScriptManager {
     /**
      * Loads a script from a file and catches any exceptions that occur during the loading process.
      * This ensures that a single faulty script does not prevent other scripts from being loaded.
+     * This method doesn't register the loaded script.
      *
      * @param file The script file to load.
      */
     private fun loadCatched(file: File) = runCatching {
-        loadScript(file)
+        loadScript(file, register = false)
     }.onFailure {
         logger.error("Unable to load script ${file.name}.", it)
     }.getOrNull()
@@ -134,6 +140,7 @@ object ScriptManager {
      */
     fun loadScript(
         file: File,
+        register: Boolean = true,
         language: String = Source.findLanguage(file),
         debugOptions: ScriptDebugOptions = ScriptDebugOptions()
     ): PolyglotScript {
@@ -142,7 +149,10 @@ object ScriptManager {
         val script = PolyglotScript(language, file, debugOptions)
         script.initScript()
 
-        scripts += script
+        if (register) {
+            scripts += script
+        }
+
         return script
     }
 
