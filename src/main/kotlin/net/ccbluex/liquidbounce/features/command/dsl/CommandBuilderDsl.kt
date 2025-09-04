@@ -26,11 +26,15 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 @DslMarker
 annotation class CommandBuilderDsl
 
+inline fun buildCommand(name: String, block: CommandBuilder.() -> Unit): Command {
+    return CommandBuilder.begin(name).apply(block).build()
+}
+
 inline fun commandFactory(
     name: String,
     crossinline block: CommandBuilder.() -> Unit,
 ): Command.Factory {
-    return Command.Factory { CommandBuilder.begin(name).apply(block).build() }
+    return Command.Factory { buildCommand(name, block) }
 }
 
 context(context: Command.Handler.Context)

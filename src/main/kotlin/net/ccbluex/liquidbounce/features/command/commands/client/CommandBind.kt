@@ -19,10 +19,11 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.module
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
+import net.ccbluex.liquidbounce.features.command.dsl.cast
+import net.ccbluex.liquidbounce.features.command.dsl.parameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
@@ -34,52 +35,47 @@ import net.ccbluex.liquidbounce.utils.input.availableInputKeys
  */
 object CommandBind : Command.Factory {
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("bind")
-            .parameter(
-                ParameterBuilder.module()
-                    .required()
-                    .build()
-            ).parameter(
-                ParameterBuilder
-                    .begin<String>("key")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedFrom { availableInputKeys }
-                    .required()
-                    .build()
-            )
-            .handler {
-                val module = args[0] as ClientModule
-                val keyName = args[1] as String
+    override fun createCommand() = buildCommand("bind") {
+        val module = parameter {
+            module().required()
+        }
 
-                if (keyName.equals("none", true)) {
-                    module.bind.unbind()
-                    ModuleClickGui.reload()
-                    chat(
-                        regular(command.result("moduleUnbound", variable(module.name))),
-                        metadata = MessageMetadata(id = "Bind#${module.name}")
-                    )
-                    return@handler
-                }
+        val key = parameter("key") {
+            verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .autocompletedFrom { availableInputKeys }
+                .required()
+        }
 
-                runCatching {
-                    module.bind.bind(keyName)
-                    ModuleClickGui.reload()
-                }.onSuccess {
-                    chat(
-                        regular(command.result("moduleBound", variable(module.name), variable(module.bind.keyName))),
-                        metadata = MessageMetadata(id = "Bind#${module.name}")
-                    )
-                }.onFailure {
-                    chat(
-                        markAsError(command.result("keyNotFound", variable(keyName))),
-                        metadata = MessageMetadata(id = "Bind#${module.name}")
-                    )
-                }
+        handler {
+            val module = module.cast()
+            val keyName = key.cast()
 
+            if (keyName.equals("none", true)) {
+                module.bind.unbind()
+                ModuleClickGui.reload()
+                chat(
+                    regular(command.result("moduleUnbound", variable(module.name))),
+                    metadata = MessageMetadata(id = "Bind#${module.name}")
+                )
+                return@handler
             }
-            .build()
+
+            runCatching {
+                module.bind.bind(keyName)
+                ModuleClickGui.reload()
+            }.onSuccess {
+                chat(
+                    regular(command.result("moduleBound", variable(module.name), variable(module.bind.keyName))),
+                    metadata = MessageMetadata(id = "Bind#${module.name}")
+                )
+            }.onFailure {
+                chat(
+                    markAsError(command.result("keyNotFound", variable(keyName))),
+                    metadata = MessageMetadata(id = "Bind#${module.name}")
+                )
+            }
+
+        }
     }
 
 }
