@@ -33,29 +33,33 @@ inline fun commandFactory(
     return Command.Factory { CommandBuilder.begin(name).apply(block).build() }
 }
 
-fun <T : Any> Parameter<T>.cast(command: Command, args: Array<out Any>): T {
-    requireOwner(command)
+context(context: Command.Handler.Context)
+fun <T : Any> Parameter<T>.cast(): T {
+    requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
-    return args.getOrNull(index) as T?
+    return context.args.getOrNull(index) as T?
         ?: requireNotNull(this.default) { "Parameter '$name' has no default value." }
 }
 
-fun <T : Any> Parameter<T>.castVararg(command: Command, args: Array<out Any>): Array<out T> {
-    requireOwner(command)
+context(context: Command.Handler.Context)
+fun <T : Any> Parameter<T>.castVararg(): Array<out T> {
+    requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
-    return args[index] as Array<T>
+    return context.args[index] as Array<T>
 }
 
-fun <T : Any> Parameter<T>.castNotRequired(command: Command, args: Array<out Any>): T? {
-    requireOwner(command)
+context(context: Command.Handler.Context)
+fun <T : Any> Parameter<T>.castNotRequired(): T? {
+    requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
-    return args.getOrNull(index) as T?
+    return context.args.getOrNull(index) as T?
 }
 
-fun <T : Any> Parameter<T>.castNotRequired(command: Command, args: Array<out Any>, default: T): T {
-    requireOwner(command)
+context(context: Command.Handler.Context)
+fun <T : Any> Parameter<T>.castNotRequired(default: T): T {
+    requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
-    return args.getOrNull(index) as T? ?: default
+    return context.args.getOrNull(index) as T? ?: default
 }
 
 private fun Parameter<*>.requireOwner(command: Command) {

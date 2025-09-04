@@ -62,10 +62,10 @@ val MarketplaceEditItemCommand = commandFactory("edit") {
     suspendHandler {
         val clientAccount = ClientAccountManager.accountOrException()
 
-        val id = id.cast(command, args)
-        val name = name.cast(command, args)
-        val type = type.cast(command, args)
-        val description = description.castVararg(command, args).joinToString(" ")
+        val id = id.cast()
+        val name = name.cast()
+        val type = type.cast()
+        val description = description.castVararg().joinToString(" ")
 
         val response = MarketplaceApi.updateMarketplaceItem(
             clientAccount.takeSession(),

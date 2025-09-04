@@ -57,9 +57,9 @@ internal val MarketplaceCreateItemCommand = commandFactory("create") {
     suspendHandler {
         val clientAccount = ClientAccountManager.accountOrException()
 
-        val name = name.cast(command, args)
-        val type = type.cast(command, args)
-        val description = description.castVararg(command, args).joinToString(" ")
+        val name = name.cast()
+        val type = type.cast()
+        val description = description.castVararg().joinToString(" ")
 
         val response = MarketplaceApi.createMarketplaceItem(
             clientAccount.takeSession(),

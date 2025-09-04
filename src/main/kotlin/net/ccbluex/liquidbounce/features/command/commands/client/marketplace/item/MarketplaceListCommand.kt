@@ -52,9 +52,9 @@ internal val MarketplaceListCommand = commandFactory("list") {
     }
 
     suspendHandler {
-        val type = type.cast(command, args)
-        val page = page.cast(command, args)
-        val featured = featured.cast(command, args)
+        val type = type.cast()
+        val page = page.cast()
+        val featured = featured.cast()
 
         val response = MarketplaceApi.getMarketplaceItems(page, 10, type = type, featured = featured)
 

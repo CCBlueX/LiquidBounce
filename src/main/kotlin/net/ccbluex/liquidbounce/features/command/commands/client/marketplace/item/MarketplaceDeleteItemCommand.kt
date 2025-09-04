@@ -43,7 +43,7 @@ internal val MarketplaceDeleteItemCommand = commandFactory("delete") {
     suspendHandler {
         val clientAccount = ClientAccountManager.accountOrException()
 
-        val id = id.cast(command, args)
+        val id = id.cast()
         MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), id)
         chat(regular(command.result("success", variable(id.toString()))))
     }

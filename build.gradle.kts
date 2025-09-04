@@ -400,7 +400,7 @@ kotlin {
         suppressWarnings = true
         jvmToolchain(21)
         freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
-//        freeCompilerArgs.add("-Xcontext-parameters")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 
