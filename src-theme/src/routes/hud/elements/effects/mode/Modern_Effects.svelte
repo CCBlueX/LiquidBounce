@@ -66,7 +66,7 @@
                           {e.color >> 8 & 255}, {e.color & 255}, 0.3));"
                         in:fade={{ delay: 100 }}
                 >
-                {getIdentifierName(e.effect, e.amplifier)}
+                {getIdentifierName(e.effect, e.amplifier + 1)}
                 </span>
                 <div class="progress-bar">
 

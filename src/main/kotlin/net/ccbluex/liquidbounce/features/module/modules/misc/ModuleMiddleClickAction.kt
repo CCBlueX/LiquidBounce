@@ -65,7 +65,7 @@ object ModuleMiddleClickAction : ClientModule(
     object Pearl : Choice("Pearl") {
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
-        private val stopOnSubmit by boolean("StopOnSubmit",false)
+        private val stopOnSubmit by floatRange("StopOnSubmit",85F..90F,60F..90F,"Pitch")
         var wasPressed = false
 
         val repeatable = tickHandler {
@@ -74,7 +74,7 @@ object ModuleMiddleClickAction : ClientModule(
                 return@tickHandler
             }
 
-            if (stopOnSubmit && player.pitch in 85f..90f) {
+            if ( player.pitch in stopOnSubmit) {
                 wasPressed = false
                 return@tickHandler
             }

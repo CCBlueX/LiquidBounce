@@ -15,6 +15,12 @@
         });
     });
 
+    function getIdentifierName(effectId: string, amplifier: number): string {
+        const id = effectId.replace(/^minecraft:/, '');
+        const words = id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1));
+        return words.join(' ') + (amplifier + 1);
+    }
+
     function formatTime(duration: number): string {
         return new Date(((duration / 20) | 0) * 1000)
             .toISOString()
@@ -52,7 +58,7 @@
                      filter: drop-shadow(0 2px 10px rgba({e.color >> 16 & 255},{e.color >> 8 & 255}, {e.color & 255}, 0.3));"
                     in:fade={{ delay: 100 }}
             >
-                {e.localizedName} {e.amplifier + 1}
+                 {getIdentifierName(e.effect, e.amplifier)}
             </span>
             <span
                     class="duration"
