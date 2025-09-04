@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.pathing.PathManagers
-import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
+import net.ccbluex.liquidbounce.utils.session.GamingCheck
 import net.minecraft.block.Blocks
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.util.math.BlockPos
@@ -120,8 +120,8 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
     }
 
     private fun shouldSkipMovement(): Boolean {
+        if (GamingCheck.OnGlass) return true
         if (player.isCreative || player.isSpectator) return true
-        if (OnGlass) return true
         if (!player.isAlive || player.abilities.flying || player.hasStatusEffect(StatusEffects.LEVITATION)) return true
 
         val yawRad = Math.toRadians(player.yaw.toDouble())

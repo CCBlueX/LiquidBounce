@@ -165,8 +165,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
         val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyReceiveHit || CombatManager.isReceiveHit
-            return alwaysInVoid
-                && voidFallPrediction.isVoidFallImminent
+            return voidFallPrediction.isVoidFallImminent
                 && ScaffoldAutoClutchHelper.enabled
                 && scaffoldCombatReady
                 && scaffoldReceiveHit

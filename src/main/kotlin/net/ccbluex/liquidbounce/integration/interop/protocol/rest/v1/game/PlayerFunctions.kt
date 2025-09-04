@@ -147,7 +147,7 @@ data class PlayerData(
             ModuleAutoBuff.isEating,
             ModuleAutoBuff.eatingStartTime,
             ModuleAutoBuff.eatingMaxDuration,
-            GameWins.localWinsCounter,
+            GameWins.victoryCount,
             PlayTimeTracker.getPlayTime(),
         )
 

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Util
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -39,6 +38,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
@@ -72,7 +72,7 @@ object HttpClient {
      */
     @get:JvmStatic
     val client: OkHttpClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
+        .dispatcher(Dispatcher(Executors.newVirtualThreadPerTaskExecutor()))
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)

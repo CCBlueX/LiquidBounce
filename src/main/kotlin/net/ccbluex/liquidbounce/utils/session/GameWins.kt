@@ -3,13 +3,8 @@ package net.ccbluex.liquidbounce.utils.session
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.OverlayChatEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
-import net.minecraft.block.Blocks
 import net.minecraft.text.Text
 import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
@@ -17,24 +12,12 @@ import java.util.concurrent.TimeUnit
 object GameWins: EventListener {
     private var titleField: Field? = null
     private var subtitleField: Field? = null
-    private val winsCounterLock = Any()
     private var lastWinDetectionTime = 0L
     private val cooldownMillis = TimeUnit.SECONDS.toMillis(10)
-    var OnGlass : Boolean = false
 
-    @Suppress("unused")
-    private val blockCheckHandler = handler<PlayerTickEvent> { event ->
-        val blockPos = player.blockPos.down()
-        val block = world.getBlockState(blockPos).block
+    var victoryCount = 0
+        private set
 
-        OnGlass  = block == Blocks.GLASS || block == Blocks.TINTED_GLASS
-    }
-    var localWinsCounter = 0
-        private set(value) {
-            synchronized(winsCounterLock) {
-                field = value
-            }
-        }
 
     init {
         try {
@@ -56,7 +39,7 @@ object GameWins: EventListener {
 
                 if (checkWinCondition(currentTitle) || checkWinCondition(currentSubtitle)) {
                     lastWinDetectionTime = currentTime
-                    localWinsCounter++
+                    victoryCount++
                 }
             } catch (e: Exception) {
                 println("Error processing win condition: ${e.message}")
@@ -72,7 +55,7 @@ object GameWins: EventListener {
 
                 if (checkChatWinCondition(event.textData)) {
                     lastWinDetectionTime = currentTime
-                    localWinsCounter++
+                    victoryCount++
                 }
             } catch (e: Exception) {
                 println("Error processing chat win condition: ${e.message}")

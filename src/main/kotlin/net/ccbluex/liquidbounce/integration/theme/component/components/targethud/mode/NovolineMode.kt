@@ -15,12 +15,14 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.util.SkinTextures
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 import java.util.function.Function
 import kotlin.math.min
@@ -157,7 +159,7 @@ object NovolineMode : TargetHudMode("Novoline") {
         val percentLocalY = y + 24f + 4f - (fontRenderer.height * 0.3f / 2f) - 1f
 
         val maxNameUnscaled = (width - 44f) / 0.3f
-        var nameStr = target.name.string
+        var nameStr = target.gameProfile?.name ?: target.name.string
         while (nameStr.isNotEmpty() && fontRenderer.getStringWidth(
                 fontRenderer.process(nameStr, color)) > maxNameUnscaled) {
             nameStr = nameStr.substring(0, nameStr.length - 1)

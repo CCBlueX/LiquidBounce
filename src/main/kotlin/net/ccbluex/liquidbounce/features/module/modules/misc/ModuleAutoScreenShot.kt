@@ -56,7 +56,7 @@ object ModuleAutoScreenShot : ClientModule("AutoScreenShot", Category.MISC) {
 
     @Suppress("unused")
     private val tickHandler = handler<OverlayTitleEvent> {
-        val currentWins = GameWins.localWinsCounter
+        val currentWins = GameWins.victoryCount
 
         if (currentWins > lastWinCount && !isProcessing) {
             lastWinCount = currentWins
@@ -186,7 +186,7 @@ object ModuleAutoScreenShot : ClientModule("AutoScreenShot", Category.MISC) {
 
     private fun takeScreenshot(perspectiveName: String) {
         val timestamp = System.currentTimeMillis()
-        val fileName = "win_${GameWins.localWinsCounter}_${perspectiveName}_$timestamp.png"
+        val fileName = "win_${GameWins.victoryCount}_${perspectiveName}_$timestamp.png"
 
         ScreenshotRecorder.saveScreenshot(
             mc.runDirectory,
@@ -205,7 +205,7 @@ object ModuleAutoScreenShot : ClientModule("AutoScreenShot", Category.MISC) {
     }
 
     override fun onEnabled()  {
-        lastWinCount = GameWins.localWinsCounter
+        lastWinCount = GameWins.victoryCount
     }
 
     override fun onDisabled() {

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -30,8 +29,7 @@ import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.ccbluex.liquidbounce.utils.session.GameWins.OnGlass
-import net.minecraft.block.Blocks
+import net.ccbluex.liquidbounce.utils.session.GamingCheck
 import net.minecraft.screen.slot.SlotActionType
 
 /**
@@ -124,7 +122,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
-        if (OnlyGaming.enabled && OnlyGaming.checkGlass && OnGlass) {
+        if (OnlyGaming.enabled && OnlyGaming.checkGlass && GamingCheck.OnGlass) {
             return@handler
         }
         val currentInventorySlots = findNonEmptySlotsInInventory()
