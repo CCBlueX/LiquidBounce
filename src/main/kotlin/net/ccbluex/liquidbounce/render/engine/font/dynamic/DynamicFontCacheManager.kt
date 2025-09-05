@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import com.mojang.blaze3d.platform.GlStateManager
+import com.mojang.blaze3d.opengl.GlStateManager
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.liquidbounce.render.FontManager
