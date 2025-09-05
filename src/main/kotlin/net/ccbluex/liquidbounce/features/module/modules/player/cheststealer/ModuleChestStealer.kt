@@ -35,6 +35,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
+import java.util.EnumSet
 import kotlin.math.ceil
 
 /**
@@ -59,16 +60,41 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         ),
         ValueType.SCREEN_HANDLER
     )
-    private val filter by enumChoice("Filter", Filter.WHITELIST)
+    private val screenHandlerFilter by enumChoice("ScreenHandlerFilter", Filter.WHITELIST)
 
-    private val checkTitle by boolean("CheckTitle", true)
+    private val titles by multiEnumChoice(
+        "ContainerTitles",
+        EnumSet.of(
+            ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+            ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+        ),
+    )
+    private val titleFilter by enumChoice("ContainerTitleFilter", Filter.WHITELIST)
+
+    @Suppress("unused")
+    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+        BARREL("Barrel", "container.barrel"),
+        BEACON("Beacon", "container.beacon"),
+        BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
+        BREWING_STAND("BrewingStand", "container.brewing"),
+        CHEST("Chest", "container.chest"),
+        LARGE_CHEST("LargeChest", "container.chestDouble"),
+        DISPENSER("Dispenser", "container.dispenser"),
+        DROPPER("Dropper", "container.dropper"),
+        ENDER_CHEST("EnderChest", "container.enderchest"),
+        FURNACE("Furnace", "container.furnace"),
+        HOPPER("Hopper", "container.hopper"),
+        SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
+        SMOKER("Smoker", "container.smoker"),
+    }
 
     init {
         tree(FeatureChestAura)
         tree(FeatureSilentScreen)
     }
 
-    val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+    @Suppress("unused")
+    private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
         val screen = getChestScreen() ?: return@handler
 
@@ -161,11 +187,14 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
     private fun isScreenTitleChest(screen: Screen): Boolean {
         val titleString = screen.title.string
-
-        return arrayOf(
-            "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
-            "container.barrel" // TODO: furnance, dispenser, hopper, etc
-        ).any { Text.translatable(it).string == titleString }
+        return when (titleFilter) {
+            Filter.WHITELIST -> titles.any {
+                Text.translatable(it.translatableKey).string == titleString
+            }
+            Filter.BLACKLIST -> titles.none {
+                Text.translatable(it.translatableKey).string == titleString
+            }
+        }
     }
 
 
@@ -259,8 +288,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is HandledScreen<*> && (!checkTitle || isScreenTitleChest(this))
-            && filter(this.screenHandler.type, screenHandlerTypes)
+        return running && this is HandledScreen<*> && isScreenTitleChest(this)
+            && screenHandlerFilter(this.screenHandler.type, screenHandlerTypes)
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
