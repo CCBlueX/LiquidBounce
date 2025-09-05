@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
@@ -91,6 +93,69 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 return size.valueAtProportion(curve.transform(range.proportionOfValue(playerDistance)))
             }
         }
+    }
+
+    private val mergeMode by enumChoice("MergeMode", MergeMode.ONLY_PLAIN)
+
+    private val itemStackComparator: Comparator<ItemStack> =
+        Comparator.comparingInt<ItemStack> { -it.count }.thenBy { it.itemName.string }
+
+    @Suppress("unused")
+    private enum class MergeMode(
+        override val choiceName: String,
+        val merge: (entities: List<ItemEntity>) -> List<ItemStack>,
+    ) : NamedChoice {
+        /**
+         * Do not merge any item stacks.
+         */
+        NONE("None", { entities ->
+            val stacks = entities.mapArray { it.stack }
+            stacks.sortWith(itemStackComparator)
+            stacks.asList()
+        }),
+
+        /**
+         * Merge all item stacks with same item.
+         */
+        ALL("All", { entities ->
+            val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
+            for (itemEntity in entities) {
+                map.getOrPut(itemEntity.stack.item, ::ArrayList)
+                    .add(itemEntity.stack)
+            }
+            val result = map.values.mapArray { stacks ->
+                if (stacks.size == 1) {
+                    stacks[0]
+                } else {
+                    ItemStack(stacks[0].item, stacks.sumOf { it.count })
+                }
+            }
+            result.sortWith(itemStackComparator)
+            result.asList()
+        }),
+
+        /**
+         * Merge item stacks with no component changes.
+         */
+        ONLY_PLAIN("OnlyPlain", { entities ->
+            val stacks = ArrayList<ItemStack>()
+            val map = Reference2IntOpenHashMap<Item>()
+
+            for (entity in entities) {
+                val stack = entity.stack
+                if (stack.componentChanges.isEmpty) {
+                    map.addTo(stack.item, stack.count)
+                } else {
+                    stacks.add(stack)
+                }
+            }
+
+            stacks.ensureCapacity(stacks.size + map.size)
+            map.mapTo(stacks) { (item, count) -> ItemStack(item, count) }
+
+            stacks.sortWith(itemStackComparator)
+            stacks
+        }),
     }
 
     private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
@@ -170,29 +235,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         output.clear()
         output.ensureCapacity(groups.size)
         groups.mapTo(output) {
-            ClusteredEntities(it, it.mergeStacks())
+            ClusteredEntities(it, mergeMode.merge(it))
         }
-    }
-
-    /**
-     * Merge stacks with same item, order by count desc
-     */
-    @JvmStatic
-    private fun List<ItemEntity>.mergeStacks(): List<ItemStack> {
-        val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
-        for (itemEntity in this) {
-            map.getOrPut(itemEntity.stack.item, ::mutableListOf)
-                .add(itemEntity.stack)
-        }
-        val result = map.values.mapArray { stacks ->
-            if (stacks.size == 1) {
-                stacks[0]
-            } else {
-                ItemStack(stacks[0].item, stacks.sumOf { it.count })
-            }
-        }
-        result.sortByDescending { it.count }
-        return result.asList()
     }
 
 }
