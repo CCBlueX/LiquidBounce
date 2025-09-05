@@ -36,24 +36,27 @@ import net.minecraft.util.math.MathHelper
  */
 @Suppress("MagicNumber")
 object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf("AimAssist", "AutoAim")) {
-
-    private val range = float("Range", 4.2f, 1f..8f)
-
-    val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
-    private val targetRenderer = tree(WorldTargetRenderer(this))
-    private val pointTracker = tree(PointTracker(this))
-
-    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
-
-    private val requirementsMet
-        get() = requires.all { it.meets() }
-
     private var angleSmooth = choices(this, "AngleSmooth") {
         arrayOf(
             InterpolationAngleSmooth(it),
-            LinearAngleSmooth(it)
+            LinearAngleSmooth(it),
         )
     }
+    private val range = float("Range", 4.2f, 1f..8f)
+    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val aimThroughWalls by boolean("ThroughWalls", false)
+
+    val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
+
+    private val pointTracker = tree(PointTracker(this))
+    private val requires by multiEnumChoice<KillAuraRequirements>(
+        "Requires",
+        KillAuraRequirements.ONLY_ON_ROTATE,
+        KillAuraRequirements.CLICK
+    )
+
+    private val requirementsMet
+        get() = requires.all { it.meets() }
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
@@ -175,12 +178,17 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
             val eyes = player.eyePos
             val pointOnHitbox = pointTracker.findPoint(eyes, target, 0)
             val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.pos)
-
+            val range = targetTracker.maxRange.toDouble()
+            val wallRange = if (aimThroughWalls){
+                range
+            }else{
+                0.0
+            }
             val spot = raytraceBox(
                 eyes,
                 pointOnHitbox.box,
-                range = targetTracker.maxRange.toDouble(),
-                wallsRange = 0.0,
+                range = range,
+                wallsRange = wallRange,
                 rotationPreference = rotationPreference
             ) ?: continue
 
