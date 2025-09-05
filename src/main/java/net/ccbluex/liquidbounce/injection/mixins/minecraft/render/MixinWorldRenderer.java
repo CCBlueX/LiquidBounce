@@ -98,7 +98,7 @@ public abstract class MixinWorldRenderer {
             outlineShader.update();
             outlineShader.getHandle().get().beginWrite(false);
 
-            var event = new DrawOutlinesEvent(new MatrixStack(), camera, tickCounter.getTickDelta(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+            var event = new DrawOutlinesEvent(new MatrixStack(), camera, tickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
             EventManager.INSTANCE.callEvent(event);
 
             if (event.getDirtyFlag()) {
@@ -248,7 +248,7 @@ public abstract class MixinWorldRenderer {
 
         //noinspection DataFlowIssue
         this.getEntityOutlinesFramebuffer().beginWrite(false);
-        var event = new DrawOutlinesEvent(new MatrixStack(), camera, renderTickCounter.getTickDelta(false), DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
+        var event = new DrawOutlinesEvent(new MatrixStack(), camera, renderTickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
         EventManager.INSTANCE.callEvent(event);
         OutlineFlag.drawOutline |= event.getDirtyFlag();
         client.getFramebuffer().beginWrite(false);

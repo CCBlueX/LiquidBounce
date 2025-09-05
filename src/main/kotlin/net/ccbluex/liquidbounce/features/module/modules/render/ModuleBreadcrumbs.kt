@@ -203,7 +203,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                 ObjectFloatMutablePair.of(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
+            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickProgress(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left(point)
 

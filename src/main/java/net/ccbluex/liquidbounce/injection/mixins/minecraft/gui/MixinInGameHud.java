@@ -85,7 +85,7 @@ public abstract class MixinInGameHud {
      */
     @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickDelta(false));
+        BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickProgress(false));
 
         // Draw after overlay event
         var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);

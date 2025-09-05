@@ -145,7 +145,7 @@ public abstract class MixinGameRenderer {
 
         newMatStack.multiplyPositionMatrix(matrix4f2);
 
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickDelta(false)));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickProgress(false)));
     }
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))
@@ -171,7 +171,7 @@ public abstract class MixinGameRenderer {
             target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V",
             shift = At.Shift.AFTER))
     public void hookScreenRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci, @Local DrawContext drawContext) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getTickDelta(false)));
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getTickProgress(false)));
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
