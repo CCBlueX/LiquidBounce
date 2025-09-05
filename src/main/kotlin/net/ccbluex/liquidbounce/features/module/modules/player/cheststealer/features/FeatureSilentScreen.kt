@@ -55,6 +55,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
         private val background = choices(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+        private val showTitle by boolean("ShowTitle", false)
 
         init {
             // This is a feature for rendering, skip it in config publication.
@@ -78,7 +79,8 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
         }
 
-        val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+        @Suppress("unused")
+        private val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
             val pos = getRenderPos() ?: return@handler
@@ -87,6 +89,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             renderEnvironmentForGUI {
                 event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
+                    .title(if (showTitle) containerScreen.title.string else "")
                     .center(pos)
                     .scale(scale)
                     .background(background.activeChoice)

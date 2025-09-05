@@ -43,6 +43,8 @@ class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
 ) {
+    private var title = ""
+    private var titleColor: Int = 0xffffffff.toInt()
     private var centerX = 0.0F
     private var centerY = 0.0F
     private var centerZ = 0.0F
@@ -52,6 +54,12 @@ class ItemStackListRenderer private constructor(
     private var backgroundMargin = 2
     private var useTexture = false
     private var drawStackOverlay = true
+
+    @JvmOverloads
+    fun title(title: String, color: Int = this.titleColor) = apply {
+        this.title = title
+        this.titleColor = color
+    }
 
     fun centerX(centerX: Float) = apply {
         this.centerX = centerX
@@ -132,8 +140,15 @@ class ItemStackListRenderer private constructor(
 
         val matrices = drawContext.matrices
 
-        val width = size * minOf(stacks.size, rowLength)
-        val height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
+        var width = size * minOf(stacks.size, rowLength)
+        var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
+
+        val textRenderer = mc.textRenderer
+
+        if (title.isNotEmpty()) {
+            width = maxOf(width, textRenderer.getWidth(title))
+            height += textRenderer.fontHeight + 2
+        }
 
         matrices.push()
 
@@ -143,6 +158,11 @@ class ItemStackListRenderer private constructor(
 
         if (!this.useTexture) {
             fillBackground(width, height)
+        }
+
+        if (title.isNotEmpty()) {
+            drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
+            matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
         }
 
         // render stacks
@@ -159,7 +179,7 @@ class ItemStackListRenderer private constructor(
 
             drawContext.drawItem(stack, leftX + diff, topY + diff)
             if (drawStackOverlay) {
-                drawContext.drawStackOverlay(mc.textRenderer, stack, leftX + diff, topY + diff, null)
+                drawContext.drawStackOverlay(textRenderer, stack, leftX + diff, topY + diff, null)
             }
         }
 
