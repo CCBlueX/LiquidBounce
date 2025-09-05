@@ -38,7 +38,7 @@ internal object NoFallVerus : Choice("Verus") {
         val packet = it.packet
         if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {
             packet.onGround = true
-            player.fallDistance = 0f
+            player.fallDistance = 0.0
             player.velocity.y = 0.0
         }
     }

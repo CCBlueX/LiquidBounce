@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.interfaces.ArmorItemAdditions
 import net.ccbluex.liquidbounce.interfaces.ItemCooldownManagerAdditions
 import net.ccbluex.liquidbounce.interfaces.MiningToolItemAddition
 import net.minecraft.entity.player.ItemCooldownManager
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -39,6 +41,10 @@ fun ArmorItem.type(): EquipmentType = (this as ArmorItemAdditions).`liquid_bounc
 
 fun ItemCooldownManager.getCooldown(stack: ItemStack): ItemCooldownManagerAdditions.Entry? =
     (this as ItemCooldownManagerAdditions).`liquidBounce$getCooldown`(stack)
+
+// TODO: Move following to ItemExtensions
+
+val PlayerEntity.handItems: List<ItemStack> get() = listOf(mainHandStack, offHandStack)
 
 val ItemStack.isSword: Boolean
     get() = isIn(ItemTags.SWORDS)
