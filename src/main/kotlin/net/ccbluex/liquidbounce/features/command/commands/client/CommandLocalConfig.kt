@@ -131,14 +131,12 @@ object CommandLocalConfig : Command.Factory {
                     chat(
                         variable(file.name)
                             .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                ClickEvent.SuggestCommand(
                                     ".localconfig load $fileNameWithoutSuffix"
                                 )
                             )
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     Text.of("§7Click to load ${file.name}")
                                 )
                             ),

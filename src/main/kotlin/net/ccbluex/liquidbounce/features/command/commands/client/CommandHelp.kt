@@ -51,8 +51,7 @@ object CommandHelp : Command.Factory {
                     "\u2B25 ".asText()
                         .formatted(Formatting.BLUE)
                         .onHover(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
+                            HoverEvent.ShowText(
                                 translation("liquidbounce.command.${command.name}.description")
                             )
                         )

@@ -4,7 +4,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -53,7 +52,7 @@ fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
     AccountManager.newMicrosoftAccount {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             GLFW.glfwSetClipboardString(mc.window.handle, it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
@@ -65,6 +64,7 @@ fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpRespons
 @Suppress("UNUSED_PARAMETER")
 fun postNewCrackedAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val username: String, val online: Boolean?)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
@@ -75,6 +75,7 @@ fun postNewCrackedAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postNewSessionAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val token: String)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
@@ -85,6 +86,7 @@ fun postNewSessionAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postNewAlteningAccount(requestObject: RequestObject): FullHttpResponse {
     data class AlteningForm(val token: String)
+
     val accountForm = requestObject.asJson<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
     return httpNoContent()
@@ -94,6 +96,7 @@ fun postNewAlteningAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postGenerateAlteningAccount(requestObject: RequestObject): FullHttpResponse {
     data class AlteningGenForm(val apiToken: String)
+
     val accountForm = requestObject.asJson<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
@@ -104,6 +107,7 @@ fun postGenerateAlteningAccount(requestObject: RequestObject): FullHttpResponse 
 @Suppress("UNUSED_PARAMETER")
 fun postSwapAccounts(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val from: Int, val to: Int)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
@@ -114,6 +118,7 @@ fun postSwapAccounts(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postOrderAccounts(requestObject: RequestObject): FullHttpResponse {
     data class AccountOrderRequest(val order: List<Int>)
+
     val accountOrderRequest = requestObject.asJson<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
@@ -124,6 +129,7 @@ fun postOrderAccounts(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postLoginAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val id: Int)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
@@ -134,6 +140,7 @@ fun postLoginAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postLoginCrackedAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val username: String, val online: Boolean?)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
@@ -144,6 +151,7 @@ fun postLoginCrackedAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val token: String)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
@@ -161,6 +169,7 @@ fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun putFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val id: Int)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
@@ -171,6 +180,7 @@ fun putFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun deleteFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val id: Int)
+
     val accountForm = requestObject.asJson<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
@@ -181,6 +191,7 @@ fun deleteFavoriteAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
     data class AccountForm(val id: Int)
+
     val accountForm = requestObject.asJson<AccountForm>()
     val account = AccountManager.removeAccount(accountForm.id)
 

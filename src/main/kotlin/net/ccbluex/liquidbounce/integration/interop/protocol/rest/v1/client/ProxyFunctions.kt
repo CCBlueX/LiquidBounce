@@ -23,7 +23,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -112,8 +111,8 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
 // POST /api/v1/client/proxies/add/clipboard
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
-    RenderSystem.recordRenderCall {
-        RenderSystem.recordRenderCall {
+    mc.execute {
+        mc.execute {
             try {
                 val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
                 if (clipboardText.isNullOrBlank()) {

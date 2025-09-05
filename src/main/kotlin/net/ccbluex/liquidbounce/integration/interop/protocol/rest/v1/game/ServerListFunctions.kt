@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
@@ -84,13 +83,14 @@ fun getServers(requestObject: RequestObject) = runCatching {
 @Suppress("UNUSED_PARAMETER")
 fun postConnect(requestObject: RequestObject): FullHttpResponse {
     data class ServerConnectRequest(val address: String)
+
     val serverConnectRequest = requestObject.asJson<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
         ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
 
     val serverAddress = ServerAddress.parse(serverInfo.address)
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
     return httpNoContent()
@@ -100,6 +100,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
+
     val serverAddRequest = requestObject.asJson<ServerAddRequest>()
 
     if (!ServerAddress.isValid(serverAddRequest.address)) {
@@ -121,6 +122,7 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerRemoveRequest(val id: Int)
+
     val serverRemoveRequest = requestObject.asJson<ServerRemoveRequest>()
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
@@ -139,6 +141,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
         val address: String,
         val resourcePackPolicy: String? = null
     )
+
     val serverEditRequest = requestObject.asJson<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 
@@ -156,6 +159,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerSwapRequest(val from: Int, val to: Int)
+
     val serverSwapRequest = requestObject.asJson<ServerSwapRequest>()
 
     serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
@@ -167,6 +171,7 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerOrderRequest(val order: List<Int>)
+
     val serverOrderRequest = requestObject.asJson<ServerOrderRequest>()
 
     serverOrderRequest.order.map { serverList.get(it) }

@@ -53,6 +53,7 @@ fun getProtocol(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // PUT /api/v1/protocols/protocol
 fun putProtocol(requestObject: RequestObject): FullHttpResponse {
     data class ProtocolRequest(val version: Int)
+
     val protocolRequest = requestObject.asJson<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)

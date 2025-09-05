@@ -28,7 +28,9 @@ import net.ccbluex.netty.http.util.httpOk
 // GET /api/v1/client/components/:id
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) =
-    httpOk(accessibleInteropGson.toJsonTree(
-        ComponentManager.getComponents(requestObject.params["id"])).asJsonArray
+    httpOk(
+        accessibleInteropGson.toJsonTree(
+            ComponentManager.getComponents(requestObject.params["id"])
+        ).asJsonArray
     )
 

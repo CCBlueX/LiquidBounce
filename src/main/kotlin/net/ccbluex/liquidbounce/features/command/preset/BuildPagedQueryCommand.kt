@@ -42,7 +42,7 @@ private fun buildPaginationText(
 ): Text {
     fun MutableText.disabled() = withColor(Formatting.DARK_GRAY)
     fun MutableText.pageAction(page: Int) = this
-        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, page.toString().asText()))
+        .onHover(HoverEvent.ShowText(page.toString().asText()))
         .onClickRun { sendPage.accept(page) }
 
     val texts = mutableListOf<Text>()

@@ -97,8 +97,8 @@ object CommandFriend : Command.Factory {
                         val removeButton = regular("[X]")
                             .formatted(Formatting.RED)
                             .bold(true)
-                            .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, removeText))
-                            .onClick(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, removeCommand))
+                            .onHover(HoverEvent.ShowText(removeText))
+                            .onClick(ClickEvent.SuggestCommand(removeCommand))
 
                         chat(
                             regular("- "),

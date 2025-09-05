@@ -84,13 +84,11 @@ object MarketplaceSearchCommand : Command.Factory {
                             variable(item.type.toString().lowercase()),
                             variable(if (item.featured) "★" else "")
                         ).onClick(
-                            ClickEvent(
-                                ClickEvent.Action.SUGGEST_COMMAND,
+                            ClickEvent.SuggestCommand(
                                 ".marketplace $action ${item.id}"
                             )
                         ).onHover(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
+                            HoverEvent.ShowText(
                                 variable(command.result("hover", variable(action), item.id))
                             )
                         )

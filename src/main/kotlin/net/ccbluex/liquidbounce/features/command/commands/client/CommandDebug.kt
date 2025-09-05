@@ -48,6 +48,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
+import java.net.URI
 import java.util.*
 
 /**
@@ -87,7 +88,7 @@ object CommandDebug : Command.Factory {
                 }.append(
                     Text.literal(paste)
                         .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
+                        .onClick(ClickEvent.OpenUrl(URI(paste)))
                 )
             )
         }

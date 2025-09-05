@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
@@ -86,7 +85,7 @@ fun putSettings(requestObject: RequestObject): FullHttpResponse {
 // POST /api/v1/client/modules/panic
 @Suppress("UNUSED_PARAMETER")
 fun postPanic(requestObject: RequestObject): FullHttpResponse {
-    RenderSystem.recordRenderCall {
+    mc.execute {
         AutoConfig.withLoading {
             runCatching {
                 for (module in ModuleManager) {
@@ -117,7 +116,7 @@ data class ModuleRequest(val name: String) {
             return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
         }
 
-        RenderSystem.recordRenderCall {
+        mc.execute {
             runCatching {
                 module.enabled = supposedNew
 

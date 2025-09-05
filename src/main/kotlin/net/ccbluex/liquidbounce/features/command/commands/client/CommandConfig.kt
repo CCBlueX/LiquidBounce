@@ -103,14 +103,12 @@ object CommandConfig : Command.Factory {
                     chat(
                         variable(settingName)
                             .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                ClickEvent.SuggestCommand(
                                     ".config load $settingName"
                                 )
                             )
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     Text.of("§7Click to load $settingName")
                                 )
                             ),
@@ -121,8 +119,7 @@ object CommandConfig : Command.Factory {
                         Text.literal(it.statusType.displayName)
                             .formatted(it.statusType.formatting)
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     Text.of(it.statusDateFormatted)
                                 )
                             )

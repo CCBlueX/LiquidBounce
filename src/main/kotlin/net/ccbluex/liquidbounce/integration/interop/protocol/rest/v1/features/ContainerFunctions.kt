@@ -62,7 +62,7 @@ fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // POST /api/v1/container/give
 @Suppress("UNUSED_PARAMETER")
 fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
-    if (!interaction.hasCreativeInventory()) {
+    if (!player.isCreative) {
         return httpForbidden("Must be in creative mode")
     }
 

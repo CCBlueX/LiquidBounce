@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
-import com.mojang.blaze3d.systems.RenderSystem
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.api.core.scope
@@ -73,7 +72,7 @@ object HideAppearance : EventListener {
     var isHidingNow = false
         set(value) {
             field = value
-            RenderSystem.recordRenderCall(::updateClient)
+            mc.execute(::updateClient)
 
             if (modMenuPresent) {
                 if (value) {
