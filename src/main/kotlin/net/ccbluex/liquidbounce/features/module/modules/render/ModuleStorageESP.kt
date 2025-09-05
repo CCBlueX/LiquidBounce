@@ -69,6 +69,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
         object Furnace : ChestType("Furnace", Color4b(79, 79, 79))
+        object BrewingStand : ChestType("BrewingStand", Color4b(139, 69, 19))
         object Dispenser : ChestType("Dispenser", Color4b(Color.LIGHT_GRAY))
         object Hopper : ChestType("Hopper", Color4b(Color.GRAY))
         object ShulkerBox : ChestType("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
@@ -79,6 +80,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         tree(ChestType.Chest)
         tree(ChestType.EnderChest)
         tree(ChestType.Furnace)
+        tree(ChestType.BrewingStand)
         tree(ChestType.Dispenser)
         tree(ChestType.Hopper)
         tree(ChestType.ShulkerBox)
@@ -259,6 +261,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is ChestBlockEntity, is BarrelBlockEntity -> ChestType.Chest
             is EnderChestBlockEntity -> ChestType.EnderChest
             is AbstractFurnaceBlockEntity -> ChestType.Furnace
+            is BrewingStandBlockEntity -> ChestType.BrewingStand
             is DispenserBlockEntity -> ChestType.Dispenser
             is HopperBlockEntity -> ChestType.Hopper
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
