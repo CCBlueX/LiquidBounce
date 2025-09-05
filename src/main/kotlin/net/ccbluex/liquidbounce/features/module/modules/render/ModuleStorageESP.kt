@@ -192,11 +192,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
                         // non-model blocks are already processed by WorldRenderer where we injected code which renders
                         // their outline
-                        if (state.renderType != BlockRenderType.MODEL) {
-                            continue
-                        }
-
-                        if (state.isAir) {
+                        if (state.renderType != BlockRenderType.MODEL || state.isAir) {
                             continue
                         }
 
