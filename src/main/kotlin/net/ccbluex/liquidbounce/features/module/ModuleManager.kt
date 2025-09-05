@@ -400,6 +400,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSkinChanger,
 
             // World
+            ModuleAirPlace,
             ModuleAutoBuild,
             ModuleAutoDisable,
             ModuleAutoFarm,
