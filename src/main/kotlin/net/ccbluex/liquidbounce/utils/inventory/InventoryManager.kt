@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
@@ -414,7 +413,7 @@ data class ClickInventoryAction(
             return false
         }
 
-        val itemsInContainer = getSlotsInContainer(screen)
+        val itemsInContainer = screen.getSlotsInContainer()
         // Find the closest item to the slot which is empty
         val closestEmptySlot = itemsInContainer
             .filter { it.itemStack.isEmpty }

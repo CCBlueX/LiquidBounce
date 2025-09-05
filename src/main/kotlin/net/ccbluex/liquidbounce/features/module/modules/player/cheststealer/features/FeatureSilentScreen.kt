@@ -86,7 +86,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             val containerScreen = mc.currentScreen as GenericContainerScreen
 
             renderEnvironmentForGUI {
-                event.context.drawItemStackList(getSlotsInContainer(containerScreen).map { it.itemStack })
+                event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
                     .center(pos)
                     .scale(scale)
                     .background(background.activeChoice)

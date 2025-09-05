@@ -74,7 +74,7 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
 
             val randomSlot = if (playerSlot.isEmpty()) {
                 // Attempt to drop from the container
-                val slots = findItemsInContainer(container ?: return@handler)
+                val slots = (container ?: return@handler).findItemsInContainer()
                 if (slots.isEmpty()) return@handler
 
                 slots.random()

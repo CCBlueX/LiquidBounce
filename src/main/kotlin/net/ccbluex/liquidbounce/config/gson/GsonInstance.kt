@@ -47,6 +47,7 @@ import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -121,6 +122,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
         .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
+        .registerTypeHierarchyAdapter(ScreenHandlerType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)

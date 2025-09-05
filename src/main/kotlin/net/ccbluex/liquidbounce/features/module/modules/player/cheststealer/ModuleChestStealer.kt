@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,9 +29,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import kotlin.math.ceil
 
@@ -48,6 +51,15 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
+
+    private val screenHandlerTypes by registryList(
+        "ScreenHandlerTypes",
+        hashSetOf(
+            ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
+        ),
+        ValueType.SCREEN_HANDLER
+    )
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     private val checkTitle by boolean("CheckTitle", true)
 
@@ -204,11 +216,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
-            val usefulItems = findItemsInContainer(screen)
+            val usefulItems = screen.findItemsInContainer()
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = findNonEmptySlotsInInventory() + findItemsInContainer(screen)
+            val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }
@@ -222,6 +234,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
     ) : NamedChoice {
         DISTANCE("Distance", {
+            // TODO: this only works with 9xN types
             it.sortedBy { slot ->
                 val slotId = slot.slotInContainer
 
@@ -247,6 +260,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
     fun Screen.canBeStolen(): Boolean {
         return running && this is HandledScreen<*> && (!checkTitle || isScreenTitleChest(this))
+            && filter(this.screenHandler.type, screenHandlerTypes)
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {

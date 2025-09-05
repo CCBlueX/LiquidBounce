@@ -39,6 +39,7 @@ enum class ValueType(
     ITEM(HumanInputDeserializer.itemDeserializer),
     SOUND(HumanInputDeserializer.soundDeserializer),
     STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
+    SCREEN_HANDLER,
     ENTITY_TYPE,
     CLIENT_PACKET,
     SERVER_PACKET,
