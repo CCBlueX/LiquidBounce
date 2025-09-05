@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -53,23 +54,50 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val screenHandlerTypes by registryList(
-        "ScreenHandlerTypes",
-        hashSetOf(
-            ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
-        ),
-        ValueType.SCREEN_HANDLER
-    )
-    private val screenHandlerFilter by enumChoice("ScreenHandlerFilter", Filter.WHITELIST)
+    private object CheckScreenHandlerType : ToggleableConfigurable(this, "CheckScreenHandlerType", enabled = true) {
+        private val types by registryList(
+            "Types",
+            hashSetOf(
+                ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
+            ),
+            ValueType.SCREEN_HANDLER
+        )
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
 
-    private val titles by multiEnumChoice(
-        "ContainerTitles",
-        EnumSet.of(
-            ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
-            ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
-        ),
-    )
-    private val titleFilter by enumChoice("ContainerTitleFilter", Filter.WHITELIST)
+        fun canSteal(screen: HandledScreen<*>): Boolean {
+            return !enabled || filter(screen.screenHandler.type, types)
+        }
+    }
+
+    init {
+        tree(CheckScreenHandlerType)
+    }
+
+    private object CheckTitle : ToggleableConfigurable(this, "CheckTitle", enabled = true) {
+        private val titles by multiEnumChoice(
+            "Titles",
+            EnumSet.of(
+                ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+                ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+            ),
+        )
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+        fun canSteal(screen: Screen): Boolean {
+            if (!enabled) return true
+
+            val titleString = screen.title.string
+
+            return when (filter) {
+                Filter.WHITELIST -> titles.any {
+                    Text.translatable(it.translatableKey).string == titleString
+                }
+                Filter.BLACKLIST -> titles.none {
+                    Text.translatable(it.translatableKey).string == titleString
+                }
+            }
+        }
+    }
 
     @Suppress("unused")
     private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
@@ -185,19 +213,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         return (slotsToCollect - freeSlotsInInv - spaceGainedThroughMerge).coerceAtLeast(0)
     }
 
-    private fun isScreenTitleChest(screen: Screen): Boolean {
-        val titleString = screen.title.string
-        return when (titleFilter) {
-            Filter.WHITELIST -> titles.any {
-                Text.translatable(it.translatableKey).string == titleString
-            }
-            Filter.BLACKLIST -> titles.none {
-                Text.translatable(it.translatableKey).string == titleString
-            }
-        }
-    }
-
-
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      *
@@ -288,8 +303,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is HandledScreen<*> && isScreenTitleChest(this)
-            && screenHandlerFilter(this.screenHandler.type, screenHandlerTypes)
+        return running && this is HandledScreen<*> && CheckScreenHandlerType.canSteal(this) && CheckTitle.canSteal(this)
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
