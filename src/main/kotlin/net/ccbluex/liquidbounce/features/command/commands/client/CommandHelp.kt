@@ -59,7 +59,7 @@ object CommandHelp : Command.Factory {
                         .append(
                             commandStart.asText()
                                 .formatted(Formatting.GRAY)
-                                .onClick {
+                                .onClickRun {
                                     mc.openChat(commandStart)
                                 }
                         )
@@ -75,7 +75,7 @@ object CommandHelp : Command.Factory {
             cmd.aliases.forEach { alias ->
                 aliasesText += ", ".asText().formatted(Formatting.DARK_GRAY)
                 aliasesText += regular(alias).formatted(Formatting.GRAY)
-                    .onClick {
+                    .onClickRun {
                         mc.openChat(CommandManager.Options.prefix + alias)
                     }
             }

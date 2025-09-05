@@ -145,7 +145,7 @@ object CommandExecutor : EventListener {
                             "\u2B25 ".asText()
                                 .formatted(Formatting.BLUE)
                                 .append(regular(CommandManager.Options.prefix + usage))
-                                .onClick {
+                                .onClickRun {
                                     mc.openChat(CommandManager.Options.prefix + usage)
                                 },
                             metadata = data

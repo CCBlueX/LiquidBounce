@@ -53,8 +53,8 @@ fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOL
 
 fun clickablePath(file: File): MutableText =
     variable(file.absolutePath)
-        .onClick { Util.getOperatingSystem().open(file) }
-        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, "Open".asText()))
+        .onClickRun { Util.getOperatingSystem().open(file) }
+        .onHover(HoverEvent.ShowText("Open".asText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
 
@@ -95,7 +95,7 @@ inline fun MutableText.onHover(event: HoverEvent?): MutableText =
 inline fun MutableText.onClick(event: ClickEvent?): MutableText =
     setStyle(style.withClickEvent(event))
 
-inline fun MutableText.onClick(callback: Runnable): MutableText =
+inline fun MutableText.onClickRun(callback: Runnable): MutableText =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
 inline operator fun MutableText.plusAssign(other: String) {
@@ -135,13 +135,12 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
  */
 fun MutableText.copyable(
     copyContent: String = convertToString(),
-    hover: HoverEvent? = HoverEvent(
-        HoverEvent.Action.SHOW_TEXT,
+    hover: HoverEvent? = HoverEvent.ShowText(
         translation("liquidbounce.tooltip.clickToCopy")
     )
 ): MutableText = apply {
     hover?.let(::onHover)
-    onClick(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copyContent))
+    onClick(ClickEvent.CopyToClipboard(copyContent))
 }
 
 fun MutableText.bypassNameProtection(): MutableText = styled {
