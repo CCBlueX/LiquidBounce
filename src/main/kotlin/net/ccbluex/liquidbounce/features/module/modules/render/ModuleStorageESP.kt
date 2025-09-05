@@ -323,7 +323,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             val chunk = mc.world?.getChunk(pos) ?: return null
-            return chunk.getBlockEntity(pos)?.categorize()
+            return try {
+                chunk.getBlockEntity(pos)?.categorize()
+            } catch (_: ArrayIndexOutOfBoundsException) {
+                null
+            }
         }
     }
 

@@ -22,6 +22,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayChatEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
@@ -144,15 +145,15 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
         var betterChat = ModuleBetterChat.INSTANCE;
 
-
         MutableText formattedText = Text.empty();
         for (OrderedText t : list) {
+            MutableText finalFormattedText = formattedText;
             t.accept((index, style, codePoint) -> {
-                formattedText.append(Text.literal(String.valueOf((char) codePoint)).setStyle(style));
+                finalFormattedText.append(Text.literal(String.valueOf((char) codePoint)).setStyle(style));
                 return true;
             });
         }
-
+        formattedText = (MutableText) ModuleNameProtect.INSTANCE.replace(formattedText);
 
         if (message != null) {
             EventManager.INSTANCE.callEvent(new OverlayChatEvent(

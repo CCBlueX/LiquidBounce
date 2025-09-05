@@ -2,7 +2,7 @@
     import {onMount, afterUpdate} from 'svelte';
     import {listen} from '../../../../integration/ws';
     import TextComponent from '../../../menu/common/TextComponent.svelte';
-    import {type KeyEvent, type ChatReceiveEvent, ChatType, type EventMap} from '../../../../integration/events';
+    import {type KeyEvent, type OverlayChatEvent, ChatType, type EventMap} from '../../../../integration/events';
     import {getMinecraftKeybinds} from '../../../../integration/rest';
     import type {MinecraftKeybind} from '../../../../integration/types';
     import {fly} from 'svelte/transition';
@@ -25,7 +25,7 @@
     let fadeQueue: typeof chatMessages[number][] = [];
     let activeFadeCount = 0;
     let focus = false;
-    let chatMessages: Array<ChatReceiveEvent & {
+    let chatMessages: Array<OverlayChatEvent & {
         id: number;
         visible: boolean;
         fadeTimeout?: number;
@@ -114,10 +114,7 @@
     }
 
 
-    function addMessage(event: ChatReceiveEvent) {
-        if (event.type == ChatType.DISGUISED_CHAT_MESSAGE) {
-            return;
-        }
+    function addMessage(event: OverlayChatEvent) {
         const msg = {...event, id: nextId++, visible: true} as typeof chatMessages[0];
         chatMessages = [...chatMessages, msg].slice(-MAX_MESSAGES);
         maybeScrollToBottomImmediately();
@@ -156,7 +153,7 @@
 
     onMount(() => {
         updateKeybinds();
-        listen('chatReceive', addMessage);
+        listen('overlayChatMessage', addMessage);
         listen('key', handleKeyDown);
     });
     listen("keybindChange" as keyof EventMap, updateKeybinds);
@@ -188,7 +185,7 @@
                         transition:fly|global={{duration: 500, x: -150, easing: expoInOut}}>
                     <span class="message-textData">
             <TextComponent
-                    textComponent={msg.textData}
+                    textComponent={msg.content}
                     fontSize={16}
                     allowPreformatting
             />

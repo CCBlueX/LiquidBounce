@@ -42,7 +42,7 @@ export interface EventMap {
     progress: ProgressEvent;
     session: SessionEvent;
     key: KeyEvent;
-
+    overlayChatMessage:OverlayChatEvent;
     betterTabValueChange: ClickGuiValueChangeEvent;
     hudLayoutEditorValueChange: ClickGuiValueChangeEvent;
     hudValueChange: ClickGuiValueChangeEvent;
@@ -125,8 +125,6 @@ export interface OverlayChatEvent {
     content: TextComponent | string,
     timestamp: number;
     isSystem: Boolean;
-    id: number
-    visible: boolean
     fadeTimeout?: number;
 }
 

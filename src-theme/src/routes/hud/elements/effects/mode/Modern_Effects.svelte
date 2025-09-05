@@ -18,11 +18,16 @@
 
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         effects = [...event.playerData.effects].sort((a, b) => {
-            const lengthDiff = b.localizedName.length - a.localizedName.length;
+            const nameA = getIdentifierName(a.effect, a.amplifier);
+            const nameB = getIdentifierName(b.effect, b.amplifier);
+
+            const lengthDiff = nameB.length - nameA.length;
             if (lengthDiff !== 0) return lengthDiff;
             return b.amplifier - a.amplifier;
         });
+
     });
+
 
     function formatTime(duration: number): string {
         return new Date(((duration / 20) | 0) * 1000)
