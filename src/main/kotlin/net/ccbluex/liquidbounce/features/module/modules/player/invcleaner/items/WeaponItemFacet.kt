@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.SwordItem
+import net.minecraft.registry.tag.ItemTags
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -58,7 +58,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             ComparatorChain<WeaponItemFacet>(
                 compareBy { estimateDamage(it) },
                 compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
-                compareByCondition { it.itemStack.item is SwordItem },
+                compareByCondition { it.itemStack.isIn(ItemTags.SWORDS) },
                 PREFER_BETTER_DURABILITY,
                 compareBy { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
                 PREFER_ITEMS_IN_HOTBAR,

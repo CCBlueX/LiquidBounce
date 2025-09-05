@@ -43,7 +43,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
-import net.minecraft.item.SwordItem
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.Hand
 import java.util.*
 
@@ -69,7 +69,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         val filter: (WeaponItemFacet) -> Boolean
     ): NamedChoice {
         ANY("Any", { true }),
-        SWORD("Sword", { it.itemStack.item is SwordItem }),
+        SWORD("Sword", { it.itemStack.isIn(ItemTags.SWORDS) }),
         AXE("Axe", { it.itemStack.item is AxeItem }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
 

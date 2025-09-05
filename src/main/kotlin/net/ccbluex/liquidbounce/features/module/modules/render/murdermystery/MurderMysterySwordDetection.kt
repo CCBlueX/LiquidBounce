@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.block.Blocks
 import net.minecraft.item.*
 
@@ -68,16 +70,15 @@ object MurderMysterySwordDetection {
 
     fun isSword(item: Item?): Boolean {
         return when (item) {
+            null -> false
             in KNOWN_NON_SWORD_ITEMS -> false
             in KNOWN_SWORD_ITEMS -> true
-            is SwordItem -> true
-            is PickaxeItem -> true
             is ShovelItem -> true
             is AxeItem -> true
             is HoeItem -> true
             is BoatItem -> true
             is BlockItem -> this.KNOWN_SWORD_BLOCKS.contains(item.block)
-            else -> false
+            else -> item.isSword || item.isPickaxe
         }
     }
 }

@@ -34,13 +34,13 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
@@ -278,7 +278,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                     return false
                 }
 
-                return player.mainHandStack.item is SwordItem || !Strength.onlyWhileHoldingSword
+                return player.mainHandStack.isSword || !Strength.onlyWhileHoldingSword
             }
 
             override fun getSlot(): ItemSlot? {
@@ -295,7 +295,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                     return false
                 }
 
-                if (player.mainHandStack.item is SwordItem && Gapple.WhileHoldingSword.enabled) {
+                if (player.mainHandStack.isSword && Gapple.WhileHoldingSword.enabled) {
                     return if (Gapple.WhileHoldingSword.onlyWhileKa) {
                         ModuleKillAura.running
                     } else {

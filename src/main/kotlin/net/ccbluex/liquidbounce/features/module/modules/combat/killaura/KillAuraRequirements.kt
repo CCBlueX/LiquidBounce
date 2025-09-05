@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.item.AxeItem
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
-import net.minecraft.item.SwordItem
 
 @Suppress("unused")
 enum class KillAuraRequirements(
@@ -38,10 +38,10 @@ enum class KillAuraRequirements(
         mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
     }),
     WEAPON("Weapon", {
-        player.inventory.mainHandStack.item.isWeapon()
+        player.mainHandStack.isWeapon()
     }),
     VANILLA_NAME("VanillaName", {
-        player.inventory.mainHandStack.customName == null
+        player.mainHandStack.customName == null
     }),
     NOT_BREAKING("NotBreaking", {
         mc.interactionManager?.isBreakingBlock == false
@@ -51,5 +51,5 @@ enum class KillAuraRequirements(
 /**
  * Check if the item is a weapon.
  */
-private fun Item.isWeapon() = this is SwordItem || !isOlderThanOrEqual1_8 && this is AxeItem
-    || this is MaceItem
+private fun ItemStack.isWeapon() = isSword || !isOlderThanOrEqual1_8 && item is AxeItem
+    || item is MaceItem

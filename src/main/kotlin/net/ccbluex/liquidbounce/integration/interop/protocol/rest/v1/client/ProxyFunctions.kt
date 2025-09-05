@@ -116,7 +116,7 @@ fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
             try {
                 val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
                 if (clipboardText.isNullOrBlank()) {
-                    return@recordRenderCall
+                    return@execute
                 }
 
                 val proxy = try {

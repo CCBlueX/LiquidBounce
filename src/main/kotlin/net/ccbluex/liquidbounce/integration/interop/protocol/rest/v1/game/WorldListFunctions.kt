@@ -122,7 +122,7 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
                     logger.error("Failed to access level ${request.name}", exception)
                 }
             }
-        }.getOrNull() ?: return@recordRenderCall
+        }.getOrNull() ?: return@execute
 
         runCatching {
             EditWorldScreen.create(mc, session) { _ ->

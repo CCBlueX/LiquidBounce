@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
 object BrowserBackendManager : EventListener {
@@ -85,7 +86,7 @@ object BrowserBackendManager : EventListener {
     /**
      * Causes an update of every browser by re-setting their viewport.
      */
-    fun forceUpdate() = RenderSystem.recordRenderCall {
+    fun forceUpdate() = mc.execute {
         for (browser in browserBackend.browsers) {
             try {
                 browser.viewport = browser.viewport
