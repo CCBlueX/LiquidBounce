@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.text.Text
 import kotlin.math.ceil
 
@@ -54,11 +54,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     init {
         tree(FeatureChestAura)
         tree(FeatureSilentScreen)
-    }
-
-    override fun onDisabled() {
-        FeatureChestAura.interactedBlocksSet.clear()
-        super.onDisabled()
     }
 
     val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
@@ -104,7 +99,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      * Create a list of actions that will move the item in the slot [from] to the slot [to].
      */
     private fun getActionsForMove(
-        screen: GenericContainerScreen,
+        screen: HandledScreen<*>,
         from: ContainerItemSlot,
         to: ItemSlot
     ): List<ClickInventoryAction> {
@@ -122,7 +117,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
-        screen: GenericContainerScreen
+        screen: HandledScreen<*>
     ): InventoryAction? {
         val itemsInInv = findNonEmptySlotsInInventory()
         val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
@@ -152,12 +147,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         return (slotsToCollect - freeSlotsInInv - spaceGainedThroughMerge).coerceAtLeast(0)
     }
 
-    private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
+    private fun isScreenTitleChest(screen: Screen): Boolean {
         val titleString = screen.title.string
 
         return arrayOf(
             "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
-            "container.barrel"
+            "container.barrel" // TODO: furnance, dispenser, hopper, etc
         ).any { Text.translatable(it).string == titleString }
     }
 
@@ -170,7 +165,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun performQuickSwaps(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        screen: GenericContainerScreen
+        screen: HandledScreen<*>
     ): Boolean? {
         for (hotbarSwap in cleanupPlan.swaps) {
             // We only care about swaps from the chest to the hotbar
@@ -207,7 +202,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
-    private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
+    private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = findItemsInContainer(screen)
 
@@ -246,12 +241,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * @return the chest screen if it is open and the title matches the chest title
      */
-    private fun getChestScreen(): GenericContainerScreen? {
-        return mc.currentScreen?.takeIf { it.canBeStolen() } as GenericContainerScreen?
+    private fun getChestScreen(): HandledScreen<*>? {
+        return mc.currentScreen?.takeIf { it.canBeStolen() } as HandledScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is GenericContainerScreen && (!checkTitle || isScreenTitleChest(this))
+        return running && this is HandledScreen<*> && (!checkTitle || isScreenTitleChest(this))
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {

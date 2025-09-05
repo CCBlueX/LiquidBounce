@@ -22,6 +22,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
+import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -192,8 +194,10 @@ fun interactItem(
     return result
 }
 
-fun findBlocksEndingWith(vararg targets: String) =
-    Registries.BLOCK.filter { block -> targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) } }
+internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
+    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
+        targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
+    }
 
 /**
  * Get the color of the armor on the player

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter.state
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -39,7 +38,8 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BlockState
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.ActionResult
@@ -76,6 +76,17 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         val maxInteractionRetries by int("MaxRetries", 4, 1..10)
     }
 
+    // Set of block names that are considered as storage blocks
+    private val validStorageBlocks by blocks(
+        "ValidStorageBlocks",
+        findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL", "FURNACE").apply {
+            add(Blocks.BREWING_STAND)
+            add(Blocks.DISPENSER)
+            add(Blocks.HOPPER)
+            add(Blocks.DECORATED_POT)
+        }
+    )
+
     init {
         tree(AwaitContainerSettings)
     }
@@ -85,14 +96,18 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null
-    val interactedBlocksSet = hashSetOf<BlockPos>()
+    val interactedBlocksSet: Set<BlockPos>
+        field = hashSetOf<BlockPos>()
 
     // Counter for the number of tries performed to interact with a block
     private var interactionAttempts = 0
 
-    // Set of block names that are considered as storage blocks
-    private val validStorageBlocks = findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL")
-        .toHashSet()
+    override fun onDisabled() {
+        interactedBlocksSet.clear()
+        interactionAttempts = 0
+        currentTargetBlock = null
+        super.onDisabled()
+    }
 
     // Event handler responsible for updating the target block
     @Suppress("unused")
@@ -159,7 +174,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     // Task that repeats to interact with the target block
     @Suppress("unused")
     private val interactionRepeatableTask = tickHandler {
-        if (mc.currentScreen is GenericContainerScreen) {
+        if (mc.currentScreen is HandledScreen<*>) {
             // Do not proceed if a screen is open which implies player might be in a GUI
             return@tickHandler
         }
@@ -193,7 +208,8 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
             if (AwaitContainerSettings.enabled) {
                 waitConditional(AwaitContainerSettings.retryTimeout) {
-                    if (mc.currentScreen is GenericContainerScreen) {
+                    val currentScreen = mc.currentScreen
+                    if (currentScreen is HandledScreen<*>) { // TODO: check if the inner type matches?
                         // Interaction was successful if the inventory screen is open
                         wasInteractionSuccessful = true
                         true
