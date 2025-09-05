@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -83,7 +84,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.currentScreen as GenericContainerScreen
+            val containerScreen = mc.currentScreen as HandledScreen<*>
 
             renderEnvironmentForGUI {
                 event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
