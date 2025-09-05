@@ -21,6 +21,7 @@ import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.MathHelper
 import org.joml.Quaternionf
 import java.awt.Color
 import kotlin.math.atan2
@@ -87,7 +88,6 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
         val rotateZ: Float
     )
 
-
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val matrices = event.context.matrices
@@ -109,9 +109,8 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
                 Pair(targetRotateX, targetAngle)
             }
 
-            val smoothedRotateX = lerp(prevRotateX, targetRotateX, smoothingFactor)
-            val smoothedRotateZ = lerp(prevRotateZ, targetAngle, smoothingFactor)
-
+            val smoothedRotateX = MathHelper.lerp(smoothingFactor, prevRotateX, targetRotateX)
+            val smoothedRotateZ = MathHelper.lerp(smoothingFactor,prevRotateZ, targetAngle)
 
             pointerData[it] = Pair(smoothedRotateX, smoothedRotateZ)
 
@@ -183,20 +182,16 @@ object ModulePointerESP : ClientModule("PointerESP", Category.RENDER) {
         pointerData.keys.retainAll(RenderedEntities.toSet())
     }
 
-    private fun lerp(start: Float, end: Float, alpha: Float): Float {
-        return start + alpha * (end - start)
-    }
-
 
     override fun onDisabled() {
         pointerData.clear()
-        RenderedEntities.subscribe(this)
+        RenderedEntities.unsubscribe(this)
         super.onDisabled()
     }
 
     override fun onEnabled() {
         pointerData.clear()
-        RenderedEntities.unsubscribe(this)
+        RenderedEntities.subscribe(this)
         super.onEnabled()
     }
 }
