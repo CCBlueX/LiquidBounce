@@ -269,6 +269,10 @@ object InventoryManager : EventListener {
         }
 
         if (screen is HandledScreen<*>) {
+            debugParameter("Screen Slot count") {
+                val slots = screen.screenHandler.slots
+                "${slots.size} (${slots.count { it.inventory !== player.inventory }})"
+            }
             // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
             // the easy way and just listen for the screen event.
             if (screen is InventoryScreen && isOlderThanOrEqual1_11_1) {
