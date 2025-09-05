@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.component.type.DyedColorComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -148,14 +149,14 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun getSlotsInContainer(screen: GenericContainerScreen) =
+fun getSlotsInContainer(screen: HandledScreen<*>) =
     screen.screenHandler.slots
-        .filter { it.inventory === screen.screenHandler.inventory }
+        .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun findItemsInContainer(screen: GenericContainerScreen) =
+fun findItemsInContainer(screen: HandledScreen<*>) =
     screen.screenHandler.slots
-        .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
+        .filter { !it.stack.isNothing() && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
 @JvmOverloads
