@@ -85,7 +85,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val chronometer = Chronometer()
 
     private val gravity: Double
-        get() = physicalSettings.gravityFactor.toDouble() * 0.0015
+        get() = physicalSettings.gravityFactor.toDouble() * 0.03125
 
     override fun onDisabled() {
         particles.clear()
@@ -104,8 +104,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             if (particle.alpha <= 0 || camera.eyePos.squaredDistanceTo(particle.pos) > 30 * 30) {
                 true
             } else {
-                particle.update()
-                particle.visible = canSeePointFrom(camera.eyePos, particle.pos)
+                particle.update(camera.eyePos)
                 false
             }
         }
@@ -138,7 +137,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             for (particle in particles) {
                 if (!particle.visible) continue
 
-                render(particle, event.partialTicks)
+                particle.render(event.partialTicks)
             }
 
             RenderSystem.depthMask(true)
@@ -172,30 +171,20 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         DOLLAR("Dollar", "particles/dollar.png".registerAsDynamicImageFromClientResources())
     }
 
-    private class Particle(
-        var pos: Vec3d,
-        var prevPos: Vec3d,
-        var velocity: Vec3d,
-        var collisionTime: Long = -1,
-        var alpha: Float = 1f,
-        val spawnTime: Long = System.currentTimeMillis(),
-        val rotation: Float,
-        val particleImage: ParticleImage,
-        var visible: Boolean = true,
-    ) {
-        constructor(pos: Vec3d, particleImage: ParticleImage) : this(
-            pos = pos,
-            prevPos = pos,
-            velocity = Vec3d(
-                (-0.01..0.01).random(),
-                (0.01..0.02).random(),
-                (-0.01..0.01).random()
-            ),
-            rotation = (0f..360f).random(),
-            particleImage = particleImage
+    private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {
+        private var prevPos = pos
+        private var velocity = Vec3d(
+            (-0.01..0.01).random(),
+            (0.01..0.02).random(),
+            (-0.01..0.01).random()
         )
+        var alpha = 1f
+        var visible = true
+        private val rotation = (0f..360f).random()
+        private val spawnTime = System.currentTimeMillis()
+        private var collisionTime = -1L
 
-        fun update() {
+        fun update(cameraPos: Vec3d) {
             prevPos = pos
 
             if (collisionTime != -1L) {
@@ -210,74 +199,78 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             if (!nextPos.isBlockAir) {
                 if (collisionTime == -1L) collisionTime = System.currentTimeMillis()
 
-                if (!Vec3d(pos.x + velocity.x * speedMultiplier, pos.y, pos.z).isBlockAir) {
-                    velocity = velocity.copy(x = -velocity.x * physicalSettings.bounceX)
-                }
-                if (!Vec3d(pos.x, pos.y + velocity.y, pos.z).isBlockAir) {
-                    velocity = velocity.copy(
-                        x = velocity.x * physicalSettings.drag,
-                        y = -velocity.y * physicalSettings.bounceY,
-                        z = velocity.z * physicalSettings.drag
-                    )
-                }
-                if (!Vec3d(pos.x, pos.y, pos.z + velocity.z * speedMultiplier).isBlockAir) {
-                    velocity = velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
+                when {
+                    !Vec3d(pos.x + velocity.x * speedMultiplier, pos.y, pos.z).isBlockAir -> {
+                        velocity = velocity.copy(x = -velocity.x * physicalSettings.bounceX)
+                    }
+                    !Vec3d(pos.x, pos.y + velocity.y, pos.z).isBlockAir -> {
+                        velocity = velocity.copy(
+                            x = velocity.x * physicalSettings.drag,
+                            y = -velocity.y * physicalSettings.bounceY,
+                            z = velocity.z * physicalSettings.drag
+                        )
+                    }
+                    !Vec3d(pos.x, pos.y, pos.z + velocity.z * speedMultiplier).isBlockAir -> {
+                        velocity = velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
+                    }
                 }
 
                 nextPos = pos.add(velocity.multiply(speedMultiplier, 1.0, speedMultiplier))
             }
 
             pos = nextPos
+            visible = canSeePointFrom(cameraPos, pos)
         }
-    }
 
-    private fun WorldRenderEnvironment.render(particle: Particle, partialTicks: Float) {
-        val interpPos = particle.prevPos.lerp(particle.pos, partialTicks.toDouble())
-        withPositionRelativeToCamera(interpPos) {
-            RenderSystem.setShaderTexture(0, particle.particleImage.texture)
+        context(env: WorldRenderEnvironment)
+        fun render(partialTicks: Float) {
+            val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
+            env.withPositionRelativeToCamera(interpPos) {
+                RenderSystem.setShaderTexture(0, particleImage.texture)
 
-            val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - particle.spawnTime) / 12000f)
-            val rotation = if (rotate) {
-                (particle.rotation + 90f) % 360f
-            } else {
-                90f
-            }
+                val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
+                val rotation = if (rotate) {
+                    (rotation + 90f) % 360f
+                } else {
+                    90f
+                }
 
-            with(matrixStack) {
-                translate(-size / 2.0, -size / 2.0, 0.0)
-                multiply(mc.gameRenderer.camera.rotation)
-                scale(-1.0f, 1.0f, -1.0f)
-                multiply(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
-                translate(size / 2.0, size / 2.0, 0.0)
-            }
+                with(matrixStack) {
+                    translate(-size / 2.0, -size / 2.0, 0.0)
+                    multiply(mc.gameRenderer.camera.rotation)
+                    scale(-1.0f, 1.0f, -1.0f)
+                    multiply(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
+                    translate(size / 2.0, size / 2.0, 0.0)
+                }
 
-            val renderColor = color.alpha(
-                MathHelper.clamp(
-                    (particle.alpha * color.a.toFloat()).toInt(),
-                    0, color.a
+                val renderColor = color.alpha(
+                    MathHelper.clamp(
+                        (alpha * color.a.toFloat()).toInt(),
+                        0, color.a
+                    )
                 )
-            )
 
-            drawCustomMesh(
-                VertexFormat.DrawMode.QUADS,
-                VertexFormats.POSITION_TEXTURE_COLOR,
-                ShaderProgramKeys.POSITION_TEX_COLOR
-            ) { matrix ->
-                vertex(matrix, 0.0f, -size, 0.0f)
-                    .texture(0.0f, 0.0f)
-                    .color(renderColor.toARGB())
+                drawCustomMesh(
+                    VertexFormat.DrawMode.QUADS,
+                    VertexFormats.POSITION_TEXTURE_COLOR,
+                    ShaderProgramKeys.POSITION_TEX_COLOR
+                ) { matrix ->
+                    vertex(matrix, 0.0f, -size, 0.0f)
+                        .texture(0.0f, 0.0f)
+                        .color(renderColor.toARGB())
 
-                vertex(matrix, -size, -size, 0.0f)
-                    .texture(0.0f, 1.0f)
-                    .color(renderColor.toARGB())
+                    vertex(matrix, -size, -size, 0.0f)
+                        .texture(0.0f, 1.0f)
+                        .color(renderColor.toARGB())
 
-                vertex(matrix, -size, 0.0f, 0.0f)
-                    .texture(1.0f, 1.0f)
-                    .color(renderColor.toARGB())
+                    vertex(matrix, -size, 0.0f, 0.0f)
+                        .texture(1.0f, 1.0f)
+                        .color(renderColor.toARGB())
 
-                vertex(matrix, 0.0f, 0.0f, 0.0f)
-                    .texture(1.0f, 0.0f)
-                    .color(renderColor.toARGB())
+                    vertex(matrix, 0.0f, 0.0f, 0.0f)
+                        .texture(1.0f, 0.0f)
+                        .color(renderColor.toARGB())
+                }
             }
         }
     }
