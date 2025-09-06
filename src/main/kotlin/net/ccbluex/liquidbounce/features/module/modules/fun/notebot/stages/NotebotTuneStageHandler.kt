@@ -27,7 +27,7 @@ import net.minecraft.util.Formatting
 
 class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStageHandler {
 
-    private val progressName = ModuleNotebot.message("tune")
+    private val progressName = ModuleNotebot.message("progressTune")
     private val assignments: Map<InstrumentNote, List<NoteBlockTracker>> = this.assignBlocks(engine)
     private val blocks: List<Pair<NoteBlockTracker, InstrumentNote>> = assignments.flatMap { note ->
         note.value.map { block -> block to note.key }

@@ -28,7 +28,7 @@ import net.minecraft.util.Formatting
 // this design also seems more future-proof if minecraft should stop sending this data to the client in future versions
 class NotebotTestStageHandler(engine: NotebotEngine): ModuleNotebot.NotebotStageHandler {
 
-    private val progressName = ModuleNotebot.message("test")
+    private val progressName = ModuleNotebot.message("progressTest")
     private val allBlocks = engine.blocksAndRequirements.availableBlocks.flatMap { it.value }
     private val remainingNoteBlocks = ArrayDeque(allBlocks)
 

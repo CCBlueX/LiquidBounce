@@ -30,7 +30,7 @@ class NotebotPlayStageHandler(
     private val availableBlocksForNote: Map<InstrumentNote, List<NoteBlockTracker>>
 ) : ModuleNotebot.NotebotStageHandler {
 
-    private val progressName = ModuleNotebot.message("play")
+    private val progressName = ModuleNotebot.message("progressPlay")
     private var songTickAccumulator = 0f
     private var currentSongTick = 0
 
