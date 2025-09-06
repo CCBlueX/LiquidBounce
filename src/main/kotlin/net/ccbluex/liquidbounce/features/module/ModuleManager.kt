@@ -119,6 +119,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.ModuleBreadcrumbs
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera
 import org.lwjgl.glfw.GLFW
 

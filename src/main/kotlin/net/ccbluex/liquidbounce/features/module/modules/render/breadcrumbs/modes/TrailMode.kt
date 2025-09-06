@@ -1,70 +1,79 @@
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.modes
 
 import com.mojang.blaze3d.systems.RenderSystem
-import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
-import it.unimi.dsi.fastutil.objects.ObjectFloatPair
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.GenericCustomColorMode
-import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
-import net.ccbluex.liquidbounce.render.GenericStaticColorMode
-import net.ccbluex.liquidbounce.render.GenericSyncColorMode
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.BreadcrumbsMode
+import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.colorMode
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.Camera
-import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import java.util.*
+import java.util.ArrayDeque
+import java.util.IdentityHashMap
 
-object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
+object TrailMode : BreadcrumbsMode("Trail") {
 
     private val onlyOwn by boolean("OnlyOwn", true)
     private val height by float("Height", 0.5f, 0f..2f)
-
-    private val colorModes = choices(this, "ColorMode", 3) {
-        arrayOf(
-            GenericCustomColorMode(it, Color4b.WHITE.with(a = 80), Color4b.WHITE.with(a = 100)),
-            GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
-            GenericRainbowColorMode(it),
-            GenericSyncColorMode(it),
-        )
-    }
-
-
-    private object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
-        val alive by int("Alive", 900, 10..10000, "ms")
-        val fade by boolean("Fade", true)
-    }
-
-    init {
-        tree(TemporaryConfigurable)
-    }
+    private val alive by int("Alive", 900, 10..10000, "ms")
+    private val fade by boolean("Fade", true)
 
     private val trails = IdentityHashMap<Entity, Trail>()
     private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
 
-    override fun onDisabled() {
+    override fun enable() {
+        clear()
+    }
+
+    override fun disable() {
+        clear()
+    }
+
+    private fun clear() {
+        lastPositions.clear()
+        trails.clear()
+    }
+
+    @Suppress("unused")
+    val updateHandler = handler<GameTickEvent> {
+        val time = System.currentTimeMillis()
+        if (onlyOwn) {
+            updateEntityTrail(time, player)
+            trails.keys.retainAll { it === player || !it.isAlive }
+            return@handler
+        }
+        val actualPresent = world.players
+        actualPresent.forEach { p -> updateEntityTrail(time, p) }
+        trails.keys.removeIf { key -> actualPresent.none { it === key } || !key.isAlive }
+    }
+
+    private fun updateEntityTrail(time: Long, entity: Entity) {
+        val last = lastPositions[entity]
+        if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) return
+        lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
+        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
+    }
+
+    val worldChangeHandler = handler<WorldChangeEvent> {
         clear()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
         renderEnvironmentForWorld(matrixStack) {
-
-            val (colorStart, colorEnd) = colorModes.activeChoice.getColors(player)
+            val (colorStart, colorEnd) = colorMode.activeChoice.getColors(player)
             draw(matrixStack, colorStart, colorEnd)
         }
     }
@@ -96,7 +105,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         )
         val lines = height == 0f
         val buffer = tessellator.begin(
-            if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
+            if (lines) VertexFormat.DrawMode.DEBUG_LINES else VertexFormat.DrawMode.QUADS,
             VertexFormats.POSITION_COLOR
         )
         val renderData = RenderData(matrix, buffer, colorStartF, colorEndF, lines)
@@ -110,36 +119,6 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
 
         if (height > 0) RenderSystem.enableCull()
-    }
-
-    @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
-        val time = System.currentTimeMillis()
-        if (onlyOwn) {
-            updateEntityTrail(time, player)
-            trails.keys.retainAll { it === player || !it.isAlive }
-            return@handler
-        }
-        val actualPresent = world.players
-        actualPresent.forEach { p -> updateEntityTrail(time, p) }
-        trails.keys.removeIf { key -> actualPresent.none { it === key } || !key.isAlive }
-    }
-
-    private fun updateEntityTrail(time: Long, entity: Entity) {
-        val last = lastPositions[entity]
-        if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) return
-        lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
-        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
-    }
-
-    @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
-        clear()
-    }
-
-    private fun clear() {
-        lastPositions.clear()
-        trails.clear()
     }
 
     @JvmRecord
@@ -162,13 +141,12 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             entity: Entity,
             time: Long
         ) {
-            val aliveDurationF = TemporaryConfigurable.alive.toFloat()
+            val aliveDurationF = alive.toFloat()
             val initialAlphaStart = renderData.colorStart.w
             val initialAlphaEnd = renderData.colorEnd.w
 
-            if (TemporaryConfigurable.enabled) {
-                val aliveDuration = TemporaryConfigurable.alive.toLong()
-                val expirationTime = time - aliveDuration
+            if (positions.isNotEmpty()) {
+                val expirationTime = time - alive.toLong()
                 while (positions.isNotEmpty() && positions.peekFirst().creationTime < expirationTime) {
                     positions.removeFirst()
                 }
@@ -178,7 +156,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                 return
             }
 
-            val shouldFade = TemporaryConfigurable.fade && TemporaryConfigurable.enabled
+            val shouldFade = fade
             val pointsWithAlpha = positions.mapIndexed { index, position ->
                 val alphaStart = if (shouldFade) {
                     val deltaTime = time - position.creationTime
