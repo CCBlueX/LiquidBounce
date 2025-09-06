@@ -279,6 +279,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleDebugRecorder,
             ModuleAntiCheatDetect,
             ModuleEasyPearl,
+            ModuleGUICloser.INSTANCE,
 
             // Movement
             ModuleAirJump,
