@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
  *
  * TODO: Implement GUI Information Panel
  *
- * [MixinWorldRenderer.cancelBlockOutline]
+ * [net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinWorldRenderer.cancelBlockOutline]
  */
 object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = arrayOf("BlockOverlay")) {
 

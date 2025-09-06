@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
@@ -99,6 +100,10 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
         @Suppress("unused")
         private val packetEventHandler = handler<PacketEvent> { event ->
             val packet = event.packet
+
+            if (ModuleBacktrack.isLagging()) {
+                return@handler
+            }
 
             if (event.packet is EntityVelocityUpdateS2CPacket
                 && packet.entityId == player.id
