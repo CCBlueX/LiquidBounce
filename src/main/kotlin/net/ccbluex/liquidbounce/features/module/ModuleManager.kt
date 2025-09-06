@@ -470,6 +470,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleProjectileESP,
 
             // World
+            ModuleAirPlace,
             ModuleAutoBuild,
             ModuleAutoDisable,
             ModuleAutoFarm,

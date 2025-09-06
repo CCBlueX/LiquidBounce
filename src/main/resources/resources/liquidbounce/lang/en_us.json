@@ -847,6 +847,7 @@
   "liquidbounce.module.autoSwap.description": "Auto switches the off-hand to GoldenApple or Throwable",
   "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
   "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump.",
+  "liquidbounce.module.airPlace.description": "Allows you to place blocks in mid-air.",
   "liquidbounce.module.autoSex.description": "Sexually harassing other players.",
   "liquidbounce.module.autoPath.description": "It'll move you to that spot at when pressing MIDDLE_CLICK.. You need Baritone for that.",
   "liquidbounce.module.advancedJumpReset.description": "Trash.",
