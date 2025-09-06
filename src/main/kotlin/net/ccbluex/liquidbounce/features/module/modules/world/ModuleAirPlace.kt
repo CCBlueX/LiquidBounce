@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.isBlockAir
 import net.ccbluex.liquidbounce.render.BoxRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -37,6 +36,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.SpawnEggItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 /**
  * AirPlace module
@@ -54,6 +54,10 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     init {
         tree(Preview)
     }
+
+
+    private inline val Vec3d.isBlockAir: Boolean
+        get() = world.getBlockState(toBlockPos()).isAir
 
     // ---------- Utils ----------
     private fun isAirPlaceableItem(stack: ItemStack): Boolean {
@@ -77,16 +81,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         if (!target.pos.isBlockAir) return@handler
         if (!playerHasAllowedItems()) return@handler
 
-
         val targetPos = target.pos.toBlockPos()
-        val worldSpaceBox = Box(
-            targetPos.x.toDouble(),
-            targetPos.y.toDouble(),
-            targetPos.z.toDouble(),
-            targetPos.x + 1.0,
-            targetPos.y + 1.0,
-            targetPos.z + 1.0
-        )
+        val worldSpaceBox = Box(targetPos)
 
         val negCameraPos = mc.entityRenderDispatcher.camera.pos.negate()
         val viewSpaceBox = worldSpaceBox.offset(negCameraPos)

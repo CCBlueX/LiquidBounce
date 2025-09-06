@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom
+import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -178,8 +178,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             (0.01..0.02).random(),
             (-0.01..0.01).random()
         )
-        var alpha = 1f
-        var visible = true
+        @JvmField var alpha = 1f
+        @JvmField var visible = true
         private val rotation = (0f..360f).random()
         private val spawnTime = System.currentTimeMillis()
         private var collisionTime = -1L
@@ -196,21 +196,23 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             velocity = velocity.add(0.0, -gravity, 0.0)
             var nextPos = pos.add(velocity.multiply(speedMultiplier, 1.0, speedMultiplier))
 
-            if (!nextPos.isBlockAir) {
-                if (collisionTime == -1L) collisionTime = System.currentTimeMillis()
+            if (!nextPos.toBlockPos().collisionShape.isEmpty) {
+                if (collisionTime == -1L) {
+                    collisionTime = System.currentTimeMillis()
+                }
 
                 when {
-                    !Vec3d(pos.x + velocity.x * speedMultiplier, pos.y, pos.z).isBlockAir -> {
+                    !pos.toBlockPos(xOffset = velocity.x * speedMultiplier).collisionShape.isEmpty -> {
                         velocity = velocity.copy(x = -velocity.x * physicalSettings.bounceX)
                     }
-                    !Vec3d(pos.x, pos.y + velocity.y, pos.z).isBlockAir -> {
+                    !pos.toBlockPos(yOffset = velocity.y).collisionShape.isEmpty -> {
                         velocity = velocity.copy(
                             x = velocity.x * physicalSettings.drag,
                             y = -velocity.y * physicalSettings.bounceY,
                             z = velocity.z * physicalSettings.drag
                         )
                     }
-                    !Vec3d(pos.x, pos.y, pos.z + velocity.z * speedMultiplier).isBlockAir -> {
+                    !pos.toBlockPos(zOffset = velocity.z * speedMultiplier).collisionShape.isEmpty -> {
                         velocity = velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
                     }
                 }
@@ -276,7 +278,3 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     }
 
 }
-
-inline val Vec3d.isBlockAir: Boolean
-    get() =
-        world.getBlockState(this.toBlockPos()).isAir
