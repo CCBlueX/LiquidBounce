@@ -24,8 +24,6 @@ import java.util.ArrayDeque
 import java.util.IdentityHashMap
 
 object TrailMode : BreadcrumbsMode("Trail") {
-
-    private val onlyOwn by boolean("OnlyOwn", true)
     private val height by float("Height", 0.5f, 0f..2f)
     private val alive by int("Alive", 900, 10..10000, "ms")
     private val fade by boolean("Fade", true)
@@ -49,11 +47,10 @@ object TrailMode : BreadcrumbsMode("Trail") {
     @Suppress("unused")
     val updateHandler = handler<GameTickEvent> {
         val time = System.currentTimeMillis()
-        if (onlyOwn) {
-            updateEntityTrail(time, player)
+        updateEntityTrail(time, player)
             trails.keys.retainAll { it === player || !it.isAlive }
             return@handler
-        }
+
         val actualPresent = world.players
         actualPresent.forEach { p -> updateEntityTrail(time, p) }
         trails.keys.removeIf { key -> actualPresent.none { it === key } || !key.isAlive }
@@ -63,7 +60,8 @@ object TrailMode : BreadcrumbsMode("Trail") {
         val last = lastPositions[entity]
         if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) return
         lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
-        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
+        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(
+            entity.x, entity.y, entity.z, time))
     }
 
     val worldChangeHandler = handler<WorldChangeEvent> {
@@ -223,14 +221,32 @@ object TrailMode : BreadcrumbsMode("Trail") {
                 val t0 = (i.toFloat() / (size - 1))
                 val t1 = ((i - 1).toFloat() / (size - 1))
 
-                val c0 = interpolateColor(t0, renderData.colorStart, renderData.colorEnd, alpha0Start, alpha0End)
-                val c1 = interpolateColor(t1, renderData.colorStart, renderData.colorEnd, alpha1Start, alpha1End)
+                val c0 = interpolateColor(t0,
+                    renderData.colorStart,
+                    renderData.colorEnd,
+                    alpha0Start,
+                    alpha0End
+                )
+                val c1 = interpolateColor(t1,
+                    renderData.colorStart,
+                    renderData.colorEnd,
+                    alpha1Start,
+                    alpha1End
+                )
 
-                buffer.vertex(renderData.matrix, v0.x, v0.y, v0.z).color(c0.x, c0.y, c0.z, c0.w)
-                buffer.vertex(renderData.matrix, v1.x, v1.y, v1.z).color(c1.x, c1.y, c1.z, c1.w)
+                buffer.vertex(renderData.matrix,
+                    v0.x, v0.y, v0.z).color(
+                    c0.x, c0.y, c0.z, c0.w)
+                buffer.vertex(renderData.matrix,
+                    v1.x, v1.y, v1.z).color(
+                    c1.x, c1.y, c1.z, c1.w)
                 if (!renderData.lines) {
-                    buffer.vertex(renderData.matrix, v1.x, v1.y + height, v1.z).color(c1.x, c1.y, c1.z, c1.w)
-                    buffer.vertex(renderData.matrix, v0.x, v0.y + height, v0.z).color(c0.x, c0.y, c0.z, c0.w)
+                    buffer.vertex(renderData.matrix,
+                        v1.x, v1.y + height, v1.z).color(
+                        c1.x, c1.y, c1.z, c1.w)
+                    buffer.vertex(renderData.matrix,
+                        v0.x, v0.y + height, v0.z).color(
+                        c0.x, c0.y, c0.z, c0.w)
                 }
             }
         }

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.render.engine.type
 
 import org.lwjgl.opengl.GL20
 import java.awt.Color
-import kotlin.math.abs
 
 @JvmRecord
 data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int, val a: Int = 255) {

@@ -42,11 +42,12 @@ sealed class TargetRenderer<T : RenderEnvironment>(
     private val slideTime by int("SlideTime", 150, 1..1000, "ms")
     private val fadeTime by int("FadeTime", 500, 1..1000, "ms")
 
-    val colorMode = choices(this, "ColorMode", 1) {
+    val colorMode = choices(this, "ColorMode") {
         arrayOf(
+            GenericSyncColorMode(it),
+            GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE, Color4b.CYAN),
             GenericStaticColorMode(it, Color4b(0, 128, 255, 255)),
             GenericRainbowColorMode(it),
-            GenericSyncColorMode(it),
         )
     }
 
@@ -257,10 +258,12 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                         hslToRgb(hue, 0.95f, 0.65f, alpha)
                     }
                     else -> {
-                        val (color1, _) = colorMode.activeChoice.getColors(mc.player)
-                        color1.withAlpha(alpha)
+                        val (color1, color2) = colorMode.activeChoice.getColors(mc.player)
+                        val t = i / length.toFloat()
+                        color1.blend(color2, t).withAlpha(alpha)
                     }
                 }
+
 
                 drawCustomMesh(
                     VertexFormat.DrawMode.QUADS,
@@ -428,22 +431,20 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         }
 
         private fun WorldRenderEnvironment.drawGradientParticle(currentSize: Float, alpha: Int) {
-            when (colorMode.activeChoice) {
+            val (color1, color2) = when (val mode = colorMode.activeChoice) {
                 is GenericRainbowColorMode -> {
                     val timeFactor = (System.currentTimeMillis() % 4000) / 4000f
-                    val color1 = hslToRgb(timeFactor, 0.95f, 0.65f, alpha)
-                    val color2 = hslToRgb(timeFactor + 0.25f, 0.95f, 0.65f, alpha)
-                    drawGradientQuad(currentSize, color1, color2)
+                    hslToRgb(timeFactor, 0.95f, 0.65f, alpha) to
+                        hslToRgb(timeFactor + 0.25f, 0.95f, 0.65f, alpha)
                 }
-
                 else -> {
-                    val (color1, color2) = colorMode.activeChoice.getColors(mc.player)
-                    val adjustedColor1 = color1.withAlpha(alpha)
-                    val adjustedColor2 = color2.withAlpha(alpha)
-                    drawGradientQuad(currentSize, adjustedColor1, adjustedColor2)
+                    val (c1, c2) = mode.getColors(mc.player)
+                    c1.withAlpha(alpha) to c2.withAlpha(alpha)
                 }
             }
+            drawGradientQuad(currentSize, color1, color2)
         }
+
 
         private fun WorldRenderEnvironment.drawGradientQuad(size: Float, color1: Color4b, color2: Color4b) {
             drawCustomMesh(
@@ -472,7 +473,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     .color(color2.toARGB())
             }
         }
-    }
+}
 
     inner class Circle(module: ClientModule) : WorldTargetRenderAppearance("GlowingCircle") {
         override val parent: ChoiceConfigurable<*>

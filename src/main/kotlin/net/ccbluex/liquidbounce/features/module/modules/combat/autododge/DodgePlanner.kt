@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.withY
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -44,7 +44,6 @@ data class DodgePlan(
     val yawChange: Float?,
     val useTimer: Boolean,
 )
-
 data class DodgePlannerConfig(
     val allowRotations: Boolean,
 )
@@ -67,7 +66,7 @@ fun planEvasion(config: DodgePlannerConfig, inflictedHit: ModuleAutoDodge.HitInf
     val optimalDodgePosition = findOptimalDodgePosition(arrowLine)
     val positionRelativeToPlayer = optimalDodgePosition.subtract(playerPos2d)
 
-    if (isOverVoid(optimalDodgePosition.withY(player.y))) {
+    if (isOverVoid(optimalDodgePosition.copy(y = player.y))) {
         return DodgePlan(DirectionalInput.NONE, false, null, false)
     }
 
@@ -203,8 +202,9 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
     val nearestPointsToDangerZoneBorders = dangerZone.map { it.getNearestPointTo(playerPosAfterFreeMovement) }
     val nearestPosToLine = baseLine.getNearestPointTo(playerPos2d)
 
-    val primaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[0].withY(player.y))
-    val secondaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[1].withY(player.y))
+    val primaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[0].copy(y = player.y))
+    val secondaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[1].copy(y = player.y))
+
     when {
         getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[0]) < DodgePlanner.SAFE_DISTANCE -> {
             return nearestPointsToDangerZoneBorders[1]

@@ -80,7 +80,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     }
 
     private val color by color("Color", Color4b.RED)
-    private val particleImages by multiEnumChoice("Particle", ParticleImage.STAR, canBeNone = false)
+    private val particleImages by multiEnumChoice("Particle", ParticleImage.SNOWFLAKE, canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
@@ -168,7 +168,10 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
          * Modified: @sqlerrorthing
          */
-        DOLLAR("Dollar", "particles/dollar.png".registerAsDynamicImageFromClientResources())
+        DOLLAR("Dollar", "particles/dollar.png".registerAsDynamicImageFromClientResources()),
+
+        SNOWFLAKE("Snowflake", "particles/snowflake.png".registerAsDynamicImageFromClientResources()),
+
     }
 
     private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {

@@ -116,6 +116,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         private val scale by float("Scale", 1f, 0.5f..4f)
         private val maximumDistance by float("MaximumDistance", 50f, 1f..256f)
         private val number by boolean("Number", true)
+        private val vanillaName by boolean("VanillaName",false)
         @Suppress("unused")
         val renderHandler = handler<OverlayRenderEvent> { event ->
             val camera = mc.cameraEntity ?: return@handler
@@ -137,7 +138,11 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
                         val distanceScale = mc.player?.let {
                             (1f / (it.distanceTo(item) * 0.1f)).coerceIn(0.5f, 2f) /5 * scale } ?: scale
                         matrixStack.scale(distanceScale, distanceScale, 1f)
-                        val displayName = item.stack.itemName.string
+                        val displayName = if  (vanillaName) {
+                            item.stack.name.string
+                        }else{
+                            item.stack.itemName.string
+                        }
                         val count = item.stack.count
                         val text = if (number && count > 1) "$displayName x$count" else displayName
 

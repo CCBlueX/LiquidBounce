@@ -20,13 +20,16 @@ import java.util.*
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object PointMode : BreadcrumbsMode("Point") {
+object SparkleMode : BreadcrumbsMode("Sparkle") {
 
     private val alive by int("Alive", 30, 20..3000, "ticks")
     private val fadeFactor by float("FadeSpeed",0.2f,0.1f..1f)
 
-    private val path = ArrayDeque<TrailPoint>()
-    private data class TrailPoint(val pos: Vec3d, val creationTime: Long)
+    private val path = ArrayDeque<Sparkle>()
+    private data class Sparkle(
+        val pos: Vec3d,
+        val creationTime: Long
+    )
 
     @Suppress("unused")
     val updateHandler = handler<GameTickEvent> {
@@ -35,11 +38,10 @@ object PointMode : BreadcrumbsMode("Point") {
 
         val currPos = Vec3d(player.x, player.y, player.z)
         val lastPos = path.peekLast()?.pos
-        val minDistance = 0.01
-        if (lastPos == null || lastPos.distanceTo(currPos) > minDistance) {
-            path.add(TrailPoint(currPos, currentTime))
-        }
 
+        if (lastPos == null || lastPos.x != currPos.x || lastPos.y != currPos.y || lastPos.z != currPos.z) {
+            path.add(Sparkle(currPos, currentTime))
+        }
 
         while (path.isNotEmpty() && currentTime - path.peekFirst().creationTime > alive) {
             path.removeFirst()
@@ -98,11 +100,18 @@ object PointMode : BreadcrumbsMode("Point") {
                     VertexFormats.POSITION_TEXTURE_COLOR,
                     ShaderProgramKeys.POSITION_TEX_COLOR
                 ) { mat ->
-                    vertex(
-                        mat, -0.5f, -0.5f, 0f).texture(0f, 0f).color(renderColor.toARGB())
-                    vertex(mat,  0.5f, -0.5f, 0f).texture(1f, 0f).color(renderColor.toARGB())
-                    vertex(mat,  0.5f,  0.5f, 0f).texture(1f, 1f).color(renderColor.toARGB())
-                    vertex(mat, -0.5f,  0.5f, 0f).texture(0f, 1f).color(renderColor.toARGB())
+                    vertex(mat, -0.5f, -0.5f, 0f)
+                        .texture(0f, 0f)
+                        .color(renderColor.toARGB())
+                    vertex(mat,  0.5f, -0.5f, 0f)
+                        .texture(1f, 0f)
+                        .color(renderColor.toARGB())
+                    vertex(mat,  0.5f,  0.5f, 0f)
+                        .texture(1f, 1f)
+                        .color(renderColor.toARGB())
+                    vertex(mat, -0.5f,  0.5f, 0f)
+                        .texture(0f, 1f)
+                        .color(renderColor.toARGB())
                 }
                 matrixStack.pop()
             }

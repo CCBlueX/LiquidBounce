@@ -43,6 +43,8 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
@@ -136,7 +138,25 @@ object HttpClient {
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+    @JvmStatic
+    fun Call.sendAsync(): CompletableFuture<Response> {
+        val future = CompletableFuture<Response>().exceptionally { throwable ->
+            if (throwable is CancellationException) this.cancel()
+            throw throwable
+        }
+        this.enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    if (!future.complete(response)) response.close()
+                }
 
+                override fun onFailure(call: Call, e: IOException) {
+                    future.completeExceptionally(e)
+                }
+            }
+        )
+        return future
+    }
 }
 
 enum class HttpMethod {

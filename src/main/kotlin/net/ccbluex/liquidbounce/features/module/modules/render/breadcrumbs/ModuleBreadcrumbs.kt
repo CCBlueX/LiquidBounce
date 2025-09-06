@@ -15,13 +15,13 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         get() = "liquidbounce.module.breadcrumbs"
 
     val modes = choices(
-        "Mode", TrailMode, arrayOf(TrailMode,RiseMode
+        "Mode", TrailMode, arrayOf(TrailMode,SparkleMode,SectorMode
         )
     )
 
     val colorMode = choices("ColorMode", 3) {
         arrayOf(
-            GenericCustomColorMode(it, Color4b.WHITE.with(a = 80), Color4b.WHITE.with(a = 100)),
+            GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE, Color4b.CYAN),
             GenericStaticColorMode(it, Color4b(0, 255, 4)),
             GenericRainbowColorMode(it),
             GenericSyncColorMode(it)
