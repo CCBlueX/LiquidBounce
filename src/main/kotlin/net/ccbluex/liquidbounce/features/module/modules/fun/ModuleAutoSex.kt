@@ -7,9 +7,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.entity.player.PlayerEntity
+import java.awt.Color
+import java.net.URI
+import java.util.*
 import kotlin.random.Random
-
 
 object ModuleAutoSex : ClientModule("AutoSex", Category.FUN) {
 
@@ -53,10 +57,88 @@ object ModuleAutoSex : ClientModule("AutoSex", Category.FUN) {
         }
     }
 
+    private fun getSkinGrayscale(image: NativeImage): Float {
+        var totalBrightness = 0f
+        var pixelCount = 0
+        for (x in 0 until image.width) {
+            for (y in 0 until image.height) {
+                val color = Color(image.getColorArgb(x, y))
+                val brightness = (color.red * 0.299f + color.green * 0.587f + color.blue * 0.114f)
+                totalBrightness += brightness
+                pixelCount++
+            }
+        }
+        return totalBrightness / pixelCount / 255f
+    }
+
+
+    fun loadSkinImage(url: String): NativeImage? {
+        return try {
+            URI(url).toURL().openStream().use { NativeImage.read(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    private val skinCache = mutableMapOf<UUID, NativeImage>()
+
+    private fun estimateNiggerFromSkin(image: NativeImage): Gender? {
+        var warmCount = 0
+        var coolCount = 0
+        var neutralCount = 0
+        var pixelCount = 0
+
+        for (x in 0 until image.width) {
+            for (y in 0 until image.height) {
+                val color = Color(image.getColorArgb(x, y))
+                val r = color.red
+                val g = color.green
+                val b = color.blue
+                if (color.alpha < 50) continue
+
+                if ((r > 200 && g < 50 && b < 50) || (b > 200 && r < 50 && g < 50)) {
+                    neutralCount++
+                    continue
+                }
+
+                if (r > g && r > b && r > 80) warmCount++
+                else if (b > r && b > g && b > 80) coolCount++
+                else neutralCount++
+
+                pixelCount++
+            }
+        }
+
+        if (pixelCount == 0) return null
+
+        val warmRatio = warmCount.toFloat() / pixelCount
+        val coolRatio = coolCount.toFloat() / pixelCount
+
+        return when {
+            warmRatio > 0.25f && warmRatio > coolRatio * 1.5f -> Gender.FEMALE
+            coolRatio > 0.25f && coolRatio > warmRatio * 1.5f -> Gender.MALE
+            else -> null
+        }
+    }
+
+    private enum class Gender { MALE, FEMALE }
 
     private fun getNearestPlayer(range: Float): PlayerEntity? {
         return mc.world?.players
             ?.filter { it != mc.player && it.isAlive && it.distanceTo(mc.player) <= range }
+            ?.filter { player ->
+                if (player is AbstractClientPlayerEntity) {
+                    val uuid = player.uuid
+                    val skinImage = skinCache[uuid] ?: run {
+                        player.skinTextures?.textureUrl?.let { url ->
+                            loadSkinImage(url)?.also { skinCache[uuid] = it }
+                        }
+                    }
+                    skinImage?.let {
+                        val gender = estimateNiggerFromSkin(it)
+                        gender == Gender.FEMALE
+                    } ?: false
+                } else false
+            }
             ?.minByOrNull { it.distanceTo(mc.player) }
     }
 
@@ -79,5 +161,4 @@ object ModuleAutoSex : ClientModule("AutoSex", Category.FUN) {
             lastMessageTime = System.currentTimeMillis()
         }
     }
-
 }

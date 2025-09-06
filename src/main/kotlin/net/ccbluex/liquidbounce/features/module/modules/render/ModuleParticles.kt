@@ -2,16 +2,18 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.color
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.gravity
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.mc
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.particleSize
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.physicalSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.rotate
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles.speed
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -24,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -47,8 +50,22 @@ import kotlin.math.max
 object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     val particleSize by float("Size", 1f, 0.5f..2f)
-    val speed by float("Speed", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
+
+    class Physical : Configurable("Physical") {
+        val motion by float("Motion", 15f, 1f..30f)
+        val bounceX by float("Bounce X", 0.8f, 0.0f..1.0f)
+        val bounceY by float("Bounce Y", 0.6f, 0.0f..1.0f)
+        val bounceZ by float("Bounce Z", 0.8f, 0.0f..1.0f)
+        val drag by float("Drag", 0.99f, 0.0f..1.0f)
+        val gravityFactor by float("GravityFactor", 0.01f, 0.0f..1f)
+    }
+
+    val physicalSettings = Physical()
+    init {
+        tree(physicalSettings)
+    }
+
     val rotate by boolean("RandomParticleRotation", true)
     val color by color("Color", Color4b.RED)
 
@@ -60,7 +77,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
-
+    val gravity: Double
+        get() = physicalSettings.gravityFactor.toDouble() * 0.0015
     @Suppress("unused")
     private val attackEvent = handler<AttackEntityEvent> { event ->
         if (!event.entity.shouldBeShown() || !chronometer.hasElapsed(230)) {
@@ -141,7 +159,7 @@ private class Particle private constructor(
     var prevPos: Vec3d,
     var velocity: Vec3d,
     var collisionTime: Long = -1,
-    var alpha: Float = 1.0f, /* 0 <= alpha <= 1 */
+    var alpha: Float = 1f,
     val spawnTime: Long = System.currentTimeMillis(),
     val rotation: Float,
     val particleImage: ParticleImage
@@ -157,44 +175,33 @@ private class Particle private constructor(
         rotation = (0f..360f).random(),
         particleImage = particleImage
     )
-}
 
-@Suppress("MagicNumber", "UnusedParameter")
-private fun Particle.update(delta: Double) {
-    val particleSpeed = speed.toDouble()
-    prevPos = pos
-
-    if (collisionTime != -1L) {
-        val timeSinceCollision = System.currentTimeMillis() - collisionTime
-        alpha = max(0f, 1f - (timeSinceCollision / 3000f))
-    }
-
-    velocity = velocity.add(0.0, -0.0001, 0.0)
-    val nextPos = pos.add((velocity * delta).multiply(particleSpeed, 1.0, particleSpeed))
-
-    if (!nextPos.isBlockAir) {
-        if (collisionTime == -1L) {
-            collisionTime = System.currentTimeMillis()
+    @Suppress("MagicNumber", "UnusedParameter")
+    fun update(delta: Double) {
+        prevPos = pos
+        if (collisionTime != -1L) {
+            val timeSinceCollision = System.currentTimeMillis() - collisionTime
+            alpha = max(0f, 1f - (timeSinceCollision / 3000f))
         }
 
-        val dx = velocity.x * delta * particleSpeed
-        val dy = velocity.y * delta
-        val dz = velocity.z * delta * particleSpeed
+        val speedMultiplier = physicalSettings.motion.toDouble()
+        velocity = velocity.add(0.0, -gravity, 0.0)
+        var nextPos = pos.add((velocity * delta).multiply(speedMultiplier, 1.0, speedMultiplier))
 
-        if (!Vec3d(pos.x + dx, pos.y, pos.z).isBlockAir) {
-            velocity = Vec3d(0.0, velocity.y, velocity.z)
+        if (!nextPos.isBlockAir) {
+            if (collisionTime == -1L) collisionTime = System.currentTimeMillis()
+
+            val dx = velocity.x * delta * speedMultiplier
+            val dy = velocity.y * delta
+            val dz = velocity.z * delta * speedMultiplier
+
+            if (!Vec3d(pos.x + dx, pos.y, pos.z).isBlockAir) velocity = velocity.copy(x = -velocity.x * physicalSettings.bounceX)
+            if (!Vec3d(pos.x, pos.y + dy, pos.z).isBlockAir) velocity = velocity.copy(x = velocity.x * physicalSettings.drag, y = -velocity.y * physicalSettings.bounceY, z = velocity.z * physicalSettings.drag)
+            if (!Vec3d(pos.x, pos.y, pos.z + dz).isBlockAir) velocity = velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
+
+            nextPos = pos.add((velocity * delta).multiply(speedMultiplier, 1.0, speedMultiplier))
         }
 
-        if (!Vec3d(pos.x, pos.y + dy, pos.z).isBlockAir) {
-            velocity = Vec3d(velocity.x, -velocity.y * 0.5, velocity.z)
-        }
-
-        if (!Vec3d(pos.x, pos.y, pos.z + dz).isBlockAir) {
-            velocity = Vec3d(velocity.x, velocity.y, 0.0)
-        }
-
-        pos = pos.add((velocity * delta).multiply(particleSpeed, 1.0, particleSpeed))
-    } else {
         pos = nextPos
     }
 }
