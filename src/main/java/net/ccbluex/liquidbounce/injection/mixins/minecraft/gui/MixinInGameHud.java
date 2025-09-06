@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.OverlayTitleEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -98,7 +99,7 @@ public abstract class MixinInGameHud {
 
         // Draw after overlay event
         var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);
-        if (component != null && component.getRunning() &&
+        if (client.interactionManager != null && component != null && component.getRunning() &&
                 client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
             drawHotbar(context, tickCounter, component);
         }
@@ -302,7 +303,10 @@ public abstract class MixinInGameHud {
     @Unique
     private void tryEmitOverlay() {
         if (cachedTitle != null && cachedSubtitle != null) {
-            OverlayTitleEvent event = new OverlayTitleEvent(cachedTitle, cachedSubtitle);
+            Text protectedTitle = ModuleNameProtect.INSTANCE.replace(cachedTitle);
+            Text protectedSubtitle = ModuleNameProtect.INSTANCE.replace(cachedSubtitle);
+
+            OverlayTitleEvent event = new OverlayTitleEvent(protectedTitle, protectedSubtitle);
 
             EventManager.INSTANCE.callEvent(event);
 
@@ -312,7 +316,6 @@ public abstract class MixinInGameHud {
             }
         }
     }
-
 
     @Inject(method = "renderNauseaOverlay", at = @At("HEAD"), cancellable = true)
     private void hookNauseaOverlay(DrawContext context, float distortionStrength, CallbackInfo ci) {

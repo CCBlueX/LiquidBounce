@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
 
-
 object PlayerDeadEventListener : EventListener {
 
     private var wasAliveLastTick = true
@@ -34,33 +33,27 @@ object PlayerDeadEventListener : EventListener {
         }
         wasAliveLastTick = !isNowDead
     }
+
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
         val packet = event.packet
         if (packet !is GameMessageS2CPacket) return@handler
 
         val message = packet.content.string
+        val playerName = mc.player?.name?.string ?: return@handler
 
-        val deathRegex = Regex("you died! want to play again\\? click here!", RegexOption.IGNORE_CASE)
-        if (deathRegex.containsMatchIn(message)) {
+        val combinedPattern = Regex(
+            "you died! want to play again\\? click here!" +
+                "|\\b${Regex.escape(playerName)}\\b was killed by .+" +
+                "|\\b${Regex.escape(playerName)}\\b fell into the void\\." +
+                "|\\b${Regex.escape(playerName)}\\b died\\." +
+                "|\\b${Regex.escape(playerName)}\\b died in close combat to .+",
+            RegexOption.IGNORE_CASE
+        )
+
+        if (combinedPattern.containsMatchIn(message)) {
             localPlayerDeathCounter++
         }
-
-        mc.player?.let { player ->
-            val name = player.name.string
-
-            val killedByRegex = Regex("\\b${Regex.escape(name)}\\b was killed by .+", RegexOption.IGNORE_CASE)
-            val voidRegex = Regex("\\b${Regex.escape(name)}\\b fell into the void\\.", RegexOption.IGNORE_CASE)
-            val diedRegex = Regex("\\b${Regex.escape(name)}\\b died\\.", RegexOption.IGNORE_CASE)
-
-            if (killedByRegex.containsMatchIn(message) ||
-                voidRegex.containsMatchIn(message) ||
-                diedRegex.containsMatchIn(message)
-            ) {
-                localPlayerDeathCounter++
-            }
-        }
     }
-
 
 }

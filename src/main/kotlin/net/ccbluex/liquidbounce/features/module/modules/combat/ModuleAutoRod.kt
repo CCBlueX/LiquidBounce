@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.LivingEntity
+import net.minecraft.item.Item
 import net.minecraft.item.Items
 
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
@@ -50,12 +51,17 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val aimOffThreshold by float("AimOffThreshold", 5f, 0.5f..10f)
     private val tickUntilSlotReset by int("TicksUntilSlotReset", 1, 0..20)
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val requiresKillAura by boolean("RequiresKillAura", false)
+
     private val requires by multiEnumChoice<KillAuraRequirements>(
         "Requires",
         KillAuraRequirements.VANILLA_NAME
     )
+    private fun defaultHoldingItems(): MutableSet<Item> {
+        val set = hashSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
+        return set
+    }
     private val ignore by multiEnumChoice<Ignore>("Ignore")
+    private val holdingItemsForIgnore by items("HoldingItemsForIgnore",defaultHoldingItems())
     private val rotationConfigurable = RotationsConfigurable(this)
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
@@ -78,13 +84,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     override val running: Boolean
         get() =
             super.running
+                && player.mainHandStack.item !in holdingItemsForIgnore
                 && !ModuleBlink.running
                 && !ModuleScaffold.running
                 && !ModuleAutoStuck.shouldActivate
                 && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
                 && !(Ignore.HOLD_CONSUME !in ignore && player.mainHandStack.isConsumable)
-                && !(Ignore.HOLD_BOW !in ignore
-                && player.mainHandStack == Items.BOW ||player.mainHandStack == Items.TRIDENT)
                 && !(Ignore.OPEN_INVENTORY !in ignore
                 && (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen))
 
@@ -149,7 +154,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (rodInUse) return@tickHandler
 
         val enemiesList = targetTracker.targets()
-        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold) return@tickHandler
+        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold){
+            return@tickHandler
+        }
 
         val rotation = findRotation(target, rotationMode) ?: return@tickHandler
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
@@ -186,7 +193,8 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 Rotation.lookingAt(point.pos, eyes)
             }
             RotationMode.PROJECTILE -> {
-                SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.FISHING_ROD, target)
+                SituationalProjectileAngleCalculator.calculateAngleForEntity(
+                    TrajectoryInfo.FISHING_ROD, target)
             }
         }
     }
@@ -207,7 +215,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem"),
         HOLD_CONSUME("HoldConsume"),
-        HOLD_BOW("HoldBow"),
     }
 
 }

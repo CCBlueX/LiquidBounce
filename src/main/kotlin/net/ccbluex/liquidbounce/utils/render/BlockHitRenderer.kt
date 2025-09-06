@@ -45,6 +45,7 @@ class BlockHitRenderer(
     private var previousPosition: Box? = null
     private var lastChange: Long = 0L
 
+    @Suppress("CognitiveComplexMethod")
     fun render(
         enable: Boolean,
         event: WorldRenderEvent,
