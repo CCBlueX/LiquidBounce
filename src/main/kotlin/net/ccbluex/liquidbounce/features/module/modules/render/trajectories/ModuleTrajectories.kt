@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.BlockRenderer
+import net.ccbluex.liquidbounce.utils.render.BlockHitRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.player.PlayerEntity
@@ -69,7 +69,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
     private val enableEntityHitESP get() = Show.ENTITY_HIT_ESP in show
 
-    private val blockHitRenderer = tree(BlockRenderer(this))
+    private val blockHitRenderer = tree(BlockHitRenderer(this))
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack

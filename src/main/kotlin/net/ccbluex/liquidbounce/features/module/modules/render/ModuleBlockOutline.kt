@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
-import net.ccbluex.liquidbounce.utils.render.BlockRenderer
+import net.ccbluex.liquidbounce.utils.render.BlockHitRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 
 /**
@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
  */
 object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = arrayOf("BlockOverlay")) {
 
-    private val blockHitRenderer = tree(BlockRenderer(this))
+    private val blockHitRenderer = tree(BlockHitRenderer(this))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

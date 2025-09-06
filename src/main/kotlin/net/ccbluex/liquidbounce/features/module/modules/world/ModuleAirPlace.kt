@@ -18,19 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.isBlockAir
-import net.ccbluex.liquidbounce.render.BoxRenderer
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.render.BlockHitRenderer
 import net.minecraft.item.ArmorStandItem
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
@@ -44,17 +41,7 @@ import net.minecraft.util.math.Box
  *  Allows you to place blocks in mid-air.
  */
 object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
-
-    private object Preview : ToggleableConfigurable(this, "Preview", true) {
-        val outlineOnly by boolean("OutlineOnly", false)
-        val fillColor by color("Color", Color4b(69, 119, 255, 104))
-        val outlineColor by color("OutlineColor", Color4b.WHITE)
-    }
-
-    init {
-        tree(Preview)
-    }
-
+    private val blockHitRenderer = tree(BlockHitRenderer(this))
     // ---------- Utils ----------
     private fun isAirPlaceableItem(stack: ItemStack): Boolean {
         if (stack.isEmpty || stack.isFood || stack.isConsumable) return false
@@ -68,15 +55,12 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         return isAirPlaceableItem(mainHand) || isAirPlaceableItem(offHand)
     }
 
-    // ---------- Render ----------
+
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (!Preview.running) return@handler
-
         val target = mc.crosshairTarget ?: return@handler
         if (!target.pos.isBlockAir) return@handler
         if (!playerHasAllowedItems()) return@handler
-
 
         val targetPos = target.pos.toBlockPos()
         val worldSpaceBox = Box(
@@ -88,17 +72,7 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
             targetPos.z + 1.0
         )
 
-        val negCameraPos = mc.entityRenderDispatcher.camera.pos.negate()
-        val viewSpaceBox = worldSpaceBox.offset(negCameraPos)
-
-        val fill = if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor
-        val outline = Preview.outlineColor
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            BoxRenderer.drawWith(this) {
-                drawBox(viewSpaceBox, fill, outline)
-            }
-        }
+        blockHitRenderer.render(true, event, null, worldSpaceBox)
     }
 
     // ---------- Place ----------

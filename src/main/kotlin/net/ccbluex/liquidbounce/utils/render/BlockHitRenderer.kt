@@ -22,11 +22,12 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.shape.VoxelShape
 
-class BlockRenderer(
+class BlockHitRenderer(
     module: ClientModule
-) : ToggleableConfigurable(module, "BlockHitRendering", true) {
-    private val slideTime by int("SlideTime", 150, 1..1000, "ms")
+) : ToggleableConfigurable(module, "BlockHitRenderer", true) {
     private val sideOnly by boolean("SideOnly", true)
+
+    private val slideTime by int("SlideTime", 150, 1..1000, "ms")
     private val alpha by int("Alpha", 70, 0..255)
     private val outlineAlpha by int("OutlineAlpha", 150, 0..255)
 
@@ -47,24 +48,28 @@ class BlockRenderer(
     fun render(
         enable: Boolean,
         event: WorldRenderEvent,
-        hitResult: HitResult?,
-
+        hitResult: HitResult? = null,
+        box: Box? = null,
+        side: Direction? = null
     ) {
-        if (!enable || hitResult == null|| hitResult !is BlockHitResult) {
+        if (!enable || (hitResult == null && box == null)) {
             resetPositions()
             return
         }
 
-        val blockPos = hitResult.blockPos
-        val blockState = world.getBlockState(blockPos)
-        if (blockState.isAir || !world.worldBorder.contains(blockPos)) {
-            resetPositions()
-            return
+        val finalPosition = if (hitResult != null && hitResult is BlockHitResult) {
+            val blockPos = hitResult.blockPos
+            val blockState = world.getBlockState(blockPos)
+            if (blockState.isAir || !world.worldBorder.contains(blockPos)) {
+                resetPositions()
+                return
+            }
+            val hitSide = hitResult.side
+            val shape = blockState.getOutlineShape(world, blockPos, ShapeContext.of(mc.cameraEntity))
+            (if (sideOnly) flatBox(shape, hitSide) else shape.boundingBox).offset(blockPos)
+        } else {
+            box ?: return
         }
-
-        val side = hitResult.side
-        val box = blockState.getOutlineShape(world, blockPos, ShapeContext.of(mc.cameraEntity))
-        val finalPosition = (if (sideOnly) flatBox(box, side) else box.boundingBox).offset(blockPos)
 
         if (currentPosition != finalPosition) {
             previousPosition = currentPosition
@@ -74,7 +79,6 @@ class BlockRenderer(
 
         val renderPosition = if (previousPosition != null) {
             val factor = easing.getFactor(lastChange, System.currentTimeMillis(), slideTime.toFloat()).toDouble()
-
             val previousPosition = previousPosition!!
             Box(
                 MathHelper.lerp(factor, previousPosition.minX, finalPosition.minX),
@@ -90,11 +94,11 @@ class BlockRenderer(
 
         val translatedPosition = renderPosition.offset(mc.entityRenderDispatcher.camera.pos.negate())
         val baseColor = colorMode.activeChoice.getColor(Unit)
-        val fillColor = baseColor.withAlpha((alpha ))
-        val outline = baseColor.withAlpha((outlineAlpha ))
+        val fillColor = baseColor.withAlpha(alpha)
+        val outline = baseColor.withAlpha(outlineAlpha)
 
         renderEnvironmentForWorld(event.matrixStack) {
-            if (sideOnly) {
+            if (side != null && sideOnly) {
                 drawBoxSide(translatedPosition, side, fillColor, outline)
             } else {
                 BoxRenderer.drawWith(this) {
