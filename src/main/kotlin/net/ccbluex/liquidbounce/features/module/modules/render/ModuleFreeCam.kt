@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
@@ -45,7 +47,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import org.lwjgl.glfw.GLFW
 
 /**
  * FreeCam module
@@ -85,22 +87,16 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
          * @return Target position as Vec3d
          */
         override fun calculateGoalPosition(context: Unit): Vec3d? {
-            if (!shouldBeGoing) {
-                return null
+            return if (shouldBeGoing) {
+                getCameraLookingAt()
+            } else {
+                null
             }
-
-            val pos = pos ?: return null
-            val cameraPosition = pos.interpolate(1f)
-            val target = raycast(
-                range = 100.0,
-                start = cameraPosition,
-                direction = mc.cameraEntity?.rotation?.directionVector ?: return null
-            )
-
-            return target.pos
         }
 
     }
+
+    private val midClickCameraTeleport by boolean("MidClickCameraTeleport", false)
 
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
@@ -109,35 +105,57 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         tree(Navigation)
     }
 
-    private data class PositionPair(var pos: Vec3d, var lastPos: Vec3d) {
-        operator fun plusAssign(velocity: Vec3d) {
+    private object PositionState {
+        var available: Boolean = false
+            set(value) {
+                if (value) {
+                    pos = player.eyePos
+                    lastPos = pos
+                } else {
+                    pos = Vec3d.ZERO
+                    lastPos = Vec3d.ZERO
+                }
+                field = value
+            }
+
+        var pos: Vec3d = Vec3d.ZERO
+            private set
+        private var lastPos: Vec3d = Vec3d.ZERO
+
+        fun set(target: Vec3d) {
             lastPos = pos
-            pos += velocity
+            pos = target
         }
 
-        fun interpolate(tickDelta: Float) = Vec3d(
-            lastPos.x + (pos.x - lastPos.x) * tickDelta,
-            lastPos.y + (pos.y - lastPos.y) * tickDelta,
-            lastPos.z + (pos.z - lastPos.z) * tickDelta
-        )
+        fun update(velocity: Vec3d) = set(pos + velocity)
 
+        fun interpolate(tickDelta: Float) = pos.interpolate(lastPos, tickDelta.toDouble())
     }
 
-    private var pos: PositionPair? = null
-
     override fun onEnabled() {
-        updatePosition(Vec3d.ZERO)
+        PositionState.available = true
         super.onEnabled()
     }
 
     override fun onDisabled() {
-        pos = null
+        PositionState.available = false
 
         // Reset player rotation
         val rotation = RotationManager.currentRotation ?: RotationManager.serverRotation
         player.yaw = rotation.yaw
         player.pitch = rotation.pitch
         super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val mouseHandler = handler<MouseButtonEvent> { event ->
+        if (midClickCameraTeleport &&
+            event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            val target = getCameraLookingAt() ?: return@handler
+
+            // interpolate to prevent tp into block
+            PositionState.set(target.interpolate(PositionState.pos, 0.9))
+        }
     }
 
     @Suppress("unused")
@@ -154,7 +172,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             .withStrafe(speed, input = event.directionalInput)
             .withAxis(Direction.Axis.Y, yAxisMovement * speed)
         ModuleDebug.debugParameter(this, "Velocity", velocity.toString())
-        updatePosition(velocity)
+        PositionState.update(velocity)
 
         event.directionalInput = DirectionalInput.NONE
         event.jump = false
@@ -184,13 +202,13 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {
-        if (!running || entity != player) {
+        if (!running || entity != player || !PositionState.available) {
             return
         }
 
         val camera = mc.gameRenderer.camera
 
-        return camera.setPos(pos?.interpolate(tickDelta) ?: return)
+        return camera.setPos(PositionState.interpolate(tickDelta))
     }
 
     fun renderPlayerFromAllPerspectives(entity: LivingEntity): Boolean {
@@ -205,17 +223,26 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
      * Modify the raycast position
      */
     fun modifyRaycast(original: Vec3d, entity: Entity, tickDelta: Float): Vec3d {
-        if (!running || entity != mc.player || !CameraInteract.running) {
+        if (!running || entity != mc.player || !CameraInteract.running || !PositionState.available) {
             return original
         }
 
-        return pos?.interpolate(tickDelta) ?: original
+        return PositionState.interpolate(tickDelta)
     }
 
     fun shouldDisableCameraInteract() = running && !CameraInteract.running
 
-    private fun updatePosition(velocity: Vec3d) {
-        pos = (pos ?: PositionPair(player.eyePos, player.eyePos)).apply { this += velocity }
+    private fun getCameraLookingAt(): Vec3d? {
+        if (!PositionState.available) return null
+
+        val cameraPosition = PositionState.interpolate(1f)
+        val target = raycast(
+            range = 200.0,
+            start = cameraPosition,
+            direction = mc.cameraEntity?.rotation?.directionVector ?: return null
+        )
+
+        return target.pos
     }
 
 }
