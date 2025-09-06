@@ -22,6 +22,8 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -64,12 +66,12 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val count by intRange("Count", 2..10, 2..30, "particles")
     private val rotate by boolean("RandomParticleRotation", true)
     private class Physical : Configurable("Physical") {
-        val motion by float("Motion", 1f, 1f..30f)
-        val bounceX by float("BounceX", 0.2f, 0.0f..1.0f)
-        val bounceY by float("BounceY", 0.1f, 0.0f..1.0f)
-        val bounceZ by float("BounceZ", 0.2f, 0.0f..1.0f)
-        val drag by float("Drag", 0.5f, 0.0f..1.0f)
-        val gravityFactor by float("GravityFactor", 0.1f, 0.0f..1f)
+        val motion by float("Motion", 15f, 1f..30f)
+        val bounceX by float("BounceX", 0.8f, 0.0f..1.0f)
+        val bounceY by float("BounceY", 0.6f, 0.0f..1.0f)
+        val bounceZ by float("BounceZ", 0.8f, 0.0f..1.0f)
+        val drag by float("Drag", 0.99f, 0.0f..1.0f)
+        val gravityFactor by float("GravityFactor", 0.8f, 0.0f..1f)
     }
 
     private val physicalSettings = Physical()
@@ -85,6 +87,31 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val gravity: Double
         get() = physicalSettings.gravityFactor.toDouble() * 0.0015
 
+    override fun onDisabled() {
+        particles.clear()
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val worldHandler = handler<WorldChangeEvent> {
+        particles.clear()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        val camera = mc.cameraEntity ?: player
+        particles.removeIf { particle ->
+            if (particle.alpha <= 0 || camera.eyePos.squaredDistanceTo(particle.pos) > 30 * 30) {
+                true
+            } else {
+                particle.update()
+                particle.visible = canSeePointFrom(camera.eyePos, particle.pos)
+                false
+            }
+        }
+    }
+
+    @Suppress("unused")
     private val attackEvent = handler<AttackEntityEvent> { event ->
         if (!event.entity.shouldBeShown() || !chronometer.hasElapsed(230)) {
             return@handler
@@ -100,6 +127,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         }
     }
 
+    @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             RenderSystem.depthMask(true)
@@ -107,32 +135,10 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             mc.gameRenderer.lightmapTextureManager.disable()
             RenderSystem.defaultBlendFunc()
 
-            val camera = mc.cameraEntity ?: return@renderEnvironmentForWorld
-            val now = System.currentTimeMillis()
+            for (particle in particles) {
+                if (!particle.visible) continue
 
-            particles.removeIf { particle ->
-                val expired = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
-                if (expired) return@removeIf true
-
-                particle.update()
-
-                if (now >= particle.nextVisibilityCheck) {
-                    particle.visible = canSeePointFrom(camera.eyePos, particle.pos)
-                    particle.nextVisibilityCheck = now + 50L
-                }
-
-                false
-            }
-
-            particles.filter { it.visible }.forEach { particle ->
-                val interpPos = particle.prevPos.lerp(particle.pos, event.partialTicks.toDouble())
-                withPositionRelativeToCamera(interpPos) {
-                    val ms = event.matrixStack
-                    ms.push()
-                    RenderSystem.setShaderTexture(0, particle.particleImage.texture)
-                    render(particle, event.partialTicks)
-                    ms.pop()
-                }
+                render(particle, event.partialTicks)
             }
 
             RenderSystem.depthMask(true)
@@ -158,7 +164,6 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
          * Modified: @sqlerrorthing
          */
         STAR("Star", "particles/star.png".registerAsDynamicImageFromClientResources()),
-//        SNOWFLAKE("Snowflake", "particles/snowflake.png".registerAsDynamicImageFromClientResources()),
 
         /**
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
@@ -177,7 +182,6 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         val rotation: Float,
         val particleImage: ParticleImage,
         var visible: Boolean = true,
-        var nextVisibilityCheck: Long = 0L
     ) {
         constructor(pos: Vec3d, particleImage: ParticleImage) : this(
             pos = pos,
@@ -228,48 +232,53 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     }
 
     private fun WorldRenderEnvironment.render(particle: Particle, partialTicks: Float) {
-        val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - particle.spawnTime) / 12000f)
-        val rotation = if (rotate) {
-            (particle.rotation + 90f) % 360f
-        } else {
-            90f
-        }
+        val interpPos = particle.prevPos.lerp(particle.pos, partialTicks.toDouble())
+        withPositionRelativeToCamera(interpPos) {
+            RenderSystem.setShaderTexture(0, particle.particleImage.texture)
 
-        with(matrixStack) {
-            translate(-size / 2.0, -size / 2.0, 0.0)
-            multiply(mc.gameRenderer.camera.rotation)
-            scale(-1.0f, 1.0f, -1.0f)
-            multiply(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
-            translate(size / 2.0, size / 2.0, 0.0)
-        }
+            val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - particle.spawnTime) / 12000f)
+            val rotation = if (rotate) {
+                (particle.rotation + 90f) % 360f
+            } else {
+                90f
+            }
 
-        val renderColor = color.alpha(
-            MathHelper.clamp(
-                (particle.alpha * color.a.toFloat()).toInt(),
-                0, color.a
+            with(matrixStack) {
+                translate(-size / 2.0, -size / 2.0, 0.0)
+                multiply(mc.gameRenderer.camera.rotation)
+                scale(-1.0f, 1.0f, -1.0f)
+                multiply(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
+                translate(size / 2.0, size / 2.0, 0.0)
+            }
+
+            val renderColor = color.alpha(
+                MathHelper.clamp(
+                    (particle.alpha * color.a.toFloat()).toInt(),
+                    0, color.a
+                )
             )
-        )
 
-        drawCustomMesh(
-            VertexFormat.DrawMode.QUADS,
-            VertexFormats.POSITION_TEXTURE_COLOR,
-            ShaderProgramKeys.POSITION_TEX_COLOR
-        ) { matrix ->
-            vertex(matrix, 0.0f, -size, 0.0f)
-                .texture(0.0f, 0.0f)
-                .color(renderColor.toARGB())
+            drawCustomMesh(
+                VertexFormat.DrawMode.QUADS,
+                VertexFormats.POSITION_TEXTURE_COLOR,
+                ShaderProgramKeys.POSITION_TEX_COLOR
+            ) { matrix ->
+                vertex(matrix, 0.0f, -size, 0.0f)
+                    .texture(0.0f, 0.0f)
+                    .color(renderColor.toARGB())
 
-            vertex(matrix, -size, -size, 0.0f)
-                .texture(0.0f, 1.0f)
-                .color(renderColor.toARGB())
+                vertex(matrix, -size, -size, 0.0f)
+                    .texture(0.0f, 1.0f)
+                    .color(renderColor.toARGB())
 
-            vertex(matrix, -size, 0.0f, 0.0f)
-                .texture(1.0f, 1.0f)
-                .color(renderColor.toARGB())
+                vertex(matrix, -size, 0.0f, 0.0f)
+                    .texture(1.0f, 1.0f)
+                    .color(renderColor.toARGB())
 
-            vertex(matrix, 0.0f, 0.0f, 0.0f)
-                .texture(1.0f, 0.0f)
-                .color(renderColor.toARGB())
+                vertex(matrix, 0.0f, 0.0f, 0.0f)
+                    .texture(1.0f, 0.0f)
+                    .color(renderColor.toARGB())
+            }
         }
     }
 
