@@ -295,7 +295,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
     val mutable = BlockPos.Mutable()
     return Array(longs.size) {
         mutable.set(longs.getLong(it))
-        this.add(mutable)
+        this.add(mutable.add(this))
     }
 }
 

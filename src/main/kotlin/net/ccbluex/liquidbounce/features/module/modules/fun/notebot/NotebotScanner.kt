@@ -43,7 +43,8 @@ object NotebotScanner : MinecraftShortcuts {
     private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
         val result = EnumMap<_, ArrayDeque<NoteBlockTracker>>(NoteBlockInstrument::class.java)
 
-        val noteBlocks = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range).filter { pos ->
+        val surroundings = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range)
+        val noteBlocks = surroundings.filter { pos ->
             pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
         }
 

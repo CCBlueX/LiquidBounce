@@ -50,7 +50,7 @@ import java.util.*
  */
 object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = true) {
 
-    private val song by file("Song", supportedExtensions = setOf("nbs"))
+    private val song = file("Song", supportedExtensions = setOf("nbs"))
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)
@@ -130,7 +130,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         chat(message("startLoading").formatted(Formatting.GREEN), this)
 
         val songData = withContext(Dispatchers.IO) {
-            NbsLoader.load(song)
+            NbsLoader.load(song.absoluteFile)
         }
 
         return songData
@@ -188,7 +188,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     private val progressMessageMetadata = MessageMetadata(id = "M$name#progress", remove = false)
 
     private fun removeProgressMessage() {
-        net.ccbluex.liquidbounce.utils.client.mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+        mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
     }
 
     fun sendNewProgressMessage(name: MutableText, progress: Int, total: Int) {
