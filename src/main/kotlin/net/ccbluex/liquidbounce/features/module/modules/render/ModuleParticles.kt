@@ -61,8 +61,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         tree(physicalSettings)
     }
 
-    private val color by color("Color", Color4b.RED)
-    private val particleImages by multiEnumChoice("Particle", ParticleImage.STAR, canBeNone = false)
+    private val color by color("Color", Color4b.WHITE)
+    private val particleImages by multiEnumChoice("Particle", ParticleImage.SNOWFLAKE, canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
 
@@ -84,7 +84,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             particles.add(Particle(pos, particleImages.random()))
         }
     }
-
+    
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             RenderSystem.depthMask(true)
@@ -95,14 +95,9 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             val camera = mc.cameraEntity ?: return@renderEnvironmentForWorld
             val now = System.currentTimeMillis()
 
-            val itr = particles.iterator()
-            while (itr.hasNext()) {
-                val particle = itr.next()
+            particles.removeIf { particle ->
                 val expired = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
-                if (expired) {
-                    itr.remove()
-                    continue
-                }
+                if (expired) return@removeIf true
 
                 particle.update(event.partialTicks.toDouble())
 
@@ -110,6 +105,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     particle.visible = canSeePointFrom(camera.eyePos, particle.pos)
                     particle.nextVisibilityCheck = now + 50L
                 }
+
+                false
             }
 
             particles.filter { it.visible }.forEach { particle ->
@@ -129,6 +126,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
+
 
     @Suppress("UNUSED")
     private enum class ParticleImage(
