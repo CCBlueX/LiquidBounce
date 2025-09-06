@@ -10,10 +10,10 @@ if (fs.existsSync("resources")) {
     log("Deleted resources folder");
 }
 
-fs.mkdirSync("resources/resources/liquidbounce", { recursive: true });
+fs.mkdirSync("resources/resources/liquidbounce/themes", { recursive: true });
 
 // Create a zip archive
-const output = fs.createWriteStream("resources/resources/liquidbounce/default_theme.zip");
+const output = fs.createWriteStream("resources/resources/liquidbounce/themes/liquidbounce.zip");
 const archive = archiver("zip", {});
 
 output.on("close", () => {

@@ -22,10 +22,12 @@ package net.ccbluex.liquidbounce.config.gson.serializer
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
 class ConfigurableSerializer(
@@ -54,6 +56,25 @@ class ConfigurableSerializer(
         val PUBLIC_SERIALIZER = ConfigurableSerializer(
             withValueType = false, includePrivate = false, includeNotAnOption = true
         )
+
+        /**
+         * Serialize a [Configurable] to a read-only [JsonObject]
+         *
+         * Used for interop communication by [ReadOnlyComponentSerializer]
+         * and [ReadOnlyThemeSerializer].
+         */
+        fun serializeReadOnly(
+            configurable: Configurable,
+            context: JsonSerializationContext
+        ): JsonObject = JsonObject().apply {
+            for (v in configurable.inner) {
+                add(v.name.toLowerCamelCase(), when (v) {
+                    is Alignment -> context.serialize(v, Alignment::class.java)
+                    is Configurable -> serializeReadOnly(v, context)
+                    else -> context.serialize(v.inner)
+                })
+            }
+        }
 
     }
 

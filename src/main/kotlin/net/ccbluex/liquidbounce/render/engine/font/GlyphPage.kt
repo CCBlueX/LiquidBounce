@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
-import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import org.lwjgl.opengl.GL11
 import java.awt.*
@@ -264,15 +263,3 @@ abstract class GlyphPage {
 
 data class FontGlyph(val codepoint: Char, val font: FontManager.FontId)
 
-internal fun BufferedImage.toNativeImage(): NativeImage {
-    val nativeImage = NativeImage(NativeImage.Format.RGBA, this.width, this.height, false)
-
-    // Fuck Minecraft native image
-    for (x in 0 until this.width) {
-        for (y in 0 until this.height) {
-            nativeImage.setColorArgb(x, y, this.getRGB(x, y))
-        }
-    }
-
-    return nativeImage
-}

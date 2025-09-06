@@ -27,21 +27,21 @@ import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
 import java.util.*
 
-fun interface CommandHandler {
-    operator fun invoke(command: Command, args: Array<Any>)
-}
-
 @Suppress("LongParameterList")
 class Command(
     val name: String,
-    val aliases: Array<out String>,
-    val parameters: Array<Parameter<*>>,
-    val subcommands: Array<Command>,
+    val aliases: List<String>,
+    val parameters: List<Parameter<*>>,
+    val subcommands: List<Command>,
     val executable: Boolean,
-    val handler: CommandHandler?,
+    val handler: Handler?,
     val requiresIngame: Boolean,
-    private var parentCommand: Command? = null
 ) : MinecraftShortcuts {
+    var parentCommand: Command? = null
+        private set
+    var index: Int = -1
+        internal set
+
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
@@ -49,20 +49,22 @@ class Command(
         get() = translation("$translationBaseKey.description").convertToString()
 
     init {
-        subcommands.forEach {
-            check(it.parentCommand == null) {
+        subcommands.forEachIndexed { i, command ->
+            check(command.parentCommand == null) {
                 "Subcommand already has parent command"
             }
 
-            it.parentCommand = this
+            command.index = i
+            command.parentCommand = this
         }
 
-        parameters.forEach {
-            check(it.command == null) {
+        parameters.forEachIndexed { i, param ->
+            check(param.command == null) {
                 "Parameter already has a command"
             }
 
-            it.command = this
+            param.index = i
+            param.command = this
         }
     }
 
@@ -248,4 +250,26 @@ class Command(
 
         suggestions.forEach(builder::suggest)
     }
+
+    fun interface Handler {
+        operator fun Context.invoke()
+
+        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>)
+
+        fun interface Suspend {
+            suspend operator fun Context.invoke()
+        }
+    }
+
+    /**
+     * Provides a [Command] to the [CommandManager].
+     */
+    fun interface Factory {
+
+        /**
+         * Creates the [Command] and is run only once by the [CommandManager].
+         */
+        fun createCommand(): Command
+    }
+
 }

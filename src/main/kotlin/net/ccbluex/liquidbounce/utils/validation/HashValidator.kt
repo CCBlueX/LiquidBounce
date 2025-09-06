@@ -3,8 +3,10 @@ package net.ccbluex.liquidbounce.utils.validation
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.Util
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
+import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.thread
 
 private const val HASH_FILE_NAME = ".hash"
@@ -25,9 +27,12 @@ object HashValidator {
 
         expectHashOrDelete(file)
 
-        file.walk()
-            .mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
-            .forEach(HashValidator::validateHashFile)
+        file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
+            .map {
+                CompletableFuture.runAsync({ validateHashFile(it) }, Util.getMainWorkerExecutor())
+            }.forEach {
+                it.join()
+            }
     }
 
     private fun validateHashFile(hashFile: File) {

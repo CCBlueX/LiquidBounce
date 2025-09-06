@@ -55,7 +55,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
 
     private object Slide : ToggleableConfigurable(this, "Slide", true) {
         val time by int("Time", 150, 1..1000, "ms")
-        val easing by curve("Easing", Easing.LINEAR)
+        val easing by easing("Easing", Easing.LINEAR)
     }
 
     init {

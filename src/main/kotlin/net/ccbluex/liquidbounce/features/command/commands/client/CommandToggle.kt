@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.module
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -33,18 +33,18 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to enable or disable a specific module.
  */
-object CommandToggle : CommandFactory {
+object CommandToggle : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("toggle")
             .alias("t")
             .parameter(
-                Parameters.module()
+                ParameterBuilder.module()
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val module = args[0] as ClientModule
 
                 val newState = !module.running

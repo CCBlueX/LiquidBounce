@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpInternalServerError
+import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.readImageAsBase64
 import net.minecraft.client.gui.screen.TitleScreen
@@ -39,7 +38,8 @@ import net.minecraft.util.path.SymlinkValidationException
 import net.minecraft.world.level.storage.LevelSummary
 import java.io.IOException
 
-var summaries = emptyList<LevelSummary>()
+@Volatile
+private var summaries = emptyList<LevelSummary>()
 
 // GET /api/v1/client/worlds
 @Suppress("UNUSED_PARAMETER")
@@ -85,7 +85,7 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
 fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
     val request = requestObject.asJson<LevelRequest>()
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         runCatching {
             mc.createIntegratedServerLoader().start(request.name) {
                 mc.setScreen(SelectWorldScreen(TitleScreen()))
@@ -95,7 +95,7 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v1/client/worlds/edit
@@ -103,7 +103,7 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
 fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
     val request = requestObject.asJson<LevelRequest>()
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         val session = runCatching {
             mc.levelStorage.createSession(request.name)
         }.onFailure { exception ->
@@ -120,7 +120,7 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
                     logger.error("Failed to access level ${request.name}", exception)
                 }
             }
-        }.getOrNull() ?: return@recordRenderCall
+        }.getOrNull() ?: return@execute
 
         runCatching {
             EditWorldScreen.create(mc, session) { _ ->
@@ -136,7 +136,7 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
         }
     }
 
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // POST /api/v1/client/worlds/delete
@@ -152,9 +152,7 @@ fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
         logger.error("Failed to delete world ${request.name}", it)
     }
 
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
-data class LevelRequest(val name: String)
-
-
+private data class LevelRequest(val name: String)

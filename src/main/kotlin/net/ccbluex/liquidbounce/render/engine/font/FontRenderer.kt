@@ -304,8 +304,8 @@ class FontRendererBuffers {
     val textBuffers = HashMap<GlyphPage, RenderBufferBuilder<VertexInputType.PosTexColor>>()
 
     fun getTextBufferForGlyphPage(glyphPage: GlyphPage): RenderBufferBuilder<VertexInputType.PosTexColor> {
-        return this.textBuffers.computeIfAbsent(glyphPage) {
-            val tessellator = getTesselatorForGlyphPage(glyphPage)
+        return this.textBuffers.computeIfAbsent(glyphPage) { key ->
+            val tessellator = getTesselatorForGlyphPage(key)
 
             RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, tessellator)
         }

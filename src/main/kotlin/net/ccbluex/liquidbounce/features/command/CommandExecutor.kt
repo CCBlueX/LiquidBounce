@@ -19,16 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
@@ -36,20 +27,9 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.highlight
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.onClick
-import net.ccbluex.liquidbounce.utils.client.openChat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.util.Formatting
 import okio.appendingSink
 import okio.buffer
@@ -76,16 +56,16 @@ object CommandExecutor : EventListener {
      */
     fun CommandBuilder.suspendHandler(
         allowParallel: Boolean = false,
-        handler: suspend (command: Command, args: Array<Any>) -> Unit,
+        handler: Command.Handler.Suspend,
     ) = if (allowParallel) {
-        this.handler { command, args ->
-            commandCoroutineScope.launch {
-                handler.invoke(command, args)
+        this.handler {
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
+                with(handler) { this@handler() }
             }
         }
     } else {
         val running = AtomicBoolean(false)
-        this.handler { command, args ->
+        this.handler {
             if (!running.compareAndSet(false, true)) {
                 chat(
                     markAsError(
@@ -98,7 +78,7 @@ object CommandExecutor : EventListener {
 
             // Progress message job
             val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
-            val progressJob = commandCoroutineScope.launch {
+            val progressJob = commandCoroutineScope.launch(CoroutineName("${command.name} Progress")) {
                 val startAt = System.currentTimeMillis()
                 var n = 0
                 val chars = charArrayOf('|', '/', '-', '\\')
@@ -119,8 +99,8 @@ object CommandExecutor : EventListener {
             }
 
             // Handler job
-            commandCoroutineScope.launch {
-                handler.invoke(command, args)
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
+                with(handler) { this@handler() }
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
@@ -144,7 +124,7 @@ object CommandExecutor : EventListener {
      * Render thread scope
      */
     private val commandCoroutineScope = CoroutineScope(
-        mc.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
+        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
     )
 
     private fun handleExceptions(e: Throwable) {

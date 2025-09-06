@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 
 /**
@@ -28,7 +27,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
  *
  * Provides subcommands for client management.
  */
-object CommandClient : CommandFactory {
+object CommandClient : Command.Factory {
 
     /**
      * Creates client command with a variety of subcommands.
@@ -41,7 +40,6 @@ object CommandClient : CommandFactory {
             .subcommand(CommandClientIntegrationSubcommand.integrationCommand())
             .subcommand(CommandClientLanguageSubcommand.languageCommand())
             .subcommand(CommandClientThemeSubcommand.themeCommand())
-            .subcommand(CommandClientComponentSubcommand.componentCommand())
             .subcommand(CommandClientAppearanceSubcommand.appearanceCommand())
             .subcommand(CommandClientPrefixSubcommand.prefixCommand())
             .subcommand(CommandClientDestructSubcommand.destructCommand())

@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
@@ -46,7 +46,7 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
-object CommandFakePlayer : CommandFactory, EventListener {
+object CommandFakePlayer : Command.Factory, EventListener {
 
     /**
      * Stores all fake players.
@@ -82,7 +82,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { _, args ->
+            .handler {
                 checkInGame()
                 spawn(args, false)
             }
@@ -99,7 +99,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 checkInGame()
 
                 if (fakePlayers.isEmpty()) {
@@ -146,7 +146,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
     private fun clearCommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .handler { _, _ ->
+            .handler {
                 checkInGame()
 
                 if (fakePlayers.isEmpty()) {
@@ -165,7 +165,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
     private fun startRecordingCommand(): Command {
         return CommandBuilder
             .begin("startrecording")
-            .handler { command, _ ->
+            .handler {
                 checkInGame()
 
                 if (recording) {
@@ -197,7 +197,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 checkInGame()
 
                 if (!recording) {
@@ -221,7 +221,7 @@ object CommandFakePlayer : CommandFactory, EventListener {
      *
      * @param moving true if the fake player should play a recording.
      */
-    private fun spawn(args: Array<Any>, moving: Boolean) {
+    private fun spawn(args: Array<out Any>, moving: Boolean) {
         val nameArg = args.getOrNull(0)?.toString() ?: "FakePlayer"
         val fakePlayer: FakePlayer
 
@@ -318,10 +318,6 @@ object CommandFakePlayer : CommandFactory, EventListener {
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
-        if (event.isCancelled) {
-            return@handler
-        }
-
         if (fakePlayers.isEmpty()) {
             return@handler
         }

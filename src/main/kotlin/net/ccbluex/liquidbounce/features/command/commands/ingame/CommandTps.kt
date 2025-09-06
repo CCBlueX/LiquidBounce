@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket
@@ -33,13 +32,13 @@ import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket
  *
  * @author ccetl
  */
-object CommandTps : CommandFactory {
+object CommandTps : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("tps")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val tps = ServerObserver.tps
                 chat(regular(command.result("tpsCheck", variable(
                     if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()

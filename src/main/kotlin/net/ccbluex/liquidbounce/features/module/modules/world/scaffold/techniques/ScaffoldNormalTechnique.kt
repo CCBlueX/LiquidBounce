@@ -61,8 +61,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         tree(ScaffoldHeadHitterFeature)
     }
 
-    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(intArrayOf(0, -1, 1, -2, 2))
-    internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(intArrayOf(0, -1, 1))
+    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2)
+    internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1)
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
 
@@ -74,7 +74,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5)) }
+            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3d.ofCenter(vec)) }
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
@@ -143,7 +143,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         randomization = Random.nextDouble(-0.01, 0.01)
     }
 
-    private fun commonOffsetToInvestigate(xzOffsets: IntArray): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
+    private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
         for (x in xzOffsets) {
             for (z in xzOffsets) {
                 add(Vec3i(x, 0, z))

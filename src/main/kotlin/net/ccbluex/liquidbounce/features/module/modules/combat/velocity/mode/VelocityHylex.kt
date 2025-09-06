@@ -33,7 +33,7 @@ object VelocityHylex : VelocityMode("Hylex") {
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
-        if (event.isCancelled || !player.moving || !player.isSprinting) {
+        if (!player.moving || !player.isSprinting) {
             return@handler
         }
 

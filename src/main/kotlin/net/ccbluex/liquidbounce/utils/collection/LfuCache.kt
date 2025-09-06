@@ -91,8 +91,8 @@ class LfuCache<K : Any, V : Any>(
         while (entryIter.hasNext()) {
             val entry = entryIter.next()
             val set = entry.value
-            if (set.isNotEmpty()) {
-                val iter = set.iterator()
+            val iter = set.iterator()
+            if (iter.hasNext()) {
                 val toRemove = iter.next()
                 iter.remove()
                 cache.remove(toRemove)
@@ -118,7 +118,7 @@ class LfuCache<K : Any, V : Any>(
      * Sets the key and corresponding value, and discards one of the least-used keys if full.
      */
     operator fun set(key: K, value: V): V {
-        cache.computeIfPresent(key) { k, oldV ->
+        cache.computeIfPresent(key) { k, _ ->
             incr(k)
             value
         }?.let { return value }

@@ -24,18 +24,22 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
 object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
-    init {
+    val isSkippingBrowser = System.getenv("LB_SKIP_BROWSER") == "true"
+        || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
+
+    fun init() {
         PersistentLocalStorage
     }
 
@@ -44,6 +48,10 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
+        if (isSkippingBrowser) {
+            logger.warn("Environment variable 'LB_SKIP_BROWSER' is set to 'true'.")
+            return
+        }
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }
 
@@ -78,7 +86,7 @@ object BrowserBackendManager : EventListener {
     /**
      * Causes an update of every browser by re-setting their viewport.
      */
-    fun forceUpdate() = RenderSystem.recordRenderCall {
+    fun forceUpdate() = mc.execute {
         for (browser in browserBackend.browsers) {
             try {
                 browser.viewport = browser.viewport

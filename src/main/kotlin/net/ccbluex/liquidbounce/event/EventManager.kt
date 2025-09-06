@@ -67,6 +67,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     BlockVelocityMultiplierEvent::class,
     BlockSlipperinessMultiplierEvent::class,
     EntityMarginEvent::class,
+    EntityHealthUpdateEvent::class,
     HealthUpdateEvent::class,
     DeathEvent::class,
     PlayerTickEvent::class,
@@ -216,7 +217,7 @@ object EventManager {
             }
 
             runCatching {
-                eventHook.handler(event)
+                eventHook.handler.accept(event)
             }.onFailure {
                 logger.error("Exception while executing handler.", it)
             }

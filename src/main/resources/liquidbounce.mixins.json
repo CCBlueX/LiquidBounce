@@ -132,7 +132,9 @@
     "truffle.MixinHostClassDesc",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
-    "truffle.MixinTruffleLanguage"
+    "truffle.MixinTruffleLanguage",
+    "truffle.MixinCommonJSRequireBuiltin",
+    "truffle.MixinNpmCompatibleESModuleLoader"
   ],
   "server": [],
   "injectors": {

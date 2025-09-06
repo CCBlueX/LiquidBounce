@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.rootConfigurables
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.*
@@ -53,11 +53,11 @@ object CommandClientConfigSubcommand {
 
     private fun backupSubcommand() = CommandBuilder.begin("backup")
         .parameter(
-            Parameters.rootConfigurables()
+            ParameterBuilder.rootConfigurables()
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
@@ -66,7 +66,7 @@ object CommandClientConfigSubcommand {
             runCatching {
                 chat(regular(command.result("backingUp", variable(formattedNames))))
                 for (configurable in configurables) {
-                    ConfigSystem.storeConfigurable(configurable)
+                    ConfigSystem.store(configurable)
                 }
 
                 val fileName = "manual-${LocalDateTime.now().toUnderlinedString()}"
@@ -85,16 +85,14 @@ object CommandClientConfigSubcommand {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ ->
+                .autocompletedFrom {
                     ConfigSystem.backupFolder.listFiles()
                         ?.map { file -> file.nameWithoutExtension }
-                        ?.filter { file -> file.startsWith(begin) }
-                        ?: emptyList()
                 }
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val fileName = args[0] as String
 
             AutoConfig.withLoading {
@@ -114,11 +112,11 @@ object CommandClientConfigSubcommand {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            Parameters.rootConfigurables()
+            ParameterBuilder.rootConfigurables()
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configurables = args.getOrNull(0) as Set<Configurable>? ?: defaultConfigurableList
             val formattedNames = configurables.joinToString(", ") { configurable ->
                 configurable.name.toLowerCamelCase()
@@ -150,7 +148,7 @@ object CommandClientConfigSubcommand {
         }
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ConfigSystem.backupFolder)
         chat(regular(command.result("browse", variable(ConfigSystem.backupFolder.absolutePath))))
     }.build()

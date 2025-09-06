@@ -20,16 +20,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.block
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
-import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
 import net.minecraft.block.Block
 import net.minecraft.registry.Registries
@@ -40,7 +35,7 @@ import net.minecraft.util.Formatting
  *
  * Allows you to add, remove, list, and clear blocks from the disallowed list.
  */
-object CommandItems : CommandFactory {
+object CommandItems : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -55,7 +50,7 @@ object CommandItems : CommandFactory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             DISALLOWED_BLOCKS_TO_PLACE.clear()
             chat(regular(command.result("blocksCleared")))
         }
@@ -83,11 +78,11 @@ object CommandItems : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.remove(block)) {
                 throw CommandException(command.result("blockNotFound", block.name))
@@ -100,11 +95,11 @@ object CommandItems : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.block()
+            ParameterBuilder.block()
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val block = args[0] as Block
             if (!DISALLOWED_BLOCKS_TO_PLACE.add(block)) {
                 throw CommandException(command.result("blockIsPresent", block.name))

@@ -21,10 +21,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import kotlinx.coroutines.delay
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CANCEL_PREVIOUS
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.DISCARD_LATEST
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.ChatClient
 import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -38,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import kotlin.time.Duration.Companion.seconds
 
 object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
     aliases = arrayOf("GlobalChat", "IRC")) {
@@ -65,7 +68,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
                 .vararg()
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
@@ -88,7 +91,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler { _, _ ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
@@ -110,14 +113,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         CommandManager.addCommand(createChatJwtCommand())
     }
 
-    override fun onEnabled() {
-        chatClient.connectAsync()
-        super.onEnabled()
+    override suspend fun enabledEffect() {
+        chatClient.connect()
     }
 
     override fun onDisabled() {
         chatClient.disconnect()
-        super.onDisabled()
     }
 
     @Suppress("unused")
@@ -126,17 +127,17 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val repeatable = tickHandler {
+    val repeatable = suspendHandler<GameTickEvent>(behavior = DISCARD_LATEST) {
         if (!chatClient.connected) {
-            chatClient.connectAsync()
-
-            // Wait 60 seconds before retrying
-            waitSeconds(60)
+            chatClient.connect()
+        } else {
+            // Wait 5 seconds before retrying
+            delay(5.seconds)
         }
     }
 
     @Suppress("unused")
-    val sessionChange = handler<SessionEvent> {
+    val sessionChange = suspendHandler<SessionEvent>(behavior = CANCEL_PREVIOUS) {
         chatClient.reconnect()
     }
 
@@ -167,7 +168,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val handleIncomingJwtToken = handler<ClientChatJwtTokenEvent> { event ->
+    val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CANCEL_PREVIOUS) { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }

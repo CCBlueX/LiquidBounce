@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
-import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.combat.Targets
  *
  * Provides subcommands for enemy configuration.
  */
-object CommandTargets : CommandFactory {
+object CommandTargets : Command.Factory {
 
     override fun createCommand() = CommandBuilder
         .begin("targets")
@@ -61,7 +61,7 @@ object CommandTargets : CommandFactory {
             subcommand(
                 CommandBuilder
                     .begin(entry.choiceName.lowercase())
-                    .handler { command, _ ->
+                    .handler {
                         val state = targets.toggle(entry)
 
                         val localizedState = if (state) {

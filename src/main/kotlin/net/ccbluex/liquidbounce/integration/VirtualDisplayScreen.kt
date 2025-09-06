@@ -27,7 +27,7 @@ import net.minecraft.client.gui.screen.Screen
 
 class VirtualDisplayScreen(
     private val screenType: VirtualScreenType,
-    private val theme: Theme = ThemeManager.route(screenType).theme,
+    private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
     val parentScreen: Screen? = mc.currentScreen
 ) : Screen("VS-${screenType.routeName.uppercase()}".asText()) {

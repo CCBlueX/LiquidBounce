@@ -1,0 +1,114 @@
+name: Sync LiquidBounce Theme Repository
+
+on:
+  push:
+    branches:
+      - nextgen
+    paths:
+      - 'src-theme/**'
+  workflow_dispatch:
+
+jobs:
+  sync-theme:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout main repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.LIQUIDBOUNCE_PAT }}
+
+    - name: Check if src-theme directory exists
+      run: |
+        if [ ! -d "src-theme" ]; then
+          echo "Error: src-theme directory not found"
+          exit 1
+        fi
+
+    - name: Setup theme repository
+      run: |
+        # Try to clone the existing repository, or create a new one
+        if git clone https://x-access-token:${{ secrets.LIQUIDBOUNCE_PAT }}@github.com/${{ github.repository_owner }}/liquidbounce-theme.git theme-repo 2>/dev/null; then
+          echo "Existing repository cloned successfully"
+          cd theme-repo
+          
+          # Ensure we're on main branch (handle master -> main migration)
+          if git branch -r | grep -q "origin/main"; then
+            git checkout main 2>/dev/null || git checkout -b main
+          elif git branch -r | grep -q "origin/master"; then
+            git checkout master
+            git checkout -b main
+            git push -u origin main
+          else
+            git checkout -b main
+          fi
+        else
+          echo "Repository doesn't exist or is empty, creating new structure"
+          mkdir theme-repo
+          cd theme-repo
+          git init
+          git checkout -b main
+          
+          # Set up remote
+          git remote add origin https://x-access-token:${{ secrets.LIQUIDBOUNCE_PAT }}@github.com/${{ github.repository_owner }}/liquidbounce-theme.git
+        fi
+
+    - name: Copy theme files
+      run: |
+        cd theme-repo
+        
+        # Remove all existing files (except .git)
+        find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+        
+        # Copy new files
+        cp -r ../src-theme/* .
+        
+        # Copy hidden files if they exist
+        if ls ../src-theme/.[!.]* 1> /dev/null 2>&1; then
+          cp -r ../src-theme/.[!.]* .
+        fi
+
+    - name: Configure Git
+      run: |
+        cd theme-repo
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+
+    - name: Commit and push changes
+      run: |
+        cd theme-repo
+        
+        # Get the main repository commit info
+        MAIN_COMMIT_SHA="${{ github.sha }}"
+        MAIN_COMMIT_SHORT_SHA=$(echo "$MAIN_COMMIT_SHA" | cut -c1-7)
+        MAIN_COMMIT_MSG=$(git -C ../ log -1 --pretty=format:"%s" $MAIN_COMMIT_SHA)
+        MAIN_REPO_NAME="${{ github.repository }}"
+        MAIN_REPO_URL="https://github.com/${{ github.repository }}"
+        
+        # Create commit message with recognizable header
+        COMMIT_MSG="sync: ${MAIN_REPO_NAME}@${MAIN_COMMIT_SHORT_SHA}
+        
+        Source commit: ${MAIN_COMMIT_SHA}
+        Source repository: ${MAIN_REPO_URL}
+        Original commit message: ${MAIN_COMMIT_MSG}
+        
+        Auto-synced on $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+        
+        git add .
+        
+        # Only commit and push if there are changes or if this is the first commit
+        if ! git diff --staged --quiet || [ ! -f .git/refs/heads/main ]; then
+          git commit -m "$COMMIT_MSG"
+          git push -u origin main
+          echo "Changes committed and pushed"
+        else
+          echo "No changes detected, skipping commit"
+        fi
+
+    - name: Create summary
+      run: |
+        echo "Theme repository sync completed!" >> $GITHUB_STEP_SUMMARY
+        echo "- Source commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Files synced from: src-theme/" >> $GITHUB_STEP_SUMMARY
+        echo "- Target repository: ${{ github.repository_owner }}/liquidbounce-theme" >> $GITHUB_STEP_SUMMARY

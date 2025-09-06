@@ -106,28 +106,8 @@ val ItemStack.isFood: Boolean
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
 
-private val BUNDLE_ITEMS = setOf(
-    Items.BUNDLE,
-    Items.WHITE_BUNDLE,
-    Items.ORANGE_BUNDLE,
-    Items.MAGENTA_BUNDLE,
-    Items.LIGHT_BLUE_BUNDLE,
-    Items.YELLOW_BUNDLE,
-    Items.LIME_BUNDLE,
-    Items.PINK_BUNDLE,
-    Items.GRAY_BUNDLE,
-    Items.LIGHT_GRAY_BUNDLE,
-    Items.CYAN_BUNDLE,
-    Items.PURPLE_BUNDLE,
-    Items.BLUE_BUNDLE,
-    Items.BROWN_BUNDLE,
-    Items.GREEN_BUNDLE,
-    Items.RED_BUNDLE,
-    Items.BLACK_BUNDLE
-)
-
 val ItemStack.isBundle
-    get() = this.item in BUNDLE_ITEMS
+    get() = this.item is BundleItem
 
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
@@ -145,7 +125,7 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
         AttributeModifiersComponent.DEFAULT
     )
-    .modifiers()
+    .modifiers
     .filter { modifier -> modifier.attribute() == attribute }
     .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
 
@@ -180,13 +160,13 @@ fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
         level * 1.25
     }
 
-val ItemStack.attackSpeed: Float
+val ItemStack.attackSpeed: Double
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
 
 val ItemStack.durability
     get() = this.maxDamage - this.damage
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Double {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     this.components
@@ -199,7 +179,7 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
             attribInstance.addTemporaryModifier(modifier)
         }
 
-    return attribInstance.value.toFloat()
+    return attribInstance.value
 }
 
 fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -110,6 +109,11 @@ open class ClientModule(
     @ScriptApiRequired
     open val settings by lazy { inner.associateBy { it.name } }
 
+    /**
+     * For delayed enabling.
+     * On client startup, the [onToggled] of enabled modules (in configuration) will be called when the player first
+     * joins a world.
+     */
     internal var calledSinceStartup = false
 
     /**

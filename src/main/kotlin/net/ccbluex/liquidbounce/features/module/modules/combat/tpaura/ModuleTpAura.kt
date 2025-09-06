@@ -43,7 +43,7 @@ object ModuleTpAura : ClientModule("TpAura", Category.COMBAT, disableOnQuit = tr
 
     private val attackRange by float("AttackRange", 4.2f, 3f..5f)
 
-    val clicker = tree(Clicker(this, mc.options.attackKey, true))
+    val clicker = tree(Clicker(this, mc.options.attackKey))
     val mode = choices("Mode", AStarMode, arrayOf(AStarMode, ImmediateMode))
     val targetSelector = tree(TargetSelector(TargetPriority.HURT_TIME))
 

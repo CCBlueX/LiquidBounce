@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.module
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 
@@ -12,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
  *
  * Module: [ModuleAutoAccount]
  */
-object CommandAutoAccount : CommandFactory {
+object CommandAutoAccount : Command.Factory {
 
     @Suppress("SpellCheckingInspection")
     override fun createCommand(): Command {
@@ -23,7 +22,7 @@ object CommandAutoAccount : CommandFactory {
             .subcommand(
                 CommandBuilder
                     .begin("register")
-                    .handler {_, _ ->
+                    .handler {
                         ModuleAutoAccount.register()
                     }
                     .build()
@@ -31,7 +30,7 @@ object CommandAutoAccount : CommandFactory {
             .subcommand(
                 CommandBuilder
                     .begin("login")
-                    .handler {_, _ ->
+                    .handler {
                         ModuleAutoAccount.login()
                     }
                     .build()
