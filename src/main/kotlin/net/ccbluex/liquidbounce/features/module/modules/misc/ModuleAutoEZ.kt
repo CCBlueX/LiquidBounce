@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.HeypixelSWKillEvent
@@ -120,9 +121,24 @@ object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("A
     )
 
     private val nameInFront by boolean("NameInFront", true)
-    private val advertisementInEnd by text("AdvertisementInEnd","JMcomicFix Client get->1057670997")
     private val delay by intRange("Delay", 4..5, 1..10, "secs")
     private val messagesPerTick by intRange("MessagesPerTick", 1..1, 1..10)
+    private val advertisement by text("Advertisement","JMcomicFix Client get->1057670997")
+    private object RandomTextInEnd : ToggleableConfigurable(this, "RandomTextInEnd", true) {
+        val length by intRange("Length", 5..10, 0..50)
+    }
+
+    init {
+        tree(RandomTextInEnd)
+    }
+    
+    private val CHARSET: List<Char> by lazy {
+        val upper = 'A'..'Z'
+        val lower = 'a'..'z'
+        val digits = '0'..'9'
+        (upper + lower + digits).toList()
+    }
+
     private var lastSent = 0L
 
     private fun sendMessage(name: String) {
@@ -141,8 +157,12 @@ object ModuleAutoEZ : ClientModule("AutoEz", Category.MISC, aliases = arrayOf("A
                 message = "$name $message"
             }
 
-            message += advertisementInEnd
-
+            message += advertisement
+            if (RandomTextInEnd.enabled) {
+                message += " <" + (1..RandomTextInEnd.length.random())
+                    .map { CHARSET.random() }
+                    .joinToString("") + ">"
+            }
             message = message.take(256)
             if (message.isNotBlank()) {
                 network.sendChatMessage(message)

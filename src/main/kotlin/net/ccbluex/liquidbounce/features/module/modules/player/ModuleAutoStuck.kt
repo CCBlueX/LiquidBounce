@@ -12,35 +12,60 @@ import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-
 
 @Suppress("TooManyFunctions")
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     private val voidFallPrediction = tree(VoidFallPrediction(this))
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
-    private val fallDistance by int("FallDistance", 5, 0..25, "blocks")
+    private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
+    private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
     private val onlyWithPearl by boolean("OnlyWithPearl", false)
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
     private val onlyReceiveHit by boolean("OnlyReceiveHit", false)
-    val alwaysInVoid by boolean("AlwaysInVoid", true)
+    val immediately by boolean("Immediately", true)
 
     private const val LOWEST_Y = -64
     private var stuckTicks = 0
     private var stuckCooldown = 0
     private var lastGroundY = LOWEST_Y
     private var ignoreTicks = 0
+    private var pauseTicks = 0
     private var scaffolding = false
 
-    var isInAir = false
+    var stucking = false
     var shouldEnableStuck = false
     var shouldActivate = false
 
     private fun hasPearlInHotbar() =
         player.inventory.main.any { it?.item == Items.ENDER_PEARL }
+
+    private fun reset(disable: Boolean) {
+        if (disable) {
+            if (shouldEnableStuck) {
+                shouldEnableStuck = false
+                shouldActivate = false
+            }
+            if (scaffolding) {
+                ModuleScaffold.enabled = false
+                scaffolding = false
+            }
+        }
+
+        lastGroundY = LOWEST_Y
+        stuckTicks = 0
+        stuckCooldown = 0
+        ignoreTicks = 0
+        pauseTicks = 0
+        stucking = false
+        shouldEnableStuck = false
+        shouldActivate = false
+    }
 
     @Suppress("unused")
     private val serverConnectHandler = handler<ServerConnectEvent> {
@@ -65,14 +90,14 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
         if (!shouldEnableStuck) return@handler
-
+        val packet = event.packet
         if (!player.isOnGround) {
-            isInAir = true
+            stucking = true
 
-            when (event.packet) {
+            when (packet) {
                 is PlayerPositionLookS2CPacket -> {
-                    shouldEnableStuck = false
-                    shouldActivate = false
+                    reset(true)
+                    pauseTicks = pauseOnFlag
                 }
                 is PlayerMoveC2SPacket -> event.cancelEvent()
                 is PlayerInteractItemC2SPacket -> {
@@ -84,12 +109,30 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
                     )
                     sendPacketSilently(
                         PlayerInteractItemC2SPacket(
-                            event.packet.hand, event.packet.sequence, player.yaw, player.pitch
+                            packet.hand, packet.sequence, player.yaw, player.pitch
                         )
                     )
                 }
+                is PlayerInteractEntityC2SPacket ->{
+                    event.cancelEvent()
+                    sendPacketSilently(
+                        PlayerMoveC2SPacket.LookAndOnGround(
+                            player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(packet)
+                }
+                is PlayerInteractBlockC2SPacket ->{
+                    event.cancelEvent()
+                    sendPacketSilently(
+                        PlayerMoveC2SPacket.LookAndOnGround(
+                            player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(packet)
+                }
             }
-        } else if (isInAir) {
+        } else if (stucking) {
             shouldEnableStuck = false
             shouldActivate = false
         }
@@ -100,8 +143,9 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     @Suppress("unused")
     private val worldChangeEventHandler = handler<WorldChangeEvent> {
-        lastGroundY = LOWEST_Y
+        reset(true)
     }
+
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val world = mc.world ?: return@handler
@@ -109,12 +153,11 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
         if (player.isSpectator || ignoreTicks > 0 || player.y <= 0) {
             ignoreTicks--
-            shouldEnableStuck = false
-            shouldActivate = false
+            reset(true)
             return@handler
         }
 
-        if (!alwaysInVoid && player.isOnGround) lastGroundY = player.y.toInt() - 1
+        if (!immediately && player.isOnGround) lastGroundY = player.y.toInt() - 1
 
         if (stuckCooldown > 0) {
             stuckCooldown--
@@ -124,9 +167,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         if (shouldEnableStuck) {
             stuckTicks++
             if (stuckTicks >= resetTicks || shouldDisableStuck()) {
-                stuckTicks = 0
-                shouldEnableStuck = false
-                stuckCooldown = 1
+                reset(true)
             }
         } else {
             stuckTicks = 0
@@ -136,7 +177,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
         if (shouldActivate && !shouldEnableStuck && stuckCooldown <= 0 && !shouldDisableStuck()) {
             shouldEnableStuck = true
-            isInAir = false
+            stucking = false
         } else if (!shouldActivate && shouldEnableStuck) {
             shouldEnableStuck = false
             ModuleScaffold.enabled = false
@@ -159,21 +200,19 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
                 scaffolding = false
             }
         }
-
-
     }
+
     private fun shouldEnableScaffold(): Boolean {
         val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
         val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyReceiveHit || CombatManager.isReceiveHit
-            return voidFallPrediction.isVoidFallImminent
-                && ScaffoldAutoClutchHelper.enabled
-                && scaffoldCombatReady
-                && scaffoldReceiveHit
-                && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
+        return voidFallPrediction.isVoidFallImminent
+            && ScaffoldAutoClutchHelper.enabled
+            && scaffoldCombatReady
+            && scaffoldReceiveHit
+            && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
             !state.isAir
         }.any()
     }
-
 
     private fun isReadyToActivate(): Boolean {
         val combatReady = !onlyDuringCombat || CombatManager.isInCombat
@@ -181,7 +220,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val pearlReady = !onlyWithPearl || hasPearlInHotbar()
 
         val airReady = !player.isOnGround
-        val voidReady = if (alwaysInVoid) {
+        val voidReady = if (immediately) {
             voidFallPrediction.isVoidFallImminent
         } else {
             player.y <= lastGroundY + 1 - fallDistance
@@ -190,12 +229,10 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
 
     override fun onEnabled() {
-        stuckTicks = 0
-        isInAir = false
-        lastGroundY = LOWEST_Y
+        reset(false)
     }
 
     override fun onDisabled() {
-        shouldEnableStuck = false
+        reset(true)
     }
 }

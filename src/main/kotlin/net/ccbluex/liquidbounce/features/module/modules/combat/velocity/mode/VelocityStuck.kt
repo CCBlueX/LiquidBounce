@@ -160,11 +160,7 @@ internal object VelocityStuck : VelocityMode("Freeze") {
             queuedPackets.forEach { handlePacket(it.packet) }
             queuedPackets.clear()
 
-            interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)?.let {
-                if (it == ActionResult.SUCCESS) {
-                    player.swingHand(Hand.MAIN_HAND)
-                }
-            }
+
 
             if (RotationManager.serverRotation.pitch != 90f) {
                 network.sendPacket(
@@ -184,6 +180,11 @@ internal object VelocityStuck : VelocityMode("Freeze") {
                 )
             }
 
+            interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)?.let {
+                if (it == ActionResult.SUCCESS) {
+                    player.swingHand(Hand.MAIN_HAND)
+                }
+            }
             freezeTickCounter = 0
             awaitingBlockUpdate = true
             targetBlockHit = null

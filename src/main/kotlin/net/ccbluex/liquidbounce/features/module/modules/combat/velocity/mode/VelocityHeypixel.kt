@@ -29,8 +29,8 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
         private val chance by int("Chance", 100, 0..100, "%")
 
         private object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
-            val maxAttackCount by int("MaxAttackCount", 20, 0..100)
-            val cooldownTicks by int("CooldownTicks", 10, 0..100, "ticks")
+            val maxAttackCount by int("MaxAttackCount", 30, 0..100)
+            val cooldownTicks by int("CooldownTicks", 20, 0..100, "ticks")
             val byHighCPSWarning by boolean("ByHighCPSWarning", true)
         }
 
@@ -82,9 +82,6 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                     && player.isAlive
                     && !player.isSpectator
                     && !player.abilities.flying
-                    && !player.isInFluid
-                    && !player.isClimbing
-                    && !player.isOnFire
                     && !player.usingItem
                 ) {
                     player.setVelocity(
@@ -124,6 +121,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                         cooldown()
                     } else {
                         var attacked = true
+                        reset()
 
                         for (i in 1..attackCount) {
                             val entityHitResult = raytraceEntity(
@@ -164,7 +162,10 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
         @Suppress("unused")
         private val movementInputEventHandler = handler<MovementInputEvent> { event ->
             if (jumpReset && jump) {
-                if (!InventoryManager.isInventoryOpen && mc.currentScreen !is GenericContainerScreen) {
+                if (!InventoryManager.isInventoryOpen
+                    && mc.currentScreen !is GenericContainerScreen
+                    && player.isOnGround
+                ) {
                     event.jump = true
                 }
                 jump = false

@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -34,7 +36,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -57,6 +61,8 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         ModuleScaffold,
         ModuleDelayBlink,
         ModuleBlink,
+        ModuleFireballFly,
+        ModuleAutoStuck
     )
 
     private val disableOn by multiEnumChoice<DisableOn>(
@@ -64,7 +70,8 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         EnumSet.of(
             DisableOn.SPECTATOR,
             DisableOn.CHANGE_WORLD,
-            DisableOn.HEYPIXEL_END_MESSAGE
+            DisableOn.HEYPIXEL_END_MESSAGE,
+            DisableOn.QUIT
         )
     )
 
@@ -109,6 +116,20 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
+    private val disconnectEventHandler = handler<DisconnectEvent> {
+        if (DisableOn.QUIT in disableOn) {
+            disableAndNotify("quit")
+        }
+    }
+
+    @Suppress("unused")
+    private val clientShutdownEventHandler = handler<ClientShutdownEvent> {
+        if (DisableOn.QUIT in disableOn) {
+            disableAndNotify("quit")
+        }
+    }
+
     private fun disableAndNotify(reason: String) {
         for (module in listOfModules) {
             module.enabled = false
@@ -121,6 +142,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         DEATH("Death"),
         SPECTATOR("Spectator"),
         CHANGE_WORLD("ChangeWorld"),
-        HEYPIXEL_END_MESSAGE("HeypixelEndMessage")
+        HEYPIXEL_END_MESSAGE("HeypixelEndMessage"),
+        QUIT("Quit")
     }
 }
