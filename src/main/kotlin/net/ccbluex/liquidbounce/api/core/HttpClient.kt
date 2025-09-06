@@ -43,7 +43,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
