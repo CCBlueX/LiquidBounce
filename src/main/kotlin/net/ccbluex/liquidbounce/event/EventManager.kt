@@ -231,7 +231,7 @@ object EventManager {
             }
 
             runCatching {
-                eventHook.handler(event)
+                eventHook.handler.accept(event)
             }.onFailure {
                 logger.error("Exception while executing handler.", it)
             }

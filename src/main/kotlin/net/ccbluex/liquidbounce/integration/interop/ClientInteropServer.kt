@@ -43,7 +43,6 @@ import java.net.Socket
 object ClientInteropServer {
 
     internal val httpServer = HttpServer()
-    private val socketEventHandler = SocketEventListener()
 
     private const val DEFAULT_PORT = 15000
 
@@ -77,7 +76,7 @@ object ClientInteropServer {
             httpServer.middleware(CorsMiddleware())
 
             // Register events with @WebSocketEvent annotation
-            socketEventHandler.registerAll()
+            SocketEventListener.registerAll()
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
         }
