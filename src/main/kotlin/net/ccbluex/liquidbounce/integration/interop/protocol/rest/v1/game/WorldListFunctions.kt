@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -86,7 +85,7 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
 fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
     val request = requestObject.asJson<LevelRequest>()
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         runCatching {
             mc.createIntegratedServerLoader().start(request.name) {
                 mc.setScreen(SelectWorldScreen(TitleScreen()))
@@ -104,7 +103,7 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
 fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
     val request = requestObject.asJson<LevelRequest>()
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         val session = runCatching {
             mc.levelStorage.createSession(request.name)
         }.onFailure { exception ->
@@ -121,7 +120,7 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
                     logger.error("Failed to access level ${request.name}", exception)
                 }
             }
-        }.getOrNull() ?: return@recordRenderCall
+        }.getOrNull() ?: return@execute
 
         runCatching {
             EditWorldScreen.create(mc, session) { _ ->

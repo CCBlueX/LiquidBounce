@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -60,7 +59,7 @@ object CommandInvsee : Command.Factory {
                     throw CommandException(command.result("playerNotFound", inputName))
                 }
 
-                RenderSystem.recordRenderCall {
+                mc.execute {
                     mc.setScreen(ViewedInventoryScreen(player))
                 }
 
