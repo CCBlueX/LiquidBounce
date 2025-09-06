@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.isBlockAir
+import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -34,6 +36,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.SpawnEggItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 /**
  * AirPlace module
@@ -42,6 +45,10 @@ import net.minecraft.util.math.Box
  */
 object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     private val blockHitRenderer = tree(BlockHitRenderer(this))
+
+    private inline val Vec3d.isBlockAir: Boolean
+        get() = world.getBlockState(toBlockPos()).isAir
+
     // ---------- Utils ----------
     private fun isAirPlaceableItem(stack: ItemStack): Boolean {
         if (stack.isEmpty || stack.isFood || stack.isConsumable) return false
@@ -63,14 +70,7 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         if (!playerHasAllowedItems()) return@handler
 
         val targetPos = target.pos.toBlockPos()
-        val worldSpaceBox = Box(
-            targetPos.x.toDouble(),
-            targetPos.y.toDouble(),
-            targetPos.z.toDouble(),
-            targetPos.x + 1.0,
-            targetPos.y + 1.0,
-            targetPos.z + 1.0
-        )
+        val worldSpaceBox = Box(targetPos)
 
         blockHitRenderer.render(true, event, null, worldSpaceBox)
     }

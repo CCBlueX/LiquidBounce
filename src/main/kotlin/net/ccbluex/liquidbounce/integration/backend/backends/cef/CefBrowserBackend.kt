@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.minecraft.util.Util
@@ -97,7 +98,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
                     runCatching {
                         resourceManager.downloadJcef()
-                        RenderSystem.recordRenderCall(whenAvailable)
+                        mc.execute(whenAvailable)
                     }.onFailure {
                         ErrorHandler.fatal(
                             error = it,

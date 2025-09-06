@@ -21,12 +21,9 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 import org.joml.Vector2d
+import kotlin.math.floor
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
@@ -73,7 +70,7 @@ inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
 inline fun Double.interpolate(old: Double, scale: Double) = old + (this - old) * scale
 
 inline fun Vec3d.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3d(x, y, z)
-inline fun Vec3d.withY(y: Double): Vec3d = Vec3d(this.x, y, this.z)
+
 inline operator fun Vec3d.component1(): Double = this.x
 inline operator fun Vec3d.component2(): Double = this.y
 inline operator fun Vec3d.component3(): Double = this.z
@@ -141,7 +138,11 @@ fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 fun Vec3i.horizontalComponent(): Vec2i = Vec2i(this.x, this.z)
 fun Vec3d.horizontalComponent(): Vector2d = Vector2d(this.x, this.z)
 
-fun Vec3d.toBlockPos() = BlockPos.ofFloored(x, y, z)!!
+fun Vec3d.toBlockPos(
+    xOffset: Double = 0.0,
+    yOffset: Double = 0.0,
+    zOffset: Double = 0.0,
+): BlockPos = BlockPos.ofFloored(x + xOffset, y + yOffset, z + zOffset)
 
 fun Vec3d.preferOver(other: Vec3d): Vec3d {
     val x = if (this.x == 0.0) other.x else this.x
