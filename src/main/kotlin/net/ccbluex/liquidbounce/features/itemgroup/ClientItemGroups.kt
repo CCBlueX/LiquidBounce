@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ContainerItemGroup
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
@@ -51,7 +51,7 @@ object ClientItemGroups : Configurable("tabs") {
         containers.add(compoundString)
         ConfigSystem.store(this)
 
-        RenderSystem.recordRenderCall {
+        mc.execute {
             chat("§aAdded container to creative inventory")
         }
     }

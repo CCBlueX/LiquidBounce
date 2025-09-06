@@ -31,8 +31,7 @@ data class ThemeMetadata(
     val components: List<String>,
     val fonts: List<String>,
     val backgrounds: List<Background>,
-    @Suppress("ArrayInDataClass")
-    val values: Array<JsonObject>? = null
+    val values: List<JsonObject>? = null
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {
