@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.BreadcrumbsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.BreadcrumbsMode.colorMode
+import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.ModuleBreadcrumbs.colorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.minecraft.client.gl.ShaderProgramKeys

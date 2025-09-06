@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.gl.ShaderProgramKeys
@@ -84,7 +83,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             particles.add(Particle(pos, particleImages.random()))
         }
     }
-    
+
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             RenderSystem.depthMask(true)
@@ -99,7 +98,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                 val expired = particle.alpha <= 0 || player.pos.distanceTo(particle.pos) > 30
                 if (expired) return@removeIf true
 
-                particle.update(event.partialTicks.toDouble())
+                particle.update()
 
                 if (now >= particle.nextVisibilityCheck) {
                     particle.visible = canSeePointFrom(camera.eyePos, particle.pos)
@@ -110,7 +109,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             }
 
             particles.filter { it.visible }.forEach { particle ->
-                val interpPos = particle.pos.interpolate(particle.prevPos, event.partialTicks.toDouble())
+                val interpPos = particle.prevPos.lerp(particle.pos, event.partialTicks.toDouble())
                 withPositionRelativeToCamera(interpPos) {
                     val ms = event.matrixStack
                     ms.push()
@@ -176,8 +175,9 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             particleImage = particleImage
         )
 
-        fun update(delta: Double) {
+        fun update() {
             prevPos = pos
+
             if (collisionTime != -1L) {
                 val timeSinceCollision = System.currentTimeMillis() - collisionTime
                 alpha = max(0f, 1f - (timeSinceCollision / 3000f))
@@ -185,32 +185,32 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
             val speedMultiplier = physicalSettings.motion.toDouble()
             velocity = velocity.add(0.0, -gravity, 0.0)
-            var nextPos = pos.add((velocity * delta).multiply(speedMultiplier, 1.0, speedMultiplier))
+            var nextPos = pos.add(velocity.multiply(speedMultiplier, 1.0, speedMultiplier))
 
             if (!nextPos.isBlockAir) {
                 if (collisionTime == -1L) collisionTime = System.currentTimeMillis()
 
-                val dx = velocity.x * delta * speedMultiplier
-                val dy = velocity.y * delta
-                val dz = velocity.z * delta * speedMultiplier
-
-                if (!Vec3d(pos.x + dx, pos.y, pos.z).isBlockAir) velocity =
-                    velocity.copy(x = -velocity.x * physicalSettings.bounceX)
-                if (!Vec3d(pos.x, pos.y + dy, pos.z).isBlockAir) velocity =
-                    velocity.copy(
+                if (!Vec3d(pos.x + velocity.x * speedMultiplier, pos.y, pos.z).isBlockAir) {
+                    velocity = velocity.copy(x = -velocity.x * physicalSettings.bounceX)
+                }
+                if (!Vec3d(pos.x, pos.y + velocity.y, pos.z).isBlockAir) {
+                    velocity = velocity.copy(
                         x = velocity.x * physicalSettings.drag,
                         y = -velocity.y * physicalSettings.bounceY,
                         z = velocity.z * physicalSettings.drag
                     )
-                if (!Vec3d(pos.x, pos.y, pos.z + dz).isBlockAir) velocity =
-                    velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
+                }
+                if (!Vec3d(pos.x, pos.y, pos.z + velocity.z * speedMultiplier).isBlockAir) {
+                    velocity = velocity.copy(z = -velocity.z * physicalSettings.bounceZ)
+                }
 
-                nextPos = pos.add((velocity * delta).multiply(speedMultiplier, 1.0, speedMultiplier))
+                nextPos = pos.add(velocity.multiply(speedMultiplier, 1.0, speedMultiplier))
             }
 
             pos = nextPos
         }
     }
+
     private fun WorldRenderEnvironment.render(particle: Particle, partialTicks: Float) {
         val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - particle.spawnTime) / 12000f)
         val rotation = if (rotate) {
