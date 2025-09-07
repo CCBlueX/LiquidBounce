@@ -429,17 +429,17 @@ open class Configurable(
      */
     @Suppress("LongMethod")
     fun json(valueObject: JsonObject) {
-        val type = valueObject["type"].asString
+        val type = enumValueOf<ValueType>(valueObject["type"].asString)
         val name = valueObject["name"].asString
 
         // todo: replace this with serious deserialization
         when (type) {
-            "BOOLEAN" -> {
+            ValueType.BOOLEAN -> {
                 val value = valueObject["value"].asBoolean
                 boolean(name, value)
             }
 
-            "INT" -> {
+            ValueType.INT -> {
                 val value = valueObject["value"].asInt
                 val min = valueObject["range"].asJsonObject["min"].asInt
                 val max = valueObject["range"].asJsonObject["max"].asInt
@@ -447,7 +447,7 @@ open class Configurable(
                 int(name, value, min..max, suffix)
             }
 
-            "INT_RANGE" -> {
+            ValueType.INT_RANGE -> {
                 val valueMin = valueObject["value"].asJsonObject["min"].asInt
                 val valueMax = valueObject["value"].asJsonObject["max"].asInt
                 val min = valueObject["range"].asJsonObject["min"].asInt
@@ -456,7 +456,7 @@ open class Configurable(
                 intRange(name, valueMin..valueMax, min..max, suffix)
             }
 
-            "FLOAT" -> {
+            ValueType.FLOAT -> {
                 val value = valueObject["value"].asFloat
                 val min = valueObject["range"].asJsonObject["min"].asFloat
                 val max = valueObject["range"].asJsonObject["max"].asFloat
@@ -464,7 +464,7 @@ open class Configurable(
                 float(name, value, min..max, suffix)
             }
 
-            "FLOAT_RANGE" -> {
+            ValueType.FLOAT_RANGE -> {
                 val valueMin = valueObject["value"].asJsonObject["min"].asFloat
                 val valueMax = valueObject["value"].asJsonObject["max"].asFloat
                 val min = valueObject["range"].asJsonObject["min"].asFloat
@@ -473,17 +473,17 @@ open class Configurable(
                 floatRange(name, valueMin..valueMax, min..max, suffix)
             }
 
-            "TEXT" -> {
+            ValueType.TEXT -> {
                 val value = valueObject["value"].asString
                 text(name, value)
             }
 
-            "COLOR" -> {
+            ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
                 color(name, Color4b(value, hasAlpha = true))
             }
 
-            "CONFIGURABLE" -> {
+            ValueType.CONFIGURABLE -> {
                 val subConfigurable = Configurable(name)
                 val values = valueObject["values"].asJsonArray
                 for (value in values) {
@@ -492,7 +492,7 @@ open class Configurable(
                 tree(subConfigurable)
             }
             // same as configurable but it is [ToggleableConfigurable]
-            "TOGGLEABLE" -> {
+            ValueType.TOGGLEABLE -> {
                 val value = valueObject["value"].asBoolean
                 // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
                 // as toggleable Configurable

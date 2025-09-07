@@ -24,11 +24,11 @@ import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.theme.component.components.WebComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
-abstract class ComponentFactory {
+interface ComponentFactory {
 
-    abstract val name: String
-    abstract val enabled: Boolean
-    abstract val singleton: Boolean
+    val name: String
+    val enabled: Boolean
+    val singleton: Boolean
 
     /**
      * Factory for creating components from JSON deserialization.
@@ -46,7 +46,7 @@ abstract class ComponentFactory {
         private val alignment: JsonObject,
         private val tweaks: Array<ComponentTweak>?,
         private val values: Array<JsonObject>?
-    ) : ComponentFactory() {
+    ) : ComponentFactory {
 
         override fun createComponent(): WebComponent = WebComponent(
             name,
@@ -63,15 +63,15 @@ abstract class ComponentFactory {
      *
      * @param name Component name
      * @param enabled Whether the component is enabled
-     * @param function Function producing the component
+     * @param provider Function producing the component
      */
     class NativeComponentFactory(
         override val name: String,
         override val enabled: Boolean = false,
         override val singleton: Boolean = false,
-        private val function: () -> Component
-    ) : ComponentFactory() {
-        override fun createComponent() = function()
+        private val provider: () -> Component
+    ) : ComponentFactory {
+        override fun createComponent() = provider()
     }
 
     /**
@@ -79,5 +79,5 @@ abstract class ComponentFactory {
      *
      * @return Component instance
      */
-    abstract fun createComponent(): Component
+    fun createComponent(): Component
 }
