@@ -71,7 +71,9 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER, aliases = arra
 
                     val matrix = ms.peek().positionMatrix
                     val tessellator = RenderSystem.renderThreadTesselator()
-                    val buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR)
+                    val buffer = tessellator.begin(
+                        VertexFormat.DrawMode.TRIANGLES,
+                        VertexFormats.POSITION_COLOR)
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
 
                     val topRadius = 0.8f
@@ -101,25 +103,37 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER, aliases = arra
 
                         val colorOuter1 = when (val mode = colorMode.activeChoice) {
                             is GenericRainbowColorMode -> hslToRgb(progressOuter1, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(c2, progressOuter1).withAlpha(alpha) }
+                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
+                                c2, progressOuter1).withAlpha(alpha) }
                         }
 
                         val colorOuter2 = when (val mode = colorMode.activeChoice) {
                             is GenericRainbowColorMode -> hslToRgb(progressOuter2, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(c2, progressOuter2).withAlpha(alpha) }
+                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
+                                c2, progressOuter2).withAlpha(alpha) }
                         }
 
                         val colorTop = when (val mode = colorMode.activeChoice) {
                             is GenericRainbowColorMode -> hslToRgb(progressTop, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(c2, progressTop).withAlpha(alpha) }
+                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
+                                c2, progressTop).withAlpha(alpha) }
                         }
 
                         buffer.vertex(matrix, x1, y1, z1)
-                            .color(colorOuter1.r / 255f, colorOuter1.g / 255f, colorOuter1.b / 255f, colorOuter1.a / 255f)
+                            .color(colorOuter1.r / 255f,
+                                colorOuter1.g / 255f,
+                                colorOuter1.b / 255f,
+                                colorOuter1.a / 255f)
                         buffer.vertex(matrix, 0f, y2, 0f)
-                            .color(colorTop.r / 255f, colorTop.g / 255f, colorTop.b / 255f, colorTop.a / 255f)
+                            .color(colorTop.r / 255f,
+                                colorTop.g / 255f,
+                                colorTop.b / 255f,
+                                colorTop.a / 255f)
                         buffer.vertex(matrix, x1n, y1, z1n)
-                            .color(colorOuter2.r / 255f, colorOuter2.g / 255f, colorOuter2.b / 255f, colorOuter2.a / 255f)
+                            .color(colorOuter2.r / 255f,
+                                colorOuter2.g / 255f,
+                                colorOuter2.b / 255f,
+                                colorOuter2.a / 255f)
 
                     }
 

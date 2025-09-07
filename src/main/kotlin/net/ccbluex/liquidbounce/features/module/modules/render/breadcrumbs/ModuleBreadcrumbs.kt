@@ -15,7 +15,8 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         get() = "liquidbounce.module.breadcrumbs"
 
     val modes = choices(
-        "Mode", TrailMode, arrayOf(TrailMode,SparkleMode,SectorMode
+        "Mode", TrailMode, arrayOf(
+            TrailMode,SparkleMode,SectorMode,DashTrailMode
         )
     )
 

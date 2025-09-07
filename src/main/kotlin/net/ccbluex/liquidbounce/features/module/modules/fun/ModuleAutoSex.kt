@@ -1,4 +1,5 @@
-@file:Suppress("unused")
+@file:Suppress("unused","all")
+
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice

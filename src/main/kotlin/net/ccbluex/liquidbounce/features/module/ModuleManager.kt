@@ -472,7 +472,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleProjectileESP,
             ModuleChinaHat,
             ModuleLineGlyphs,
-
+            ModuleFireFlies,
 
             // World
             ModuleAirPlace,

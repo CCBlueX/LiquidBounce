@@ -1,4 +1,4 @@
-@file:Suppress("MemberVisibilityCanBePrivate", "LongParameterList", "LongMethod")
+@file:Suppress("LongParameterList", "LongMethod","CognitiveComplexMethod","TooManyFunctions")
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
@@ -167,13 +167,19 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
         if (glyphVectorGenerators.isEmpty()) return
 
         val tess = RenderSystem.renderThreadTesselator()
-        val buffer: BufferBuilder = tess.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR)
+        val buffer: BufferBuilder = tess.begin(
+            VertexFormat.DrawMode.DEBUG_LINES,
+            VertexFormats.POSITION_COLOR
+        )
 
         glyphVectorGenerators.forEachIndexed { index, glyph ->
 
             val lw = calcLineWidth(glyph)
             RenderSystem.lineWidth(lw)
-            renderGlyphToBuffer(buffer, glyph, index + 1, glyph.currentAlpha, partialTicks, matrix)
+            renderGlyphToBuffer(buffer, glyph,
+                index + 1,
+                glyph.currentAlpha, partialTicks, matrix
+            )
         }
 
         RenderSystem.lineWidth(1.0f)
@@ -194,6 +200,12 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
         val lineVectors = glyph.getPositionVectors(partialTicks)
         var currentColorIndex = colorIndex
 
+        val camera = mc.gameRenderer.camera
+        val camX = camera.pos.x
+        val camY = camera.pos.y
+        val camZ = camera.pos.z
+        val eps = 0.001f
+
         fun getRenderColor(idx: Int, alpha: Float) = when (colorMode.activeChoice) {
             is GenericRainbowColorMode -> {
                 val time = (System.currentTimeMillis() % 4000) / 4000f
@@ -207,28 +219,33 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
             }
         }
 
+        fun drawVertex(x: Double, y: Double, z: Double, color: Color4b) {
+            buffer.vertex(matrix,
+                (x - camX).toFloat(),
+                (y - camY).toFloat(),
+                (z - camZ).toFloat())
+                .color(color.toARGB())
+        }
+
         for (i in 1 until lineVectors.size) {
             val p0 = lineVectors[i - 1]
             val p1 = lineVectors[i]
             val color = getRenderColor(i, alphaPercentage)
-            val camera = mc.gameRenderer.camera
-            val camX = camera.pos.x
-            val camY = camera.pos.y
-            val camZ = camera.pos.z
 
-            buffer.vertex(matrix, (p0.x - camX).toFloat(), (p0.y - camY).toFloat(), (p0.z - camZ).toFloat()).color(color.toARGB())
-            buffer.vertex(matrix, (p1.x - camX).toFloat(), (p1.y - camY).toFloat(), (p1.z - camZ).toFloat()).color(color.toARGB())
+            drawVertex(p0.x, p0.y, p0.z, color)
+            drawVertex(p1.x, p1.y, p1.z, color)
 
             currentColorIndex += 180
         }
 
         currentColorIndex = colorIndex
+
         for ((i, p) in lineVectors.withIndex()) {
             val color = getRenderColor(i, alphaPercentage)
-            val eps = 0.001f
 
-            buffer.vertex(matrix, p.x.toFloat() - eps, p.y.toFloat() - eps, p.z.toFloat()).color(color.toARGB())
-            buffer.vertex(matrix, p.x.toFloat() + eps, p.y.toFloat() + eps, p.z.toFloat()).color(color.toARGB())
+            drawVertex(p.x - eps, p.y - eps, p.z - eps, color)
+            drawVertex(p.x + eps, p.y + eps, p.z + eps, color)
+
             currentColorIndex += 180
         }
     }
@@ -300,7 +317,10 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
         }
 
         fun getPositionVectors(partialTicks: Float): List<Vec3d> {
-            val moveAdvance = calculateMoveAdvance(lastStepTicks, currentStepTicks, partialTicks)
+            val moveAdvance = calculateMoveAdvance(
+                lastStepTicks,
+                currentStepTicks, partialTicks
+            )
             return smoothLerpVectors(vectorList, moveAdvance)
         }
 
