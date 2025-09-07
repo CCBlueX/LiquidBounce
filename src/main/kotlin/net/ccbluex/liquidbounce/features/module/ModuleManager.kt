@@ -288,6 +288,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleTeleport,
             ModulePhase,
             ModuleGodMode,
+            ModuleVoidTP,
 
             // Fun
             ModuleAutoSex,
@@ -469,6 +470,9 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleParticleCosmetics,
             ModulePenisESP,
             ModuleProjectileESP,
+            ModuleChinaHat,
+            ModuleLineGlyphs,
+
 
             // World
             ModuleAirPlace,

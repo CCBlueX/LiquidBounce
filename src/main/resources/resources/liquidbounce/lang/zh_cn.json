@@ -856,5 +856,8 @@
   "liquidbounce.module.autoPath.description": "单击鼠标中键选择坐标后，将你移动到那个位置。需要Baritone",
   "liquidbounce.module.advancedJumpReset.description": "垃圾待删除。",
   "liquidbounce.module.projectileESP.description": "高亮显示飞行中的投掷物图标，便于快速判断位置。",
-  "liquidbounce.module.keepRange.description": "在靠近目标时取消你的移动输入以控制与其的距离。"
+  "liquidbounce.module.keepRange.description": "在靠近目标时取消你的移动输入以控制与其的距离。",
+  "liquidbounce.module.chinaHat.description": "「中国功夫」",
+  "liquidbounce.module.voidTp.description": "By _0x16z，不知道有啥用。",
+  "liquidbounce.module.lineGlyphs.description": "在你周围绘制一些线段铭文。"
 }

@@ -852,5 +852,8 @@
   "liquidbounce.module.autoPath.description": "It'll move you to that spot at when pressing MIDDLE_CLICK.. You need Baritone for that.",
   "liquidbounce.module.advancedJumpReset.description": "Trash.",
   "liquidbounce.module.projectileESP.description": "Highlight the projectile icon in flight for quick positioning.",
-  "liquidbounce.module.keepRange.description": "Control your movements to maintain distance from your target."
+  "liquidbounce.module.keepRange.description": "Control your movements to maintain distance from your target.",
+  "liquidbounce.module.chinaHat.description": "「ChinaKungFu」",
+  "liquidbounce.module.voidTp.description": "IDK.",
+  "liquidbounce.module.lineGlyphs.description": "Draw some linesGlyphs around you."
 }
