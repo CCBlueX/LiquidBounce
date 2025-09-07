@@ -20,48 +20,94 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
+import net.ccbluex.liquidbounce.config.util.JsonValueFactory
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
-    val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter
+    val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter,
+    val factory: JsonValueFactory? = null,
 ) {
 
     // Primitive Types
-    BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
-    FLOAT(HumanInputDeserializer.floatDeserializer),
-    FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
-    INT(HumanInputDeserializer.intDeserializer),
-    INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
-    TEXT(HumanInputDeserializer.textDeserializer),
-    COLOR(HumanInputDeserializer.colorDeserializer),
-    BLOCK(HumanInputDeserializer.blockDeserializer),
-    ITEM(HumanInputDeserializer.itemDeserializer),
-    SOUND(HumanInputDeserializer.soundDeserializer),
-    STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
+    BOOLEAN(
+        HumanInputDeserializer.booleanDeserializer,
+        AutoCompletionProvider.booleanCompleter,
+        factory = JsonValueFactory.Boolean,
+    ),
+    FLOAT(
+        HumanInputDeserializer.floatDeserializer,
+        factory = JsonValueFactory.Float,
+    ),
+    FLOAT_RANGE(
+        HumanInputDeserializer.floatRangeDeserializer,
+        factory = JsonValueFactory.FloatRange,
+    ),
+    INT(
+        HumanInputDeserializer.intDeserializer,
+        factory = JsonValueFactory.Int,
+    ),
+    INT_RANGE(
+        HumanInputDeserializer.intRangeDeserializer,
+        factory = JsonValueFactory.IntRange,
+    ),
+    TEXT(
+        HumanInputDeserializer.textDeserializer,
+        factory = JsonValueFactory.Text,
+    ),
+    COLOR(
+        HumanInputDeserializer.colorDeserializer,
+        factory = JsonValueFactory.Color,
+    ),
+    BLOCK(
+        HumanInputDeserializer.blockDeserializer,
+    ),
+    ITEM(
+        HumanInputDeserializer.itemDeserializer,
+    ),
+    SOUND(
+        HumanInputDeserializer.soundDeserializer,
+    ),
+    STATUS_EFFECT(
+        HumanInputDeserializer.statusEffectDeserializer,
+    ),
     SCREEN_HANDLER,
     ENTITY_TYPE,
     CLIENT_PACKET,
     SERVER_PACKET,
-    KEY(HumanInputDeserializer.keyDeserializer),
-    FILE(HumanInputDeserializer.fileDeserializer),
+    KEY(
+        HumanInputDeserializer.keyDeserializer,
+    ),
+    FILE(
+        HumanInputDeserializer.fileDeserializer,
+    ),
     BIND,
     VECTOR3_I,
     VECTOR3_D,
     VECTOR2_F,
 
     // Configuration Types
-    CHOICE(completer = AutoCompletionProvider.choiceCompleter),
-    CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
+    CHOICE(
+        completer = AutoCompletionProvider.choiceCompleter,
+    ),
+    CHOOSE(
+        completer = AutoCompletionProvider.chooseCompleter,
+    ),
+    MULTI_CHOOSE(
+        HumanInputDeserializer.textArrayDeserializer,
+    ),
     LIST,
     MUTABLE_LIST,
     ITEM_LIST,
     REGISTRY_LIST,
     CURVE,
 
-    CONFIGURABLE,
-    TOGGLEABLE,
+    CONFIGURABLE(
+        factory = JsonValueFactory.Configurable
+    ),
+    TOGGLEABLE(
+        factory = JsonValueFactory.Toggleable
+    ),
 
     // Client Types
     FRIEND,

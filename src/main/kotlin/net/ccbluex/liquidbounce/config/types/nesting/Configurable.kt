@@ -430,81 +430,9 @@ open class Configurable(
     @Suppress("LongMethod")
     fun json(valueObject: JsonObject) {
         val type = enumValueOf<ValueType>(valueObject["type"].asString)
-        val name = valueObject["name"].asString
-
-        // todo: replace this with serious deserialization
-        when (type) {
-            ValueType.BOOLEAN -> {
-                val value = valueObject["value"].asBoolean
-                boolean(name, value)
-            }
-
-            ValueType.INT -> {
-                val value = valueObject["value"].asInt
-                val min = valueObject["range"].asJsonObject["min"].asInt
-                val max = valueObject["range"].asJsonObject["max"].asInt
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                int(name, value, min..max, suffix)
-            }
-
-            ValueType.INT_RANGE -> {
-                val valueMin = valueObject["value"].asJsonObject["min"].asInt
-                val valueMax = valueObject["value"].asJsonObject["max"].asInt
-                val min = valueObject["range"].asJsonObject["min"].asInt
-                val max = valueObject["range"].asJsonObject["max"].asInt
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                intRange(name, valueMin..valueMax, min..max, suffix)
-            }
-
-            ValueType.FLOAT -> {
-                val value = valueObject["value"].asFloat
-                val min = valueObject["range"].asJsonObject["min"].asFloat
-                val max = valueObject["range"].asJsonObject["max"].asFloat
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                float(name, value, min..max, suffix)
-            }
-
-            ValueType.FLOAT_RANGE -> {
-                val valueMin = valueObject["value"].asJsonObject["min"].asFloat
-                val valueMax = valueObject["value"].asJsonObject["max"].asFloat
-                val min = valueObject["range"].asJsonObject["min"].asFloat
-                val max = valueObject["range"].asJsonObject["max"].asFloat
-                val suffix = valueObject["suffix"]?.asString ?: ""
-                floatRange(name, valueMin..valueMax, min..max, suffix)
-            }
-
-            ValueType.TEXT -> {
-                val value = valueObject["value"].asString
-                text(name, value)
-            }
-
-            ValueType.COLOR -> {
-                val value = valueObject["value"].asInt
-                color(name, Color4b(value, hasAlpha = true))
-            }
-
-            ValueType.CONFIGURABLE -> {
-                val subConfigurable = Configurable(name)
-                val values = valueObject["values"].asJsonArray
-                for (value in values) {
-                    subConfigurable.json(value.asJsonObject)
-                }
-                tree(subConfigurable)
-            }
-            // same as configurable but it is [ToggleableConfigurable]
-            ValueType.TOGGLEABLE -> {
-                val value = valueObject["value"].asBoolean
-                // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
-                // as toggleable Configurable
-                val subConfigurable = object : ToggleableConfigurable(null, name, value) {}
-                val settings = valueObject["values"].asJsonArray
-                for (setting in settings) {
-                    subConfigurable.json(setting.asJsonObject)
-                }
-                tree(subConfigurable)
-            }
-
-            else -> error("Unsupported type: $type")
+        val factory = type.factory ?: error("Unsupported type: $type")
+        with(factory) {
+            attachFrom(valueObject)
         }
     }
 
