@@ -58,6 +58,7 @@ object CommandClientThemeSubcommand {
 
             runCatching {
                 ThemeManager.currentTheme = theme.metadata.id
+//                ConfigSystem.store(ThemeManager)
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
             }.onSuccess {
