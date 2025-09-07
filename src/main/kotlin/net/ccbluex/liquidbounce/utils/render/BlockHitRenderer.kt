@@ -45,13 +45,14 @@ class BlockHitRenderer(
     private var previousPosition: Box? = null
     private var lastChange: Long = 0L
 
-    @Suppress("CognitiveComplexMethod")
+    @Suppress("CognitiveComplexMethod","LongParameterList")
     fun render(
         enable: Boolean,
         event: WorldRenderEvent,
         hitResult: HitResult? = null,
         box: Box? = null,
-        side: Direction? = null
+        side: Direction? = null,
+        overrideColor: Color4b? = null
     ) {
         if (!enable || (hitResult == null && box == null)) {
             resetPositions()
@@ -94,7 +95,7 @@ class BlockHitRenderer(
         }
 
         val translatedPosition = renderPosition.offset(mc.entityRenderDispatcher.camera.pos.negate())
-        val baseColor = colorMode.activeChoice.getColor(Unit)
+        val baseColor = overrideColor ?: colorMode.activeChoice.getColor(Unit)
         val fillColor = baseColor.withAlpha(alpha)
         val outline = baseColor.withAlpha(outlineAlpha)
 
@@ -108,6 +109,7 @@ class BlockHitRenderer(
             }
         }
     }
+
 
     private fun flatBox(shape: VoxelShape, side: Direction) = when (side) {
         Direction.UP -> shape.boxWithBoundsY(shape.getMax(Direction.Axis.Y))

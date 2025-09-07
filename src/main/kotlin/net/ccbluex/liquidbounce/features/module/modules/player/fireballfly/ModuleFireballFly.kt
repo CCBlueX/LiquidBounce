@@ -115,7 +115,9 @@ object ModuleFireballFly : ClientModule("FireballFly", Category.MOVEMENT, disabl
             if (it.timestamp <= System.currentTimeMillis() - delay * 50) {
                 packetProcessQueue.add(it.packet)
                 true
-            } else false
+            } else {
+                false
+            }
         }
     }
 

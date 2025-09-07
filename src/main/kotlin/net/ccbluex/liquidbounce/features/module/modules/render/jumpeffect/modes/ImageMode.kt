@@ -76,8 +76,11 @@ object ImageMode : JumpEffectMode("Image") {
             RenderSystem.enableBlend()
             RenderSystem.blendFuncSeparate(
                 GlStateManager.SrcFactor.SRC_ALPHA,
-                if (darkImprint) GlStateManager.DstFactor.ONE
-                else GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
+                if (darkImprint) {
+                    GlStateManager.DstFactor.ONE
+                } else{
+                    GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA
+                },
                 GlStateManager.SrcFactor.ZERO,
                 GlStateManager.DstFactor.ONE
             )

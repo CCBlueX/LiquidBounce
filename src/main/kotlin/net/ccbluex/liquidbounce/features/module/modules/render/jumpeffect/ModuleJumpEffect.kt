@@ -24,7 +24,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
     )
     val colorMode = choices("ColorMode", 3) {
         arrayOf(
-            GenericCustomColorMode(it, Color4b.WHITE.with(a = 80), Color4b.WHITE.with(a = 100)),
+            GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE.withAlpha(200), Color4b.CYAN.withAlpha(150)),
             GenericStaticColorMode(it, Color4b(0, 255, 4)),
             GenericRainbowColorMode(it),
             GenericSyncColorMode(it)

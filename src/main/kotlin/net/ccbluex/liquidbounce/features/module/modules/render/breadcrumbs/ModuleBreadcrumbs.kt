@@ -22,7 +22,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
     val colorMode = choices("ColorMode", 3) {
         arrayOf(
-            GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE, Color4b.CYAN),
+            GenericCustomColorMode(it, Color4b.CYAN.withAlpha(100), Color4b.TRANSPARENT),
             GenericStaticColorMode(it, Color4b(0, 255, 4)),
             GenericRainbowColorMode(it),
             GenericSyncColorMode(it)

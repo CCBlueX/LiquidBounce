@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.categorize
 import net.ccbluex.liquidbounce.utils.render.BlockHitRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 
@@ -44,13 +45,15 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
     private val renderHandler = handler<WorldRenderEvent> { event ->
         // Disable rendering if ModuleTrajectories is active, rendering block hit ESP,
         // and the player is holding a projectile item
-        if (ModuleTrajectories.running && ModuleTrajectories.enableBlockHitESP &&
-            player.handItems.any {
-                TrajectoryData.getRenderedTrajectoryInfo(player, it.item,
-                    ModuleTrajectories.alwaysShowBow) != null }
+        if (ModuleTrajectories.running &&
+            player.handItems.any { itemStack ->
+                TrajectoryData.getRenderedTrajectoryInfo(player, itemStack.item, ModuleTrajectories.alwaysShowBow)
+                    ?.categorize()?.blockHitESP == true
+            }
         ) {
             return@handler
         }
+
         blockHitRenderer.render(
             enable = true,
             event = event,

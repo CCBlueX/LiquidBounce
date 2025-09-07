@@ -58,7 +58,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
     private val showProgress by boolean("ShowProgress", true)
-    var checkTitle by boolean("CheckTitle", true)
+
     @JvmStatic
     var stealingStartTime: Long = 0L
     @JvmStatic
@@ -77,7 +77,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
 
         fun canSteal(screen: HandledScreen<*>): Boolean {
-            return !enabled || filter(screen.screenHandler.type, types)
+            if (!enabled) return true
+            return try {
+                filter(screen.screenHandler.type, types)
+            } catch (_: UnsupportedOperationException) {
+                false
+            }
         }
     }
 
@@ -137,7 +142,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
-        val screen = getChestScreen()
+        val screen = getChestScreen() ?: return@handler
         if (screen == null) {
             if (initialItemCount > 0) {
                 initialItemCount = 0

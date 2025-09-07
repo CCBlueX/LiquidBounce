@@ -33,7 +33,7 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         arrayOf(
             GenericSyncColorMode(it),
             GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE, Color4b.CYAN),
-            GenericStaticColorMode(it, Color4b(255, 255, 100, 255)),
+            GenericStaticColorMode(it, Color4b.YELLOW),
             GenericRainbowColorMode(it)
         )
     }
@@ -132,8 +132,11 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             RenderSystem.enableBlend()
             RenderSystem.blendFuncSeparate(
                 GlStateManager.SrcFactor.SRC_ALPHA,
-                if (darkImprint) GlStateManager.DstFactor.ONE
-                else GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
+                if (darkImprint) {
+                    GlStateManager.DstFactor.ONE
+                } else {
+                    GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA
+                },
                 GlStateManager.SrcFactor.ZERO,
                 GlStateManager.DstFactor.ONE
             )
@@ -142,20 +145,25 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             RenderSystem.lineWidth(2.0f)
 
             val tess = RenderSystem.renderThreadTesselator()
-            val buffer = tess.begin(VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR)
+            val buffer = tess.begin(
+                VertexFormat.DrawMode.LINE_STRIP,
+                VertexFormats.POSITION_COLOR)
             val camera = mc.gameRenderer.camera
 
             particles.forEach { particle ->
-                val distance = player.pos.squaredDistanceTo(particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
+                val distance = player.pos.squaredDistanceTo(
+                    particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
                 if (distance > 25) return@forEach
 
                 val (color1, color2) = colorMode.activeChoice.getColors(player)
                 val t = (sin(currentTime.toFloat() * 0.2f) + 1) * 0.5f
                 val baseColor = color1.blend(color2, t)
-                val progress = 1f - ((currentTime - particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
+                val progress = 1f - ((currentTime - particle.creationTime)
+                    .toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
 
                 particle.trail.forEach { trail ->
-                    val trailColor = baseColor.withAlpha((baseColor.a * (1f - trail.timePC(currentTime)) * progress).toInt())
+                    val trailColor = baseColor.withAlpha(
+                        (baseColor.a * (1f - trail.timePC(currentTime)) * progress).toInt())
                     val x = (trail.pos.x - camera.pos.x).toFloat()
                     val y = (trail.pos.y - camera.pos.y).toFloat()
                     val z = (trail.pos.z - camera.pos.z).toFloat()
@@ -178,10 +186,12 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
                 val y = interpPos.y - camera.pos.y
                 val z = interpPos.z - camera.pos.z
 
-                val distance = player.pos.squaredDistanceTo(particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
+                val distance = player.pos.squaredDistanceTo(
+                    particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
                 if (distance > 25) return@forEach
 
-                val progress = 1f - ((currentTime - particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
+                val progress = 1f - ((currentTime - particle.creationTime)
+                    .toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
                 matrixStack.push()
                 matrixStack.translate(x, y, z)
                 val size = 0.1f + 0.05f * (1f - progress)
