@@ -812,7 +812,7 @@
   "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
   "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump.",
   "liquidbounce.module.airPlace.description": "Allows you to place blocks in mid-air.",
-  "liquidbounce.module.notebot.description": "Automatically plays note block songs from NBS (Note Block Song) files located in '.minecraft/LiquidBounce/nbs/'.",
+  "liquidbounce.module.notebot.description": "Automatically plays note block songs from NBS (Note Block Song) file.",
   "liquidbounce.module.notebot.messages.startTesting": "Starting testing...",
   "liquidbounce.module.notebot.messages.noNbs": "No NBS found at %s!",
   "liquidbounce.module.notebot.messages.couldNotParse": "Could not parse the NoteBlockSong!",

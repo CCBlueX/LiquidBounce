@@ -816,7 +816,7 @@
   "liquidbounce.module.anchor.description": "让你移动到水晶PvP的安全点里。",
   "liquidbounce.module.antiCheatDetect.messages.description": "Anti Cheat Detect 将尝试在你下次加入任何服务器/游戏时，通过监测 ping 参数来检测服务器的反作弊系统。请注意，结果可能不准确，特别是当服务器上有多个反作弊系统时。",
   "liquidbounce.module.autoWindCharge.description": "在按下跳跃键时自动用风弹加速跳跃。",
-  "liquidbounce.module.notebot.description": "使用 NBS 文件 ('.minecraft/LiquidBounce/nbs/文件名.nbs') 定义的乐谱自动演奏音符盒音乐。",
+  "liquidbounce.module.notebot.description": "使用 NBS 文件定义的乐谱自动演奏音符盒音乐。",
   "liquidbounce.module.notebot.messages.startTesting": "开始测试…",
   "liquidbounce.module.notebot.messages.noNbs": "未在 %s 找到 NBS 文件！",
   "liquidbounce.module.notebot.messages.couldNotParse": "无法解析此音乐文件！",

@@ -44,7 +44,7 @@ object NbsLoader {
             SongData(nbsFile.nameWithoutExtension, nbs, notesByTick, songTickLength, songTicksPerGameTick)
         } catch (e: IOException) {
             logger.error("Failed to load NBS data from ${nbsFile.absolutePath}", e)
-            chat(markAsError(ModuleNotebot.message("CouldNotParse")), ModuleNotebot)
+            chat(markAsError(ModuleNotebot.message("couldNotParse")), ModuleNotebot)
             null
         }
     }
