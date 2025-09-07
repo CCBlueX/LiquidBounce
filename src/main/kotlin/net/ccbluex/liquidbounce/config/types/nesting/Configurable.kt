@@ -427,7 +427,6 @@ open class Configurable(
      *
      * @param valueObject JsonObject
      */
-    @Suppress("LongMethod")
     fun json(valueObject: JsonObject) {
         val type = enumValueOf<ValueType>(valueObject["type"].asString)
         val factory = type.factory ?: error("Unsupported type: $type")
