@@ -22,13 +22,10 @@
 package net.ccbluex.liquidbounce.config.gson.serializer
 
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.gson.serializer.ConfigurableSerializer.Companion.serializeReadOnly
 import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
 object ReadOnlyComponentSerializer : JsonSerializer<Component> {
@@ -39,20 +36,10 @@ object ReadOnlyComponentSerializer : JsonSerializer<Component> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
+        addProperty("id", src.id.toString())
         add("settings", serializeReadOnly(src, context))
     }
 
-    private fun serializeReadOnly(
-        configurable: Configurable,
-        context: JsonSerializationContext
-    ): JsonObject = JsonObject().apply {
-        for (v in configurable.inner) {
-            add(v.name.toLowerCamelCase(), when (v) {
-                is Alignment -> JsonPrimitive(v.toStyle())
-                is Configurable -> serializeReadOnly(v, context)
-                else -> context.serialize(v.inner)
-            })
-        }
-    }
+
 
 }

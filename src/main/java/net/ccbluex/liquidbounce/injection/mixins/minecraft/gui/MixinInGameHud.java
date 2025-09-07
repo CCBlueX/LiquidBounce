@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay;
-import net.ccbluex.liquidbounce.integration.theme.component.FeatureTweak;
-import net.ccbluex.liquidbounce.integration.theme.component.types.IntegratedComponent;
+import net.ccbluex.liquidbounce.integration.theme.component.Component;
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
 import net.ccbluex.liquidbounce.interfaces.DrawContextAddition;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.MinecraftClient;
@@ -88,7 +88,7 @@ public abstract class MixinInGameHud {
         BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickDelta(false));
 
         // Draw after overlay event
-        var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
+        var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);
         if (component != null && component.getRunning() &&
                 client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
             drawHotbar(context, tickCounter, component);
@@ -121,7 +121,7 @@ public abstract class MixinInGameHud {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getRunning() && ModuleFreeCam.INSTANCE.shouldDisableCameraInteract())
-                || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CROSSHAIR)) {
+                || ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
         }
     }
@@ -155,42 +155,42 @@ public abstract class MixinInGameHud {
 
     @Inject(method = "renderScoreboardSidebar*", at = @At("HEAD"), cancellable = true)
     private void renderScoreboardSidebar(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_SCOREBOARD)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_SCOREBOARD)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
     private void hookRenderHotbar(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.TWEAK_HOTBAR)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.TWEAK_HOTBAR)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
     private void hookRenderStatusBars(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_BAR)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_STATUS_BAR)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
     private void hookRenderExperienceBar(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_EXP_BAR)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderExperienceLevel", at = @At("HEAD"), cancellable = true)
     private void hookRenderExperienceLevel(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_EXP_BAR)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
     private void hookRenderHeldItemTooltip(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
             ci.cancel();
         }
     }
@@ -199,14 +199,14 @@ public abstract class MixinInGameHud {
     private void hookSetOverlayMessage(Text message, boolean tinted, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_OVERLAY_MESSAGE)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_OVERLAY_MESSAGE)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
     private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
             ci.cancel();
         }
     }
@@ -217,7 +217,7 @@ public abstract class MixinInGameHud {
     }
 
     @Unique
-    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, IntegratedComponent component) {
+    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;

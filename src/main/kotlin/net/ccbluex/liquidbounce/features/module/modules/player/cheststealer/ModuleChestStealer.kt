@@ -21,6 +21,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,10 +30,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
+import java.util.EnumSet
 import kotlin.math.ceil
 
 /**
@@ -49,19 +54,75 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val checkTitle by boolean("CheckTitle", true)
+    private object CheckScreenHandlerType : ToggleableConfigurable(this, "CheckScreenHandlerType", enabled = true) {
+        private val types by registryList(
+            "Types",
+            hashSetOf(
+                ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
+            ),
+            ValueType.SCREEN_HANDLER
+        )
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+        fun canSteal(screen: HandledScreen<*>): Boolean {
+            return !enabled || filter(screen.screenHandler.type, types)
+        }
+    }
+
+    init {
+        tree(CheckScreenHandlerType)
+    }
+
+    private object CheckTitle : ToggleableConfigurable(this, "CheckTitle", enabled = true) {
+        private val titles by multiEnumChoice(
+            "Titles",
+            EnumSet.of(
+                ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+                ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+            ),
+        )
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+        fun canSteal(screen: Screen): Boolean {
+            if (!enabled) return true
+
+            val titleString = screen.title.string
+
+            return when (filter) {
+                Filter.WHITELIST -> titles.any {
+                    Text.translatable(it.translatableKey).string == titleString
+                }
+                Filter.BLACKLIST -> titles.none {
+                    Text.translatable(it.translatableKey).string == titleString
+                }
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+        BARREL("Barrel", "container.barrel"),
+        BEACON("Beacon", "container.beacon"),
+        BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
+        BREWING_STAND("BrewingStand", "container.brewing"),
+        CHEST("Chest", "container.chest"),
+        LARGE_CHEST("LargeChest", "container.chestDouble"),
+        DISPENSER("Dispenser", "container.dispenser"),
+        DROPPER("Dropper", "container.dropper"),
+        ENDER_CHEST("EnderChest", "container.enderchest"),
+        FURNACE("Furnace", "container.furnace"),
+        HOPPER("Hopper", "container.hopper"),
+        SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
+        SMOKER("Smoker", "container.smoker"),
+    }
 
     init {
         tree(FeatureChestAura)
         tree(FeatureSilentScreen)
     }
 
-    override fun onDisabled() {
-        FeatureChestAura.interactedBlocksSet.clear()
-        super.onDisabled()
-    }
-
-    val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+    @Suppress("unused")
+    private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
         val screen = getChestScreen() ?: return@handler
 
@@ -104,7 +165,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      * Create a list of actions that will move the item in the slot [from] to the slot [to].
      */
     private fun getActionsForMove(
-        screen: GenericContainerScreen,
+        screen: HandledScreen<*>,
         from: ContainerItemSlot,
         to: ItemSlot
     ): List<ClickInventoryAction> {
@@ -122,7 +183,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
-        screen: GenericContainerScreen
+        screen: HandledScreen<*>
     ): InventoryAction? {
         val itemsInInv = findNonEmptySlotsInInventory()
         val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
@@ -152,16 +213,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         return (slotsToCollect - freeSlotsInInv - spaceGainedThroughMerge).coerceAtLeast(0)
     }
 
-    private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
-        val titleString = screen.title.string
-
-        return arrayOf(
-            "container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
-            "container.barrel"
-        ).any { Text.translatable(it).string == titleString }
-    }
-
-
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      *
@@ -170,7 +221,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun performQuickSwaps(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        screen: GenericContainerScreen
+        screen: HandledScreen<*>
     ): Boolean? {
         for (hotbarSwap in cleanupPlan.swaps) {
             // We only care about swaps from the chest to the hotbar
@@ -207,13 +258,13 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
-    private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
+    private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
-            val usefulItems = findItemsInContainer(screen)
+            val usefulItems = screen.findItemsInContainer()
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = findNonEmptySlotsInInventory() + findItemsInContainer(screen)
+            val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }
@@ -227,6 +278,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
     ) : NamedChoice {
         DISTANCE("Distance", {
+            // TODO: this only works with 9xN types
             it.sortedBy { slot ->
                 val slotId = slot.slotInContainer
 
@@ -246,12 +298,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * @return the chest screen if it is open and the title matches the chest title
      */
-    private fun getChestScreen(): GenericContainerScreen? {
-        return mc.currentScreen?.takeIf { it.canBeStolen() } as GenericContainerScreen?
+    private fun getChestScreen(): HandledScreen<*>? {
+        return mc.currentScreen?.takeIf { it.canBeStolen() } as HandledScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is GenericContainerScreen && (!checkTitle || isScreenTitleChest(this))
+        return running && this is HandledScreen<*> && CheckScreenHandlerType.canSteal(this) && CheckTitle.canSteal(this)
     }
 
     private enum class ItemMoveMode(override val choiceName: String) : NamedChoice {

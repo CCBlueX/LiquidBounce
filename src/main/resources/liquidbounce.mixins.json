@@ -125,13 +125,16 @@
     "minecraft.text.MixinMutableTextAccessor",
     "minecraft.text.MixinTextColor",
     "minecraft.text.MixinTranslatableTextContent",
+    "minecraft.util.MixinVec3i",
     "minecraft.world.chuck.MixinChunkSkyLightProvider",
     "sodium.MixinSodiumBlockOcclusionCache",
     "sodium.MixinSodiumLightDataAccessMixin",
     "truffle.MixinHostClassDesc",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
-    "truffle.MixinTruffleLanguage"
+    "truffle.MixinTruffleLanguage",
+    "truffle.MixinCommonJSRequireBuiltin",
+    "truffle.MixinNpmCompatibleESModuleLoader"
   ],
   "server": [],
   "injectors": {

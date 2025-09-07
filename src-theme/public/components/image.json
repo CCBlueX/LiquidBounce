@@ -1,0 +1,28 @@
+{
+  "name": "Image",
+  "enabled": false,
+  "singleton": false,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  },
+  "values": [
+    {
+      "type": "TEXT",
+      "name": "URL",
+      "value": "https://liquidbounce.net/images/logos/logo.svg"
+    },
+    {
+      "type": "FLOAT",
+      "name": "Scale",
+      "value": 1.0,
+      "range": {
+        "min": 0.0,
+        "max": 10.0
+      },
+      "suffix": "%"
+    }
+  ]
+}

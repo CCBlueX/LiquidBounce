@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -35,7 +37,9 @@ import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
+import java.io.File
 import java.util.*
 import kotlin.enums.EnumEntries
 
@@ -276,15 +280,15 @@ open class Configurable(
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
 
-    fun curve(name: String, default: Easing) = enumChoice(name, default)
+    fun easing(name: String, default: Easing) = enumChoice(name, default)
 
     fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
     fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
-    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR_I)
+    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 
-    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
+    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
     fun <C : MutableSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -308,6 +312,26 @@ open class Configurable(
 
     fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
+
+    @Suppress("LongParameterList")
+    fun curve(
+        name: String,
+        default: MutableList<Vector2f>,
+        xAxis: Axis,
+        yAxis: Axis,
+        tension: Float = 0.4f,
+    ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    fun file(
+        name: String,
+        default: File? = null,
+        dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
+        supportedExtensions: Set<String>? = null
+    ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -380,5 +404,109 @@ open class Configurable(
     ) = choices(eventListener, name, { activeIndex }, choicesCallback)
 
     fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }
+
+    /**
+     * Assigns the value of the settings to the component
+     *
+     * A component can have dynamic settings which can be assigned through the JSON file
+     * These have to be interpreted and assigned to the configurable
+     *
+     * An example:
+     * {
+     *     "type": "INT",
+     *     "name": "Size",
+     *     "value": 14,
+     *     "range": {
+     *         "min": 1,
+     *         "max": 100
+     *     },
+     *     "suffix": "px"
+     * }
+     *
+     * TODO: Replace with proper deserialization
+     *
+     * @param valueObject JsonObject
+     */
+    @Suppress("LongMethod")
+    fun json(valueObject: JsonObject) {
+        val type = valueObject["type"].asString
+        val name = valueObject["name"].asString
+
+        // todo: replace this with serious deserialization
+        when (type) {
+            "BOOLEAN" -> {
+                val value = valueObject["value"].asBoolean
+                boolean(name, value)
+            }
+
+            "INT" -> {
+                val value = valueObject["value"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                int(name, value, min..max, suffix)
+            }
+
+            "INT_RANGE" -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asInt
+                val valueMax = valueObject["value"].asJsonObject["max"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                intRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            "FLOAT" -> {
+                val value = valueObject["value"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                float(name, value, min..max, suffix)
+            }
+
+            "FLOAT_RANGE" -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asFloat
+                val valueMax = valueObject["value"].asJsonObject["max"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                floatRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            "TEXT" -> {
+                val value = valueObject["value"].asString
+                text(name, value)
+            }
+
+            "COLOR" -> {
+                val value = valueObject["value"].asInt
+                color(name, Color4b(value, hasAlpha = true))
+            }
+
+            "CONFIGURABLE" -> {
+                val subConfigurable = Configurable(name)
+                val values = valueObject["values"].asJsonArray
+                for (value in values) {
+                    subConfigurable.json(value.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+            // same as configurable but it is [ToggleableConfigurable]
+            "TOGGLEABLE" -> {
+                val value = valueObject["value"].asBoolean
+                // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
+                // as toggleable Configurable
+                val subConfigurable = object : ToggleableConfigurable(null, name, value) {}
+                val settings = valueObject["values"].asJsonArray
+                for (setting in settings) {
+                    subConfigurable.json(setting.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+
+            else -> error("Unsupported type: $type")
+        }
+    }
+
 
 }

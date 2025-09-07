@@ -19,13 +19,11 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -35,7 +33,7 @@ import net.minecraft.util.Formatting
  *
  * Provides a help page for displaying other commands.
  */
-object CommandHelp : CommandFactory {
+object CommandHelp : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -62,7 +60,7 @@ object CommandHelp : CommandFactory {
                             commandStart.asText()
                                 .formatted(Formatting.GRAY)
                                 .onClick {
-                                    mc.setScreen(ChatScreen(commandStart))
+                                    mc.openChat(commandStart)
                                 }
                         )
                         .append(buildAliasesText(command))
@@ -78,7 +76,7 @@ object CommandHelp : CommandFactory {
                 aliasesText += ", ".asText().formatted(Formatting.DARK_GRAY)
                 aliasesText += regular(alias).formatted(Formatting.GRAY)
                     .onClick {
-                        mc.setScreen(ChatScreen(CommandManager.Options.prefix + alias))
+                        mc.openChat(CommandManager.Options.prefix + alias)
                     }
             }
         }

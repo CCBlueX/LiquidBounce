@@ -31,12 +31,7 @@ import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider.setupC
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptChoice
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptModule
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.underline
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -46,12 +41,13 @@ import org.graalvm.polyglot.io.IOAccess
 import java.io.File
 import java.net.BindException
 import java.net.ServerSocket
+import java.util.function.Consumer
 import java.util.function.Function
 
 class PolyglotScript(
     val language: String, val file: File,
     val debugOptions: ScriptDebugOptions = ScriptDebugOptions()
-) {
+) : AutoCloseable {
 
     private val context: Context = Context.newBuilder(language)
         .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
@@ -62,8 +58,14 @@ class PolyglotScript(
         .allowCreateThread(true) // Enable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
-        .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
-        .option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+        .apply {
+            if (language == "js") {
+                option("js.nashorn-compat", "true") // Enable Nashorn compatibility
+                option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+                option("js.commonjs-require", "true")
+                option("js.commonjs-require-cwd", file.parentFile.absolutePath)
+            }
+        }
         .apply {
             if (debugOptions.enabled) {
                 val protocolString = debugOptions.protocol.toString().lowercase()
@@ -80,12 +82,15 @@ class PolyglotScript(
 
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(variable(devtoolURL)
-                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
-                                        regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                    ))
-                                    .underline(true)
+                                .append(
+                                    variable(devtoolURL)
+                                        .copyable(
+                                            copyContent = devtoolURL, hover = HoverEvent(
+                                                HoverEvent.Action.SHOW_TEXT,
+                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                            )
+                                        )
+                                        .underline(true)
                                 )
                         )
                     }
@@ -99,10 +104,15 @@ class PolyglotScript(
                         }
 
                         chat(
-                            regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
-                                translation("liquidbounce.scripts.debug.dap", variable(debugOptions.port.toString()))
+                            regular(
+                                translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
+                                    translation(
+                                        "liquidbounce.scripts.debug.dap",
+                                        variable(debugOptions.port.toString())
+                                    )
+                                )
                             )
-                        ))
+                        )
                     }
                 }
             }
@@ -127,7 +137,7 @@ class PolyglotScript(
      */
     private var scriptEnabled = false
 
-    private val globalEvents = mutableMapOf<String, () -> Unit>()
+    private val globalEvents = hashMapOf<String, Runnable>()
 
     /**
      * Tracks client modifications made by the script
@@ -140,22 +150,28 @@ class PolyglotScript(
      * Initialization of scripts
      */
     fun initScript() {
-        // Evaluate script
-        context.eval(Source.newBuilder(language, file).build())
+        try {
+            // Evaluate script
+            context.eval(Source.newBuilder(language, file).build())
 
-        // Call load event
-        callGlobalEvent("load")
+            // Call load event
+            callGlobalEvent("load")
 
-        if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
-            logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
-            error("Script '${file.name}' is missing required information!")
+            if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+                logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
+                error("Script '${file.name}' is missing required information!")
+            }
+
+            logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
+        } catch (e: Exception) {
+            logger.error("[ScriptAPI] Failed to load script '${file.name}'.", e)
+            context.close()
+            throw e
         }
-
-        logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
-    inner class RegisterScript : Function<Map<String, Any>, PolyglotScript> {
+    private inner class RegisterScript : Function<Map<String, Any>, PolyglotScript> {
 
         /**
          * Global function 'registerScript' which is called to register a script.
@@ -187,10 +203,10 @@ class PolyglotScript(
      * @see ScriptModule
      */
     @Suppress("unused")
-    fun registerModule(moduleObject: Map<String, Any>, callback: (ClientModule) -> Unit) {
+    fun registerModule(moduleObject: Map<String, Any>, callback: Consumer<ClientModule>) {
         val module = ScriptModule(this, moduleObject)
         registeredModules += module
-        callback(module)
+        callback.accept(module)
     }
 
     /**
@@ -218,10 +234,10 @@ class PolyglotScript(
     @Suppress("unused")
     fun registerChoice(
         choiceConfigurable: ChoiceConfigurable<Choice>, choiceObject: Map<String, Any>,
-        callback: (Choice) -> Unit
+        callback: Consumer<Choice>
     ) {
         ScriptChoice(choiceObject, choiceConfigurable).apply {
-            callback(this)
+            callback.accept(this)
             registeredChoices += this
         }
     }
@@ -231,7 +247,7 @@ class PolyglotScript(
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: () -> Unit) {
+    fun on(eventName: String, handler: Runnable) {
         globalEvents[eventName] = handler
     }
 
@@ -279,8 +295,7 @@ class PolyglotScript(
     /**
      * Called when the client unloads the script.
      */
-
-    fun close() {
+    override fun close() {
         context.close(true)
     }
 
@@ -290,7 +305,7 @@ class PolyglotScript(
      */
     private fun callGlobalEvent(eventName: String) {
         try {
-            globalEvents[eventName]?.invoke()
+            globalEvents[eventName]?.run()
         } catch (throwable: Throwable) {
             logger.error(
                 "${file.name}::$scriptName -> Event Function $eventName threw an error",

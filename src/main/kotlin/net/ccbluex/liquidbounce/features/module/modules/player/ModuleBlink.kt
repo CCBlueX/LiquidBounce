@@ -78,7 +78,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
     }
 
     override fun onDisabled() {
-        PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
+        PacketQueueManager.flush(TransferOrigin.OUTGOING)
         removeClone()
     }
 
@@ -137,7 +137,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
             when (AutoResetOption.action) {
                 ResetAction.RESET -> PacketQueueManager.cancel()
                 ResetAction.BLINK -> {
-                    PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
+                    PacketQueueManager.flush(TransferOrigin.OUTGOING)
                     dummyPlayer?.copyPositionAndRotation(player)
                 }
             }

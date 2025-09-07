@@ -28,10 +28,9 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -46,7 +45,7 @@ import org.apache.commons.io.input.CharSequenceReader
  * such as loading configuration from an external source or an API
  * and listing available configurations.
  */
-object CommandConfig : CommandFactory {
+object CommandConfig : Command.Factory {
 
     private const val CONFIGS_URL = "https://github.com/CCBlueX/LiquidCloud/tree/main/LiquidBounce/settings/nextgen"
 
@@ -63,14 +62,14 @@ object CommandConfig : CommandFactory {
 
     private fun browseSubcommand() = CommandBuilder
         .begin("browse")
-        .handler { _, _ ->
+        .handler {
             browseUrl(CONFIGS_URL)
         }
         .build()
 
     private fun reloadSubcommand() = CommandBuilder
         .begin("reload")
-        .suspendHandler { command, _ ->
+        .suspendHandler {
             if (AutoConfig.reloadConfigs()) {
                 chat(regular("Reloaded ${configs?.size} settings info from API"))
             } else {
@@ -80,7 +79,7 @@ object CommandConfig : CommandFactory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .handler { command, _ ->
+        .handler {
             runCatching {
                 chat(regular(command.result("loading")))
                 val widthOfSpace = mc.textRenderer.getWidth(" ")
@@ -144,16 +143,16 @@ object CommandConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autocompleteConfigs(begin) }
+                .autocompletedFrom { configs?.map { it.settingId } }
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.modules()
+            ParameterBuilder.modules()
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val name = args[0] as String
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
@@ -184,9 +183,5 @@ object CommandConfig : CommandFactory {
             }
         }
         .build()
-
-    private fun autocompleteConfigs(begin: String): List<String> {
-        return configs?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
-    }
 
 }

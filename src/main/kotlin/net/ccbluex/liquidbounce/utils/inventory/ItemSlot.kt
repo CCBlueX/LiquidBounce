@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
@@ -36,9 +36,9 @@ abstract class ItemSlot {
     /**
      * Used for example for slot click packets
      */
-    abstract fun getIdForServer(screen: GenericContainerScreen?): Int?
+    abstract fun getIdForServer(screen: HandledScreen<*>?): Int?
 
-    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? GenericContainerScreen)
+    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? HandledScreen<*>)
 
     abstract override fun hashCode(): Int
 
@@ -53,7 +53,7 @@ class VirtualItemSlot(
     override val slotType: ItemSlotType,
     val id: Int
 ): ItemSlot() {
-    override fun getIdForServer(screen: GenericContainerScreen?): Int? {
+    override fun getIdForServer(screen: HandledScreen<*>?): Int? {
         throw NotImplementedError()
     }
 
@@ -73,15 +73,15 @@ class VirtualItemSlot(
 }
 
 class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
-    private val screen: GenericContainerScreen
-        get() = mc.currentScreen as GenericContainerScreen
+    private val screen: HandledScreen<*>
+        get() = mc.currentScreen as HandledScreen<*>
     override val itemStack: ItemStack
         get() = this.screen.screenHandler.slots[this.slotInContainer].stack
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.CONTAINER
 
-    override fun getIdForServer(screen: GenericContainerScreen?): Int = this.slotInContainer
+    override fun getIdForServer(screen: HandledScreen<*>?): Int = this.slotInContainer
 
     fun distance(itemSlot: ContainerItemSlot): Int {
         val slotId = this.slotInContainer
@@ -110,7 +110,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
     }
 }
 
-private fun GenericContainerScreen.itemCount() = this.screenHandler.rows * 9
+private fun HandledScreen<*>.itemCount() = this.screenHandler.slots.size
 
 open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
 
@@ -130,7 +130,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
 
     open val useHand = Hand.MAIN_HAND
 
-    override fun getIdForServer(screen: GenericContainerScreen?): Int? {
+    override fun getIdForServer(screen: HandledScreen<*>?): Int? {
         return if (screen == null) 36 + hotbarSlot else screen.itemCount() + 27 + this.hotbarSlot
     }
 
@@ -160,7 +160,7 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
     override val slotType: ItemSlotType
         get() = ItemSlotType.INVENTORY
 
-    override fun getIdForServer(screen: GenericContainerScreen?): Int {
+    override fun getIdForServer(screen: HandledScreen<*>?): Int {
         return if (screen == null) 9 + inventorySlot else screen.itemCount() + this.inventorySlot
     }
 
@@ -185,7 +185,7 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
     override val slotType: ItemSlotType
         get() = ItemSlotType.ARMOR
 
-    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 8 - this.armorType else null
+    override fun getIdForServer(screen: HandledScreen<*>?) = if (screen == null) 8 - this.armorType else null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -212,7 +212,7 @@ object OffHandSlot : HotbarItemSlot(-1) {
 
     override val useHand = Hand.OFF_HAND
 
-    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 45 else null
+    override fun getIdForServer(screen: HandledScreen<*>?) = if (screen == null) 45 else null
 
     override fun equals(other: Any?): Boolean {
         return this === other

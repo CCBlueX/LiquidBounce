@@ -129,7 +129,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
         accounts += CrackedAccount(username, online).also { it.refresh() }
 
         // Store configurable
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
@@ -238,7 +238,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
                 }
 
                 // Store configurable
-                ConfigSystem.storeConfigurable(this@AccountManager)
+                ConfigSystem.store(this@AccountManager)
             }
 
             /**
@@ -264,7 +264,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
         }
 
         // Store configurable
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
         EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
@@ -278,7 +278,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
         val account = AlteningAccount.generateAccount(apiToken).also { accounts += it }
 
         // Store configurable
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
 
         account
     }.onFailure {
@@ -309,13 +309,13 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun favoriteAccount(id: Int) {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
         account.favorite()
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
     }
 
     fun unfavoriteAccount(id: Int) {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
         account.unfavorite()
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
     }
 
     fun swapAccounts(index1: Int, index2: Int) {
@@ -323,7 +323,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
         val account2 = accounts.getOrNull(index2) ?: error("Account not found!")
         accounts[index1] = account2
         accounts[index2] = account1
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
     }
 
     fun orderAccounts(order: List<Int>) {
@@ -332,11 +332,11 @@ object AccountManager : Configurable("Accounts"), EventListener {
                 accounts[index] = serverInfo
             }
 
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        ConfigSystem.store(this@AccountManager)
     }
 
     fun removeAccount(id: Int): MinecraftAccount {
-        val account = accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+        val account = accounts.removeAt(id).apply { ConfigSystem.store(this@AccountManager) }
         EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
         return account;
     }
@@ -363,7 +363,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
             }
 
             // Store configurable
-            ConfigSystem.storeConfigurable(this@AccountManager)
+            ConfigSystem.store(this@AccountManager)
 
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
         }

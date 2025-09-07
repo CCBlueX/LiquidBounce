@@ -28,6 +28,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import java.awt.Color
+import java.io.File
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -86,6 +87,8 @@ object HumanInputDeserializer {
     }
 
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
+
+    val fileDeserializer: StringDeserializer<File> = StringDeserializer(::File)
 
     fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
