@@ -133,10 +133,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         tree(FeatureSilentScreen)
     }
 
-    override fun onDisabled() {
-        FeatureChestAura.interactedBlocksSet.clear()
-        super.onDisabled()
-    }
 
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
