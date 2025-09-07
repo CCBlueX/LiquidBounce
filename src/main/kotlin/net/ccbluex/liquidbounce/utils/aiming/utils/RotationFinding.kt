@@ -49,7 +49,7 @@ import net.minecraft.util.math.Vec3d
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
-fun raytraceBlock(
+fun raytraceBlockRotation(
     eyes: Vec3d,
     pos: BlockPos,
     state: BlockState,

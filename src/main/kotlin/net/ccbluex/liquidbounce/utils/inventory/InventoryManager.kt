@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
@@ -263,11 +263,17 @@ object InventoryManager : EventListener {
     ) { event ->
         val screen = event.screen
 
+        debugParameter("Screen") { screen }
+
         if (event.isCancelled) {
             return@handler
         }
 
-        if (screen is InventoryScreen || screen is GenericContainerScreen) {
+        if (screen is HandledScreen<*>) {
+            debugParameter("Screen Slot count") {
+                val slots = screen.screenHandler.slots
+                "${slots.size} (${slots.count { it.inventory !== player.inventory }})"
+            }
             // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
             // the easy way and just listen for the screen event.
             if (screen is InventoryScreen && isOlderThanOrEqual1_11_1) {
@@ -300,7 +306,7 @@ sealed interface InventoryAction {
 
 @JvmRecord
 data class ClickInventoryAction(
-    val screen: GenericContainerScreen? = null,
+    val screen: HandledScreen<*>? = null,
     val slot: ItemSlot,
     val button: Int,
     val actionType: SlotActionType,
@@ -310,7 +316,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun click(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             slot: ItemSlot,
             button: Int,
             actionType: SlotActionType
@@ -323,7 +329,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun performThrow(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             slot: ItemSlot
         ) = ClickInventoryAction(
             screen,
@@ -334,7 +340,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun performQuickMove(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             slot: ItemSlot
         ) = ClickInventoryAction(
             screen,
@@ -345,7 +351,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun performSwap(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             from: ItemSlot,
             to: HotbarItemSlot
         ) = ClickInventoryAction(
@@ -357,7 +363,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun performPickupAll(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             slot: ItemSlot
         ) = ClickInventoryAction(
             screen,
@@ -368,7 +374,7 @@ data class ClickInventoryAction(
 
         @JvmStatic
         fun performPickup(
-            screen: GenericContainerScreen? = null,
+            screen: HandledScreen<*>? = null,
             slot: ItemSlot
         ) = ClickInventoryAction(
             screen,
@@ -392,7 +398,7 @@ data class ClickInventoryAction(
         }
 
         // Check if current screen is the same as the screen we want to interact with
-        val screen = mc.currentScreen as? GenericContainerScreen ?: return false
+        val screen = mc.currentScreen as? HandledScreen<*> ?: return false
         return screen.syncId == this.screen.syncId
     }
 
@@ -409,7 +415,7 @@ data class ClickInventoryAction(
             return false
         }
 
-        val itemsInContainer = getSlotsInContainer(screen)
+        val itemsInContainer = screen.getSlotsInContainer()
         // Find the closest item to the slot which is empty
         val closestEmptySlot = itemsInContainer
             .filter { it.itemStack.isEmpty }
@@ -444,7 +450,7 @@ data class UseInventoryAction(
 
 @JvmRecord
 data class CloseContainerAction(
-    val screen: GenericContainerScreen,
+    val screen: HandledScreen<*>,
 ) : InventoryAction {
 
     // Check if current handler is the same as the screen we want to close

@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -55,6 +55,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
         private val background = choices(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+        private val showTitle by boolean("ShowTitle", false)
 
         init {
             // This is a feature for rendering, skip it in config publication.
@@ -78,15 +79,17 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
         }
 
-        val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+        @Suppress("unused")
+        private val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
             if (!shouldHide) return@handler
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.currentScreen as GenericContainerScreen
+            val containerScreen = mc.currentScreen as HandledScreen<*>
 
             renderEnvironmentForGUI {
-                event.context.drawItemStackList(getSlotsInContainer(containerScreen).map { it.itemStack })
+                event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
+                    .title(if (showTitle) containerScreen.title.string else "")
                     .center(pos)
                     .scale(scale)
                     .background(background.activeChoice)
