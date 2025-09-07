@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -61,7 +62,7 @@ import kotlin.math.max
  * @author sqlerrorthing
  */
 object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
-
+    private val darkImprint by boolean("DarkImprint", true)
     private val particleSize by float("Size", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
     private val rotate by boolean("RandomParticleRotation", true)
@@ -131,8 +132,16 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         renderEnvironmentForWorld(event.matrixStack) {
             RenderSystem.depthMask(true)
             RenderSystem.disableCull()
+            RenderSystem.disableDepthTest()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.defaultBlendFunc()
+            RenderSystem.enableBlend()
+            RenderSystem.blendFuncSeparate(
+                GlStateManager.SrcFactor.SRC_ALPHA,
+                if (darkImprint) GlStateManager.DstFactor.ONE
+                else GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SrcFactor.ZERO,
+                GlStateManager.DstFactor.ONE
+            )
 
             for (particle in particles) {
                 if (!particle.visible) continue
@@ -142,7 +151,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
             RenderSystem.depthMask(true)
             RenderSystem.enableCull()
-            RenderSystem.defaultBlendFunc()
+            RenderSystem.enableDepthTest()
+            RenderSystem.disableBlend()
             mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
@@ -172,6 +182,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
         SNOWFLAKE("Snowflake", "particles/snowflake.png".registerAsDynamicImageFromClientResources()),
 
+        HEART("Heart","particles/heart.png".registerAsDynamicImageFromClientResources()),
     }
 
     private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {

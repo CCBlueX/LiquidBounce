@@ -878,6 +878,6 @@
   "liquidbounce.module.keepRange.description": "在靠近目标时取消你的移动输入以控制与其的距离。",
   "liquidbounce.module.chinaHat.description": "「中国功夫」",
   "liquidbounce.module.voidTp.description": "By _0x16z，不知道有啥用。",
-  "liquidbounce.module.lineGlyphs.description": "在你周围绘制一些线段铭文。",
+  "liquidbounce.module.lineGlyphs.description": "在你所见之处绘制一种铭文。",
   "liquidbounce.module.fireFlies.description": "只是为了好看?"
 }

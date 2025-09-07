@@ -874,6 +874,6 @@
   "liquidbounce.module.keepRange.description": "Control your movements to maintain distance from your target.",
   "liquidbounce.module.chinaHat.description": "「ChinaKungFu」",
   "liquidbounce.module.voidTp.description": "IDK.",
-  "liquidbounce.module.lineGlyphs.description": "Draw some linesGlyphs around you.",
+  "liquidbounce.module.lineGlyphs.description": "Draw an glyphs where you can see it.",
   "liquidbounce.module.fireFlies.description": "It's just for looks?"
 }

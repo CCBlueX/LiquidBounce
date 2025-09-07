@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
+import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.*
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.Identifier
@@ -22,6 +23,7 @@ import kotlin.collections.contains
 import kotlin.math.pow
 
 object ImageMode : JumpEffectMode("Image") {
+    private val darkImprint by boolean("DarkImprint", true)
     private val onlySelf by boolean("OnlySelf", true)
     private val easeOut by boolean("EaseOut", true)
     private val circleAlpha by float("Alpha", 255f, 0f..255f)
@@ -60,22 +62,28 @@ object ImageMode : JumpEffectMode("Image") {
         }
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         if (circles.isEmpty()) return@handler
 
         val currentTime = System.currentTimeMillis()
 
-        RenderSystem.disableDepthTest()
-        RenderSystem.disableCull()
-        RenderSystem.enableBlend()
-        RenderSystem.blendFunc(
-            GlStateManager.SrcFactor.SRC_ALPHA,
-            GlStateManager.DstFactor.ONE
-        )
-        RenderSystem.setShader(VertexInputType.PosTexColor.shaderProgram)
-        RenderSystem.setShaderTexture(0, imageType.texture)
-
         renderEnvironmentForWorld(event.matrixStack) {
+            RenderSystem.depthMask(true)
+            RenderSystem.disableDepthTest()
+            RenderSystem.disableCull()
+            mc.gameRenderer.lightmapTextureManager.disable()
+            RenderSystem.enableBlend()
+            RenderSystem.blendFuncSeparate(
+                GlStateManager.SrcFactor.SRC_ALPHA,
+                if (darkImprint) GlStateManager.DstFactor.ONE
+                else GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SrcFactor.ZERO,
+                GlStateManager.DstFactor.ONE
+            )
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
+            RenderSystem.setShaderTexture(0, imageType.texture)
+
             val builder = RenderBufferBuilder(
                 drawMode = VertexFormat.DrawMode.QUADS,
                 vertexFormat = VertexInputType.PosTexColor,
@@ -110,15 +118,19 @@ object ImageMode : JumpEffectMode("Image") {
                     val animationDuration = 4000f / gradientSpeed
                     val animationProgress = (currentTime % animationDuration.toLong()) / animationDuration
 
-                    val alpha = (1f - progress) * circleAlpha
-                    val colorTopLeft = color1Base.blend(color2Base,
-                        animationProgress).withAlpha(alpha.toInt())
-                    val colorTopRight = color1Base.blend(color2Base,
-                        (animationProgress + 0.25f) % 1f).withAlpha(alpha.toInt())
-                    val colorBottomRight = color1Base.blend(color2Base,
-                        (animationProgress + 0.5f) % 1f).withAlpha(alpha.toInt())
-                    val colorBottomLeft = color1Base.blend(color2Base,
-                        (animationProgress + 0.75f) % 1f).withAlpha(alpha.toInt())
+                    val alpha = ((1f - progress) * circleAlpha).toInt()
+                    val colorTopLeft = color1Base.blend(
+                        color2Base,
+                        animationProgress).withAlpha(alpha)
+                    val colorTopRight = color1Base.blend(
+                        color2Base,
+                        (animationProgress + 0.25f) % 1f).withAlpha(alpha)
+                    val colorBottomRight = color1Base.blend(
+                        color2Base,
+                        (animationProgress + 0.5f) % 1f).withAlpha(alpha)
+                    val colorBottomLeft = color1Base.blend(
+                        color2Base,
+                        (animationProgress + 0.75f) % 1f).withAlpha(alpha)
 
                     builder.drawGradientQuad(
                         this,
@@ -140,10 +152,11 @@ object ImageMode : JumpEffectMode("Image") {
 
             builder.draw()
         }
-
+        RenderSystem.depthMask(true)
         RenderSystem.enableDepthTest()
         RenderSystem.enableCull()
         RenderSystem.disableBlend()
+        mc.gameRenderer.lightmapTextureManager.enable()
     }
 
     private enum class Image(
@@ -151,7 +164,7 @@ object ImageMode : JumpEffectMode("Image") {
         textureName: String
     ) : NamedChoice {
         CIRCLE("Default", "circle"),
-        UWUMOUSE("UWU mouse", "mouse");
+        PORTAL("Portal", "portal");
 
         val texture: Identifier =
             "image/jumpCircle/$textureName.png".registerAsDynamicImageFromClientResources()

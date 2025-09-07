@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextA
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgramKey
@@ -356,6 +357,39 @@ inline fun RenderEnvironment.drawCustomMesh(
 
         // Draw the custom mesh
         BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+    }
+}
+fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawGradientQuad(
+    env: RenderEnvironment,
+    pos1: Vec3d,
+    uv1: UV2f,
+    pos2: Vec3d,
+    uv2: UV2f,
+    pos3: Vec3d,
+    uv3: UV2f,
+    pos4: Vec3d,
+    uv4: UV2f,
+    color1: Color4b,
+    color2: Color4b,
+    color3: Color4b,
+    color4: Color4b
+) {
+    val matrix = env.currentMvpMatrix
+
+    // Draw the vertices of the quad with per-vertex colors
+    with(buffer) {
+        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat())
+            .texture(uv1.u, uv1.v)
+            .color(color1.toARGB())
+        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat())
+            .texture(uv2.u, uv2.v)
+            .color(color2.toARGB())
+        vertex(matrix, pos3.x.toFloat(), pos3.y.toFloat(), pos3.z.toFloat())
+            .texture(uv3.u, uv3.v)
+            .color(color3.toARGB())
+        vertex(matrix, pos4.x.toFloat(), pos4.y.toFloat(), pos4.z.toFloat())
+            .texture(uv4.u, uv4.v)
+            .color(color4.toARGB())
     }
 }
 
