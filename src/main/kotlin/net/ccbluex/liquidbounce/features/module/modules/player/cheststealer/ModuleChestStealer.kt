@@ -181,18 +181,17 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     /**
-     * Find first mergeable or empty slot
+     * Find first mergeable or empty slots
      */
     private fun Iterable<ItemSlot>.findPossibleTarget(
         from: ItemSlot,
         usedTargets: MutableSet<ItemSlot>? = null,
     ): ItemSlot? {
         val fromStack = from.itemStack
+        // TODO: Multi target pickup (e.g. from = 64, inventory has 32, 32)
         return firstOrNull {
             (usedTargets == null || it !in usedTargets) &&
                 (it.itemStack.isEmpty || it.itemStack.canMerge(fromStack))
-        }?.also {
-            usedTargets?.add(it)
         }
     }
 

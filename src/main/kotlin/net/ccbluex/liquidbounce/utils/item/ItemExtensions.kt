@@ -116,9 +116,16 @@ val ItemStack.isSword
 val ItemStack.isPickaxe
     get() = this.isIn(ItemTags.PICKAXES)
 
-fun ItemStack.canMerge(other: ItemStack): Boolean {
+/**
+ * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * with the other item stack
+ */
+fun ItemStack.isMergeable(other: ItemStack): Boolean {
     return this.item == other.item && this.componentChanges == other.componentChanges
-        && this.count + other.count <= this.maxCount
+}
+
+fun ItemStack.canMerge(other: ItemStack): Boolean {
+    return this.isMergeable(other) && this.count + other.count <= this.maxCount
 }
 
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
