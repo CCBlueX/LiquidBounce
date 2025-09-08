@@ -277,20 +277,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         override val choiceName: String,
         val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
     ) : NamedChoice {
-        DISTANCE("Distance", {
-            // TODO: this only works with 9xN types
-            it.sortedBy { slot ->
-                val slotId = slot.slotInContainer
-
-                val rowA = slotId / 9
-                val colA = slotId % 9
-
-                val rowB = InventoryManager.lastClickedSlot / 9
-                val colB = InventoryManager.lastClickedSlot % 9
-
-                (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
-            }
-        }),
+        DISTANCE("Distance", { it.sortedWith(Comparator(ContainerItemSlot::distance)) }),
         INDEX("Index", { list -> list.sortedBy { it.slotInContainer } }),
         RANDOM("Random", List<ContainerItemSlot>::shuffled),
     }

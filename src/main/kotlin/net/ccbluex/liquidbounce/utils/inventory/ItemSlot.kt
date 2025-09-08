@@ -84,6 +84,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
     override fun getIdForServer(screen: HandledScreen<*>?): Int = this.slotInContainer
 
     fun distance(itemSlot: ContainerItemSlot): Int {
+        // TODO: only for 9xN types
         val slotId = this.slotInContainer
         val otherId = itemSlot.slotInContainer
 
