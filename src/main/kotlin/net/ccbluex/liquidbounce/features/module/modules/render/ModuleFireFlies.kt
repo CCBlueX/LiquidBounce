@@ -22,13 +22,6 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
-
-    private val fireFliesTexture = "image/firepart.png".registerAsDynamicImageFromClientResources()
-    private val darkImprint by boolean("DarkImprint", true)
-    private val lighting by boolean("Lighting", true)
-    private val spawnDelay by float("SpawnDelay", 3.0f, 1.0f..10.0f)
-    private val particleCount by int("ParticleCount", 50, 10..100)
-    private val trailLength by int("TrailLength", 20, 5..50)
     private val colorMode = choices(this, "ColorMode") {
         arrayOf(
             GenericSyncColorMode(it),
@@ -38,8 +31,17 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         )
     }
 
+    private val darkImprint by boolean("DarkImprint", true)
+    private val lighting by boolean("Lighting", true)
+    private val spawnDelay by float("SpawnDelay", 2.0f, 1.0f..10.0f)
+    private val particleCount by int("ParticleCount", 16, 10..100)
+    private val maxLiveCount by int("MaxLiveCount", 100, 1..1000)
+    private val trailLength by int("TrailLength", 20, 5..50)
+
+    private val fireFliesTexture = "image/firepart.png".registerAsDynamicImageFromClientResources()
     private val particles = ArrayDeque<FireFly>()
     private val random = Random()
+    private var spawnTimer = 0f
 
     private data class FireFly(
         var pos: Vec3d,
@@ -92,32 +94,36 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     }
 
     @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
+    private val updateHandler = handler<GameTickEvent> {
         val player = mc.player ?: return@handler
         val currentTime = mc.world?.time ?: return@handler
-
-        if (currentTime % (spawnDelay.toInt() + 1) == 0L && particles.size < particleCount) {
-            repeat(2) {
-                val pos = generateSpawnPosition()
-                particles.add(FireFly(pos, pos, currentTime, 6000L, generateRandomVelocity()))
-            }
-        }
 
         particles.forEach { particle ->
             particle.prevPos = particle.pos
             particle.pos = particle.pos.add(particle.velocity)
             particle.trail.add(TrailPart(particle.pos, currentTime, 400))
             particle.trail.removeIf { it.toRemove(currentTime) }
-            if (particle.trail.size > trailLength) {
-                particle.trail.removeAt(0)
-            }
-            if (random.nextFloat() < 0.05f) {
-                particle.velocity = generateRandomVelocity()
-            }
+            if (particle.trail.size > trailLength) particle.trail.removeAt(0)
+            if (random.nextFloat() < 0.05f) particle.velocity = generateRandomVelocity()
         }
 
-        particles.removeIf { currentTime - it.creationTime > it.maxAlive }
+        val maxDistance = 25.0
+        particles.removeIf { particle ->
+            val distanceSq = player.pos.squaredDistanceTo(particle.pos)
+            distanceSq > maxDistance * maxDistance || currentTime - particle.creationTime > particle.maxAlive
+        }
+
+        spawnTimer += 1f
+        if (spawnTimer >= spawnDelay) {
+            spawnTimer = 0f
+            val canSpawn = (maxLiveCount - particles.size).coerceAtLeast(0)
+            repeat(particleCount.coerceAtMost(canSpawn)) {
+                val pos = generateSpawnPosition()
+                particles.add(FireFly(pos, pos, currentTime, 6000L, generateRandomVelocity()))
+            }
+        }
     }
+
 
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->

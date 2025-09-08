@@ -24,14 +24,14 @@ import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
 import net.minecraft.util.Hand
 
 internal object VelocityHeypixel : VelocityMode("Heypixel") {
-        private val attackCount by int("AttackCount", 6, 0..20)
-        private val jumpReset by boolean("JumpReset", true)
-        private val chance by int("Chance", 100, 0..100, "%")
-
-        private object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
-            val maxAttackCount by int("MaxAttackCount", 30, 0..100)
-            val cooldownTicks by int("CooldownTicks", 20, 0..100, "ticks")
-            val byHighCPSWarning by boolean("ByHighCPSWarning", true)
+    private val attackCount by int("AttackCount", 6, 0..20)
+    private val chance by int("Chance", 100, 0..100, "%")
+    private val jumpReset by boolean("JumpReset", true)
+    private val ignoreBackTracking by boolean("IgnoreBackTracking",true)
+    private object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
+        val maxAttackCount by int("MaxAttackCount", 30, 0..100)
+        val cooldownTicks by int("CooldownTicks", 20, 0..100, "ticks")
+        val byHighCPSWarning by boolean("ByHighCPSWarning", true)
         }
 
         init {
@@ -44,7 +44,13 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
         private var cooldownTicks = 0
         private var jump = false
 
-        private fun reset() {
+
+    override val running: Boolean
+        get() = super.running
+            && !(ignoreBackTracking && ModuleBacktrack.isLagging())
+
+
+    private fun reset() {
             canReduce = false
             target = null
         }
@@ -98,9 +104,6 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
         private val packetEventHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
-            if (ModuleBacktrack.isLagging()) {
-                return@handler
-            }
 
             if (event.packet is EntityVelocityUpdateS2CPacket
                 && packet.entityId == player.id

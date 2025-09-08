@@ -25,12 +25,11 @@ import kotlin.math.pow
 object ImageMode : JumpEffectMode("Image") {
     private val darkImprint by boolean("DarkImprint", true)
     private val onlySelf by boolean("OnlySelf", true)
-    private val easeOut by boolean("EaseOut", true)
     private val circleAlpha by float("Alpha", 255f, 0f..255f)
     private val circleScale by float("Scale", 1f, 0.5f..5f)
     private val rotateSpeed by float("RotateSpeed", 2f, 0.5f..5f)
     private val gradientSpeed by float("GradientSpeed", 0.25f, 0f..1f)
-    private val imageType by enumChoice("ImageType", Image.CIRCLE)
+    private val imageType by enumChoice("ImageType", Image.PORTAL)
     private val circles = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
     private val cache = mutableListOf<PlayerEntity>()
 
@@ -58,7 +57,7 @@ object ImageMode : JumpEffectMode("Image") {
             }
         }
         circles.removeAll {
-            System.currentTimeMillis() - it.rightLong() > if (easeOut) 5000 else 6000
+            System.currentTimeMillis() - it.rightLong() > 5000
         }
     }
 
@@ -97,11 +96,7 @@ object ImageMode : JumpEffectMode("Image") {
                 val pos = circle.left()
                 val elapsed = (currentTime - circle.rightLong()).toFloat()
                 val progress = elapsed / 6000f
-                val sizeAnim = circleScale * if (easeOut) {
-                    1 - (1 - (elapsed * 2f) / 5000f).pow(4)
-                } else {
-                    elapsed / 5000f
-                }
+                val sizeAnim = circleScale *  (1 - (1 - (elapsed * 2f) / 5000f).pow(4))
 
                 val (color1Base, color2Base) = colorMode.activeChoice.getColors(null)
                 val rotation = sizeAnim * rotateSpeed * 1000f

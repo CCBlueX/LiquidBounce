@@ -17,7 +17,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
         get() = "liquidbounce.module.jumpEffect"
 
     val modes = choices(
-        "Mode", RenderMode, arrayOf(
+        "Mode", ImageMode, arrayOf(
             ImageMode,
             RenderMode
         )

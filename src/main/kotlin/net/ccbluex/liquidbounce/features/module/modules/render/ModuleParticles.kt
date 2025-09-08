@@ -63,9 +63,10 @@ import kotlin.math.max
  */
 object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val darkImprint by boolean("DarkImprint", true)
+    private val rotate by boolean("RandomParticleRotation", true)
     private val particleSize by float("Size", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
-    private val rotate by boolean("RandomParticleRotation", true)
+
     private class Physical : Configurable("Physical") {
         val motion by float("Motion", 15f, 1f..30f)
         val bounceX by float("BounceX", 0.8f, 0.0f..1.0f)

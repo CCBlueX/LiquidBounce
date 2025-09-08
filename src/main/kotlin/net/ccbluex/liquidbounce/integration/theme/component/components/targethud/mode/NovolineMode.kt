@@ -28,11 +28,13 @@ import java.util.function.Function
 import kotlin.math.min
 
 object NovolineMode : TargetHudMode("Novoline") {
-
+    private val width by float("Width",64f,40f..100f)
+    private val animationTime by int("AnimTime", 2, 1..5,"tick")
     private const val HOLD_TICKS = 10
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
 
+    private var scaleAnim = 0f
     private var easingHealth = 0f
     private var previousEasingHealth = 0f
     private var alpha = 0
@@ -91,15 +93,15 @@ object NovolineMode : TargetHudMode("Novoline") {
             TargetHudComponent.textColor.fade(0.1f)
         )
         val nameWidth = (fontRenderer.getStringWidth(nameProcessedForWidth) * 0.3f)
-        val baseW = 106f + nameWidth
+        val baseW = width + nameWidth
         val baseH = 36f
 
         applyAdaptiveScale(baseW, baseH) { scale, cx, cy ->
+            val finalScale = scale * (0.8f + 0.2f * scaleAnim)
             ctx.matrices.push()
             ctx.matrices.translate(cx, cy, 0f)
-            ctx.matrices.scale(scale, scale, 1f)
+            ctx.matrices.scale(finalScale, finalScale, 1f)
             ctx.matrices.translate(-baseW / 2f, -baseH / 2f, 0f)
-
             val x = 0f
             val y = 0f
             val w = baseW
@@ -169,34 +171,37 @@ object NovolineMode : TargetHudMode("Novoline") {
         val nameLocalX = x + 38f
         val nameLocalY = y + 6f
 
-        val percentScreenX = cx + (percentLocalX - baseW / 2f) * scale
-        val percentScreenY = cy + (percentLocalY - baseH / 2f) * scale
-        val nameScreenX = cx + (nameLocalX - baseW / 2f) * scale
-        val nameScreenY = cy + (nameLocalY - baseH / 2f) * scale
+        val finalScale = scale * (0.8f + 0.2f * scaleAnim)
 
         renderEnvironmentForGUI {
             fontRenderer.withBuffers { buf ->
-                fun drawTextWithTransform(text: TextProcessor.ProcessedText, screenX: Float, screenY: Float) {
+                fun drawTextWithTransform(text: TextProcessor.ProcessedText, localX: Float, localY: Float) {
                     matrixStack.push()
-                    matrixStack.translate(screenX, screenY, 0f)
-                    matrixStack.scale(0.3f * scale, 0.3f * scale, 1f)
+
+                    matrixStack.translate(cx, cy, 0f)
+
+                    matrixStack.scale(finalScale, finalScale, 1f)
+
+                    matrixStack.translate(localX - baseW / 2f, localY - baseH / 2f, 0f)
+                    matrixStack.scale(0.3f, 0.3f, 1f)
                     fontRenderer.draw(text, 0f, 0f, shadow = false, z = 0.001f)
                     fontRenderer.commit(this@renderEnvironmentForGUI, buf)
                     matrixStack.pop()
                 }
 
-                drawTextWithTransform(processedName, nameScreenX, nameScreenY)
-                drawTextWithTransform(processedPercent, percentScreenX, percentScreenY)
+                drawTextWithTransform(processedName, nameLocalX, nameLocalY)
+                drawTextWithTransform(processedPercent, percentLocalX, percentLocalY)
             }
         }
     }
+
 
     private fun updateAnimationStates(entity: LivingEntity?, hasActive: Boolean) {
         val delta = mc.renderTickCounter.getTickDelta(true)
 
         if (entity != null) {
             val health = entity.getActualHealth(true)
-            val max = (entity.maxHealth + entity.absorptionAmount).coerceAtLeast(1f).coerceAtLeast(1f)
+            val max = (entity.maxHealth + entity.absorptionAmount).coerceAtLeast(1f)
             lastKnownHealth = health
             lastKnownMax = max
 
@@ -208,13 +213,19 @@ object NovolineMode : TargetHudMode("Novoline") {
                 (easingHealth - previousEasingHealth) * 0.1f * delta).coerceIn(0f, lastKnownMax.coerceAtLeast(1f))
         }
 
+        val animSpeed = (1f / animationTime) * delta
+
         val targetAlpha = if (hasActive) 255 else 0
-        alpha = (alpha + (targetAlpha - alpha) * 0.2f * delta).toInt().coerceIn(0, 255)
+        alpha = (alpha + (targetAlpha - alpha) * animSpeed).toInt().coerceIn(0, 255)
+
+        val targetScale = if (hasActive) 1f else 0f
+        scaleAnim += (targetScale - scaleAnim) * animSpeed
 
         if (!hasActive && alpha <= 0) {
             easingHealth = 0f
             previousEasingHealth = 0f
             delayCounter = 0
+            scaleAnim = 0f
         }
     }
 

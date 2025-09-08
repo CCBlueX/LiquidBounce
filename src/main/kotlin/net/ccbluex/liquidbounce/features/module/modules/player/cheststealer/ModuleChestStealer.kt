@@ -142,7 +142,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
-        val screen = getChestScreen() ?: return@handler
+        val screen = getChestScreen()
         if (screen == null) {
             if (initialItemCount > 0) {
                 initialItemCount = 0

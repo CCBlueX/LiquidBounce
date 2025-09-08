@@ -49,7 +49,7 @@ open class BrowserSettings(
     /**
      * The maximum frames per second the browser renderer should run at.
      */
-    val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS").onChanged {
+    val fps = int("Fps", fpsLimit, 24..max(24, refreshRate), "FPS").onChanged {
         mc.execute {
             update()
         }
