@@ -73,7 +73,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
 
         fun canSteal(screen: HandledScreen<*>): Boolean {
-            return !enabled || filter(screen.screenHandler.type, types)
+            return !enabled || filter(runCatching { screen.screenHandler.type }.getOrNull(), types)
         }
     }
 
