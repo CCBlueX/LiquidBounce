@@ -39,34 +39,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import java.util.EnumSet
-import kotlin.collections.ArrayDeque
-import kotlin.collections.Iterable
-import kotlin.collections.List
-import kotlin.collections.MutableSet
-import kotlin.collections.Set
-import kotlin.collections.any
-import kotlin.collections.buildList
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.count
-import kotlin.collections.emptyList
-import kotlin.collections.filterIsInstance
-import kotlin.collections.filterTo
-import kotlin.collections.firstOrNull
-import kotlin.collections.hashMapOf
-import kotlin.collections.hashSetOf
-import kotlin.collections.listOf
-import kotlin.collections.maxOf
-import kotlin.collections.mutableListOf
-import kotlin.collections.none
-import kotlin.collections.plus
-import kotlin.collections.plusAssign
-import kotlin.collections.shuffled
-import kotlin.collections.sortBy
-import kotlin.collections.sortedBy
-import kotlin.collections.sortedWith
-import kotlin.collections.sumOf
-import kotlin.collections.toHashSet
 import kotlin.math.ceil
 
 /**
