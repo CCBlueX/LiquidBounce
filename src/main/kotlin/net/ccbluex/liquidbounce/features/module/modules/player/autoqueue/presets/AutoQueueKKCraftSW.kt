@@ -49,9 +49,7 @@ object AutoQueueKKCraftSW : Choice("KKCraftSW") {
 
     @Suppress("unused")
     private val scheduleInventoryHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (!player.isSpectator && !hasPaper) {
-            return@handler
-        }
+        if (!player.isSpectator && !hasPaper) return@handler
 
         val screen = mc.currentScreen as? GenericContainerScreen ?: return@handler
         val fireworkSlot = screen.screenHandler.slots.firstOrNull {
@@ -60,17 +58,19 @@ object AutoQueueKKCraftSW : Choice("KKCraftSW") {
 
         event.schedule(
             InventoryConstraints(),
-            ClickInventoryAction.click(screen, ContainerItemSlot(fireworkSlot.id), 0, SlotActionType.PICKUP)
+            InventoryAction.Click.performPickup(screen, ContainerItemSlot(fireworkSlot.id))
         )
 
         KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
+
         event.schedule(
             InventoryConstraints(),
-            CloseContainerAction(screen).also {
+            InventoryAction.CloseScreen(screen).also {
                 tasking = false
             }
         )
     }
+
 
     @Suppress("unused")
     private val respawnListener = handler<PacketEvent> { event ->

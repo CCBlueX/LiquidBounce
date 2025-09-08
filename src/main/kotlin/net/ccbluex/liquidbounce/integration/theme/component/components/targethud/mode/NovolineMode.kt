@@ -30,6 +30,7 @@ import kotlin.math.min
 object NovolineMode : TargetHudMode("Novoline") {
     private val width by float("Width",64f,40f..100f)
     private val animationTime by int("AnimTime", 2, 1..5,"tick")
+
     private const val HOLD_TICKS = 10
     private val fontRenderer
         get() = FontManager.FONT_RENDERER

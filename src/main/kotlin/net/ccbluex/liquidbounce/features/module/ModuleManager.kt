@@ -333,6 +333,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAntiCheat,
             ModuleAutoEZ,
             ModuleClientTitle,
+            ModuleAutoF5,
 
            // Movement
             ModuleAirJump,
@@ -440,7 +441,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleNametags,
             ModuleCombineMobs,
             ModuleAspect,
-            ModuleAutoF5,
             ModuleAutoScreenShot,
             ModuleChams,
             ModuleBedPlates,

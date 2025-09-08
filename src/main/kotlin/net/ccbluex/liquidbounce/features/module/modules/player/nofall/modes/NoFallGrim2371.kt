@@ -52,7 +52,12 @@ internal object NoFallGrim2371 : Choice("Grim2371-1.9+") {
             }
 
             event.cancelEvent()
-            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true, player.horizontalCollision))
+            network.sendPacket(
+                PlayerMoveC2SPacket.OnGroundOnly(
+                    true,
+                    player.horizontalCollision
+                )
+            )
             true
         }
 

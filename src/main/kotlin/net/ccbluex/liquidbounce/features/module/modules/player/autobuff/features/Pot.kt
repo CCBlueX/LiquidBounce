@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoBuffRotationsConfigurable.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -124,6 +125,9 @@ object Pot : Buff("Pot") {
         if (stack.isNothing() || !isValidPotion(stack) ||
             stack.getPotionEffects().all { alreadyHasOrNotNeeded(it) }) {
 
+            return
+        }
+        if (ModuleScaffold.enabled) {
             return
         }
         var rotation = Rotation(player.yaw, (85f..90f).random())

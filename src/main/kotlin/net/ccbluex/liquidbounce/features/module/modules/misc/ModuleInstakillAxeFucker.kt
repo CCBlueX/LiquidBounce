@@ -14,9 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.CloseContainerAction
 import net.ccbluex.liquidbounce.utils.inventory.ContainerItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -25,7 +24,6 @@ import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.Items
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.screen.slot.Slot
-import net.minecraft.screen.slot.SlotActionType
 
 object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MISC) {
 
@@ -56,7 +54,7 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MI
         if (chestSlot != null) {
             event.schedule(
                 inventoryConstraints,
-                ClickInventoryAction.Companion.click(screen, chestSlot.toContainerItemSlot(), 0, SlotActionType.PICKUP)
+                InventoryAction.Click.performPickup(screen, chestSlot.toContainerItemSlot())
             )
         }
 
@@ -64,11 +62,11 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MI
         if (helmetSlot != null) {
             event.schedule(
                 inventoryConstraints,
-                ClickInventoryAction.Companion.click(screen, helmetSlot.toContainerItemSlot(), 0, SlotActionType.PICKUP)
+                InventoryAction.Click.performPickup(screen, helmetSlot.toContainerItemSlot())
             )
-            if (hasPerformedActions) {
+        if (hasPerformedActions) {
                 KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
-                event.schedule(inventoryConstraints, CloseContainerAction(screen), Priority.IMPORTANT_FOR_USER_SAFETY)
+                event.schedule(inventoryConstraints, InventoryAction.CloseScreen(screen), Priority.IMPORTANT_FOR_PLAYER_LIFE)
                 notification(
                     "InstakillAxeFucker", "InstakillAxe has been auto selected with no probability.",
                     NotificationEvent.Severity.INFO

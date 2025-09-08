@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.Screen
@@ -194,12 +193,12 @@ object ModuleTreasureManager : ClientModule("TreasureManager", Category.PLAYER) 
         screen: GenericContainerScreen,
         from: ItemSlot,
         to: ItemSlot
-    ): List<ClickInventoryAction> {
+    ): List<InventoryAction.Click> {
         return when (itemMoveMode) {
-            ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, from))
+            ItemMoveMode.QUICK_MOVE -> listOf(InventoryAction.Click.performQuickMove(screen, from))
             ItemMoveMode.DRAG_AND_DROP -> listOf(
-                ClickInventoryAction.performPickup(screen, from),
-                ClickInventoryAction.performPickup(screen, to),
+                InventoryAction.Click.performPickup(screen, from),
+                InventoryAction.Click.performPickup(screen, to),
             )
         }
     }
