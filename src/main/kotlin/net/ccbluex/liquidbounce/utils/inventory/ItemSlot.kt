@@ -40,9 +40,9 @@ sealed interface ItemSlot {
 
     fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? HandledScreen<*>)
 
-    abstract override fun hashCode(): Int
+    override fun hashCode(): Int
 
-    abstract override fun equals(other: Any?): Boolean
+    override fun equals(other: Any?): Boolean
 }
 
 /**
