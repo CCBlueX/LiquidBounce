@@ -52,18 +52,16 @@ class InventoryCleanupPlan(
         this.usefulItems.removeAll(usefulItemsToRemove)
         this.usefulItems.addAll(usefulItemsToAdd)
 
-        this.swaps.forEachIndexed { index, hotbarSwap ->
-            val newSwap = hotbarSwap.copy(
+        this.swaps.replaceAll { hotbarSwap ->
+            hotbarSwap.copy(
                 from = slotMap[hotbarSwap.from] ?: hotbarSwap.from,
                 to = slotMap[hotbarSwap.to] ?: hotbarSwap.to
             )
-
-            this.swaps[index] = newSwap
         }
 
-        mergeableItems.values.forEach { mergeableItems ->
-            mergeableItems.forEachIndexed { index, itemSlot ->
-                mergeableItems[index] = slotMap[itemSlot] ?: itemSlot
+        this.mergeableItems.values.forEach { mergeableItems ->
+            mergeableItems.replaceAll { itemSlot ->
+                slotMap[itemSlot] ?: itemSlot
             }
         }
     }

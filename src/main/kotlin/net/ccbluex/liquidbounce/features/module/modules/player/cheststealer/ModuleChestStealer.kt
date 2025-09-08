@@ -36,7 +36,29 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
-import java.util.*
+import java.util.EnumSet
+import kotlin.collections.ArrayDeque
+import kotlin.collections.List
+import kotlin.collections.any
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.count
+import kotlin.collections.emptyList
+import kotlin.collections.filterIsInstance
+import kotlin.collections.filterTo
+import kotlin.collections.firstOrNull
+import kotlin.collections.hashMapOf
+import kotlin.collections.hashSetOf
+import kotlin.collections.listOf
+import kotlin.collections.maxOf
+import kotlin.collections.mutableListOf
+import kotlin.collections.none
+import kotlin.collections.plus
+import kotlin.collections.shuffled
+import kotlin.collections.sortedBy
+import kotlin.collections.sortedWith
+import kotlin.collections.sumOf
+import kotlin.collections.toHashSet
 import kotlin.math.ceil
 
 /**
@@ -54,8 +76,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val throwAction = ThrowAction.THROW // FIXME: No cleaner + this;
-    // TODO: merge items
+    private val throwAction = ThrowAction.THROW
 //    private val throwAction by enumChoice("ThrowAction", ThrowAction.THROW)
 
     private enum class ThrowAction(override val choiceName: String) : NamedChoice {
@@ -130,6 +151,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         tree(FeatureSilentScreen)
     }
 
+    private val mainInventory = Slots.Inventory + Slots.Hotbar
+
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
@@ -145,23 +168,26 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
+        val emptySlots = mainInventory.filterTo(ArrayDeque()) { it.itemStack.isEmpty }
 
         for (slot in sortedItemsToCollect) {
-            if (!hasInventorySpace() && stillRequiredSpace > 0) {
+            val emptySlot = emptySlots.removeFirstOrNull()
+
+            if (emptySlot != null) {
+                val actions = getActionsForMove(screen, from = slot, to = emptySlot)
+
+                event.schedule(
+                    inventoryConstrains, actions,
+                    /**
+                     * we prioritize item based on how important it is
+                     * for example we should prioritize armor over apples
+                     */
+                    ItemCategorization(emptyList()).getItemFacets(slot).maxOf { it.category.type.allocationPriority }
+                )
+            } else if (stillRequiredSpace > 0) {
+                // Throw useless items
                 event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
             }
-
-            val emptySlot = findEmptyStorageSlotsInInventory().firstOrNull() ?: break
-
-            val actions = getActionsForMove(screen, from = slot, to = emptySlot)
-
-            event.schedule(inventoryConstrains, actions,
-                /**
-                 * we prioritize item based on how important it is
-                 * for example we should prioritize armor over apples
-                 */
-                ItemCategorization(listOf()).getItemFacets(slot).maxOf { it.category.type.allocationPriority }
-            )
         }
 
         // Check if stealing the chest was completed
@@ -215,7 +241,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
     ): Int {
-        val freeSlotsInInv = (Slots.Inventory + Slots.Hotbar).count { it.itemStack.isEmpty }
+        val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
             val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
