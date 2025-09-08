@@ -54,7 +54,14 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-//    private val throwAction by
+    private val throwAction = ThrowAction.THROW // FIXME: No cleaner + this;
+    // TODO: merge items
+//    private val throwAction by enumChoice("ThrowAction", ThrowAction.THROW)
+
+    private enum class ThrowAction(override val choiceName: String) : NamedChoice {
+        THROW("Throw"),
+        PUT_BACK("PutBack"),
+    }
 
     private object CheckScreenHandlerType : ToggleableConfigurable(this, "CheckScreenHandlerType", enabled = true) {
         private val types by registryList(
@@ -168,7 +175,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun getActionsForMove(
         screen: HandledScreen<*>,
-        from: ContainerItemSlot,
+        from: ItemSlot,
         to: ItemSlot
     ): List<InventoryAction.Click> {
         return when (itemMoveMode) {
@@ -186,12 +193,19 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
         screen: HandledScreen<*>
-    ): InventoryAction? {
+    ): List<InventoryAction>? {
         val itemsInInv = findNonEmptySlotsInInventory()
         val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
-        return InventoryAction.Click.performThrow(screen, itemToThrowOut)
+        return when (throwAction) {
+            ThrowAction.PUT_BACK -> {
+                val emptySlot = screen.getSlotsInContainer().firstOrNull { it.itemStack.isEmpty } ?: return null
+                getActionsForMove(screen, from = itemToThrowOut, to = emptySlot)
+            }
+
+            ThrowAction.THROW -> listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
+        }
     }
 
     /**
@@ -264,7 +278,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
-            InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
+            InventoryCleanupPlan(usefulItems.toHashSet(), mutableListOf(), hashMapOf())
         } else {
             val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
 
