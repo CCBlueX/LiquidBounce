@@ -13,24 +13,18 @@
 
     let expanded = false;
     let optionRefs: HTMLElement[] = [];
-
+    let optionMaxHeight = '0px';
     function updateValue(v: string) {
         value = v;
         dispatch("change");
     }
-    
-    function easeInBack(t: number): number {
-        const c1 = 1.5;
-        const c3 = c1 + 1;
-        return c3 * t * t * t - c1 * t * t;
-    }
 
     afterUpdate(() => {
         if (expanded && optionRefs.length > 0) {
-
+            const panelHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-height')) || window.innerHeight;
+            optionMaxHeight = `min(66vh, ${0.66 * panelHeight}px)`;
         }
     });
-
 
 </script>
 
@@ -57,12 +51,12 @@
         >
             <div
                     class="options"
+                    style="max-height: {optionMaxHeight}"
                     on:click|stopPropagation
                     in:FadeIn={{ duration: 200 }}
                     out:FadeOut={{ duration: 200 }}
-                    style="max-height: min(66vh, calc(0.66 * var(--panel-height, 100vh)))"
-
             >
+
                 {#each options as o, index (o)}
                     <div
                             class="option"

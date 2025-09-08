@@ -66,7 +66,10 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MI
             )
         if (hasPerformedActions) {
                 KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
-                event.schedule(inventoryConstraints, InventoryAction.CloseScreen(screen), Priority.IMPORTANT_FOR_PLAYER_LIFE)
+                event.schedule(
+                    inventoryConstraints,
+                    InventoryAction.CloseScreen(screen),
+                    Priority.IMPORTANT_FOR_PLAYER_LIFE)
                 notification(
                     "InstakillAxeFucker", "InstakillAxe has been auto selected with no probability.",
                     NotificationEvent.Severity.INFO

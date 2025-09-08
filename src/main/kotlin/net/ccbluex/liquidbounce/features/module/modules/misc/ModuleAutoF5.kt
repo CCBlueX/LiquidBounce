@@ -42,18 +42,18 @@ object ModuleAutoF5 : ClientModule("AutoF5", Category.MISC) {
     @Suppress("unused")
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->
         val screen = mc.currentScreen
+        val shouldF5 = !FeatureSilentScreen.shouldHide && (
+            (OpenOn.CHEST in openOn && screen is GenericContainerScreen) ||
+                (OpenOn.INVENTORY_SCREEN in openOn && screen is InventoryScreen) ||
+                (OpenOn.SCAFFOLD in openOn && ModuleScaffold.enabled) ||
+                (OpenOn.KILL_AURA in openOn && ModuleKillAura.targetTracker.target != null)
+            )
 
-        if (!FeatureSilentScreen.shouldHide &&
-            (
-                (OpenOn.CHEST in openOn && screen is GenericContainerScreen)
-                    || (OpenOn.INVENTORY_SCREEN in openOn && screen is InventoryScreen)
-                    || (OpenOn.SCAFFOLD in openOn && ModuleScaffold.enabled)
-                    || (OpenOn.KILL_AURA in openOn && ModuleKillAura.targetTracker.target != null)
-                )
-        ) {
+        if (shouldF5) {
             event.perspective = Perspective.THIRD_PERSON_BACK
         }
     }
+
 
     private enum class OpenOn(override val choiceName: String) : NamedChoice {
         INVENTORY_SCREEN("InventoryScreen"),

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.until
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -35,17 +36,17 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * @author XeContrast
  */
-internal object NoFallGrim2371 : Choice("Grim2371-1.9+") {
+internal object NoFallGrim2371 : Choice("Grim2371") {
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (player.isOnGround || player.fallDistance < 2.5) {
+        if (player.isOnGround || player.fallDistance < player.getAttributeValue(
+                EntityAttributes.SAFE_FALL_DISTANCE).toFloat()) {
             return@tickHandler
         }
-
         until<PlayerNetworkMovementTickEvent> { event ->
             if (!player.isOnGround || event.state != EventState.PRE) {
                 return@until false
