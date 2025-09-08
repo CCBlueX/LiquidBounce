@@ -148,18 +148,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
 
-        val usedTargets = hashSetOf<ItemSlot>()
-
-        // Find first mergeable or empty slot
-        fun possibleTarget(containerItemSlot: ContainerItemSlot): ItemSlot? {
-            val containerStack = containerItemSlot.itemStack
-            return mainInventory.firstOrNull {
-                it !in usedTargets && (it.itemStack.isEmpty || it.itemStack.canMerge(containerStack))
-            }?.also { usedTargets.add(it) }
-        }
+        val usedTakeTargets = hashSetOf<ItemSlot>()
+        val usedThrowTargets = hashSetOf<ItemSlot>()
 
         for (slot in sortedItemsToCollect) {
-            val moveTo = possibleTarget(slot)
+            val moveTo = mainInventory.findPossibleTarget(slot, usedTakeTargets)
 
             if (moveTo != null) {
                 val actions = getActionsForMove(screen, from = slot, to = moveTo)
@@ -174,13 +167,32 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                 )
             } else if (stillRequiredSpace > 0) {
                 // Throw useless items
-                event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
+                event.schedule(
+                    inventoryConstrains,
+                    throwItem(cleanupPlan, screen, usedThrowTargets) ?: break
+                )
             }
         }
 
         // Check if stealing the chest was completed
         if (autoClose && sortedItemsToCollect.isEmpty()) {
             event.schedule(inventoryConstrains, InventoryAction.CloseScreen(screen))
+        }
+    }
+
+    /**
+     * Find first mergeable or empty slot
+     */
+    private fun Iterable<ItemSlot>.findPossibleTarget(
+        from: ItemSlot,
+        usedTargets: MutableSet<ItemSlot>? = null,
+    ): ItemSlot? {
+        val fromStack = from.itemStack
+        return firstOrNull {
+            (usedTargets == null || it !in usedTargets) &&
+                (it.itemStack.isEmpty || it.itemStack.canMerge(fromStack))
+        }?.also {
+            usedTargets?.add(it)
         }
     }
 
@@ -206,7 +218,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
-        screen: HandledScreen<*>
+        screen: HandledScreen<*>,
+        putBackUsedSlots: MutableSet<ItemSlot>,
     ): List<InventoryAction>? {
         val itemsInInv = findNonEmptySlotsInInventory()
         val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
@@ -214,7 +227,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
         return when (throwAction) {
             ThrowAction.PUT_BACK -> {
-                val emptySlot = screen.getSlotsInContainer().firstOrNull { it.itemStack.isEmpty } ?: return null
+                val emptySlot = screen.getSlotsInContainer().findPossibleTarget(
+                    itemToThrowOut, putBackUsedSlots
+                ) ?: return null
                 getActionsForMove(screen, from = itemToThrowOut, to = emptySlot)
             }
 
