@@ -54,6 +54,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
+//    private val throwAction by
+
     private object CheckScreenHandlerType : ToggleableConfigurable(this, "CheckScreenHandlerType", enabled = true) {
         private val types by registryList(
             "Types",
@@ -186,7 +188,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         screen: HandledScreen<*>
     ): InventoryAction? {
         val itemsInInv = findNonEmptySlotsInInventory()
-        val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
+        val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
         return InventoryAction.Click.performThrow(screen, itemToThrowOut)

@@ -67,4 +67,9 @@ class InventoryCleanupPlan(
             }
         }
     }
+
+    fun findItemsToThrowOut(
+        itemSlots: List<ItemSlot>,
+    ) = itemSlots.filter { it !in usefulItems }
+
 }

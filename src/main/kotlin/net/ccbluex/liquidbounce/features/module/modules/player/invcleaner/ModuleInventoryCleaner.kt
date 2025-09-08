@@ -192,7 +192,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
         cleanupPlan: InventoryCleanupPlan,
         currentInventorySlots: List<ItemSlot>
     ): Boolean {
-        val itemsToDispose = findItemsToThrowOut(cleanupPlan, currentInventorySlots)
+        val itemsToDispose = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(
@@ -203,11 +203,6 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
         return true
     }
-
-    fun findItemsToThrowOut(
-        cleanupPlan: InventoryCleanupPlan,
-        itemsInInv: List<ItemSlot>,
-    ) = itemsInInv.filter { it !in cleanupPlan.usefulItems }
 
     private class AmountConstraintProvider(
         val desiredItemsPerCategory: Map<ItemCategory, Int>,
