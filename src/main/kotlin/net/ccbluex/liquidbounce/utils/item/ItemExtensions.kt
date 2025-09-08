@@ -46,6 +46,7 @@ import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.math.BlockPos
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
@@ -137,8 +138,8 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
         AttributeModifiersComponent.DEFAULT
     )
     .modifiers
-    .filter { modifier -> modifier.attribute() == attribute }
-    .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
+    .filter { modifier -> modifier.attribute == attribute }
+    .firstNotNullOfOrNull { modifier -> modifier.modifier.value }
 
 val ItemStack.attackDamage: Double
     get() {
