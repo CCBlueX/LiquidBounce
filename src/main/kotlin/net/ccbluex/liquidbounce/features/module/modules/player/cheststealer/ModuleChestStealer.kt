@@ -32,12 +32,41 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.canMerge
+import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.item.ItemStack
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import java.util.EnumSet
+import kotlin.collections.ArrayDeque
+import kotlin.collections.Iterable
+import kotlin.collections.List
+import kotlin.collections.MutableSet
+import kotlin.collections.Set
+import kotlin.collections.any
+import kotlin.collections.buildList
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.count
+import kotlin.collections.emptyList
+import kotlin.collections.filterIsInstance
+import kotlin.collections.filterTo
+import kotlin.collections.firstOrNull
+import kotlin.collections.hashMapOf
+import kotlin.collections.hashSetOf
+import kotlin.collections.listOf
+import kotlin.collections.maxOf
+import kotlin.collections.mutableListOf
+import kotlin.collections.none
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.collections.shuffled
+import kotlin.collections.sortBy
+import kotlin.collections.sortedBy
+import kotlin.collections.sortedWith
+import kotlin.collections.sumOf
+import kotlin.collections.toHashSet
 import kotlin.math.ceil
 
 /**
@@ -55,10 +84,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val throwAction = ThrowAction.THROW
+    private val onFull = OnFull.THROW
 //    private val throwAction by enumChoice("ThrowAction", ThrowAction.THROW)
 
-    private enum class ThrowAction(override val choiceName: String) : NamedChoice {
+    private enum class OnFull(override val choiceName: String) : NamedChoice {
+        NONE("NONE"),
         THROW("Throw"),
         PUT_BACK("PutBack"),
     }
@@ -152,13 +182,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val usedThrowTargets = hashSetOf<ItemSlot>()
 
         for (slot in sortedItemsToCollect) {
-            val moveTo = mainInventory.findPossibleTarget(slot, usedTakeTargets)
+            val moveActions = mainInventory.findPossiblePickActions(screen, slot, usedTakeTargets)
 
-            if (moveTo != null) {
-                val actions = getActionsForMove(screen, from = slot, to = moveTo)
-
+            if (moveActions != null) {
                 event.schedule(
-                    inventoryConstrains, actions,
+                    inventoryConstrains, moveActions,
                     /**
                      * we prioritize item based on how important it is
                      * for example we should prioritize armor over apples
@@ -181,34 +209,72 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     /**
-     * Find first mergeable or empty slots
+     * Calculates the mergeable count.
      */
-    private fun Iterable<ItemSlot>.findPossibleTarget(
-        from: ItemSlot,
-        usedTargets: MutableSet<ItemSlot>? = null,
-    ): ItemSlot? {
-        val fromStack = from.itemStack
-        // TODO: Multi target pickup (e.g. from = 64, inventory has 32, 32)
-        return firstOrNull {
-            (usedTargets == null || it !in usedTargets) &&
-                (it.itemStack.isEmpty || it.itemStack.canMerge(fromStack))
+    private fun Iterable<ItemSlot>.mergeableCountFor(itemStack: ItemStack, blacklist: Set<ItemSlot>?): Int =
+        sumOf {
+            val targetStack = it.itemStack
+            when {
+                blacklist != null && it in blacklist -> 0
+                targetStack.isEmpty -> itemStack.maxCount
+                targetStack.isMergeable(itemStack) -> targetStack.maxCount - targetStack.count
+                else -> 0
+            }
         }
-    }
 
     /**
-     * Create a list of actions that will move the item in the slot [from] to the slot [to].
+     * Gets the clicks from mergeable or empty slots, or null if impossible to pick
      */
-    private fun getActionsForMove(
+    @Suppress("CognitiveComplexMethod")
+    private fun Iterable<ItemSlot>.findPossiblePickActions(
         screen: HandledScreen<*>,
         from: ItemSlot,
-        to: ItemSlot
-    ): List<InventoryAction.Click> {
+        usedTargets: MutableSet<ItemSlot>? = null,
+    ): List<InventoryAction.Click>? {
+        val fromStack = from.itemStack
+        val remaining = mergeableCountFor(fromStack, blacklist = usedTargets)
+
+        // Impossible to pick any item into inventory
+        if (remaining == 0) return null
+
         return when (itemMoveMode) {
             ItemMoveMode.QUICK_MOVE -> listOf(InventoryAction.Click.performQuickMove(screen, from))
-            ItemMoveMode.DRAG_AND_DROP -> listOf(
-                InventoryAction.Click.performPickup(screen, from),
-                InventoryAction.Click.performPickup(screen, to),
-            )
+
+            ItemMoveMode.DRAG_AND_DROP -> {
+                // Never empty
+                val targets = filterTo(ArrayDeque()) {
+                    (usedTargets == null || it !in usedTargets) &&
+                        (it.itemStack.isEmpty || it.itemStack.isMergeable(fromStack))
+                }
+
+                /* The remaining count after merged with [fromStack]. Negative -> fromStack has remaining */
+                fun mergedRemaining(target: ItemStack) = fromStack.maxCount - fromStack.count - target.count
+
+                buildList {
+                    // Pick up
+                    this += InventoryAction.Click.performPickup(screen, from)
+
+                    val possibleSinglePut = targets.firstOrNull { mergedRemaining(it.itemStack) >= 0 }
+                    if (possibleSinglePut != null) {
+                        this += InventoryAction.Click.performPickup(screen, possibleSinglePut)
+                    } else {
+                        // Now all `mergedRemaining` result of [targets] are negative
+                        // Minimize click count
+                        targets.sortBy { mergedRemaining(it.itemStack) }
+                        var count = fromStack.count
+                        while (count >= 0) {
+                            val target = targets.removeFirstOrNull() ?: break
+                            count += mergedRemaining(target.itemStack)
+                            this += InventoryAction.Click.performPickup(screen, target)
+                        }
+                    }
+
+                    if (remaining < fromStack.count) {
+                        // Unable to take all, put remaining items back
+                        this += InventoryAction.Click.performPickup(screen, from)
+                    }
+                }
+            }
         }
     }
 
@@ -224,15 +290,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
-        return when (throwAction) {
-            ThrowAction.PUT_BACK -> {
-                val emptySlot = screen.getSlotsInContainer().findPossibleTarget(
-                    itemToThrowOut, putBackUsedSlots
-                ) ?: return null
-                getActionsForMove(screen, from = itemToThrowOut, to = emptySlot)
-            }
-
-            ThrowAction.THROW -> listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
+        return when (onFull) {
+            OnFull.NONE -> null
+            OnFull.PUT_BACK -> screen.getSlotsInContainer()
+                .findPossiblePickActions(screen, itemToThrowOut, putBackUsedSlots)
+            OnFull.THROW -> listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
         }
     }
 
