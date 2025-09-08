@@ -132,7 +132,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
     open val useHand = Hand.MAIN_HAND
 
     override fun getIdForServer(screen: HandledScreen<*>?): Int? {
-        return if (screen == null) 36 + hotbarSlot else screen.itemCount() + 27 + this.hotbarSlot
+        return if (screen == null) 36 + hotbarSlot else screen.itemCount() - 9 + this.hotbarSlot
     }
 
     override fun equals(other: Any?): Boolean {
