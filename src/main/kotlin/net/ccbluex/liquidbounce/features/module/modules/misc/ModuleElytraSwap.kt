@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.item.ArmorItem
@@ -76,12 +79,12 @@ object ModuleElytraSwap : ClientModule(
     private fun ScheduleInventoryActionEvent.doSwap(slot: ItemSlot) {
         var exchange: InventoryAction? = null
         if (!chestplateSlot.itemStack.isEmpty) {
-            exchange = ClickInventoryAction.performPickup(slot = slot)
+            exchange = InventoryAction.Click.performPickup(slot = slot)
         }
 
         val actions = listOfNotNull(
-            ClickInventoryAction.performPickup(slot = slot),
-            ClickInventoryAction.performPickup(slot = chestplateSlot),
+            InventoryAction.Click.performPickup(slot = slot),
+            InventoryAction.Click.performPickup(slot = chestplateSlot),
             exchange
         )
 

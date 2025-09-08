@@ -26,7 +26,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
+import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Item
@@ -119,9 +123,24 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
             if (Features.USE_PICKUP_ALL in features && currentStackNotEmpty) {
                 event.schedule(
                     constraints,
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP),
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP_ALL),
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
+                    Click(
+                        null,
+                        slot = slot,
+                        button = 0,
+                        actionType = SlotActionType.PICKUP
+                    ),
+                    Click(
+                        null,
+                        slot = slot,
+                        button = 0,
+                        actionType = SlotActionType.PICKUP_ALL
+                    ),
+                    Click(
+                        null,
+                        slot = slot,
+                        button = 0,
+                        actionType = SlotActionType.PICKUP
+                    )
                 )
             } else {
                 refillNormal(item, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
@@ -143,12 +162,27 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
         inventorySlots.forEach { inventorySlot ->
             neededToRefill -= inventorySlot.itemStack.count
             val actions = mutableListOf(
-                ClickInventoryAction.click(null, inventorySlot, 0, SlotActionType.PICKUP),
-                ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
+                Click(
+                    null,
+                    slot = inventorySlot,
+                    button = 0,
+                    actionType = SlotActionType.PICKUP
+                ),
+                Click(
+                    null,
+                    slot = slot,
+                    button = 0,
+                    actionType = SlotActionType.PICKUP
+                )
             )
 
             if (neededToRefill < 0) {
-                actions += ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
+                actions += Click(
+                    null,
+                    slot = slot,
+                    button = 0,
+                    actionType = SlotActionType.PICKUP
+                )
             }
 
             event.schedule(constraints, actions)

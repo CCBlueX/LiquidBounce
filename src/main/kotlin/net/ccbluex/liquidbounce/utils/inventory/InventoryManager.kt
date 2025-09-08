@@ -33,10 +33,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
@@ -174,7 +172,7 @@ object InventoryManager : EventListener {
                     // Check if this is the first action in the chain, which allows us to simulate a miss click
                     // This is only possible for container-type slots and also does not make much sense when
                     // the action is a throw action (you cannot miss-click really when throwing)
-                    if (index == 0 && action is ClickInventoryAction
+                    if (index == 0 && action is InventoryAction.Click
                         && constraints.missChance.random() > Random.nextInt(100)
                         && action.actionType != SlotActionType.THROW) {
                         // Simulate a miss click (this is only possible for container-type slots)
@@ -185,12 +183,12 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    if (action is CloseContainerAction) {
+                    if (action is InventoryAction.CloseScreen) {
                         waitTicks(constraints.closeDelay.random())
                         cycles = 0
                     }
                     if (action.performAction()) {
-                        if (action !is CloseContainerAction) {
+                        if (action !is InventoryAction.CloseScreen) {
                             waitTicks(constraints.clickDelay.random())
                             cycles = 0
                         }
@@ -289,8 +287,8 @@ object InventoryManager : EventListener {
         isInventoryOpenServerSide = false
     }
 
-    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryActionChain> =
-        compareBy<InventoryActionChain> {
+    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryAction.Chain> =
+        compareBy<InventoryAction.Chain> {
             it.requiresInventoryOpen()
         }.thenByDescending {
             it.priority

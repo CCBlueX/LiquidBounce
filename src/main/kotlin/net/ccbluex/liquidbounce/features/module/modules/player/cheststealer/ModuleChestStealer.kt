@@ -36,7 +36,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
-import java.util.EnumSet
+import java.util.*
 import kotlin.math.ceil
 
 /**
@@ -157,7 +157,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
         // Check if stealing the chest was completed
         if (autoClose && sortedItemsToCollect.isEmpty()) {
-            event.schedule(inventoryConstrains, CloseContainerAction(screen))
+            event.schedule(inventoryConstrains, InventoryAction.CloseScreen(screen))
         }
     }
 
@@ -168,12 +168,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         screen: HandledScreen<*>,
         from: ContainerItemSlot,
         to: ItemSlot
-    ): List<ClickInventoryAction> {
+    ): List<InventoryAction.Click> {
         return when (itemMoveMode) {
-            ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, from))
+            ItemMoveMode.QUICK_MOVE -> listOf(InventoryAction.Click.performQuickMove(screen, from))
             ItemMoveMode.DRAG_AND_DROP -> listOf(
-                ClickInventoryAction.performPickup(screen, from),
-                ClickInventoryAction.performPickup(screen, to),
+                InventoryAction.Click.performPickup(screen, from),
+                InventoryAction.Click.performPickup(screen, to),
             )
         }
     }
@@ -189,7 +189,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
-        return ClickInventoryAction.performThrow(screen, itemToThrowOut)
+        return InventoryAction.Click.performThrow(screen, itemToThrowOut)
     }
 
     /**
@@ -235,7 +235,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
             event.schedule(
                 inventoryConstrains,
-                ClickInventoryAction.performSwap(screen, hotbarSwap.from, hotbarSwap.to),
+                InventoryAction.Click.performSwap(screen, hotbarSwap.from, hotbarSwap.to),
                 /**
                  * we prioritize item based on how important it is
                  * for example we should prioritize armor over apples
