@@ -46,6 +46,7 @@ import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.math.BlockPos
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
@@ -109,6 +110,24 @@ val ItemStack.foodComponent: FoodComponent?
 val ItemStack.isBundle
     get() = this.item is BundleItem
 
+val ItemStack.isSword
+    get() = this.isIn(ItemTags.SWORDS)
+
+val ItemStack.isPickaxe
+    get() = this.isIn(ItemTags.PICKAXES)
+
+/**
+ * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * with the other item stack
+ */
+fun ItemStack.isMergeable(other: ItemStack): Boolean {
+    return this.item == other.item && this.componentChanges == other.componentChanges
+}
+
+fun ItemStack.canMerge(other: ItemStack): Boolean {
+    return this.isMergeable(other) && this.count + other.count <= this.maxCount
+}
+
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val MiningToolItem.type: Int
@@ -126,8 +145,8 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
         AttributeModifiersComponent.DEFAULT
     )
     .modifiers
-    .filter { modifier -> modifier.attribute() == attribute }
-    .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
+    .filter { modifier -> modifier.attribute == attribute }
+    .firstNotNullOfOrNull { modifier -> modifier.modifier.value }
 
 val ItemStack.attackDamage: Double
     get() {

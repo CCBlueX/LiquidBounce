@@ -29,20 +29,20 @@ import java.util.*
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
  */
-abstract class ItemSlot {
-    abstract val itemStack: ItemStack
-    abstract val slotType: ItemSlotType
+sealed interface ItemSlot {
+    val itemStack: ItemStack
+    val slotType: ItemSlotType
 
     /**
      * Used for example for slot click packets
      */
-    abstract fun getIdForServer(screen: HandledScreen<*>?): Int?
+    fun getIdForServer(screen: HandledScreen<*>?): Int?
 
     fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? HandledScreen<*>)
 
-    abstract override fun hashCode(): Int
+    override fun hashCode(): Int
 
-    abstract override fun equals(other: Any?): Boolean
+    override fun equals(other: Any?): Boolean
 }
 
 /**
@@ -52,10 +52,9 @@ class VirtualItemSlot(
     override val itemStack: ItemStack,
     override val slotType: ItemSlotType,
     val id: Int
-): ItemSlot() {
-    override fun getIdForServer(screen: HandledScreen<*>?): Int? {
-        throw NotImplementedError()
-    }
+) : ItemSlot {
+    override fun getIdForServer(screen: HandledScreen<*>?): Nothing =
+        throw UnsupportedOperationException("VirtualItemSlot does not have a server id")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -70,9 +69,11 @@ class VirtualItemSlot(
         return id
     }
 
+    override fun toString(): String = "ItemSlot/Virtual(id=$id)"
+
 }
 
-class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
+class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
     private val screen: HandledScreen<*>
         get() = mc.currentScreen as HandledScreen<*>
     override val itemStack: ItemStack
@@ -84,6 +85,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
     override fun getIdForServer(screen: HandledScreen<*>?): Int = this.slotInContainer
 
     fun distance(itemSlot: ContainerItemSlot): Int {
+        // TODO: only for 9xN types
         val slotId = this.slotInContainer
         val otherId = itemSlot.slotInContainer
 
@@ -108,11 +110,13 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
     override fun hashCode(): Int {
         return Objects.hash(this.javaClass, slotInContainer)
     }
+
+    override fun toString(): String = "ItemSlot/Container(slotInContainer=$slotInContainer)"
 }
 
 private fun HandledScreen<*>.itemCount() = this.screenHandler.slots.size
 
-open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
+open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
 
     override val itemStack: ItemStack
         get() = player.inventory.getStack(this.hotbarSlot)
@@ -131,7 +135,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
     open val useHand = Hand.MAIN_HAND
 
     override fun getIdForServer(screen: HandledScreen<*>?): Int? {
-        return if (screen == null) 36 + hotbarSlot else screen.itemCount() + 27 + this.hotbarSlot
+        return if (screen == null) 36 + hotbarSlot else screen.itemCount() - 9 + this.hotbarSlot
     }
 
     override fun equals(other: Any?): Boolean {
@@ -148,12 +152,12 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
     }
 
     override fun toString(): String {
-        return "HotbarItemSlot(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
+        return "ItemSlot/Hotbar(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
     }
 
 }
 
-class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
+class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getStack(9 + this.inventorySlot)
 
@@ -161,7 +165,7 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
         get() = ItemSlotType.INVENTORY
 
     override fun getIdForServer(screen: HandledScreen<*>?): Int {
-        return if (screen == null) 9 + inventorySlot else screen.itemCount() + this.inventorySlot
+        return if (screen == null) 9 + inventorySlot else screen.itemCount() - 36 + this.inventorySlot
     }
 
     override fun equals(other: Any?): Boolean {
@@ -176,9 +180,11 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
     override fun hashCode(): Int {
         return Objects.hash(this.javaClass, inventorySlot)
     }
+
+    override fun toString(): String = "ItemSlot/Inventory(inventorySlot=$inventorySlot)"
 }
 
-class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
+class ArmorItemSlot(private val armorType: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.armor[this.armorType]
 

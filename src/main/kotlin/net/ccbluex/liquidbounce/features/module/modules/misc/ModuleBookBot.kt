@@ -1,16 +1,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.component.DataComponentTypes
@@ -100,7 +100,8 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         }
 
         if (!isCandidate(player.mainHandStack)) {
-            event.schedule(inventoryConstraints, ClickInventoryAction.performSwap(
+            event.schedule(
+                inventoryConstraints, InventoryAction.Click.performSwap(
                 from = book,
                 to = HotbarItemSlot(player.inventory.selectedSlot),
             ))

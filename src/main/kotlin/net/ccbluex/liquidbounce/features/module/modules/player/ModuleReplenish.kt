@@ -26,12 +26,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
+import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * Module Replenish
@@ -87,7 +91,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
             val currentStackNotEmpty = !itemStack.isEmpty
 
             // check if the current stack, if not empty, is allowed to be refilled
-            val unsupportedStackSize = item.maxCount <= itemThreshold
+            val unsupportedStackSize = itemStack.maxCount <= itemThreshold
             if (currentStackNotEmpty && (unsupportedStackSize || itemStack.count > itemThreshold)) {
                 trackedHotbarItems[slot.hotbarSlot] = itemStack.item
                 return@forEach
@@ -119,12 +123,10 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
             if (Features.USE_PICKUP_ALL in features && currentStackNotEmpty) {
                 event.schedule(
                     constraints,
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP),
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP_ALL),
-                    ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
+                    Click.performMergeStack(slot = slot),
                 )
             } else {
-                refillNormal(item, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
+                refillNormal(itemStack, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
             }
 
             trackedHotbarItems[slot.hotbarSlot] = item
@@ -133,22 +135,21 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
     }
 
     private fun refillNormal(
-        item: Item,
+        itemStack: ItemStack,
         count: Int,
         inventorySlots: List<InventoryItemSlot>,
         slot: HotbarItemSlot,
         event: ScheduleInventoryActionEvent
     ) {
-        var neededToRefill = item.maxCount - count
+        var neededToRefill = itemStack.maxCount - count
         inventorySlots.forEach { inventorySlot ->
             neededToRefill -= inventorySlot.itemStack.count
-            val actions = mutableListOf(
-                ClickInventoryAction.click(null, inventorySlot, 0, SlotActionType.PICKUP),
-                ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
-            )
+            val actions = ArrayList<Click>(3)
+            actions += Click.performPickup(slot = inventorySlot)
+            actions += Click.performPickup(slot = slot)
 
             if (neededToRefill < 0) {
-                actions += ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP)
+                actions += Click.performPickup(slot = slot)
             }
 
             event.schedule(constraints, actions)

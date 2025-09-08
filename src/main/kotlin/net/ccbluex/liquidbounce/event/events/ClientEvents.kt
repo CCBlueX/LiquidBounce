@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.ServerInfo
@@ -206,14 +205,14 @@ object ResourceReloadEvent : Event()
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChain> = mutableListOf()) : Event() {
+class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
 
     fun schedule(
         constrains: InventoryConstraints,
         action: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        schedule.add(InventoryActionChain(constrains, listOf(action), priority))
+        this.schedule.add(InventoryAction.Chain(constrains, listOf(action), priority))
     }
 
     fun schedule(
@@ -221,7 +220,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         vararg actions: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions.asList(), priority))
+        this.schedule.add(InventoryAction.Chain(constrains, actions.asList(), priority))
     }
 
     fun schedule(
@@ -229,7 +228,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         actions: List<InventoryAction>,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions, priority))
+        this.schedule.add(InventoryAction.Chain(constrains, actions, priority))
     }
 }
 

@@ -102,8 +102,7 @@ open class ClientModule(
      */
     private var locked: Value<Boolean>? = null
 
-    override val baseKey: String
-        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+    override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     // Tag to be displayed on the HUD
     open val tag: String?

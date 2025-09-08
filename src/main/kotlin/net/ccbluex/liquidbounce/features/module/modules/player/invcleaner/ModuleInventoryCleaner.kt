@@ -119,7 +119,6 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
             )
         }
 
-
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
         if (OnlyGaming.enabled && OnlyGaming.checkGlass && GamingCheck.OnGlass) {
@@ -153,7 +152,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
         event.schedule(
             inventoryConstraints,
-            ClickInventoryAction.performSwap(null, hotbarSwap.from, hotbarSwap.to)
+            InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
         )
 
         return true
@@ -164,15 +163,13 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
      * @return true if a merge was scheduled, false otherwise
      */
     private fun processStackMerging(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
-        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
+        val stacksToMerge = cleanupPlan.findSlotsToMerge()
         val slotToMerge = stacksToMerge.firstOrNull() ?: return false
 
         // pickup -> pickup all -> pickup to handle remaining items
         event.schedule(
             inventoryConstraints,
-            ClickInventoryAction.click(null, slotToMerge, 0, SlotActionType.PICKUP),
-            ClickInventoryAction.click(null, slotToMerge, 0, SlotActionType.PICKUP_ALL),
-            ClickInventoryAction.click(null, slotToMerge, 0, SlotActionType.PICKUP)
+            InventoryAction.Click.performMergeStack(slot = slotToMerge),
         )
 
         return true
@@ -187,22 +184,17 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
         cleanupPlan: InventoryCleanupPlan,
         currentInventorySlots: List<ItemSlot>
     ): Boolean {
-        val itemsToDispose = findItemsToThrowOut(cleanupPlan, currentInventorySlots)
+        val itemsToDispose = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(
             inventoryConstraints,
-            ClickInventoryAction.performThrow(screen = null, itemToThrow),
+            InventoryAction.Click.performThrow(screen = null, itemToThrow),
             Priority.NOT_IMPORTANT
         )
 
         return true
     }
-
-    fun findItemsToThrowOut(
-        cleanupPlan: InventoryCleanupPlan,
-        itemsInInv: List<ItemSlot>,
-    ) = itemsInInv.filter { it !in cleanupPlan.usefulItems }
 
     private class AmountConstraintProvider(
         val desiredItemsPerCategory: Map<ItemCategory, Int>,
