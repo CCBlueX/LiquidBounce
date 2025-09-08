@@ -109,6 +109,17 @@ val ItemStack.foodComponent: FoodComponent?
 val ItemStack.isBundle
     get() = this.item is BundleItem
 
+val ItemStack.isSword
+    get() = this.isIn(ItemTags.SWORDS)
+
+val ItemStack.isPickaxe
+    get() = this.isIn(ItemTags.PICKAXES)
+
+fun ItemStack.canMerge(other: ItemStack): Boolean {
+    return this.item == other.item && this.componentChanges == other.componentChanges
+        && this.count + other.count <= this.maxCount
+}
+
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val MiningToolItem.type: Int

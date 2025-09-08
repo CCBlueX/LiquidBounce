@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.canMerge
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.screen.ScreenHandlerType
@@ -146,13 +147,22 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
-        val emptySlots = mainInventory.filterTo(ArrayDeque()) { it.itemStack.isEmpty }
+
+        val usedTargets = hashSetOf<ItemSlot>()
+
+        // Find first mergeable or empty slot
+        fun possibleTarget(containerItemSlot: ContainerItemSlot): ItemSlot? {
+            val containerStack = containerItemSlot.itemStack
+            return mainInventory.firstOrNull {
+                it !in usedTargets && (it.itemStack.isEmpty || it.itemStack.canMerge(containerStack))
+            }?.also { usedTargets.add(it) }
+        }
 
         for (slot in sortedItemsToCollect) {
-            val emptySlot = emptySlots.removeFirstOrNull()
+            val moveTo = possibleTarget(slot)
 
-            if (emptySlot != null) {
-                val actions = getActionsForMove(screen, from = slot, to = emptySlot)
+            if (moveTo != null) {
+                val actions = getActionsForMove(screen, from = slot, to = moveTo)
 
                 event.schedule(
                     inventoryConstrains, actions,

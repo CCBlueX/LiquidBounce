@@ -131,7 +131,7 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultStack, ItemSlotType.ARMOR, id))
         }
 
         /**
@@ -175,37 +175,38 @@ class ItemCategorization(
      * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
      */
     @Suppress("CyclomaticComplexMethod", "LongMethod")
-    fun getItemFacets(slot: ItemSlot): Array<ItemFacet> {
+    fun getItemFacets(slot: ItemSlot): List<ItemFacet> {
         if (slot.itemStack.isNothing()) {
-            return emptyArray()
+            return emptyList()
         }
 
-        val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
+        val specificItemFacets: List<ItemFacet> = when (val item = slot.itemStack.item) {
             // Treat animal armor as a normal item
-            is AnimalArmorItem -> arrayOf(ItemFacet(slot))
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
-            is SwordItem -> arrayOf(SwordItemFacet(slot))
-            is BowItem -> arrayOf(BowItemFacet(slot))
-            is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
-            is ArrowItem -> arrayOf(ArrowItemFacet(slot))
-            is MiningToolItem -> arrayOf(MiningToolItemFacet(slot))
-            is FishingRodItem -> arrayOf(RodItemFacet(slot))
-            is ShieldItem -> arrayOf(ShieldItemFacet(slot))
+            is AnimalArmorItem -> listOf(ItemFacet(slot))
+            is ArmorItem -> listOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
+            is SwordItem -> listOf(SwordItemFacet(slot))
+            is BowItem -> listOf(BowItemFacet(slot))
+            is CrossbowItem -> listOf(CrossbowItemFacet(slot))
+            is ArrowItem -> listOf(ArrowItemFacet(slot))
+            is MiningToolItem -> listOf(MiningToolItemFacet(slot))
+            is FishingRodItem -> listOf(RodItemFacet(slot))
+            is ShieldItem -> listOf(ShieldItemFacet(slot))
             is BlockItem -> {
                 if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
                     && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
                 ) {
-                    arrayOf(BlockItemFacet(slot))
+                    listOf(BlockItemFacet(slot))
                 } else {
-                    arrayOf(ItemFacet(slot))
+                    listOf(ItemFacet(slot))
                 }
             }
-            Items.MILK_BUCKET -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
+
+            Items.MILK_BUCKET -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
             is BucketItem -> {
                 when (item.fluid) {
-                    is WaterFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
-                    is LavaFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
-                    else -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
+                    is WaterFluid -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
+                    is LavaFluid -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
+                    else -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
                 }
             }
             is PotionItem -> {
@@ -214,30 +215,32 @@ class ItemCategorization(
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                 if (areAllEffectsGood) {
-                    arrayOf(PotionItemFacet(slot))
+                    listOf(PotionItemFacet(slot))
                 } else {
-                    arrayOf(ItemFacet(slot))
+                    listOf(ItemFacet(slot))
                 }
             }
-            is EnderPearlItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
+
+            is EnderPearlItem -> listOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
             Items.GOLDEN_APPLE -> {
-                arrayOf(
+                listOf(
                     FoodItemFacet(slot),
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)),
                 )
             }
             Items.ENCHANTED_GOLDEN_APPLE -> {
-                arrayOf(
+                listOf(
                     FoodItemFacet(slot),
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
-            Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> arrayOf(ThrowableItemFacet(slot))
+
+            Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> listOf(ThrowableItemFacet(slot))
             else -> {
                 if (slot.itemStack.isFood) {
-                    arrayOf(FoodItemFacet(slot))
+                    listOf(FoodItemFacet(slot))
                 } else {
-                    arrayOf(ItemFacet(slot))
+                    listOf(ItemFacet(slot))
                 }
             }
         }

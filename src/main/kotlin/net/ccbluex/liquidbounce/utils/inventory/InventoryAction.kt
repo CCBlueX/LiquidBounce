@@ -101,6 +101,19 @@ sealed interface InventoryAction {
                 actionType = SlotActionType.PICKUP
             )
 
+            /**
+             * pickup -> pickup all -> pickup to handle remaining items
+             */
+            @JvmStatic
+            fun performMergeStack(
+                screen: HandledScreen<*>? = null,
+                slot: ItemSlot,
+            ) = listOf(
+                performPickup(screen, slot = slot),
+                performPickupAll(screen, slot = slot),
+                performPickup(screen, slot = slot),
+            )
+
         }
 
         override fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean {

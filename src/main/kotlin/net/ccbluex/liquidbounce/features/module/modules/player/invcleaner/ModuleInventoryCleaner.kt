@@ -25,11 +25,9 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * InventoryCleaner module
@@ -154,30 +152,13 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
      * @return true if a merge was scheduled, false otherwise
      */
     private fun processStackMerging(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
-        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
+        val stacksToMerge = cleanupPlan.findSlotsToMerge()
         val slotToMerge = stacksToMerge.firstOrNull() ?: return false
 
         // pickup -> pickup all -> pickup to handle remaining items
         event.schedule(
             inventoryConstraints,
-            Click(
-                null,
-                slot = slotToMerge,
-                button = 0,
-                actionType = SlotActionType.PICKUP
-            ),
-            Click(
-                null,
-                slot = slotToMerge,
-                button = 0,
-                actionType = SlotActionType.PICKUP_ALL
-            ),
-            Click(
-                null,
-                slot = slotToMerge,
-                button = 0,
-                actionType = SlotActionType.PICKUP
-            )
+            InventoryAction.Click.performMergeStack(slot = slotToMerge),
         )
 
         return true
