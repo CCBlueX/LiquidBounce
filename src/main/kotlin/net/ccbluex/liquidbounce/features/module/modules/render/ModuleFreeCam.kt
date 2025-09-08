@@ -45,6 +45,8 @@ import net.minecraft.client.option.Perspective
 import net.minecraft.client.util.InputUtil
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.lwjgl.glfw.GLFW
@@ -64,6 +66,9 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
      */
     private object CameraInteract : ToggleableConfigurable(ModuleFreeCam, "AllowCameraInteract", true) {
         val lookAt by boolean("LookAt", true)
+    }
+    private object MidClickCameraTeleport : ToggleableConfigurable(ModuleFreeCam, "MidClickCameraTeleport", true) {
+        val onlyHitBlocks by boolean("OnlyHitBlocks",true)
     }
 
     /**
@@ -96,7 +101,6 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     }
 
-    private val midClickCameraTeleport by boolean("MidClickCameraTeleport", false)
 
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
@@ -149,7 +153,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (midClickCameraTeleport &&
+        if (MidClickCameraTeleport.enabled &&
             event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             val target = getCameraLookingAt() ?: return@handler
 
@@ -236,13 +240,16 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         if (!PositionState.available) return null
 
         val cameraPosition = PositionState.interpolate(1f)
-        val target = raycast(
+        val hitResult = raycast(
             range = 200.0,
             start = cameraPosition,
             direction = mc.cameraEntity?.rotation?.directionVector ?: return null
         )
+        
+        if (MidClickCameraTeleport.onlyHitBlocks && hitResult.type != HitResult.Type.BLOCK) {
+            return null
+        }
 
-        return target.pos
+        return hitResult.pos
     }
-
 }

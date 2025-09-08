@@ -26,7 +26,7 @@ object TargetHudComponent : NativeComponent(
         arrayOf(
             GenericCustomColorMode(it, Color4b.RED.with(a = 137), Color4b.RED.with(a = 233)),
             GenericStaticColorMode(it, Color4b.RED.with(a = 150)),
-            GenericSyncColorMode(it)
+            GenericSyncColorMode(it, defaultEndAlpha = 137, defaultStartAlpha = 150)
         )
     }
     val backgroundColor by color("Background", Color4b.DARK_GRAY.withAlpha(125))

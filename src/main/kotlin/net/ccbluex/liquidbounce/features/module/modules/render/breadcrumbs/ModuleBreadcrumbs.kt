@@ -25,7 +25,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             GenericCustomColorMode(it, Color4b.CYAN.withAlpha(100), Color4b.TRANSPARENT),
             GenericStaticColorMode(it, Color4b(0, 255, 4)),
             GenericRainbowColorMode(it),
-            GenericSyncColorMode(it)
+            GenericSyncColorMode(it, defaultStartAlpha = 150, defaultEndAlpha = 50)
         )
     }
 

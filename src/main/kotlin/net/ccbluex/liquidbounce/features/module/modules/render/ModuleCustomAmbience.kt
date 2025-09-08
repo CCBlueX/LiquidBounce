@@ -43,15 +43,15 @@ import org.lwjgl.opengl.GL13
  */
 object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = arrayOf("FogChanger")) {
 
-    val weather = enumChoice("Weather", WeatherType.SNOWY)
-    private val time = enumChoice("Time", TimeType.NIGHT)
+    val weather = enumChoice("Weather", WeatherType.SUNNY)
+    private val time = enumChoice("Time", TimeType.MID_NIGHT)
 
-    object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", true) {
+    object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", false) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
         val layers by int("Layers", 3, 1..14)
     }
 
-    object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
+    object FogConfigurable : ToggleableConfigurable(this, "Fog", false) {
 
         private val color by color("Color", Color4b(47, 128, 255, 201))
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))

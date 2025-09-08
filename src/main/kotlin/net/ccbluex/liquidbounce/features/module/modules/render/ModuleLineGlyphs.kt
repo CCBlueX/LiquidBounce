@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.GenericSyncColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Color4b.Companion.hslToRgb
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.BufferRenderer
@@ -28,11 +27,8 @@ import java.util.Random
 import kotlin.math.*
 
 object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
-
-
     private val slowSpeed by boolean("Slow Speed", false)
     private val glyphCount by int("Glyphs Count", 70, 10..200)
-    private val distance by int("Distance",1,1..20)
     private val colorMode = choices(this, "ColorMode") {
         arrayOf(
             GenericSyncColorMode(it),
@@ -85,7 +81,7 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
         val dy = furthest.y - camY
         val dz = furthest.z - camZ
         val dist = sqrt(dx * dx + dy * dy + dz * dz)
-        val factor = 1.0 - dist / distance
+        val factor = 1.0 - dist
         val clamped = max(min(factor.toFloat(), 1f), 0f)
         return 0.0001f + 3.0f * clamped
     }
@@ -206,18 +202,12 @@ object ModuleLineGlyphs : ClientModule("LineGlyphs", Category.RENDER) {
         val camZ = camera.pos.z
         val eps = 0.001f
 
-        fun getRenderColor(idx: Int, alpha: Float) = when (colorMode.activeChoice) {
-            is GenericRainbowColorMode -> {
-                val time = (System.currentTimeMillis() % 4000) / 4000f
-                val hue = (time + idx / lineVectors.size.toFloat()) % 1f
-                hslToRgb(hue, 0.95f, 0.65f, (alpha * 255).toInt())
-            }
-            else -> {
-                val (color1, color2) = colorMode.activeChoice.getColors(mc.player)
-                val t = idx / lineVectors.size.toFloat()
-                color1.blend(color2, t).withAlpha((alpha * 255).toInt())
-            }
+        fun getRenderColor(idx: Int, alpha: Float): Color4b {
+            val mode = colorMode.activeChoice
+            val t = (idx / lineVectors.size.toFloat() * 360).toInt()
+            return mode.getColor(mc.player, t).withAlpha((alpha * 255).toInt())
         }
+
 
         fun drawVertex(x: Double, y: Double, z: Double, color: Color4b) {
             buffer.vertex(matrix,

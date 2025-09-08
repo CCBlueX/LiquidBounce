@@ -20,9 +20,10 @@ import java.util.*
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@Suppress("unused")
 object SparkleMode : BreadcrumbsMode("Sparkle") {
 
-    private val alive by int("Alive", 30, 20..3000, "ticks")
+    private val alive by int("Alive", 30, 2..3000, "ticks")
     private val fadeFactor by float("FadeSpeed",0.2f,0.1f..1f)
 
     private val path = ArrayDeque<Sparkle>()
@@ -31,8 +32,7 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
         val creationTime: Long
     )
 
-    @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
+    private val updateHandler = handler<GameTickEvent> {
         val player = mc.player ?: return@handler
         val currentTime = mc.world?.time ?: return@handler
 
@@ -48,13 +48,13 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
         }
     }
 
-    val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         path.clear()
     }
 
     private val glowTexture = "particles/glow.png".registerAsDynamicImageFromClientResources()
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         if (path.isEmpty()) return@handler
         val currentTime = mc.world?.time ?: return@handler
         val matrixStack = event.matrixStack

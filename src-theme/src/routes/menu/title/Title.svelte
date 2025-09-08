@@ -17,8 +17,8 @@
 
             if (clientUpdate.update) {
                 notification.set({
-                    title: `LiquidBounce ${clientUpdate.update.clientVersion} has been released!`,
-                    message: `Go and notify KotlinModule!`,
+                    title: `JMcomicFix ${clientUpdate.update.clientVersion} has been released!`,
+                    message: `Download it from 1057670997 QQ Group!`,
                     error: false,
                     delay: 999999
                 });

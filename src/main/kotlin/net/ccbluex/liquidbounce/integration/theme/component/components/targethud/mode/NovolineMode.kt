@@ -238,11 +238,7 @@ object NovolineMode : TargetHudMode("Novoline") {
         val currentHealth = (easingHealth / maxHealth).coerceIn(0f, 1f) * barW
         val previousHealth = (previousEasingHealth / maxHealth).coerceIn(0f, 1f) * barW
 
-        val (start, end) = when (val mode = TargetHudComponent.colorModes.activeChoice) {
-            is GenericStaticColorMode,
-            is GenericRainbowColorMode -> mode.getColors(mc.player).first.let { it to it }
-            else -> mode.getColors(mc.player)
-        }
+        val (start, end) = TargetHudComponent.colorModes.activeChoice.getColors(mc.player)
 
         ctx.fill(
             barX.toInt(), barY.toInt(), (barX + barW).toInt(), (barY + 8f).toInt(),

@@ -23,9 +23,10 @@ import org.joml.Vector4f
 import java.util.ArrayDeque
 import java.util.IdentityHashMap
 
+@Suppress("unused")
 object TrailMode : BreadcrumbsMode("Trail") {
     private val height by float("Height", 0.5f, 0f..2f)
-    private val alive by int("Alive", 900, 10..10000, "ms")
+    private val alive by int("Alive", 500, 100..10000, "ms")
     private val fade by boolean("Fade", true)
 
     private val trails = IdentityHashMap<Entity, Trail>()
@@ -44,8 +45,7 @@ object TrailMode : BreadcrumbsMode("Trail") {
         trails.clear()
     }
 
-    @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
+    private val updateHandler = handler<GameTickEvent> {
         val time = System.currentTimeMillis()
         updateEntityTrail(time, player)
             trails.keys.retainAll { it === player || !it.isAlive }
@@ -64,11 +64,11 @@ object TrailMode : BreadcrumbsMode("Trail") {
             entity.x, entity.y, entity.z, time))
     }
 
-    val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         clear()
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
         renderEnvironmentForWorld(matrixStack) {
             val (colorStart, colorEnd) = colorMode.activeChoice.getColors(player)

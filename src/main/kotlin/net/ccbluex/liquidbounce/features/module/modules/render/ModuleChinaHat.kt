@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Color4b.Companion.hslToRgb
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -82,6 +81,8 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER, aliases = arra
                     val currentTime = System.currentTimeMillis()
                     val animationDuration = (4000f / gradientSpeed).coerceAtLeast(1f)
 
+                    val mode = colorMode.activeChoice
+
                     for (j in 0 until sides) {
                         val jNext = (j + 1) % sides
                         val theta = 2.0 * Math.PI * j / sides
@@ -95,46 +96,25 @@ object ModuleChinaHat : ClientModule("ChinaHat", Category.RENDER, aliases = arra
                         val y1 = 0f
                         val y2 = height
 
-                        val baseProgress = (System.currentTimeMillis() % animationDuration.toLong()) / animationDuration
+                        val baseProgress = (currentTime % animationDuration.toLong()) / animationDuration
 
                         val progressOuter1 = (baseProgress + j / sides.toFloat()) % 1f
                         val progressOuter2 = (baseProgress + jNext / sides.toFloat()) % 1f
                         val progressTop = (baseProgress + (j + 0.5f) / sides.toFloat()) % 1f
 
-                        val colorOuter1 = when (val mode = colorMode.activeChoice) {
-                            is GenericRainbowColorMode -> hslToRgb(progressOuter1, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
-                                c2, progressOuter1).withAlpha(alpha) }
-                        }
+                        val colorOuter1 = mode.getColor(mc.player, (progressOuter1 * 360).toInt()).withAlpha(alpha)
+                        val colorOuter2 = mode.getColor(mc.player, (progressOuter2 * 360).toInt()).withAlpha(alpha)
+                        val colorTop = mode.getColor(mc.player, (progressTop * 360).toInt()).withAlpha(alpha)
 
-                        val colorOuter2 = when (val mode = colorMode.activeChoice) {
-                            is GenericRainbowColorMode -> hslToRgb(progressOuter2, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
-                                c2, progressOuter2).withAlpha(alpha) }
-                        }
-
-                        val colorTop = when (val mode = colorMode.activeChoice) {
-                            is GenericRainbowColorMode -> hslToRgb(progressTop, 0.95f, 0.65f, alpha)
-                            else -> mode.getColors(mc.player).let { (c1, c2) -> c1.blend(
-                                c2, progressTop).withAlpha(alpha) }
-                        }
-
-                        buffer.vertex(matrix, x1, y1, z1)
-                            .color(colorOuter1.r / 255f,
-                                colorOuter1.g / 255f,
-                                colorOuter1.b / 255f,
-                                colorOuter1.a / 255f)
-                        buffer.vertex(matrix, 0f, y2, 0f)
-                            .color(colorTop.r / 255f,
-                                colorTop.g / 255f,
-                                colorTop.b / 255f,
-                                colorTop.a / 255f)
-                        buffer.vertex(matrix, x1n, y1, z1n)
-                            .color(colorOuter2.r / 255f,
-                                colorOuter2.g / 255f,
-                                colorOuter2.b / 255f,
-                                colorOuter2.a / 255f)
-
+                        buffer.vertex(matrix, x1, y1, z1).color(
+                            colorOuter1.r / 255f, colorOuter1.g / 255f,
+                            colorOuter1.b / 255f, colorOuter1.a / 255f)
+                        buffer.vertex(matrix, 0f, y2, 0f).color(
+                            colorTop.r / 255f, colorTop.g / 255f,
+                            colorTop.b / 255f, colorTop.a / 255f)
+                        buffer.vertex(matrix, x1n, y1, z1n).color(
+                            colorOuter2.r / 255f, colorOuter2.g / 255f,
+                            colorOuter2.b / 255f, colorOuter2.a / 255f)
                     }
 
                     BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return@forEach)

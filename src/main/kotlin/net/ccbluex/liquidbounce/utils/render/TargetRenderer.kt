@@ -227,8 +227,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             val distance = 10.0 + (length * 0.2)
             val alphaFactorPerParticle = 15
 
-            val time = (System.currentTimeMillis() % 4000) / 4000f
-
             for (i in 0..<length) {
                 val angle: Double = 0.15f * (System.currentTimeMillis() - lastTime - (i * distance)) / (30)
                 val sin = sin(angle) * radius
@@ -252,17 +250,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                         ghostAlpha
                     )
 
-                val renderColor = when (colorMode.activeChoice) {
-                    is GenericRainbowColorMode -> {
-                        val hue = (time + i / length.toFloat()) % 1f
-                        hslToRgb(hue, 0.95f, 0.65f, alpha)
-                    }
-                    else -> {
-                        val (color1, color2) = colorMode.activeChoice.getColors(mc.player)
-                        val t = i / length.toFloat()
-                        color1.blend(color2, t).withAlpha(alpha)
-                    }
-                }
+                val (startColor, endColor) = colorMode.activeChoice.getColors(mc.player)
+                val t = i / length.toFloat()
+                val renderColor = startColor.blend(endColor, t).withAlpha(alpha)
 
 
                 drawCustomMesh(
@@ -431,17 +421,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         }
 
         private fun WorldRenderEnvironment.drawGradientParticle(currentSize: Float, alpha: Int) {
-            val (color1, color2) = when (val mode = colorMode.activeChoice) {
-                is GenericRainbowColorMode -> {
-                    val timeFactor = (System.currentTimeMillis() % 4000) / 4000f
-                    hslToRgb(timeFactor, 0.95f, 0.65f, alpha) to
-                        hslToRgb(timeFactor + 0.25f, 0.95f, 0.65f, alpha)
-                }
-                else -> {
-                    val (c1, c2) = mode.getColors(mc.player)
-                    c1.withAlpha(alpha) to c2.withAlpha(alpha)
-                }
-            }
+            val (color1, color2) = colorMode.activeChoice.getColors(mc.player)
+                .let { it.first.withAlpha(alpha) to it.second.withAlpha(alpha) }
+
             drawGradientQuad(currentSize, color1, color2)
         }
 
@@ -522,39 +504,34 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             with(env) {
                 withPosition(this.relativeToCamera(pos)) {
                     withDisabledCull {
-                        when (colorMode.activeChoice) {
-                            is GenericRainbowColorMode -> {
-                                // HSL rotation gradient for rainbow mode
-                                val time = (System.currentTimeMillis() % 4000) / 4000f
-                                drawRainbowCircle(
-                                    radius,
-                                    thickness,
-                                    time,
-                                    rotationSpeed,
-                                    (alpha * alphaFactor).toInt(),
-                                    (glowAlpha * alphaFactor).toInt(),
-                                    Vec3(0.0, glowHeight, 0.0)
-                                )
-                            }
+                        val mode = colorMode.activeChoice
+                        val alphaVal = (alpha * alphaFactor).toInt()
+                        val glowAlphaVal = (glowAlpha * alphaFactor).toInt()
 
-                            else -> {
-                                // Standard two-color gradient for other modes
-                                val (color, glowColor) = colorMode.activeChoice.getColors(mc.player).let {
-                                    it.first.withAlpha((alpha * alphaFactor).toInt()) to
-                                        it.second.withAlpha((glowAlpha * alphaFactor).toInt())
-                                }
-                                drawGradientCircle(
-                                    radius,
-                                    radius - thickness,
-                                    color,
-                                    glowColor,
-                                    Vec3(0.0, glowHeight, 0.0)
-                                )
-                            }
+                        if (mode is GenericRainbowColorMode) {
+                            val time = (System.currentTimeMillis() % 4000) / 4000f
+                            drawRainbowCircle(radius, thickness,
+                                time, rotationSpeed,
+                                alphaVal,
+                                glowAlphaVal,
+                                Vec3(0.0, glowHeight, 0.0))
+                        } else {
+                            val colors = mode.getColors(mc.player)
+                            drawRainbowCircle(
+                                radius,
+                                thickness,
+                                0f,
+                                0f,
+                                alphaVal,
+                                glowAlphaVal,
+                                Vec3(0.0, glowHeight, 0.0),
+                                colors
+                            )
                         }
                     }
                 }
             }
+
         }
         private fun RenderEnvironment.drawRainbowCircle(
             outerRadius: Float,
@@ -563,7 +540,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             rotationSpeed: Float,
             alpha: Int,
             glowAlpha: Int,
-            innerOffset: Vec3 = Vec3(0f, 0f, 0f)
+            innerOffset: Vec3 = Vec3(0f, 0f, 0f),
+            customColors: Pair<Color4b, Color4b>? = null  // 新增参数
         ) {
             val innerRadius = outerRadius - thickness
             val matrix = matrixStack.peek().positionMatrix
@@ -575,44 +553,35 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             )
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
 
-
-            var firstOuterX = 0f; var firstOuterZ = 0f; var firstOuterColor = 0
-            var firstInnerX = 0f; var firstInnerY = 0f; var firstInnerZ = 0f; var firstInnerColor = 0
-
             val segments = 64
             val fullCircle = Math.PI.toFloat() * 2
 
             with(buffer) {
                 for (i in 0..segments) {
-
                     val angle = if (i == segments) 0f else i.toFloat() / segments * fullCircle
-                    val hue = ((angle / fullCircle) + (System.currentTimeMillis() * 0.001f * rotationSpeed) % 1f + timeOffset) % 1f
 
-                    val outerColorARGB = hslToRgb(hue, 0.95f, 0.65f, alpha).toARGB()
-                    val innerColorARGB = hslToRgb(hue - 0.1f, 0.95f, 0.65f, glowAlpha).toARGB()
+                    val (outerColorARGB, innerColorARGB) = if (customColors != null) {
+                        val t = i / segments.toFloat()
+                        val outer = customColors.first.blend(customColors.second, t).withAlpha(alpha).toARGB()
+                        val inner = customColors.first.blend(customColors.second, t).withAlpha(glowAlpha).toARGB()
+                        outer to inner
+                    } else {
+                        val hue = ((angle / fullCircle) + (System.currentTimeMillis() * 0.001f * rotationSpeed) % 1f + timeOffset) % 1f
+                        hslToRgb(hue, 0.95f, 0.65f, alpha).toARGB() to
+                            hslToRgb(hue - 0.1f, 0.95f, 0.65f, glowAlpha).toARGB()
+                    }
 
                     val outerX = cos(angle) * outerRadius
                     val outerZ = sin(angle) * outerRadius
                     val innerX = cos(angle) * innerRadius + innerOffset.x
                     val innerZ = sin(angle) * innerRadius + innerOffset.z
 
-                    if (i == 0) {
-                        firstOuterX = outerX; firstOuterZ = outerZ; firstOuterColor = outerColorARGB
-                        firstInnerX = innerX; firstInnerY = innerOffset.y; firstInnerZ = innerZ; firstInnerColor = innerColorARGB
-                    }
-
-
                     vertex(matrix, outerX, 0f, outerZ).color(outerColorARGB)
-
                     vertex(matrix, innerX, innerOffset.y, innerZ).color(innerColorARGB)
                 }
-
-
-                vertex(matrix, firstOuterX, 0f, firstOuterZ).color(firstOuterColor)
-                vertex(matrix, firstInnerX, firstInnerY, firstInnerZ).color(firstInnerColor)
-
-                BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
             }
+
+            BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
         }
     }
 

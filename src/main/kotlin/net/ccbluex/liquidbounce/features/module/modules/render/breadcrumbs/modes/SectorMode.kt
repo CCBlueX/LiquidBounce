@@ -22,14 +22,15 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@Suppress("unused")
 object SectorMode : BreadcrumbsMode("Sector") {
 
-    private val alive by int("Alive", 300, 20..3000, "ticks")
+    private val alive by int("Alive", 7, 2..100, "ticks")
     private val path = ArrayDeque<TrailPoint>()
     private data class TrailPoint(val pos: Vec3d, val creationTime: Long)
 
-    @Suppress("unused")
-    val updateHandler = handler<GameTickEvent> {
+
+    private val updateHandler = handler<GameTickEvent> {
         val player = mc.player ?: return@handler
         val currentTime = mc.world?.time ?: return@handler
 
@@ -44,11 +45,11 @@ object SectorMode : BreadcrumbsMode("Sector") {
         }
     }
 
-    val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         path.clear()
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         if (path.isEmpty()) return@handler
         val currentTime = mc.world?.time ?: return@handler
         val matrixStack = event.matrixStack
@@ -79,10 +80,9 @@ object SectorMode : BreadcrumbsMode("Sector") {
                 val y = pos.y - camera.pos.y
                 val z = pos.z - camera.pos.z
                 val distance = player.pos.squaredDistanceTo(pos.x, pos.y - 1.0, pos.z).let { sqrt(it) }
-                val quality = (distance * 4 + 10).toInt().coerceAtMost(350)
                 if (index % 10 != 0 && distance > 25) return@forEach
                 if (index % 3 == 0 && distance > 15) return@forEach
-
+                val quality = (distance * 4 + 10).toInt().coerceAtMost(350)
                 val progress = 1f - ((currentTime - point.creationTime).toFloat() / alive.toFloat()).coerceIn(0f, 1f)
                 matrixStack.push()
                 matrixStack.translate(x, y, z)
