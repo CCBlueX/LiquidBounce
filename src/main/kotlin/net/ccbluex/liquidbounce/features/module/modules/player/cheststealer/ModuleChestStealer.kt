@@ -56,13 +56,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
 
-    private val onFull = OnFull.THROW
-//    private val throwAction by enumChoice("ThrowAction", ThrowAction.THROW)
+    private val onFull by enumChoice("OnFull", OnFull.THROW)
 
     private enum class OnFull(override val choiceName: String) : NamedChoice {
-        NONE("NONE"),
+        NONE("None"),
         THROW("Throw"),
-        PUT_BACK("PutBack"),
+//        PUT_BACK("PutBack"), TODO: Fix this
     }
 
     private object CheckScreenHandlerType : ToggleableConfigurable(this, "CheckScreenHandlerType", enabled = true) {
@@ -150,11 +149,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
 
-        val usedTakeTargets = hashSetOf<ItemSlot>()
-        val usedThrowTargets = hashSetOf<ItemSlot>()
+        val targetBlacklist = hashSetOf<ItemSlot>()
 
         for (slot in sortedItemsToCollect) {
-            val moveActions = mainInventory.findPossiblePickActions(screen, slot, usedTakeTargets)
+            val moveActions = mainInventory.findPossiblePickActions(screen, slot, targetBlacklist)
 
             if (moveActions != null) {
                 event.schedule(
@@ -169,7 +167,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                 // Throw useless items
                 event.schedule(
                     inventoryConstrains,
-                    throwItem(cleanupPlan, screen, usedThrowTargets) ?: break
+                    throwItem(cleanupPlan, screen, targetBlacklist) ?: break
                 )
             }
         }
@@ -201,21 +199,22 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun Iterable<ItemSlot>.findPossiblePickActions(
         screen: HandledScreen<*>,
         from: ItemSlot,
-        usedTargets: MutableSet<ItemSlot>? = null,
+        targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
         val fromStack = from.itemStack
-        val remaining = mergeableCountFor(fromStack, blacklist = usedTargets)
+        val remaining = mergeableCountFor(fromStack, blacklist = targetBlacklist)
 
         // Impossible to pick any item into inventory
         if (remaining == 0) return null
 
+        targetBlacklist?.add(from)
         return when (itemMoveMode) {
             ItemMoveMode.QUICK_MOVE -> listOf(InventoryAction.Click.performQuickMove(screen, from))
 
             ItemMoveMode.DRAG_AND_DROP -> {
                 // Never empty
                 val targets = filterTo(ArrayDeque()) {
-                    (usedTargets == null || it !in usedTargets) &&
+                    (targetBlacklist == null || it !in targetBlacklist) &&
                         (it.itemStack.isEmpty || it.itemStack.isMergeable(fromStack))
                 }
 
@@ -229,6 +228,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                     val possibleSinglePut = targets.firstOrNull { mergedRemaining(it.itemStack) >= 0 }
                     if (possibleSinglePut != null) {
                         this += InventoryAction.Click.performPickup(screen, possibleSinglePut)
+                        targetBlacklist?.add(possibleSinglePut)
                     } else {
                         // Now all `mergedRemaining` result of [targets] are negative
                         // Minimize click count
@@ -238,6 +238,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                             val target = targets.removeFirstOrNull() ?: break
                             count += mergedRemaining(target.itemStack)
                             this += InventoryAction.Click.performPickup(screen, target)
+                            targetBlacklist?.add(target)
                         }
                     }
 
@@ -256,7 +257,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
         screen: HandledScreen<*>,
-        putBackUsedSlots: MutableSet<ItemSlot>,
+        targetBlacklist: MutableSet<ItemSlot>,
     ): List<InventoryAction>? {
         val itemsInInv = findNonEmptySlotsInInventory()
         val itemToThrowOut = cleanupPlan.findItemsToThrowOut(itemsInInv)
@@ -264,9 +265,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
 
         return when (onFull) {
             OnFull.NONE -> null
-            OnFull.PUT_BACK -> screen.getSlotsInContainer()
-                .findPossiblePickActions(screen, itemToThrowOut, putBackUsedSlots)
-            OnFull.THROW -> listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
+//            OnFull.PUT_BACK -> screen.getSlotsInContainer()
+//                .findPossiblePickActions(screen, itemToThrowOut, targetBlacklist)
+            OnFull.THROW -> {
+                targetBlacklist.add(itemToThrowOut)
+                listOf(InventoryAction.Click.performThrow(screen, itemToThrowOut))
+            }
         }
     }
 
