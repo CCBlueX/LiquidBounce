@@ -165,7 +165,7 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
         get() = ItemSlotType.INVENTORY
 
     override fun getIdForServer(screen: HandledScreen<*>?): Int {
-        return if (screen == null) 9 + inventorySlot else screen.itemCount() + this.inventorySlot
+        return if (screen == null) 9 + inventorySlot else screen.itemCount() - 36 + this.inventorySlot
     }
 
     override fun equals(other: Any?): Boolean {
