@@ -29,8 +29,8 @@ import net.minecraft.util.math.MathHelper
 
 fun ClientPlayerEntity.setRotation(rotation: Rotation) {
     rotation.normalize().let { normalizedRotation ->
-        prevPitch = pitch
-        prevYaw = yaw
+        lastPitch = pitch
+        lastYaw = yaw
         renderYaw = yaw
         lastRenderYaw = yaw
 

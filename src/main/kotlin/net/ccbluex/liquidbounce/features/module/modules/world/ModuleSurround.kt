@@ -248,7 +248,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val dx = abs(player.x - (centerPos?.x ?: 0.0))
         val dz = abs(player.z - (centerPos?.y ?: 0.0))
         val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
-        val speed = player.pos.subtract(player.prevX, player.prevY, player.prevZ).lengthSquared() * 20.0
+        val speed = player.pos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
         val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0
         if (yChange || xzChange || highSpeed) {
             enabled = false

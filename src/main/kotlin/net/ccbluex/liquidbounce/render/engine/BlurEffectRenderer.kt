@@ -162,7 +162,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
 
         BlurShader.blit()
 
-        RenderSystem.enableBlend()
+        GlStateManager._enableBlend()
         RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
 
         this.overlayFramebuffer.drawInternal(mc.window.framebufferWidth, mc.window.framebufferHeight)

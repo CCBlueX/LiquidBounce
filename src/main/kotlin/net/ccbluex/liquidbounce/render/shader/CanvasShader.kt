@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.GlUniform
 import net.minecraft.client.gl.GlUsage
 import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.GL30
 

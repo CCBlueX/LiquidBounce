@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTr
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -88,7 +88,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
             target.getDimensions(EntityPose.STANDING),
-            target.pos.subtract(target.prevPos),
+            target.pos.subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
 

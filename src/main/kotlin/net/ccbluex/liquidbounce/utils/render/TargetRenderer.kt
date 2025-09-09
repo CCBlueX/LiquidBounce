@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gl.ShaderProgramKeys
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -95,15 +94,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
-            RenderSystem.depthMask(false)
-            RenderSystem.disableCull()
+            GlStateManager._depthMask(false)
+            GlStateManager._disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.blendFuncSeparate(
-                GlStateManager.SrcFactor.SRC_ALPHA,
-                GlStateManager.DstFactor.ONE,
-                GlStateManager.SrcFactor.ZERO,
-                GlStateManager.DstFactor.ONE
-            )
+            RenderSystem.defaultBlendFunc()
 
             with(mc.gameRenderer.camera.pos) {
                 env.matrixStack.translate(-this.x, -this.y, -this.z)
@@ -139,10 +133,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 )
             }
 
-            RenderSystem.depthMask(true)
+            GlStateManager._depthMask(true)
             RenderSystem.defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
-            RenderSystem.enableCull()
+            GlStateManager._enableCull()
             env.matrixStack.pop()
         }
 

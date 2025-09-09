@@ -163,7 +163,7 @@ class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
 
 data class SimulatedPlayerSnapshot(
     val pos: Vec3d,
-    val fallDistance: Float,
+    val fallDistance: Double,
     val velocity: Vec3d,
     val onGround: Boolean,
     val clipLedged: Boolean

@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -28,6 +31,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.RENDER_THREAD_TESSELATOR
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -37,7 +41,6 @@ import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.Camera
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -89,13 +92,13 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         }
 
         if (height > 0) {
-            RenderSystem.disableCull()
+            GlStateManager._disableCull()
         }
 
         val matrix = matrixStack.peek().positionMatrix
 
         @Suppress("SpellCheckingInspection")
-        val tessellator = RenderSystem.renderThreadTesselator()
+        val tessellator = RENDER_THREAD_TESSELATOR
         val camera = mc.entityRenderDispatcher.camera ?: return
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
@@ -113,7 +116,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
 
         if (height > 0) {
-            RenderSystem.enableCull()
+            GlStateManager._enableCull()
         }
     }
 

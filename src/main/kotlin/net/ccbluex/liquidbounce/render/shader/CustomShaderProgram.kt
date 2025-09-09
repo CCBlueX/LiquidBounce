@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.minecraft.client.gl.PostEffectPipeline
 import net.minecraft.client.gl.ShaderProgram
-import net.minecraft.client.gl.ShaderProgramDefinition
 import net.minecraft.client.render.RenderPhase
 
 class CustomShaderProgram(
     val shader: Shader,
-    uniforms: MutableList<ShaderProgramDefinition.Uniform> = mutableListOf(),
-    samplers: MutableList<ShaderProgramDefinition.Sampler> = mutableListOf()
+    uniforms: MutableList<PostEffectPipeline.Uniform> = mutableListOf(),
+    samplers: MutableList<PostEffectPipeline.Input> = mutableListOf()
 ) : ShaderProgram(shader.program) {
     init {
         this.set(uniforms, samplers)
@@ -35,8 +35,8 @@ class CustomShaderProgram(
 
 class CustomShaderProgramPhase(
     val shader: Shader,
-    uniforms: MutableList<ShaderProgramDefinition.Uniform> = mutableListOf(),
-    samplers: MutableList<ShaderProgramDefinition.Sampler> = mutableListOf()
+    uniforms: MutableList<PostEffectPipeline.Uniform> = mutableListOf(),
+    samplers: MutableList<PostEffectPipeline.Input> = mutableListOf()
 ) : RenderPhase.ShaderProgram() {
 
     private val shaderProgram = CustomShaderProgram(shader, uniforms, samplers)

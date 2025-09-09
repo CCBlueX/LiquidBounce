@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
@@ -61,14 +62,14 @@ class Nametag private constructor(
                 return emptyList()
             }
 
-            val itemIterator = entity.handItems.iterator()
-
-            val firstHandItem = itemIterator.next()
-            val secondHandItem = itemIterator.next()
-
-            val armorItems = entity.armorItems.reversed()
-
-            return listOf(firstHandItem) + armorItems + secondHandItem
+            return listOf(
+                entity.getEquippedStack(EquipmentSlot.MAINHAND),
+                entity.getEquippedStack(EquipmentSlot.HEAD),
+                entity.getEquippedStack(EquipmentSlot.CHEST),
+                entity.getEquippedStack(EquipmentSlot.LEGS),
+                entity.getEquippedStack(EquipmentSlot.FEET),
+                entity.getEquippedStack(EquipmentSlot.OFFHAND),
+            )
         }
 
     }

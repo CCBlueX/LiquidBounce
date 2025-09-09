@@ -124,7 +124,7 @@ class SimulatedPlayer(
                 player,
                 input,
                 player.pos,
-                velocity = player.pos.subtract(player.prevPos),
+                velocity = player.pos.subtract(player.lastPos),
                 player.boundingBox,
                 player.yaw,
                 player.pitch,
@@ -950,7 +950,7 @@ class SimulatedPlayer(
              * Guesses the current input of a server player based on player position and velocity
              */
             fun guessInput(entity: PlayerEntity): SimulatedPlayerInput {
-                val velocity = entity.pos.subtract(entity.prevPos)
+                val velocity = entity.pos.subtract(entity.lastPos)
 
                 val horizontalVelocity = velocity.horizontalLengthSquared()
 

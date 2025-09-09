@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.*
@@ -131,7 +132,8 @@ class CefBrowser(
 
     init {
         mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            override fun getGlId() = mcefBrowser.renderer.textureID
+            override fun getGlTexture(): GpuTexture = TODO()
+//            override fun getGlId() = mcefBrowser.renderer.textureID FIXME: ID int -> GpuTexture
         })
     }
 

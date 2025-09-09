@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -48,11 +49,14 @@ import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity
 import net.minecraft.entity.vehicle.TntMinecartEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.item.ShieldItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
+import net.minecraft.registry.tag.DamageTypeTags
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.util.Hand
 import net.minecraft.util.PlayerInput
@@ -76,7 +80,7 @@ val Entity.isInsideWaterOrBubbleColumn: Boolean
 inline var Input.movementForward: Float
     get() = movementInput.y
     set(value) {
-        movementInput.y = value // TODO: it's not joml vec, chn
+        movementInput.y = value // TODO: it's not joml vec, setter should be changed
     }
 
 inline var Input.movementSideways: Float
@@ -95,6 +99,35 @@ val PlayerEntity.armorItems: Iterable<ItemStack>
         getEquippedStack(EquipmentSlot.CHEST),
         getEquippedStack(EquipmentSlot.HEAD),
     )
+
+fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
+    val entity = source.source
+    var bl = false
+    if (entity is PersistentProjectileEntity) {
+        if (entity.pierceLevel > 0.toByte()) {
+            bl = true
+        }
+    }
+
+    val itemStack = blockingItem
+    if (!source.isIn(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
+        val vec3d = source.position
+        if (vec3d != null) {
+            val vec3d2 = getRotationVector(0f, headYaw)
+            val vec3d3 = vec3d.relativize(pos).copy(y = 0.0).normalize()
+            return vec3d3.dotProduct(vec3d2) < 0.0
+        }
+    }
+
+    return false
+}
+
+// TODO: inline them after successfully launched
+inline val Entity.prevX get() = lastX
+inline val Entity.prevY get() = lastY
+inline val Entity.prevZ get() = lastZ
+inline val Entity.prevYaw get() = lastYaw
+inline val Entity.prevPitch get() = lastPitch
 
 // Copied from 1.21.4 END
 
@@ -281,7 +314,7 @@ fun Vec3d.withStrafe(
     return Vec3d(x, y, z)
 }
 
-val Entity.prevPos: Vec3d
+val Entity.lastPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
 
 val Entity.rotation: Rotation
@@ -504,6 +537,7 @@ fun LivingEntity.getExposureToExplosion(
     val shapeContext = entityBoundingBox1?.let {
         EntityShapeContext(
             isDescending,
+            false, // TODO: is this correct?
             entityBoundingBox1.minY,
             mainHandStack,
             ::canWalkOnFluid,

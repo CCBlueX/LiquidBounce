@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.client.gl.GlUsage
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.GL13
 import java.io.Closeable
@@ -82,7 +82,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
         val active = GlStateManager._getActiveTexture()
 
         GlStateManager._bindTexture(0)
-        RenderSystem.disableDepthTest()
+        GlStateManager._disableDepthTest()
         enableBlend()
 
         buffer.bind()
@@ -106,7 +106,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
         VertexBuffer.unbind()
 
         endBlend()
-        RenderSystem.enableDepthTest()
+        GlStateManager._enableDepthTest()
         GlStateManager._activeTexture(active)
     }
 

@@ -87,7 +87,7 @@ class StaticGlyphPage(
                 .toSet()
 
             val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(nativeImage)
+            val texture = NativeImageBackedTexture(null, nativeImage)
 
             texture.bindTexture()
             texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true)

@@ -24,9 +24,9 @@ mutable field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastBaseY D
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastZ D
+accessible field net/minecraft/client/network/ClientPlayerEntity lastXClient D # 1.21.4 laseX
+accessible field net/minecraft/client/network/ClientPlayerEntity lastYClient D # 1.21.4 laseBaseY
+accessible field net/minecraft/client/network/ClientPlayerEntity lastZClient D # 1.21.4 laseZ
 #accessible field net/minecraft/client/network/ClientPlayerEntity lastYaw F
 #accessible field net/minecraft/client/network/ClientPlayerEntity lastPitch F
 #accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
@@ -34,7 +34,7 @@ accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chat
 #accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
 #accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 #accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
-#accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
+accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
 #accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
 #accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
 #accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I

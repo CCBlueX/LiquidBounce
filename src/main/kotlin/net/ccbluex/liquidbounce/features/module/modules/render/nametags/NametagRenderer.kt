@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import org.lwjgl.opengl.GL11
@@ -144,8 +144,8 @@ class NametagRenderer {
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT)
         GL11.glEnable(GL11.GL_DEPTH_TEST)
 
-        RenderSystem.enableBlend()
-        RenderSystem.blendFuncSeparate(
+        GlStateManager._enableBlend()
+        GlStateManager._blendFuncSeparate(
             GL11.GL_SRC_ALPHA,
             GL11.GL_ONE_MINUS_SRC_ALPHA,
             GL11.GL_ONE,

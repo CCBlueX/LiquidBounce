@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Vec3d
@@ -125,8 +125,8 @@ class MinaraiAngleSmooth(
             targetVector = targetRotation.directionVector,
             velocityDelta = velocityDelta.toVec2f(),
 
-            playerDiff = player.pos.subtract(player.prevPos),
-            targetDiff = entity?.let { entity.pos.subtract(entity.prevPos) } ?: Vec3d.ZERO,
+            playerDiff = player.pos.subtract(player.lastPos),
+            targetDiff = entity?.let { entity.pos.subtract(entity.lastPos) } ?: Vec3d.ZERO,
 
             hurtTime = entity?.let {entity.hurtTime } ?: 10,
             distance = entity?.let { player.squaredBoxedDistanceTo(entity).toFloat() } ?: 3f,

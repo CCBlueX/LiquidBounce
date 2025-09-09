@@ -31,7 +31,6 @@ import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket
-import net.minecraft.network.packet.s2c.play.ExperienceOrbSpawnS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
@@ -166,7 +165,8 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
     @Suppress("unused")
     private val entitySpawnHandler = handler<PacketEvent> {
         when(val packet = it.packet) {
-            is ExperienceOrbSpawnS2CPacket -> highestId = max(packet.entityId, highestId)
+            // TODO: I guess this packet is merged into EntitySpawnS2CPacket
+//            is ExperienceOrbSpawnS2CPacket -> highestId = max(packet.entityId, highestId)
             is EntitySpawnS2CPacket -> highestId = max(packet.entityId, highestId)
             is GameJoinS2CPacket -> highestId = max(packet.playerEntityId, highestId)
         }

@@ -126,29 +126,29 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     val camera = mc.entityRenderDispatcher.camera ?: return
 
-    RenderSystem.enableBlend()
+    GlStateManager._enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
-    RenderSystem.disableDepthTest()
+    GlStateManager._disableDepthTest()
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
-    RenderSystem.disableBlend()
-    RenderSystem.enableDepthTest()
-    RenderSystem.enableCull()
+    GlStateManager._disableBlend()
+    GlStateManager._enableDepthTest()
+    GlStateManager._enableCull()
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
 inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
-    RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
+    GlStateManager._setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
-    RenderSystem.enableBlend()
+    GlStateManager._enableBlend()
 
     draw(GUIRenderEnvironment(matrixStack))
 
-    RenderSystem.disableBlend()
+    GlStateManager._disableBlend()
 }
 
 /**

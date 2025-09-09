@@ -217,7 +217,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 val entity = packet.getEntity(world) ?: return@handler
                 val id = entity.id
                 val currentValue = flyingSet.getOrDefault(id, 0)
-                if (entity.isOnGround && entity.prevY != entity.y) {
+                if (entity.isOnGround && entity.lastY != entity.y) {
                     flyingSet.put(id, currentValue + 1)
                 } else if (!entity.isOnGround && currentValue > 0) {
                     val newVL = currentValue / 2

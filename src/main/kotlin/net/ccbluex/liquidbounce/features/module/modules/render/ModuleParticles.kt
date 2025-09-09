@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -44,8 +46,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.client.gl.ShaderProgramKeys
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
@@ -129,8 +129,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            RenderSystem.depthMask(true)
-            RenderSystem.disableCull()
+            GlStateManager._depthMask(true)
+            GlStateManager._disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
             RenderSystem.defaultBlendFunc()
 
@@ -140,8 +140,8 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                 particle.render(event.partialTicks)
             }
 
-            RenderSystem.depthMask(true)
-            RenderSystem.enableCull()
+            GlStateManager._depthMask(true)
+            GlStateManager._enableCull()
             RenderSystem.defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
         }

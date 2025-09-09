@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.texture.NativeImage
@@ -46,7 +47,10 @@ private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
-    private val texture = NativeImageBackedTexture(ATLAS_SIZE * 16, ATLAS_SIZE * 16, false)
+    private val texture = NativeImageBackedTexture(
+        { "$CLIENT_NAME MinimapTexture" },
+        ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
+    )
     private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
     private val dirtyAtlasPositions = hashSetOf<AtlasPosition>()
     private val chunkPosAtlasPosMap = hashMapOf<ChunkPos, AtlasPosition>()
