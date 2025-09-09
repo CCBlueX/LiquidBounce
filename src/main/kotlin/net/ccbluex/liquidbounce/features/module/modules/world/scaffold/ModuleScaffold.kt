@@ -218,7 +218,6 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         tree(ScaffoldSprintControlFeature)
         tree(SimulatePlacementAttempts)
         tree(ScaffoldAccelerationFeature)
-        tree(ScaffoldAutoClutchHelper)
         tree(ScaffoldStrafeFeature)
         tree(ScaffoldJumpStrafe)
         tree(ScaffoldSpeedLimiterFeature)

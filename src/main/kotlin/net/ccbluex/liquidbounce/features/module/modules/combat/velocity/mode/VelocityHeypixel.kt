@@ -46,9 +46,8 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
 
 
     override val running: Boolean
-        get() = super.running
-            && !(ignoreBackTracking && ModuleBacktrack.isLagging())
-
+        get() = super.running &&
+            (!ignoreBackTracking || !ModuleBacktrack.isLagging())
 
     private fun reset() {
             canReduce = false

@@ -6,8 +6,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoClutchHelper
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -38,7 +36,6 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private var lastGroundY = LOWEST_Y
     private var ignoreTicks = 0
     private var pauseTicks = 0
-    private var scaffolding = false
 
     var freezing = false
     var forceStuck = false
@@ -53,10 +50,6 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
             if (shouldEnableStuck) {
                 shouldEnableStuck = false
                 shouldActivate = false
-            }
-            if (scaffolding) {
-                ModuleScaffold.enabled = false
-                scaffolding = false
             }
         }
 
@@ -197,37 +190,9 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
             shouldEnableStuck = false
             ModuleScaffold.enabled = false
         }
-
-        if (shouldEnableScaffold()) {
-            if (!ModuleScaffold.enabled) {
-                ModuleScaffold.enabled = true
-                scaffolding = true
-            }
-            if (player.isOnGround) {
-                if (scaffolding) {
-                    ModuleScaffold.enabled = false
-                    scaffolding = false
-                }
-            }
-        } else {
-            if (scaffolding) {
-                ModuleScaffold.enabled = false
-                scaffolding = false
-            }
-        }
     }
 
-    private fun shouldEnableScaffold(): Boolean {
-        val scaffoldCombatReady = !ScaffoldAutoClutchHelper.scaffoldOnlyDuringCombat || CombatManager.isInCombat
-        val scaffoldReceiveHit = !ScaffoldAutoClutchHelper.scaffoldOnlyReceiveHit || CombatManager.isReceiveHit
-        return voidFallPrediction.isVoidFallImminent
-            && ScaffoldAutoClutchHelper.enabled
-            && scaffoldCombatReady
-            && scaffoldReceiveHit
-            && player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
-            !state.isAir
-        }.any()
-    }
+
 
     private fun isReadyToActivate(): Boolean {
         val combatReady = !onlyDuringCombat || CombatManager.isInCombat

@@ -397,6 +397,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleReach,
             ModuleAutoQueue,
             ModuleSmartEat,
+            ModuleScaffoldHelper,
             ModuleReplenish,
             ModulePotionSpoof,
             ModuleTreasureManager,

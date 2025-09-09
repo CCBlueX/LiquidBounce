@@ -1,0 +1,72 @@
+package net.ccbluex.liquidbounce.features.module.modules.player
+
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
+
+object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, aliases = arrayOf("AutoScaffold")) {
+
+    private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val scaffoldOnlyReceiveHit by boolean("OnlyReceiveHit", true)
+    private val scaffoldOnlyDuringCombat by boolean("OnlyDuringCombat", false)
+    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_STUCK)
+
+    private var scaffolding = false
+
+    override val running: Boolean
+        get() = super.running && passesRequirements()
+
+    private fun shouldEnableScaffold(): Boolean {
+        return voidFallPrediction.isVoidFallImminent &&
+            player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
+                !state.isAir
+            }.any()
+    }
+
+    private fun passesRequirements(): Boolean {
+        if (!inGame || isDestructed) return false
+        if (scaffoldOnlyDuringCombat && !CombatManager.isInCombat) return false
+        if (scaffoldOnlyReceiveHit && !CombatManager.isReceiveHit) return false
+        return notCondition.all { it.testCondition() }
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        val player = mc.player ?: return@handler
+
+        if (shouldEnableScaffold() && passesRequirements()) {
+            if (!ModuleScaffold.enabled) {
+                ModuleScaffold.enabled = true
+                scaffolding = true
+            }
+            if (player.isOnGround && scaffolding) {
+                ModuleScaffold.enabled = false
+                scaffolding = false
+            }
+        } else if (scaffolding) {
+            ModuleScaffold.enabled = false
+            scaffolding = false
+        }
+    }
+
+    @Suppress("unused")
+    private enum class NotCondition(
+        override val choiceName: String,
+        val testCondition: () -> Boolean
+    ) : NamedChoice {
+        WHILE_USING_ITEM("WhileUsingItem", { !player.isUsingItem }),
+        WHILE_SNEAKING("WhileSneaking", { !player.isSneaking }),
+        DURING_STUCK("Freezing", {
+            !(ModuleAutoStuck.freezing || ModuleAutoStuck.forceStuck || ModuleFreeze.running)
+        }),
+    }
+}

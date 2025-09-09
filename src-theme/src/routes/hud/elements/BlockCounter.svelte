@@ -9,9 +9,9 @@
     import {cubicOut} from "svelte/easing";
     import {Tween} from "svelte/motion";
 
-    let playerData = $state<PlayerData | null>(null);
-    let count = $state<number | undefined>(undefined);
-    let contentElement = $state<HTMLDivElement | null>(null);
+    let playerData: PlayerData | null = null;
+    let count = <number | undefined>(undefined);
+    let contentElement: HTMLDivElement;
     let firstAppear = true;
 
     const maxWidth = new Tween(0, { duration: 150, easing: cubicOut });
@@ -32,20 +32,15 @@
         }
     });
 
-    $effect(() => {
-        if (contentElement && count !== undefined) {
-            updateMaxWidth(firstAppear);
-            firstAppear = false;
-        } else if (count === undefined) {
-            maxWidth.set(0);
-            firstAppear = true;
-        }
-    });
-
+    $: if (contentElement && count !== undefined) {
+        updateMaxWidth(firstAppear);
+        firstAppear = false;
+    } else if (count === undefined) {
+        maxWidth.set(0);
+        firstAppear = true;
+    }
 
     async function updateMaxWidth(isFirstAppear = false) {
-        if (!contentElement) return;
-
         if (isFirstAppear) {
             await maxWidth.set(0, { duration: 0 });
             await tick();
@@ -60,7 +55,6 @@
         await maxWidth.set(fullWidth);
     }
 </script>
-
 <div class="main-wrapper" class:draggable={count === undefined}>
     {#if count !== undefined}
         <div

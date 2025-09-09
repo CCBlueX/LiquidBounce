@@ -2,14 +2,13 @@
     import {onMount, afterUpdate} from 'svelte';
     import {listen} from '../../../../integration/ws';
     import TextComponent from '../../../menu/common/TextComponent.svelte';
-    import {type KeyEvent, type OverlayChatEvent, ChatType, type EventMap} from '../../../../integration/events';
+    import {type KeyEvent, type OverlayChatEvent, type EventMap} from '../../../../integration/events';
     import {getMinecraftKeybinds} from '../../../../integration/rest';
     import type {MinecraftKeybind} from '../../../../integration/types';
     import {fly} from 'svelte/transition';
     import {Tween} from 'svelte/motion';
     import {cubicOut, expoInOut} from 'svelte/easing';
 
-    const MAX_MESSAGES = 50;
     const MAX_DISPLAYED = 25;
     const HEIGHT_FOCUSED = 500;
     const HEIGHT_BLUR = 312;
@@ -22,6 +21,7 @@
         duration: 300,
         easing: cubicOut
     });
+
     let fadeQueue: typeof chatMessages[number][] = [];
     let activeFadeCount = 0;
     let focus = false;
@@ -82,17 +82,16 @@
         if (!msg) return;
 
         activeFadeCount++;
-
         msg.fadeTimeout = window.setTimeout(() => {
             msg.visible = false;
-            chatMessages = [...chatMessages];
-            msg.fadeTimeout = undefined;
             activeFadeCount--;
 
-            setTimeout(() => {
-                processFadeQueue();
-            }, FADE_DELAY_BETWEEN_BATCHES);
+            chatMessages = [...chatMessages];
+            removeInvisibleMessages();
+
+            setTimeout(() => processFadeQueue(), FADE_DELAY_BETWEEN_BATCHES);
         }, FADE_DURATION);
+
     }
 
     $: if (initialized) {
@@ -116,7 +115,11 @@
 
     function addMessage(event: OverlayChatEvent) {
         const msg = {...event, id: nextId++, visible: true} as typeof chatMessages[0];
-        chatMessages = [...chatMessages, msg].slice(-MAX_MESSAGES);
+
+        chatMessages = chatMessages.filter(m => m.visible);
+
+        chatMessages = [...chatMessages, msg].slice(-MAX_DISPLAYED);
+
         maybeScrollToBottomImmediately();
 
         if (initialized && !focus &&
@@ -124,6 +127,12 @@
         ) {
             scheduleFade(msg);
         }
+    }
+
+    function removeInvisibleMessages() {
+        chatMessages = chatMessages
+            .filter(msg => msg.visible)
+            .slice(-MAX_DISPLAYED);
     }
 
     function handleKeyDown(event: KeyEvent) {
@@ -234,6 +243,7 @@
   .messages-container {
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
     gap: 4px;
     padding: 8px;
     transition: background-color 0.3s ease;
