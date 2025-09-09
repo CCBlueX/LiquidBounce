@@ -5,6 +5,7 @@
     import {fade, fly} from 'svelte/transition';
     import {expoInOut} from "svelte/easing";
     import {REST_BASE} from "../../../../../integration/host";
+    import {forcedEnglish} from "../Effects";
 
     let effects: StatusEffect[] = [];
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
@@ -62,7 +63,11 @@
                      filter: drop-shadow(0 2px 10px rgba({e.color >> 16 & 255},{e.color >> 8 & 255}, {e.color & 255}, 0.3));"
                     in:fade={{ delay: 100 }}
             >
-                 {getIdentifierName(e.effect, e.amplifier)}
+                {#if forcedEnglish}
+                    {getIdentifierName(e.effect, e.amplifier)}
+                {:else}
+                    {e.effect} {e.amplifier + 1}
+                {/if}
             </span>
             <span
                     class="duration"

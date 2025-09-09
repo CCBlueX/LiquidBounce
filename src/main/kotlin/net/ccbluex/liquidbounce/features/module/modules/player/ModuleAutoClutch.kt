@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -167,10 +166,10 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     override val running: Boolean
         get() =
             super.running
-                && !(ModuleAutoStuck.shouldActivate || ModuleAutoStuck.immediately)
+                && !(ModuleAutoStuck.shouldActivate || (ModuleAutoStuck.enabled && ModuleAutoStuck.immediately))
                 && !(onlyDuringCombat && !CombatManager.isInCombat)
                 && !ModuleScaffold.running
-                && !ModuleFreeze.running
+                && !ModuleStuck.running
                 && !ModuleAirJump.running
                 && !ModuleFly.running
 
@@ -315,9 +314,6 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
         if (voidFallPrediction.isVoidFallImminent) {
             triggerPosition = player.pos
             state = State.FINDING_PEARL
-            if (allowClutchWithStuck && !ModuleAutoStuck.enabled) {
-                ModuleAutoStuck.enabled = true
-            }
         }
     }
 
@@ -751,7 +747,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     }
     private fun rotateToSolution() {
         if (allowClutchWithStuck) {
-            ModuleAutoStuck.shouldEnableStuck = true
+            ModuleStuck.enabled = true
         }
 
         if (bestSolution == null || bestEnergy >= 10000.0) {
@@ -823,7 +819,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             pearlThrownTick = player.age.toLong()
             scheduleSafetyCheck()
         }
-        ModuleAutoStuck.shouldEnableStuck = false
+        ModuleStuck.enabled = false
         state = State.PAUSED
     }
 

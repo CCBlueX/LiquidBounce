@@ -172,9 +172,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             targetRenderer.reset()
             return@handler
         }
-        if (ModuleAutoDodge.isDodging) {
-            return@handler
-        }
+//        if (ModuleAutoDodge.isDodging) {
+//            return@handler
+//        }
 
         // Update current target tracker to make sure you attack the best enemy
         updateTarget()
@@ -188,9 +188,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         if (player.isDead || player.isSpectator) {
             return@tickHandler
         }
-        if (ModuleAutoDodge.isDodging) {
-            return@tickHandler
-        }
+//        if (ModuleAutoDodge.isDodging) {
+//            return@tickHandler
+//        }
 
 
         // Check if there is target to attack

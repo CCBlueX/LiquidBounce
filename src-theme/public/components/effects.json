@@ -8,5 +8,22 @@
     "verticalAlignment": "Bottom",
     "verticalOffset": 15
   },
+  "values": [
+    {
+      "type": "CHOICE",
+      "name": "Mode",
+      "value": "Modern",
+      "choices": [
+        "Simple",
+        "Modern",
+        "Hanabi"
+      ]
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "ForcedEnglish",
+      "value": false
+    }
+  ],
   "tweaks": ["DISABLE_STATUS_EFFECT_OVERLAY"]
 }

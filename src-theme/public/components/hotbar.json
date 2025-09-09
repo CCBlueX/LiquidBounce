@@ -8,6 +8,19 @@
     "verticalAlignment": "Bottom",
     "verticalOffset": 15
   },
+  "values": [
+    {
+      "type": "CHOICE",
+      "name": "Mode",
+      "value": "Modern",
+      "choices": [
+        "Simple",
+        "Modern",
+        "Rise",
+        "Hanabi"
+      ]
+    }
+  ],
   "tweaks": [
     "TWEAK_HOTBAR",
     "DISABLE_STATUS_BAR",

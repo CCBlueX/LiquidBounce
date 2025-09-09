@@ -30,8 +30,8 @@ import kotlin.math.*
 @Suppress("TooManyFunctions")
 object ModuleBowAura : ClientModule("TPBowAura", Category.COMBAT, disableOnQuit = true) {
 
-    private val mode by enumChoice("Mode", Mode.VELOCITY_1_9, Mode.entries.toTypedArray())
-    private val packetMode by enumChoice("PacketMode", PacketMode.C06, PacketMode.entries.toTypedArray())
+    private val mode by enumChoice("Mode", Mode.VELOCITY_1_9, Mode.entries.toSet())
+    private val packetMode by enumChoice("PacketMode", PacketMode.C06, PacketMode.entries.toSet())
     private val delay by intRange("Delay", 200..5000, 10..10000, "ms")
     private val maxTargets by int("MaxTargets", 1, 1..150)
     private val moveDistance by float("MoveDistance", 2f, 0.1f..20f, "m")

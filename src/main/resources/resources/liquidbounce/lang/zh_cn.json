@@ -880,5 +880,6 @@
   "liquidbounce.module.voidTp.description": "By _0x16z，不知道有啥用。",
   "liquidbounce.module.lineGlyphs.description": "在你所见之处绘制一种铭文。",
   "liquidbounce.module.fireFlies.description": "只是为了好看?",
-  "liquidbounce.module.scaffoldHelper": "自动帮你启用Scaffold。"
+  "liquidbounce.module.scaffoldHelper.description": "自动帮你启用脚手架。",
+  "liquidbounce.module.stuck.description": "让你的位置和转头暂停但不影响交互。"
 }

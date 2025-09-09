@@ -13,7 +13,7 @@
       "type": "CHOICE",
       "name": "Mode",
       "value": "Modern",
-      "choices": ["Simple", "Modern", "HU_JI"]
+      "choices": ["Simple", "Modern", "户籍"]
     },
     {
       "type": "INT",

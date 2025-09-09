@@ -29,7 +29,7 @@ object ModuleBowBomb : ClientModule("BowBomb", Category.COMBAT, aliases = arrayO
     private val activeTime by float("ActiveTime", 0.4f, 0f..3f, "s")
     private val minimize by boolean("Minimize", false)
     private val message by boolean("Message", true)
-    private val exploit by enumChoice("Exploit", ExploitMode.STRICT, ExploitMode.entries.toTypedArray())
+    private val exploit by enumChoice("Exploit", ExploitMode.STRICT, ExploitMode.entries.toSet())
 
     private val targetTracker = TargetTracker(TargetPriority.DISTANCE)
     private val rotationsConfigurable = tree(RotationsConfigurable(this))

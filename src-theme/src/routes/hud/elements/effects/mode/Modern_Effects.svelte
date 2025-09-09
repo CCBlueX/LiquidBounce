@@ -7,6 +7,7 @@
     import {expoOut} from "svelte/easing";
     import {flip} from "svelte/animate";
     import {springTransition} from "../../../../../util/animate_utils";
+    import {forcedEnglish} from "../Effects";
 
     let effects: StatusEffect[] = [];
 
@@ -71,7 +72,11 @@
                           {e.color >> 8 & 255}, {e.color & 255}, 0.3));"
                         in:fade={{ delay: 100 }}
                 >
-                {getIdentifierName(e.effect, e.amplifier + 1)}
+                    {#if forcedEnglish}
+                        {getIdentifierName(e.effect, e.amplifier)}
+                    {:else}
+                        {e.effect} {e.amplifier + 1}
+                    {/if}
                 </span>
                 <div class="progress-bar">
 

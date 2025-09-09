@@ -1,236 +1,123 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import org.lwjgl.glfw.GLFW
 
-@Suppress("TooManyFunctions")
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
-
+    val immediately by boolean("Immediately", true)
     private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
-    private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
-    private val scaffoldFreezeTicks by int("ScaffoldBlockedTicks", 3, 0..20, "ticks")
-    private val directlyKeybind by key("Directly", GLFW.GLFW_KEY_V)
-    private val onlyWithPearl by boolean("OnlyWithPearl", false)
-    private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
-    private val onlyReceiveHit by boolean("OnlyReceiveHit", false)
-    val immediately by boolean("Immediately", true)
-
-
+    private val notCondition by multiEnumChoice("Not", NotCondition.WhileReceiveHit)
     private const val LOWEST_Y = -64
-    private var stuckTicks = 0
-    private var stuckCooldown = 0
-    private var lastGroundY = LOWEST_Y
-    private var ignoreTicks = 0
-    private var pauseTicks = 0
-    private var pauseAutoStuck = 0
 
+
+    private var lastGroundY = LOWEST_Y
     private var freezingTicks = 0
-    var scaffoldBlocked = false
-    var freezing = false
-    var forceStuck = false
-    var shouldEnableStuck = false
+    private var pauseTicks = 0
+    private var ignoreTicks = 0
+
+    private var freezing = false
     var shouldActivate = false
 
     private fun hasPearlInHotbar() =
         player.inventory.main.any { it?.item == Items.ENDER_PEARL }
 
     private fun reset(disable: Boolean) {
-        if (disable) {
-            if (shouldEnableStuck) {
-                shouldEnableStuck = false
-                shouldActivate = false
-            }
+        if (disable && freezing) {
+            freezing = false
+            shouldActivate = false
+            ModuleStuck.enabled = false
         }
-
         lastGroundY = LOWEST_Y
-        stuckTicks = 0
-        stuckCooldown = 0
-        ignoreTicks = 0
-        pauseTicks = 0
-        freezing = false
         freezingTicks = 0
-        scaffoldBlocked = false
-        shouldEnableStuck = false
-        shouldActivate = false
-        forceStuck = false
+        pauseTicks = 0
+        ignoreTicks = 0
     }
 
+    @Suppress("unused")
+    private val packetEventHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+        if (packet is PlayerPositionLookS2CPacket) {
+            reset(true)
+            pauseTicks = pauseOnFlag
+        }
+    }
 
     @Suppress("unused")
     private val serverConnectHandler = handler<ServerConnectEvent> {
         ignoreTicks = 20
     }
 
-
-    @Suppress("unused")
-    private val keyHandler = handler<KeyEvent> {
-        if (it.action != GLFW.GLFW_PRESS) return@handler
-
-        if (it.key.code == directlyKeybind.code) {
-            forceStuck = !forceStuck
-
-            if (shouldEnableStuck) {
-
-                pauseAutoStuck = 50
-                shouldEnableStuck = false
-                shouldActivate = false
-            }
-        }
-    }
-
-    @Suppress("unused")
-    private val movementInputEventHandler = handler<MovementInputEvent> {
-        if (shouldEnableStuck || forceStuck) {
-            player.movement.x = 0.0
-            player.movement.y = 0.0
-            player.movement.z = 0.0
-            it.directionalInput = DirectionalInput(
-                forwards = false,
-                backwards = false,
-                left = false,
-                right = false
-            )
-        }
-    }
-
-    @Suppress("unused")
-    private val packetEventHandler = handler<PacketEvent> { event ->
-        if (!shouldEnableStuck && !forceStuck) return@handler
-        val packet = event.packet
-
-        if (!player.isOnGround) {
-            freezing = true
-            freezingTicks++
-
-            if (freezingTicks >= scaffoldFreezeTicks) {
-                scaffoldBlocked = true
-            }
-            when (packet) {
-                is PlayerPositionLookS2CPacket -> {
-                    reset(true)
-                    pauseTicks = pauseOnFlag
-                }
-                is PlayerMoveC2SPacket -> event.cancelEvent()
-                is PlayerInteractItemC2SPacket -> {
-                    event.cancelEvent()
-                    sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
-                            player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
-                        )
-                    )
-                    sendPacketSilently(
-                        PlayerInteractItemC2SPacket(
-                            packet.hand, packet.sequence, player.yaw, player.pitch
-                        )
-                    )
-                }
-                is PlayerInteractEntityC2SPacket ->{
-                    event.cancelEvent()
-                    sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
-                            player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
-                        )
-                    )
-                    sendPacketSilently(packet)
-                }
-                is PlayerInteractBlockC2SPacket ->{
-                    event.cancelEvent()
-                    sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
-                            player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
-                        )
-                    )
-                    sendPacketSilently(packet)
-                }
-            }
-        } else if (freezing && !forceStuck) {
-            shouldEnableStuck = false
-            shouldActivate = false
-        }
-    }
-
-    private fun shouldDisableStuck(): Boolean =
-        player.isInsideWaterOrBubbleColumn || voidFallPrediction.hasSolidBlockBelow()
-
     @Suppress("unused")
     private val worldChangeEventHandler = handler<WorldChangeEvent> {
         reset(true)
     }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        val world = mc.world ?: return@handler
-        val player = mc.player ?: return@handler
+    private fun shouldDisableFreeze(): Boolean =
+        player.isInsideWaterOrBubbleColumn || voidFallPrediction.hasSolidBlockBelow()
 
-        if (player.isSpectator || ignoreTicks > 0 || player.y <= 0) {
+    private fun isReadyToActivate(): Boolean {
+        val voidFallImminent = if (immediately) {
+            voidFallPrediction.isVoidFallImminent
+        } else {
+            player.y <= lastGroundY + 1 - fallDistance && isInVoid(player.pos)
+        }
+        return !player.isOnGround  && notCondition.all { it.testCondition() } && voidFallImminent
+    }
+
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
+        if (player.isSpectator || player.abilities.flying || ignoreTicks > 0 || player.y <= (mc.world?.bottomY
+                ?: LOWEST_Y)
+        ) {
             ignoreTicks--
             reset(true)
-            return@handler
+            return@tickHandler
+        }
+        if (ModuleScaffold.enabled && !ModuleScaffoldHelper.helping){
+            reset(true)
+            return@tickHandler
+        }
+        if (!immediately && player.isOnGround) {
+            lastGroundY = player.y.toInt() - 1
         }
 
-        if (!immediately && player.isOnGround) lastGroundY = player.y.toInt() - 1
-
-        if (stuckCooldown > 0) {
-            stuckCooldown--
-            return@handler
-        }
-
-        if (shouldEnableStuck) {
-            stuckTicks++
-            if (stuckTicks >= resetTicks || shouldDisableStuck()) {
-                reset(true)
-            }
-        } else {
-            stuckTicks = 0
-        }
-        if (pauseAutoStuck > 0) {
-            pauseAutoStuck--
+        if (pauseTicks > 0) {
+            pauseTicks--
             shouldActivate = false
         } else {
             shouldActivate = isReadyToActivate()
         }
 
-
-        if (shouldActivate && !shouldEnableStuck && stuckCooldown <= 0 && !shouldDisableStuck()) {
-            shouldEnableStuck = true
+        if (shouldActivate && !freezing && !shouldDisableFreeze()) {
+            freezing = true
+            ModuleStuck.enabled = true
+        } else if (!shouldActivate && freezing) {
             freezing = false
-        } else if (!shouldActivate && shouldEnableStuck) {
-            shouldEnableStuck = false
-            ModuleScaffold.enabled = false
+            ModuleStuck.enabled = false
         }
-    }
 
-
-
-    private fun isReadyToActivate(): Boolean {
-        val combatReady = !onlyDuringCombat || CombatManager.isInCombat
-        val receiveHitReady = !onlyReceiveHit || CombatManager.isReceiveHit
-        val pearlReady = !onlyWithPearl || hasPearlInHotbar()
-
-        val airReady = !player.isOnGround
-        val voidReady = if (immediately) {
-            voidFallPrediction.isVoidFallImminent
-        } else {
-            player.y <= lastGroundY + 1 - fallDistance && isInVoid(player.pos)
+        if (freezing) {
+            freezingTicks++
+            if (freezingTicks >= resetTicks || shouldDisableFreeze()) {
+                reset(true)
+            }
         }
-        return combatReady && pearlReady && airReady && voidReady && receiveHitReady
     }
 
     override fun onEnabled() {
@@ -239,5 +126,14 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     override fun onDisabled() {
         reset(true)
+    }
+    @Suppress("unused")
+    private enum class NotCondition(
+        override val choiceName: String,
+        val testCondition: () -> Boolean
+    ) : NamedChoice {
+        WhileReceiveHit("WhileReceiveHit", { !CombatManager.isReceiveHit }),
+        WhileDuringCombat("WhileDuringCombat", { !CombatManager.isInCombat }),
+        WhilePearl("WhilePearl",{!hasPearlInHotbar()}),
     }
 }

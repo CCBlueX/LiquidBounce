@@ -410,6 +410,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoSwap,
             ModuleAutoPath,
             ModuleAdvancedJumpReset,
+            ModuleStuck,
 
             // Render
             ModuleAnimations,

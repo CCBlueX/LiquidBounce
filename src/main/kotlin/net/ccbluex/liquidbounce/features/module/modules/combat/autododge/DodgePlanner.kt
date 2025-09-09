@@ -19,13 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.autododge
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.module.modules.combat.autododge.ModuleAutoDodge.isOverVoid
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
-import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -44,10 +42,15 @@ data class DodgePlan(
     val yawChange: Float?,
     val useTimer: Boolean,
 )
+
 data class DodgePlannerConfig(
     val allowRotations: Boolean,
 )
-fun planEvasion(config: DodgePlannerConfig, inflictedHit: ModuleAutoDodge.HitInfo): DodgePlan? {
+
+fun planEvasion(
+    config: DodgePlannerConfig,
+    inflictedHit: ModuleAutoDodge.HitInfo,
+): DodgePlan? {
     val player = mc.player!!
     val arrowLine =
         Line(
@@ -63,15 +66,14 @@ fun planEvasion(config: DodgePlannerConfig, inflictedHit: ModuleAutoDodge.HitInf
     if (distanceToArrowLine > DodgePlanner.SAFE_DISTANCE_WITH_PADDING) {
         return null
     }
-    val optimalDodgePosition = findOptimalDodgePosition(arrowLine)
-    val positionRelativeToPlayer = optimalDodgePosition.subtract(playerPos2d)
 
-    if (isOverVoid(optimalDodgePosition.copy(y = player.y))) {
-        return DodgePlan(DirectionalInput.NONE, false, null, false)
-    }
+    val optimalDodgePosition = findOptimalDodgePosition(arrowLine)
+
+    val positionRelativeToPlayer = optimalDodgePosition.subtract(playerPos2d)
 
     return DodgePlanner(config, inflictedHit, distanceToArrowLine, positionRelativeToPlayer).plan()
 }
+
 class DodgePlanner(
     private val config: DodgePlannerConfig,
     private val hypotheticalHit: ModuleAutoDodge.HitInfo,
@@ -192,19 +194,24 @@ private fun getDodgeMovementWithoutAngleChange(positionRelativeToPlayer: Vec3d):
     return getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 20.0F)
 }
 
-// DodgePlanner.kt
 fun findOptimalDodgePosition(baseLine: Line): Vec3d {
     val player = mc.player!!
+
     val playerPos2d = Vec3d(player.pos.x, 0.0, player.pos.z)
+    // Usually it takes around two ticks to change the movement to whatever we want. In this time we will keep the
+    // current velocity. So we have to account for this by integrating the player's velocity in the calculation.
     val playerPosAfterFreeMovement = playerPos2d.add(player.velocity.x * 2.0, 0.0, player.velocity.z * 2.0)
 
     val dangerZone = getDangerZoneBorders(baseLine, DodgePlanner.SAFE_DISTANCE_WITH_PADDING)
-    val nearestPointsToDangerZoneBorders = dangerZone.map { it.getNearestPointTo(playerPosAfterFreeMovement) }
+
+    val nearestPointsToDangerZoneBorders =
+        dangerZone.map { it.getNearestPointTo(playerPosAfterFreeMovement) }
+    val nearestPointDistancesToPlayer =
+        nearestPointsToDangerZoneBorders.map { it.distanceTo(playerPosAfterFreeMovement) }
+
     val nearestPosToLine = baseLine.getNearestPointTo(playerPos2d)
 
-    val primaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[0].copy(y = player.y))
-    val secondaryVoid = isOverVoid(nearestPointsToDangerZoneBorders[1].copy(y = player.y))
-
+    // Check if one direction is not viable because we would collide with a block
     when {
         getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[0]) < DodgePlanner.SAFE_DISTANCE -> {
             return nearestPointsToDangerZoneBorders[1]
@@ -215,21 +222,14 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
         }
     }
 
-    return when {
-        !primaryVoid && secondaryVoid -> nearestPointsToDangerZoneBorders[0]
-        primaryVoid && !secondaryVoid -> nearestPointsToDangerZoneBorders[1]
-        else -> {
-            val distToPrimary = nearestPointsToDangerZoneBorders[0].distanceTo(playerPos2d)
-            val distToSecondary = nearestPointsToDangerZoneBorders[1].distanceTo(playerPos2d)
-            if (distToPrimary < distToSecondary){
-                nearestPointsToDangerZoneBorders[0]
-            }
-            else{
-                nearestPointsToDangerZoneBorders[1]
-            }
-        }
+    // Find the nearest point that is outside the danger zone
+    return if (nearestPointDistancesToPlayer[0] < nearestPointDistancesToPlayer[1] - 0.05) {
+        nearestPointsToDangerZoneBorders[0]
+    } else {
+        nearestPointsToDangerZoneBorders[1]
     }
 }
+
 fun getWalkableDistance(basePos: Vec3d, dodgePos: Vec3d): Double {
     val playerY = mc.player!!.y
     val rayYs = doubleArrayOf(0.6, 1.6)
