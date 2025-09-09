@@ -72,10 +72,10 @@
                           {e.color >> 8 & 255}, {e.color & 255}, 0.3));"
                         in:fade={{ delay: 100 }}
                 >
-                    {#if forcedEnglish}
+                    {#if $forcedEnglish}
                         {getIdentifierName(e.effect, e.amplifier)}
                     {:else}
-                        {e.effect} {e.amplifier + 1}
+                        {e.localizedName} {e.amplifier + 1}
                     {/if}
                 </span>
                 <div class="progress-bar">

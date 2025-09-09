@@ -13,7 +13,7 @@
     };
 
     let ModeComponent: any;
-    $: forcedEnglish.set(settings?.forcedEnglish ?? false);
+    $: forcedEnglish.set(settings?.forcedenglish ?? false);
     $: ModeComponent = modes[settings?.mode] ?? Simple_Effects;
 </script>
 
