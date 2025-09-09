@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.ShieldItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
@@ -43,10 +44,10 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     @JvmOverloads
     fun shouldHideOffhand(
         player: PlayerEntity = this.player,
-        offHandItem: Item = player.offHandStack.item,
-        mainHandItem: Item = player.mainHandStack.item,
-    ) = (running || KillAuraAutoBlock.blockVisual) && offHandItem is ShieldItem
-        && (mainHandItem is SwordItem || player === this.player && running && alwaysHideShield)
+        offHandStack: ItemStack = player.offHandStack,
+        mainHandStack: ItemStack = player.mainHandStack,
+    ) = (running || KillAuraAutoBlock.blockVisual) && offHandStack.item is ShieldItem
+        && (mainHandStack.isSword || player === this.player && running && alwaysHideShield)
 
     @Suppress("UNUSED")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
