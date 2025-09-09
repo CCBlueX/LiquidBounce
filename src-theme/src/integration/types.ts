@@ -463,12 +463,8 @@ export interface Vector2f {
     y: number;
 }
 
-// Minecraft key types based on InputUtil mappings
-// To make usage more TypeScript-friendly, allow both prefixed (Minecraft translation keys)
-// and short forms without the "key.keyboard." / "key.mouse." prefixes.
 
-// Short mouse key names (without "key.mouse.")
-export type MouseKeyName =
+type MouseKeyName =
     | "left"
     | "right"
     | "middle"
@@ -478,8 +474,7 @@ export type MouseKeyName =
     | "7"
     | "8";
 
-// Short keyboard key names (without "key.keyboard.")
-export type KeyboardKeyName =
+type KeyboardKeyName =
     | "unknown"
     | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
     | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
