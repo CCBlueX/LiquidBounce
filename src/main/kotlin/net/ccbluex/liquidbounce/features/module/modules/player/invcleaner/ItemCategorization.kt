@@ -176,11 +176,12 @@ class ItemCategorization(
      */
     @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun getItemFacets(slot: ItemSlot): List<ItemFacet> {
-        if (slot.itemStack.isNothing()) {
+        val itemStack = slot.itemStack
+        if (itemStack.isNothing()) {
             return emptyList()
         }
 
-        val specificItemFacets: List<ItemFacet> = when (val item = slot.itemStack.item) {
+        val specificItemFacets: List<ItemFacet> = when (val item = itemStack.item) {
             // Treat animal armor as a normal item
             is AnimalArmorItem -> listOf(ItemFacet(slot))
             is ArmorItem -> listOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
@@ -192,8 +193,8 @@ class ItemCategorization(
             is FishingRodItem -> listOf(RodItemFacet(slot))
             is ShieldItem -> listOf(ShieldItemFacet(slot))
             is BlockItem -> {
-                if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
-                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
+                if (ScaffoldBlockItemSelection.isValidBlock(itemStack)
+                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(itemStack)
                 ) {
                     listOf(BlockItemFacet(slot))
                 } else {
@@ -211,7 +212,7 @@ class ItemCategorization(
             }
             is PotionItem -> {
                 val areAllEffectsGood =
-                    slot.itemStack.getPotionEffects()
+                    itemStack.getPotionEffects()
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                 if (areAllEffectsGood) {
@@ -237,7 +238,7 @@ class ItemCategorization(
 
             Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> listOf(ThrowableItemFacet(slot))
             else -> {
-                if (slot.itemStack.isFood) {
+                if (itemStack.isFood) {
                     listOf(FoodItemFacet(slot))
                 } else {
                     listOf(ItemFacet(slot))

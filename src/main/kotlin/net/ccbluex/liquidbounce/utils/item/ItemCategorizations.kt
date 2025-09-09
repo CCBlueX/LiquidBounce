@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.FoodComponent
+import net.minecraft.component.type.ToolComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
@@ -48,6 +49,9 @@ val ItemStack.isFood: Boolean
 
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
+
+val ItemStack.toolComponent: ToolComponent?
+    get() = this.get(DataComponentTypes.TOOL)
 
 val ItemStack.isBundle
     get() = this.isIn(ItemTags.BUNDLES)

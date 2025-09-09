@@ -25,11 +25,10 @@ import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
-import net.ccbluex.liquidbounce.utils.item.material
+import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
-import net.minecraft.item.MiningToolItem
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
@@ -40,8 +39,17 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
             )
         private val COMPARATOR =
+            /**
+             * @see net.minecraft.item.ToolMaterial.applyToolSettings
+             * @see net.minecraft.component.type.ToolComponent.Rule.ofAlwaysDropping
+             */
             ComparatorChain<MiningToolItemFacet>(
-                compareBy { (it.itemStack.item as MiningToolItem).material().speed },
+                compareBy {
+                    val toolComponent = it.itemStack.toolComponent ?: return@compareBy 0f
+                    toolComponent.rules.firstOrNull { rule ->
+                        rule.correctForDrops.orElse(false)
+                    }?.speed?.orElse(null) ?: 0f
+                },
                 compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ITEMS_IN_HOTBAR,

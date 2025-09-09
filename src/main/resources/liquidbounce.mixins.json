@@ -78,7 +78,6 @@
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
     "minecraft.item.MixinItemStack",
-    "minecraft.item.MixinMiningToolItem",
     "minecraft.network.MixinAllowedAddressResolver",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientLoginNetworkHandlerMixin",
