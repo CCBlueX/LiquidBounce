@@ -3,9 +3,9 @@
     import type {OverlayPlayListEvent, KeyEvent, EventMap, PlayerEntry} from "../../../integration/events";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import { onMount } from "svelte";
-    import { getTextWidth } from '../../../integration/text_measurement';
-    import { getMinecraftKeybinds } from "../../../integration/rest";
-    import type { MinecraftKeybind, TextComponent as TTextComponent } from "../../../integration/types";
+    import {getTextWidth} from '../../../integration/text_measurement';
+    import { getMinecraftKeybinds, getModuleSettings } from "../../../integration/rest";
+    import type { ConfigurableSetting, MinecraftKeybind, MultiChooseSetting,ChoiceSetting, TextComponent as TTextComponent } from "../../../integration/types";
     import AvatarView from "../common/PlayerView/AvatarView.svelte";
     import { scale } from "svelte/transition";
     import { REST_BASE } from "../../../integration/host";
@@ -16,32 +16,18 @@
     let rows = 1;
     let visible = false;
     let columnWidths: number[] = [];
+    let visibilityKeywords: string[] = [];
     let keyPlayerList: MinecraftKeybind | undefined;
     let overlayPlayList: OverlayPlayListEvent | null = null;
+    const maxColumns = 4;
 
-    function isVisible(type: "Header" | "Footer" | "Avatar"): boolean {
-        if (!settings?.visibility) return true;
-        return settings.visibility.includes(type);
-    }
-
-    function getTextString(tc: string | TTextComponent): string {
-        if (typeof tc === "string") return tc;
-        let str = tc.text ?? "";
-        if (tc.extra) {
-            for (const e of tc.extra) {
-                str += getTextString(e);
-            }
-        }
-        return str;
-    }
-
-    const calculateLayout = (players: { name: string | TTextComponent, latency: string | TTextComponent, uuid: string, isFriend: boolean, isStaff: boolean, isSelf: boolean }[]) => {
+    const calculateLayout = (players: { name: string | TTextComponent }[]) => {
         const playerCount = players.length;
         const maxRows = Math.min(20, Math.floor(600 / 20));
         rows = Math.min(maxRows, playerCount);
-        columns = Math.min(Math.ceil(playerCount / rows),4);
+        columns = Math.min(Math.ceil(playerCount / rows), maxColumns);
 
-        while (columns > 4 && rows < maxRows) {
+        while (columns > maxColumns && rows < maxRows) {
             rows++;
             columns = Math.ceil(playerCount / rows);
         }
@@ -59,73 +45,97 @@
         }
     };
 
+    function getTextString(tc: string | TTextComponent): string {
+        if (typeof tc === "string") return tc;
+        let str = tc.text ?? "";
+        if (tc.extra) {
+            for (const e of tc.extra) {
+                str += getTextString(e);
+            }
+        }
+        return str;
+    }
     const sortPlayers = (players: PlayerEntry[]) => {
         if (!settings?.sortBy) return players;
-        const sorted = [...players];
-        switch (settings.sortBy) {
-            case "Latency":
-                sorted.sort((a, b) => parseInt(getTextString(a.latency)) - parseInt(getTextString(b.latency)));
-                break;
-            case "NameLength":
-                sorted.sort((a, b) => getTextString(a.name).length - getTextString(b.name).length);
-                break;
-            case "Alphabetical":
-                sorted.sort((a, b) => getTextString(a.name).localeCompare(getTextString(b.name)));
-                break;
-            case "ReverseAlphabetical":
-                sorted.sort((a, b) => getTextString(b.name).localeCompare(getTextString(a.name)));
-                break;
-            case "Vanilla":
-                break;
-            default:
-                break;
-        }
-        return sorted;
+
+        const comparators: { [key: string]: (a: PlayerEntry, b: PlayerEntry) => number } = {
+            "Vanilla": () => 0,
+            "Ping": (a, b) => parseInt(getTextString(a.latency)) - parseInt(getTextString(b.latency)),
+            "NameLength": (a, b) => getTextString(a.name).length - getTextString(b.name).length,
+            "Alphabetical": (a, b) => getTextString(a.name).localeCompare(getTextString(b.name)),
+            "ReverseAlphabetical": (a, b) => getTextString(b.name).localeCompare(getTextString(a.name)),
+            "None": () => 0
+        };
+
+        const comparator = comparators[settings.sortBy] ?? (() => 0);
+        return [...players].sort(comparator);
     };
+
     const handleKeyDown = ({ key, action }: KeyEvent) => {
         if (key === keyPlayerList?.key.translationKey) {
             visible = action === 1 || action === 2;
         }
     };
+
+    const setVisibilityKeywords = (configurable: ConfigurableSetting) => {
+        const keywordsSetting = configurable.value.find(v => v.name === "Visibility") as MultiChooseSetting;
+        const sortSetting = configurable.value.find(v => v.name === "Sorting") as ChoiceSetting;
+        visibilityKeywords = keywordsSetting?.value ?? [];
+        if (sortSetting) {
+            settings.sortBy = sortSetting.value;
+        }
+    };
+
     const updateKeybinds = async () => {
         const keybinds = await getMinecraftKeybinds();
         keyPlayerList = keybinds.find(k => k.bindName === "key.playerlist");
     };
 
+    const isVisible = (type: string) => visibilityKeywords.includes(type);
+
+
     listen("keybindChange" as keyof EventMap, updateKeybinds);
+
     listen("key", handleKeyDown);
+
     listen("overlayPlayList", ({ players, ...rest }: OverlayPlayListEvent) => {
         overlayPlayList = { players: sortPlayers(players), ...rest };
         players && calculateLayout(players);
     });
-
     onMount(async () => {
         await updateKeybinds();
+        const settings = await getModuleSettings("BetterTab");
+        setVisibilityKeywords(settings);
+        setInterval(async () => {
+            setVisibilityKeywords(settings);
+        }, 1000);
     });
 </script>
+
 
 {#if visible}
     <div class="tab-overlay" transition:scale={{duration:300}}>
         {#if overlayPlayList}
             <div class="tab-container hud-container">
+                <!-- Header - only show if HEADER is selected in visibility settings -->
                 {#if overlayPlayList.header && isVisible("Header")}
                     <div class="tab-header">
                         <TextComponent fontSize={20} allowPreformatting={true} textComponent={overlayPlayList.header}/>
                     </div>
                 {/if}
 
+                <!-- Player Grid - always visible when tab is open -->
                 <div
                         class="player-grid"
                         style="grid-template-columns: {columnWidths.map(w => `minmax(${w}px, 1fr)`).join(' ')};"
                 >
                     {#each overlayPlayList.players as player}
-                        <div
-                                class="player-entry"
+                        <div class="player-entry"
                                 class:friend={settings?.highlight.friend && player.isFriend}
                                 class:staff={settings?.highlight.staff && player.isStaff}
                                 class:self={settings?.highlight.self && player.isSelf}
                         >
-                            {#if isVisible("Avatar")}
+                            {#if !isVisible("NameOnly")}
                                 <div class="avatar">
                                     <div class="avatar-inner">
                                         <AvatarView
@@ -143,6 +153,7 @@
                     {/each}
                 </div>
 
+                <!-- Footer - only show if FOOTER is selected in visibility settings -->
                 {#if overlayPlayList.footer && isVisible("Footer")}
                     <div class="tab-footer">
                         <TextComponent fontSize={20} allowPreformatting={true} textComponent={overlayPlayList.footer}/>

@@ -7,5 +7,23 @@
     "horizontalOffset": 20,
     "verticalAlignment": "CenterTranslated",
     "verticalOffset": 0
-  }
+  },
+  "values": [
+    {
+      "type": "CHOICE",
+      "name": "Mode",
+      "value": "Modern",
+      "choices": ["Simple", "Modern", "HU_JI"]
+    },
+    {
+      "type": "INT",
+      "name": "Timeout",
+      "value": 2000,
+      "range": {
+        "min": 0,
+        "max": 5000
+      },
+      "suffix": "ms"
+    }
+  ]
 }

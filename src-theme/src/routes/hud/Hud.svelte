@@ -174,7 +174,7 @@
                     {:else if c.name === 'TabGui'}
                         <TabGui/>
                     {:else if c.name === 'TargetHud'}
-                        <TargetHud/>
+                        <TargetHud settings={c.settings}/>
                     {:else if c.name === 'TitleControl'}
                         <TitleControl/>
                     {:else if c.name === 'Watermark'}
