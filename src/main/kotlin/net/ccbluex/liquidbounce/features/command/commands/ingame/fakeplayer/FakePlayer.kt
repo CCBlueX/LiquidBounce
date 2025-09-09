@@ -68,7 +68,7 @@ open class FakePlayer(
         this.pose = snapshot.pose
         this.preferredHand = snapshot.preferredHand
         this.inventory.clone(snapshot.inventory)
-        this.limbAnimator.pos = snapshot.limbPos
+        this.limbAnimator.animationProgress = snapshot.limbPos
     }
 
     override fun setHealth(health: Float) {

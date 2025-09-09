@@ -70,7 +70,7 @@ fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
         entity.pose,
         entity.preferredHand ?: Hand.MAIN_HAND,
         entity.inventory,
-        entity.limbAnimator.pos
+        entity.limbAnimator.animationProgress
     )
 }
 
@@ -98,6 +98,6 @@ fun fromPlayerMotion(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
         entity.pose,
         entity.preferredHand ?: Hand.MAIN_HAND,
         playerInventory,
-        entity.limbAnimator.pos
+        entity.limbAnimator.animationProgress
     )
 }
