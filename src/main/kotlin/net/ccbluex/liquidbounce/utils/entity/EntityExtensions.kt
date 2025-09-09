@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.minecraft.block.Blocks
 import net.minecraft.block.EntityShapeContext
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.input.Input
@@ -66,6 +67,10 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
+
+// Copied from 1.21.4
+val Entity.isInsideWaterOrBubbleColumn: Boolean
+    get() = this.isTouchingWater || this.blockStateAtPos.isOf(Blocks.BUBBLE_COLUMN)
 
 val Entity.netherPosition: Vec3d
     get() = if (world.registryKey == World.NETHER) {

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.entity.EntityEquipment
 import net.minecraft.entity.EntityPose
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.util.Hand
@@ -75,7 +76,7 @@ fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
 }
 
 fun fromPlayerMotion(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
-    val playerInventory = PlayerInventory(null)
+    val playerInventory = PlayerInventory(null, EntityEquipment())
     playerInventory.clone(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
