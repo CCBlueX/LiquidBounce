@@ -875,5 +875,6 @@
   "liquidbounce.module.chinaHat.description": "「ChinaKungFu」",
   "liquidbounce.module.voidTp.description": "IDK.",
   "liquidbounce.module.lineGlyphs.description": "Draw an glyphs where you can see it.",
-  "liquidbounce.module.fireFlies.description": "It's just for looks?"
+  "liquidbounce.module.fireFlies.description": "It's just for looks?",
+  "liquidbounce.module.scaffoldHelper": "Automatically help you enable scaffold."
 }

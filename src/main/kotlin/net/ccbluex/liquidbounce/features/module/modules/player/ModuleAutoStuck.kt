@@ -69,6 +69,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         scaffoldBlocked = false
         shouldEnableStuck = false
         shouldActivate = false
+        forceStuck = false
     }
 
 

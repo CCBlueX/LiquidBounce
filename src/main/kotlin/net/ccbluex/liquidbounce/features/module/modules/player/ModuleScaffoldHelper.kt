@@ -17,14 +17,18 @@ import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, aliases = arrayOf("AutoScaffold")) {
 
     private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val keepTick by int("KeepTick",15,10..30,"tick")
     private val scaffoldOnlyReceiveHit by boolean("OnlyReceiveHit", true)
     private val scaffoldOnlyDuringCombat by boolean("OnlyDuringCombat", false)
-    private val notCondition by multiEnumChoice("Not", NotCondition.DURING_STUCK)
+    private val notCondition by multiEnumChoice("Not", NotCondition.WHILE_SNEAKING)
 
     private var scaffolding = false
+    private var keepTickLeft = 0
 
     override val running: Boolean
-        get() = super.running && passesRequirements()
+        get() = super.running
+            && passesRequirements()
+            && !(ModuleFreeze.running || ModuleAutoStuck.scaffoldBlocked)
 
     private fun shouldEnableScaffold(): Boolean {
         return voidFallPrediction.isVoidFallImminent &&
@@ -45,19 +49,26 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         val player = mc.player ?: return@handler
 
         if (shouldEnableScaffold() && passesRequirements()) {
+            keepTickLeft = keepTick
             if (!ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = true
                 scaffolding = true
             }
-            if (player.isOnGround && scaffolding) {
+            if ((player.isOnGround && scaffolding) || ModuleAutoStuck.scaffoldBlocked) {
+                ModuleScaffold.enabled = false
+                scaffolding = false
+                keepTickLeft = 0
+            }
+        } else if (scaffolding) {
+            if (keepTickLeft > 0) {
+                keepTickLeft--
+            } else {
                 ModuleScaffold.enabled = false
                 scaffolding = false
             }
-        } else if (scaffolding) {
-            ModuleScaffold.enabled = false
-            scaffolding = false
         }
     }
+
 
 
     override fun onDisabled() {
@@ -72,8 +83,5 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     ) : NamedChoice {
         WHILE_USING_ITEM("WhileUsingItem", { !player.isUsingItem }),
         WHILE_SNEAKING("WhileSneaking", { !player.isSneaking }),
-        DURING_STUCK("WhileFreezing", {
-            !(ModuleFreeze.running || ModuleAutoStuck.scaffoldBlocked)
-        }),
     }
 }
