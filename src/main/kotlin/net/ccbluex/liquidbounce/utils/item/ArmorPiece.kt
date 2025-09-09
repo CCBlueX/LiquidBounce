@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.item
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.attribute.EntityAttributes
 
 /**
  * @see net.minecraft.item.equipment.ArmorMaterial.createAttributeModifiers
@@ -29,7 +28,7 @@ import net.minecraft.entity.attribute.EntityAttributes
 @JvmInline
 value class ArmorPiece(val itemSlot: ItemSlot) {
     val slotType: EquipmentSlot
-        get() = itemSlot.itemStack.equippableComponent!!.slot
+        get() = itemSlot.itemStack.equipmentSlot!!
     val entitySlotId: Int
         get() = this.slotType.entitySlotId
     val inventorySlot: Int
@@ -40,11 +39,11 @@ value class ArmorPiece(val itemSlot: ItemSlot) {
         get() = itemSlot.slotType == ItemSlotType.HOTBAR
 
     val toughness: Float
-        get() = itemSlot.itemStack.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS)!!.toFloat()
-
-    val knockbackResistance: Float?
-        get() = itemSlot.itemStack.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE)?.toFloat()
+        get() = itemSlot.itemStack.armorToughness!!.toFloat()
 
     val defensePoints: Float
-        get() = itemSlot.itemStack.getAttributeValue(EntityAttributes.ARMOR)!!.toFloat()
+        get() = itemSlot.itemStack.armorValue!!.toFloat()
+
+    val knockbackResistance: Float?
+        get() = itemSlot.itemStack.armorKnockbackResistance?.toFloat()
 }

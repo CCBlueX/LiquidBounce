@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.item
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.ToolComponent
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
@@ -99,3 +100,14 @@ val ItemStack.isPlayerArmor
 val ItemStack.equippableComponent
     get() = this.get(DataComponentTypes.EQUIPPABLE)
 
+val ItemStack.equipmentSlot
+    get() = this.equippableComponent?.slot
+
+val ItemStack.armorToughness
+    get() = this.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS)
+
+val ItemStack.armorValue
+    get() = this.getAttributeValue(EntityAttributes.ARMOR)
+
+val ItemStack.armorKnockbackResistance
+    get() = this.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE)
