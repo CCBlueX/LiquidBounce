@@ -33,8 +33,8 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
 import net.minecraft.item.consume.UseAction;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
@@ -49,14 +49,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(HeldItemRenderer.class)
 public abstract class MixinHeldItemRenderer {
 
-    @Shadow
-    @Final
-    private static float EQUIP_OFFSET_TRANSLATE_Y;
     @Final
     @Shadow
     private MinecraftClient client;
+
     @Shadow
     private ItemStack offHand;
+
+    @Shadow
+    @Final
+    private static float EQUIP_OFFSET_TRANSLATE_Y;
 
     @Inject(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;push()V", shift = At.Shift.AFTER))
     private void hookRenderFirstPersonItem(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
@@ -93,10 +95,10 @@ public abstract class MixinHeldItemRenderer {
 
     @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
     private void hideShield(AbstractClientPlayerEntity player, float tickDelta, float pitch,
-                            Hand hand, float swingProgress, ItemStack item, float equipProgress,
-                            MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
-                            CallbackInfo ci) {
-        if (hand == Hand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item.getItem())) {
+                                                Hand hand, float swingProgress, ItemStack item, float equipProgress,
+                                                MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
+                                                CallbackInfo ci) {
+        if (hand == Hand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
             ci.cancel();
         }
     }
@@ -107,8 +109,7 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 0
     ))
     private UseAction hookUseAction(ItemStack instance) {
-        var item = instance.getItem();
-        if (item instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (instance.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -121,9 +122,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
-        var item = instance.getMainHandStack().getItem();
+        var itemStack = instance.getMainHandStack();
 
-        if (item instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return true;
         }
 
@@ -136,9 +137,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
-        var item = instance.getMainHandStack().getItem();
+        var itemStack = instance.getMainHandStack();
 
-        if (item instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return Hand.MAIN_HAND;
         }
 
@@ -151,9 +152,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 2
     ))
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
-        var item = instance.getMainHandStack().getItem();
+      var itemStack = instance.getMainHandStack();
 
-        if (item instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+      if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return 7200;
         }
 
@@ -182,7 +183,7 @@ public abstract class MixinHeldItemRenderer {
     private Item preventConflictingCode(Item item) {
         // only applies to sword items,
         // so that future items won't be affected if minecraft decides to actually make use out of this
-        if (item instanceof SwordItem) {
+        if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
             return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
         }
 
@@ -198,7 +199,7 @@ public abstract class MixinHeldItemRenderer {
                                                 CallbackInfo ci) {
         var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
 
-        if (shouldAnimate && item.getItem() instanceof SwordItem) {
+        if (shouldAnimate && item.isIn(ItemTags.SWORDS)) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {

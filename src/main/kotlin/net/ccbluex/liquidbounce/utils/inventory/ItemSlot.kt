@@ -207,7 +207,7 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot {
     }
 }
 
-object OffHandSlot : HotbarItemSlot(-1) {
+data object OffHandSlot : HotbarItemSlot(-1) {
     override val itemStack: ItemStack
         get() = player.offHandStack
 
@@ -219,12 +219,4 @@ object OffHandSlot : HotbarItemSlot(-1) {
     override val useHand = Hand.OFF_HAND
 
     override fun getIdForServer(screen: HandledScreen<*>?) = if (screen == null) 45 else null
-
-    override fun equals(other: Any?): Boolean {
-        return this === other
-    }
-
-    override fun hashCode(): Int {
-        return this.javaClass.hashCode()
-    }
 }

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
 import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Item
@@ -99,7 +100,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
 
             // find replacement items
             val inventorySlots = Slots.Inventory.slots
-                .filter { it.itemStack.item == item }
+                .filter { it.itemStack.isMergeable(itemStack) }
                 .sortedWith(
                     // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
                     if (Features.CLEANUP in features) {
