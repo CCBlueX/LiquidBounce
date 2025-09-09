@@ -49,6 +49,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.vehicle.TntMinecartEntity
+import net.minecraft.item.ItemStack
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
@@ -71,6 +72,23 @@ import kotlin.math.sqrt
 // Copied from 1.21.4
 val Entity.isInsideWaterOrBubbleColumn: Boolean
     get() = this.isTouchingWater || this.blockStateAtPos.isOf(Blocks.BUBBLE_COLUMN)
+
+inline var Input.movementForward: Float
+    get() = movementInput.y
+    set(value) {
+        movementInput.y = value // TODO: it's not joml vec, chn
+    }
+
+inline var Input.movementSideways: Float
+    get() = movementInput.x
+    set(value) {
+        movementInput.x = value
+    }
+
+val PlayerEntity.handItems: Iterable<ItemStack>
+    get() = listOf(mainHandStack, offHandStack)
+
+// Copied from 1.21.4 END
 
 val Entity.netherPosition: Vec3d
     get() = if (world.registryKey == World.NETHER) {

@@ -38,10 +38,10 @@ enum class KillAuraRequirements(
         mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
     }),
     WEAPON("Weapon", {
-        player.inventory.mainHandStack.isWeapon()
+        player.mainHandStack.isWeapon()
     }),
     VANILLA_NAME("VanillaName", {
-        player.inventory.mainHandStack.customName == null
+        player.mainHandStack.customName == null
     }),
     NOT_BREAKING("NotBreaking", {
         mc.interactionManager?.isBreakingBlock == false
