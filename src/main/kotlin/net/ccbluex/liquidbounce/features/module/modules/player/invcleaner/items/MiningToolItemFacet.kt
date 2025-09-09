@@ -32,7 +32,12 @@ import net.minecraft.item.ItemStack
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
-        val VALUE_ESTIMATOR =
+        const val MASK_AXE = 1 shl 0
+        const val MASK_PICKAXE = 1 shl 1
+        const val MASK_SHOVEL = 1 shl 2
+        const val MASK_HOE = 1 shl 3
+
+        private val VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
@@ -60,10 +65,10 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private val ItemStack.miningToolType: Int
             get() {
                 var bits = 0
-                if (isAxe) bits = bits or (1 shl 0)
-                if (isPickaxe) bits = bits or (1 shl 1)
-                if (isShovel) bits = bits or (1 shl 2)
-                if (isHoe) bits = bits or (1 shl 3)
+                if (isAxe) bits = bits or MASK_AXE
+                if (isPickaxe) bits = bits or MASK_PICKAXE
+                if (isShovel) bits = bits or MASK_SHOVEL
+                if (isHoe) bits = bits or MASK_HOE
                 if (bits == 0) error("Item ${this.item} is not a mining tool")
                 return bits
             }
