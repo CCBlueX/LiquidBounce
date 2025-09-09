@@ -11,15 +11,12 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.minecraft.client.gl.ShaderProgramKeys
-import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.util.math.RotationAxis
 import net.minecraft.util.math.Vec3d
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     private val colorMode = choices(this, "ColorMode") {
@@ -34,9 +31,8 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     private val darkImprint by boolean("DarkImprint", true)
     private val lighting by boolean("Lighting", true)
     private val spawnDelay by float("SpawnDelay", 2.0f, 1.0f..10.0f)
-    private val particleCount by int("ParticleCount", 16, 10..100)
-    private val maxLiveCount by int("MaxLiveCount", 100, 1..1000)
-    private val trailLength by int("TrailLength", 20, 5..50)
+    private val particleCount by int("ParticleCount", 64, 10..1000)
+    private val maxLiveCount by int("MaxLiveCount", 500, 1..2000)
 
     private val fireFliesTexture = "image/firepart.png".registerAsDynamicImageFromClientResources()
     private val particles = ArrayDeque<FireFly>()
@@ -49,7 +45,8 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         val creationTime: Long,
         val maxAlive: Long,
         var velocity: Vec3d,
-        val trail: MutableList<TrailPart> = mutableListOf()
+        val trail: MutableList<TrailPart> = mutableListOf(),
+        val phase: Float = random.nextFloat() * 13f
     )
 
     private data class TrailPart(
@@ -103,7 +100,6 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             particle.pos = particle.pos.add(particle.velocity)
             particle.trail.add(TrailPart(particle.pos, currentTime, 400))
             particle.trail.removeIf { it.toRemove(currentTime) }
-            if (particle.trail.size > trailLength) particle.trail.removeAt(0)
             if (random.nextFloat() < 0.05f) particle.velocity = generateRandomVelocity()
         }
 
@@ -124,12 +120,10 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         }
     }
 
-
     @Suppress("unused")
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         if (particles.isEmpty()) return@handler
         val player = mc.player ?: return@handler
-
         val currentTime = mc.world?.time ?: return@handler
         val matrixStack = event.matrixStack
         val partialTicks = event.partialTicks
@@ -138,112 +132,99 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             RenderSystem.enableBlend()
             RenderSystem.blendFuncSeparate(
                 GlStateManager.SrcFactor.SRC_ALPHA,
-                if (darkImprint) {
-                    GlStateManager.DstFactor.ONE
-                } else {
-                    GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA
-                },
+                if (darkImprint) GlStateManager.DstFactor.ONE else GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SrcFactor.ZERO,
                 GlStateManager.DstFactor.ONE
             )
             RenderSystem.disableCull()
             RenderSystem.disableDepthTest()
-            RenderSystem.lineWidth(2.0f)
 
-            val tess = RenderSystem.renderThreadTesselator()
-            val buffer = tess.begin(
-                VertexFormat.DrawMode.LINE_STRIP,
-                VertexFormats.POSITION_COLOR)
+            RenderSystem.setShaderTexture(0, fireFliesTexture)
+
             val camera = mc.gameRenderer.camera
-
-            particles.forEach { particle ->
-                val distance = player.pos.squaredDistanceTo(
-                    particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
-                if (distance > 25) return@forEach
-
-                val (color1, color2) = colorMode.activeChoice.getColors(player)
-                val t = (sin(currentTime.toFloat() * 0.2f) + 1) * 0.5f
-                val baseColor = color1.blend(color2, t)
-                val progress = 1f - ((currentTime - particle.creationTime)
-                    .toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
-
-                particle.trail.forEach { trail ->
-                    val trailColor = baseColor.withAlpha(
-                        (baseColor.a * (1f - trail.timePC(currentTime)) * progress).toInt())
-                    val x = (trail.pos.x - camera.pos.x).toFloat()
-                    val y = (trail.pos.y - camera.pos.y).toFloat()
-                    val z = (trail.pos.z - camera.pos.z).toFloat()
-                    buffer.vertex(matrixStack.peek().positionMatrix, x, y, z)
-                        .color(trailColor.r / 255f, trailColor.g / 255f, trailColor.b / 255f, trailColor.a / 255f)
-                }
+            val (color1Base, color2Base) = colorMode.activeChoice.getColors(player)
+            val total = particles.size
+            if (total == 0) {
+                RenderSystem.enableDepthTest()
+                RenderSystem.enableCull()
+                return@renderEnvironmentForWorld
             }
 
-            val v = buffer.endNullable() ?: return@renderEnvironmentForWorld
-            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
-            BufferRenderer.drawWithGlobalProgram(v)
+            val time = currentTime.toFloat()
+            val maxDistSq = 25.0 * 25.0
 
-            // Render particles
-            RenderSystem.setShaderTexture(0, fireFliesTexture)
-            var index = 0
-            particles.forEach { particle ->
-                index++
-                val interpPos = particle.prevPos.lerp(particle.pos, partialTicks.toDouble())
-                val x = interpPos.x - camera.pos.x
-                val y = interpPos.y - camera.pos.y
-                val z = interpPos.z - camera.pos.z
+            val yawRad = Math.toRadians(camera.yaw.toDouble())
+            val pitchRad = Math.toRadians(camera.pitch.toDouble())
+            val forward = Vec3d(
+                -sin(yawRad) * cos(pitchRad),
+                -sin(pitchRad),
+                cos(yawRad) * cos(pitchRad)
+            ).normalize()
 
-                val distance = player.pos.squaredDistanceTo(
-                    particle.pos.x, particle.pos.y, particle.pos.z).let { sqrt(it) }
-                if (distance > 25) return@forEach
+            val worldUp = Vec3d(0.0, 1.0, 0.0)
+            var rightVec = forward.crossProduct(worldUp)
+            rightVec = if (rightVec.lengthSquared() == 0.0) Vec3d(1.0, 0.0, 0.0) else rightVec.normalize()
+            val upAdjusted = rightVec.crossProduct(forward).normalize()
 
-                val progress = 1f - ((currentTime - particle.creationTime)
-                    .toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
-                matrixStack.push()
-                matrixStack.translate(x, y, z)
-                val size = 0.1f + 0.05f * (1f - progress)
-                matrixStack.scale(size, size, size)
-                matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.yaw))
-                matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.pitch))
+            val rxx = rightVec.x.toFloat(); val rxy = rightVec.y.toFloat(); val rxz = rightVec.z.toFloat()
+            val uxx = upAdjusted.x.toFloat(); val uxy = upAdjusted.y.toFloat(); val uxz = upAdjusted.z.toFloat()
 
-                val (color1, color2) = colorMode.activeChoice.getColors(player)
-                val t = (sin(currentTime.toFloat() * 0.2f + -(index / particles.size.toFloat()) * 13) + 1) * 0.5f
-                val color = color1.blend(color2, t)
-                val alpha = (color.a * progress).toInt()
-                val renderColor = color.withAlpha(alpha)
+            drawCustomMesh(
+                VertexFormat.DrawMode.QUADS,
+                VertexFormats.POSITION_TEXTURE_COLOR,
+                ShaderProgramKeys.POSITION_TEX_COLOR
+            ) { mat ->
+                var index = 0
+                val iter = particles.iterator()
+                while (iter.hasNext()) {
+                    index++
+                    val particle = iter.next()
 
-                drawCustomMesh(
-                    VertexFormat.DrawMode.QUADS,
-                    VertexFormats.POSITION_TEXTURE_COLOR,
-                    ShaderProgramKeys.POSITION_TEX_COLOR
-                ) { mat ->
-                    vertex(mat, -0.5f, -0.5f, 0f).texture(0f, 0f).color(renderColor.toARGB())
-                    vertex(mat, 0.5f, -0.5f, 0f).texture(1f, 0f).color(renderColor.toARGB())
-                    vertex(mat, 0.5f, 0.5f, 0f).texture(1f, 1f).color(renderColor.toARGB())
-                    vertex(mat, -0.5f, 0.5f, 0f).texture(0f, 1f).color(renderColor.toARGB())
-                }
+                    val interp = particle.prevPos.lerp(particle.pos, partialTicks.toDouble())
+                    val cx = (interp.x - camera.pos.x).toFloat()
+                    val cy = (interp.y - camera.pos.y).toFloat()
+                    val cz = (interp.z - camera.pos.z).toFloat()
 
-                if (lighting) {
-                    val lightingSize = size * 3.0f
-                    matrixStack.scale(3.0f, 3.0f, 3.0f)
-                    val lightingColor = renderColor.withAlpha((alpha / 5))
-                    drawCustomMesh(
-                        VertexFormat.DrawMode.QUADS,
-                        VertexFormats.POSITION_TEXTURE_COLOR,
-                        ShaderProgramKeys.POSITION_TEX_COLOR
-                    ) { mat ->
-                        vertex(mat, -0.5f, -0.5f, 0f).texture(0f, 0f).color(lightingColor.toARGB())
-                        vertex(mat, 0.5f, -0.5f, 0f).texture(1f, 0f).color(lightingColor.toARGB())
-                        vertex(mat, 0.5f, 0.5f, 0f).texture(1f, 1f).color(lightingColor.toARGB())
-                        vertex(mat, -0.5f, 0.5f, 0f).texture(0f, 1f).color(lightingColor.toARGB())
+                    val dx = interp.x - player.x
+                    val dy = interp.y - player.y
+                    val dz = interp.z - player.z
+                    val distSq = dx * dx + dy * dy + dz * dz
+                    if (distSq > maxDistSq) continue
+
+                    val progress = 1f - ((currentTime - particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
+                    val t = (sin(time * 0.2f + particle.phase) + 1f) * 0.5f
+                    val color = color1Base.blend(color2Base, t)
+                    val alpha = (color.a * progress).toInt()
+                    if (alpha <= 0) continue
+                    val renderColor = color.withAlpha(alpha)
+
+                    val sizes = if (lighting) floatArrayOf(0.1f + 0.05f * (1f - progress), 3f * (0.1f + 0.05f * (1f - progress)))
+                    else floatArrayOf(0.1f + 0.05f * (1f - progress))
+                    val alphas = if (lighting) intArrayOf(alpha, (alpha / 5).coerceAtLeast(1)) else intArrayOf(alpha)
+
+                    sizes.forEachIndexed { idx, size ->
+                        val half = size * 0.5f
+                        val argb = renderColor.withAlpha(alphas[idx]).toARGB()
+
+                        val rx = rxx * half; val ry = rxy * half; val rz = rxz * half
+                        val ux = uxx * half; val uy = uxy * half; val uz = uxz * half
+
+                        val v0x = cx - rx - ux; val v0y = cy - ry - uy; val v0z = cz - rz - uz
+                        val v1x = cx + rx - ux; val v1y = cy + ry - uy; val v1z = cz + rz - uz
+                        val v2x = cx + rx + ux; val v2y = cy + ry + uy; val v2z = cz + rz + uz
+                        val v3x = cx - rx + ux; val v3y = cy - ry + uy; val v3z = cz - rz + uz
+
+                        vertex(mat, v0x, v0y, v0z).texture(0f, 1f).color(argb)
+                        vertex(mat, v1x, v1y, v1z).texture(1f, 1f).color(argb)
+                        vertex(mat, v2x, v2y, v2z).texture(1f, 0f).color(argb)
+                        vertex(mat, v3x, v3y, v3z).texture(0f, 0f).color(argb)
                     }
                 }
-
-                matrixStack.pop()
             }
 
             RenderSystem.enableDepthTest()
             RenderSystem.enableCull()
-            RenderSystem.lineWidth(1.0f)
         }
     }
+
 }

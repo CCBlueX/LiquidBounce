@@ -66,11 +66,9 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
         }
     }
 
-
     private val worldChangeHandler = handler<WorldChangeEvent> {
         path.clear()
     }
-
 
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (path.isEmpty()) return@handler
@@ -106,18 +104,24 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
             val forwardY = -sin(pitchRad)
             val forwardZ = cos(yawRad) * cos(pitchRad)
 
-            var fLen = sqrt(forwardX * forwardX + forwardY * forwardY + forwardZ * forwardZ)
-            val fx = if (fLen != 0.0) forwardX / fLen else 0.0
-            val fy = if (fLen != 0.0) forwardY / fLen else 0.0
-            val fz = if (fLen != 0.0) forwardZ / fLen else 1.0
+            val forward = Vec3d(
+                -sin(yawRad) * cos(pitchRad),
+                -sin(pitchRad),
+                cos(yawRad) * cos(pitchRad)
+            ).normalize()
+
+            val up = Vec3d(0.0, 1.0, 0.0)
+            val right = forward.crossProduct(up).normalize()
+            val upAdjusted = right.crossProduct(forward).normalize()
+
 
             val uxw = 0.0
             val uyw = 1.0
             val uzw = 0.0
 
-            var rightX = uyw * fz - uzw * fy
-            var rightY = uzw * fx - uxw * fz
-            var rightZ = uxw * fy - uyw * fx
+            var rightX = uyw * forward.z - uzw * forward.y
+            var rightY = uzw * forward.x - uxw * forward.z
+            var rightZ = uxw * forward.y - uyw * forward.x
             var rLen = sqrt(rightX * rightX + rightY * rightY + rightZ * rightZ)
             if (rLen == 0.0) {
                 rightX = 1.0; rightY = 0.0; rightZ = 0.0; rLen = 1.0
@@ -125,9 +129,9 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
                 rightX /= rLen; rightY /= rLen; rightZ /= rLen
             }
 
-            var upX = fy * rightZ - fz * rightY
-            var upY = fz * rightX - fx * rightZ
-            var upZ = fx * rightY - fy * rightX
+            var upX = forward.y * rightZ - forward.z * rightY
+            var upY = forward.z * rightX - forward.x * rightZ
+            var upZ = forward.x * rightY - forward.y * rightX
             var uLen = sqrt(upX * upX + upY * upY + upZ * upZ)
             if (uLen == 0.0) {
                 upX = 0.0; upY = 1.0; upZ = 0.0
@@ -162,19 +166,29 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
                     val totalLife = alive.toFloat()
                     val progress = if (Animation.enabled && Animation.fade) {
                         1f - (life / totalLife).coerceIn(0f, 1f)
-                    } else 1f
+                    } else {
+                        1f
+                    }
 
                     val fadeFactor = if (Animation.enabled && Animation.fade) {
                         val fadeStart = totalLife - Animation.fadeDuration
                         if (life >= fadeStart) {
                             val fadeProgress = ((life - fadeStart) / Animation.fadeDuration).coerceIn(0f, 1f)
                             1f - fadeProgress
-                        } else 1f
-                    } else 1f
-                    val shrinkFactor = if (Animation.enabled && Animation.shrink && life >= totalLife - Animation.shrinkDuration) {
-                        val shrinkProgress = ((life - (totalLife - Animation.shrinkDuration)) / Animation.shrinkDuration).coerceIn(0f, 1f)
+                        } else {
+                            1f
+                        }
+                    } else {
+                        1f
+                    }
+                    val shrinkFactor = if (Animation.enabled && Animation.shrink
+                        && life >= totalLife - Animation.shrinkDuration) {
+                        val shrinkProgress = ((life - (
+                            totalLife - Animation.shrinkDuration)) / Animation.shrinkDuration).coerceIn(0f, 1f)
                         1f - shrinkProgress
-                    } else 1f
+                    } else {
+                        1f
+                    }
 
                     val baseSize = 0.5f
                     val size = (baseSize * shrinkFactor) * (0.5f + 0.5f * progress)
@@ -216,7 +230,6 @@ object SparkleMode : BreadcrumbsMode("Sparkle") {
             RenderSystem.depthMask(true)
         }
     }
-
 
     override fun enable() {
         path.clear()

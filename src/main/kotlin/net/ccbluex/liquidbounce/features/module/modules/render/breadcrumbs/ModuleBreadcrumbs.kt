@@ -20,12 +20,12 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
         )
     )
 
-    val colorMode = choices("ColorMode", 3) {
+    val colorMode = choices("ColorMode", 0) {
         arrayOf(
-            GenericCustomColorMode(it, Color4b.CYAN.withAlpha(100), Color4b.TRANSPARENT),
-            GenericStaticColorMode(it, Color4b(0, 255, 4)),
+            GenericSyncColorMode(it),
+            GenericCustomColorMode(it, Color4b.LIQUID_BOUNCE, Color4b.CYAN),
+            GenericStaticColorMode(it, Color4b.CYAN),
             GenericRainbowColorMode(it),
-            GenericSyncColorMode(it, defaultStartAlpha = 150, defaultEndAlpha = 50)
         )
     }
 
