@@ -321,7 +321,7 @@ val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch, true)
 
 val ClientPlayerEntity.lastRotation: Rotation
-    get() = Rotation(this.lastYaw, this.lastPitch, true)
+    get() = Rotation(this.lastYawClient, this.lastPitchClient, true)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())

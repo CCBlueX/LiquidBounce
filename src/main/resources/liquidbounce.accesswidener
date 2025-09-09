@@ -27,17 +27,17 @@ accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chat
 accessible field net/minecraft/client/network/ClientPlayerEntity lastXClient D # 1.21.4 laseX
 accessible field net/minecraft/client/network/ClientPlayerEntity lastYClient D # 1.21.4 laseBaseY
 accessible field net/minecraft/client/network/ClientPlayerEntity lastZClient D # 1.21.4 laseZ
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastYaw F
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastPitch F
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
+accessible field net/minecraft/client/network/ClientPlayerEntity lastYawClient F # 1.21.4 lastYaw
+accessible field net/minecraft/client/network/ClientPlayerEntity lastPitchClient F # 1.21.4 lastPitch
+accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
+accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
+accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
+accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
-#accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
-#accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
+accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
+accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
+accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
 accessible method net/minecraft/client/network/ClientPlayerEntity sendMovementPackets ()V
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
@@ -101,7 +101,7 @@ accessible field net/minecraft/client/render/WorldRenderer blockBreakingProgress
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
 accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
-#accessible method net/minecraft/entity/LivingEntity computeFallDamage (FF)I
+accessible method net/minecraft/entity/LivingEntity computeFallDamage (DF)I
 
 accessible field net/minecraft/entity/mob/CreeperEntity explosionRadius I
 

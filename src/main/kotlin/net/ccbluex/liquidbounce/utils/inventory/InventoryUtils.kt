@@ -119,7 +119,7 @@ internal enum class InventoryRequirements(
     })
 }
 
-fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
+fun hasInventorySpace() = player.inventory.mainStacks.any { it.isEmpty }
 
 fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
     return (Slots.Inventory + Slots.Hotbar).filter { it.itemStack.isEmpty }

@@ -39,7 +39,7 @@ class AutoShopInventoryManager : EventListener {
     @Suppress("unused")
     // update the items from the player's inventory every tick
     private val onTick = handler<GameTickEvent> {
-        val inventoryItems = player.inventory.main.toMutableList().apply {
+        val inventoryItems = player.inventory.mainStacks.toMutableList().apply {
             addAll(player.armorItems)
             add(player.offHandStack)
         }

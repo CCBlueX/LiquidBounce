@@ -141,7 +141,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
         world.addEntity(slime)
 
         // Play sound at position
-        world.playSound(
+        world.playSoundClient(
             position.x,
             position.y,
             position.z,
@@ -150,7 +150,6 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
             1f,
             1f,
             false,
-            Random.nextLong()
         )
 
         return slime
