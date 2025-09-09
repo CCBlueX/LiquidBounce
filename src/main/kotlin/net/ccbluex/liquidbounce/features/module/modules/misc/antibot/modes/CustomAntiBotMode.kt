@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.*
 import net.minecraft.item.equipment.ArmorMaterials
@@ -131,16 +133,17 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = arrayOf(
-            multiEnumChoice("Helmet", EnumSet.of(ArmorPredicate.NOTHING), HELMET),
-            multiEnumChoice("Chestplate", EnumSet.of(ArmorPredicate.NOTHING), CHESTPLATE),
-            multiEnumChoice("Leggings", EnumSet.of(ArmorPredicate.NOTHING), BASE),
-            multiEnumChoice("Boots", EnumSet.of(ArmorPredicate.NOTHING), BASE),
-        )
+        private val values = EnumMap<_, MultiChooseEnumListValue<ArmorPredicate>>(EquipmentSlot::class.java).apply {
+            this[EquipmentSlot.HEAD] = multiEnumChoice("Helmet", EnumSet.of(ArmorPredicate.NOTHING), HELMET)
+            this[EquipmentSlot.CHEST] = multiEnumChoice("Chestplate", EnumSet.of(ArmorPredicate.NOTHING), CHESTPLATE)
+            this[EquipmentSlot.LEGS] = multiEnumChoice("Leggings", EnumSet.of(ArmorPredicate.NOTHING), BASE)
+            this[EquipmentSlot.FEET] = multiEnumChoice("Boots", EnumSet.of(ArmorPredicate.NOTHING), BASE)
+        }
 
         fun isValid(entity: PlayerEntity): Boolean {
-            return entity.armorItems.withIndex().all { (index, armor) ->
-                val predicates = values[values.lastIndex - index].get()
+            return values.all { (slot, value) ->
+                val predicates = value.get()
+                val armor = entity.getEquippedStack(slot)
                 // Nothing selected = skip this part
                 return predicates.isEmpty() || predicates.any {
                     it.predicate.test(armor)

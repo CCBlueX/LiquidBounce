@@ -188,8 +188,6 @@ class ItemCategorization(
             add(WeaponItemFacet(slot))
 
             when (val item = itemStack.item) {
-                // Treat animal armor as a normal item
-                is AnimalArmorItem -> add(ItemFacet(slot))
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))

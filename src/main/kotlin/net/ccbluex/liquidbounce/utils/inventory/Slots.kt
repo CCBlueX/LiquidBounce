@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.collections.filter
@@ -84,7 +85,12 @@ object Slots {
      */
     @JvmField
     val Armor = SlotGroup(
-        List(4) { ArmorItemSlot(it) }
+        listOf(
+            ArmorItemSlot(EquipmentSlot.FEET), // 0
+            ArmorItemSlot(EquipmentSlot.LEGS), // 1
+            ArmorItemSlot(EquipmentSlot.CHEST), // 2
+            ArmorItemSlot(EquipmentSlot.HEAD), // 3
+        )
     )
 
     /**

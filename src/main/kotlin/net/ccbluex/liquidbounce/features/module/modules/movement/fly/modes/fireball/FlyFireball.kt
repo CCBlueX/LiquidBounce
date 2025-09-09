@@ -63,7 +63,7 @@ internal object FlyFireball : Choice("Fireball") {
         }
     }
 
-    fun holdsFireball() = player.inventory.mainHandStack.item is FireChargeItem
+    fun holdsFireball() = player.mainHandStack.item is FireChargeItem
 
     fun throwFireball() {
         interactItem(Hand.MAIN_HAND)

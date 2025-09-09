@@ -149,7 +149,8 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
             SoundCategory.NEUTRAL,
             1f,
             1f,
-            false
+            false,
+            Random.nextLong()
         )
 
         return slime

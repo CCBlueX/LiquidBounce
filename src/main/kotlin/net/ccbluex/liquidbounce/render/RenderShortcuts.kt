@@ -22,17 +22,16 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gl.ShaderProgramKey
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -60,6 +59,12 @@ val HAS_AMD_VEGA_APU = GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Rad
 
 val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+// Copied from 1.21.4
+
+val RENDER_THREAD_TESSELATOR = Tessellator(1536)
+
+// Copied from 1.21.4 end
 
 /**
  * Data class representing the rendering environment.
@@ -238,11 +243,11 @@ inline fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment
  * @param draw The block of code to be executed with cull disabled.
  */
 inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
-    RenderSystem.disableCull()
+    GlStateManager._disableCull()
     try {
         draw()
     } finally {
-        RenderSystem.enableCull()
+        GlStateManager._enableCull()
     }
 }
 
@@ -282,7 +287,7 @@ private fun RenderEnvironment.drawLines(lines: Array<out Vec3>, mode: DrawMode =
     }
 
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(mode, VertexFormats.POSITION)
     // Set the shader to the position program
@@ -303,7 +308,7 @@ private fun RenderEnvironment.drawLines(lines: Array<out Vec3>, mode: DrawMode =
 /**
  */
 fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
     RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
@@ -341,7 +346,7 @@ inline fun RenderEnvironment.drawCustomMesh(
     shader: ShaderProgramKey,
     drawer: BufferBuilder.(Matrix4f) -> Unit
 ) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     val buffer = tessellator.begin(drawMode, vertexFormat)
 
     RenderSystem.setShader(shader)
@@ -360,7 +365,7 @@ inline fun RenderEnvironment.drawCustomMesh(
 }
 
 fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.QUADS, VertexFormats.POSITION)
 
@@ -381,7 +386,7 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
 }
 
 fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.DEBUG_LINES, VertexFormats.POSITION)
 
@@ -409,7 +414,7 @@ fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
 }
 
 fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val bufferBuilder = tessellator.begin(DrawMode.TRIANGLES, VertexFormats.POSITION)
 
@@ -444,7 +449,7 @@ fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Ve
 @Suppress("LongMethod")
 fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false) {
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
 
     // Begin drawing lines or quads with position format
     val buffer = tessellator.begin(
@@ -479,7 +484,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
 
 fun RenderEnvironment.drawBoxSide(box: Box, side: Direction, face: Color4b, outline: Color4b){
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
 
     // Set the shader to the position program
     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
@@ -579,7 +584,7 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     val buffer = tessellator.begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
 
     // Set the shader to the position program
@@ -623,7 +628,7 @@ fun RenderEnvironment.drawGradientCircle(
 ) {
 
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     val buffer = tessellator.begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
 
     // Set the shader to the position and color program
@@ -652,7 +657,7 @@ fun RenderEnvironment.drawGradientCircle(
  */
 fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     val buffer = tessellator.begin(DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR)
 
     // Set the shader to the position and color program
@@ -677,7 +682,7 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
  */
 fun RenderEnvironment.drawOutlinedBox(box: Box) {
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.DEBUG_LINES, VertexFormats.POSITION)
 
@@ -730,7 +735,7 @@ fun RenderEnvironment.drawOutlinedBox(box: Box) {
  */
 fun RenderEnvironment.drawSolidBox(box: Box) {
     val matrix = matrixStack.peek().positionMatrix
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = RENDER_THREAD_TESSELATOR
     // Begin drawing lines with position format
     val buffer = tessellator.begin(DrawMode.QUADS, VertexFormats.POSITION)
 

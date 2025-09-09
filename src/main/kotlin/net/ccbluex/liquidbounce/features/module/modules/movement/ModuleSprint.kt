@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.movementForward
+import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -123,7 +125,8 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     @Suppress("MagicNumber")
     fun shouldPreventSprint(): Boolean {
         val deltaYaw = player.yaw - (RotationManager.currentRotation ?: return false).yaw
-        val (forward, sideways) = Pair(player.input.movementForward, player.input.movementSideways)
+        val forward = player.input.movementForward
+        val sideways = player.input.movementSideways
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
             MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5

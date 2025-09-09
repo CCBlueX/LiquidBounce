@@ -28,7 +28,7 @@ inline fun Identifier.registerDynamicImage(image: InputStream) {
 }
 
 inline fun Identifier.registerDynamicImage(image: NativeImage) {
-    mc.textureManager.registerTexture(this, NativeImageBackedTexture(image))
+    mc.textureManager.registerTexture(this, NativeImageBackedTexture(::toName, image))
 }
 
 /**

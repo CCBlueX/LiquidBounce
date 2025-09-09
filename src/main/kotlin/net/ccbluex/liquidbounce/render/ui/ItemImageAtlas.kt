@@ -114,6 +114,7 @@ private class ItemFramebufferRenderer(
     private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
 
     private val framebuffer: Framebuffer = SimpleFramebuffer(
+        "ItemFramebufferRenderer",
         NATIVE_ITEM_SIZE * scale * itemsPerDimension,
         NATIVE_ITEM_SIZE * scale * itemsPerDimension,
         true

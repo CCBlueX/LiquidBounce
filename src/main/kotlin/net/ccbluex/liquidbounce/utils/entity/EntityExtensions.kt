@@ -88,6 +88,14 @@ inline var Input.movementSideways: Float
 val PlayerEntity.handItems: Iterable<ItemStack>
     get() = listOf(mainHandStack, offHandStack)
 
+val PlayerEntity.armorItems: Iterable<ItemStack>
+    get() = listOf(
+        getEquippedStack(EquipmentSlot.FEET),
+        getEquippedStack(EquipmentSlot.LEGS),
+        getEquippedStack(EquipmentSlot.CHEST),
+        getEquippedStack(EquipmentSlot.HEAD),
+    )
+
 // Copied from 1.21.4 END
 
 val Entity.netherPosition: Vec3d

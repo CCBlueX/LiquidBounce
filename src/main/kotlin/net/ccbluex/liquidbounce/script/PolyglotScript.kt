@@ -85,8 +85,7 @@ class PolyglotScript(
                                 .append(
                                     variable(devtoolURL)
                                         .copyable(
-                                            copyContent = devtoolURL, hover = HoverEvent(
-                                                HoverEvent.Action.SHOW_TEXT,
+                                            copyContent = devtoolURL, hover = HoverEvent.ShowText(
                                                 regular(translation("liquidbounce.scripts.debug.inspect.url"))
                                             )
                                         )

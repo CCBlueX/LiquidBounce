@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
@@ -39,8 +40,8 @@ class AutoShopInventoryManager : EventListener {
     // update the items from the player's inventory every tick
     private val onTick = handler<GameTickEvent> {
         val inventoryItems = player.inventory.main.toMutableList().apply {
-            addAll(player.inventory.armor)
-            addAll(player.inventory.offHand)
+            addAll(player.armorItems)
+            add(player.offHandStack)
         }
 
         val newItems = mutableMapOf<String, Int>()

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
@@ -129,12 +130,12 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
     @Suppress("unused", "MagicNumber")
     private enum class ArmorColor(
         override val choiceName: String,
-        val slot: Int
+        val slot: EquipmentSlot,
     ) : NamedChoice {
-        HELMET("Helmet", 3),
-        CHESTPLATE("Chestplate", 2),
-        PANTS("Pants", 1),
-        BOOTS("Boots", 0);
+        HELMET("Helmet", EquipmentSlot.HEAD),
+        CHESTPLATE("Chestplate", EquipmentSlot.CHEST),
+        PANTS("Pants", EquipmentSlot.LEGS),
+        BOOTS("Boots", EquipmentSlot.FEET);
 
         /**
          * Checks if the color of the item in the [slot] of
@@ -142,8 +143,8 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
          */
         @Suppress("ReturnCount")
         fun matchesArmorColor(suspected: PlayerEntity): Boolean {
-            val ownStack = player.inventory.getArmorStack(slot)
-            val otherStack = suspected.inventory.getArmorStack(slot)
+            val ownStack = player.getEquippedStack(slot)
+            val otherStack = suspected.getEquippedStack(slot)
 
             // returns false if the armor is not dyeable (e.g., iron armor)
             // to avoid a false positive from `null == null`
