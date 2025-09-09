@@ -37,6 +37,7 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
@@ -115,10 +116,9 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
                 }
                 .forEach {
                     val itemStack = it.second
-                    val item = itemStack.item
                     val entity = world.getEntityById(packet.entityId)
 
-                    handleItem(item, entity)
+                    handleItem(itemStack, entity)
                 }
         }
         if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
@@ -156,15 +156,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     }
 
     private fun handleItem(
-        item: Item?,
+        itemStack: ItemStack,
         entity: Entity?,
     ) {
         if (entity !is AbstractClientPlayerEntity) {
             return
         }
 
-        val isSword = MurderMysterySwordDetection.isSword(item)
-        val isBow = item is BowItem
+        val isSword = MurderMysterySwordDetection.isSword(itemStack)
+        val isBow = itemStack.item is BowItem
 
         val locationSkin = entity.skinTextures.texture
 

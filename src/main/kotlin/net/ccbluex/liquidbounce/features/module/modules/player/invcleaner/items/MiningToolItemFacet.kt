@@ -48,7 +48,7 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                     val toolComponent = it.itemStack.toolComponent ?: return@compareBy 0f
                     toolComponent.rules.firstOrNull { rule ->
                         rule.correctForDrops.orElse(false)
-                    }?.speed?.orElse(null) ?: 0f
+                    }?.speed?.orElse(null) ?: toolComponent.defaultMiningSpeed
                 },
                 compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 PREFER_BETTER_DURABILITY,

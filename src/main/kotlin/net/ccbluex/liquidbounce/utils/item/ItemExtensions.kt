@@ -93,8 +93,6 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
     return this.isMergeable(other) && this.count + other.count <= this.maxCount
 }
 
-fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
-
 fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
     .getOrDefault(
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
