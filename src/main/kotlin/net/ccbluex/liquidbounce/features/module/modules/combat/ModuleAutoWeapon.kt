@@ -38,11 +38,11 @@ import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
+import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
 import net.minecraft.util.Hand
 import java.util.*
@@ -70,7 +70,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
     ): NamedChoice {
         ANY("Any", { true }),
         SWORD("Sword", { it.itemStack.isSword }),
-        AXE("Axe", { it.itemStack.item is AxeItem }),
+        AXE("Axe", { it.itemStack.isAxe }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
 
         /**
@@ -112,12 +112,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             }
 
             // If we have an axe in our main hand, we will break the shield
-            if (player.mainHandStack.item is AxeItem) {
+            if (player.mainHandStack.isAxe) {
                 return true
             }
 
             // If we are not going to switch to an axe, we will not break the shield
-            return determineWeaponSlot(null, enforceShield = true)?.itemStack?.item is AxeItem
+            return determineWeaponSlot(null, enforceShield = true)?.itemStack?.isAxe == true
         }
 
     /**
@@ -190,7 +190,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
                     // A mace's smash attack cannot be blocked by a shield
                     requiresMace -> itemFacet.itemStack.item is MaceItem
                     // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> itemFacet.itemStack.item is AxeItem
+                    requiresShield -> itemFacet.itemStack.isAxe
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.filter(itemFacet)
                 }

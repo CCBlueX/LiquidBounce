@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.AxeItem
 
 object KillAuraTargetTracker : TargetTracker() {
 
@@ -47,7 +47,7 @@ object KillAuraTargetTracker : TargetTracker() {
             return true
         }
 
-        if (player.mainHandStack.item is AxeItem || ModuleAutoWeapon.willShieldBreak) {
+        if (player.mainHandStack.isAxe || ModuleAutoWeapon.willShieldBreak) {
             return true
         }
 
