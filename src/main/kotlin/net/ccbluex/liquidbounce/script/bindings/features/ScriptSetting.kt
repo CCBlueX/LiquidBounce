@@ -18,12 +18,15 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.list
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
 import org.graalvm.polyglot.Value as PolyglotValue
 
@@ -132,11 +135,7 @@ object ScriptSetting {
     @JvmName("choose")
     fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").asArray<String>().map {
-            object : NamedChoice {
-                override val choiceName = it
-            }
-        }.toTypedArray<NamedChoice>()
+        val choices = value.getMember("choices").asArray<String>().mapArray { it.asNamedChoice() }
         val defaultStr = value.getMember("default").asString()
 
         val default = choices.find { it.choiceName == defaultStr }
@@ -146,7 +145,7 @@ object ScriptSetting {
                 }'"
             )
 
-        return ChooseListValue(name, defaultValue = default, choices = choices)
+        return ChooseListValue(name, defaultValue = default, choices = ObjectArraySet(choices))
     }
 
     @JvmName("multiChoose")
