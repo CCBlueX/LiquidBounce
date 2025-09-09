@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.world.GameMode
+import net.minecraft.util.StringIdentifiable
 import java.lang.reflect.Type
 
-object GameModeSerializer : JsonSerializer<GameMode> {
-    override fun serialize(src: GameMode?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.getName()) }
+object StringIdentifiableSerializer : JsonSerializer<StringIdentifiable> {
+    override fun serialize(src: StringIdentifiable?, typeOfSrc: Type, context: JsonSerializationContext) =
+        src?.let { JsonPrimitive(it.asString()) }
 }

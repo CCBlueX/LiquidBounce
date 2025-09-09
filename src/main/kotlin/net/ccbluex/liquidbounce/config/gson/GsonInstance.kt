@@ -52,10 +52,10 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import net.minecraft.world.GameMode
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -140,7 +140,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
         .registerTypeAdapter(Session::class.javaObjectType, SessionSerializer)
         .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
-        .registerTypeAdapter(GameMode::class.javaObjectType, GameModeSerializer)
+        .registerTypeHierarchyAdapter(StringIdentifiable::class.java, StringIdentifiableSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
