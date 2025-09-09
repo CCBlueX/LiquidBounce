@@ -95,3 +95,7 @@ val ItemStack.isHeadArmor
 
 val ItemStack.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
+
+val ItemStack.equippableComponent
+    get() = this.get(DataComponentTypes.EQUIPPABLE)
+

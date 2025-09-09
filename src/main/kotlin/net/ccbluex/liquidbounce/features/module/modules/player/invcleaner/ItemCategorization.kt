@@ -174,7 +174,7 @@ class ItemCategorization(
      * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
      * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
      */
-    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    @Suppress("CyclomaticComplexMethod", "CognitiveComplexMethod", "LongMethod")
     fun getItemFacets(slot: ItemSlot): List<ItemFacet> {
         val itemStack = slot.itemStack
         if (itemStack.isEmpty) {

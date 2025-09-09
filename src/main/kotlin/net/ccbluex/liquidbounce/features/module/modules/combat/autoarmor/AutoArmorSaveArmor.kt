@@ -44,7 +44,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
         )
 
         // All conditions must be met for this feature to work.
-        if (conditions.any { it == false }) {
+        if (conditions.any { !it }) {
             return@tickHandler
         }
 
