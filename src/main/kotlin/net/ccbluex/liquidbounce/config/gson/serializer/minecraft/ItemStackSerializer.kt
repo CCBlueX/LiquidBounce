@@ -48,7 +48,7 @@ object ItemStackSerializer : JsonSerializer<ItemStack> {
             /**
              * @see ItemStack.CODEC
              */
-            add("components", context.serialize(it.componentChanges))
+//            add("components", context.serialize(it.componentChanges))
         }
     }
 

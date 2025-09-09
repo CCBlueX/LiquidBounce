@@ -31,7 +31,6 @@ import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.AttributeModifiersComponent
-import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.EnchantmentHelper
@@ -42,15 +41,11 @@ import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.*
-import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.math.BlockPos
 import java.util.*
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 /**
  * Create item with NBT tags
@@ -74,18 +69,6 @@ fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): Item
     return itemStack
 }
 
-/**
- * Check if a stack is nothing (means empty slot)
- */
-@OptIn(ExperimentalContracts::class)
-fun ItemStack?.isNothing(): Boolean {
-    contract {
-        returns(true) implies (this@isNothing != null)
-    }
-
-    return this?.isEmpty == true
-}
-
 fun ItemStack?.getEnchantmentCount(): Int {
     val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
 
@@ -98,30 +81,6 @@ fun ItemStack?.getEnchantment(enchantment: RegistryKey<Enchantment>): Int {
     return enchantments.getLevel(enchantment.toRegistryEntry())
 }
 
-val ItemStack.isConsumable: Boolean
-    get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
-
-val ItemStack.isFood: Boolean
-    get() = foodComponent != null && this.useAction == UseAction.EAT
-
-val ItemStack.foodComponent: FoodComponent?
-    get() = this.get(DataComponentTypes.FOOD)
-
-val ItemStack.isBundle
-    get() = this.item is BundleItem
-
-/**
- * @since 1.21.5
- */
-val ItemStack.isSword
-    get() = this.isIn(ItemTags.SWORDS)
-
-/**
- * @since 1.21.5
- */
-val ItemStack.isPickaxe
-    get() = this.isIn(ItemTags.PICKAXES)
-
 /**
  * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
  * with the other item stack
@@ -133,17 +92,6 @@ fun ItemStack.isMergeable(other: ItemStack): Boolean {
 fun ItemStack.canMerge(other: ItemStack): Boolean {
     return this.isMergeable(other) && this.count + other.count <= this.maxCount
 }
-
-fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
-
-val MiningToolItem.type: Int
-    get() = when (this) {
-        is AxeItem -> 0
-        is PickaxeItem -> 1
-        is ShovelItem -> 2
-        is HoeItem -> 3
-        else -> error("Unknown tool item $this (WTF?)")
-    }
 
 fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
     .getOrDefault(

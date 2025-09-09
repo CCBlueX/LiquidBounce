@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.item.AxeItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
 
@@ -51,5 +51,5 @@ enum class KillAuraRequirements(
 /**
  * Check if the item is a weapon.
  */
-private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.item is AxeItem
+private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.isAxe
     || this.item is MaceItem
