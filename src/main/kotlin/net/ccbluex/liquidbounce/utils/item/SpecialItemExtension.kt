@@ -46,14 +46,3 @@ fun ItemCooldownManager.getCooldown(stack: ItemStack): ItemCooldownManagerAdditi
 
 val PlayerEntity.handItems: List<ItemStack> get() = listOf(mainHandStack, offHandStack)
 
-val ItemStack.isSword: Boolean
-    get() = isIn(ItemTags.SWORDS)
-
-val Item.isSword: Boolean
-    get() = defaultStack.isSword
-
-val ItemStack.isPickaxe: Boolean
-    get() = isIn(ItemTags.PICKAXES)
-
-val Item.isPickaxe: Boolean
-    get() = defaultStack.isPickaxe
