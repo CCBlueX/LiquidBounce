@@ -59,7 +59,7 @@ object FontManager {
     /**
      * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
      */
-    private val CJK_FONT  by AsyncLazy {
+    private val CJK_FONT by AsyncLazy {
         runCatching {
             when (Util.getOperatingSystem()) {
                 WINDOWS -> systemFont("Microsoft YaHei")
@@ -98,9 +98,10 @@ object FontManager {
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */
-    var glyphManager: FontGlyphPageManager? = null
+    var glyphManager: FontGlyphPageManager
+        field: FontGlyphPageManager? = null
         private set
-        get() = field ?: error("Glyph manager was not initialized yet!")
+        get() = requireNotNull(field) { "Glyph manager was not initialized yet!" }
 
     /**
      * Returns the font by the given name.

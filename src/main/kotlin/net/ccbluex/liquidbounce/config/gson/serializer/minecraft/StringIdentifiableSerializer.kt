@@ -23,7 +23,6 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.minecraft.util.StringIdentifiable
-import net.minecraft.world.GameMode
 import java.lang.reflect.Type
 
 object StringIdentifiableSerializer : JsonSerializer<StringIdentifiable> {

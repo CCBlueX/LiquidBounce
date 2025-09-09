@@ -23,31 +23,37 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.item.SpecialItemExtensionKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ConsumableComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.consume.UseAction;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Item.class)
-public class MixinItem {
+public abstract class MixinItem {
+
+    @Shadow
+    public abstract ItemStack getDefaultStack();
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void hookSwordUse(World world, PlayerEntity user, Hand hand,
                               CallbackInfoReturnable<ActionResult> cir) {
         // Hooks sword use - only if main hand (otherwise this makes no sense on 1.8)
-        if (SpecialItemExtensionKt.isSword((Item) (Object) this) && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual() && hand == Hand.MAIN_HAND) {
+        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+            && !ModuleSwordBlock.INSTANCE.getOnlyVisual() && hand == Hand.MAIN_HAND) {
             var itemStack = user.getStackInHand(hand);
             user.setCurrentHand(hand);
             ConsumableComponent consumableComponent = itemStack.get(DataComponentTypes.CONSUMABLE);
@@ -62,7 +68,8 @@ public class MixinItem {
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction hookSwordUseAction(UseAction original) {
         // Hooks sword use action
-        if (SpecialItemExtensionKt.isSword((Item) (Object) this) && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
+        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+          && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -72,7 +79,8 @@ public class MixinItem {
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int hookMaxUseTime(int original) {
         // Hooks sword max use time
-        if (SpecialItemExtensionKt.isSword((Item) (Object) this) && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
+        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+            && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return 72000;
         }
 

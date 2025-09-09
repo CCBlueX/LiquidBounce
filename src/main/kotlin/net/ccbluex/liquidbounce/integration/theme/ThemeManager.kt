@@ -19,9 +19,6 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -38,7 +35,6 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
@@ -71,9 +67,11 @@ object ThemeManager : Configurable("theme") {
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                CoroutineScope(Dispatchers.Minecraft).launch {
-                    theme.compileShader()
-                    includedTheme.compileShader()
+                mc.execute {
+                    runBlocking {
+                        theme.compileShader()
+                        includedTheme.compileShader()
+                    }
                 }
             }
 

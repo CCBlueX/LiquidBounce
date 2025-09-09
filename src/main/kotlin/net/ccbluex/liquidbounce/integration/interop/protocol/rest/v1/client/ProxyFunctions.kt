@@ -112,27 +112,25 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
     mc.execute {
-        mc.execute {
-            try {
-                val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
-                if (clipboardText.isNullOrBlank()) {
-                    return@execute
-                }
-
-                val proxy = try {
-                    Proxy.parse(clipboardText.trim())
-                } catch (e: Exception) {
-                    throw IllegalArgumentException(
-                        "Invalid proxy format. Expected format: host:port:username:password or host:port",
-                        e
-                    )
-                }
-
-                ProxyManager.validateProxy(proxy)
-            } catch (e: Exception) {
-                logger.error("Failed to add proxy from clipboard.", e)
-                EventManager.callEvent(ProxyCheckResultEvent(null, error = e.message ?: "Unknown error"))
+        try {
+            val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
+            if (clipboardText.isNullOrBlank()) {
+                return@execute
             }
+
+            val proxy = try {
+                Proxy.parse(clipboardText.trim())
+            } catch (e: Exception) {
+                throw IllegalArgumentException(
+                    "Invalid proxy format. Expected format: host:port:username:password or host:port",
+                    e
+                )
+            }
+
+            ProxyManager.validateProxy(proxy)
+        } catch (e: Exception) {
+            logger.error("Failed to add proxy from clipboard.", e)
+            EventManager.callEvent(ProxyCheckResultEvent(null, error = e.message ?: "Unknown error"))
         }
     }
 

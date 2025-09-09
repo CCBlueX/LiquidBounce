@@ -205,8 +205,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         chronometer.reset()
     }
 
-    fun performSwitch(from: ItemSlot, smart: Boolean): List<ClickInventoryAction> {
-        val actions = ArrayList<ClickInventoryAction>(3)
+    fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
+        val actions = ArrayList<InventoryAction.Click>(3)
 
         if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
@@ -225,10 +225,10 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
             }
         } else {
-            actions += ClickInventoryAction.performPickup(slot = from)
-            actions += ClickInventoryAction.performPickup(slot = OffHandSlot)
+            actions += InventoryAction.Click.performPickup(slot = from)
+            actions += InventoryAction.Click.performPickup(slot = OffHandSlot)
             if (!OffHandSlot.itemStack.isEmpty) {
-                actions += ClickInventoryAction.performPickup(slot = from)
+                actions += InventoryAction.Click.performPickup(slot = from)
             }
         }
 
@@ -393,7 +393,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          */
         SWITCH("Switch") {
             override fun performSwitch(from: ItemSlot) = listOf(
-                ClickInventoryAction.performSwap(
+                InventoryAction.Click.performSwap(
                     from = from,
                     to = OffHandSlot
                 )
@@ -412,7 +412,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          * Chooses the switch action based on the version. Only works if vfp is installed.
          */
         AUTOMATIC("Automatic") {
-            override fun performSwitch(from: ItemSlot): List<ClickInventoryAction> {
+            override fun performSwitch(from: ItemSlot): List<InventoryAction.Click> {
                 return if (isNewerThanOrEquals1_16) {
                     SWITCH.performSwitch(from)
                 } else {
@@ -421,7 +421,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             }
         };
 
-        abstract fun performSwitch(from: ItemSlot): List<ClickInventoryAction>
+        abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
     }
 
 }

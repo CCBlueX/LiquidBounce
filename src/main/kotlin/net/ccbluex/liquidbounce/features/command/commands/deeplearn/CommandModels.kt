@@ -174,8 +174,7 @@ object CommandModels : Command.Factory {
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
-        @Suppress("ArrayInDataClass")
-        data class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
+        class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
 
         val (dataset, datasetTime) = measureTimedValue {
             Dataset(

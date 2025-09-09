@@ -88,12 +88,13 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isWeaponSelected(): Boolean {
-            val item = player.mainHandStack.item
+            val stack = player.mainHandStack
+            val item = stack.item
 
             return when (weapon) {
-                Weapon.SWORD -> item.isSword
+                Weapon.SWORD -> stack.isSword
                 Weapon.AXE -> item is AxeItem
-                Weapon.BOTH -> item.isSword || item is AxeItem
+                Weapon.BOTH -> stack.isSword || item is AxeItem
                 Weapon.ANY -> true
             }
         }

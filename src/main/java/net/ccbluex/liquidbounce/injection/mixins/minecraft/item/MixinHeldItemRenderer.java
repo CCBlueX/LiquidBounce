@@ -98,7 +98,7 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        if (hand == Hand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item.getItem())) {
+        if (hand == Hand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
             ci.cancel();
         }
     }
@@ -109,7 +109,6 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 0
     ))
     private UseAction hookUseAction(ItemStack instance) {
-        var item = instance.getItem();
         if (instance.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }

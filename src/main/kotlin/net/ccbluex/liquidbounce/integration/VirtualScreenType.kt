@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration
 
+import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screen.DisconnectedScreen
@@ -48,7 +49,7 @@ private val Screen.isLunar
 
 enum class VirtualScreenType(
     val routeName: String,
-    private val recognizer: Predicate<Screen> = Predicate { false },
+    private val recognizer: Predicate<Screen> = Predicates.alwaysFalse(),
     val isInGame: Boolean = false,
     private val open: Runnable = Runnable {
         mc.setScreen(VirtualDisplayScreen(byName(routeName)!!))
@@ -121,7 +122,7 @@ enum class VirtualScreenType(
 
     VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
         recognizer = { it::class.java.name == "de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen" },
-        open = { openVfpProtocolSelection() }
+        open = ::openVfpProtocolSelection
     ),
 
     BROWSER("browser",

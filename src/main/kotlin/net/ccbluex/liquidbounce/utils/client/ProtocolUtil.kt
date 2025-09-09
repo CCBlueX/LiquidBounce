@@ -33,7 +33,9 @@ val usesViaFabricPlus = runCatching {
     // Register ViaFabricPlus protocol version change callback
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
-        mc.execute(mc::updateWindowTitle)
+        mc.execute {
+            mc.updateWindowTitle()
+        }
     }
 
     true

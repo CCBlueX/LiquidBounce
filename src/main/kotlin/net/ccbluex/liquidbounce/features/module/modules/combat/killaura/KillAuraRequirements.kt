@@ -38,10 +38,10 @@ enum class KillAuraRequirements(
         mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
     }),
     WEAPON("Weapon", {
-        player.mainHandStack.isWeapon()
+        player.inventory.mainHandStack.isWeapon()
     }),
     VANILLA_NAME("VanillaName", {
-        player.mainHandStack.customName == null
+        player.inventory.mainHandStack.customName == null
     }),
     NOT_BREAKING("NotBreaking", {
         mc.interactionManager?.isBreakingBlock == false
@@ -51,5 +51,5 @@ enum class KillAuraRequirements(
 /**
  * Check if the item is a weapon.
  */
-private fun ItemStack.isWeapon() = isSword || !isOlderThanOrEqual1_8 && item is AxeItem
-    || item is MaceItem
+private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.item is AxeItem
+    || this.item is MaceItem
