@@ -21,14 +21,8 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.FoodComponent
-import net.minecraft.item.AxeItem
-import net.minecraft.item.BundleItem
-import net.minecraft.item.HoeItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.item.MiningToolItem
-import net.minecraft.item.PickaxeItem
-import net.minecraft.item.ShovelItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.tag.ItemTags
 import kotlin.contracts.ExperimentalContracts
@@ -97,14 +91,3 @@ val ItemStack.isHeadArmor
 
 val ItemStack.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
-
-// 1.21.4 code
-
-val MiningToolItem.type: Int
-    get() = when (this) {
-        is AxeItem -> 0
-        is PickaxeItem -> 1
-        is ShovelItem -> 2
-        is HoeItem -> 3
-        else -> error("Unknown tool item $this (WTF?)")
-    }

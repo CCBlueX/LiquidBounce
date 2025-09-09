@@ -21,10 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isHoe
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
+import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.material
-import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.item.ItemStack
 import net.minecraft.item.MiningToolItem
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
@@ -43,10 +47,21 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
+
+        // TODO: compare multi tool item
+        private val ItemStack.miningToolType: Int
+            get() {
+                var bits = 0
+                if (isAxe) bits = bits or (1 shl 0)
+                if (isPickaxe) bits = bits or (1 shl 1)
+                if (isShovel) bits = bits or (1 shl 2)
+                if (isHoe) bits = bits or (1 shl 3)
+                if (bits == 0) error("Item ${this.item} is not a mining tool")
+                return bits
+            }
     }
 
-    override val category: ItemCategory
-        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as MiningToolItem).type)
+    override val category = ItemCategory(ItemType.TOOL, this.itemStack.miningToolType)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
