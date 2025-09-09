@@ -39,6 +39,7 @@
     import TargetHud from "./elements/targethud/TargetHud.svelte";
     import Effects from "./elements/effects/Effects.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import HuJi_TargetHud from "./elements/targethud/Mode/HuJi_TargetHud.svelte";
 
     const {width, height, destroy} = WindowSize();
     let metadata: Metadata;
@@ -161,7 +162,7 @@
                     {:else if c.name === 'ProgressBar'}
                         <ProgressBar/>
                     {:else if c.name === 'PlayerList'}
-                        <PlayerList/>
+                        <PlayerList settings={c.settings}/>
                     {:else if c.name === 'Scoreboard'}
                         <Scoreboard/>
                     {:else if c.name === 'SessionInfo'}
@@ -172,8 +173,8 @@
                         <StatusBar/>
                     {:else if c.name === 'TabGui'}
                         <TabGui/>
-                    {:else if c.name === 'TargetHUD'}
-                        <TargetHud settings={c.settings}/>
+                    {:else if c.name === 'TargetHud'}
+                        <TargetHud/>
                     {:else if c.name === 'TitleControl'}
                         <TitleControl/>
                     {:else if c.name === 'Watermark'}

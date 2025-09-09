@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -23,6 +24,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.client.option.Perspective
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.math.MathHelper
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -50,8 +53,18 @@ object ModuleHalo : ClientModule("Halo", Category.RENDER) {
         tree(DynamicOffset)
         tree(TrackCamera)
     }
+    private val prevEyeHeights = mutableMapOf<PlayerEntity, Double>()
+    private val inputHandler = handler<MovementInputEvent> { event ->
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+        val player = MinecraftClient.getInstance().player ?: return@handler
+        if (event.sneak) {
+
+            prevEyeHeights[player] = prevEyeHeights[player] ?: player.standingEyeHeight.toDouble()
+
+        }
+    }
+
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val mc = MinecraftClient.getInstance()
         val world = mc.world ?: return@handler
         var players = if (!onlySelf) world.players else listOfNotNull(mc.player)
@@ -79,7 +92,14 @@ object ModuleHalo : ClientModule("Halo", Category.RENDER) {
             players.forEach { player ->
                 if (player.isSpectator || !player.isAlive) return@forEach
                 val interp = player.interpolateCurrentPosition(event.partialTicks)
-                val baseY = player.standingEyeHeight
+                val eyeHeight = MathHelper.lerp(
+                    event.partialTicks.toDouble(),
+                    prevEyeHeights.getOrDefault(player,
+                        player.getEyeHeight(player.pose).toDouble()) + player.prevY,
+                    player.getEyeHeight(player.pose).toDouble() + player.y
+                )
+                val baseY = eyeHeight - MathHelper.lerp(event.partialTicks.toDouble(), player.prevY, player.y)
+                prevEyeHeights[player] = baseY
 
                 // Calculate circular offset based on pitch
                 val pitch = if (TrackCamera.enabled) {

@@ -30,6 +30,7 @@ listen("targetChange", (data: TargetChangeEvent) => {
     visible.set(true);
 });
 startHideTimeout(settings);
+
 </script>
 {#if $visible && target }
 <svelte:component this={ModeComponent} {settings} />

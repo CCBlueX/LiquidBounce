@@ -1,12 +1,35 @@
 {
   "name": "PlayerList",
   "enabled": true,
-  "singleton": true,
+  "singleton": false,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",
     "horizontalOffset": 0,
     "verticalAlignment": "Top",
     "verticalOffset": 0
   },
-"tweaks": ["DISABLE_PLAYER_LIST_HUD"]
+  "tweaks": ["DISABLE_PLAYER_LIST_HUD"],
+  "values": [
+    {
+      "type": "CONFIGURABLE",
+      "name": "Highlight",
+      "values": [
+        {
+          "type": "BOOLEAN",
+          "name": "Friend",
+          "value": true
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "Staff",
+          "value": true
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "Self",
+          "value": true
+        }
+      ]
+    }
+  ]
 }
