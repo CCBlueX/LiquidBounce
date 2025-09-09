@@ -110,9 +110,15 @@ val ItemStack.foodComponent: FoodComponent?
 val ItemStack.isBundle
     get() = this.item is BundleItem
 
+/**
+ * @since 1.21.5
+ */
 val ItemStack.isSword
     get() = this.isIn(ItemTags.SWORDS)
 
+/**
+ * @since 1.21.5
+ */
 val ItemStack.isPickaxe
     get() = this.isIn(ItemTags.PICKAXES)
 

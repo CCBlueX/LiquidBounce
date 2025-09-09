@@ -39,11 +39,11 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
-import net.minecraft.item.SwordItem
 import net.minecraft.util.Hand
 import java.util.*
 
@@ -69,7 +69,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         val filter: (WeaponItemFacet) -> Boolean
     ): NamedChoice {
         ANY("Any", { true }),
-        SWORD("Sword", { it.itemStack.item is SwordItem }),
+        SWORD("Sword", { it.itemStack.isSword }),
         AXE("Axe", { it.itemStack.item is AxeItem }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
 

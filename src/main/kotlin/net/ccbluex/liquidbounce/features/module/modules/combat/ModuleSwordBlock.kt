@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ShieldItem
-import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 
@@ -65,7 +65,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
             val hand = packet.hand
             val itemInHand = player.getStackInHand(hand) // or activeItem
 
-            if (hand == Hand.MAIN_HAND && itemInHand.item is SwordItem) {
+            if (hand == Hand.MAIN_HAND && itemInHand.isSword) {
                 val offHandItem = player.getStackInHand(Hand.OFF_HAND)
                 if (offHandItem?.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
