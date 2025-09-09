@@ -109,7 +109,7 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 0
     ))
     private UseAction hookUseAction(ItemStack instance) {
-      if (instance.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (instance.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -122,9 +122,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
-      var itemStack = instance.getMainHandStack();
+        var itemStack = instance.getMainHandStack();
 
-      if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return true;
         }
 
@@ -137,9 +137,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
-      var itemStack = instance.getMainHandStack();
+        var itemStack = instance.getMainHandStack();
 
-      if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return Hand.MAIN_HAND;
         }
 
@@ -183,7 +183,7 @@ public abstract class MixinHeldItemRenderer {
     private Item preventConflictingCode(Item item) {
         // only applies to sword items,
         // so that future items won't be affected if minecraft decides to actually make use out of this
-      if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
+        if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
             return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
         }
 
@@ -199,7 +199,7 @@ public abstract class MixinHeldItemRenderer {
                                                 CallbackInfo ci) {
         var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
 
-      if (shouldAnimate && item.isIn(ItemTags.SWORDS)) {
+        if (shouldAnimate && item.isIn(ItemTags.SWORDS)) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
