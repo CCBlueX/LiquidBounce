@@ -73,7 +73,7 @@ class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
 @Nameable("refreshArrayList")
-object RefreshArrayListEvent : Event()
+object RefreshArrayListEvent : Event(), WebSocketEvent
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {

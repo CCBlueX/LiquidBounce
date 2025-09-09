@@ -32,6 +32,8 @@ export interface EventMap {
     proxyCheckResult: ProxyCheckResultEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    valueChanged: ValueChangedEvent;
+    refreshArrayList: void;
 }
 
 export interface ClickGuiValueChangeEvent {
@@ -143,4 +145,8 @@ export interface SpaceSeperatedNamesChangeEvent {
 
 export interface BrowserUrlChangeEvent {
     url: string;
+}
+
+export interface ValueChangedEvent {
+    value: ConfigurableSetting;
 }
