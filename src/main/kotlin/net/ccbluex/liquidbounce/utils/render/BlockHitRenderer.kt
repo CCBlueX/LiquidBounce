@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.boxWithBoundsX
 import net.ccbluex.liquidbounce.utils.block.boxWithBoundsY
 import net.ccbluex.liquidbounce.utils.block.boxWithBoundsZ
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.minecraft.block.BlockRenderType
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -26,7 +27,7 @@ class BlockHitRenderer(
     module: ClientModule
 ) : ToggleableConfigurable(module, "BlockHitRenderer", true) {
     private val sideOnly by boolean("SideOnly", true)
-
+    private val visibilityOnly by boolean("VisibilityOnly", true)
     private val slideTime by int("SlideTime", 150, 1..1000, "ms")
     private val alpha by int("Alpha", 70, 0..255)
     private val outlineAlpha by int("OutlineAlpha", 150, 0..255)
@@ -66,6 +67,11 @@ class BlockHitRenderer(
                 resetPositions()
                 return
             }
+            if (visibilityOnly && (blockState.renderType == BlockRenderType.INVISIBLE || blockState.isTransparent)) {
+                resetPositions()
+                return
+            }
+
             val hitSide = hitResult.side
             val shape = blockState.getOutlineShape(world, blockPos, ShapeContext.of(mc.cameraEntity))
             (if (sideOnly) flatBox(shape, hitSide) else shape.boundingBox).offset(blockPos)

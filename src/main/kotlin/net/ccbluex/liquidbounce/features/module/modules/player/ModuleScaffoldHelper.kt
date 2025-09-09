@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.updateRenderCount
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -58,6 +59,12 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         }
     }
 
+
+    override fun onDisabled() {
+        scaffolding = false
+        updateRenderCount()
+        super.onDisabled()
+    }
     @Suppress("unused")
     private enum class NotCondition(
         override val choiceName: String,
@@ -65,8 +72,8 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     ) : NamedChoice {
         WHILE_USING_ITEM("WhileUsingItem", { !player.isUsingItem }),
         WHILE_SNEAKING("WhileSneaking", { !player.isSneaking }),
-        DURING_STUCK("Freezing", {
-            !(ModuleAutoStuck.freezing || ModuleAutoStuck.forceStuck || ModuleFreeze.running)
+        DURING_STUCK("WhileFreezing", {
+            !(ModuleFreeze.running || ModuleAutoStuck.scaffoldBlocked)
         }),
     }
 }

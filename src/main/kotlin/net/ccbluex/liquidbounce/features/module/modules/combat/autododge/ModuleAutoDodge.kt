@@ -77,6 +77,11 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
                 && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
                 && !(Ignore.CLIMBING !in ignore && player.isClimbing)
                 && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
+
+
+    var isDodging = false
+        private set
+
     @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
         val arrows = world.findFlyingArrows()
@@ -90,6 +95,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         val dodgePlan =
             planEvasion(DodgePlannerConfig(allowRotations = AllowRotationChange.enabled), inflictedHit)
                 ?: return@handler
+
+        isDodging = true
 
         event.directionalInput = dodgePlan.directionalInput
 
@@ -106,6 +113,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         if (AllowTimer.enabled && dodgePlan.useTimer) {
             Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE, this@ModuleAutoDodge)
         }
+        once<MovementInputEvent> { isDodging = false }
     }
     fun isOverVoid(pos: Vec3d): Boolean {
         return ModuleAntiVoid.isSafeForRescue(pos)

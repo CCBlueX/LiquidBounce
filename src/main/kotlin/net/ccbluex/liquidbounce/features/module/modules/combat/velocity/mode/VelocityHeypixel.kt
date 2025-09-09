@@ -123,7 +123,6 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                         cooldown()
                     } else {
                         var attacked = true
-                        reset()
 
                         for (i in 1..attackCount) {
                             val entityHitResult = raytraceEntity(
@@ -133,6 +132,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
 
                             if (entityHitResult == null) {
                                 attacked = false
+                                reset()
                                 break
                             }
 

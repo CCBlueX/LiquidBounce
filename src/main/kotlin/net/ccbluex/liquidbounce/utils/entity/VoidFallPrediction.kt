@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import kotlin.math.ceil
 import kotlin.math.floor
 
 class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPrediction"), EventListener {
@@ -62,17 +61,18 @@ class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPredicti
     }
 
     fun isPredictingFall(): Boolean {
-        if (player.isOnGround) return false
         val velY = player.velocity.y
         if (velY < -0.2 && !canReachSafeBlock()) return true
         if (player.fallDistance > 2f && velY <= 0.0 && !canReachSafeBlock()) return true
 
         return simulatePlayerTrajectory { pos, box, blockPos ->
-            pos.y <= voidThreshold.toDouble() &&
-                !box.collideBlockIntersects { !it.defaultState.isAir }
+            val voidLevelReached = pos.y <= voidThreshold.toDouble()
+            val noSolidBelow = !box.collideBlockIntersects { !it.defaultState.isAir }
+            val inVoidArea = isInVoid(pos)
+            voidLevelReached || (inVoidArea && noSolidBelow)
         }
-
     }
+
 
     fun countAdjacentSafeBlocks(center: BlockPos): Int {
         var count = 0
@@ -101,37 +101,7 @@ class VoidFallPrediction(val parent: EventListener) : Configurable("VoidPredicti
         return false
     }
 
-    fun isInVoid(pos: Vec3d, voidDistance: Int = -1): Boolean {
-        val xRange = mutableListOf(0)
-        val zRange = mutableListOf(0)
 
-        if (pos.x - floor(pos.x) <= 0.3) {
-            xRange.add(-1)
-        } else if (ceil(pos.x) - pos.x <= 0.3) {
-            xRange.add(1)
-        }
-
-        if (pos.z - floor(pos.z) <= 0.3) {
-            zRange.add(-1)
-        } else if (ceil(pos.z) - pos.z <= 0.3) {
-            zRange.add(1)
-        }
-
-
-        val minY = if (voidDistance == -1) -64 else pos.y.toInt() - voidDistance
-        val maxY = pos.y.toInt()
-
-        for (xOffset in xRange) {
-            for (zOffset in zRange) {
-                for (y in minY..maxY) {
-                    val blockPos = BlockPos(pos.x.toInt() + xOffset, y, pos.z.toInt() + zOffset)
-                    val state = blockPos.getState()
-                    if (state != null && !state.isAir) return false
-                }
-            }
-        }
-        return true
-    }
 
     fun isBlockUnder(height: Double = 5.0): Boolean {
         val box = player.boundingBox.offset(0.0, -height, 0.0)

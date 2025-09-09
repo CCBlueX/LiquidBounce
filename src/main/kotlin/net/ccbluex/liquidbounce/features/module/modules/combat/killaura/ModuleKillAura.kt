@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
+import net.ccbluex.liquidbounce.features.module.modules.combat.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK
@@ -171,6 +172,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             targetRenderer.reset()
             return@handler
         }
+        if (ModuleAutoDodge.isDodging) {
+            return@handler
+        }
 
         // Update current target tracker to make sure you attack the best enemy
         updateTarget()
@@ -184,6 +188,10 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         if (player.isDead || player.isSpectator) {
             return@tickHandler
         }
+        if (ModuleAutoDodge.isDodging) {
+            return@tickHandler
+        }
+
 
         // Check if there is target to attack
         val target = targetTracker.target

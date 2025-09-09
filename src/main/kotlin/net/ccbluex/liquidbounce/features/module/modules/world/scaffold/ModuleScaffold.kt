@@ -310,7 +310,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         renderer.clearSilently()
     }
 
-    private fun updateRenderCount(count: Int? = null) = EventManager.callEvent(BlockCountChangeEvent(count))
+    fun updateRenderCount(count: Int? = null) = EventManager.callEvent(BlockCountChangeEvent(count))
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
@@ -348,10 +348,17 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         }
 
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
-            .also { this.currentTarget = it }
+
+        if (target == null) {
+            this.currentTarget = null
+            return@handler
+        }
+
+        this.currentTarget = target
+
 
         // Debug stuff
-        if (optimalLine != null && target != null) {
+        if (optimalLine != null) {
             val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
             val a = optimalLine.getNearestPointTo(b)
 
@@ -481,6 +488,13 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         }.normalize()
         val currentCrosshairTarget = technique.activeChoice.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
+
+        if (target != null && (currentCrosshairTarget == null ||
+                !target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget) ||
+                !isValidCrosshairTarget(currentCrosshairTarget))) {
+            currentTarget = null
+            return@tickHandler
+        }
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
         val hasBlockInOffHand = isValidBlock(player.offHandStack)

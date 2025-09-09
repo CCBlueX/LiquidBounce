@@ -191,16 +191,24 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
                     val distSq = dx * dx + dy * dy + dz * dz
                     if (distSq > maxDistSq) continue
 
-                    val progress = 1f - ((currentTime - particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
+                    val progress = 1f - ((currentTime - particle.creationTime).toFloat()
+                        / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
                     val t = (sin(time * 0.2f + particle.phase) + 1f) * 0.5f
                     val color = color1Base.blend(color2Base, t)
                     val alpha = (color.a * progress).toInt()
                     if (alpha <= 0) continue
                     val renderColor = color.withAlpha(alpha)
 
-                    val sizes = if (lighting) floatArrayOf(0.1f + 0.05f * (1f - progress), 3f * (0.1f + 0.05f * (1f - progress)))
-                    else floatArrayOf(0.1f + 0.05f * (1f - progress))
-                    val alphas = if (lighting) intArrayOf(alpha, (alpha / 5).coerceAtLeast(1)) else intArrayOf(alpha)
+                    val sizes = if (lighting){
+                        floatArrayOf(0.1f + 0.05f * (1f - progress), 3f * (0.1f + 0.05f * (1f - progress)))
+                    } else{
+                        floatArrayOf(0.1f + 0.05f * (1f - progress))
+                    }
+                    val alphas = if (lighting) {
+                        intArrayOf(alpha, (alpha / 5).coerceAtLeast(1))
+                    } else {
+                        intArrayOf(alpha)
+                    }
 
                     sizes.forEachIndexed { idx, size ->
                         val half = size * 0.5f

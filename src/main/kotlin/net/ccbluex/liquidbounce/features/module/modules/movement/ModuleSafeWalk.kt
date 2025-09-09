@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
@@ -30,11 +30,9 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
@@ -49,14 +47,22 @@ import kotlin.math.min
  */
 object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
 
-    @Suppress("UnusedPrivateProperty")
+    override val running: Boolean
+        get() =
+            super.running
+                &&!ModuleScaffold.running
+
+    private val voidThreshold by int("VoidLevel", 0, -256..0)
+    private val ticksToPredict by int("TicksToPredict", 10, 10..100,"tick")
+
+    @Suppress("UnusedPrivateProperty","Unused")
     private val modes = choices("Mode", 1, ::safeWalkChoices) // Default safe mode
 
     fun safeWalkChoices(choice: ChoiceConfigurable<Choice>): Array<Choice> {
         return arrayOf(
             NoneChoice(choice),
+            OnEdge(choice),
             Safe(choice),
-            OnEdge(choice)
         )
     }
 
@@ -91,6 +97,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
         private var sneakTicks = 0
         private var jump by boolean("Jump", false)
 
+
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
@@ -98,7 +105,9 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            val shouldBeActive = player.isOnGround && !event.sneak
+            //Usually 2 ticks are enough,but we have to make sure players are 100% safe.
+            val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticksToPredict)
+            val shouldBeActive = player.isOnGround && !event.sneak  && isInVoid(nextTick.pos, voidThreshold)
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,
@@ -109,7 +118,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
 
                     val center = center
                     if (center != null) {
-                        val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(1)
+
                         debugGeometry("Center") {
                             ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
                         }

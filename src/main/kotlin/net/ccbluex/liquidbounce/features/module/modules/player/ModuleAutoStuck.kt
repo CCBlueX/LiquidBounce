@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
@@ -24,11 +25,13 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
     private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
+    private val scaffoldFreezeTicks by int("ScaffoldBlockedTicks", 3, 0..20, "ticks")
     private val directlyKeybind by key("Directly", GLFW.GLFW_KEY_V)
     private val onlyWithPearl by boolean("OnlyWithPearl", false)
     private val onlyDuringCombat by boolean("OnlyDuringCombat", false)
     private val onlyReceiveHit by boolean("OnlyReceiveHit", false)
     val immediately by boolean("Immediately", true)
+
 
     private const val LOWEST_Y = -64
     private var stuckTicks = 0
@@ -36,7 +39,10 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private var lastGroundY = LOWEST_Y
     private var ignoreTicks = 0
     private var pauseTicks = 0
+    private var pauseAutoStuck = 0
 
+    private var freezingTicks = 0
+    var scaffoldBlocked = false
     var freezing = false
     var forceStuck = false
     var shouldEnableStuck = false
@@ -59,14 +65,18 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         ignoreTicks = 0
         pauseTicks = 0
         freezing = false
+        freezingTicks = 0
+        scaffoldBlocked = false
         shouldEnableStuck = false
         shouldActivate = false
     }
+
 
     @Suppress("unused")
     private val serverConnectHandler = handler<ServerConnectEvent> {
         ignoreTicks = 20
     }
+
 
     @Suppress("unused")
     private val keyHandler = handler<KeyEvent> {
@@ -74,8 +84,14 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
         if (it.key.code == directlyKeybind.code) {
             forceStuck = !forceStuck
-        }
 
+            if (shouldEnableStuck) {
+
+                pauseAutoStuck = 50
+                shouldEnableStuck = false
+                shouldActivate = false
+            }
+        }
     }
 
     @Suppress("unused")
@@ -97,14 +113,17 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private val packetEventHandler = handler<PacketEvent> { event ->
         if (!shouldEnableStuck && !forceStuck) return@handler
         val packet = event.packet
+
         if (!player.isOnGround) {
             freezing = true
+            freezingTicks++
 
+            if (freezingTicks >= scaffoldFreezeTicks) {
+                scaffoldBlocked = true
+            }
             when (packet) {
                 is PlayerPositionLookS2CPacket -> {
-                    if (!forceStuck) {
-                        reset(true)
-                    }
+                    reset(true)
                     pauseTicks = pauseOnFlag
                 }
                 is PlayerMoveC2SPacket -> event.cancelEvent()
@@ -180,8 +199,13 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         } else {
             stuckTicks = 0
         }
+        if (pauseAutoStuck > 0) {
+            pauseAutoStuck--
+            shouldActivate = false
+        } else {
+            shouldActivate = isReadyToActivate()
+        }
 
-        shouldActivate = isReadyToActivate()
 
         if (shouldActivate && !shouldEnableStuck && stuckCooldown <= 0 && !shouldDisableStuck()) {
             shouldEnableStuck = true
@@ -203,7 +227,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
         val voidReady = if (immediately) {
             voidFallPrediction.isVoidFallImminent
         } else {
-            player.y <= lastGroundY + 1 - fallDistance && voidFallPrediction.isInVoid(player.pos)
+            player.y <= lastGroundY + 1 - fallDistance && isInVoid(player.pos)
         }
         return combatReady && pearlReady && airReady && voidReady && receiveHitReady
     }

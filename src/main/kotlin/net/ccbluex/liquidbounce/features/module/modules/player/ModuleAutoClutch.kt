@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
+import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -359,7 +360,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
             val points = List(PlayerTrajectory.trajectoryLength) { tick ->
                 val snapshot = cache.getSnapshotAt(tick)
                 val isSafe = voidFallPrediction.canReachSafeBlockFrom()
-                    && !voidFallPrediction.isInVoid(snapshot.pos)
+                    && !isInVoid(snapshot.pos)
                 snapshot.pos to isSafe
             }
 
