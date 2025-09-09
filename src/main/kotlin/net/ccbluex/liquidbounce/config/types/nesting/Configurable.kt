@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config.types.nesting
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
+import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -363,10 +364,9 @@ open class Configurable(
         MultiChooseEnumListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, enumValues<T>())
+        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
 
-    fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice =
+    fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Set<T>): ChooseListValue<T> =
         ChooseListValue(name, defaultValue = default, choices = choices).apply { this@Configurable.inner.add(this) }
 
     protected fun <T : Choice> choices(
@@ -502,6 +502,13 @@ open class Configurable(
                     subConfigurable.json(setting.asJsonObject)
                 }
                 tree(subConfigurable)
+            }
+
+            "CHOICE" -> {
+                val value = valueObject["value"].asString.asNamedChoice()
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                enumChoice(name, value, choices)
             }
 
             else -> error("Unsupported type: $type")
