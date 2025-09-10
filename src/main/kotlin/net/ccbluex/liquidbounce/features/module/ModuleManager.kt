@@ -256,6 +256,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleVomit,
 
             // Misc
+            ModuleGUICloser,
             ModuleBookBot,
             ModuleAntiBot,
             ModuleBetterTab,
