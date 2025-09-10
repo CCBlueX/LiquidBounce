@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.fileGson
+import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -197,7 +197,7 @@ object ConfigSystem {
     }
 
     /**
-     * Serialize a configurable to a writer
+     * Serialize a configurable to a writer, and close it
      */
     private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = fileGson) {
         gson.newJsonWriter(writer).use {
@@ -206,22 +206,22 @@ object ConfigSystem {
     }
 
     /**
-     * Serialize a configurable to a writer
+     * Serialize a configurable to a [JsonObject].
      */
-    fun serializeConfigurable(configurable: Configurable, gson: Gson = fileGson) =
-        gson.toJsonTree(configurable, Configurable::class.javaObjectType)
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = fileGson): JsonObject =
+        gson.toJsonTree(configurable, Configurable::class.javaObjectType) as JsonObject
 
     /**
-     * Deserialize a configurable from a reader
+     * Deserialize a configurable from a reader, and close it
      */
     fun deserializeConfigurable(configurable: Configurable, reader: Reader, gson: Gson = fileGson) {
-        JsonParser.parseReader(gson.newJsonReader(reader))?.let {
-            deserializeConfigurable(configurable, it)
+        gson.newJsonReader(reader).use { reader ->
+            deserializeConfigurable(configurable, reader.parseTree())
         }
     }
 
     /**
-     * Deserialize a configurable from a json element
+     * Deserialize a configurable from a [JsonElement]. It should be [JsonObject].
      */
     fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
         val jsonObject = jsonElement.asJsonObject
