@@ -86,18 +86,18 @@ object ConfigSystem {
     /**
      * Create new root configurable
      */
-    fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
+    fun root(name: String, tree: MutableCollection<out Configurable> = mutableListOf()): Configurable {
         @Suppress("UNCHECKED_CAST")
-        return root(Configurable(name, value = tree as MutableList<Value<*>>))
+        return root(Configurable(name, value = tree as MutableCollection<Value<*>>))
     }
 
     fun dynamic(
         name: String,
-        tree: MutableList<out Configurable> = mutableListOf(),
+        tree: MutableCollection<out Configurable> = mutableListOf(),
         factory: (String, JsonObject) -> Value<*>
     ): Configurable {
         @Suppress("UNCHECKED_CAST")
-        return root(DynamicConfigurable(name, tree as MutableList<Value<*>>, factory))
+        return root(DynamicConfigurable(name, tree as MutableCollection<Value<*>>, factory))
     }
 
     /**

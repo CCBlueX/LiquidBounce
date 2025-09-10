@@ -76,7 +76,7 @@ class ChoiceConfigurable<T : Choice>(
         // the other systems accordingly. For whatever reason the conditional configurable is bypassing the value system
         // which the other configurables use, so we do it manually.
         set(mutableListOf(newChoice), apply = {
-            this.activeChoice = it[0] as T
+            this.activeChoice = it.first() as T
         })
 
         if (this.activeChoice.running) {
@@ -94,7 +94,7 @@ class ChoiceConfigurable<T : Choice>(
         }
 
         set(mutableListOf(defaultChoice), apply = {
-            this.activeChoice = it[0] as T
+            this.activeChoice = it.first() as T
         })
 
         if (this.activeChoice.running) {

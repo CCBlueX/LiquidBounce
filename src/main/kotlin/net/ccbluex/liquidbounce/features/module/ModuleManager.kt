@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -93,13 +95,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
-import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import org.lwjgl.glfw.GLFW
 
-/**
- * Should be sorted by Module::name
- */
-private val modules = ArrayList<ClientModule>(256)
+private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
 
 /**
  * A fairly simple module manager
@@ -444,7 +442,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
     fun addModule(module: ClientModule) {
         module.initConfigurable()
         module.onRegistration()
-        modules.sortedInsert(module, ClientModule::name)
+        modules += module
     }
 
     fun removeModule(module: ClientModule) {
@@ -464,7 +462,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      */
     @JvmName("getCategories")
     @ScriptApiRequired
-    fun getCategories() = Category.entries.mapArray { it.readableName }
+    fun getCategories() = Category.entries.mapArray { it.choiceName }
 
     @JvmName("getModules")
     @ScriptApiRequired
