@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -135,12 +136,12 @@ class MinimapTextureAtlasManager {
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the GLid of the texture
+     * @return the [GpuTexture] of the texture
      */
-    fun prepareRendering(): Int {
+    fun prepareRendering(): GpuTexture {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.glId
+                return this.texture.glTexture
             }
 
             this.texture.bindTexture()
@@ -157,7 +158,7 @@ class MinimapTextureAtlasManager {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.glId
+        return this.texture.glTexture
     }
 
     private fun uploadFullTexture() {

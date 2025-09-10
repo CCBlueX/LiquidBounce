@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
+import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -133,7 +133,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = EnumMap<_, MultiChooseEnumListValue<ArmorPredicate>>(EquipmentSlot::class.java).apply {
+        private val values = EnumMap<_, MultiChooseListValue<ArmorPredicate>>(EquipmentSlot::class.java).apply {
             this[EquipmentSlot.HEAD] = multiEnumChoice("Helmet", EnumSet.of(ArmorPredicate.NOTHING), HELMET)
             this[EquipmentSlot.CHEST] = multiEnumChoice("Chestplate", EnumSet.of(ArmorPredicate.NOTHING), CHESTPLATE)
             this[EquipmentSlot.LEGS] = multiEnumChoice("Leggings", EnumSet.of(ArmorPredicate.NOTHING), BASE)
