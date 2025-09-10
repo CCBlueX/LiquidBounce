@@ -270,7 +270,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize(higher = false),
+            PreferStackSize.LESS,
             PreferAverageHardBlocks(neutralRange = false),
         )
     val BLOCK_COMPARATOR_FOR_INVENTORY =
@@ -280,7 +280,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize(higher = true),
+            PreferStackSize.MORE,
             PreferAverageHardBlocks(neutralRange = false),
         )
 

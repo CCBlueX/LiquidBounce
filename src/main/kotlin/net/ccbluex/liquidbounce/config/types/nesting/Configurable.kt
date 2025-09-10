@@ -18,8 +18,13 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
+import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -45,7 +50,7 @@ import kotlin.enums.EnumEntries
 @Suppress("TooManyFunctions")
 open class Configurable(
     name: String,
-    value: MutableList<Value<*>> = mutableListOf(),
+    value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
 
     /**
@@ -61,7 +66,7 @@ open class Configurable(
      * Used for backwards compatibility when renaming.
      */
     aliases: Array<out String> = emptyArray(),
-) : Value<MutableList<Value<*>>>(
+) : Value<MutableCollection<Value<*>>>(
     name,
     aliases,
     defaultValue = value,
@@ -337,35 +342,34 @@ open class Configurable(
         vararg default: T,
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumEntries<T>,
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumSet<T> = emptyEnumSet(),
+        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), enumValues<T>().toEnumSet(), canBeNone)
+        multiEnumChoice(name, default, choices as Set<T>, canBeNone)
 
-    fun <T> multiEnumChoice(
+    fun <T : NamedChoice> multiEnumChoice(
         name: String,
-        default: EnumSet<T>,
-        choices: EnumSet<T>,
-        canBeNone: Boolean = true
-    ) where T : Enum<T>, T : NamedChoice =
-        MultiChooseEnumListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
+        default: MutableSet<T>,
+        choices: Set<T>,
+        canBeNone: Boolean
+    ) = MultiChooseListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, enumValues<T>())
+        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
 
-    fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice =
+    fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Set<T>): ChooseListValue<T> =
         ChooseListValue(name, defaultValue = default, choices = choices).apply { this@Configurable.inner.add(this) }
 
     protected fun <T : Choice> choices(
@@ -403,5 +407,128 @@ open class Configurable(
     ) = choices(eventListener, name, { activeIndex }, choicesCallback)
 
     fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }
+
+    /**
+     * Assigns the value of the settings to the component
+     *
+     * A component can have dynamic settings which can be assigned through the JSON file
+     * These have to be interpreted and assigned to the configurable
+     *
+     * An example:
+     * {
+     *     "type": "INT",
+     *     "name": "Size",
+     *     "value": 14,
+     *     "range": {
+     *         "min": 1,
+     *         "max": 100
+     *     },
+     *     "suffix": "px"
+     * }
+     *
+     * TODO: Replace with proper deserialization
+     *
+     * @param valueObject JsonObject
+     */
+    @Suppress("LongMethod")
+    fun json(valueObject: JsonObject) {
+        val type = enumValueOf<ValueType>(valueObject["type"].asString)
+        val name = valueObject["name"].asString
+
+        // todo: replace this with serious deserialization
+        when (type) {
+            ValueType.BOOLEAN -> {
+                val value = valueObject["value"].asBoolean
+                boolean(name, value)
+            }
+
+            ValueType.INT -> {
+                val value = valueObject["value"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                int(name, value, min..max, suffix)
+            }
+
+            ValueType.INT_RANGE -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asInt
+                val valueMax = valueObject["value"].asJsonObject["max"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                intRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            ValueType.FLOAT -> {
+                val value = valueObject["value"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                float(name, value, min..max, suffix)
+            }
+
+            ValueType.FLOAT_RANGE -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asFloat
+                val valueMax = valueObject["value"].asJsonObject["max"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                floatRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            ValueType.TEXT -> {
+                val value = valueObject["value"].asString
+                text(name, value)
+            }
+
+            ValueType.COLOR -> {
+                val value = valueObject["value"].asInt
+                color(name, Color4b(value, hasAlpha = true))
+            }
+
+            ValueType.CONFIGURABLE -> {
+                val subConfigurable = Configurable(name)
+                val values = valueObject["values"].asJsonArray
+                for (value in values) {
+                    subConfigurable.json(value.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+            // same as configurable but it is [ToggleableConfigurable]
+            ValueType.TOGGLEABLE -> {
+                val value = valueObject["value"].asBoolean
+                // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
+                // as toggleable Configurable
+                val subConfigurable = object : ToggleableConfigurable(null, name, value) {}
+                val settings = valueObject["values"].asJsonArray
+                for (setting in settings) {
+                    subConfigurable.json(setting.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+
+            ValueType.CHOOSE -> {
+                val value = valueObject["value"].asString.asNamedChoice()
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                enumChoice(name, value, choices)
+            }
+
+            ValueType.MULTI_CHOOSE -> {
+                val value = valueObject["value"].asJsonArray.mapTo(hashSetOf()) { it.asString.asNamedChoice() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+                val canBeNone = when (val json = valueObject["canBeNone"]) {
+                    null, is JsonNull -> true // default = true
+                    is JsonPrimitive, is JsonArray -> json.asBoolean
+                    else -> error("Unexpected JSON (${json.javaClass}): $json, should be boolean")
+                }
+
+                multiEnumChoice(name, value, choices, canBeNone)
+            }
+
+            else -> error("Unsupported type: $type")
+        }
+    }
+
 
 }

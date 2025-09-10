@@ -56,16 +56,16 @@ object CommandExecutor : EventListener {
      */
     fun CommandBuilder.suspendHandler(
         allowParallel: Boolean = false,
-        handler: suspend (command: Command, args: Array<Any>) -> Unit,
+        handler: Command.Handler.Suspend,
     ) = if (allowParallel) {
-        this.handler { command, args ->
-            commandCoroutineScope.launch {
-                handler.invoke(command, args)
+        this.handler {
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
+                with(handler) { this@handler() }
             }
         }
     } else {
         val running = AtomicBoolean(false)
-        this.handler { command, args ->
+        this.handler {
             if (!running.compareAndSet(false, true)) {
                 chat(
                     markAsError(
@@ -78,7 +78,7 @@ object CommandExecutor : EventListener {
 
             // Progress message job
             val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
-            val progressJob = commandCoroutineScope.launch {
+            val progressJob = commandCoroutineScope.launch(CoroutineName("${command.name} Progress")) {
                 val startAt = System.currentTimeMillis()
                 var n = 0
                 val chars = charArrayOf('|', '/', '-', '\\')
@@ -99,8 +99,8 @@ object CommandExecutor : EventListener {
             }
 
             // Handler job
-            commandCoroutineScope.launch {
-                handler.invoke(command, args)
+            commandCoroutineScope.launch(CoroutineName(command.name)) {
+                with(handler) { this@handler() }
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
@@ -124,7 +124,7 @@ object CommandExecutor : EventListener {
      * Render thread scope
      */
     private val commandCoroutineScope = CoroutineScope(
-        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler + CoroutineName("CommandExecutor")
+        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
     )
 
     private fun handleExceptions(e: Throwable) {

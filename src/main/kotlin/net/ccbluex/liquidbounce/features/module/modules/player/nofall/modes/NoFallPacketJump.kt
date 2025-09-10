@@ -9,10 +9,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import java.util.EnumSet
 
 internal object NoFallPacketJump : Choice("PacketJump") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL,
-        arrayOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
+        EnumSet.of(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
     private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
     private val timing = choices("Timing", Landing, arrayOf(Landing, Falling))
 

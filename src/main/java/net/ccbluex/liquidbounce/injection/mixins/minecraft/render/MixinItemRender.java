@@ -40,7 +40,7 @@ public class MixinItemRender {
 
     @Inject(method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V", at = @At("HEAD"), cancellable = true)
     private void hookRenderItem(LivingEntity entity, ItemStack item, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
-        if (renderMode == (leftHanded ? THIRD_PERSON_LEFT_HAND : THIRD_PERSON_RIGHT_HAND) && entity instanceof PlayerEntity player && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item.getItem())) {
+        if (renderMode == (leftHanded ? THIRD_PERSON_LEFT_HAND : THIRD_PERSON_RIGHT_HAND) && entity instanceof PlayerEntity player && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
             ci.cancel();
         }
     }

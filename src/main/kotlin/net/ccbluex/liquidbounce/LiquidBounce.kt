@@ -187,6 +187,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.loadAll()
 
         isInitialized = true
+        logger.info("Client has been successfully initialized.")
     }
 
     /**
@@ -313,7 +314,11 @@ object LiquidBounce : EventListener {
         BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
-        ThemeManager.load()
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        runBlocking {
+            ThemeManager.load()
+        }
         IntegrationListener
 
         taskManager = TaskManager(scope).apply {
@@ -338,10 +343,7 @@ object LiquidBounce : EventListener {
 
             launch("Marketplace") { task ->
                 runCatching {
-                    // Preload marketplace items
-                    ConfigSystem.load(MarketplaceManager)
                     MarketplaceManager.updateAll(task)
-                    ConfigSystem.store(MarketplaceManager)
                 }.onFailure { exception ->
                     logger.error("Failed to update marketplace items.", exception)
                 }

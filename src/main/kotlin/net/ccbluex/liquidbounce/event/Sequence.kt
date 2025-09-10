@@ -227,7 +227,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      */
     suspend inline fun <reified E : Event> waitNext(
         priority: Short = 0,
-        crossinline handler: Handler<E>
+        crossinline handler: (E) -> Unit
     ): E {
         val deferred = CompletableDeferred<E>(parent = coroutine)
         owner.once<E>(priority) {

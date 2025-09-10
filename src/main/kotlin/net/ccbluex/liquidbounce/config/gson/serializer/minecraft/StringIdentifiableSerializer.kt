@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.item.equipment.ArmorMaterial;
-import net.minecraft.item.equipment.EquipmentType;
+package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 
-/**
- * Additions to {@link net.minecraft.item.ArmorItem}
- */
-public interface ArmorItemAdditions {
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import net.minecraft.util.StringIdentifiable
+import java.lang.reflect.Type
 
-    @SuppressWarnings("unused")
-    ArmorMaterial liquid_bounce$getMaterial();
-
-    @SuppressWarnings("unused")
-    EquipmentType liquid_bounce$getType();
-
+object StringIdentifiableSerializer : JsonSerializer<StringIdentifiable> {
+    override fun serialize(src: StringIdentifiable?, typeOfSrc: Type, context: JsonSerializationContext) =
+        src?.let { JsonPrimitive(it.asString()) }
 }

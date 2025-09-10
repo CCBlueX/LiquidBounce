@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.*
@@ -30,13 +29,13 @@ import org.lwjgl.glfw.GLFW
  *
  * Displays the current username.
  */
-object CommandUsername : CommandFactory, MinecraftShortcuts {
+object CommandUsername : Command.Factory, MinecraftShortcuts {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("username")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val username = player.name.string
                 val formattedUsernameWithEvents = variable(username)
                     .bypassNameProtection()

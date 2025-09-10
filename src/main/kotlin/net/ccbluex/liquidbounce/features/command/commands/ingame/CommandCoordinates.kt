@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
@@ -32,7 +31,7 @@ import org.apache.commons.lang3.StringUtils
  *
  * Copies your coordinates to your clipboard.
  */
-object CommandCoordinates : CommandFactory {
+object CommandCoordinates : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -47,7 +46,7 @@ object CommandCoordinates : CommandFactory {
                             .required()
                             .build()
                     )
-                    .handler { _, args ->
+                    .handler {
                         val name = args[0] as String
                         network.sendChatMessage("/msg $name ${getCoordinates(fancy = true)}")
                     }
@@ -55,7 +54,7 @@ object CommandCoordinates : CommandFactory {
             )
             .subcommand(
                 CommandBuilder.begin("copy")
-                    .handler { command, _ ->
+                    .handler {
                         mc.keyboard.clipboard = getCoordinates()
                         chat(command.result("success"), command)
                     }
@@ -63,7 +62,7 @@ object CommandCoordinates : CommandFactory {
             )
             .subcommand(
                 CommandBuilder.begin("info")
-                    .handler { command, _ ->
+                    .handler {
                         chat(getCoordinates().asText().styled { it.withColor(Formatting.GRAY) }, command)
                     }
                     .build()

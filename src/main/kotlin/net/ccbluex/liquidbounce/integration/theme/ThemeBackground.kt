@@ -26,18 +26,21 @@ import net.minecraft.client.render.RenderLayer
 import net.minecraft.util.Identifier
 import java.io.Closeable
 
-abstract class ThemeBackground : Closeable {
+sealed interface ThemeBackground : Closeable {
 
     companion object {
+        @JvmStatic
         fun shader(shader: CanvasShader) = ShaderThemeBackground(shader)
+        @JvmStatic
         fun image(imageId: Identifier) = ImageThemeBackground(imageId)
+        @JvmStatic
         fun none() = MinecraftThemeBackground
     }
 
     /**
      * Returns false to let Minecraft render its default wallpaper.
      */
-    object MinecraftThemeBackground : ThemeBackground() {
+    object MinecraftThemeBackground : ThemeBackground {
         override fun draw(
             context: DrawContext,
             width: Int,
@@ -55,7 +58,7 @@ abstract class ThemeBackground : Closeable {
      * Background implementation that renders a static image texture.
      * @param imageId The Minecraft resource identifier for the image
      */
-    class ImageThemeBackground(private val imageId: Identifier) : ThemeBackground() {
+    class ImageThemeBackground(private val imageId: Identifier) : ThemeBackground {
 
         override fun draw(
             context: DrawContext,
@@ -85,7 +88,7 @@ abstract class ThemeBackground : Closeable {
      * Background implementation that renders using a custom shader.
      * @param shader The canvas shader to use for rendering
      */
-    class ShaderThemeBackground(private val shader: CanvasShader) : ThemeBackground() {
+    class ShaderThemeBackground(private val shader: CanvasShader) : ThemeBackground {
 
         override fun draw(
             context: DrawContext,
@@ -115,7 +118,7 @@ abstract class ThemeBackground : Closeable {
      * @return true if background was drawn, false to use default Minecraft background
      */
     @Suppress("LongParameterList")
-    abstract fun draw(
+    fun draw(
         context: DrawContext,
         width: Int,
         height: Int,

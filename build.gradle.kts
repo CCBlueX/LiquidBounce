@@ -26,7 +26,7 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.2"
+    id("com.gorylenko.gradle-git-properties") version "2.5.3"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "1.9.10"
@@ -44,6 +44,9 @@ val includeDependency: Configuration by configurations.creating
 /** Includes mod in the JAR file */
 val includeModDependency: Configuration by configurations.creating
 
+/** Includes native-only dependency in the JAR file */
+val includeNative: Configuration by configurations.creating
+
 /**
  * Provided by:
  * - Minecraft
@@ -51,6 +54,7 @@ val includeModDependency: Configuration by configurations.creating
  */
 fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
 
     exclude(group = "com.google.code.gson", module = "gson")
     exclude(group = "net.java.dev.jna", module = "jna")
@@ -82,9 +86,13 @@ includeModDependency.excludeProvidedLibs()
 configurations {
     include.configure {
         extendsFrom(includeModDependency)
+        extendsFrom(includeNative)
     }
     modApi.configure {
         extendsFrom(includeModDependency)
+    }
+    runtimeOnly.configure {
+        extendsFrom(includeNative)
     }
 }
 
@@ -156,6 +164,10 @@ dependencies {
     // JCEF Support
     includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.3.2")
+    // MacOS native (Linux native is included in game)
+    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
@@ -178,10 +190,11 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
+    includeDependency("com.squareup.okhttp3:okhttp:${project.property("okhttp_version")}")
+    includeDependency("com.squareup.okhttp3:okhttp-coroutines:${project.property("okhttp_version")}")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
+    includeDependency("io.netty:netty-handler-proxy:${project.property("netty_version")}")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
@@ -386,6 +399,8 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
+        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

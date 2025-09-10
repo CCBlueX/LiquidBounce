@@ -63,7 +63,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val handler = commandObject.getMember("onExecute")
 
             @Suppress("SpreadOperator")
-            commandBuilder.handler { _, args ->
+            commandBuilder.handler {
                 handler.execute(*args)
             }
         }

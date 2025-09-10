@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
@@ -43,7 +42,7 @@ import java.time.ZoneId
  *
  * Allows you to load, list, and create local configurations.
  */
-object CommandLocalConfig : CommandFactory {
+object CommandLocalConfig : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -75,7 +74,7 @@ object CommandLocalConfig : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
 
             @Suppress("UNCHECKED_CAST")
@@ -103,7 +102,7 @@ object CommandLocalConfig : CommandFactory {
         }
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
         chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
@@ -117,7 +116,7 @@ object CommandLocalConfig : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val configFiles = ConfigSystem.userConfigsFolder.listFiles { file, name ->
                 name.endsWith(".json", ignoreCase = true)
             }
@@ -174,7 +173,7 @@ object CommandLocalConfig : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 

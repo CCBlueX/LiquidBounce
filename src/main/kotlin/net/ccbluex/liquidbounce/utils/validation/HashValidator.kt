@@ -1,11 +1,12 @@
 package net.ccbluex.liquidbounce.utils.validation
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.Util
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
-import kotlin.concurrent.thread
+import java.util.concurrent.CompletableFuture
 
 private const val HASH_FILE_NAME = ".hash"
 
@@ -25,14 +26,17 @@ object HashValidator {
 
         expectHashOrDelete(file)
 
-        file.walk()
-            .mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
-            .forEach(HashValidator::validateHashFile)
+        file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
+            .map {
+                CompletableFuture.runAsync({ validateHashFile(it) }, Util.getMainWorkerExecutor())
+            }.forEach {
+                it.join()
+            }
     }
 
     private fun validateHashFile(hashFile: File) {
         val delete = runCatching {
-            val hashes = decode<Map<String, String>>(hashFile.inputStream())
+            val hashes = hashFile.readJson<Map<String, String>>()
             shouldDelete(hashFile, hashes)
         }.onFailure {
             logger.warn("Invalid hash file ${hashFile.absolutePath}", it)
@@ -53,7 +57,7 @@ object HashValidator {
 
         logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
 
-        Runtime.getRuntime().addShutdownHook(thread(start = false) {
+        Runtime.getRuntime().addShutdownHook(Thread {
             runCatching {
                 folderToDelete.deleteRecursively()
             }.onFailure {

@@ -1,11 +1,13 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
@@ -108,6 +110,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         val revisionDir = itemDir.resolve(revisionId.toString())
+        val previousRevisionDir = installedRevisionId?.let { itemDir.resolve(it.toString()) }
 
         try {
             val taskProgressUpdater = subTask?.let { subTask ->
@@ -121,6 +124,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             extractZip(revisionArchiveFile, revisionDir)
 
             installedRevisionId = revisionId
+            ConfigSystem.store(MarketplaceManager)
         } catch (exception: Exception) {
             if (revisionDir.exists()) {
                 revisionDir.deleteRecursively()
@@ -131,7 +135,13 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             revisionArchiveFile.delete()
         }
 
-        // Reload the item type's manager on render thread.
+        try {
+            previousRevisionDir?.deleteRecursively()
+        } catch (exception: Exception) {
+            logger.warn("Failed to delete previous revision directory", exception)
+        }
+
+        // Reload the item type's manager on the render thread.
         withContext(MinecraftDispatcher) {
             type.reload()
         }

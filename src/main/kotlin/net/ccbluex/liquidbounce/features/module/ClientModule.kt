@@ -94,8 +94,7 @@ open class ClientModule(
      */
     private var locked: Value<Boolean>? = null
 
-    override val baseKey: String
-        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+    override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -121,14 +120,13 @@ open class ClientModule(
      */
     open fun onRegistration() {}
 
-    override fun onEnabledValueRegistration(value: Value<Boolean>) =
+    final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
             if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }
-
                 value.doNotIncludeAlways()
             }
         }.notAnOption().onChanged { newState ->

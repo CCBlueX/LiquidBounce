@@ -35,7 +35,7 @@ object CommandClientLanguageSubcommand {
         .build()
 
     private fun unsetSubcommand() = CommandBuilder.begin("unset")
-        .handler { command, args ->
+        .handler {
             chat(regular("Unset override language..."))
             LanguageManager.overrideLanguage = ""
             ConfigSystem.store(LanguageManager)
@@ -47,7 +47,7 @@ object CommandClientLanguageSubcommand {
                 .autocompletedFrom { LanguageManager.knownLanguages }
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                 .build()
-        ).handler { command, args ->
+        ).handler {
             val language = LanguageManager.knownLanguages.find { it.equals(args[0] as String, true) }
             if (language == null) {
                 chat(regular("Language not found."))
@@ -61,7 +61,7 @@ object CommandClientLanguageSubcommand {
         }.build()
 
     private fun listSubcommand() = CommandBuilder.begin("list")
-        .handler { command, args ->
+        .handler {
             chat(regular("Available languages:"))
             chat(texts = LanguageManager.knownLanguages.mapArray { regular("-> $it") })
         }.build()

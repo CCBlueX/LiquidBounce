@@ -316,7 +316,8 @@ object CommandManager : Iterable<Command> by commands {
         }
 
         @Suppress("UNCHECKED_CAST")
-        command.handler!!(command, parsedParameters as Array<Any>)
+        val ctx = Command.Handler.Context(command, parsedParameters as Array<out Any>)
+        with(command.handler!!) { ctx() }
     }
 
     /**

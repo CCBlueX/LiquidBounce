@@ -21,11 +21,8 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
+import kotlin.math.floor
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
@@ -137,7 +134,11 @@ fun Vec3i.toVec3d(
 fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
 fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 
-fun Vec3d.toBlockPos() = BlockPos.ofFloored(x, y, z)!!
+fun Vec3d.toBlockPos(
+    xOffset: Double = 0.0,
+    yOffset: Double = 0.0,
+    zOffset: Double = 0.0,
+): BlockPos = BlockPos.ofFloored(x + xOffset, y + yOffset, z + zOffset)
 
 fun Vec3d.preferOver(other: Vec3d): Vec3d {
     val x = if (this.x == 0.0) other.x else this.x

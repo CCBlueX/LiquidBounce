@@ -4,7 +4,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -53,7 +52,7 @@ fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
     AccountManager.newMicrosoftAccount {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             GLFW.glfwSetClipboardString(mc.window.handle, it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
