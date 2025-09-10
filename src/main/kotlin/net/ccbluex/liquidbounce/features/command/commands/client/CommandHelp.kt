@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
@@ -34,7 +33,7 @@ import net.minecraft.util.Formatting
  *
  * Provides a help page for displaying other commands.
  */
-object CommandHelp : CommandFactory {
+object CommandHelp : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder

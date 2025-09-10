@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.integration.backend.browser
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -32,7 +31,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
     init {
         if (browserBackend.isAccelerationSupported) {
             accelerated = boolean("Accelerated(BETA)", false).onChanged {
-                RenderSystem.recordRenderCall {
+                mc.execute {
                     IntegrationListener.restart()
                     mc.updateWindowTitle()
                 }
@@ -51,7 +50,7 @@ open class BrowserSettings(
      * The maximum frames per second the browser renderer should run at.
      */
     val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS").onChanged {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             update()
         }
     }

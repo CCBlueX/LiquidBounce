@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.api.core
 
 import com.google.gson.JsonElement
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.NativeImage
@@ -33,12 +36,16 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.coroutines.executeAsync
+import okio.Buffer
+import okio.BufferedSink
 import okio.BufferedSource
 import okio.sink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
@@ -132,6 +139,27 @@ object HttpClient {
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
 
+    // For Java and JS
+    @JvmStatic
+    fun Call.sendAsync(): CompletableFuture<Response> {
+        val future = CompletableFuture<Response>().exceptionally { throwable ->
+            if (throwable is CancellationException) this.cancel()
+            throw throwable
+        }
+        this.enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    if (!future.complete(response)) response.close()
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    future.completeExceptionally(e)
+                }
+            }
+        )
+        return future
+    }
+
 }
 
 enum class HttpMethod {
@@ -154,7 +182,7 @@ inline fun <reified T> Response.parse(): T {
         NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
             NativeImageBackedTexture(NativeImage.read(stream))
         } as T
-        else -> decode<T>(body.charStream())
+        else -> body.charStream().readJson<T>()
     }
 }
 
@@ -187,8 +215,17 @@ fun Response.toFile(file: File) = use { response ->
  * Creates request body from JSON.
  */
 fun JsonElement.toRequestBody(): RequestBody {
-    return accessibleInteropGson.toJson(this)
-        .toRequestBody(HttpClient.MediaTypes.JSON)
+    val buffer = Buffer()
+    buffer.outputStream().writer(Charsets.UTF_8).use {
+        accessibleInteropGson.toJson(this, it)
+    }
+    return object : RequestBody() {
+        override fun contentType() = HttpClient.MediaTypes.JSON
+        override fun contentLength(): Long = buffer.size
+        override fun writeTo(sink: BufferedSink) {
+            sink.writeAll(buffer.copy())
+        }
+    }
 }
 
 fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)

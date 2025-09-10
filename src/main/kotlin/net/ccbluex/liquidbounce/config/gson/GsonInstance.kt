@@ -42,18 +42,20 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
 import net.minecraft.client.util.InputUtil
+import net.minecraft.component.ComponentChanges
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import net.minecraft.world.GameMode
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -119,8 +121,10 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
         .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
+        .registerTypeAdapter(ComponentChanges::class.java, CodecBasedAdapter.COMPONENT_CHANGES)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
         .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
+        .registerTypeHierarchyAdapter(ScreenHandlerType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
@@ -136,7 +140,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
         .registerTypeAdapter(Session::class.javaObjectType, SessionSerializer)
         .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
-        .registerTypeAdapter(GameMode::class.javaObjectType, GameModeSerializer)
+        .registerTypeHierarchyAdapter(StringIdentifiable::class.java, StringIdentifiableSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
         .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)

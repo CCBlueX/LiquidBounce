@@ -116,16 +116,16 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
             !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
 
         if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
-            return UseInventoryAction(inventorySlot)
+            return InventoryAction.UseItem(inventorySlot)
         }
 
         // Should the item be just thrown out of the inventory
         val shouldThrow = isInArmorSlot && !hasInventorySpace()
 
         return if (shouldThrow) {
-            ClickInventoryAction.performThrow(screen = null, armorPieceSlot)
+            InventoryAction.Click.performThrow(screen = null, armorPieceSlot)
         } else {
-            ClickInventoryAction.performQuickMove(screen = null, armorPieceSlot)
+            InventoryAction.Click.performQuickMove(screen = null, armorPieceSlot)
         }
     }
 

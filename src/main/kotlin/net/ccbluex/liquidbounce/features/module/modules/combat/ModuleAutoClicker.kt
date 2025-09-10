@@ -30,11 +30,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.Entity
-import net.minecraft.item.AxeItem
 import net.minecraft.item.BlockItem
-import net.minecraft.item.SwordItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 
@@ -88,12 +88,12 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isWeaponSelected(): Boolean {
-            val item = player.mainHandStack.item
+            val stack = player.mainHandStack
 
             return when (weapon) {
-                Weapon.SWORD -> item is SwordItem
-                Weapon.AXE -> item is AxeItem
-                Weapon.BOTH -> item is SwordItem || item is AxeItem
+                Weapon.SWORD -> stack.isSword
+                Weapon.AXE -> stack.isAxe
+                Weapon.BOTH -> stack.isSword || stack.isAxe
                 Weapon.ANY -> true
             }
         }

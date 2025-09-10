@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.utils.client.*
 
@@ -28,13 +27,13 @@ import net.ccbluex.liquidbounce.utils.client.*
  *
  * Allow verify the latency of the current player.
  */
-object CommandPing : CommandFactory {
+object CommandPing : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("ping")
             .requiresIngame()
-            .handler { command, _ ->
+            .handler {
                 val ping = network.getPlayerListEntry(player.uuid)!!.latency
                 chat(regular(command.result("pingCheck", variable(ping.toString()))), command)
             }

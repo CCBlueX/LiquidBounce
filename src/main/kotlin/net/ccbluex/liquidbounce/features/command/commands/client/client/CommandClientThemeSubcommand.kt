@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -39,7 +40,7 @@ object CommandClientThemeSubcommand {
         .subcommand(reloadSubcommand())
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ThemeManager.themesFolder)
         chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
     }.build()
@@ -51,13 +52,14 @@ object CommandClientThemeSubcommand {
                 .autocompletedFrom { ThemeManager.themeIds }
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             val id = args[0] as String
             val theme = ThemeManager.themes.find { it.metadata.id.equals(id, true) } ?:
                 throw CommandException("No theme found with name \"$id\"!".asText())
 
             runCatching {
                 ThemeManager.currentTheme = theme.metadata.id
+                ConfigSystem.store(ThemeManager)
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
             }.onSuccess {
@@ -102,7 +104,7 @@ object CommandClientThemeSubcommand {
         )
 
     private fun reloadSubcommand() = CommandBuilder.begin("reload")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             val prevCount = ThemeManager.themes.size
 
             ThemeManager.load()

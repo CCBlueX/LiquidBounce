@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -29,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
-object CommandItemStack : CommandFactory, MinecraftShortcuts {
+object CommandItemStack : Command.Factory, MinecraftShortcuts {
 
     private val amountParameter = ParameterBuilder
         .begin<Int>("amount")
@@ -45,7 +44,7 @@ object CommandItemStack : CommandFactory, MinecraftShortcuts {
             .begin("stack")
             .requiresIngame()
             .parameter(amountParameter)
-            .handler { command, args ->
+            .handler {
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException(command.result("mustBeCreative"))
                 }

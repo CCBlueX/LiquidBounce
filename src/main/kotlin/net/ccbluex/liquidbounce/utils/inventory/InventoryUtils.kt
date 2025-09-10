@@ -22,6 +22,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
@@ -32,8 +33,9 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
+import net.minecraft.block.Block
 import net.minecraft.block.Blocks
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.component.type.DyedColorComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -148,14 +150,14 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun getSlotsInContainer(screen: GenericContainerScreen) =
-    screen.screenHandler.slots
-        .filter { it.inventory === screen.screenHandler.inventory }
+fun HandledScreen<*>.getSlotsInContainer() =
+    this.screenHandler.slots
+        .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun findItemsInContainer(screen: GenericContainerScreen) =
-    screen.screenHandler.slots
-        .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
+fun HandledScreen<*>.findItemsInContainer() =
+    this.screenHandler.slots
+        .filter { !it.stack.isNothing() && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
 @JvmOverloads
@@ -191,8 +193,10 @@ fun interactItem(
     return result
 }
 
-fun findBlocksEndingWith(vararg targets: String) =
-    Registries.BLOCK.filter { block -> targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) } }
+internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
+    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
+        targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
+    }
 
 /**
  * Get the color of the armor on the player

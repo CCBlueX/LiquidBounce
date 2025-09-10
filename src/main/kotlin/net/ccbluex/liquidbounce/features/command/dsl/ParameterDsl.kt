@@ -16,16 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.item.ToolMaterial;
+package net.ccbluex.liquidbounce.features.command.dsl
 
-/**
- * Addition to {@link net.minecraft.item.MiningToolItem}
- */
-public interface MiningToolItemAddition {
+import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 
-    @SuppressWarnings("unused")
-    ToolMaterial liquid_bounce$getMaterial();
+inline fun <T : Any> CommandBuilder.addParam(
+    block: ParameterBuilder.Companion.() -> ParameterBuilder<T>
+): Parameter<T> = ParameterBuilder.block().build().also { parameter(it) }
 
-}
+inline fun <T : Any> CommandBuilder.addParam(
+    name: String,
+    block: ParameterBuilder<T>.() -> ParameterBuilder<T>
+): Parameter<T> = ParameterBuilder.begin<T>(name).block().build().also { parameter(it) }

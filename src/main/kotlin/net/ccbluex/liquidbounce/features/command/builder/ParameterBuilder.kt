@@ -22,13 +22,16 @@ package net.ccbluex.liquidbounce.features.command.builder
 import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
+import net.ccbluex.liquidbounce.features.command.dsl.CommandBuilderDsl
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 
+@CommandBuilderDsl
 class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     private var verifier: Parameter.Verificator<T>? = null
     private var required: Boolean? = null
+    private var default: T? = null
     private var vararg: Boolean = false
     private var autocompletionHandler: AutoCompletionProvider? = null
 
@@ -75,8 +78,10 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         this.verifier = verifier
     }
 
-    fun optional(): ParameterBuilder<T> = apply {
+    @JvmOverloads
+    fun optional(default: T? = null): ParameterBuilder<T> = apply {
         this.required = false
+        this.default = default
     }
 
     /**
@@ -118,6 +123,7 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
             this.name,
             this.required
                 ?: throw IllegalArgumentException("The parameter was neither marked as required nor as optional."),
+            this.default,
             this.vararg,
             this.verifier,
             autocompletionHandler

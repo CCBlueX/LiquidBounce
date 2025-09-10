@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.lang
 
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
@@ -68,7 +68,7 @@ object LanguageManager : Configurable("lang") {
             runCatching {
                 languageMap.computeIfAbsent(language) {
                     val languageFile = javaClass.getResourceAsStream("/resources/liquidbounce/lang/$language.json")
-                    val translations = decode<HashMap<String, String>>(languageFile!!)
+                    val translations = languageFile!!.readJson<HashMap<String, String>>()
 
                     ClientLanguage(translations)
                 }

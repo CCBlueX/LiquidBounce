@@ -27,13 +27,7 @@ import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 import kotlin.reflect.KClass
 
-/**
- * Empty event:
- * `{"name":"","event":{}}`
- */
-private const val EVENT_JSON_BYTE_COUNT = 64
-
-internal class SocketEventListener : EventListener {
+internal object SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
         .filter { WebSocketEvent::class.java.isAssignableFrom(it.java) }
@@ -43,6 +37,8 @@ internal class SocketEventListener : EventListener {
      * Contains all events that are registered in the current context
      */
     private val registeredEvents = hashMapOf<KClass<out Event>, EventHook<in Event>>()
+
+    private val writeBuffer = ThreadLocal.withInitial { StringBuilderWriter(DEFAULT_BUFFER_SIZE) }
 
     fun registerAll() {
         events.keys.forEach { register(it) }
@@ -72,17 +68,15 @@ internal class SocketEventListener : EventListener {
     }
 
     private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
-        val json = runCatching {
-            StringBuilderWriter(EVENT_JSON_BYTE_COUNT).use {
-                JsonWriter(it).use { writer ->
-                    writer.beginObject()
-                    writer.name("name").value(event::class.eventName)
-                    writer.name("event")
-                    (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
-                    writer.endObject()
-                }
-                it.toString()
+        val json = writeBuffer.get().runCatching {
+            JsonWriter(this).use { writer ->
+                writer.beginObject()
+                writer.name("name").value(event::class.eventName)
+                writer.name("event")
+                (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
+                writer.endObject()
             }
+            toString().also { builder.clear() }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@execute

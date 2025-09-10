@@ -25,9 +25,12 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.network.ClientConnection
 
 /**
  * Proxy Manager
@@ -46,6 +49,12 @@ object ProxyManager : Configurable("proxy"), EventListener {
      */
     val currentProxy
         get() = proxy.takeIf { proxy -> proxy.host.isNotBlank() && proxy.port > 0 }
+
+    private val clientConnections = mutableListOf<ClientConnection>()
+
+    internal fun addClientConnection(connection: ClientConnection) = mc.execute {
+        clientConnections.add(connection)
+    }
 
     init {
         ConfigSystem.root(this)
@@ -106,6 +115,21 @@ object ProxyManager : Configurable("proxy"), EventListener {
         // it is likely from [ProxyValidator] and we don't want to override it.
         if (pipeline.get("proxy") == null) {
             pipeline.addFirst("proxy", currentProxy?.handler() ?: return@handler)
+        }
+    }
+
+    /**
+     * Handles proxy validation connections.
+     */
+    @Suppress("unused")
+    private val connectionTicker = handler<GameTickEvent> {
+        clientConnections.removeIf {
+            if (it.isOpen) {
+                it.tick()
+                true
+            } else {
+                false
+            }
         }
     }
 

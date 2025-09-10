@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceListCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceListCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions.MarketplaceRevisionsCommand
 
 /**
@@ -28,18 +28,18 @@ import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.rev
  *
  * Allows interacting with the LiquidBounce Marketplace
  */
-object CommandMarketplace : CommandFactory {
+object CommandMarketplace : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("marketplace")
         .hub()
-        .subcommand(MarketplaceListCommand.createCommand())
-        .subcommand(MarketplaceSearchCommand.createCommand())
-        .subcommand(MarketplaceSubscribeCommand.createCommand())
-        .subcommand(MarketplaceUnsubscribeCommand.createCommand())
-        .subcommand(MarketplaceUpdateCommand.createCommand())
-        .subcommand(MarketplaceRevisionsCommand.createCommand())
+        .subcommand(marketplaceListCommand())
+        .subcommand(MarketplaceSearchCommand)
+        .subcommand(MarketplaceSubscribeCommand)
+        .subcommand(MarketplaceUnsubscribeCommand)
+        .subcommand(MarketplaceUpdateCommand)
+        .subcommand(MarketplaceRevisionsCommand)
         // Editing items is disabled until proven stable
-        // .subcommand(MarketplaceItemCommand.createCommand())
+        // .subcommand(MarketplaceItemCommand)
         .build()
 
 }

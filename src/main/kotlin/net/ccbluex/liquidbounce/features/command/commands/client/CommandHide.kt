@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
@@ -34,7 +33,7 @@ import net.minecraft.util.Formatting
  *
  * Allows you to hide specific modules.
  */
-object CommandHide : CommandFactory {
+object CommandHide : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -49,7 +48,7 @@ object CommandHide : CommandFactory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleManager.forEach { it.hidden = false }
             chat(
                 regular(command.result("modulesUnhidden")),
@@ -85,7 +84,7 @@ object CommandHide : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
             modules.forEach { it.hidden = false }
 
@@ -106,7 +105,7 @@ object CommandHide : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
             modules.forEach { it.hidden = true }
 

@@ -17,15 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
+@file:Suppress("NOTHING_TO_INLINE")
+package net.ccbluex.liquidbounce.utils.kotlin
 
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import net.minecraft.world.GameMode
-import java.lang.reflect.Type
+import java.util.*
 
-object GameModeSerializer : JsonSerializer<GameMode> {
-    override fun serialize(src: GameMode?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.getName()) }
-}
+inline fun <T> Set<T>.unmodifiable(): Set<T> = Collections.unmodifiableSet(this)
+
+inline fun <T> List<T>.unmodifiable(): List<T> = Collections.unmodifiableList(this)
+
+inline fun <T> Array<out T>?.unmodifiable(): List<T> =
+    when {
+        isNullOrEmpty() -> emptyList()
+        size == 1 -> Collections.singletonList(this[0])
+        else -> this.asList().unmodifiable()
+    }

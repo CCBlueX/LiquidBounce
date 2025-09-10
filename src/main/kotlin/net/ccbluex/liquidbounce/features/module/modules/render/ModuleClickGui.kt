@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
@@ -58,7 +57,7 @@ object ModuleClickGui :
 
     @Suppress("UnusedPrivateProperty")
     private val cache by boolean("Cache", true).onChanged { cache ->
-        RenderSystem.recordRenderCall {
+        mc.execute {
             if (cache) {
                 open()
             } else {

@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
+import java.util.EnumSet
 
 /**
  * Step module
@@ -107,7 +108,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
         private val packetType by enumChoice("PacketType", MovePacketType.FULL,
-            arrayOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
+            EnumSet.of(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
+        )
 
         private var ticksWait = 0
 

@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Subscribe to marketplace item
  */
-object MarketplaceSubscribeCommand : CommandFactory {
+object MarketplaceSubscribeCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("subscribe")
         .parameter(
@@ -45,7 +45,7 @@ object MarketplaceSubscribeCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val id = args[0] as Int
 
             if (MarketplaceManager.isSubscribed(id)) {

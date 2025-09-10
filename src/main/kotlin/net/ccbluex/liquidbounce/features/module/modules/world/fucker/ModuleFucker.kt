@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -84,7 +85,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
     }
 
     private val surroundings by boolean("Surroundings", true)
-    private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
+    private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG"))
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val action by enumChoice("Action", DestroyAction.DESTROY).apply(::tagBy)
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
@@ -337,7 +338,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = arrayOf("
             return false
         }
 
-        val raytrace = raytraceBlock(
+        val raytrace = raytraceBlockRotation(
             player.eyePos,
             target.pos,
             state,

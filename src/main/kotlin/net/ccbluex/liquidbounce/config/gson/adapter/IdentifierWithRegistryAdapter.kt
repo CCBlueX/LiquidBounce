@@ -55,6 +55,9 @@ class IdentifierWithRegistryAdapter<T : Any>(val registry: Registry<T>) : TypeAd
 
         @JvmField
         val STATUS_EFFECT = IdentifierWithRegistryAdapter(Registries.STATUS_EFFECT)
+
+        @JvmField
+        val SCREEN_HANDLER = IdentifierWithRegistryAdapter(Registries.SCREEN_HANDLER)
     }
 
 }

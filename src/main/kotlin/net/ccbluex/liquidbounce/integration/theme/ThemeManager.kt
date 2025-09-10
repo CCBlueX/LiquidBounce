@@ -19,7 +19,6 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -49,7 +48,7 @@ object ThemeManager : Configurable("theme") {
 
     var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
-        RenderSystem.recordRenderCall {
+        mc.execute {
             IntegrationListener.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
@@ -68,7 +67,7 @@ object ThemeManager : Configurable("theme") {
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                RenderSystem.recordRenderCall {
+                mc.execute {
                     runBlocking {
                         theme.compileShader()
                         includedTheme.compileShader()
