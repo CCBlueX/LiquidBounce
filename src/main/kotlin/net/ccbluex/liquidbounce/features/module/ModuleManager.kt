@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
@@ -103,7 +105,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
-import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHalo
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleCapes
 import net.ccbluex.jmcomicfix.features.module.modules.misc.ModuleAutoGG
@@ -123,10 +124,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.breadcrumbs.Modul
 import net.ccbluex.liquidbounce.features.module.modules.render.smoothcamera.ModuleSmoothCamera
 import org.lwjgl.glfw.GLFW
 
-/**
- * Should be sorted by Module::name
- */
-private val modules = ArrayList<ClientModule>(256)
+private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
 
 /**
  * A fairly simple module manager
@@ -335,7 +333,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleClientTitle,
             ModuleAutoF5,
 
-           // Movement
+            // Movement
             ModuleAirJump,
             ModuleAntiBounce,
             ModuleAntiLevitation,
@@ -525,7 +523,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
     fun addModule(module: ClientModule) {
         module.initConfigurable()
         module.onRegistration()
-        modules.sortedInsert(module, ClientModule::name)
+        modules += module
     }
 
     fun removeModule(module: ClientModule) {
@@ -545,7 +543,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      */
     @JvmName("getCategories")
     @ScriptApiRequired
-    fun getCategories() = Category.entries.mapArray { it.readableName }
+    fun getCategories() = Category.entries.mapArray { it.choiceName }
 
     @JvmName("getModules")
     @ScriptApiRequired

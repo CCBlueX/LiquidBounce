@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CANCEL_PREVIOUS
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.DISCARD_LATEST
@@ -122,12 +123,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val shutdownHandler = handler<ClientShutdownEvent> {
+    private val shutdownHandler = handler<ClientShutdownEvent> {
         chatClient.disconnect()
     }
 
     @Suppress("unused")
-    val repeatable = suspendHandler<GameTickEvent>(behavior = DISCARD_LATEST) {
+    private val repeatable = suspendHandler<GameTickEvent>(context = Dispatchers.IO, behavior = DISCARD_LATEST) {
         if (!chatClient.connected) {
             chatClient.connect()
         } else {
@@ -137,12 +138,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val sessionChange = suspendHandler<SessionEvent>(behavior = CANCEL_PREVIOUS) {
+    private val sessionChange = suspendHandler<SessionEvent>(behavior = CANCEL_PREVIOUS) {
         chatClient.reconnect()
     }
 
     @Suppress("unused")
-    val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
+    private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
         fun prefix(): MutableText = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
                 event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
@@ -168,13 +169,13 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CANCEL_PREVIOUS) { event ->
+    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CANCEL_PREVIOUS) { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }
 
     @Suppress("unused")
-    val handleStateChange = handler<ClientChatStateChange> {
+    private val handleStateChange = handler<ClientChatStateChange> {
         when (it.state) {
             ClientChatStateChange.State.CONNECTED -> {
                 notification(

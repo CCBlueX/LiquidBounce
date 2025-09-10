@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.minecraft.block.MapColor
 import net.minecraft.item.map.MapState
 import java.awt.Color
@@ -16,7 +16,7 @@ object MurderMysteryFontDetection {
         checkNotNull(stream) { "Unable to find $FILE_NAME!" }
 
         // We should not use interface here
-        decode<HashMap<String, BooleanArray>>(stream)
+        stream.readJson<HashMap<String, BooleanArray>>()
     }
 
     @Suppress("all")
