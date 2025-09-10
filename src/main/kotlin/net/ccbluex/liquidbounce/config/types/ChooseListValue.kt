@@ -29,8 +29,12 @@ class ChooseListValue<T : NamedChoice>(
     name: String,
     aliases: Array<String> = emptyArray(),
     defaultValue: T,
-    @Exclude val choices: Array<T>
+    @Exclude val choices: Set<T>
 ) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
+
+    init {
+        require(defaultValue in choices) { "default value must be in [${choices}]" }
+    }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
@@ -60,4 +64,24 @@ class ChooseListValue<T : NamedChoice>(
 
 interface NamedChoice {
     val choiceName: String
+
+    companion object {
+        @JvmName("of")
+        @JvmStatic
+        fun String.asNamedChoice(): NamedChoice = object : NamedChoice {
+            override val choiceName get() = this@asNamedChoice
+
+            override fun equals(other: Any?): Boolean =
+                when (other) {
+                    is NamedChoice -> other.choiceName == this.choiceName
+                    is CharSequence -> this.choiceName == other
+                    is Enum<*> -> this.choiceName == other.name
+                    else -> false
+                }
+
+            override fun hashCode(): Int = this.choiceName.hashCode()
+
+            override fun toString(): String = this.choiceName
+        }
+    }
 }
