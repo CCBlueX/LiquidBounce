@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
+import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -362,10 +364,9 @@ open class Configurable(
         MultiChooseEnumListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, enumValues<T>())
+        where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
 
-    fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
-        where T : Enum<T>, T : NamedChoice =
+    fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Set<T>): ChooseListValue<T> =
         ChooseListValue(name, defaultValue = default, choices = choices).apply { this@Configurable.inner.add(this) }
 
     protected fun <T : Choice> choices(
@@ -403,5 +404,116 @@ open class Configurable(
     ) = choices(eventListener, name, { activeIndex }, choicesCallback)
 
     fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }
+
+    /**
+     * Assigns the value of the settings to the component
+     *
+     * A component can have dynamic settings which can be assigned through the JSON file
+     * These have to be interpreted and assigned to the configurable
+     *
+     * An example:
+     * {
+     *     "type": "INT",
+     *     "name": "Size",
+     *     "value": 14,
+     *     "range": {
+     *         "min": 1,
+     *         "max": 100
+     *     },
+     *     "suffix": "px"
+     * }
+     *
+     * TODO: Replace with proper deserialization
+     *
+     * @param valueObject JsonObject
+     */
+    @Suppress("LongMethod")
+    fun json(valueObject: JsonObject) {
+        val type = valueObject["type"].asString
+        val name = valueObject["name"].asString
+
+        // todo: replace this with serious deserialization
+        when (type) {
+            "BOOLEAN" -> {
+                val value = valueObject["value"].asBoolean
+                boolean(name, value)
+            }
+
+            "INT" -> {
+                val value = valueObject["value"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                int(name, value, min..max, suffix)
+            }
+
+            "INT_RANGE" -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asInt
+                val valueMax = valueObject["value"].asJsonObject["max"].asInt
+                val min = valueObject["range"].asJsonObject["min"].asInt
+                val max = valueObject["range"].asJsonObject["max"].asInt
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                intRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            "FLOAT" -> {
+                val value = valueObject["value"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                float(name, value, min..max, suffix)
+            }
+
+            "FLOAT_RANGE" -> {
+                val valueMin = valueObject["value"].asJsonObject["min"].asFloat
+                val valueMax = valueObject["value"].asJsonObject["max"].asFloat
+                val min = valueObject["range"].asJsonObject["min"].asFloat
+                val max = valueObject["range"].asJsonObject["max"].asFloat
+                val suffix = valueObject["suffix"]?.asString ?: ""
+                floatRange(name, valueMin..valueMax, min..max, suffix)
+            }
+
+            "TEXT" -> {
+                val value = valueObject["value"].asString
+                text(name, value)
+            }
+
+            "COLOR" -> {
+                val value = valueObject["value"].asInt
+                color(name, Color4b(value, hasAlpha = true))
+            }
+
+            "CONFIGURABLE" -> {
+                val subConfigurable = Configurable(name)
+                val values = valueObject["values"].asJsonArray
+                for (value in values) {
+                    subConfigurable.json(value.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+            // same as configurable but it is [ToggleableConfigurable]
+            "TOGGLEABLE" -> {
+                val value = valueObject["value"].asBoolean
+                // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
+                // as toggleable Configurable
+                val subConfigurable = object : ToggleableConfigurable(null, name, value) {}
+                val settings = valueObject["values"].asJsonArray
+                for (setting in settings) {
+                    subConfigurable.json(setting.asJsonObject)
+                }
+                tree(subConfigurable)
+            }
+
+            "CHOICE" -> {
+                val value = valueObject["value"].asString.asNamedChoice()
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                enumChoice(name, value, choices)
+            }
+
+            else -> error("Unsupported type: $type")
+        }
+    }
+
 
 }

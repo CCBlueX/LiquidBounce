@@ -23,6 +23,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.convertToString
@@ -249,6 +250,18 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", entityType.name.convertToString())
                     addProperty("icon", iconUrl(id)) // TODO: fix icon
+                })
+            }
+        }
+
+        "screen_handler" -> {
+            val iconId = Registries.ITEM.getId(Items.CHEST)
+            val converter = CaseFormat.LOWER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL)
+            Registries.SCREEN_HANDLER.forEach { screenHandlerType ->
+                val id = Registries.SCREEN_HANDLER.getId(screenHandlerType) ?: return@forEach
+                add(id.toString(), JsonObject().apply {
+                    addProperty("name", converter.convert(id.toName()))
+                    addProperty("icon", iconUrl(iconId)) // TODO: better icon?
                 })
             }
         }

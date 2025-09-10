@@ -209,7 +209,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         }
 
         val rotation = (if (rotations.rotationTiming == ON_TICK) {
-            findRotation(target, range.toDouble(), 0)?.rotation
+            findRotation(target, range.toDouble())?.rotation
         } else {
             null
         } ?: RotationManager.currentRotation ?: player.rotation).normalize()
@@ -325,15 +325,11 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val squaredMaxRange = maximumRange.pow(2)
         val squaredNormalRange = range.pow(2)
 
-        // Calculate ticks until next click
-        val ticksUntilClick = clickScheduler.ticksUntilClick
-        debugParameter("Ticks Until Click") { ticksUntilClick }
-
         // Find suitable target
         val target = targetTracker.targets()
             .filter { entity -> entity.squaredBoxedDistanceTo(player) <= squaredMaxRange }
             .sortedBy { entity -> if (entity.squaredBoxedDistanceTo(player) <= squaredNormalRange) 0 else 1 }
-            .firstOrNull { entity -> processTarget(entity, maximumRange, ticksUntilClick) }
+            .firstOrNull { entity -> processTarget(entity, maximumRange) }
 
         if (target != null) {
             targetTracker.target = target
@@ -356,10 +352,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     @Suppress("ReturnCount")
     private fun processTarget(
         entity: LivingEntity,
-        range: Float,
-        ticks: Int
+        range: Float
     ): Boolean {
-        val (rotation, _) = findRotation(entity, range.toDouble(), ticks) ?: return false
+        val (rotation, _) = findRotation(entity, range.toDouble()) ?: return false
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
@@ -405,9 +400,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
      *
      *  @return The best spot to attack the entity
      */
-    private fun findRotation(entity: LivingEntity, range: Double, ticks: Int): RotationWithVector? {
+    private fun findRotation(entity: LivingEntity, range: Double): RotationWithVector? {
         val eyes = player.eyePos
-        val point = pointTracker.findPoint(eyes, entity, ticks)
+        val point = pointTracker.findPoint(eyes, entity)
 
         val pointPos = point.pos
 

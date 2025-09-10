@@ -6,7 +6,7 @@
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * (at any later version.
  *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -47,7 +47,9 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     delete("/localStorage", ::deleteLocalStorage)
 
     // Theme Functions
-    get("/theme", ::getThemeInfo)
+    get("/theme", ::getTheme) // returns current theme
+    get("/theme/:id", ::getTheme)
+    get("/shader", ::getToggleShaderInfo)
     post("/shader", ::postToggleShader)
 
     // VirtualScreen Functions
@@ -68,9 +70,9 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     }
     get("/module/:name", ::getModule)
 
-
     // Component Functions
     get("/components", ::getComponents)
+    get("/components/:id", ::getComponents)
 
     // Session Functions
     get("/session", ::getSessionInfo)
@@ -173,5 +175,16 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
         post("/join", ::postJoinWorld)
         post("/edit", ::postEditWorld)
         post("/delete", ::postDeleteWorld)
+    }
+
+    // Marketplace Functions
+    get("/marketplace", ::getMarketplaceItems).apply {
+        get("/:id", ::getMarketplaceItem)
+        get("/:id/revisions", ::getMarketplaceItemRevisions)
+        get("/:id/revisions/:revisionId", ::getMarketplaceItemRevision)
+        post("/:id/subscribe", ::subscribeMarketplaceItem)
+        post("/:id/unsubscribe", ::unsubscribeMarketplaceItem)
+        get("/:id/reviews", ::getMarketplaceItemReviews)
+        post("/:id/reviews", ::postMarketplaceItemReview)
     }
 }

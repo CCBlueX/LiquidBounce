@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
@@ -33,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.player
  *
  * Module: [ModuleTeleport]
  */
-object CommandTeleport : CommandFactory {
+object CommandTeleport : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -58,7 +57,7 @@ object CommandTeleport : CommandFactory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val x = (args[0] as String).toDoubleOrNull()
                 val z = (args[args.size - 1] as String).toDoubleOrNull()
                 val y = if (args.size == 3) {

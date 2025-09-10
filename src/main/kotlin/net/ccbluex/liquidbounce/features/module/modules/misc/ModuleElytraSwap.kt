@@ -22,14 +22,14 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.type
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isChestArmor
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.item.equipment.EquipmentType
 
 /**
  * ModuleElytraSwap
@@ -56,7 +56,7 @@ object ModuleElytraSwap : ClientModule(
         EventPriorityConvention.CRITICAL_MODIFICATION
     ) { event ->
         val elytraItem = slotsToSearch.findSlot { it.isElytra() && !it.willBreakNextUse() }
-        val chestplateItem = slotsToSearch.findSlot { it.item.isChestplate() }
+        val chestplateItem = slotsToSearch.findSlot { it.isChestArmor }
 
         val chestplateStack = chestplateSlot.itemStack
         when {
@@ -67,7 +67,7 @@ object ModuleElytraSwap : ClientModule(
             chestplateStack.isElytra() && chestplateItem != null -> event.doSwap(chestplateItem)
 
             // replacing the chestplate with elytra
-            chestplateStack.item.isChestplate() && elytraItem != null -> event.doSwap(elytraItem)
+            chestplateStack.isChestArmor && elytraItem != null -> event.doSwap(elytraItem)
         }
 
         enabled = false
@@ -76,19 +76,17 @@ object ModuleElytraSwap : ClientModule(
     private fun ScheduleInventoryActionEvent.doSwap(slot: ItemSlot) {
         var exchange: InventoryAction? = null
         if (!chestplateSlot.itemStack.isEmpty) {
-            exchange = ClickInventoryAction.performPickup(slot = slot)
+            exchange = InventoryAction.Click.performPickup(slot = slot)
         }
 
         val actions = listOfNotNull(
-            ClickInventoryAction.performPickup(slot = slot),
-            ClickInventoryAction.performPickup(slot = chestplateSlot),
+            InventoryAction.Click.performPickup(slot = slot),
+            InventoryAction.Click.performPickup(slot = chestplateSlot),
             exchange
         )
 
         schedule(constraints, actions)
     }
-
-    private fun Item.isChestplate() = this is ArmorItem && type() == EquipmentType.CHESTPLATE
 
     private fun ItemStack.isElytra() = this.item == Items.ELYTRA
 

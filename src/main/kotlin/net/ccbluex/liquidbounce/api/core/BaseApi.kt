@@ -83,7 +83,8 @@ abstract class BaseApi(protected val baseUrl: String) {
 
     protected suspend inline fun <reified T> delete(
         endpoint: String,
+        body: RequestBody? = null,
         crossinline headers: Headers.Builder.() -> Unit = {}
-    ): T = request(endpoint, HttpMethod.DELETE, headers)
+    ): T = request(endpoint, HttpMethod.DELETE, headers, body)
 
 }

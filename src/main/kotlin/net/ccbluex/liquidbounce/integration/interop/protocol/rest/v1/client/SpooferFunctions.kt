@@ -37,6 +37,6 @@ fun getSpooferConfigurable(request: RequestObject): FullHttpResponse {
 
 fun putSpooferConfigurable(request: RequestObject): FullHttpResponse {
     ConfigSystem.deserializeConfigurable(SpooferManager, request.body.reader())
-    ConfigSystem.storeConfigurable(SpooferManager)
+    ConfigSystem.store(SpooferManager)
     return httpNoContent()
 }

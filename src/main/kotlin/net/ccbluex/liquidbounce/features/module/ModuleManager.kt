@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.dupe.ModuleDupe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.phase.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
@@ -171,7 +172,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
         }
 
         // Store modules configuration after world change, happens on disconnect as well
-        ConfigSystem.storeConfigurable(modulesConfigurable)
+        ConfigSystem.store(modulesConfigurable)
     }
 
     /**
@@ -250,6 +251,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             // Fun
             ModuleDankBobbing,
             ModuleDerp,
+            ModuleNotebot,
             ModuleSkinDerp,
             ModuleHandDerp,
             ModuleTwerk,
@@ -326,6 +328,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAutoBreak,
             ModuleAutoFish,
             ModuleAutoRespawn,
+            ModuleAutoWindCharge,
             ModuleOffhand,
             ModuleAutoShop,
             ModuleAutoWalk,
@@ -400,6 +403,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSkinChanger,
 
             // World
+            ModuleAirPlace,
             ModuleAutoBuild,
             ModuleAutoDisable,
             ModuleAutoFarm,

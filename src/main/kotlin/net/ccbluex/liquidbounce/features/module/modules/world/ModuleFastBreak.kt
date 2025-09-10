@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.item.MiningToolItem
+import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 
 /**
@@ -42,7 +42,7 @@ object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
     private val modeChoice = choices("Mode", 0) { arrayOf(NoneChoice(it), AbortAnother) }.apply(::tagBy)
 
     val repeatable = tickHandler {
-        if (onlyTool && player.mainHandStack.item !is MiningToolItem) {
+        if (onlyTool && !player.mainHandStack.isMiningTool) {
             return@tickHandler
         }
 
@@ -64,9 +64,8 @@ object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modeChoice
 
-
         val packetHandler = handler<PacketEvent> {
-            if (onlyTool && player.mainHandStack.item !is MiningToolItem) {
+            if (onlyTool && !player.mainHandStack.isMiningTool) {
                 return@handler
             }
 

@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.module
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
@@ -37,7 +37,7 @@ import net.minecraft.util.Formatting
  *
  * Module: [ModuleAutoDisable]
  */
-object CommandAutoDisable : CommandFactory {
+object CommandAutoDisable : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -52,7 +52,7 @@ object CommandAutoDisable : CommandFactory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
+        .handler {
             ModuleAutoDisable.listOfModules.clear()
             chat(
                 command.result("modulesCleared"),
@@ -84,11 +84,11 @@ object CommandAutoDisable : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            Parameters.modules(all = ModuleAutoDisable.listOfModules)
+            ParameterBuilder.modules(all = ModuleAutoDisable.listOfModules)
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
@@ -112,11 +112,11 @@ object CommandAutoDisable : CommandFactory {
     private fun addSubcommand() = CommandBuilder
         .begin("add")
         .parameter(
-            Parameters.modules()
+            ParameterBuilder.modules()
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->

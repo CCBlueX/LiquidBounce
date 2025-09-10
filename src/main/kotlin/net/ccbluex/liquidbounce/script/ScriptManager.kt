@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptAsyncUtil
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.Source
 import java.io.File
@@ -71,10 +73,13 @@ object ScriptManager {
      */
     fun loadAll() {
         require(isInitialized) { "Cannot load scripts before the script engine is initialized." }
-
-        root.listFiles { file ->
+        val files = root.listFiles { file ->
             Source.findLanguage(file) != null || file.isDirectory
-        }?.forEach { file ->
+        } + MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.SCRIPT).map { item ->
+            item.getInstallationFolder()
+        }
+
+        files.forEach { file ->
             if (file.isDirectory) {
                 // If a directory is found, look for a main script file inside it.
                 val mainFile = file.listFiles { dirFile ->
@@ -160,7 +165,7 @@ object ScriptManager {
 
         if (scripts.isNotEmpty()) {
             // Reload the ClickGUI to update the module list.
-            RenderSystem.recordRenderCall(ModuleClickGui::reload)
+            mc.execute(ModuleClickGui::reload)
         }
     }
 

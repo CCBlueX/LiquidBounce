@@ -34,13 +34,13 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
@@ -205,8 +205,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         chronometer.reset()
     }
 
-    fun performSwitch(from: ItemSlot, smart: Boolean): List<ClickInventoryAction> {
-        val actions = ArrayList<ClickInventoryAction>(3)
+    fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
+        val actions = ArrayList<InventoryAction.Click>(3)
 
         if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
@@ -225,10 +225,10 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
             }
         } else {
-            actions += ClickInventoryAction.performPickup(slot = from)
-            actions += ClickInventoryAction.performPickup(slot = OffHandSlot)
+            actions += InventoryAction.Click.performPickup(slot = from)
+            actions += InventoryAction.Click.performPickup(slot = OffHandSlot)
             if (!OffHandSlot.itemStack.isEmpty) {
-                actions += ClickInventoryAction.performPickup(slot = from)
+                actions += InventoryAction.Click.performPickup(slot = from)
             }
         }
 
@@ -278,7 +278,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                     return false
                 }
 
-                return player.mainHandStack.item is SwordItem || !Strength.onlyWhileHoldingSword
+                return player.mainHandStack.isSword || !Strength.onlyWhileHoldingSword
             }
 
             override fun getSlot(): ItemSlot? {
@@ -295,7 +295,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                     return false
                 }
 
-                if (player.mainHandStack.item is SwordItem && Gapple.WhileHoldingSword.enabled) {
+                if (player.mainHandStack.isSword && Gapple.WhileHoldingSword.enabled) {
                     return if (Gapple.WhileHoldingSword.onlyWhileKa) {
                         ModuleKillAura.running
                     } else {
@@ -393,7 +393,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          */
         SWITCH("Switch") {
             override fun performSwitch(from: ItemSlot) = listOf(
-                ClickInventoryAction.performSwap(
+                InventoryAction.Click.performSwap(
                     from = from,
                     to = OffHandSlot
                 )
@@ -412,7 +412,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          * Chooses the switch action based on the version. Only works if vfp is installed.
          */
         AUTOMATIC("Automatic") {
-            override fun performSwitch(from: ItemSlot): List<ClickInventoryAction> {
+            override fun performSwitch(from: ItemSlot): List<InventoryAction.Click> {
                 return if (isNewerThanOrEquals1_16) {
                     SWITCH.performSwitch(from)
                 } else {
@@ -421,7 +421,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             }
         };
 
-        abstract fun performSwitch(from: ItemSlot): List<ClickInventoryAction>
+        abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
     }
 
 }

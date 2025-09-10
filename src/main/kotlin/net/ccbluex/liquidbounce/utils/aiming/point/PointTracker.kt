@@ -45,8 +45,6 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
     private val predicateBoxParts by multiEnumChoice<ExemptBoxPart>("ExemptBoxParts")
     private val predicateBestHitVector = tree(ExemptBestHitVector(this))
 
-    private val prediction by boolean("Prediction", false)
-
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
@@ -71,14 +69,10 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
      *
      * @param entity The entity we want to track.
      */
-    fun findPoint(eyes: Vec3d, entity: LivingEntity, ticks: Int): PointInsideBox {
+    fun findPoint(eyes: Vec3d, entity: LivingEntity, ticks: Int = 0): PointInsideBox {
         // Predict target position
-        val targetPos = if (prediction) {
-            PositionExtrapolation.getBestForEntity(entity)
-                .getPositionInTicks(ticks.toDouble())
-        } else {
-            entity.pos
-        }
+        val targetPos = PositionExtrapolation.getBestForEntity(entity)
+            .getPositionInTicks(ticks.toDouble())
 
         // Project points onto box
         val box = entity.getBoundingBoxAt(targetPos)

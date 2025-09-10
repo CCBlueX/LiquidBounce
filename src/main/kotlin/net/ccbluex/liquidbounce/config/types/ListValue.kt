@@ -157,6 +157,7 @@ class RegistryListValue<T : MutableSet<E>, E>(
             put(ValueType.CLIENT_PACKET, "clientpackets")
             put(ValueType.SERVER_PACKET, "serverpackets")
             put(ValueType.ENTITY_TYPE, "entity_type")
+            put(ValueType.SCREEN_HANDLER, "screen_handler")
         }
     }
 

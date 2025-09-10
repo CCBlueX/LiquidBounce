@@ -21,12 +21,14 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.integration.theme.component.components
-import net.ccbluex.liquidbounce.integration.theme.component.customComponents
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
-// GET /api/v1/client/components
+// GET /api/v1/client/components/:id
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) =
-    httpOk(accessibleInteropGson.toJsonTree(components + customComponents).asJsonArray)
+    httpOk(accessibleInteropGson.toJsonTree(
+        ComponentManager.getComponents(requestObject.params["id"])).asJsonArray
+    )
+

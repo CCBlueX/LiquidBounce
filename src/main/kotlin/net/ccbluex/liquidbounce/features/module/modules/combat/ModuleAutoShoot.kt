@@ -211,20 +211,23 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     }
 
     private fun findRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
-        val eyes = player.eyePos
-        // todo: calculate time until projectile reaches target
-        val pointOnHitbox = pointTracker.findPoint(eyes, target, 1)
-
         return when (gravityType) {
             GravityType.AUTO -> {
                 // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
                 return null
             }
-            GravityType.LINEAR -> Rotation.lookingAt(pointOnHitbox.pos, eyes)
+            GravityType.LINEAR -> {
+                // On linear we likely don't need to care about gravity,
+                // but instead aim exactly at the hitbox of the target.
+                val eyes = player.eyePos
+                val point = pointTracker.findPoint(eyes, target, 1)
+                Rotation.lookingAt(point.pos, eyes)
+            }
             // Determines the required yaw and pitch angles to hit a target with a projectile,
             // considering gravity's effect on the projectile's motion.
             GravityType.PROJECTILE -> {
-                SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.GENERIC, target)
+                SituationalProjectileAngleCalculator.calculateAngleForEntity(TrajectoryInfo.GENERIC,
+                    target)
             }
         }
     }

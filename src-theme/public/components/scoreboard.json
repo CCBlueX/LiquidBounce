@@ -1,0 +1,12 @@
+{
+  "name": "Scoreboard",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 15,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  },
+  "tweaks": ["DISABLE_SCOREBOARD"]
+}

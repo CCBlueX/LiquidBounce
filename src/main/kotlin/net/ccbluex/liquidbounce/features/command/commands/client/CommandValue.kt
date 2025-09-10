@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.*
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -35,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  * Allows you to change values of a specific module.
  */
 @Suppress("SwallowedException")
-object CommandValue : CommandFactory {
+object CommandValue : Command.Factory {
 
     override fun createCommand() = CommandBuilder
         .begin("value")
@@ -48,21 +47,21 @@ object CommandValue : CommandFactory {
     private fun setSubCommand() = CommandBuilder
         .begin("set")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueName()
+            ParameterBuilder.valueName()
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueType()
+            ParameterBuilder.valueType()
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
             val valueString = args[2] as String
@@ -89,16 +88,16 @@ object CommandValue : CommandFactory {
     private fun resetSubCommand() = CommandBuilder
         .begin("reset")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.valueName()
+            ParameterBuilder.valueName()
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
 
@@ -119,11 +118,11 @@ object CommandValue : CommandFactory {
     private fun resetAllSubCommand() = CommandBuilder
         .begin("reset-all")
         .parameter(
-            Parameters.module("moduleName")
+            ParameterBuilder.module("moduleName")
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
 
             module.getContainedValuesRecursively()

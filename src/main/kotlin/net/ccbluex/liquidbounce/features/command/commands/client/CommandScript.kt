@@ -18,12 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.script.DebugProtocol
 import net.ccbluex.liquidbounce.script.ScriptDebugOptions
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -34,12 +32,10 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
 import java.io.File
 
-object CommandScript : CommandFactory {
+private fun ParameterBuilder<*>.autocompletedFromScriptNames() =
+    autocompletedFrom { ScriptManager.root.listFiles()?.map { it.name } }
 
-    private val listScriptFiles = AutoCompletionProvider { prefix: String, _ ->
-        ScriptManager.scripts.filter { it.file.name.startsWith(prefix) }
-            .map { it.file.name.removeSuffix(".js") }
-    }
+object CommandScript : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder.begin("script")
@@ -55,12 +51,14 @@ object CommandScript : CommandFactory {
     }
 
     private fun editSubcommand() = CommandBuilder.begin("edit").parameter(
-        ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listScriptFiles)
+        ParameterBuilder.begin<String>("name")
+            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+            .required()
+            .autocompletedFromScriptNames()
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
-        val scriptFile = ScriptManager.root.resolve("$name.js")
+        val scriptFile = ScriptManager.root.resolve(name)
 
         if (!scriptFile.exists()) {
             chat(regular(command.result("notFound", variable(name))))
@@ -71,12 +69,12 @@ object CommandScript : CommandFactory {
         chat(regular(command.result("opened", variable(name))))
     }.build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ScriptManager.root)
         chat(regular(command.result("browse", clickablePath(ScriptManager.root))))
     }.build()
 
-    private fun listSubcommand() = CommandBuilder.begin("list").handler { command, _ ->
+    private fun listSubcommand() = CommandBuilder.begin("list").handler {
         val scripts = ScriptManager.scripts
         val scriptNames = scripts.map { script -> "${script.scriptName} (${script.language})" }
 
@@ -93,23 +91,12 @@ object CommandScript : CommandFactory {
             ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .required()
-                .autocompletedWith(listScriptFiles)
+                .autocompletedFromScriptNames()
                 .build()
-
         )
         .parameter(
-            ParameterBuilder.begin<String>("protocol")
-                .verifiedBy {
-                    try {
-                        ParameterValidationResult.ok(DebugProtocol.valueOf(it).name)
-                    } catch (_: IllegalArgumentException) {
-                        ParameterValidationResult.error("")
-                    }
-                }
+            ParameterBuilder.enumChoice<DebugProtocol>("protocol")
                 .optional()
-                .autocompletedWith { prefix, _ ->
-                    DebugProtocol.entries.map { it.toString() }.filter { it.startsWith(prefix) }
-                }
                 .build()
         )
         .parameter(
@@ -130,9 +117,9 @@ object CommandScript : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
-            val scriptFile = ScriptManager.root.resolve("$name.js")
+            val scriptFile = ScriptManager.root.resolve(name)
 
             if (!scriptFile.exists()) {
                 chat(regular(command.result("notFound", variable(name))))
@@ -145,13 +132,12 @@ object CommandScript : CommandFactory {
         .build()
 
     private fun loadScriptWithDebug(
-        args: Array<Any>,
+        args: Array<out Any>,
         scriptFile: File,
         command: Command,
         name: String
     ) {
-        val protocol =
-            args.getOrNull(1)?.let { DebugProtocol.valueOf((it as String).uppercase()) } ?: DebugProtocol.INSPECT
+        val protocol = args.getOrNull(1) as DebugProtocol? ?: DebugProtocol.INSPECT
 
         runCatching {
             ScriptManager.loadScript(
@@ -191,11 +177,11 @@ object CommandScript : CommandFactory {
 
     private fun unloadSubcommand() = CommandBuilder.begin("unload").parameter(
         ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith { prefix, _ ->
-                ScriptManager.scripts.filter { it.scriptName.startsWith(prefix) }.map { it.scriptName }
+            .autocompletedFrom {
+                ScriptManager.scripts.map { it.scriptName }
             }
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
 
         val script = ScriptManager.scripts.find { it.scriptName.equals(name, true) }
@@ -215,12 +201,14 @@ object CommandScript : CommandFactory {
     }.build()
 
     private fun loadSubcommand() = CommandBuilder.begin("load").parameter(
-        ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-            .autocompletedWith(listScriptFiles)
+        ParameterBuilder.begin<String>("name")
+            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+            .required()
+            .autocompletedFromScriptNames()
             .build()
-    ).handler { command, args ->
+    ).handler {
         val name = args[0] as String
-        val scriptFile = ScriptManager.root.resolve("$name.js")
+        val scriptFile = ScriptManager.root.resolve(name)
 
         if (!scriptFile.exists()) {
             chat(regular(command.result("notFound", variable(name))))
@@ -243,7 +231,7 @@ object CommandScript : CommandFactory {
 
     }.build()
 
-    private fun reloadSubcommand() = CommandBuilder.begin("reload").handler { command, _ ->
+    private fun reloadSubcommand() = CommandBuilder.begin("reload").handler {
         runCatching {
             ScriptManager.reload()
         }.onSuccess {

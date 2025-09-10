@@ -1,3 +1,19 @@
+
+export interface Metadata {
+    id: string;
+    name: string;
+    version: string;
+    authors: string[];
+    screens: string[];
+    overlays: string[];
+    components: string[];
+    fonts: string[];
+    backgrounds: {
+        name: string;
+        types: string[];
+    }[];
+}
+
 export interface Module {
     name: string;
     category: string;
@@ -338,9 +354,37 @@ export interface GameWindow {
     guiScale: number;
 }
 
+export interface Theme {
+    name: string;
+    id: string;
+    settings: { [name: string]: any };
+}
+
 export interface Component {
     name: string;
+    id: string;
     settings: { [name: string]: any };
+}
+
+export interface Alignment {
+    horizontalAlignment: HorizontalAlignment;
+    verticalAlignment: VerticalAlignment;
+    horizontalOffset: number;
+    verticalOffset: number;
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
 }
 
 export interface ClientInfo {

@@ -1,9 +1,15 @@
 name: Build
-
 on:
   push:
     branches:
       - main
+
+permissions:
+  contents: write
+
+env:
+  ZIP_NAME: theme            # Name for the distribution archive
+  MARKETPLACE_ITEM_ID: 12345        # Replace with your actual marketplace item ID
 
 jobs:
   build:
@@ -11,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -24,23 +32,23 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Upload dist artifact
+      - name: Create dist archive
+        run: zip -r ${{ env.ZIP_NAME }}.zip dist/
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}.zip
 
-      # Uncomment the sections below if you want to create GitHub releases
-      # 
-      # - name: Create dist archive
-      #   run: zip -r dist.zip dist/
-      #
-      # - name: Generate version tag
-      #   id: version_tag
-      #   run: |
-      #     COMMIT_HASH=$(git rev-parse --short HEAD)
-      #     TAG="build-$COMMIT_HASH-$(date +'%Y%m%d%H%M%S')"
-      #     echo "version=$TAG" >> $GITHUB_OUTPUT
+      - name: Generate version tag
+        id: version_tag
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          TAG="build-$COMMIT_HASH-$(date +'%Y%m%d%H%M%S')"
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+
+      # Uncomment the sections below to enable GitHub releases and marketplace publishing
       #
       # - name: Create and push Git tag
       #   run: |
@@ -52,8 +60,18 @@ jobs:
       # - name: Upload to GitHub Release
       #   uses: softprops/action-gh-release@v1
       #   with:
-      #     files: dist.zip
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: ${{ env.ZIP_NAME }}.zip
       #     tag_name: ${{ steps.version_tag.outputs.version }}
-      #     prerelease: false
+      #     prerelease: true
       #     name: "Build Release ${{ steps.version_tag.outputs.version }}"
+      #
+      # - name: Upload to LiquidBounce Marketplace
+      #   run: |
+      #     curl -X POST \
+      #       "https://api.liquidbounce.net/api/v3/marketplace/${{ env.MARKETPLACE_ITEM_ID }}/revisions" \
+      #       -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+      #       -F "file=@${{ env.ZIP_NAME }}.zip" \
+      #       -F "version=${{ steps.version_tag.outputs.version }}" \
+      #       -F "changelog=Automated build from commit ${{ github.sha }}" \
+      #       -F "channel=alpha" \
+      #       --fail-with-body

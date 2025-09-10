@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
@@ -35,7 +34,7 @@ import net.minecraft.util.Hand
  *
  * Allows you to rename an item held in the player's hand.
  */
-object CommandItemRename : CommandFactory {
+object CommandItemRename : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -49,7 +48,7 @@ object CommandItemRename : CommandFactory {
                     .vararg()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 if (!interaction.hasCreativeInventory()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }

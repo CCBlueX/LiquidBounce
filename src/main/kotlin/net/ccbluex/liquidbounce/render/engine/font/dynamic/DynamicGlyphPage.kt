@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import net.ccbluex.liquidbounce.render.engine.font.*
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension

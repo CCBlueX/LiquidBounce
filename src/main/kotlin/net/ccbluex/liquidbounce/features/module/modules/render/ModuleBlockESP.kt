@@ -48,7 +48,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
+        findBlocksEndingWith("_BED", "DRAGON_EGG")
     ).onChange {
         if (running) {
             onDisabled()
