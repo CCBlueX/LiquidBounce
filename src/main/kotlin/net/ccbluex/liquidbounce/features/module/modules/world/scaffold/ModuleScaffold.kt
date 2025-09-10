@@ -56,6 +56,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.*
@@ -173,6 +174,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             false
         }
     private var wasTowering: Boolean = false
+    private var nullTargetTicks = 0
 
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
@@ -351,15 +353,20 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
 
         if (target == null) {
-            this.currentTarget = null
-            return@handler
+            nullTargetTicks++
+            if (nullTargetTicks > 20 && isInVoid(player.pos)) {
+                this.currentTarget = null
+                return@handler
+            }
+        } else {
+            nullTargetTicks = 0
         }
 
         this.currentTarget = target
 
 
         // Debug stuff
-        if (optimalLine != null) {
+        if (optimalLine != null && target != null) {
             val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
             val a = optimalLine.getNearestPointTo(b)
 

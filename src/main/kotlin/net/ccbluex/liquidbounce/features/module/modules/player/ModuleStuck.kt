@@ -16,7 +16,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
-object ModuleStuck : ClientModule("Stuck", Category.PLAYER) {
+object ModuleStuck : ClientModule("Stuck", Category.PLAYER, disableOnQuit = true) {
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> {

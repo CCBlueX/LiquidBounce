@@ -24,7 +24,7 @@ import net.minecraft.item.TridentItem
  */
 object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot", true) {
     private val rotationConfigurable = RotationsConfigurable(this)
-
+    private val throughWall by boolean("ThroughWall",true)
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
 
     init {
@@ -57,7 +57,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
                 enemy,
                 3
                 )
-            if (!pathClear) {
+            if (!pathClear && !throughWall) {
                 return@selectFirst false
             }
 

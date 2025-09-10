@@ -46,7 +46,7 @@ object ModuleEagle : ClientModule(
         }
 
     private var currentEdgeDistance: Float = edgeDistance.random()
-    private var wasSneaking = false
+    var wasSneaking = false
 
     private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
         private val conditions by multiEnumChoice(

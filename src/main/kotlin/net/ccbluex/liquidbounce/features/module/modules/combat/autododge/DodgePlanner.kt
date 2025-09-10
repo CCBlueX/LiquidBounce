@@ -1,21 +1,4 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.autododge
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -30,6 +13,9 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.isInVoid
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -194,12 +180,11 @@ private fun getDodgeMovementWithoutAngleChange(positionRelativeToPlayer: Vec3d):
     return getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 20.0F)
 }
 
+@Suppress("ReturnCount")
 fun findOptimalDodgePosition(baseLine: Line): Vec3d {
     val player = mc.player!!
 
     val playerPos2d = Vec3d(player.pos.x, 0.0, player.pos.z)
-    // Usually it takes around two ticks to change the movement to whatever we want. In this time we will keep the
-    // current velocity. So we have to account for this by integrating the player's velocity in the calculation.
     val playerPosAfterFreeMovement = playerPos2d.add(player.velocity.x * 2.0, 0.0, player.velocity.z * 2.0)
 
     val dangerZone = getDangerZoneBorders(baseLine, DodgePlanner.SAFE_DISTANCE_WITH_PADDING)
@@ -222,7 +207,21 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
         }
     }
 
-    // Find the nearest point that is outside the danger zone
+    val sim = PlayerSimulationCache.getSimulationForLocalPlayer()
+    fun isCandidateVoid(dodgePos: Vec3d): Boolean {
+        val distance = playerPos2d.distanceTo(dodgePos)
+        val ticksToPredict = ceil(distance / 0.11).toInt().coerceAtLeast(10)
+        val snapshot = sim.getSnapshotAt(ticksToPredict)
+        return isInVoid(snapshot.pos, 0)
+    }
+
+    val candidate0Void = isCandidateVoid(nearestPointsToDangerZoneBorders[0])
+    val candidate1Void = isCandidateVoid(nearestPointsToDangerZoneBorders[1])
+
+    when {
+        candidate0Void && !candidate1Void -> return nearestPointsToDangerZoneBorders[1]
+        candidate1Void && !candidate0Void -> return nearestPointsToDangerZoneBorders[0]
+    }
     return if (nearestPointDistancesToPlayer[0] < nearestPointDistancesToPlayer[1] - 0.05) {
         nearestPointsToDangerZoneBorders[0]
     } else {

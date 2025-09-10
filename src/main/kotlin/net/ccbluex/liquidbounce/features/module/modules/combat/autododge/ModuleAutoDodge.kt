@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
+import net.minecraft.entity.projectile.LlamaSpitEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.SpectralArrowEntity
 import net.minecraft.entity.projectile.TridentEntity

@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
@@ -19,10 +18,10 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     val immediately by boolean("Immediately", false)
-
+    private val disableOnFlag by boolean("DisablerOnFlag",false)
     private val voidFallPrediction = tree(VoidFallPrediction(this))
     private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
-    private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
+    private val resetTicks by int("ResetTicks", 300, 200..2000, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
     private val notCondition by multiEnumChoice("Not", NotCondition.WhileReceiveHit)
 
@@ -53,7 +52,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is PlayerPositionLookS2CPacket && disableOnFlag) {
             reset(true)
             pauseTicks = pauseOnFlag
         }
@@ -87,10 +86,6 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
                 ?: LOWEST_Y)
         ) {
             ignoreTicks--
-            reset(true)
-            return@tickHandler
-        }
-        if (ModuleScaffold.enabled && !ModuleScaffoldHelper.helping){
             reset(true)
             return@tickHandler
         }
