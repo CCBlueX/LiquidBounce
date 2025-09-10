@@ -28,9 +28,8 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     private val scaffoldBlockedTick by int("BlockedForFreeze",5,5..30,"tick")
     private val notCondition by multiEnumChoice("Not", NotCondition.WHILE_SNEAKING)
 
-
-    private var keepTickLeft = 0
     private var freezeActiveTicks = 0
+    private var lastPlaceTick = 0
 
     var helping = false
 
@@ -72,6 +71,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val player = mc.player ?: return@handler
+        val currentTick = mc.world!!.time.toInt()
 
         if (ModuleStuck.running) {
             freezeActiveTicks++
@@ -81,34 +81,36 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
         val freezeBlocking = freezeActiveTicks > scaffoldBlockedTick
 
+        // 如果卡死，不允许 Scaffold
         if (freezeBlocking && helping) {
-            if (ModuleScaffold.enabled) ModuleScaffold.enabled = false
+            ModuleScaffold.enabled = false
             helping = false
-            keepTickLeft = 0
+            lastPlaceTick = 0
             updateRenderCount()
             return@handler
         }
 
+        // 危险 → 启动 Scaffold 并记录开始时间
         if (shouldEnableScaffold() && passesRequirements() && !freezeBlocking) {
-            keepTickLeft = keepTick
-            if (!ModuleScaffold.enabled) {
+            if (!helping) {
                 ModuleScaffold.enabled = true
                 helping = true
-            }
-            if ((player.isOnGround && helping)) {
-                ModuleScaffold.enabled = false
-                helping = false
-                keepTickLeft = 0
-            }
-        } else if (helping) {
-            if (keepTickLeft > 0) {
-                keepTickLeft--
-            } else {
-                ModuleScaffold.enabled = false
-                helping = false
+                lastPlaceTick = currentTick
             }
         }
+
+        // Scaffold 在放方块 → 刷新时间戳
+        if (helping && ModuleScaffold.currentTarget != null) {
+            lastPlaceTick = currentTick
+        }
+
+        // 超过 keepTick 没有放方块 → 关闭 Scaffold
+        if (helping && currentTick - lastPlaceTick > keepTick) {
+            ModuleScaffold.enabled = false
+            helping = false
+        }
     }
+
 
     override fun onDisabled() {
         helping = false

@@ -203,7 +203,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     }
 
-    private var currentTarget: BlockPlacementTarget? = null
+    var currentTarget: BlockPlacementTarget? = null
 
     private var swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
 
