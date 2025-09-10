@@ -53,6 +53,7 @@ object ThemeManager : Configurable("theme") {
             IntegrationListener.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
+           // ModuleHudEditor.reload(true)
         }
     }
 

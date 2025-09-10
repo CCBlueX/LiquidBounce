@@ -10,7 +10,7 @@
   },
   "values": [
     {
-      "type": "CHOICE",
+      "type": "CHOOSE",
       "name": "Mode",
       "value": "Modern",
       "choices": [

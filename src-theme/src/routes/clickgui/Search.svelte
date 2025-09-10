@@ -28,6 +28,7 @@
     let clickOutsideCount = 0;
     let placeholder = "";
     let showHistory = false;
+    let isCialloActive = false;
     let interval: ReturnType<typeof setInterval>;
 
     $: if ($showSearch && autoFocus) {
@@ -240,8 +241,10 @@
     }
 
     function handleInput() {
-        if ($query === '0721') {
+
+        if (['0721', '1011010001','Ciallo~(∠・ω< )⌒★'].includes($query)) {
             $query = 'Ciallo~(∠・ω< )⌒★';
+            isCialloActive = true;
             const temp = new Howl({
                 src: ['audio/ciallo.ogg'],
                 preload: true,
@@ -249,31 +252,28 @@
                     temp.play();
                 },
             });
-        }
-        if ($query === '1011010001') {
-            $query = 'Ciallo~(∠・ω< )⌒★';
-            const temp = new Howl({
-                src: ['audio/ciallo.ogg'],
-                preload: true,
-                onload: () => {
-                    temp.play();
-                },
-            });
+            return;
         }
 
+        if (isCialloActive) {
+            isCialloActive = false;
+            $query = '';
+        }
 
         filterModules();
+
         if ($query.length > 0) {
             showHistory = false;
         }
+
         placeholder = getWeightedRandomPlaceholder();
     }
 
     let lastArrowPressTime = 0;
-
+    const allowedInputs = [ 'Ciallo~(∠・ω< )⌒★'];
     async function handleKeyDown(e: KeyboardKeyEvent) {
         const validatedQuery = $query.replace(/[^a-z0-9]/gi, '');
-        if (validatedQuery !== $query) {
+        if (validatedQuery !== $query && !allowedInputs.includes($query)) {
             $query = validatedQuery;
             return;
         }
@@ -422,14 +422,6 @@
         if (recentPlaceholders.length > maxRecent) recentPlaceholders.pop();
         return fallback;
     }
-
-
-
-
-
-
-
-
     onMount(() => {
         const fetchSettings = async () => {
             const clickGuiSettings = await getModuleSettings("ClickGUI");

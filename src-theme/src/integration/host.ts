@@ -1,5 +1,5 @@
 const IN_DEV = false;
-const DEV_PORT = 15000;
+const DEV_PORT = 10721;
 
 export const REST_BASE = IN_DEV ? `http://localhost:${DEV_PORT}` : window.location.origin;
 

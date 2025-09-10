@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import java.util.EnumSet
 import java.util.TreeMap
 
 class MultiChooseListValue<T : NamedChoice>(
