@@ -832,5 +832,5 @@
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
   "liquidbounce.module.anchor.description": "Pulls you into safe holes for crystal PvP.",
-  "liquidbounce.module.guiCloser.description": "Closes GenericContainerScreen with its title contains specified words."
+  "liquidbounce.module.guiCloser.description": "Closes GUIs if their title contains specified words."
 }
