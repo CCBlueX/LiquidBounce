@@ -80,6 +80,8 @@ interface NamedChoice {
                 }
 
             override fun hashCode(): Int = this.choiceName.hashCode()
+
+            override fun toString(): String = this.choiceName
         }
     }
 }
