@@ -24,6 +24,7 @@ import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.jmcomicfix.features.module.modules.`fun`.ModuleFPSBoost
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
+import net.ccbluex.jmcomicfix.api.services.client.ClientUpdate.release
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -51,6 +52,20 @@ fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
     addProperty("inGame", inGame)
     addProperty("viaFabricPlus", usesViaFabricPlus)
     addProperty("hasProtocolHack", usesViaFabricPlus)
+})
+
+// GET /api/v1/client/release
+@Suppress("UNUSED_PARAMETER")
+fun getRelease(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    val releaseInfo = net.ccbluex.jmcomicfix.api.services.client.ClientApi.getLatestRelease()
+    if (releaseInfo != null) {
+        addProperty("tagName", releaseInfo.tagName)
+        addProperty("downloadUrl", releaseInfo.downloadUrl)
+        addProperty("publishedAt", releaseInfo.publishedAt.toString())
+        addProperty("prerelease", releaseInfo.prerelease)
+    } else {
+        addProperty("error", "No release info available")
+    }
 })
 
 // GET /api/v1/client/update

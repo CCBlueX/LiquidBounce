@@ -14,7 +14,7 @@
 
     let ModeComponent: any;
     $: forcedEnglish.set(settings?.forcedenglish ?? false);
-    $: ModeComponent = modes[settings?.mode] ?? Simple_Effects;
+    $: ModeComponent = modes[settings?.mode] ?? Hanabi_Effects;
 </script>
 
 <svelte:component this={ModeComponent} {settings} />

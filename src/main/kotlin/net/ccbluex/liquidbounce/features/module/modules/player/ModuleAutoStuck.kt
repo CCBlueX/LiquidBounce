@@ -17,15 +17,16 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
-    val immediately by boolean("Immediately", true)
+
+    val immediately by boolean("Immediately", false)
+
     private val voidFallPrediction = tree(VoidFallPrediction(this))
     private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
     private val resetTicks by int("ResetTicks", 300, 200..500, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
     private val notCondition by multiEnumChoice("Not", NotCondition.WhileReceiveHit)
+
     private const val LOWEST_Y = -64
-
-
     private var lastGroundY = LOWEST_Y
     private var freezingTicks = 0
     private var pauseTicks = 0

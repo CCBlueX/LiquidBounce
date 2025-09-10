@@ -6,12 +6,12 @@
     import {cubicOut} from 'svelte/easing';
     import {Tween} from "svelte/motion";
 
-    let progress = new Tween(1, { duration: 0, easing: cubicOut });
+    let progress = new Tween(1, {duration: 0, easing: cubicOut});
 
     let currentNotification: TNotification | null = null;
     let showNotification = false;
     let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
-    progress.set(1, { duration: 0 });
+    progress.set(1, {duration: 0});
 
 
     onMount(() => {
@@ -27,7 +27,7 @@
 
                 currentNotification = n;
                 showNotification = true;
-                progress.set(1, { duration: 0 });
+                progress.set(1, {duration: 0});
                 timeoutHandle = setTimeout(() => {
                     showNotification = false;
                     timeoutHandle = null;
@@ -54,14 +54,27 @@
 <div class="notifications">
     {#if showNotification && currentNotification}
         {#key currentNotification.id || currentNotification.message}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div class="notification"
                  transition:fly|global={{duration: 500, y: -100}}
                  style="--progress: {progress.current}"
+                 on:click={() => {
+    if (currentNotification?.url) {
+        navigator.clipboard.writeText(currentNotification.url)
+            .then(() => {
+                               if (currentNotification) {
+                    currentNotification.message = "Link copied!";
+                }
+            })
+            .catch(err => console.error("Copy failed", err));
+    }
+}}
                  on:outroend={() => {
         if (!showNotification) currentNotification = null;
      }}>
 
-            <div class="icon" class:error={currentNotification.error}>
+                <div class="icon" class:error={currentNotification.error}>
                     <img src="img/hud/notification/icon-info.svg" alt="info">
                 </div>
                 <div class="title">{currentNotification.title}</div>
@@ -93,6 +106,7 @@
     overflow: hidden;
     padding-right: 10px;
     min-width: 350px;
+
     &::after {
       content: "";
       position: absolute;
@@ -110,6 +124,7 @@
       position: relative;
       z-index: 1;
     }
+
     .title {
       color: $text;
       font-weight: 600;

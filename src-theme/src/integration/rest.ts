@@ -25,7 +25,8 @@ import type {
     Verification,
     Theme,
     VirtualScreen,
-    World
+    World,
+    ClientRelease
 } from "./types";
 import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
@@ -666,7 +667,12 @@ export async function getClientInfo(): Promise<ClientInfo> {
 
     return data;
 }
+export async function getClientRelease(): Promise<ClientRelease> {
+    const response = await fetch(`${API_BASE}/client/release`);
+    const data: ClientRelease = await response.json();
 
+    return data;
+}
 export async function getClientUpdate(): Promise<ClientUpdate> {
     const response = await fetch(`${API_BASE}/client/update`);
     const data: ClientUpdate = await response.json();

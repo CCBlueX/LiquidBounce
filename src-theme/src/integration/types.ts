@@ -454,6 +454,13 @@ export interface ClientInfo {
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
 }
+export interface ClientRelease {
+    tagName: string;
+    downloadUrl: string;
+    publishedAt: string;
+    prerelease: boolean;
+    error?: string;
+}
 
 export interface ClientUpdate {
     development: boolean;

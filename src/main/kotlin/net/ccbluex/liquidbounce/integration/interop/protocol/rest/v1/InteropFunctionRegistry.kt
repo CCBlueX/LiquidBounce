@@ -32,6 +32,7 @@ import org.spongepowered.asm.mixin.Mixins.getConfigs
 internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/client") {
     // Client Functions
     get("/info", ::getClientInfo)
+    get("/release",::getRelease)
     get("/update", ::getUpdateInfo)
     post("/exit", ::postExit)
     get("/window", ::getWindowInfo)

@@ -6,6 +6,7 @@ export interface TNotification {
     error: boolean;
     delay?: number;
     id?: string;
+    url?: string;
 }
 
 let lastMessage: string | null = null;
