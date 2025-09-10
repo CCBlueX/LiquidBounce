@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
@@ -5,39 +23,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
-import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import java.util.EnumSet
+import java.util.TreeMap
 
-class MultiChooseEnumListValue<T>(
-    name: String,
-    value: EnumSet<T>,
-    choices: Set<T>,
-    canBeNone: Boolean = true,
-) : MultiChooseListValue<T>(
-    name,
-    value = value,
-    choices = choices,
-    canBeNone = canBeNone,
-    autoSorting = true // EnumSet is ordered
-) where T : Enum<T>, T : NamedChoice {
-    override val T.elementName: String
-        get() = choiceName
-}
-
-class MultiChooseStringListValue(
-    name: String,
-    value: MutableSet<String>,
-    choices: Set<String>,
-    canBeNone: Boolean = true,
-) : MultiChooseListValue<String>(
-    name,
-    value = value,
-    choices = choices,
-    canBeNone = canBeNone,
-    autoSorting = false
-)
-
-sealed class MultiChooseListValue<T>(
+class MultiChooseListValue<T : NamedChoice>(
     name: String,
     /**
      * Enabled values. A mutable and unordered [Set].
@@ -52,14 +40,6 @@ sealed class MultiChooseListValue<T>(
      * Can deselect all values or enable at least one
      */
     @Exclude val canBeNone: Boolean = true,
-
-    /**
-     * If the [value] automatically implements sorting and guarantees order,
-     * then set the [autoSorting] to true.
-     * Otherwise, if the insertion order is not guaranteed,
-     * leave [autoSorting] to false and then the implementation guarantees the order.
-     */
-    @Exclude @ProtocolExclude private val autoSorting: Boolean
 ) : Value<MutableSet<T>>(
     name,
     defaultValue = value,
@@ -81,6 +61,8 @@ sealed class MultiChooseListValue<T>(
         value.retainAll(choices)
     }
 
+    private val choiceByName = choices.associateByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { it.choiceName }
+
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val active = get()
         active.clear()
@@ -92,19 +74,13 @@ sealed class MultiChooseListValue<T>(
 
         if (!canBeNone && active.isEmpty()) {
             active.addAll(choices)
-        } else {
-            active.sortIfAutoSortingDisabled()
         }
 
         set(active)
     }
 
     private fun MutableSet<T>.tryToEnable(name: String) {
-        val choiceWithName = choices.firstOrNull { it.elementName == name }
-
-        if (choiceWithName != null) {
-            add(choiceWithName)
-        }
+        choiceByName[name]?.let { add(it) }
     }
 
     fun toggle(value: T): Boolean {
@@ -126,28 +102,11 @@ sealed class MultiChooseListValue<T>(
             current.add(value)
         }
 
-        current.sortIfAutoSortingDisabled()
+        // Trigger listeners
         set(current)
 
         return !isActive
     }
-
-    private fun MutableSet<T>.sortIfAutoSortingDisabled() {
-        if (autoSorting) {
-            return
-        }
-
-        val temp = LinkedHashSet(this)
-        clear()
-
-        for (choice in choices) {
-            if (temp.contains(choice)) {
-                add(choice)
-            }
-        }
-    }
-
-    protected open val T.elementName: String get() = this.toString()
 
     operator fun contains(choice: T) = get().contains(choice)
 }

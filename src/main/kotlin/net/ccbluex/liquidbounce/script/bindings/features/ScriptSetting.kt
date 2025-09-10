@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.list
@@ -26,7 +25,6 @@ import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.client.util.InputUtil
 import org.graalvm.polyglot.Value as PolyglotValue
 
@@ -135,7 +133,7 @@ object ScriptSetting {
     @JvmName("choose")
     fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").asArray<String>().mapArray { it.asNamedChoice() }
+        val choices = value.getMember("choices").asArray<String>().toNamedChoices(::LinkedHashSet)
         val defaultStr = value.getMember("default").asString()
 
         val default = choices.find { it.choiceName == defaultStr }
@@ -145,18 +143,18 @@ object ScriptSetting {
                 }'"
             )
 
-        return ChooseListValue(name, defaultValue = default, choices = ObjectArraySet(choices))
+        return ChooseListValue(name, defaultValue = default, choices = choices)
     }
 
     @JvmName("multiChoose")
-    fun multiChoose(value: PolyglotValue): MultiChooseStringListValue {
+    fun multiChoose(value: PolyglotValue): MultiChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val choices = value.getMember("choices").asArray<String>().toSet()
-        val default = value.getMember("default")?.asArray<String>()?.toHashSet() ?: hashSetOf()
+        val choices = value.getMember("choices").asArray<String>().toNamedChoices(::LinkedHashSet)
+        val default = value.getMember("default")?.asArray<String>().toNamedChoices(::HashSet)
 
         val canBeNone = value.getMember("canBeNone")?.asBoolean() ?: true
 
-        return MultiChooseStringListValue(
+        return MultiChooseListValue(
             name,
             value = default,
             choices = choices,
@@ -176,4 +174,6 @@ object ScriptSetting {
     ) =
         RangedValue(name, defaultValue = default, range = range, suffix = suffix, valueType = valueType)
 
+    private inline fun Array<String>?.toNamedChoices(toSet: (Int) -> MutableSet<NamedChoice>) =
+        this?.mapTo(toSet(size)) { it.asNamedChoice() } ?: toSet(0)
 }
