@@ -43,7 +43,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
             NoFallGrim2371,
             NoFallHypixel,
             NoFallHypixelPacket,
-            NoFallHeypixel,
+            NoFallMatrix,
             NoFallIntave1255,
             NoFallMLG,
             NoFallNoGround,

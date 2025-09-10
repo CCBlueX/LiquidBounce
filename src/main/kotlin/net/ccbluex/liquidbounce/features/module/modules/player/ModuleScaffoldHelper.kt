@@ -81,8 +81,9 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if (player.mainHandStack.item != Items.ENDER_PEARL
-            && !ModuleScaffold.enabled && ModuleStuck.enabled) return@handler
+        if (player.mainHandStack.item != Items.ENDER_PEARL || !ModuleScaffold.enabled || ModuleStuck.enabled) {
+            return@handler
+        }
         if (packet is PlayerInteractItemC2SPacket) {
             event.cancelEvent()
             sendPacketSilently(
