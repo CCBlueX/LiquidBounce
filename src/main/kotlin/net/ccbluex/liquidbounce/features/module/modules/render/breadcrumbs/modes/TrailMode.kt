@@ -28,7 +28,7 @@ object TrailMode : BreadcrumbsMode("Trail") {
     private val height by float("Height", 0.5f, 0f..2f)
     private val alive by int("Alive", 500, 100..10000, "ms")
     private val fade by boolean("Fade", true)
-
+    private val onlyOwn by boolean("OnlyOwn", true)
     private val trails = IdentityHashMap<Entity, Trail>()
     private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
 
@@ -45,16 +45,23 @@ object TrailMode : BreadcrumbsMode("Trail") {
         trails.clear()
     }
 
-    private val updateHandler = handler<GameTickEvent> {
+    @Suppress("unused")
+    val updateHandler = handler<GameTickEvent> {
         val time = System.currentTimeMillis()
-        updateEntityTrail(time, player)
+
+        if (onlyOwn) {
+            updateEntityTrail(time, player)
             trails.keys.retainAll { it === player || !it.isAlive }
             return@handler
+        }
 
         val actualPresent = world.players
-        actualPresent.forEach { p -> updateEntityTrail(time, p) }
-        trails.keys.removeIf { key -> actualPresent.none { it === key } || !key.isAlive }
+        actualPresent.forEach { player -> updateEntityTrail(time, player) }
+        trails.keys.removeIf { key ->
+            actualPresent.none { it === key } || !key.isAlive
+        }
     }
+
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
         val last = lastPositions[entity]

@@ -674,7 +674,7 @@ fun ClientPlayerEntity.canSeeEntity(entity: Entity, samples: Int = 5): Boolean {
     }
 }
 
-fun isInVoid(pos: Vec3d, voidDistance: Int = -1): Boolean {
+fun isInVoid(pos: Vec3d, voidDistance: Int = -64): Boolean {
     val xRange = mutableListOf(0)
     val zRange = mutableListOf(0)
 

@@ -1,11 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -16,15 +15,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.item.Items
 
 object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, aliases = arrayOf("AutoScaffold")) {
     private val AutoJumpOnVoidEdge by boolean("AutoJumpAtVoidEdge",true)
@@ -77,27 +72,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
         if (shouldJump) {
             event.jump = true
-        }
-    }
-
-    @Suppress("unused")
-    private val packetEventHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-        if (player.mainHandStack.item != Items.ENDER_PEARL || !ModuleScaffold.enabled || ModuleStuck.enabled) {
-            return@handler
-        }
-        if (packet is PlayerInteractItemC2SPacket) {
-            event.cancelEvent()
-            sendPacketSilently(
-                PlayerMoveC2SPacket.LookAndOnGround(
-                    player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
-                )
-            )
-            sendPacketSilently(
-                PlayerInteractItemC2SPacket(
-                    packet.hand, packet.sequence, player.yaw, player.pitch
-                )
-            )
         }
     }
 
