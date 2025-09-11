@@ -28,39 +28,27 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.BlockHitRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.Entity
+import net.minecraft.entity.Ownable
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.FireballEntity
-import net.minecraft.entity.projectile.FishingBobberEntity
-import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.entity.projectile.WindChargeEntity
+import net.minecraft.entity.projectile.*
 import net.minecraft.entity.projectile.thrown.*
 import net.minecraft.item.EggItem
 import net.minecraft.item.EnderPearlItem
 import net.minecraft.item.SnowballItem
-import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.math.Vec3d
-import java.awt.Color
 
-/**
- * Trajectories module
- *
- * Allows you to see where projectile items will land.
- */
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
+
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
-        Show.ALWAYS_SHOW_BOW,
-        Show.ACTIVE_TRAJECTORY_ARROW,
-        Show.ACTIVE_TRAJECTORY_OTHER
+        Show.ACTIVE_TRAJECTORY_ARROW
     )
 
     val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
@@ -68,22 +56,22 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
-    sealed class ProjectileType(name: String, defaultColor: Color4b) : ToggleableConfigurable(
-        this, name, enabled = true) {
+    // ---------------- Projectile Types ----------------
+    sealed class ProjectileType(name: String, defaultColor: Color4b) : ToggleableConfigurable(this, name, enabled = true) {
         val color by color("Color", defaultColor)
         val blockHitESP by boolean("BlockHitESP", true)
         val entityHitESP by boolean("EntityHitESP", true)
 
-        object Arrow : ProjectileType("Arrow", Color4b(Color.RED).withAlpha(100))
-        object Potion : ProjectileType("Potion", Color4b(Color.PINK).withAlpha(100))
-        object EnderPearl : ProjectileType("EnderPearl", Color4b(Color.MAGENTA).withAlpha(100))
-        object FishingBobber : ProjectileType("FishingBobber", Color4b(Color.DARK_GRAY).withAlpha(100))
-        object Trident : ProjectileType("Trident", Color4b(Color.CYAN).withAlpha(100))
-        object Snowball : ProjectileType("Snowball", Color4b(Color.WHITE).withAlpha(100))
-        object Egg : ProjectileType("Egg", Color4b(Color.WHITE).withAlpha(100))
-        object ExpBottle : ProjectileType("ExpBottle", Color4b(Color.GREEN).withAlpha(100))
-        object Fireball : ProjectileType("Fireball", Color4b(Color.ORANGE).withAlpha(100))
-        object WindCharge : ProjectileType("WindCharge", Color4b(Color.LIGHT_GRAY).withAlpha(100))
+        object Arrow : ProjectileType("Arrow", Color4b(255, 0, 0, 100))
+        object Potion : ProjectileType("Potion", Color4b(255, 192, 203, 100))
+        object EnderPearl : ProjectileType("EnderPearl", Color4b(255, 0, 255, 100))
+        object FishingBobber : ProjectileType("FishingBobber", Color4b(64, 64, 64, 100))
+        object Trident : ProjectileType("Trident", Color4b(0, 255, 255, 100))
+        object Snowball : ProjectileType("Snowball", Color4b(255, 255, 255, 100))
+        object Egg : ProjectileType("Egg", Color4b(255, 255, 255, 100))
+        object ExpBottle : ProjectileType("ExpBottle", Color4b(0, 255, 0, 100))
+        object Fireball : ProjectileType("Fireball", Color4b(255, 165, 0, 100))
+        object WindCharge : ProjectileType("WindCharge", Color4b(192, 192, 192, 100))
     }
 
     init {
@@ -99,109 +87,105 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         tree(ProjectileType.WindCharge)
     }
 
-    private val blockHitRenderer = tree(BlockHitRenderer(this))
+    private val simulationResults = mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    override fun onDisabled() {
+        simulationResults.clear()
+    }
 
-        world.entities.forEach {
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        simulationResults.clear()
+
+        world.entities.forEach { entity ->
             val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
-                it,
-                this.activeTrajectoryArrow,
-                this.activeTrajectoryOther
+                entity,
+                activeTrajectoryArrow,
+                activeTrajectoryOther
             ) ?: return@forEach
 
-            val type = it.categorize() ?: return@forEach
+            val type = entity.categorize() ?: return@forEach
             if (!type.enabled || type.color.a <= 0) return@forEach
 
-            val trajectoryRenderer = TrajectoryInfoRenderer(
-                owner = it,
-                velocity = it.velocity,
-                pos = it.pos,
+            val renderer = TrajectoryInfoRenderer(
+                owner = (entity as? Ownable)?.owner ?: entity,
+                velocity = entity.velocity,
+                pos = entity.pos,
                 trajectoryInfo = trajectoryInfo,
+                type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3d.ZERO
             )
 
-            val hitResult = trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, type.color, matrixStack)
-
-            if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity == player)) {
-                drawLandingPos(
-                    hitResult,
-                    trajectoryInfo,
-                    event,
-                    if (type.blockHitESP) type.color else Color4b.TRANSPARENT,
-                    if (type.entityHitESP) type.color else Color4b.TRANSPARENT
-                )
-            }
+            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                event,
+                trajectoryColor = type.color,
+                blockHitColor = if (type.blockHitESP) type.color else Color4b.TRANSPARENT,
+                entityHitColor = if (type.entityHitESP) type.color else Color4b.TRANSPARENT
+            )
         }
 
+        // ---------------- Player & Others ----------------
         if (otherPlayers) {
-            for (otherPlayer in world.players) {
-                if (otherPlayer != player) {
-                    drawHypotheticalTrajectory(otherPlayer, event)
-                }
-            }
+            world.players.forEach { drawHypotheticalTrajectory(it, event) }
+        } else {
+            drawHypotheticalTrajectory(player, event)
         }
-
-        drawHypotheticalTrajectory(player, event)
     }
 
-    /**
-     * Draws the trajectory for an item in the player's hand
-     */
-    private fun drawHypotheticalTrajectory(otherPlayer: PlayerEntity, event: WorldRenderEvent) {
-        val trajectoryInfo = otherPlayer.handItems.firstNotNullOfOrNull {
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
+    private fun drawHypotheticalTrajectory(playerEntity: PlayerEntity, event: WorldRenderEvent) {
+        val trajectoryInfo = playerEntity.handItems.firstNotNullOfOrNull {
+            TrajectoryData.getRenderedTrajectoryInfo(playerEntity, it.item, alwaysShowBow)
         } ?: return
 
         val type = trajectoryInfo.categorize() ?: return
         if (!type.enabled || type.color.a <= 0) return
 
-        val rotation = if (otherPlayer == player) {
-            if (ModuleFreeCam.running) {
-                RotationManager.serverRotation
-            } else {
-                RotationManager.activeRotationTarget?.rotation
-                    ?: RotationManager.currentRotation ?: otherPlayer.rotation
-            }
-        } else {
-            otherPlayer.rotation
-        }
+        val rotation = if (playerEntity === player) {
+            if (ModuleFreeCam.running) RotationManager.serverRotation
+            else RotationManager.activeRotationTarget?.rotation
+                ?: RotationManager.currentRotation
+                ?: playerEntity.rotation
+        } else playerEntity.rotation
 
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            entity = otherPlayer,
+            entity = playerEntity,
             trajectoryInfo = trajectoryInfo,
             rotation = rotation,
             partialTicks = event.partialTicks
         )
 
-        val hitResult = renderer.drawTrajectoryForProjectile(maxSimulatedTicks, type.color, event.matrixStack)
-
-        if (hitResult != null) {
-            if (hitResult is EntityHitResult && type.entityHitESP) {
-                drawLandingPos(
-                    hitResult,
-                    trajectoryInfo,
-                    event,
-                    Color4b.TRANSPARENT,
-                    type.color
-                )
-            } else if (type.blockHitESP && blockHitRenderer.enabled) {
-                blockHitRenderer.render(true, event, hitResult, overrideColor = type.color)
-            }
-        }
+        simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+            maxSimulatedTicks,
+            event,
+            trajectoryColor = type.color,
+            blockHitColor = if (type.blockHitESP) type.color else Color4b.TRANSPARENT,
+            entityHitColor = if (type.entityHitESP) type.color else Color4b.TRANSPARENT
+        )
     }
 
-    private enum class Show(
-        override val choiceName: String
-    ) : NamedChoice {
+
+    private enum class Show(override val choiceName: String) : NamedChoice {
         ALWAYS_SHOW_BOW("AlwaysShowBow"),
         OTHER_PLAYERS("OtherPlayers"),
         ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),
         ACTIVE_TRAJECTORY_OTHER("ActiveTrajectoryOther"),
     }
 
+    // ---------------- Categorize ----------------
+    @JvmStatic
+    fun Entity.categorize(): ProjectileType? = when (this) {
+        is ArrowEntity -> ProjectileType.Arrow
+        is PotionEntity -> ProjectileType.Potion
+        is EnderPearlEntity -> ProjectileType.EnderPearl
+        is FishingBobberEntity -> ProjectileType.FishingBobber
+        is TridentEntity -> ProjectileType.Trident
+        is SnowballEntity -> ProjectileType.Snowball
+        is EggEntity -> ProjectileType.Egg
+        is ExperienceBottleEntity -> ProjectileType.ExpBottle
+        is FireballEntity -> ProjectileType.Fireball
+        is WindChargeEntity -> ProjectileType.WindCharge
+        else -> null
+    }
     @JvmStatic
     fun TrajectoryInfo.categorize(): ProjectileType? {
         return when {
@@ -226,21 +210,4 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         }
     }
 
-
-    @JvmStatic
-    fun Entity.categorize(): ProjectileType? {
-        return when (this) {
-            is ArrowEntity -> ProjectileType.Arrow
-            is PotionEntity -> ProjectileType.Potion
-            is EnderPearlEntity -> ProjectileType.EnderPearl
-            is FishingBobberEntity -> ProjectileType.FishingBobber
-            is TridentEntity -> ProjectileType.Trident
-            is SnowballEntity -> ProjectileType.Snowball
-            is EggEntity -> ProjectileType.Egg
-            is ExperienceBottleEntity -> ProjectileType.ExpBottle
-            is FireballEntity -> ProjectileType.Fireball
-            is WindChargeEntity -> ProjectileType.WindCharge
-            else -> null
-        }
-    }
 }

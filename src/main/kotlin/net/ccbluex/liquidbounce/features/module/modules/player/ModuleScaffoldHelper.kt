@@ -40,10 +40,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     var isHelping = false
 
 
-    override val running: Boolean
-        get() = super.running
-            && passesRequirements()
-
     private fun noBlockNearby(): Boolean{
         return !player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state -> !state.isAir }.any()
 
@@ -51,7 +47,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
     private fun isImminentVoid(): Boolean {
         val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticksToPredict)
-        return isInVoid(nextTick.pos, 0)
+        return isInVoid(nextTick.pos, -63)
     }
 
     private fun passesRequirements(): Boolean {
@@ -95,6 +91,9 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     }
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        if (player.isSpectator || player.abilities.flying || mc.world?.bottomY?.let { it1 -> player.y <= (it1) } == true){
+            return@handler
+        }
         val currentTick = mc.world!!.time.toInt()
 
         if (ModuleStuck.running) stuckTicks++ else stuckTicks = 0
@@ -124,7 +123,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
             voidStayTicks = 0
         }
 
-        val canEnableNow = isImminentVoid() && !freezeBlocking && !noBlockNearby()
+        val canEnableNow = isImminentVoid() && !freezeBlocking && !noBlockNearby() && passesRequirements()
 
         if (canEnableNow && !isHelping) {
             ModuleScaffold.enabled = true
@@ -141,17 +140,18 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
 
 
-        if (isHelping && (
-                currentTick >= scaffoldActiveUntil
-                    || (AutoDisable && (
-                    (player.isOnGround && solidBelow3x3) ||
-                        (!player.isOnGround && hasSolidBelow(player))
-                    ))
-                )) {
+        val shouldAutoDisableScaffold = currentTick >= scaffoldActiveUntil ||
+            (AutoDisable && (
+                (player.isOnGround && solidBelow3x3) || !passesRequirements() ||
+                    (!player.isOnGround && hasSolidBelow(player))
+                ))
+
+        if (isHelping && shouldAutoDisableScaffold) {
             ModuleScaffold.enabled = false
             updateRenderCount()
             isHelping = false
         }
+
     }
 
     override fun onDisabled() {

@@ -26,7 +26,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.SpawnEggItem
-import net.minecraft.util.hit.HitResult
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
@@ -244,16 +244,17 @@ object ModuleAntiInstakillAxe : ClientModule("AntiInstakillAxe", Category.PLAYER
                 TrajectoryData.getRenderedTrajectoryInfo(player, Items.ENDER_PEARL, false) ?: return null,
                 newRotation
             )
-            val positions = mutableListOf<Vec3d>()
-            val hitResult = trajectoryRenderer.runSimulation(maxPearlTicks, positions)
 
-            if (hitResult != null && hitResult.type == HitResult.Type.BLOCK) {
+            val simulationResult = trajectoryRenderer.runSimulation(maxPearlTicks)
+            val hitResult = simulationResult.hitResult
+
+            if (hitResult is BlockHitResult) {
                 val landingPos = hitResult.pos
                 val blockPos = BlockPos.ofFloored(landingPos)
                 val belowPos = blockPos.down()
                 val belowState = mc.world?.getBlockState(belowPos) ?: return null
 
-                if (!belowState.isAir && belowState.isFullCube(world, belowPos)) {
+                if (!belowState.isAir && belowState.isFullCube(mc.world, belowPos)) {
                     val distance = player.pos.distanceTo(landingPos)
                     if (distance > bestDistance) {
                         bestDistance = distance

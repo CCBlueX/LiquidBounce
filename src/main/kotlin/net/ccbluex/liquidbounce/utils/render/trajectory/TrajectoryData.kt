@@ -36,14 +36,6 @@ object TrajectoryData {
         }
     }
 
-    fun getColorForEntity(it: Entity): Color4b {
-        return when (it) {
-            is ArrowEntity -> Color4b(255, 0, 0, 200)
-            is EnderPearlEntity -> Color4b(128, 0, 128, 200)
-            else -> Color4b(200, 200, 200, 200)
-        }
-    }
-
     @JvmStatic
     fun getRenderTrajectoryInfoForOtherEntity(
         entity: Entity,
