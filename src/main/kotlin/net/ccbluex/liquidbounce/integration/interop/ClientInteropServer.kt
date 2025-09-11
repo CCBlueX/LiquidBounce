@@ -44,7 +44,7 @@ object ClientInteropServer {
 
     internal val httpServer = HttpServer()
 
-    private const val DEFAULT_PORT = 10721
+    private const val DEFAULT_PORT = 721
 
     val port = try {
         Socket("127.0.0.1", DEFAULT_PORT).use {

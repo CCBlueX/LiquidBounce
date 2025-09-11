@@ -18,15 +18,6 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * FireFlies - optimized
- * Key optimizations (no functional changes):
- * - Replaced immutable Vec3d allocations per-particle with mutable FloatVec to avoid excessive GC.
- * - Avoided per-particle temporary arrays and lambdas in render loop (unrolled lighting branch).
- * - Rebuilt particle deque for culling instead of removeIf (much lower CPU churn).
- * - Used ThreadLocalRandom for faster random calls.
- * - Minimized property accesses by caching local vars inside hot loops.
- */
 
 object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     private val colorMode = choices(this, "ColorMode") {
@@ -42,16 +33,14 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     private val spawnDelay by float("SpawnDelay", 2.0f, 1.0f..10.0f)
     private val spawnleCount by int("SpawnCount", 16, 10..10000)
     private val maxLiveCount by int("MaxLiveCount", 1337, 50..50000)
-    // tuned cap: good visual density while reducing GPU stress
     private val maxQuadsPerFrame by int("MaxQuadsPerFrame",5000,5000..100000)
 
     private val fireFliesTexture = "image/firepart.png".registerAsDynamicImageFromClientResources()
     private val particles = ArrayDeque<FireFly>()
-    // Use ThreadLocalRandom for lower contention and faster PRNG
+
     private val rand get() = ThreadLocalRandom.current()
     private var spawnTimer = 0f
 
-    // Lightweight mutable float vector to avoid Vec3d allocations
     private data class FloatVec(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
         fun setFrom(other: FloatVec) {
             x = other.x; y = other.y; z = other.z
@@ -67,25 +56,8 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         val creationTime: Long,
         val maxAlive: Long,
         val velocity: FloatVec,
-        val trail: ArrayDeque<TrailPart> = ArrayDeque(),
         val phase: Float = (ThreadLocalRandom.current().nextFloat() * 13f)
     )
-
-    private data class TrailPart(
-        val x: Float,
-        val y: Float,
-        val z: Float,
-        val creationTime: Long,
-        val maxTime: Int
-    ) {
-        fun timePC(currentTime: Long): Float {
-            return ((currentTime - creationTime).toFloat() / maxTime.toFloat()).coerceIn(0f, 1f)
-        }
-
-        fun toRemove(currentTime: Long): Boolean {
-            return timePC(currentTime) >= 1.0f
-        }
-    }
 
     override fun onEnabled() {
         particles.clear()
@@ -119,31 +91,21 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
         val player = mc.player ?: return@handler
         val currentTime = mc.world?.time ?: return@handler
 
-        // Update particles in-place (minimize allocations)
         val it = particles.iterator()
         while (it.hasNext()) {
             val particle = it.next()
 
-            // copy pos -> prevPos
             particle.prevPos.setFrom(particle.pos)
-            // integrate velocity
+
             val vx = particle.velocity.x; val vy = particle.velocity.y; val vz = particle.velocity.z
             particle.pos.addInplace(vx, vy, vz)
-            // append trail (small allocation unavoidable)
-            particle.trail.addLast(TrailPart(particle.pos.x, particle.pos.y, particle.pos.z, currentTime, 400))
-            // trim expired trail parts using removeFirst (cheap)
-            while (particle.trail.isNotEmpty() && particle.trail.first().toRemove(currentTime)) {
-                particle.trail.removeFirst()
-            }
 
-            // slight random wandering
             if (rand.nextFloat() < 0.05f) {
                 val nv = generateRandomVelocity()
                 particle.velocity.x = nv.x; particle.velocity.y = nv.y; particle.velocity.z = nv.z
             }
         }
 
-        // Cull dead/far particles by rebuilding the deque (cheap and avoids removeIf overhead)
         val playerX = player.x.toFloat(); val playerY = player.y.toFloat(); val playerZ = player.z.toFloat()
         val maxDistance = 25f
         val maxDistSq = maxDistance * maxDistance
@@ -162,7 +124,6 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             }
         }
 
-        // Spawning
         spawnTimer += 1f
         if (spawnTimer >= spawnDelay) {
             spawnTimer = 0f
@@ -185,7 +146,7 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
     }
 
 
-    @Suppress("unused")
+    @Suppress("unused","LongParameterList")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (particles.isEmpty()) return@handler
         val player = mc.player ?: return@handler
@@ -218,7 +179,6 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             val time = currentTime.toFloat()
             val maxDistSq = 25.0f * 25.0f
 
-            // camera forward
             val yawRad = Math.toRadians(camera.yaw.toDouble()).toFloat()
             val pitchRad = Math.toRadians(camera.pitch.toDouble()).toFloat()
             val forwardX = (-sin(yawRad.toDouble()) * cos(pitchRad.toDouble())).toFloat()
@@ -227,7 +187,6 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             val fLen = kotlin.math.sqrt(forwardX * forwardX + forwardY * forwardY + forwardZ * forwardZ)
             val fx = forwardX / fLen; val fy = forwardY / fLen; val fz = forwardZ / fLen
 
-            // right = forward x worldUp, up = right x forward
             val uxw = 0f; val uyw = 1f; val uzw = 0f
             var rx = fy * uzw - fz * uyw
             var ry = fz * uxw - fx * uzw
@@ -244,14 +203,9 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
             val ulen = kotlin.math.sqrt(ux*ux + uy*uy + uz*uz)
             ux /= ulen; uy /= ulen; uz /= ulen
 
-            // cache camera/player positions
             val camX = camera.pos.x.toFloat(); val camY = camera.pos.y.toFloat(); val camZ = camera.pos.z.toFloat()
             val playerX = player.x.toFloat(); val playerY = player.y.toFloat(); val playerZ = player.z.toFloat()
 
-            // --- KEY OPTIMIZATIONS APPLIED HERE ---
-            // 1) Render a single quad per particle (inner glow merged into texture) to halve vertex count.
-            // 2) Cap maximum quads per frame to avoid unbounded GPU load while preserving majority of visuals.
-            //    Chosen cap is conservative and prevents stalls on weaker GPUs without changing particle logic.
 
             var rendered = 0
 
@@ -260,7 +214,7 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
                 VertexFormats.POSITION_TEXTURE_COLOR,
                 ShaderProgramKeys.POSITION_TEX_COLOR
             ) { mat ->
-                // local inline emitter to avoid allocations/captures inside loop
+
                 fun emitQuadInline(
                     cx: Float, cy: Float, cz: Float,
                     halfRx: Float, halfRy: Float, halfRz: Float,
@@ -286,7 +240,6 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
                     vertex(mat, v3x, v3y, v3z).texture(0f, 0f).color(argb)
                 }
 
-                // iterate particles with early out when cap reached
                 val itr = particles.iterator()
                 while (itr.hasNext()) {
                     if (rendered >= maxQuadsPerFrame) break
@@ -313,11 +266,10 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
                     val distSq = dx * dx + dy * dy + dz * dz
                     if (distSq > maxDistSq) continue
 
-                    val progress =
-                        1f - ((currentTime - particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
+                    val progress = 1f - ((currentTime -
+                            particle.creationTime).toFloat() / particle.maxAlive.toFloat()).coerceIn(0f, 1f)
                     val t = (sin(time * 0.2f + particle.phase) + 1f) * 0.5f
 
-                    // blended color
                     val blended = color1Base.blend(color2Base, t)
                     val rgbOnly = blended.toARGB() and 0x00FFFFFF
 
@@ -326,10 +278,8 @@ object ModuleFireFlies : ClientModule("FireFlies", Category.RENDER) {
 
                     val outerArgb = ((alpha and 0xFF) shl 24) or rgbOnly
 
-                    // single quad sized to represent both inner+outer (texture should contain glow)
                     val sizeOuter = 0.1f + 0.05f * (1f - progress)
 
-                    // pre-scale right/up by half size to avoid repeated multiplications inside emit
                     val half = sizeOuter * 0.5f
                     val hrx = rx * half; val hry = ry * half; val hrz = rz * half
                     val hux = ux * half; val huy = uy * half; val huz = uz * half

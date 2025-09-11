@@ -89,7 +89,8 @@ object SectorMode : BreadcrumbsMode("Sector") {
                     if (index % 3 == 0 && distance > 15) return@forEach
 
                     val quality = (distance * 4 + 10).toInt().coerceAtMost(350)
-                    val progress = 1f - ((currentTime - point.creationTime).toFloat() / alive.toFloat()).coerceIn(0f, 1f)
+                    val timeAlive = (currentTime - point.creationTime).toFloat()
+                    val progress = 1f - (timeAlive / alive.toFloat()).coerceIn(0f, 1f)
                     if (progress <= 0f) return@forEach
 
                     matrixStack.push()
