@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.deeplearn.data
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
@@ -93,7 +93,7 @@ data class TrainingData(
 
         private fun parse(file: File): List<TrainingData> = when {
             file.isDirectory -> file.listFiles().flatMap(::parse)
-            file.extension == "json" -> decode<List<TrainingData>>(file.inputStream())
+            file.extension == "json" -> file.readJson<List<TrainingData>>()
             else -> emptyList()
         }
 

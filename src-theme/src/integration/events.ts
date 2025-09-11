@@ -1,37 +1,71 @@
 import type {
     Component,
     ConfigurableSetting,
-    ItemStack,
+    ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
     PlayerData,
     Proxy,
     Screen,
     Server,
+    Session,
     TextComponent,
 } from "./types";
 
+
+
 export interface EventMap {
     socketReady: void;
+
+    clickGuiScaleChange: ClickGuiScaleChangeEvent;
     clickGuiValueChange: ClickGuiValueChangeEvent;
+    spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    clientLanguageChanged: void;
+    valueChanged: ValueChangedEvent;
+    moduleActivation: ModuleActivationEvent;
     moduleToggle: ModuleToggleEvent;
-    keyboardKey: KeyboardKeyEvent;
-    mouseButton: MouseButtonEvent;
-    scaleFactorChange: ScaleFactorChangeEvent;
-    componentsUpdate: ComponentsUpdateEvent;
-    clientPlayerData: ClientPlayerDataEvent;
-    overlayMessage: OverlayMessageEvent;
+    refreshArrayList: void;
     notification: NotificationEvent;
-    keyEvent: KeyEvent;
+    gameModeChange: GameModeChangeEvent;
     targetChange: TargetChangeEvent;
     blockCountChange: BlockCountChangeEvent;
-    accountManagerAddition: AccountManagerAdditionEvent;
-    accountManagerRemoval: AccountManagerRemovalEvent;
+    clientChatStateChange: ClientChatStateChangeEvent;
+    clientChatMessage: ClientChatMessageEvent;
+    clientChatError: ClientChatErrorEvent;
     accountManagerMessage: AccountManagerMessageEvent;
     accountManagerLogin: AccountManagerLoginEvent;
-    serverPinged: ServerPingedEvent;
-    clientPlayerInventory: ClientPlayerInventoryEvent;
+    accountManagerAddition: AccountManagerAdditionEvent;
+    accountManagerRemoval: AccountManagerRemovalEvent;
     proxyCheckResult: ProxyCheckResultEvent;
-    spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
+    virtualScreen: VirtualScreenEvent;
+    serverPinged: ServerPingedEvent;
+    componentsUpdate: ComponentsUpdateEvent;
+    scaleFactorChange: ScaleFactorChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+
+    //WindowEvents.kt
+    mouseButton: MouseButtonEvent;
+    keyboardKey: KeyboardKeyEvent;
+    keyboardChar: KeyboardCharEvent;
+
+    //UserInterfaceEvents.kt
+    fps: FpsChangeEvent;
+    clientPlayerData: ClientPlayerDataEvent;
+    clientPlayerInventory: ClientPlayerInventoryEvent;
+    title: TitleEventTitle;
+    subtitle: TitleEventSubtitle;
+    titleFade: TitleEventFade;
+    clearTitle: TitleEventClear;
+
+    //GameEvents.kt
+    key: KeyEvent;
+    keybindChange: void;
+    session: SessionEvent;
+    chatSend: ChatSendEvent;
+    chatReceive: ChatReceiveEvent;
+    disconnect: void;
+    overlayMessage: OverlayMessageEvent;
+
+    //PlayerEvents.kt
+    death: void;
 }
 
 export interface ClickGuiValueChangeEvent {
@@ -49,16 +83,21 @@ export interface KeyboardKeyEvent {
     scanCode: number;
     action: number;
     mods: number;
-    key: string;
+    key: MinecraftKeyboardKey;
     screen: Screen | undefined;
 }
 
 export interface MouseButtonEvent {
-    key: string;
+    key: MinecraftMouseKey;
     button: number;
     action: number;
     mods: number;
     screen: Screen | undefined;
+}
+
+export interface KeyboardCharEvent {
+    codePoint: number;
+    modifiers: number;
 }
 
 export interface ScaleFactorChangeEvent {
@@ -86,9 +125,8 @@ export interface NotificationEvent {
 }
 
 export interface KeyEvent {
-    key: string;
+    key: MinecraftKey;
     action: number;
-    mods: number;
 }
 
 export interface TargetChangeEvent {
@@ -142,5 +180,81 @@ export interface SpaceSeperatedNamesChangeEvent {
 }
 
 export interface BrowserUrlChangeEvent {
+    index: number;
     url: string;
+}
+
+export interface ValueChangedEvent {
+    value: ConfigurableSetting;
+}
+
+export interface ClickGuiScaleChangeEvent {
+    value: number;
+}
+
+export interface ModuleActivationEvent {
+    moduleName: string;
+}
+
+export interface GameModeChangeEvent {
+    gameMode: "survival" | "creative" | "adventure" | "spectator";
+}
+
+export interface ClientChatStateChangeEvent {
+    state: "connecting" | "connected" | "logon" | "loggedIn" | "disconnected" | "authenticationFailed";
+}
+
+export interface ClientChatMessageEvent {
+    user: {
+        name: string;
+        uuid: string;
+    };
+    message: string;
+    chatGroup: "PublicChat" | "PrivateChat";
+    // Not "public"/"private" because the EnumChoiceSerializer in Kotlin ignores @SerializedName annotations, bug?
+}
+
+export interface ClientChatErrorEvent {
+    error: string;
+}
+
+export interface SessionEvent {
+    session: Session;
+}
+
+export interface ChatSendEvent {
+    message: string;
+}
+
+export interface ChatReceiveEvent {
+    message: string;
+    textData: TextComponent;
+    type: "ChatMessage" | "DisguisedChatMessage" | "GameMessage";
+}
+
+export interface FpsChangeEvent {
+    fps: number;
+}
+
+export interface TitleEventTitle {
+    text: TextComponent | string | null;
+}
+
+export interface TitleEventSubtitle {
+    text: TextComponent | string | null;
+}
+
+export interface TitleEventFade {
+    fadeInTicks: number;
+    stayTicks: number;
+    fadeOutTicks: number;
+}
+
+export interface TitleEventClear {
+    reset: boolean;
+}
+
+export interface VirtualScreenEvent {
+    type: string;
+    action: "open" | "close";
 }

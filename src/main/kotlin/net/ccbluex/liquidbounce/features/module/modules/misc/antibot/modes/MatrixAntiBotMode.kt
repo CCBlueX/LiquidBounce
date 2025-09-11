@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
+import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
@@ -99,7 +99,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
     private fun isFullyArmored(entity: PlayerEntity): Boolean {
         return (0..3).all {
             val stack = entity.inventory.getArmorStack(it)
-            stack.item is ArmorItem && stack.hasEnchantments()
+            stack.isPlayerArmor && stack.hasEnchantments()
         }
     }
 
