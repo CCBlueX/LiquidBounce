@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import java.util.function.ToIntFunction
 
 /**
  * Allows configuring and manage modes
@@ -33,12 +35,13 @@ import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 class ChoiceConfigurable<T : Choice>(
     @Exclude @ProtocolExclude val eventListener: EventListener,
     name: String,
-    activeChoiceIndexCallback: (List<T>) -> Int,
+    activeChoiceIndexCallback: ToIntFunction<List<T>>,
     choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
-    var choices: MutableList<T> = choicesCallback(this).toMutableList()
-    private var defaultChoice: T = choices[activeChoiceIndexCallback(choices)]
+    var choices: MutableList<T> = ObjectArrayList(choicesCallback(this))
+        internal set
+    private var defaultChoice: T = choices[activeChoiceIndexCallback.applyAsInt(choices)]
     var activeChoice: T = defaultChoice
         private set
 
@@ -56,17 +59,8 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    override fun setByString(name: String) {
-        val newChoice = choices.firstOrNull { it.choiceName == name }
-
-        if (newChoice == null) {
-            throw IllegalArgumentException(
-                "ChoiceConfigurable `${this.name}` has no option named $name" +
-                " (available options are ${this.choices.joinToString { it.choiceName }})"
-            )
-        }
-
-        if (activeChoice === newChoice) {
+    private fun setAndUpdate(newChoice: T) {
+        if (this.activeChoice === newChoice) {
             return
         }
 
@@ -86,22 +80,19 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
+    override fun setByString(name: String) {
+        val newChoice = choices.firstOrNull { it.choiceName == name }
+
+        if (newChoice == null) {
+            throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})")
+        }
+
+        this.setAndUpdate(newChoice)
+    }
+
     override fun restore() {
-        if (activeChoice === defaultChoice) {
-            return
-        }
-
-        if (this.activeChoice.running) {
-            this.activeChoice.disable()
-        }
-
-        set(mutableListOf(defaultChoice), apply = {
-            this.activeChoice = it.first() as T
-        })
-
-        if (this.activeChoice.running) {
-            this.activeChoice.enable()
-        }
+        this.setAndUpdate(defaultChoice)
     }
 
     @ScriptApiRequired
@@ -119,9 +110,9 @@ abstract class Choice(name: String) : Configurable(name), EventListener, NamedCh
 
     abstract val parent: ChoiceConfigurable<*>
 
-    open fun enable() {}
+    open fun enable() { }
 
-    open fun disable() {}
+    open fun disable() { }
 
     /**
      * Check if the choice is selected on the parent.
@@ -138,10 +129,10 @@ abstract class Choice(name: String) : Configurable(name), EventListener, NamedCh
 
     override fun parent() = this.parent.eventListener
 
-    protected fun <T : Choice> choices(name: String, active: T, choices: Array<T>) =
+    protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
         choices(this, name, active, choices)
 
-    protected fun <T : Choice> choices(
+    protected fun <T: Choice> choices(
         name: String,
         activeIndex: Int = 0,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>

@@ -206,7 +206,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             entity = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
             rotation = angles
-        ).runSimulation(MAX_SIMULATED_TICKS)?.pos ?: return false
+        ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.pos ?: return false
 
         return !Limits.enabled || Limits.destDistance > destination.distanceTo(simulatedDestination)
     }
@@ -223,8 +223,9 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
+            type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
-        ).runSimulation(MAX_SIMULATED_TICKS)
+        ).runSimulation(MAX_SIMULATED_TICKS).hitResult
 
     override fun onDisabled() {
         queue.clear()

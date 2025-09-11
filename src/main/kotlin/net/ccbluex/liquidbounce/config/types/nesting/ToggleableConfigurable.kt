@@ -97,6 +97,15 @@ abstract class ToggleableConfigurable(
 
     final override fun parent() = parent
 
+    protected fun <T : Choice> choices(name: String, active: T, choices: Array<T>) =
+        choices(this, name, active, choices)
+
+    protected fun <T : Choice> choices(
+        name: String,
+        activeIndex: Int = 0,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+    ) = choices(this, name, activeIndex, choicesCallback)
+
 }
 
 /**
