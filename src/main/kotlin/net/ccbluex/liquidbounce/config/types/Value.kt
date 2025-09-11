@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
+import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
@@ -222,7 +223,7 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: (T) -> Unit) {
+    fun set(t: T, apply: Consumer<T>) {
         var currT = t
         runCatching {
             listeners.forEach {
@@ -233,7 +234,7 @@ open class Value<T : Any>(
                 return
             }
         }.onSuccess {
-            apply(currT)
+            apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it(currT) }
             stateFlow.value = currT

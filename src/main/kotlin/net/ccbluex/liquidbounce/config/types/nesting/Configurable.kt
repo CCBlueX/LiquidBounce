@@ -45,6 +45,7 @@ import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
+import java.util.function.ToIntFunction
 import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
@@ -390,7 +391,7 @@ open class Configurable(
     protected fun <T : Choice> choices(
         eventListener: EventListener,
         name: String,
-        activeCallback: (List<T>) -> Int,
+        activeCallback: ToIntFunction<List<T>>,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ): ChoiceConfigurable<T> {
         return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {
