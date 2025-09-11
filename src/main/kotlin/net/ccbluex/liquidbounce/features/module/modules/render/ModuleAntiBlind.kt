@@ -48,6 +48,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = ar
         DoRender.INVISIBLE_ENTITIES,
         DoRender.BOSS_BARS,
         DoRender.EXPLOSION_PARTICLES,
+        DoRender.WORLD_BORDER,
     ).also { tagBy(it) }
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
@@ -90,5 +91,6 @@ enum class DoRender(override val choiceName: String) : NamedChoice {
     SIGN_TEXT("SignText"),
     INVISIBLE_ENTITIES("InvisibleEntities"),
     BOSS_BARS("BossBars"),
-    EXPLOSION_PARTICLES("ExplosionParticles")
+    EXPLOSION_PARTICLES("ExplosionParticles"),
+    WORLD_BORDER("WorldBorder"),
 }

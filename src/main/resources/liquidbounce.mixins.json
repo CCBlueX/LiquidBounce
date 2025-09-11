@@ -114,6 +114,7 @@
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWeatherRendering",
+    "minecraft.client.MixinWorldBorderRendering",
     "minecraft.render.MixinWorldRenderer",
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",

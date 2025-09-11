@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.wat
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import java.util.function.BooleanSupplier
 
 /**
  * Speed module
@@ -132,7 +133,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
     private fun passesRequirements() = when {
         // DO NOT REMOVE - PLAYER COULD BE NULL!
         !inGame || isDestructed -> false
-        else -> notCondition.all { it.testCondition() }
+        else -> notCondition.all { it.testCondition.asBoolean }
     }
 
     private object OnlyInCombat : ToggleableConfigurable(this, "OnlyInCombat", false) {
@@ -197,7 +198,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
     @Suppress("unused")
     private enum class NotCondition(
         override val choiceName: String,
-        val testCondition: () -> Boolean
+        val testCondition: BooleanSupplier
     ) : NamedChoice {
         WHILE_USING_ITEM("WhileUsingItem", {
             !player.isUsingItem
