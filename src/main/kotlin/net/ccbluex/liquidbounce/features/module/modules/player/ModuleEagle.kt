@@ -47,6 +47,7 @@ object ModuleEagle : ClientModule(
 
     private var currentEdgeDistance: Float = edgeDistance.random()
     var wasSneaking = false
+    var shouldBeActive = false
     private object EagleAutoBlockFeature : ToggleableConfigurable(this, "AutoBlock", true) {
         val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
         val doNotUseBelowCount by int("DoNotUseBelowCount", 1, 0..64)
@@ -54,6 +55,7 @@ object ModuleEagle : ClientModule(
         private var lastSwitch = 0
 
         fun trySwitchBlock(): Boolean {
+            if (!shouldBeActive)return false
             if (!enabled || player.isCreative) return false
 
             val handStack = player.mainHandStack
@@ -124,7 +126,7 @@ object ModuleEagle : ClientModule(
 
         EagleAutoBlockFeature.trySwitchBlock()
 
-        val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
+        shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
             player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
 
         event.sneak = event.sneak && !Conditional.shouldSneak(event) || shouldBeActive

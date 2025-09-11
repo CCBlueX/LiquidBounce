@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle.wasSneaking
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle.shouldBeActive
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.updateRenderCount
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -65,7 +65,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         val shouldJump = player.isOnGround && player.moving && AutoJumpOnVoidEdge &&isImminentVoid()
             &&
             !isHelping &&
-            !wasSneaking &&
+            !shouldBeActive &&
             !player.isSneaking &&
             !mc.options.sneakKey.isPressed &&
             !mc.options.jumpKey.isPressed &&
