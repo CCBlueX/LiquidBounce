@@ -8,7 +8,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle.wasSneaking
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.updateRenderCount
@@ -20,15 +19,17 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.minecraft.entity.player.PlayerEntity
 
 object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, aliases = arrayOf("AutoScaffold")) {
     private val AutoJumpOnVoidEdge by boolean("AutoJumpAtVoidEdge",true)
     private val AutoDisable by boolean("AutoDisable", true)
     private val preserveInVoid by boolean("PreserveInVoid",false)
     private val voidDisableTick by int("VoidDisableDelay", 50, 5..100, "tick")
-    private val ticksToPredict by int("TicksToPredict", 10, 2..20,"tick")
+    private val ticksToPredict by int("TicksToPredict", 3, 2..20,"tick")
     private val scaffoldBlockedTick by int("BlockedForFreeze",15,5..30,"tick")
     private val keepTick by int("KeepEnabledTicks",16,10..30,"tick")
+    private val SafeLandBlocks by int("SafeLandBlocks",3,2..5)
     private val notCondition by multiEnumChoice("Not", NotCondition.WHILE_SNEAKING)
 
     private var stuckTicks = 0
@@ -80,7 +81,18 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         lastPlacedTick = currentTick
         scaffoldActiveUntil = currentTick + keepTick
     }
-
+    fun hasSolidBelow(player: PlayerEntity, blocks: Int = SafeLandBlocks): Boolean {
+        val startY = player.blockPos.y - 1 // 玩家脚下第一格
+        for (yOffset in 0..(startY - world.bottomY - blocks + 1)) {
+            var solidCount = 0
+            for (i in 0 until blocks) {
+                val state = player.blockPos.down(yOffset + i + 1).getState() ?: continue
+                if (!state.isAir) solidCount++ else break
+            }
+            if (solidCount == blocks) return true
+        }
+        return false
+    }
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val currentTick = mc.world!!.time.toInt()
@@ -127,20 +139,19 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
             }
         }
 
-        val solidBelow2Vertical = !player.blockPos.down(1).getState()!!.isAir &&
-            !player.blockPos.down(2).getState()!!.isAir
+
 
         if (isHelping && (
                 currentTick >= scaffoldActiveUntil
-                    || (AutoDisable && player.isOnGround && (solidBelow3x3 || solidBelow2Vertical))
+                    || (AutoDisable && (
+                    (player.isOnGround && solidBelow3x3) ||
+                        (!player.isOnGround && hasSolidBelow(player))
+                    ))
                 )) {
             ModuleScaffold.enabled = false
             updateRenderCount()
             isHelping = false
         }
-
-
-
     }
 
     override fun onDisabled() {
@@ -155,9 +166,8 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         val testCondition: () -> Boolean
     ) : NamedChoice {
         WHILE_USING_ITEM("WhileUsingItem", { !player.isUsingItem }),
-        WHILE_SNEAKING("WhileSneaking", { !player.isSneaking }),
+        WHILE_SNEAKING("WhileSneaking", { !mc.options.sneakKey.isPressed }),
         WhileReceiveHit("WhileReceiveHit", { !CombatManager.isReceiveHit }),
         WhileDuringCombat("WhileDuringCombat", { !CombatManager.isInCombat }),
-        WHILE_KILLAURA("WhileKillAura",{ ModuleKillAura.targetTracker.target == null }),
     }
 }

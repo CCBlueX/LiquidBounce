@@ -703,7 +703,27 @@ fun isInVoid(pos: Vec3d, voidDistance: Int = -64): Boolean {
     }
     return true
 }
+fun hasSolidBlockBelow(): Boolean {
+    val checkDepth = 3
+    val bb = player.boundingBox
+    val minX = floor(bb.minX).toInt()
+    val maxX = floor(bb.maxX).toInt()
+    val minZ = floor(bb.minZ).toInt()
+    val maxZ = floor(bb.maxZ).toInt()
 
+    for (dy in 0..checkDepth) {
+        val y = floor(bb.minY).toInt() - dy
+        for (x in minX..maxX) {
+            for (z in minZ..maxZ) {
+                val state = BlockPos(x, y, z).getState()
+                if (state != null && !state.isAir) {
+                    return true
+                }
+            }
+        }
+    }
+    return false
+}
 
 val LivingEntity.wouldBlockHit
     get() = !isOlderThanOrEqual1_8 &&

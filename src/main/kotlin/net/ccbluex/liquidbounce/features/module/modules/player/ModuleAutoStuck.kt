@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
+import net.ccbluex.liquidbounce.utils.entity.hasSolidBlockBelow
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.minecraft.item.Items
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -69,7 +70,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     }
 
     private fun shouldDisableFreeze(): Boolean =
-        player.isInsideWaterOrBubbleColumn || voidFallPrediction.hasSolidBlockBelow()
+        player.isInsideWaterOrBubbleColumn ||hasSolidBlockBelow()
 
     private fun isReadyToActivate(): Boolean {
         val voidFallImminent = if (immediately) {

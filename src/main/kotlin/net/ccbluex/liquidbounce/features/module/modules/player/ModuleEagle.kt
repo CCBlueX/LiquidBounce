@@ -47,7 +47,34 @@ object ModuleEagle : ClientModule(
 
     private var currentEdgeDistance: Float = edgeDistance.random()
     var wasSneaking = false
+    private object EagleAutoBlockFeature : ToggleableConfigurable(this, "AutoBlock", true) {
+        val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
+        val doNotUseBelowCount by int("DoNotUseBelowCount", 1, 0..64)
 
+        private var lastSwitch = 0
+
+        fun trySwitchBlock(): Boolean {
+            if (!enabled || player.isCreative) return false
+
+            val handStack = player.mainHandStack
+            if (isValidBlock(handStack) && handStack.count > doNotUseBelowCount) return false
+
+            if (lastSwitch > 0) {
+                lastSwitch--
+                return false
+            }
+
+            for (i in 0..8) {
+                val stack = player.inventory.getStack(i)
+                if (isValidBlock(stack) && stack.count > doNotUseBelowCount) {
+                    player.inventory.selectedSlot = i
+                    lastSwitch = slotResetDelay
+                    return true
+                }
+            }
+            return false
+        }
+    }
     private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
         private val conditions by multiEnumChoice(
             "Conditions",
@@ -89,17 +116,13 @@ object ModuleEagle : ClientModule(
     }
 
     init {
-        tree(Conditional)
+        treeAll(Conditional, EagleAutoBlockFeature)
     }
-
-    override fun onDisabled() {
-        wasSneaking = false
-        super.onDisabled()
-    }
-
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
         debugParameter("EdgeDistance") { currentEdgeDistance }
+
+        EagleAutoBlockFeature.trySwitchBlock()
 
         val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
             player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
@@ -113,5 +136,13 @@ object ModuleEagle : ClientModule(
             wasSneaking = false
         }
     }
+
+
+
+    override fun onDisabled() {
+        wasSneaking = false
+        super.onDisabled()
+    }
+
 
 }
