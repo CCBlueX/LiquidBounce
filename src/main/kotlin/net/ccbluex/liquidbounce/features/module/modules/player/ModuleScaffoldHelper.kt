@@ -22,37 +22,39 @@ import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.item.Items
 
 object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, aliases = arrayOf("AutoScaffold")) {
-    private val AutoJumpOnVoidEdge by boolean("AutoJumpOnVoidEdge",true)
+    private val AutoJumpOnVoidEdge by boolean("AutoJumpAtVoidEdge",true)
     private val preserveInVoid by boolean("PreserveInVoid",false)
-    private val voidDisableTick by int("VoidAutoDisableTick", 50, 5..100, "tick")
+    private val voidDisableTick by int("VoidDisableDelay", 50, 5..100, "tick")
     private val ticksToPredict by int("TicksToPredict", 10, 2..20,"tick")
     private val scaffoldBlockedTick by int("BlockedForFreeze",15,5..30,"tick")
-    private val keepTick by int("KeepTick",10,10..30,"tick")
+    private val keepTick by int("KeepEnabledTicks",16,10..30,"tick")
     private val voidFallPrediction = tree(VoidFallPrediction(this))
     private val notCondition by multiEnumChoice("Not", NotCondition.WHILE_SNEAKING)
 
-    private var freezeActiveTicks = 0
-    private var lastPlaceTick = 0
-    private var scaffoldLockUntil = 0
-    private var voidTicks = 0
+    private var stuckTicks = 0
+    private var lastPlacedTick = 0
+    private var scaffoldActiveUntil = 0
+    private var voidStayTicks = 0
 
-    var helping = false
+    var isHelping = false
 
 
     override val running: Boolean
         get() = super.running
             && passesRequirements()
 
+    private fun noBlockNearby(): Boolean{
+        return !player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state -> !state.isAir }.any()
+
+    }
+
     private fun shouldEnableScaffold(): Boolean {
-        return voidFallPrediction.isVoidFallImminent   &&
-            player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state ->
-                !state.isAir
-            }.any()
+        return voidFallPrediction.isVoidFallImminent  && !noBlockNearby()
     }
 
     private fun passesRequirements(): Boolean {
@@ -66,7 +68,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
         val shouldJump = player.isOnGround && player.moving && AutoJumpOnVoidEdge &&
             isInVoid(nextTick.pos, 0)&&
-            !helping &&
+            !isHelping &&
             !wasSneaking &&
             !player.isSneaking &&
             !mc.options.sneakKey.isPressed &&
@@ -101,59 +103,58 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
     fun notifyBlockPlaced() {
         val currentTick = mc.world!!.time.toInt()
-        lastPlaceTick = currentTick
-        scaffoldLockUntil = currentTick + keepTick
+        lastPlacedTick = currentTick
+        scaffoldActiveUntil = currentTick + keepTick
     }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val currentTick = mc.world!!.time.toInt()
 
-        if (ModuleStuck.running) freezeActiveTicks++ else freezeActiveTicks = 0
-        val freezeBlocking = freezeActiveTicks > scaffoldBlockedTick
+        if (ModuleStuck.running) stuckTicks++ else stuckTicks = 0
+        val freezeBlocking = stuckTicks > scaffoldBlockedTick
 
-        if (freezeBlocking && helping) {
+        if (freezeBlocking && isHelping) {
             ModuleScaffold.enabled = false
-            helping = false
+            isHelping = false
             updateRenderCount()
             return@handler
         }
 
-        val voidNoBlockNearby =isInVoid(player.pos) &&
-            !player.pos.add(0.0, -1.0, 0.0).searchBlocksInRadius(4.5f) { _, state -> !state.isAir }.any()
-
-        if (voidNoBlockNearby && preserveInVoid ) {
-            voidTicks++
-            if (voidTicks >= voidDisableTick && ModuleScaffold.enabled) {
+        if (noBlockNearby() && preserveInVoid && isInVoid(player.pos) ) {
+            voidStayTicks++
+            if (voidStayTicks >= voidDisableTick && ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = false
-                helping = false
+                isHelping = false
                 notification(
-                    "ScaffoldHelper","PreserveInVoid worked! Scaffold auto disabled.",NotificationEvent.Severity.ERROR
+                    "ScaffoldHelper",
+                    "Disabled due to prolonged void exposure.",
+                    NotificationEvent.Severity.ERROR
                 )
                 return@handler
             }
         } else {
-            voidTicks = 0
+            voidStayTicks = 0
         }
 
         val canEnableNow = shouldEnableScaffold() && !freezeBlocking
 
-        if (canEnableNow && !helping) {
+        if (canEnableNow && !isHelping) {
             ModuleScaffold.enabled = true
-            helping = true
-            lastPlaceTick = currentTick
-            scaffoldLockUntil = currentTick + keepTick
+            isHelping = true
+            lastPlacedTick = currentTick
+            scaffoldActiveUntil = currentTick + keepTick
         }
 
-        if (helping && currentTick >= scaffoldLockUntil) {
+        if (isHelping && currentTick >= scaffoldActiveUntil) {
             ModuleScaffold.enabled = false
-            helping = false
+            isHelping = false
         }
     }
 
     override fun onDisabled() {
-        helping = false
-        freezeActiveTicks = 0
+        isHelping = false
+        stuckTicks = 0
         super.onDisabled()
     }
 
@@ -164,9 +165,9 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     ) : NamedChoice {
         WHILE_USING_ITEM("WhileUsingItem", { !player.isUsingItem }),
         WHILE_SNEAKING("WhileSneaking", { !player.isSneaking }),
-        WHILE_ON_GROUND("WhileOnGround",{player.isOnGround}),
+        WHILE_ON_GROUND("WhileOnGround",{ !player.isOnGround }),
         WhileReceiveHit("WhileReceiveHit", { !CombatManager.isReceiveHit }),
         WhileDuringCombat("WhileDuringCombat", { !CombatManager.isInCombat }),
-        WHILE_KILLAURA("WhileKillAura",{ModuleKillAura.targetTracker.target == null}),
+        WHILE_KILLAURA("WhileKillAura",{ ModuleKillAura.targetTracker.target == null }),
     }
 }

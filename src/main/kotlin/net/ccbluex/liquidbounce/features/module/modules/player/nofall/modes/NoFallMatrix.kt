@@ -20,6 +20,18 @@ internal object NoFallMatrix : Choice("Matrix-1.18+") {
     private var shouldHandleFall = false
     private var lagConfirmed = false
 
+    override fun enable() {
+        shouldSendLagPacket = false
+        shouldHandleFall = false
+        lagConfirmed = false
+        super.enable()
+    }
+    override fun disable() {
+        shouldSendLagPacket = false
+        shouldHandleFall = false
+        lagConfirmed = false
+        super.enable()
+    }
     @Suppress("unused")
     private val tickHandler = tickHandler {
         if (player.isOnGround || player.fallDistance < player.getAttributeValue(
