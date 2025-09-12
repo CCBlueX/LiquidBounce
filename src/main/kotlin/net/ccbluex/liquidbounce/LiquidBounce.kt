@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.api.core.scope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.common.SoundLoader
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
@@ -160,7 +159,7 @@ object LiquidBounce : EventListener {
         if (isInitialized) {
             return
         }
-        SoundLoader.init()
+
         // Ensure we are on the render thread
         RenderSystem.assertOnRenderThread()
 

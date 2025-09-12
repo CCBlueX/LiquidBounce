@@ -169,9 +169,7 @@ object ImageMode : JumpEffectMode("Image") {
         BLADE("Blade","blade"),
         CIRCLE("Circle", "circle"),
         PORTAL("Portal", "portal"),
-        KONCHAL("Konchal","konchal"),
-        UNIVERSAL("Universal","universal");
-
+        KONCHAL("Konchal","konchal");
         val texture: Identifier =
             "image/jumpCircle/$textureName.png".registerAsDynamicImageFromClientResources()
     }

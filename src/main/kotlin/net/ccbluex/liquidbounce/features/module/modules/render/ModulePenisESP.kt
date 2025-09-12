@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
@@ -52,14 +53,15 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
         val offsetZ by float("OffsetZ", 0f, -180f..180f)
     }
 
+    private val penis by color("Penis", Color4b.LIQUID_BOUNCE)
+    private val glans by color("Glans", Color4b.LIQUID_BOUNCE)
     init {
         tree(Offset)
         tree(Rotation)
 
         ClientTickEvents.END_CLIENT_TICK.register {
             val player = mc.player ?: return@register
-
-            val entities = RenderedEntities.filterIsInstance<LivingEntity>()
+            val entities = RenderedEntities.filter { it.isPlayer }
 
             for (entity in entities) {
                 if (entity == player || !entity.isAlive) continue
@@ -182,7 +184,7 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        val entities = RenderedEntities.filterIsInstance<LivingEntity>()
+        val entities = RenderedEntities.filter { it.isPlayer }
         if (manualTrigger) {
             entities.forEach { spawnEjaculationParticles(it) }
         }
@@ -242,7 +244,6 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
     private fun WorldRenderEnvironment.drawCylinder(matrixStack: MatrixStack, length: Float) {
         val radius = glansRadius
         val matrix = matrixStack.peek().positionMatrix
-        val alpha = 255
         val segmentCount = segments
 
         drawCustomMesh(
@@ -263,20 +264,19 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
                 val u1 = (i + 1).toFloat() / segmentCount
 
                 vertex(matrix, x0, 0f, z0)
-                    .texture(u0, 1f).color(255, 255, 255, alpha)
+                    .texture(u0, 1f).color(penis.toARGB())
                 vertex(matrix, x1, 0f, z1)
-                    .texture(u1, 1f).color(255, 255, 255, alpha)
+                    .texture(u1, 1f).color(penis.toARGB())
                 vertex(matrix, x1, length, z1)
-                    .texture(u1, 0f).color(255, 255, 255, alpha)
+                    .texture(u1, 0f).color(penis.toARGB())
                 vertex(matrix, x0, length, z0)
-                    .texture(u0, 0f).color(255, 255, 255, alpha)
+                    .texture(u0, 0f).color(penis.toARGB())
             }
         }
     }
 
     private fun WorldRenderEnvironment.drawGlans(matrixStack: MatrixStack) {
         val matrix = matrixStack.peek().positionMatrix
-        val alpha = 255
         val radius = glansRadius
         val segmentCount = segments
 
@@ -309,10 +309,10 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
 
                     vertex(matrix, x0, y0, z0)
                         .texture(u, v0)
-                        .color(255, 255, 255, alpha)
+                        .color(glans.toARGB())
                     vertex(matrix, x1, y1, z1)
                         .texture(u, v1)
-                        .color(255, 255, 255, alpha)
+                        .color(glans.toARGB())
                 }
             }
         }
