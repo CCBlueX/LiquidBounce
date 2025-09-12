@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
-object ModuleReportHelper : ClientModule("ReportHelper", Category.PLAYER) {
+object ModuleReportHelper : ClientModule("ReportHelper", Category.PLAYER, aliases = arrayOf("AutoReport")) {
 
     init {
         tree(ReportHelperAutoReport)
