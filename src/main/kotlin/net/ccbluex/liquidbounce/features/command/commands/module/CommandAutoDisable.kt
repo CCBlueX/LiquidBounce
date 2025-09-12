@@ -53,7 +53,7 @@ object CommandAutoDisable : Command.Factory {
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
         .handler {
-            ModuleAutoDisable.listOfModules.clear()
+            ModuleAutoDisable.modules.clear()
             chat(
                 command.result("modulesCleared"),
                 metadata = MessageMetadata(id = "CAutoDisable#global")
@@ -69,7 +69,7 @@ object CommandAutoDisable : Command.Factory {
                 result("modules").withColor(Formatting.RED).bold(true)
             },
             items = {
-                ModuleAutoDisable.listOfModules
+                ModuleAutoDisable.modules
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
@@ -84,7 +84,7 @@ object CommandAutoDisable : Command.Factory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            ParameterBuilder.modules(all = ModuleAutoDisable.listOfModules)
+            ParameterBuilder.modules(all = ModuleAutoDisable.modules)
                 .required()
                 .build()
         )
@@ -92,7 +92,7 @@ object CommandAutoDisable : Command.Factory {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
-                if (!ModuleAutoDisable.listOfModules.remove(module)) {
+                if (!ModuleAutoDisable.modules.remove(module)) {
                     throw CommandException(command.result("moduleNotPresent", module.name))
                 }
 
@@ -120,7 +120,7 @@ object CommandAutoDisable : Command.Factory {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
-                if (!ModuleAutoDisable.listOfModules.add(module)) {
+                if (!ModuleAutoDisable.modules.add(module)) {
                     throw CommandException(command.result("moduleIsPresent", module.name))
                 }
 
