@@ -52,7 +52,7 @@ object InstantNukerMode : Choice("Instant") {
             return@tickHandler
         }
 
-        val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random())
+        val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random()).toList()
 
         if (targets.none()) {
             wasTarget = null

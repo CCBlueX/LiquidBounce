@@ -30,5 +30,5 @@ abstract class NukerArea(name: String) : Choice(name) {
     override val parent: ChoiceConfigurable<*>
         get() = areaMode
 
-    abstract fun lookupTargets(radius: Float, count: Int? = null): Sequence<Pair<BlockPos, BlockState>>
+    abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>
 }

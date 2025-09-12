@@ -45,7 +45,7 @@ object FloorNukerArea : NukerArea("Floor") {
     private val topToBottom by boolean("TopToBottom", true)
 
     @Suppress("detekt:CognitiveComplexMethod")
-    override fun lookupTargets(radius: Float, count: Int?): Sequence<Pair<BlockPos, BlockState>> {
+    override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
         val (startX, startY, startZ) = if (relativeToPlayer) startPosition.add(player.blockPos) else startPosition
         val (endX, endY, endZ) = if (relativeToPlayer) endPosition.add(player.blockPos) else endPosition
 
@@ -59,7 +59,7 @@ object FloorNukerArea : NukerArea("Floor") {
         val rangeSquared = radius * radius
         if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
             // Return empty list if not
-            return emptySequence()
+            return emptyList()
         }
 
         // Create ranges from start position to end position, they might be flipped, so we need to use min/max
@@ -70,7 +70,6 @@ object FloorNukerArea : NukerArea("Floor") {
         // Iterate through each Y range first, so we can as soon we find a block on the floor,
         // we can skip the rest
         // From top to bottom
-
         val start = BlockPos.Mutable(xRange.first, 0, zRange.first)
         val end = BlockPos.Mutable(xRange.last, 0, zRange.last)
 
@@ -78,38 +77,36 @@ object FloorNukerArea : NukerArea("Floor") {
         for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
             start.y = y
             end.y = y
-            val m = sequence {
-                for (pos in start..end) {
-                    val state = pos.getState() ?: continue
+            val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
+            for (pos in start..end) {
+                val state = pos.getState() ?: continue
 
-                    if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
-                        continue
-                    }
+                if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
+                    continue
+                }
 
-                    val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
+                val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
 
-                    if (!shape.isEmpty &&
-                        shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                            .getClosestPointTo(eyesPos)
-                            .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
-                            .getOrDefault(false)
-                    ) {
-                        yield(pos.toImmutable() to state)
-                    }
+                if (!shape.isEmpty &&
+                    shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                        .getClosestPointTo(eyesPos)
+                        .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
+                        .getOrDefault(false)
+                ) {
+                    blocks.add(pos.toImmutable() to state)
                 }
             }
 
             // Return when not empty
-            if (m.any()) {
+            if (blocks.isNotEmpty()) {
                 return if (count != null) {
-                    m.take(count)
+                    blocks.take(count)
                 } else {
-                    m
+                    blocks
                 }
             }
         }
 
-        return emptySequence()
+        return emptyList()
     }
-
 }

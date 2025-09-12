@@ -31,8 +31,7 @@ import net.minecraft.util.math.Box
 import kotlin.jvm.optionals.getOrDefault
 
 object SphereNukerArea : NukerArea("Sphere") {
-
-    override fun lookupTargets(radius: Float, count: Int?): Sequence<Pair<BlockPos, BlockState>> {
+    override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
         val rangeSquared = radius * radius
         val eyesPos = player.eyePos
 
@@ -52,9 +51,9 @@ object SphereNukerArea : NukerArea("Sphere") {
                 .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
                 .getOrDefault(false)
         }.sortedBy { (pos, _) ->
-            // If there is a last target, sort by distance to it, otherwise go by hardness
             wasTarget?.let { pos.getSquaredDistance(it) } ?: pos.getSquaredDistance(player.blockPos)
-        }
+        }.toList()
+
 
         val boundingBox = player.box.offset(0.0, -1.0, 0.0)
         val nonStandingPositions = positions.filter { (pos, _) ->
