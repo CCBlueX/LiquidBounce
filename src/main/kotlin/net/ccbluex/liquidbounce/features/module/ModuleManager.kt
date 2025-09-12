@@ -299,7 +299,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSuicide,
             ModuleTwerk,
             ModuleVomit,
-
+            ModuleSpecSpoof,
             // Misc
             ModuleAutoGG,
             ModuleBookBot,
