@@ -112,7 +112,8 @@ object ModuleHudEditor :
     }
 
     @Suppress("unused")
-    private val gameRenderHandler = handler<GameRenderEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
+    private val gameRenderHandler = handler<GameRenderEvent>(
+        priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
         clickGuiBrowser?.visible = mc.currentScreen is ClickScreen
         }
 

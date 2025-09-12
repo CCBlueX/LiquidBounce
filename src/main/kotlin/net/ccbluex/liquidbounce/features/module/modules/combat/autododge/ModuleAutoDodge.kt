@@ -40,6 +40,8 @@ import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.LlamaSpitEntity
 import net.minecraft.entity.projectile.ArrowEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity
+import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.entity.projectile.SpectralArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.util.math.Box
@@ -56,6 +58,8 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     private val ignore by multiEnumChoice("Ignore", Ignore.entries)
+    private val OnlyArrow by boolean("OnlyArrow", false)
+    private val ignoreOwn by boolean("IgnoreOwn", false)
 
     init {
         tree(AllowRotationChange)
@@ -105,9 +109,17 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     }
 
     private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
-        (entity is ArrowEntity || entity is SpectralArrowEntity ||
-            (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
+        val isRelevantProjectile = if (!OnlyArrow) {
+            entity is ProjectileEntity && (entity !is PersistentProjectileEntity || !entity.isOnGround)
+        } else {
+            entity is LlamaSpitEntity ||
+                (entity is ArrowEntity || entity is SpectralArrowEntity ||
+                    (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
+        }
+
+        (isRelevantProjectile) && !(ignoreOwn && (entity as? ProjectileEntity)?.owner?.uuid == mc.player?.uuid)
     }
+
 
     private fun <T : PlayerSimulation> getInflictedHits(
         simulatedPlayer: T,

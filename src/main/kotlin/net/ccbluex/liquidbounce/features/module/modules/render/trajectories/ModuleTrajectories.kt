@@ -20,14 +20,19 @@ package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
@@ -41,7 +46,7 @@ import net.minecraft.item.EnderPearlItem
 import net.minecraft.item.SnowballItem
 import net.minecraft.util.math.Vec3d
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber","Unused")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
@@ -55,7 +60,6 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val otherPlayers get() = Show.OTHER_PLAYERS in show
     private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
-
     // ---------------- Projectile Types ----------------
     sealed class ProjectileType(name: String, defaultColor: Color4b) : ToggleableConfigurable(
         this, name, enabled = true) {
@@ -75,6 +79,93 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         object WindCharge : ProjectileType("WindCharge", Color4b(192, 192, 192, 100))
     }
 
+    private object ShowDetailedInfo : ToggleableConfigurable(this, "ShowDetailedInfo", false) {
+        private val showAt by enumChoice("ShowAt", ShowAt.LANDING)
+
+        private enum class ShowAt(
+            override val choiceName: String,
+            val getPosition: (TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult) -> Vec3d
+        ) : NamedChoice {
+            OWNER("Owner", { renderer, _ ->
+                renderer.owner.pos
+            }),
+            ENTITY("Entity", { _, result ->
+                result.positions.first()
+            }),
+            LANDING("Landing", { _, result ->
+                result.positions.last()
+            }),
+        }
+
+        private val ownerName by boolean("OwnerName", false)
+        private val distance by boolean("Distance", false)
+        private val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
+
+        private enum class DurationUnit(
+            override val choiceName: String,
+            val getString: (ticks: Int) -> String,
+        ) : NamedChoice {
+            TICKS("Ticks", Int::toString),
+            SECONDS("Seconds", { ticks ->
+                (ticks * 0.05).toFixed(1) + "s"
+            }),
+        }
+
+        private val scale by float("Scale", 1F, 0.25F..4F)
+        private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+
+        private val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+            fun Vec3d.calcScreenPosWithOffset(): Vec3? {
+                return WorldToScreen.calculateScreenPos(add(renderOffset))
+            }
+
+            val context = event.context
+
+            simulationResults.forEachIndexed { index, (renderer, result) ->
+                val screenPos =
+                    when {
+                        showAt === ShowAt.OWNER && renderer.owner === player -> when (renderer.type) {
+                            // If this renderer is created by player holding items and showAt is OWNER,
+                            // then show at the landing position
+                            TrajectoryInfoRenderer.Type.HYPOTHETICAL ->
+                                ShowAt.LANDING.getPosition(renderer, result).calcScreenPosWithOffset()
+                            else -> {
+                                val centerX = mc.window.scaledWidth * 0.5F
+                                val centerY = mc.window.scaledHeight * 0.5F
+                                Vec3(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
+                            }
+                        }
+                        else -> showAt.getPosition(renderer, result).calcScreenPosWithOffset()
+                    } ?: return@forEachIndexed
+
+                context.matrices.push()
+                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
+                context.matrices.scale(scale, scale, 1.0F)
+
+                val text = durationUnit.getString(result.positions.size).asText()
+                if (ownerName && renderer.owner !== player) {
+                    text.append(" ").append(renderer.owner.name)
+                }
+                if (distance) {
+                    text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
+                }
+
+                var y = 0
+
+                context.drawCenteredTextWithShadow(
+                    mc.textRenderer,
+                    text,
+                    0,
+                    y,
+                    Color4b.WHITE.toARGB(),
+                )
+                y += mc.textRenderer.fontHeight + 1
+
+                context.matrices.pop()
+            }
+        }
+    }
+
     init {
         tree(ProjectileType.Arrow)
         tree(ProjectileType.Potion)
@@ -86,6 +177,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         tree(ProjectileType.ExpBottle)
         tree(ProjectileType.Fireball)
         tree(ProjectileType.WindCharge)
+        tree(ShowDetailedInfo)
     }
 
     private val simulationResults = mutableListOf<Pair
@@ -170,7 +262,6 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             entityHitColor = if (type.entityHitESP) type.color else Color4b.TRANSPARENT
         )
     }
-
 
     private enum class Show(override val choiceName: String) : NamedChoice {
         ALWAYS_SHOW_BOW("AlwaysShowBow"),
