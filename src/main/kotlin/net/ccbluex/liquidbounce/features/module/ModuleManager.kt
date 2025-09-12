@@ -381,7 +381,6 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleNoBob,
             ModuleNoFov,
             ModuleNoHurtCam,
-            ModuleNoSignRender,
             ModuleNoSwing,
             ModuleCustomAmbience,
             ModuleProphuntESP,

@@ -433,7 +433,6 @@
 	"liquidbounce.module.noPitchLimit.description": "通常のピッチ制限を超えて頭を回転させることができます。",
 	"liquidbounce.module.noPush.description": "他のプレイヤーから押されないようにします。",
 	"liquidbounce.module.noRotateSet.description": "サーバーが頭を回転させないようにします。",
-	"liquidbounce.module.noSignRender.description": "標識テキストがレンダリングされないようにします。",
 	"liquidbounce.module.noSlow.description": "ブロックやアイテムの使用による減速効果をキャンセルします。",
 	"liquidbounce.module.noSlowBreak.description": "悪影響を与える状況にある場合、採掘速度を自動的に調整します。",
 	"liquidbounce.module.noSwing.description": "スイング効果を無効にします。",

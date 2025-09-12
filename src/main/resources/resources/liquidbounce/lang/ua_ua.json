@@ -302,7 +302,6 @@
   "liquidbounce.module.mobOwners.description": "Показує, кому належить приручена сутність або снаряд.",
   "liquidbounce.module.noBob.description": "Вимикає ефект хитання камери.",
   "liquidbounce.module.noHurtCam.description": "Вимикає ефект отримання урону.",
-  "liquidbounce.module.noSignRender.description": "Не дає табличкам відображатися.",
   "liquidbounce.module.noSwing.description": "Прибирає ефект махання рукою.",
   "liquidbounce.module.noWeather.description": "Вимикає ефект дощу.",
   "liquidbounce.module.rotations.description": "Дозволяє вам бачити ваш поворот голови з серверної сторони.",

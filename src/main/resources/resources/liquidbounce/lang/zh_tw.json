@@ -608,7 +608,6 @@
   "liquidbounce.module.noPitchLimit.description": "取消縱向的旋轉視角限制。",
   "liquidbounce.module.noPush.description": "防止你被其他玩家推動。",
   "liquidbounce.module.noRotateSet.description": "防止伺服器改變你的視角。",
-  "liquidbounce.module.noSignRender.description": "不渲染告示牌上的字。",
   "liquidbounce.module.noSlow.description": "取消靈魂沙或物品導致的緩慢效果。",
   "liquidbounce.module.noSlowBreak.description": "消除負面影響造成的破壞減速。",
   "liquidbounce.module.noSwing.description": "禁用揮手動畫。",
