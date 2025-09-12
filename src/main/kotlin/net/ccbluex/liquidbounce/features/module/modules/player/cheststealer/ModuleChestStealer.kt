@@ -125,10 +125,6 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         tree(CheckTitle)
     }
 
-    init {
-        tree(CheckTitle)
-    }
-
     @Suppress("unused")
     private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
         BARREL("Barrel", "container.barrel"),
