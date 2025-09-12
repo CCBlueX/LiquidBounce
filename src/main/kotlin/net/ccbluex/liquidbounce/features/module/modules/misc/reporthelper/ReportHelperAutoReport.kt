@@ -24,16 +24,20 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import kotlin.random.Random
 
 internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelper, "AutoReport", false) {
 
+    private val delay by intRange("Delay", 1..3, 0..20, "ticks")
+    private val chance by int("Chance", 100, 1..100, "%")
     private val pattern by text("CommandPattern", "report %s")
 
     private val reported: MutableSet<String> = ObjectRBTreeSet(String.CASE_INSENSITIVE_ORDER)
 
     @Suppress("unused")
-    private val chatHandler = handler<ChatReceiveEvent> { event ->
+    private val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->
         val message = event.message
 
         if (message.contains(player.gameProfile.name)) {
@@ -41,13 +45,13 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
                 entity.gameProfile.name.takeIf { name ->
                     entity !== player && message.contains(name) && !FriendManager.isFriend(name)
                 }
-            } ?: return@handler
+            } ?: return@sequenceHandler
 
-            if (reported.contains(another)) {
-                return@handler
+            if (Random.nextInt(100) >= chance || !reported.add(another)) {
+                return@sequenceHandler
             }
 
-            reported.add(another)
+            waitTicks(delay.random())
             player.networkHandler.sendCommand(pattern.format(another))
         }
     }
@@ -55,6 +59,11 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
         reported.clear()
+    }
+
+    override fun onDisabled() {
+        reported.clear()
+        super.onDisabled()
     }
 
 }
