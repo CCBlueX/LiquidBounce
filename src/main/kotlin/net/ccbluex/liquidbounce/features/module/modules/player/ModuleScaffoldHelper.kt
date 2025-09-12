@@ -47,7 +47,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
     private fun isImminentVoid(): Boolean {
         val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticksToPredict)
-        return isInVoid(nextTick.pos, -63)
+        return isInVoid(nextTick.pos, -64)
     }
 
     private fun passesRequirements(): Boolean {

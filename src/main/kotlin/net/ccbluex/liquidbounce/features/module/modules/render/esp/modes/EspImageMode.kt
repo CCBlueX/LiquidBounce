@@ -194,7 +194,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
         abstract fun getTexture(): Identifier
 
         object FaceImageMode : ImageMode("Face") {
-            private val image by enumChoice("Image", FaceImage.ALAN34)
+            private val image by enumChoice("Image", FaceImage.CHEN_YUMO)
 
             override fun getTexture(): Identifier = image.texture
 
@@ -202,8 +202,9 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
                 override val choiceName: String,
                 textureName: String
             ) : NamedChoice {
-                XINXIN("Xinxin", "xinxin"),
+                XUJINLIANG("Xinxin", "xinxin"),
                 BAIZHIJUN("SuChen", "suchen"),
+                CHEN_YUMO("Mouse","mouse"),
                 ALAN34("Alan34", "alan");
 
                 val texture: Identifier =

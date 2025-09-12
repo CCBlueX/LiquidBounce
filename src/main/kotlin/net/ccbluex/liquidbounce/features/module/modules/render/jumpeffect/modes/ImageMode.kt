@@ -29,7 +29,7 @@ object ImageMode : JumpEffectMode("Image") {
     private val circleScale by float("Scale", 1f, 0.5f..5f)
     private val rotateSpeed by float("RotateSpeed", 2f, 0.5f..5f)
     private val gradientSpeed by float("GradientSpeed", 0.25f, 0f..1f)
-    private val imageType by enumChoice("ImageType", Image.PORTAL)
+    private val imageType by enumChoice("ImageType", Image.ARC)
     private val circles = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
     private val cache = mutableListOf<PlayerEntity>()
 
@@ -101,17 +101,21 @@ object ImageMode : JumpEffectMode("Image") {
                 val (color1Base, color2Base) = colorMode.activeChoice.getColors(null)
                 val rotation = sizeAnim * rotateSpeed * 1000f
                 val renderPos = Vec3d(pos.x, pos.y - 0.5, pos.z)
-
                 withPositionRelativeToCamera(renderPos) {
                     matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f))
-                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotation))
-
                     val scale = sizeAnim * 2f
                     val half = scale / 2f
-                    val minX = -half
-                    val minY = -half
-                    val maxX = half
-                    val maxY = half
+
+                    matrixStack.translate(0.0, 0.0, half.toDouble())
+                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotation))
+                    matrixStack.translate(0.0, 0.0, -half.toDouble())
+
+
+                    val minX = -sizeAnim
+                    val minY = -sizeAnim
+                    val maxX = -sizeAnim + scale
+                    val maxY = -sizeAnim + scale
+
 
                     val animationDuration = 4000f / gradientSpeed
                     val animationProgress = (currentTime % animationDuration.toLong()) / animationDuration
@@ -132,13 +136,13 @@ object ImageMode : JumpEffectMode("Image") {
 
                     builder.drawGradientQuad(
                         this,
-                        pos1 = Vec3d(minX.toDouble(), minY.toDouble(), 0.0),
+                        pos1 = Vec3d(minX.toDouble(), maxY.toDouble(), 0.0),
                         uv1 = UV2f(0f, 1f),
-                        pos2 = Vec3d(maxX.toDouble(), minY.toDouble(), 0.0),
+                        pos2 = Vec3d(maxX.toDouble(), maxY.toDouble(), 0.0),
                         uv2 = UV2f(1f, 1f),
-                        pos3 = Vec3d(maxX.toDouble(), maxY.toDouble(), 0.0),
+                        pos3 = Vec3d(maxX.toDouble(), minY.toDouble(), 0.0),
                         uv3 = UV2f(1f, 0f),
-                        pos4 = Vec3d(minX.toDouble(), maxY.toDouble(), 0.0),
+                        pos4 = Vec3d(minX.toDouble(), minY.toDouble(), 0.0),
                         uv4 = UV2f(0f, 0f),
                         color1 = colorTopLeft,
                         color2 = colorTopRight,
@@ -161,8 +165,12 @@ object ImageMode : JumpEffectMode("Image") {
         override val choiceName: String,
         textureName: String
     ) : NamedChoice {
-        CIRCLE("Default", "circle"),
-        PORTAL("Portal", "portal");
+        ARC("Arc","arc"),
+        BLADE("Blade","blade"),
+        CIRCLE("Circle", "circle"),
+        PORTAL("Portal", "portal"),
+        KONCHAL("Konchal","konchal"),
+        UNIVERSAL("Universal","universal");
 
         val texture: Identifier =
             "image/jumpCircle/$textureName.png".registerAsDynamicImageFromClientResources()
