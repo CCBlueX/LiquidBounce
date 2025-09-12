@@ -12,9 +12,14 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.pathing.BaritonePathManager
+import net.ccbluex.liquidbounce.utils.pathing.BaritoneUtils
 
 object ModuleAutoPath : ClientModule("AutoPath", Category.PLAYER) {
     private var targetPos: BlockPos? = null
+
+    override val running: Boolean
+        get() = super.running  &&
+            PathManagers.baritoneExists() && BaritoneUtils.IS_AVAILABLE
 
     @Suppress("unused")
     private val tickHandler = tickHandler {

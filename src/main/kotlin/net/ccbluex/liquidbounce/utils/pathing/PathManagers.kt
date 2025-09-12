@@ -7,7 +7,7 @@ object PathManagers {
     lateinit var instance: BaritonePathManager
         private set
 
-    private fun baritoneExists(): Boolean {
+    fun baritoneExists(): Boolean {
         return try {
             Class.forName("baritone.api.BaritoneAPI")
             true

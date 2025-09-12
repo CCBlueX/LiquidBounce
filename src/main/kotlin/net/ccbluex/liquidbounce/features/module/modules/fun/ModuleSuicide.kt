@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3i
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.pathing.BaritoneUtils
 import net.ccbluex.liquidbounce.utils.pathing.PathManagers
 import net.ccbluex.liquidbounce.utils.session.GamingCheck
 import net.minecraft.block.Blocks
@@ -33,6 +34,11 @@ object ModuleSuicide : ClientModule("Suicide", Category.FUN, aliases = arrayOf("
     private val pathStepThreshold by float("PathStepThreshold", 0.5f, 0f..1.0f)
     private var targetPos: Vec3d? = null
     private var ticksSinceLastSearch: Int = 0
+
+    override val running: Boolean
+        get() = super.running  &&
+            PathManagers.baritoneExists() && BaritoneUtils.IS_AVAILABLE
+
 
     @Suppress("unused")
     private val moveInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
