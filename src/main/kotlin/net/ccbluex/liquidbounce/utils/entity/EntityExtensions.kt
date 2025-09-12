@@ -22,10 +22,13 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoClutch
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
+import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
@@ -674,7 +677,9 @@ fun ClientPlayerEntity.canSeeEntity(entity: Entity, samples: Int = 5): Boolean {
     }
 }
 
-fun isInVoid(pos: Vec3d, voidDistance: Int = -64): Boolean {
+fun isInVoid(pos: Vec3d, voidDistance: Int = -64, checkOnGround: Boolean = true): Boolean {
+    if (checkOnGround && player.isOnGround) return false
+
     val xRange = mutableListOf(0)
     val zRange = mutableListOf(0)
 
@@ -703,6 +708,16 @@ fun isInVoid(pos: Vec3d, voidDistance: Int = -64): Boolean {
     }
     return true
 }
+
+fun isBlockUnder(height: Double = 5.0): Boolean {
+
+    return player.boundingBox.offset(
+        0.0,
+        -height,
+        0.0
+    ).collideBlockIntersects { it.defaultState.isAir }
+}
+
 fun hasSolidBlockBelow(): Boolean {
     val checkDepth = 3
     val bb = player.boundingBox

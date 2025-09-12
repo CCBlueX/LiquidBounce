@@ -1,8 +1,8 @@
 <script lang="ts">
     import type {PlayerData} from "../../../integration/types";
-    import type {BlockCountChangeEvent, ClientPlayerDataEvent} from "../../../integration/events";
+    import type {BlockCountChangeEvent, ClientPlayerDataEvent, ModuleToggleEvent} from "../../../integration/events";
     import {listen} from "../../../integration/ws";
-    import {getPlayerData} from "../../../integration/rest";
+    import {getModules, getPlayerData} from "../../../integration/rest";
     import {onMount,tick} from "svelte";
     import {FadeOut} from "../../../util/animate_utils";
     import {blockCount} from './island/Island';
@@ -13,24 +13,8 @@
     let count = <number | undefined>(undefined);
     let contentElement: HTMLDivElement;
     let firstAppear = true;
-
+    let scaffoldEnable = false
     const maxWidth = new Tween(0, { duration: 150, easing: cubicOut });
-
-    listen("blockCountChange", (e: BlockCountChangeEvent) => {
-        count = e.count;
-        blockCount.set(e.count);
-    });
-
-    listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
-        playerData = e.playerData;
-    });
-
-    onMount(async () => {
-        playerData = await getPlayerData();
-        if (contentElement && count !== undefined) {
-            await updateMaxWidth(true);
-        }
-    });
 
     $: if (contentElement && count !== undefined) {
         updateMaxWidth(firstAppear);
@@ -54,9 +38,33 @@
 
         await maxWidth.set(fullWidth);
     }
+
+    listen("blockCountChange", (e: BlockCountChangeEvent) => {
+        count = e.count;
+        blockCount.set(e.count);
+    });
+
+    listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
+        playerData = e.playerData;
+    });
+
+    listen("moduleToggle", (e: ModuleToggleEvent) => {
+        if (e.moduleName === "Scaffold") {
+            scaffoldEnable = e.enabled;
+        }
+    });
+
+    onMount(async () => {
+        playerData = await getPlayerData();
+        if (contentElement && count !== undefined) {
+            await updateMaxWidth(true);
+        }
+
+    });
 </script>
+
 <div class="main-wrapper" class:draggable={count === undefined}>
-    {#if count !== undefined}
+    {#if count !== undefined && scaffoldEnable}
         <div
                 class="hud hud-container"
                 bind:this={contentElement}

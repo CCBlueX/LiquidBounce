@@ -52,7 +52,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
             super.running
                 &&!ModuleScaffold.running
 
-    private val voidThreshold by int("VoidLevel", 0, -256..0)
+    private val voidThreshold by int("VoidLevel", 0, -256..256)
     private val ticksToPredict by int("TicksToPredict", 10, 10..100,"tick")
 
     @Suppress("UnusedPrivateProperty","Unused")

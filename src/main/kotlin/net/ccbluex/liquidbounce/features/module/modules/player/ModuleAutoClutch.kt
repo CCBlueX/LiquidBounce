@@ -32,7 +32,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPredictor
+import net.ccbluex.liquidbounce.utils.entity.isBlockUnder
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -90,7 +91,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
     @Suppress("unused")
     private val algorithm by enumChoice("Algorithm", Algorithm.SimulatedAnnealing)
 
-    private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val voidFallPrediction = tree(VoidFallPredictor( ticksToPredict = 30, voidThreshold = -64 ))
     private val adjacentSafeBlocks by int("AdjacentSafeBlocks", 0, 0..3)
     private val aimPrecision by float("AimPrecision", 0.1f, 0.1f..1f)
     private val pitchRange by floatRange("PitchLimit", -90f..0f, -90f..45f)
@@ -306,7 +307,7 @@ object ModuleAutoClutch : ClientModule("AutoClutch", Category.PLAYER) {
 
         if (voidFallPrediction.isPlayerSafe()
             || voidFallPrediction.canReachSafeBlockFrom()
-            || voidFallPrediction.isBlockUnder(2.0)) {
+            || isBlockUnder(2.0)) {
             resetAllVariables()
             return
         }

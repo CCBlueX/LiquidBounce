@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.VoidFallPrediction
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPredictor
 import net.ccbluex.liquidbounce.utils.entity.hasSolidBlockBelow
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.minecraft.item.Items
@@ -20,7 +20,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
 
     val immediately by boolean("Immediately", false)
     private val disableOnFlag by boolean("DisablerOnFlag",false)
-    private val voidFallPrediction = tree(VoidFallPrediction(this))
+    private val voidFallPrediction = tree(VoidFallPredictor())
     private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
     private val resetTicks by int("ResetTicks", 300, 200..2000, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")

@@ -212,7 +212,7 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
         val distance = playerPos2d.distanceTo(dodgePos)
         val ticksToPredict = ceil(distance / 0.11).toInt().coerceAtLeast(10)
         val snapshot = sim.getSnapshotAt(ticksToPredict)
-        return isInVoid(snapshot.pos, 0)
+        return isInVoid(snapshot.pos)
     }
 
     val candidate0Void = isCandidateVoid(nearestPointsToDangerZoneBorders[0])

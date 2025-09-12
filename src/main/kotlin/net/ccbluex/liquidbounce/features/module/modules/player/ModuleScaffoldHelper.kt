@@ -10,13 +10,14 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle.shouldBeActive
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.updateRenderCount
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.VoidFallPredictor
 import net.ccbluex.liquidbounce.utils.entity.isInVoid
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.entity.player.PlayerEntity
@@ -25,8 +26,8 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     private val AutoJumpOnVoidEdge by boolean("AutoJumpAtVoidEdge",true)
     private val AutoDisable by boolean("AutoDisable", true)
     private val preserveInVoid by boolean("PreserveInVoid",false)
+    private val voidFallPrediction = tree(VoidFallPredictor( ticksToPredict = 3, voidThreshold = -64))
     private val voidDisableTick by int("VoidDisableDelay", 50, 5..100, "tick")
-    private val ticksToPredict by int("TicksToPredict", 3, 2..20,"tick")
     private val scaffoldBlockedTick by int("BlockedForFreeze",15,5..30,"tick")
     private val keepTick by int("KeepEnabledTicks",16,10..30,"tick")
     private val SafeLandBlocks by int("SafeLandBlocks",3,2..5)
@@ -45,20 +46,21 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
     }
 
-    private fun isImminentVoid(): Boolean {
-        val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticksToPredict)
-        return isInVoid(nextTick.pos, -64)
-    }
 
     private fun passesRequirements(): Boolean {
         if (!inGame || isDestructed) return false
         return notCondition.all { it.testCondition() }
     }
 
+    private fun isImminentVoid(): Boolean {
+        val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(3)
+        return isInVoid(nextTick.pos,checkOnGround = false)
+    }
+
     @Suppress("unused")
     private val simulatedTickHandler = handler<MovementInputEvent> { event ->
         val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
-        val shouldJump = player.isOnGround && player.moving && AutoJumpOnVoidEdge &&isImminentVoid()
+        val shouldJump = player.isOnGround && player.moving && AutoJumpOnVoidEdge && isImminentVoid()
             &&
             !isHelping &&
             !shouldBeActive &&
@@ -77,8 +79,16 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         lastPlacedTick = currentTick
         scaffoldActiveUntil = currentTick + keepTick
     }
-    fun hasSolidBelow(player: PlayerEntity, blocks: Int = SafeLandBlocks): Boolean {
-        val startY = player.blockPos.y - 1 // 玩家脚下第一格
+    private fun hasUsableBlocks(): Boolean {
+        val inv = player.inventory
+        return (0 until inv.size()).any { i ->
+            val stack = inv.getStack(i)
+            ScaffoldBlockItemSelection.isValidBlock(stack)
+        }
+    }
+
+    private fun hasSolidBelow(player: PlayerEntity, blocks: Int = SafeLandBlocks): Boolean {
+        val startY = player.blockPos.y - 1
         for (yOffset in 0..(startY - world.bottomY - blocks + 1)) {
             var solidCount = 0
             for (i in 0 until blocks) {
@@ -102,7 +112,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
         if (freezeBlocking && isHelping) {
             ModuleScaffold.enabled = false
             isHelping = false
-            updateRenderCount()
             return@handler
         }
 
@@ -110,7 +119,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
             voidStayTicks++
             if (voidStayTicks >= voidDisableTick && ModuleScaffold.enabled) {
                 ModuleScaffold.enabled = false
-                updateRenderCount()
                 isHelping = false
                 notification(
                     "ScaffoldHelper",
@@ -123,7 +131,8 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
             voidStayTicks = 0
         }
 
-        val canEnableNow = isImminentVoid() && !freezeBlocking && !noBlockNearby() && passesRequirements()
+        val canEnableNow = voidFallPrediction.isVoidFallImminent
+            && !freezeBlocking && !noBlockNearby() && passesRequirements() && hasUsableBlocks()
 
         if (canEnableNow && !isHelping) {
             ModuleScaffold.enabled = true
@@ -138,8 +147,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
             }
         }
 
-
-
         val shouldAutoDisableScaffold = currentTick >= scaffoldActiveUntil ||
             (AutoDisable && (
                 (player.isOnGround && solidBelow3x3) || !passesRequirements() ||
@@ -148,7 +155,6 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
 
         if (isHelping && shouldAutoDisableScaffold) {
             ModuleScaffold.enabled = false
-            updateRenderCount()
             isHelping = false
         }
 
