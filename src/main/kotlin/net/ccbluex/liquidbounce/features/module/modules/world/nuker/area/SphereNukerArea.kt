@@ -32,7 +32,7 @@ import kotlin.jvm.optionals.getOrDefault
 
 object SphereNukerArea : NukerArea("Sphere") {
 
-    override fun lookupTargets(radius: Float, count: Int?): Sequence<Pair<BlockPos, BlockState>> {
+    override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
         val rangeSquared = radius * radius
         val eyesPos = player.eyePos
 
@@ -65,9 +65,9 @@ object SphereNukerArea : NukerArea("Sphere") {
         val list = nonStandingPositions.ifEmpty { positions }
 
         return if (count != null) {
-            list.take(count)
+            list.take(count).toList()
         } else {
-            list
+            list.toList()
         }
     }
 

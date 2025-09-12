@@ -33,7 +33,6 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
-import kotlin.jvm.optionals.getOrDefault
 
 object FloorNukerArea : NukerArea("Floor") {
 
@@ -45,7 +44,7 @@ object FloorNukerArea : NukerArea("Floor") {
     private val topToBottom by boolean("TopToBottom", true)
 
     @Suppress("detekt:CognitiveComplexMethod")
-    override fun lookupTargets(radius: Float, count: Int?): Sequence<Pair<BlockPos, BlockState>> {
+    override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
         val (startX, startY, startZ) = if (relativeToPlayer) startPosition.add(player.blockPos) else startPosition
         val (endX, endY, endZ) = if (relativeToPlayer) endPosition.add(player.blockPos) else endPosition
 
@@ -59,7 +58,7 @@ object FloorNukerArea : NukerArea("Floor") {
         val rangeSquared = radius * radius
         if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
             // Return empty list if not
-            return emptySequence()
+            return emptyList()
         }
 
         // Create ranges from start position to end position, they might be flipped, so we need to use min/max
@@ -78,7 +77,7 @@ object FloorNukerArea : NukerArea("Floor") {
         for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
             start.y = y
             end.y = y
-            val m = sequence {
+            val m = buildList {
                 for (pos in start..end) {
                     val state = pos.getState() ?: continue
 
@@ -92,14 +91,15 @@ object FloorNukerArea : NukerArea("Floor") {
                         shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
                             .getClosestPointTo(eyesPos)
                             .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
-                            .getOrDefault(false)) {
-                        yield(pos.toImmutable() to state)
+                            .orElse(false)
+                    ) {
+                        add(pos.toImmutable() to state)
                     }
                 }
             }
 
             // Return when not empty
-            if (m.any()) {
+            if (m.isNotEmpty()) {
                 return if (count != null) {
                     m.take(count)
                 } else {
@@ -108,7 +108,7 @@ object FloorNukerArea : NukerArea("Floor") {
             }
         }
 
-        return emptySequence()
+        return emptyList()
     }
 
 }

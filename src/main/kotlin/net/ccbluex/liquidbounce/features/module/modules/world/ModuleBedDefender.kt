@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.ints.IntObjectPair
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -136,16 +137,16 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         val mutable = BlockPos.Mutable()
         val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
             mutable.set(pos).toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
-        }
+        }.toCollection(ObjectArrayList())
 
-        if (placementPositions.none()) {
+        if (placementPositions.isEmpty) {
             return@handler
         }
 
-        val updatePositions = placementPositions.toMutableList().apply {
+        val updatePositions = placementPositions.apply {
             // Layer(ASC) Center Distance(DESC)
             sortWith(
-                Comparator.comparingInt(IntLongPair::leftInt)
+                Comparator.comparingInt<IntLongPair> { it.leftInt() }
                     .thenComparingDouble {
                         -mutable.set(it.rightLong()).getSquaredDistance(eyesPos)
                     }

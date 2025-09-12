@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 
-abstract class NukerArea(name: String) : Choice(name) {
+sealed class NukerArea(name: String) : Choice(name) {
 
     override val parent: ChoiceConfigurable<*>
         get() = areaMode
 
-    abstract fun lookupTargets(radius: Float, count: Int? = null): Sequence<Pair<BlockPos, BlockState>>
+    abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>
 }
