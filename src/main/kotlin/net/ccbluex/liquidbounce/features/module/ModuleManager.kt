@@ -107,9 +107,9 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHalo
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleCapes
-import net.ccbluex.jmcomicfix.features.module.modules.misc.ModuleAutoGG
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoGG
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleKillEffects
-import net.ccbluex.jmcomicfix.features.module.modules.client.ModuleHudEditor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleHudEditor
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.jmcomicfix.features.module.modules.`fun`.*
 import net.ccbluex.jmcomicfix.features.module.modules.render.*

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.jmcomicfix.features.module.modules.client.ModuleHudEditor
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleHudEditor
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.IntegrationListener

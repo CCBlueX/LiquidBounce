@@ -57,7 +57,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
     // ---------------- Projectile Types ----------------
-    sealed class ProjectileType(name: String, defaultColor: Color4b) : ToggleableConfigurable(this, name, enabled = true) {
+    sealed class ProjectileType(name: String, defaultColor: Color4b) : ToggleableConfigurable(
+        this, name, enabled = true) {
         val color by color("Color", defaultColor)
         val blockHitESP by boolean("BlockHitESP", true)
         val entityHitESP by boolean("EntityHitESP", true)
@@ -87,7 +88,8 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         tree(ProjectileType.WindCharge)
     }
 
-    private val simulationResults = mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
+    private val simulationResults = mutableListOf<Pair
+    <TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
 
     override fun onDisabled() {
         simulationResults.clear()
@@ -141,11 +143,17 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         if (!type.enabled || type.color.a <= 0) return
 
         val rotation = if (playerEntity === player) {
-            if (ModuleFreeCam.running) RotationManager.serverRotation
-            else RotationManager.activeRotationTarget?.rotation
-                ?: RotationManager.currentRotation
-                ?: playerEntity.rotation
-        } else playerEntity.rotation
+            if (ModuleFreeCam.running){
+                RotationManager.serverRotation
+            }
+            else{
+                RotationManager.activeRotationTarget?.rotation
+                    ?: RotationManager.currentRotation
+                    ?: playerEntity.rotation
+            }
+        } else {
+            playerEntity.rotation
+        }
 
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             entity = playerEntity,

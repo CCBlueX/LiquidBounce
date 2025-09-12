@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.jmcomicfix.features.module.modules.`fun`.ModuleFPSBoost
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleFPSBoost
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.jmcomicfix.api.services.client.ClientUpdate.release

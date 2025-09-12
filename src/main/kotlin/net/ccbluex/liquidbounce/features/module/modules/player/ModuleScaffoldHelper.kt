@@ -91,7 +91,7 @@ object ModuleScaffoldHelper : ClientModule("ScaffoldHelper", Category.WORLD, ali
     }
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (player.isSpectator || player.abilities.flying || mc.world?.bottomY?.let { it1 -> player.y <= (it1) } == true){
+        if (player.isSpectator||player.abilities.flying||mc.world?.bottomY?.let { it1 -> player.y <= (it1) } == true){
             return@handler
         }
         val currentTick = mc.world!!.time.toInt()
