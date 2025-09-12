@@ -877,5 +877,6 @@
   "liquidbounce.module.lineGlyphs.description": "Draw an glyphs where you can see it.",
   "liquidbounce.module.fireFlies.description": "It's just for looks?",
   "liquidbounce.module.scaffoldHelper.description": "Automatically help you enable scaffold.",
-  "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction."
+  "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction.",
+  "liquidbounce.module.specSpoof.description": "Modify your hardware specifications string in the F3 Menu!"
 }

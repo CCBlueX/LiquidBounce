@@ -881,5 +881,6 @@
   "liquidbounce.module.lineGlyphs.description": "在你所见之处绘制一种铭文。",
   "liquidbounce.module.fireFlies.description": "只是为了好看?",
   "liquidbounce.module.scaffoldHelper.description": "自动帮你启用脚手架。",
-  "liquidbounce.module.stuck.description": "让你的位置和转头暂停但不影响交互。"
+  "liquidbounce.module.stuck.description": "让你的位置和转头暂停但不影响交互。",
+  "liquidbounce.module.specSpoof.description": "在F3菜单中修改你的硬件规格字符串！"
 }

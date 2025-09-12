@@ -6,32 +6,29 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 
 object ModuleSpecSpoof : ClientModule("SpecSpoof", Category.FUN, aliases = arrayOf("HardwareProtect")) {
 
-    private val spoofCPU by text("CPU", "Intel(R) Core(TM) i9-13900K")
-    private val spoofGPU by text("GPU", "NVIDIA GeForce RTX 4090")
-    private val spoofDriver by text("Driver", "536.23")
-    private val spoofVendor by text("Vendor", "NVIDIA Corporation")
+    private val spoofCPU by text("CPU", "32x Intel(R) Core(TM) i9-14900KS CPU @6.2Ghz")
+    private val spoofGPU by text("GPU", "NVIDIA GeForce RTX 5090/PCIe/SSE2")
+    private val spoofDriver by text("Driver", "581.29")
+    private val spoofVendor by text("Vendor", "CCBlueX Development")
 
-    fun getSpoofedCPU(): String = if (running){
-        spoofCPU
-    } else {
-        GlDebugInfo.getCpuInfo()
-    }
+    private val realSpecs = mapOf(
+        "CPU" to { GlDebugInfo.getCpuInfo() },
+        "GPU" to { GlDebugInfo.getRenderer() },
+        "Driver" to { GlDebugInfo.getVersion() },
+        "Vendor" to { GlDebugInfo.getVendor() }
+    )
 
-    fun getSpoofedGPU(): String = if (running) {
-        spoofGPU
-    } else {
-        GlDebugInfo.getRenderer()
-    }
+    private val spoofedSpecs = mapOf(
+        "CPU" to { spoofCPU },
+        "GPU" to { spoofGPU },
+        "Driver" to { spoofDriver },
+        "Vendor" to { spoofVendor }
+    )
 
-    fun getSpoofedDriver(): String = if (running) {
-        spoofDriver
-    } else {
-        GlDebugInfo.getVersion()
-    }
-
-    fun getSpoofedVendor(): String = if (running) {
-        spoofVendor
-    } else{
-        GlDebugInfo.getVendor()
-    }
+    fun getSpec(type: String): String =
+        (if (running) {
+            spoofedSpecs
+        } else {
+            realSpecs
+        })[type]?.invoke() ?: "Unknown"
 }
