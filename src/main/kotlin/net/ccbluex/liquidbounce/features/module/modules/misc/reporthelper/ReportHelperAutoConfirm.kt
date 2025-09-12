@@ -36,6 +36,29 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
         arrayOf(Hypixel, Heypixel)
     }
 
+    private sealed class Mode(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = mode
+
+        protected abstract fun onScreenUpdated(screen: HandledScreen<*>)
+
+        init {
+            sequenceHandler<ScreenEvent> { event ->
+                val screen = event.screen
+                if (screen !is HandledScreen<*>) {
+                    return@sequenceHandler
+                }
+
+                // Wait for screen update
+                if (!waitConditional(5) { mc.currentScreen === screen }) {
+                    return@sequenceHandler
+                }
+
+                onScreenUpdated(screen)
+            }
+        }
+    }
+
     /**
      * Type: Confirm Screen (9x3)
      * Pattern:
@@ -43,35 +66,21 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
      * - 2x air / yes / air / player head / air / no / 2x air
      * - 9x air
      */
-    private object Hypixel : Choice("Hypixel") {
-        override val parent: ChoiceConfigurable<*>
-            get() = mode
-
+    private object Hypixel : Mode("Hypixel") {
         private val emptyIndices = intArrayOf(
             0, 1, 2, 3, 4, 5, 6, 7, 8,
             9, 10, 12, 14, 16, 17,
             18, 19, 20, 21, 22, 23, 24, 25, 26
         )
 
-        @Suppress("unused")
-        private val screenHandler = sequenceHandler<ScreenEvent> { event ->
-            val screen = event.screen
-            if (screen !is HandledScreen<*>) {
-                return@sequenceHandler
-            }
-
-            // Wait for screen update
-            if (!waitConditional(5) { mc.currentScreen === screen }) {
-                return@sequenceHandler
-            }
-
+        override fun onScreenUpdated(screen: HandledScreen<*>) {
             val slots = screen.getSlotsInContainer()
             if (slots.size != 27 ||
                 emptyIndices.any { !slots[it].itemStack.isEmpty } ||
                 !slots[11].itemStack.isOf(Items.GREEN_TERRACOTTA) ||
                 !slots[13].itemStack.isOf(Items.PLAYER_HEAD) ||
                 !slots[15].itemStack.isOf(Items.RED_TERRACOTTA)) {
-                return@sequenceHandler
+                return
             }
 
             interaction.clickSlot(
@@ -91,28 +100,14 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
      * Pattern:
      * DiamondSword = report as hack
      */
-    private object Heypixel : Choice("Heypixel") {
-        override val parent: ChoiceConfigurable<*>
-            get() = mode
-
-        @Suppress("unused")
-        private val screenHandler = sequenceHandler<ScreenEvent> { event ->
-            val screen = event.screen
-            if (screen !is HandledScreen<*>) {
-                return@sequenceHandler
-            }
-
-            // Wait for screen update
-            if (!waitConditional(5) { mc.currentScreen === screen }) {
-                return@sequenceHandler
-            }
-
+    private object Heypixel : Mode("Heypixel") {
+        override fun onScreenUpdated(screen: HandledScreen<*>) {
             val slots = screen.getSlotsInContainer()
             if (slots.size != 9) {
-                return@sequenceHandler
+                return
             }
 
-            val diamondSwordId = slots.firstOrNull { it.itemStack.isOf(Items.DIAMOND_SWORD) } ?: return@sequenceHandler
+            val diamondSwordId = slots.firstOrNull { it.itemStack.isOf(Items.DIAMOND_SWORD) } ?: return
 
             interaction.clickSlot(
                 screen.syncId,
