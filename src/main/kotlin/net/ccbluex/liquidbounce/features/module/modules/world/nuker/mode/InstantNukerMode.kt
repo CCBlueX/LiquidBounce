@@ -61,17 +61,22 @@ object InstantNukerMode : Choice("Instant") {
         }
 
         for ((pos, _) in targets) {
-            network.sendPacket(
-                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
-            )
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence)
+            }
 
             swingMode.swing(Hand.MAIN_HAND)
             wasTarget = pos
 
             if (!doNotStop) {
-                network.sendPacket(
-                    PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
-                )
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                        pos,
+                        Direction.DOWN,
+                        sequence
+                    )
+                }
             }
         }
     }

@@ -31,13 +31,14 @@ object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canA
 
     override fun start(mineTarget: MineTarget) {
         NormalMineMode.start(mineTarget)
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction
+                mineTarget.direction,
+                sequence,
             )
-        )
+        }
         ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
     }
 
