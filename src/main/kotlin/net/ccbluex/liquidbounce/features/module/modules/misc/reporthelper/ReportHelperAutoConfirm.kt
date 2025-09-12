@@ -75,9 +75,11 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
 
         override fun onScreenUpdated(screen: HandledScreen<*>) {
             val slots = screen.getSlotsInContainer()
-            if (slots.size != 27 ||
-                emptyIndices.any { !slots[it].itemStack.isEmpty } ||
-                !slots[11].itemStack.isOf(Items.GREEN_TERRACOTTA) ||
+            if (slots.size != 27 || emptyIndices.any { !slots[it].itemStack.isEmpty }) {
+                return
+            }
+
+            if (!slots[11].itemStack.isOf(Items.GREEN_TERRACOTTA) ||
                 !slots[13].itemStack.isOf(Items.PLAYER_HEAD) ||
                 !slots[15].itemStack.isOf(Items.RED_TERRACOTTA)) {
                 return
