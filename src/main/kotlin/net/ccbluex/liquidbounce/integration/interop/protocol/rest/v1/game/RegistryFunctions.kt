@@ -26,6 +26,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -280,6 +281,14 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", converter.convert(id.toName()))
                     addProperty("icon", iconUrl(iconId)) // TODO: better icon?
+                })
+            }
+        }
+
+        "client_module" -> {
+            ModuleManager.forEach { module ->
+                add(module.name, JsonObject().apply {
+                    addProperty("name", module.name)
                 })
             }
         }

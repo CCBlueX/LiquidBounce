@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
@@ -36,10 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.fireballfly.ModuleFireballFly
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import java.util.EnumSet
@@ -53,30 +51,15 @@ import java.util.EnumSet
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
-    val listOfModules = arrayListOf(
-        ModuleFly,
-        ModuleSpeed,
-        ModuleNoClip,
-        ModuleKillAura,
-        ModuleScaffold,
-        ModuleDelayBlink,
-        ModuleBlink,
-        ModuleFireballFly,
-        ModuleAutoStuck
+    val modules: MutableSet<ClientModule> by registryList(
+        "Modules",
+        ReferenceOpenHashSet.of(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura),
+        ValueType.CLIENT_MODULE
     )
-
-    private val disableOn by multiEnumChoice<DisableOn>(
-        "On",
-        EnumSet.of(
-            DisableOn.SPECTATOR,
-            DisableOn.CHANGE_WORLD,
-            DisableOn.HEYPIXEL_END_MESSAGE,
-            DisableOn.QUIT
-        )
-    )
+    private val disableOn by multiEnumChoice<DisableOn>("On")
 
     @Suppress("unused")
-    val flagHandler = handler<PacketEvent> {
+    val worldChangesHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
@@ -131,10 +114,18 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     }
 
     private fun disableAndNotify(reason: String) {
-        for (module in listOfModules) {
-            module.enabled = false
+        val anyDisabled = modules.any { module ->
+            if (module.enabled) {
+                module.enabled = false
+                true
+            } else {
+                false
+            }
         }
-        notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
+
+        if (anyDisabled) {
+            notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
+        }
     }
 
     private enum class DisableOn(override val choiceName: String) : NamedChoice {

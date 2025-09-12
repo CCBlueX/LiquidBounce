@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
@@ -84,6 +86,12 @@ object HumanInputDeserializer {
             .getOrNull()
 
         requireNotNull(effect) { "Unknown status effect '$it'" }
+    }
+
+    val clientModuleDeserializer: StringDeserializer<ClientModule> = StringDeserializer {
+        val module = ModuleManager[it]
+
+        requireNotNull(module) { "Unknown module '$it'" }
     }
 
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
