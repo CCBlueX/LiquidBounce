@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("TooManyFunctions","NestedBlockDepth")
+@file:Suppress("TooManyFunctions","NestedBlockDepth","CognitiveComplexMethod")
 
 package net.ccbluex.liquidbounce.utils.entity
 

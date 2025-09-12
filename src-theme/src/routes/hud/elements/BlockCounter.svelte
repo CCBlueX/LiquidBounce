@@ -2,7 +2,7 @@
     import type {PlayerData} from "../../../integration/types";
     import type {BlockCountChangeEvent, ClientPlayerDataEvent, ModuleToggleEvent} from "../../../integration/events";
     import {listen} from "../../../integration/ws";
-    import {getModules, getPlayerData} from "../../../integration/rest";
+    import { getPlayerData} from "../../../integration/rest";
     import {onMount,tick} from "svelte";
     import {FadeOut} from "../../../util/animate_utils";
     import {blockCount} from './island/Island';
