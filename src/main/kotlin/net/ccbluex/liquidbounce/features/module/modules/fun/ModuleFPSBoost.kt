@@ -27,7 +27,7 @@ object ModuleFPSBoost : ClientModule("FPSBoost", Category.FUN, aliases = arrayOf
     }
 
     object Static : FPSBoostMode("Static") {
-        private val targetFPS by int("TargetFPS", 120, 10..1000)
+        private val targetFPS by int("TargetFPS", 120, 0..2147483647)
 
         override fun getModifiedFPS(originalFPS: Int): Int {
             return targetFPS
@@ -43,20 +43,31 @@ object ModuleFPSBoost : ClientModule("FPSBoost", Category.FUN, aliases = arrayOf
     }
 
     object SmoothRandom : FPSBoostMode("Random") {
-        private val minFPS by int("MinFPS", 60, 10..1000)
-        private val maxFPS by int("MaxFPS", 240, 10..1000)
-        private val changeSpeed by float("ChangeSpeed", 0.2f, 0.01f..1f)
+        private val baseRange by intRange("Range", 1024..1337, 0..99999999)
+        private val fastChangeSpeed by float("FastSpeed", 0.1f, 0.01f..1f)
+        private val slowChangeSpeed by float("SlowSpeed", 0.02f, 0.001f..0.1f)
 
-        private var currentTarget = minFPS
-        private var currentFPS = minFPS.toFloat()
+        private var fastTarget = baseRange.start
+        private var slowTarget = baseRange.start
+        private var currentFPS = baseRange.start.toFloat()
 
         override fun getModifiedFPS(originalFPS: Int): Int {
-            if (System.currentTimeMillis() % 3000 < 50 || currentTarget !in minFPS..maxFPS) {
-                currentTarget = Random.Default.nextInt(minFPS, maxFPS + 1)
+            val time = System.currentTimeMillis()
+
+            if (time % 5000 < 50) {
+                slowTarget = Random.nextInt(baseRange.start, baseRange.endInclusive + 1)
             }
-            currentFPS += (currentTarget - currentFPS) * changeSpeed
+
+            if (time % 300 < 20) {
+                fastTarget = slowTarget + Random.nextInt(-2, 3)
+            }
+
+            val targetFPS = (slowTarget + (fastTarget - slowTarget) * 0.5f)
+            currentFPS += (targetFPS - currentFPS) * fastChangeSpeed
+            currentFPS += (slowTarget - currentFPS) * slowChangeSpeed
 
             return currentFPS.roundToInt()
         }
     }
+
 }
