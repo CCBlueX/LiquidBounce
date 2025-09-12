@@ -66,13 +66,14 @@ object ModuleCapes : ClientModule("Capes", Category.CLIENT, hide = true, state =
             Tenacity("Tenacity", "Tenacity"),
             LiquidBounce("LiquidBounce", "LiquidBounce"),
             JMcomicFix("JMcomicFix", "JMcomicFix"),
+            MoonLight("MoonLight","MoonLight"),
             Novoline("Novoline", "Novoline"),
             Opal("Opal", "Opal"),
             PowerX("PowerX", "PowerX"),
             Rise("Rise", "Rise"),
-            Sensei("Sensei", "Sensei"),
             VapeV4("VapeV4", "Vape_V4"),
-            VapeLite("VapeLite", "Vape_Lite");
+            VapeLite("VapeLite", "Vape_Lite"),
+            Sensei("Sensei", "Sensei");
         }
     }
 

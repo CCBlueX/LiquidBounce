@@ -194,7 +194,7 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
         abstract fun getTexture(): Identifier
 
         object FaceImageMode : ImageMode("Face") {
-            private val image by enumChoice("Image", FaceImage.CHEN_YUMO)
+            private val image by enumChoice("Image", FaceImage.ALAN34)
 
             override fun getTexture(): Identifier = image.texture
 
@@ -204,11 +204,10 @@ object EspImageMode : EspMode("Image", requiresTrueSight = true) {
             ) : NamedChoice {
                 XUJINLIANG("Xinxin", "xinxin"),
                 BAIZHIJUN("SuChen", "suchen"),
-                CHEN_YUMO("Mouse","mouse"),
                 ALAN34("Alan34", "alan");
 
                 val texture: Identifier =
-                    "image/esp2D/$textureName.png".registerAsDynamicImageFromClientResources()
+                    "image/face/$textureName.png".registerAsDynamicImageFromClientResources()
             }
         }
         object FileImageMode : ImageMode("File") {

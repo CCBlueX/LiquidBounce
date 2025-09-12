@@ -89,20 +89,19 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
             }
         }
     }
+
     private val attackedTrigger by boolean("AttackedTrigger", true)
     private val manualTrigger by boolean("Manual", false)
 
+    //Because there’s no decent texture,this is just a placeholder texture now.
     private val penisTexture: Identifier =
         "image/penisEsp/penis.png".registerAsDynamicImageFromClientResources()
     private val glansTexture: Identifier =
         "image/penisEsp/glans.png".registerAsDynamicImageFromClientResources()
 
     private val sneakingBehindTimes = mutableMapOf<LivingEntity, Long>()
-
-
     private val sneakStateMap = mutableMapOf<LivingEntity, Int>()
     private val ejaculationCooldownMap = mutableMapOf<LivingEntity, Int>()
-
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
@@ -263,10 +262,14 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
                 val u0 = i.toFloat() / segmentCount
                 val u1 = (i + 1).toFloat() / segmentCount
 
-                vertex(matrix, x0, 0f, z0).texture(u0, 1f).color(255, 255, 255, alpha)
-                vertex(matrix, x1, 0f, z1).texture(u1, 1f).color(255, 255, 255, alpha)
-                vertex(matrix, x1, length, z1).texture(u1, 0f).color(255, 255, 255, alpha)
-                vertex(matrix, x0, length, z0).texture(u0, 0f).color(255, 255, 255, alpha)
+                vertex(matrix, x0, 0f, z0)
+                    .texture(u0, 1f).color(255, 255, 255, alpha)
+                vertex(matrix, x1, 0f, z1)
+                    .texture(u1, 1f).color(255, 255, 255, alpha)
+                vertex(matrix, x1, length, z1)
+                    .texture(u1, 0f).color(255, 255, 255, alpha)
+                vertex(matrix, x0, length, z0)
+                    .texture(u0, 0f).color(255, 255, 255, alpha)
             }
         }
     }
@@ -304,8 +307,12 @@ object ModulePenisESP : ClientModule("PenisESP", Category.RENDER) {
                     val v0 = i.toFloat() / segmentCount
                     val v1 = (i + 1).toFloat() / segmentCount
 
-                    vertex(matrix, x0, y0, z0).texture(u, v0).color(255, 255, 255, alpha)
-                    vertex(matrix, x1, y1, z1).texture(u, v1).color(255, 255, 255, alpha)
+                    vertex(matrix, x0, y0, z0)
+                        .texture(u, v0)
+                        .color(255, 255, 255, alpha)
+                    vertex(matrix, x1, y1, z1)
+                        .texture(u, v1)
+                        .color(255, 255, 255, alpha)
                 }
             }
         }
