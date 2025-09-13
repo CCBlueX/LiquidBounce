@@ -42,10 +42,10 @@ import kotlin.math.abs
 @Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
-    val scale by float("Scale", 2F, 0.25F..40000F)
-    val heightOffset by float("HeightOffset", 0.55F, -1F..1F)
-    val scaleMode by enumChoice("ScaleMode",Mode.EQUAL)
+    val scale by float("Scale", 1.25F, 0.25F..4F)
+    val heightOffset by float("HeightOffset", 0.6F, -1F..1F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+    val scaleMode by enumChoice("ScaleMode",Mode.PROJECTIVE)
 
     internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
 
@@ -138,6 +138,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
     enum class Mode(override val choiceName: String) : NamedChoice {
         EQUAL("Equal"),
-        TEST("Test")
+        PROJECTIVE("projection")
     }
 }

@@ -76,11 +76,11 @@ class NametagRenderer {
 
         val ppu = pixelDist / worldOffset
 
-        val scale = ((ppu / fontSize) * baseScale) / 4
+        val scale = (((ppu / fontSize) * baseScale) / 4).coerceAtMost(1f)
 
         return when (scaleMode) {
             ModuleNametags.Mode.EQUAL -> 1f / (fontSize * 0.15f) * baseScale
-            ModuleNametags.Mode.TEST -> {
+            ModuleNametags.Mode.PROJECTIVE -> {
                 scale
             }
         }
