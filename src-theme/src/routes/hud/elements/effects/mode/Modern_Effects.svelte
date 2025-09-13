@@ -17,19 +17,6 @@
         return words.join(' ') + (amplifier + 1);
     }
 
-    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
-        effects = [...event.playerData.effects].sort((a, b) => {
-            const nameA = getIdentifierName(a.effect, a.amplifier);
-            const nameB = getIdentifierName(b.effect, b.amplifier);
-
-            const lengthDiff = nameB.length - nameA.length;
-            if (lengthDiff !== 0) return lengthDiff;
-            return b.amplifier - a.amplifier;
-        });
-
-    });
-
-
     function formatTime(duration: number): string {
         return new Date(((duration / 20) | 0) * 1000)
             .toISOString()
@@ -49,6 +36,17 @@
         return `${REST_BASE}/api/v1/client/resource/effectTexture?id=minecraft:${effectId}`;
     }
 
+    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
+        effects = [...event.playerData.effects].sort((a, b) => {
+            const nameA = $forcedEnglish ? getIdentifierName(a.effect, a.amplifier) : a.localizedName;
+            const nameB = $forcedEnglish ? getIdentifierName(b.effect, b.amplifier) : b.localizedName;
+
+            const lengthDiff = nameB.length - nameA.length;
+            if (lengthDiff !== 0) return lengthDiff;
+            return b.amplifier - a.amplifier;
+        });
+
+    });
 </script>
 
 <div class="effects">

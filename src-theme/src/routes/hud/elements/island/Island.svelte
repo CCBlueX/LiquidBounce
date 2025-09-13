@@ -574,7 +574,7 @@
         NameProtectSetting(settings);
     });
 </script>
-{#if loaded}
+{#if loaded  && playerData}
     <div class="dynamic-island-container">
         <div class="dynamic-island hud-container {alertState}"
              class:notification-active={currentAlert !== null}
@@ -586,7 +586,7 @@
                 opacity: {initialOpacity.current};
                 transform-origin: top center;">
             <div class="content-wrapper" bind:this={wrapper}>
-                {#if currentAlert}
+                {#if currentAlert && playerData.gameMode !== "creative"}
                     <div class="notification-content {currentAlert.type}"
                          in:fade={{ duration: 150 }}
                          bind:this={contentRefs.alert}>
@@ -616,7 +616,7 @@
                         <span class="greeting">{timeGreeting}</span>
                         <span class="username">&nbsp;{userData.username}~</span>
                     </div>
-                {:else if currentContent === 'chest'}
+                {:else if currentContent === 'chest' && playerData.gameMode !== "spectator"}
                     <div class="chest-content"
                          in:fade={{ duration: 150 }}
                          bind:this={contentRefs.chest}>

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHeypixel
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -341,6 +342,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
             target.shouldBeAttacked() &&
+            VelocityHeypixel.totalAttackCount == 0 &&
             player.age > 10 &&
             currentChance < chance &&
             chronometer.hasElapsed() &&

@@ -33,14 +33,14 @@ import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
-internal object VelocityJump : VelocityMode("Jump") {
+internal object VelocityLegit : VelocityMode("Jump") {
     private val delayInAir by boolean("DelayInAir", false)
     private val requireKillAura by boolean("RequireKillAura", true)
 
-    private var velocityInput = false
     private var damage = false
-    private val packets = mutableListOf<Packet<*>>()
     private var delayPackets = false
+    private var velocityInput = false
+    private val packets = mutableListOf<Packet<*>>()
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> { event ->

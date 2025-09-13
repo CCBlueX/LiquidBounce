@@ -48,7 +48,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val escapeHealthThreshold by int("EscapeHealthThreshold", 10, 1..20)
     private val pushDelay by int("PushDelay", 100, 50..1000)
     private val pullbackDelay by int("PullbackDelay", 500, 50..1000)
-    private val aimOffThreshold by float("AimOffThreshold", 5f, 0.5f..10f)
+    private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
     private val tickUntilSlotReset by int("TicksUntilSlotReset", 1, 0..20)
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
 

@@ -8,37 +8,15 @@
     import {expoOut} from "svelte/easing";
     import {flip} from "svelte/animate";
     import {springTransition} from "../../../../../util/animate_utils";
-
-
+    
     type EffectWithMax = StatusEffect & { maxDuration: number };
     let effects: EffectWithMax[] = [];
+
     function getIdentifierName(effectId: string, amplifier: number): string {
         const id = effectId.replace(/^minecraft:/, '');
         const words = id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1));
         return words.join(' ') + (amplifier + 1);
     }
-
-    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
-        effects = event.playerData.effects.map(e => {
-            const key = `${e.effect}-${e.amplifier}`;
-
-            if (!(initialDurations.has(key)) || e.duration > (initialDurations.get(key) ?? 0)) {
-                initialDurations.set(key, e.duration);
-            }
-
-            return {
-                ...e,
-                maxDuration: initialDurations.get(key) ?? e.duration
-            };
-        }).sort((a, b) => {
-            const nameA = getIdentifierName(a.effect, a.amplifier);
-            const nameB = getIdentifierName(b.effect, b.amplifier);
-
-            const lengthDiff = nameB.length - nameA.length;
-            if (lengthDiff !== 0) return lengthDiff;
-            return b.amplifier - a.amplifier;
-        });
-    });
 
     const initialDurations = new Map<string, number>();
 
@@ -54,6 +32,32 @@
         const effectId = effect.replace(/^minecraft:/, '');
         return `${REST_BASE}/api/v1/client/resource/effectTexture?id=minecraft:${effectId}`;
     }
+
+    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
+        effects = event.playerData.effects.map(e => {
+            const key = `${e.effect}-${e.amplifier}`;
+
+            if (!(initialDurations.has(key)) || e.duration > (initialDurations.get(key) ?? 0)) {
+                initialDurations.set(key, e.duration);
+            }
+
+            return {
+                ...e,
+                maxDuration: initialDurations.get(key) ?? e.duration
+            };
+        }).sort((a, b) => {
+            const nameA = $forcedEnglish
+                ? getIdentifierName(a.effect, a.amplifier)
+                : `${a.localizedName} ${a.amplifier + 1}`;
+            const nameB = $forcedEnglish
+                ? getIdentifierName(b.effect, b.amplifier)
+                : `${b.localizedName} ${b.amplifier + 1}`;
+
+            const lengthDiff = nameB.length - nameA.length;
+            if (lengthDiff !== 0) return lengthDiff;
+            return b.amplifier - a.amplifier;
+        });
+    });
 
 </script>
 

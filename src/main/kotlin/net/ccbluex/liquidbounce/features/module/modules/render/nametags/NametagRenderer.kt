@@ -35,7 +35,6 @@ import org.lwjgl.opengl.GL11
 
 private const val NAMETAG_PADDING: Int = 5
 private const val ITEM_SIZE: Int = 20
-private const val ITEM_SCALE: Float = 1.0F
 
 @Suppress("MagicNumber")
 class NametagRenderer {
@@ -112,14 +111,14 @@ class NametagRenderer {
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
         if (NametagShowOptions.BACKGROUND.isShowing()) {
-        quadBuffers.drawQuad(this@drawNametag, q1, q2)
+            quadBuffers.drawQuad(this@drawNametag, q1, q2)
         }
         if (NametagShowOptions.BORDER.isShowing()) {
             lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
         }
 
         if (NametagShowOptions.ITEMS.isShowing()) {
-            drawItemList(pos, nametag.items)
+            drawItemList(nametag, pos, nametag.items, x)
         }
 
         // Draw enchantments directly for the entity (regardless of whether items are shown)
@@ -140,16 +139,25 @@ class NametagRenderer {
         matrixStack.pop()
     }
 
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) {
+    private fun drawItemList(nametag: Nametag, pos: Vec3, itemsToRender: List<ItemStack>, textWidth: Float) {
         dc.matrices.push()
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
-        dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
-        dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
+
+        val fontSize = FontManager.DEFAULT_FONT_SIZE
+        val scale = getNametagScale(
+            nametag.entity,
+            ModuleNametags.scaleMode,
+            ModuleNametags.scale
+        )
+        dc.matrices.scale(scale, scale, 1.0F)
+
+        val backgroundWidth = textWidth + 0.3f * fontSize
+        dc.matrices.translate(-backgroundWidth * 0.5f, -ITEM_SIZE.toFloat()- 100, 0.0F)
 
         dc.fill(
             0,
             0,
-            itemsToRender.size * ITEM_SIZE,
+            (backgroundWidth * fontSize / FontManager.DEFAULT_FONT_SIZE).toInt(),
             ITEM_SIZE,
             Color4b.BLACK.with(a = 0).toARGB()
         )
@@ -157,19 +165,23 @@ class NametagRenderer {
         dc.matrices.translate(0.0F, 0.0F, 100.0F)
 
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
+        val itemCount = itemsToRender.size
+        val itemSpacing = if (itemCount > 1) backgroundWidth / (itemCount - 1) else 0f
 
         itemsToRender.forEachIndexed { index, itemStack ->
-            if (itemStack.isEmpty) {
-                return@forEachIndexed
-            }
+            if (itemStack.isEmpty) return@forEachIndexed
 
-            val x = index * ITEM_SIZE
-            dc.drawItem(itemStack, x, 0)
+            val x = if (itemCount == 1) backgroundWidth / 2 - ITEM_SIZE / 2 else index * itemSpacing
+
+            dc.matrices.push()
+            dc.matrices.translate(x, 0.0F, 0.0F)
+            dc.matrices.scale(1f / scale, 1f / scale, 1f);
+            dc.drawItem(itemStack, 0, 0)
             if (itemInfo) {
-                dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
+                dc.drawStackOverlay(mc.textRenderer, itemStack, 0, 0)
             }
+            dc.matrices.pop()
         }
-
         dc.matrices.pop()
     }
 

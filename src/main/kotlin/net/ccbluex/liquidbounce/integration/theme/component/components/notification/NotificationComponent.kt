@@ -14,7 +14,7 @@ import javax.sound.sampled.AudioSystem
 object NotificationComponent: NativeComponent(
     "Notification", true, Alignment(
         horizontalAlignment = Alignment.ScreenAxisX.RIGHT,
-        horizontalOffset = 15,
+        horizontalOffset = 5,
         verticalAlignment = Alignment.ScreenAxisY.BOTTOM,
         verticalOffset = 30,
     )

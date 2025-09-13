@@ -41,12 +41,11 @@ import kotlin.math.abs
  */
 @Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
+    val scaleMode by enumChoice("ScaleMode",Mode.EQUAL)
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 1.25F, 0.25F..4F)
     val heightOffset by float("HeightOffset", 0.6F, -1F..1F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
-    val scaleMode by enumChoice("ScaleMode",Mode.PIXEL_UNIT_SCALE)
-
     internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
 
     val fontRenderer

@@ -19,6 +19,7 @@ import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
+import java.util.Locale
 
 object NovolineMode : NotificationMode("Novoline") {
     private val animationTime by int("AnimTime", 5, 1..10, "tick")
@@ -37,8 +38,16 @@ object NovolineMode : NotificationMode("Novoline") {
         val animationKey: Long,
         var alpha: Float = 0f,
         var xOffset: Float = 0f,
-        val startTime: Long = System.currentTimeMillis()
-    )
+        val startTime: Long = System.currentTimeMillis(),
+        var remaining: Float = 3f
+    ) {
+        val subtitle: String
+            get() = when (severity) {
+                ENABLED -> "$message has been enabled! (${String.format(Locale.US, "%.1f", remaining)}s)"
+                DISABLED -> "$message has been disabled! (${String.format(Locale.US, "%.1f", remaining)}s)"
+                else -> message
+            }
+    }
 
     private val notifications = mutableListOf<NotificationData>()
 
@@ -66,22 +75,22 @@ object NovolineMode : NotificationMode("Novoline") {
 
         notifications.forEach { notification ->
             val elapsed = (now - notification.startTime) / 1000f
-            notification.alpha = if (elapsed < 0.2f) {
-                (notification.alpha + animSpeed).coerceIn(0f, 1f)
-            } else if (elapsed > 2.8f) {
-                (notification.alpha - animSpeed).coerceIn(0f, 1f)
-            } else {
-                1f
-            }
-            notification.xOffset = if (elapsed < 0.2f) {
-                (notification.xOffset - (30f * animSpeed)).coerceIn(0f, 30f)
-            } else if (elapsed > 2.8f) {
-                (notification.xOffset + (30f * animSpeed)).coerceIn(0f, 30f)
-            } else {
-                0f
+
+            notification.alpha = when {
+                elapsed < 0.2f -> (notification.alpha + animSpeed).coerceIn(0f, 1f)
+                elapsed > 2.8f -> (notification.alpha - animSpeed).coerceIn(0f, 1f)
+                else -> 1f
             }
 
-            if (notification.alpha <= 0f || (now - notification.startTime) > 3000) {
+            notification.xOffset = when {
+                elapsed < 0.2f -> (notification.xOffset - (30f * animSpeed)).coerceIn(0f, 30f)
+                elapsed > 2.8f -> (notification.xOffset + (30f * animSpeed)).coerceIn(0f, 30f)
+                else -> 0f
+            }
+
+            notification.remaining = ((3000 - (now - notification.startTime)) / 1000f).coerceAtLeast(0f)
+
+            if (notification.alpha <= 0f || elapsed > 3f) {
                 toRemove.add(notification)
             }
         }
@@ -89,9 +98,8 @@ object NovolineMode : NotificationMode("Novoline") {
         notifications.removeAll(toRemove)
     }
 
-
     private fun renderNotifications(ctx: DrawContext) {
-        val baseWidth = 300f
+        val baseWidth = 320f
         val baseHeight = 52f
         var offsetY = 0f
 
@@ -171,13 +179,13 @@ object NovolineMode : NotificationMode("Novoline") {
 
             fontRenderer.withBuffers { buf ->
                 val fontScale = 0.3f
-                val textStartX = 10f + 40f + 10f // = 60f
+                val textStartX = 10f + 40f + 10f
 
                 matrixStack.push()
                 matrixStack.translate(textStartX, 0f, 0f)
                 matrixStack.scale(fontScale, fontScale, 1f)
                 val titleColor = Color4b(255, 255, 255, (255 * notification.alpha).toInt())
-                val processedTitle = fontRenderer.process(notification.title, titleColor)
+                val processedTitle = fontRenderer.process(notification.severity.name, titleColor)
                 fontRenderer.draw(processedTitle, 0f, 12f / fontScale, shadow = false, z = 0.001f)
                 fontRenderer.commit(this@renderEnvironmentForGUI, buf)
                 matrixStack.pop()
@@ -186,11 +194,12 @@ object NovolineMode : NotificationMode("Novoline") {
                 matrixStack.translate(textStartX, 0f, 0f)
                 matrixStack.scale(fontScale, fontScale, 1f)
                 val messageColor = Color4b(203, 209, 227, (255 * notification.alpha).toInt())
-                val processedMsg = fontRenderer.process(notification.message, messageColor)
+                val processedMsg = fontRenderer.process(notification.subtitle, messageColor)
                 fontRenderer.draw(processedMsg, 0f, 30f / fontScale, shadow = false, z = 0.001f)
                 fontRenderer.commit(this@renderEnvironmentForGUI, buf)
                 matrixStack.pop()
             }
+
 
             matrixStack.pop()
         }
