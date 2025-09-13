@@ -1,10 +1,10 @@
 {
   "name": "StatusBar",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",
-    "horizontalOffset": 0,
+    "horizontalOffset": 400,
     "verticalAlignment": "Bottom",
     "verticalOffset": 90
   },

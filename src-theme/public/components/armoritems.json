@@ -1,12 +1,12 @@
 {
   "name": "ArmorItems",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
-    "horizontalAlignment": "CenterTranslated",
-    "horizontalOffset": 225,
-    "verticalAlignment": "Bottom",
-    "verticalOffset": 15
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 5,
+    "verticalAlignment": "Center",
+    "verticalOffset": -105
   },
   "values": [
     {

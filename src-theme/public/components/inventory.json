@@ -1,12 +1,12 @@
 {
   "name": "Inventory",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
-    "horizontalAlignment": "Right",
-    "horizontalOffset": 35,
-    "verticalAlignment": "Bottom",
-    "verticalOffset": 35
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 5,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 80
   },
   "values": [
     {

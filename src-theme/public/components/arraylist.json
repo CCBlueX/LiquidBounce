@@ -7,5 +7,16 @@
     "horizontalOffset": 0,
     "verticalAlignment": "Top",
     "verticalOffset": 0
-  }
+  },
+  "values": [
+    {
+      "type": "CHOOSE",
+      "name": "Mode",
+      "value": "Simple",
+      "choices": [
+        "Simple",
+        "Modern"
+      ]
+    }
+  ]
 }

@@ -1,11 +1,22 @@
 {
   "name": "SessionInfo",
-  "enabled": true,
+  "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
     "horizontalOffset": 5,
     "verticalAlignment": "Top",
     "verticalOffset": 80
-  }
+  },
+  "values": [
+    {
+      "type": "CHOOSE",
+      "name": "Mode",
+      "value": "Simple",
+      "choices": [
+        "Simple",
+        "Modern"
+      ]
+    }
+  ]
 }

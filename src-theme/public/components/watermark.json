@@ -4,7 +4,7 @@
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
-    "horizontalOffset": 0,
+    "horizontalOffset": 5,
     "verticalAlignment": "Top",
     "verticalOffset": 15
   },

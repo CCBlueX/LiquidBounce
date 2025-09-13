@@ -12,7 +12,7 @@
     {
       "type": "CHOOSE",
       "name": "Mode",
-      "value": "Modern",
+      "value": "Rise",
       "choices": [
         "Simple",
         "Modern",
