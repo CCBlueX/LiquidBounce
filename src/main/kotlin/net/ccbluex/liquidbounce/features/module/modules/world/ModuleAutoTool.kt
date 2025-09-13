@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
-import net.ccbluex.liquidbounce.event.events.MinecraftKeyPressed
+import net.ccbluex.liquidbounce.event.events.SetKeyPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -104,7 +104,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }
 
         @Suppress("unused")
-        private val keyHandler = handler<MinecraftKeyPressed> {
+        private val keyHandler = handler<SetKeyPressedEvent> {
             if (it.key == mc.options.attackKey.boundKey && !it.pressed) {
                 breakStartedWithHoldingShift = false
             }

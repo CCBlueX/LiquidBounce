@@ -23,7 +23,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.KeybindChangeEvent;
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent;
-import net.ccbluex.liquidbounce.event.events.MinecraftKeyPressed;
+import net.ccbluex.liquidbounce.event.events.SetKeyPressedEvent;
 import net.ccbluex.liquidbounce.utils.client.VanillaTranslationRecognizer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -52,7 +52,7 @@ public class MixinKeyBinding {
 
     @Inject(method = "setKeyPressed", at = @At("HEAD"), cancellable = true)
     private static void hookSetKeyPressed(InputUtil.Key key, boolean pressed, CallbackInfo ci) {
-        if (EventManager.INSTANCE.callEvent(new MinecraftKeyPressed(key, pressed)).isCancelled()) {
+        if (EventManager.INSTANCE.callEvent(new SetKeyPressedEvent(key, pressed)).isCancelled()) {
             ci.cancel();
         }
     }

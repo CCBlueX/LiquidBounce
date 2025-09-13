@@ -93,7 +93,7 @@ class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
 
 @Nameable("minecraftKeyPressed")
-class MinecraftKeyPressed(val key: InputUtil.Key, val pressed: Boolean) : CancellableEvent()
+class SetKeyPressedEvent(val key: InputUtil.Key, val pressed: Boolean) : CancellableEvent()
 
 @Nameable("clientChatStateChange")
 class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
