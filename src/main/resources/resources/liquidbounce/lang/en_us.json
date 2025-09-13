@@ -692,7 +692,6 @@
   "liquidbounce.module.noPush.description": "Protects you from being pushed around by other players.",
   "liquidbounce.module.noRotateSet.description": "Prevents the server from being able to rotate your head.",
   "liquidbounce.module.noSlotSet.description": "Disallows forced slot changes by server.",
-  "liquidbounce.module.noSignRender.description": "Prevents text on signs from being rendered.",
   "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
   "liquidbounce.module.noSwim.description": "Prevents player pose change to swimming, for low version servers.",

@@ -39,6 +39,7 @@ import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
+import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.max
 import kotlin.random.Random
@@ -268,6 +269,12 @@ object InventoryManager : EventListener {
         }
 
         if (screen is HandledScreen<*>) {
+            debugParameter("Screen Handler Type") {
+                val type = runCatching { screen.screenHandler.type }.getOrNull()
+                type?.let {
+                    Registries.SCREEN_HANDLER.getId(it)
+                }
+            }
             debugParameter("Screen Slot count") {
                 val slots = screen.screenHandler.slots
                 "${slots.size} (${slots.count { it.inventory !== player.inventory }})"

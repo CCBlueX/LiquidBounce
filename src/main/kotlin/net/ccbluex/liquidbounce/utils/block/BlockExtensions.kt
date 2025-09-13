@@ -577,17 +577,17 @@ fun doBreak(
     if (immediate) {
         EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
 
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         swingMode.swing(Hand.MAIN_HAND)
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         return
     }
 

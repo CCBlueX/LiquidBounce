@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.minecraft.item.Items
+import net.minecraft.util.Identifier
 
 /**
  * AntiBlind module
@@ -29,6 +31,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  */
 @Suppress("MagicNumber")
 object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = arrayOf("NoRender")) {
+    /**
+     * @see Items.CARVED_PUMPKIN
+     * @see net.minecraft.client.gui.hud.InGameHud.renderMiscOverlays
+     */
+    @JvmField
+    val TEXTURE_PUMPKIN_BLUR: Identifier = Identifier.ofVanilla("textures/misc/pumpkinblur.png")
+
     private val render = multiEnumChoice("DoRender",
         DoRender.ARMOR,
         DoRender.MOB_IN_SPAWNER,
