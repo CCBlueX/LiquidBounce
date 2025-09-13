@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoClutch
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.util.math.BlockPos
@@ -24,11 +25,18 @@ open class VoidFallPredictor(
     var isVoidFallImminent = false
         private set
 
+    @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        val player = mc.player ?: return@handler
         update()
     }
 
     private fun update() {
+        if (player.boundingBox == null) {
+            isVoidFallImminent = false
+            return
+        }
+
         isVoidFallImminent =
             isPredictingFall() && !canReachSafeBlock() && !isBlockUnder(2.0) && !isPlayerSafe()
     }
