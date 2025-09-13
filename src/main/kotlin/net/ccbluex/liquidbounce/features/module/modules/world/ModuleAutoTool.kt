@@ -99,7 +99,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         @Suppress("unused")
         private val blockAttackHandler = handler<BlockAttackEvent> {
             if (!breakStartedWithHoldingShift) {
-                breakStartedWithHoldingShift = player.isSneaking
+                breakStartedWithHoldingShift = mc.options.sneakKey.isPressed
             }
         }
 
@@ -111,7 +111,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }
 
         fun matches(): Boolean {
-            return player.isSneaking || (!requireHold && breakStartedWithHoldingShift)
+            return mc.options.sneakKey.isPressed || (!requireHold && breakStartedWithHoldingShift)
         }
     }
 
