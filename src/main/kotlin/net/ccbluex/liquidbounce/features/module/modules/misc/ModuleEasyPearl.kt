@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.aiming.projectiles.BasicLandingPointAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -211,10 +211,11 @@ object ModuleEasyPearl :
      * @return the target rotation for the target position
      */
     private fun getTargetRotation(targetPosition: Vec3d): Rotation? =
-        SituationalProjectileAngleCalculator.calculateAngleFor(
+        BasicLandingPointAngleCalculator.calculateAngleFor(
             TrajectoryInfo.GENERIC,
-            sourcePos = player.pos,
-            targetPosFunction = ConstantPositionExtrapolation(targetPosition),
-            targetShape = EntityDimensions.fixed(1.0F, 0.0F),
+            player.eyePos.add(player.getRotationVec(0f).multiply(0.16)),
+            ConstantPositionExtrapolation(targetPosition),
+            EntityDimensions.fixed(0f, 0f)
         )
+
 }
