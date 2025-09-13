@@ -19,14 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
-import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
-import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
@@ -48,14 +46,14 @@ object FloorNukerArea : NukerArea("Floor") {
         val (startX, startY, startZ) = if (relativeToPlayer) startPosition.add(player.blockPos) else startPosition
         val (endX, endY, endZ) = if (relativeToPlayer) endPosition.add(player.blockPos) else endPosition
 
-        val box = Box.enclosing(
-            BlockPos(startX, startY, startZ),
-            BlockPos(endX, endY, endZ)
-        )
+        val start = BlockPos.Mutable(startX, startY, startZ)
+        val end = BlockPos.Mutable(endX, endY, endZ)
+
+        val box = Box.enclosing(start, end)
 
         // Check if the box is within the radius
         val eyesPos = player.eyePos
-        val rangeSquared = radius * radius
+        val rangeSquared = (radius * radius).toDouble()
         if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
             // Return empty list if not
             return emptyList()
@@ -70,31 +68,19 @@ object FloorNukerArea : NukerArea("Floor") {
         // we can skip the rest
         // From top to bottom
 
-        val start = BlockPos.Mutable(xRange.first, 0, zRange.first)
-        val end = BlockPos.Mutable(xRange.last, 0, zRange.last)
+        start.set(xRange.first, 0, zRange.first)
+        end.set(xRange.last, 0, zRange.last)
 
         // Check if [topToBottom] is enabled, if so reverse the range
         for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
             start.y = y
             end.y = y
-            val m = buildList {
-                for (pos in start..end) {
-                    val state = pos.getState() ?: continue
-
-                    if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
-                        continue
-                    }
-
-                    val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
-
-                    if (!shape.isEmpty &&
-                        shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                            .getClosestPointTo(eyesPos)
-                            .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
-                            .orElse(false)
-                    ) {
-                        add(pos.toImmutable() to state)
-                    }
+            val m = (start..end).iterate().mapNotNull { pos ->
+                val state = pos.getState() ?: return@mapNotNull null
+                if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
+                    pos.toImmutable() to state
+                } else {
+                    null
                 }
             }
 

@@ -19,39 +19,24 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
-import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
-import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import kotlin.jvm.optionals.getOrDefault
 
 object SphereNukerArea : NukerArea("Sphere") {
 
     override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
-        val rangeSquared = radius * radius
+        val rangeSquared = (radius * radius).toDouble()
         val eyesPos = player.eyePos
 
         val positions = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-            if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
-                return@searchBlocksInCuboid false
-            }
+            isPositionAvailable(eyesPos, rangeSquared, pos, state)
+        }.toMutableList()
 
-            val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
-
-            if (shape.isEmpty) {
-                return@searchBlocksInCuboid false
-            }
-
-            shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                .getClosestPointTo(eyesPos)
-                .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
-                .getOrDefault(false)
-        }.sortedBy { (pos, _) ->
+        positions.sortBy { (pos, _) ->
             // If there is a last target, sort by distance to it, otherwise go by hardness
             wasTarget?.let { pos.getSquaredDistance(it) } ?: pos.getSquaredDistance(player.blockPos)
         }
@@ -65,9 +50,9 @@ object SphereNukerArea : NukerArea("Sphere") {
         val list = nonStandingPositions.ifEmpty { positions }
 
         return if (count != null) {
-            list.take(count).toList()
+            list.take(count)
         } else {
-            list.toList()
+            list
         }
     }
 
