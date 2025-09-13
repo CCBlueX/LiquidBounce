@@ -47,12 +47,9 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
 
-    private val registerRegexString: String by text("RegisterRegex", "/register").onChanged {
-        registerRegex = Regex(it)
-    }
-    private val loginRegexString: String by text("LoginRegex", "/login").onChanged {
-        loginRegex = Regex(it)
-    }
+    private val registerRegex by regex("RegisterRegex", Regex("/register"))
+
+    private val loginRegex by regex("LoginRegex", Regex("/login"))
 
     private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
 
@@ -61,9 +58,6 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
         TITLE("Title"),
         SUBTITLE("Subtitle"),
     }
-
-    private var registerRegex = Regex(registerRegexString)
-    private var loginRegex = Regex(loginRegexString)
 
     // We can receive chat messages before the world is initialized,
     // so we have to handle events even before that
@@ -102,9 +96,9 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
             if (sending || messageSource !in messageSources) {
                 return@sequenceHandler
             }
-    
+
             val msg = textProvider(event) ?: return@sequenceHandler
-    
+
             when {
                 registerRegex.containsMatchIn(msg) -> {
                     action(::register)

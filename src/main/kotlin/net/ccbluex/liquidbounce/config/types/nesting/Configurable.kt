@@ -282,8 +282,13 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
+    fun regex(name: String, default: Regex) = value(name, default, ValueType.TEXT)
+
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
+
+    fun <C : MutableCollection<Regex>> regexList(name: String, default: C) =
+        mutableList<C, Regex>(name, default, ValueType.TEXT)
 
     fun easing(name: String, default: Easing) = enumChoice(name, default)
 
