@@ -70,10 +70,10 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
 
     val clientConnection = ClientConnection(NetworkSide.CLIENTBOUND)
     val channelFuture = connect(socketAddress, false, clientConnection)
-    channelFuture.syncUninterruptibly()
+        .syncUninterruptibly()
 
     // Channel is ready after connection future
-    val scope = CoroutineScope(clientConnection.channel!!.eventLoop().asCoroutineDispatcher())
+    val scope = CoroutineScope(channelFuture.channel().eventLoop().asCoroutineDispatcher())
 
     // Add to tick list
     ProxyManager.addClientConnection(clientConnection)
