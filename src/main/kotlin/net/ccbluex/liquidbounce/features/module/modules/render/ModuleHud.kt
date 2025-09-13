@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
@@ -35,6 +34,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.notification.NotificationComponent
 import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -127,13 +127,12 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
     private val customization = tree(Customization())
 
-    val nativeComponents = listOf(MinimapComponent, TargetHudComponent)
-
     val themes = tree(Configurable("Themes"))
 
     val components = tree(Configurable("AdditionalComponents")).apply {
         tree(MinimapComponent)
         tree(TargetHudComponent)
+        tree(NotificationComponent)
     }
         /**
          * Updates [themes] content

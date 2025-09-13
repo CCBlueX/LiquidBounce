@@ -34,17 +34,6 @@ object TargetHudComponent : NativeComponent(
     val textColor by color("Name", Color4b.WHITE)
     val size by float("Size", 1f, 0.8f..1.5f)
 
-    fun applyAdaptiveScale(baseW: Float, baseH: Float, block: (scale: Float, cx: Float, cy: Float) -> Unit) {
-        val window = mc.window
-        val s = size.coerceAtLeast(0.1f)
-        val scale = (window.scaledWidth.coerceAtMost(window.scaledHeight)) / 500f * s
-
-        val bounds = alignment.getBounds(baseW * scale, baseH * scale)
-        val cx = bounds.xMin + (baseW * scale) / 2f
-        val cy = bounds.yMin + (baseH * scale) / 2f
-
-        block(scale, cx, cy)
-    }
 
     override fun onEnabled() {
         modes.activeChoice.enable()

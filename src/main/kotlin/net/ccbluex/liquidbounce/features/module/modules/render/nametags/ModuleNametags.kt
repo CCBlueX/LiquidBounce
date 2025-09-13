@@ -45,7 +45,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val scale by float("Scale", 1.25F, 0.25F..4F)
     val heightOffset by float("HeightOffset", 0.6F, -1F..1F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
-    val scaleMode by enumChoice("ScaleMode",Mode.PROJECTIVE)
+    val scaleMode by enumChoice("ScaleMode",Mode.PIXEL_UNIT_SCALE)
 
     internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
 
@@ -138,6 +138,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
     enum class Mode(override val choiceName: String) : NamedChoice {
         EQUAL("Equal"),
-        PROJECTIVE("projection")
+        PIXEL_UNIT_SCALE("PixelPerUnit")
     }
 }

@@ -80,7 +80,7 @@ class NametagRenderer {
 
         return when (scaleMode) {
             ModuleNametags.Mode.EQUAL -> 1f / (fontSize * 0.15f) * baseScale
-            ModuleNametags.Mode.PROJECTIVE -> {
+            ModuleNametags.Mode.PIXEL_UNIT_SCALE -> {
                 scale
             }
         }

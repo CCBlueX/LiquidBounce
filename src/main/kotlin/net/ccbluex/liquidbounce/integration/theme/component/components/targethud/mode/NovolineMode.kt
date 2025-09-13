@@ -6,8 +6,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.integration.theme.component.components.applyAdaptiveScale
 import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent
-import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent.applyAdaptiveScale
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent.alignment
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudComponent.size
+import net.ccbluex.liquidbounce.integration.theme.component.components.targethud.TargetHudMode
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -93,7 +96,7 @@ object NovolineMode : TargetHudMode("Novoline") {
         val baseW = width + nameWidth
         val baseH = 36f
 
-        applyAdaptiveScale(baseW, baseH) { scale, cx, cy ->
+        applyAdaptiveScale(size ,baseW, baseH, alignment) { scale, cx, cy ->
             val finalScale = scale * (0.8f + 0.2f * scaleAnim)
             ctx.matrices.push()
             ctx.matrices.translate(cx, cy, 0f)

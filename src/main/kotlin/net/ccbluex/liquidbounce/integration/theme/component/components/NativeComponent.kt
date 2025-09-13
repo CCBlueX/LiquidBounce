@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.theme.component.components
 
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
 abstract class NativeComponent(
@@ -29,3 +30,21 @@ abstract class NativeComponent(
     alignment: Alignment,
     tweaks: Array<ComponentTweak> = emptyArray()
 ) : Component(name, enabled, alignment, tweaks)
+
+fun applyAdaptiveScale(
+    size: Float,
+    baseW: Float,
+    baseH: Float,
+    alignment: Alignment,
+    block: (scale: Float, cx: Float, cy: Float) -> Unit
+) {
+    val window = mc.window
+    val s = size.coerceAtLeast(0.1f)
+    val scale = (window.scaledWidth.coerceAtMost(window.scaledHeight)) / 500f * s
+
+    val bounds = alignment.getBounds(baseW * scale, baseH * scale)
+    val cx = bounds.xMin + (baseW * scale) / 2f
+    val cy = bounds.yMin + (baseH * scale) / 2f
+
+    block(scale, cx, cy)
+}
