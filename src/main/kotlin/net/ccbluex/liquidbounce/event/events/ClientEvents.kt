@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.util.InputUtil
 import net.minecraft.world.GameMode
 
 @Deprecated(
@@ -90,6 +91,9 @@ class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
 class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
+
+@Nameable("minecraftKeyPressed")
+class MinecraftKeyPressed(val key: InputUtil.Key, val pressed: Boolean) : CancellableEvent()
 
 @Nameable("clientChatStateChange")
 class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {

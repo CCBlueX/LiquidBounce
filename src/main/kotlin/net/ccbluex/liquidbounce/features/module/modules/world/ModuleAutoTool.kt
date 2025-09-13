@@ -21,16 +21,18 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.event.events.MinecraftKeyPressed
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -87,10 +89,34 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
-    private val requireSneaking by boolean("RequireSneaking", false)
+    private object RequireSneaking : ToggleableConfigurable(
+        this, "RequireSneaking", false
+    ) {
+        private val requireHold by boolean("RequireHold", false)
+
+        private var breakStartedWithHoldingShift = false
+
+        @Suppress("unused")
+        private val blockAttackHandler = handler<BlockAttackEvent> {
+            if (!breakStartedWithHoldingShift) {
+                breakStartedWithHoldingShift = player.isSneaking
+            }
+        }
+
+        @Suppress("unused")
+        private val keyHandler = handler<MinecraftKeyPressed> {
+            if (it.key == mc.options.attackKey.boundKey && !it.pressed) {
+                breakStartedWithHoldingShift = false
+            }
+        }
+
+        fun matches(): Boolean {
+            return player.isSneaking || (!requireHold && breakStartedWithHoldingShift)
+        }
+    }
 
     private object RequireNearBed : ToggleableConfigurable(
-        this, "RequireNearBed", enabled = false
+        this, "RequireNearBed", false
     ), BedBlockTracker.Subscriber {
         override val maxLayers: Int get() = 1
 
@@ -110,24 +136,26 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     init {
-        tree(RequireNearBed)
+        treeAll(
+            RequireSneaking,
+            RequireNearBed
+        )
     }
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
-        if (!RequireNearBed.enabled || RequireNearBed.matches()) {
+        if (
+            (!RequireNearBed.enabled || RequireNearBed.matches())
+            && (!RequireSneaking.enabled || RequireSneaking.matches())
+        ) {
             switchToBreakBlock(event.pos)
         }
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isSneaking) {
-            return
-        }
-
         val blockState = pos.getState()!!
-        val slot = toolSelector.activeChoice.getTool(blockState) ?: return
-        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+        val bestSlot = toolSelector.activeChoice.getTool(blockState) ?: return
+        SilentHotbar.selectSlotSilently(this, bestSlot, swapPreviousDelay)
     }
 
     fun <T : ItemSlot> SlotGroup<T>.findBestToolToMineBlock(
