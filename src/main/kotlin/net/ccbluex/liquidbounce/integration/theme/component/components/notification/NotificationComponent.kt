@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.integration.theme.component.components.notificat
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.io.InputStream
+import java.util.logging.Logger
 import javax.sound.sampled.AudioSystem
 
 object NotificationComponent: NativeComponent(
@@ -27,7 +28,8 @@ object NotificationComponent: NativeComponent(
     val backgroundColor by color("Background", Color4b.BLACK.withAlpha(75))
     fun playSound(resourcePath: String) {
         try {
-            val inputStream: InputStream = javaClass.classLoader.getResourceAsStream("resources/liquidbounce/$resourcePath")
+            val inputStream: InputStream = javaClass.classLoader.getResourceAsStream(
+                "resources/liquidbounce/$resourcePath")
                 ?: return
             AudioSystem.getAudioInputStream(inputStream).use { audioStream ->
                 val clip = AudioSystem.getClip()
@@ -35,9 +37,10 @@ object NotificationComponent: NativeComponent(
                 clip.framePosition = 0
                 clip.start()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        }catch (e: Exception) {
+            Logger.getLogger("LiquidBounce").warning("Failed to play sound: ${e.message}")
         }
+
     }
     fun playSuccess() = playSound("sound/notification/success.wav")
     fun playEnabled() = playSound("sound/notification/enable.wav")

@@ -62,9 +62,10 @@ object NovolineMode : NotificationMode("Novoline") {
     private fun updateAnimations() {
         val animSpeed = (1f / animationTime)
         val now = System.currentTimeMillis()
+        val toRemove = mutableListOf<NotificationData>()
 
         notifications.forEach { notification ->
-            val elapsed = (System.currentTimeMillis() - notification.startTime) / 1000f
+            val elapsed = (now - notification.startTime) / 1000f
             notification.alpha = if (elapsed < 0.2f) {
                 (notification.alpha + animSpeed).coerceIn(0f, 1f)
             } else if (elapsed > 2.8f) {
@@ -79,10 +80,15 @@ object NovolineMode : NotificationMode("Novoline") {
             } else {
                 0f
             }
+
+            if (notification.alpha <= 0f || (now - notification.startTime) > 3000) {
+                toRemove.add(notification)
+            }
         }
 
-        notifications.removeAll { it.alpha <= 0f || (now - it.startTime) > 3000 }
+        notifications.removeAll(toRemove)
     }
+
 
     private fun renderNotifications(ctx: DrawContext) {
         val baseWidth = 300f
@@ -97,6 +103,7 @@ object NovolineMode : NotificationMode("Novoline") {
         }
     }
 
+    @Suppress("LongParameterList","LongMethod")
     private fun renderSingleNotification(
         ctx: DrawContext,
         notification: NotificationData,
