@@ -116,7 +116,7 @@ object NovolineMode : NotificationMode("Novoline") {
 
         ctx.fill(
             0, 0, width.toInt(), height.toInt(),
-            backgroundColor.withAlpha(70 * notification.alpha.toInt()).toARGB()
+            backgroundColor.withAlpha((backgroundColor.a * notification.alpha).toInt()).toARGB()
         )
         ctx.matrices.pop()
 

@@ -18,13 +18,13 @@
     }
 
     let notifications: TNotification[] = [];
-    const error = new Howl({src: ['audio/notifications/error.mp3'], preload: true});
-    const info = new Howl({src: ['audio/notifications/info.mp3'], preload: true});
+    const error = new Howl({src: ['audio/notifications/error.ogg'], preload: true});
+    const info = new Howl({src: ['audio/notifications/info.ogg'], preload: true});
     const success = new Howl({src: ['audio/notifications/success.ogg'], preload: true});
     const disable = new Howl({src: ['audio/notifications/disable.ogg'], preload: true, volume: 0.5});
     const enable = new Howl({src: ['audio/notifications/enable.ogg'], preload: true, volume: 0.5});
-    const blink = new Howl({src: ['audio/notifications/blink.wav'], preload: true})
-    const blinked = new Howl({src: ['audio/notifications/blinked.wav'], preload: true})
+    const blink = new Howl({src: ['audio/notifications/blink.ogg'], preload: true})
+    const blinked = new Howl({src: ['audio/notifications/blinked.ogg'], preload: true})
 
     function addNotification(title: string, message: string, severity: string) {
         const animationKey = Date.now();
