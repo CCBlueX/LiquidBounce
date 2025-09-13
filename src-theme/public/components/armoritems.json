@@ -7,5 +7,12 @@
     "horizontalOffset": 225,
     "verticalAlignment": "Bottom",
     "verticalOffset": 15
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "Line",
+      "value": false
+    }
+  ]
 }

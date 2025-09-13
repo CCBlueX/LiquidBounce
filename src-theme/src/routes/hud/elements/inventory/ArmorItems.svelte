@@ -11,6 +11,13 @@
     import ArmorItem from "../../common/ItemView/ArmorItem.svelte";
     import Line from "../../common/Trims/Line.svelte";
 
+
+    export let settings: { [name: string]: any };
+
+    export let armorSlots: ItemStack[] = Array(4).fill(0).map(() => createEmptySlot());
+
+    let offHandSlots: ItemStack[] = [createEmptySlot()];
+
     function createEmptySlot(): ItemStack {
         return {
             identifier: "minecraft:air",
@@ -22,11 +29,6 @@
             hasDyedColor: false
         };
     }
-
-    export let armorSlots: ItemStack[] = Array(4).fill(0).map(() => createEmptySlot());
-
-    let offHandSlots: ItemStack[] = [createEmptySlot()];
-
 
     function countTotems(inventory: PlayerInventory, offHand: ItemStack[]): number {
         let total = 0;
@@ -126,7 +128,9 @@
         <img alt="armor" class="icon" src="img/hud/inventory/armor.svg"/>
         <span>ArmorItems</span>
     </div>
-    <Line/>
+    {#if settings?.line}
+        <Line />
+    {/if}
     <div class="armor-items">
         {#each [...armorSlots].reverse() as stack (stack)}
             {#if shouldShowSlot(stack)}

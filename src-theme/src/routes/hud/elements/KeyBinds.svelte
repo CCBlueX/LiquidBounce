@@ -8,6 +8,8 @@
     import Line from "../common/Trims/Line.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
+    export let settings: { [name: string]: any };
+
     type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
     type BindInfo = {
@@ -152,7 +154,9 @@
             <img class="icon" src="img/hud/keybinds/keyboard.svg" alt="keyboard" />
             <span>Keybindings</span>
         </div>
+        {#if settings?.line}
         <Line />
+        {/if}
         {#each bindings as binding (binding.moduleName)}
             <div class:disabled={!binding.enabled} class="binding-item">
                 <span class="module-name">       {$spaceSeperatedNames ? convertToSpacedString(binding.moduleName ) : binding.moduleName}</span>

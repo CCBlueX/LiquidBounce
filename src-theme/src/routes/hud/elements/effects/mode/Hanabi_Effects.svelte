@@ -8,7 +8,7 @@
     import {expoOut} from "svelte/easing";
     import {flip} from "svelte/animate";
     import {springTransition} from "../../../../../util/animate_utils";
-    
+
     type EffectWithMax = StatusEffect & { maxDuration: number };
     let effects: EffectWithMax[] = [];
 

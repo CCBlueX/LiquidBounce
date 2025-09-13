@@ -128,7 +128,7 @@
                     {:else if c.name === 'Image'}
                         <img alt="" src={c.settings.uRL} style="scale: {c.settings.scale};"/>
                     {:else if c.name === 'ArmorItems'}
-                        <ArmorItems/>
+                        <ArmorItems settings={c.settings}/>
                     {:else if c.name === 'ArrayList'}
                         <ArrayList/>
                     {:else if c.name === 'BlockCounter'}
@@ -140,15 +140,15 @@
                     {:else if c.name === 'HealthBar'}
                         <HealthBar/>
                     {:else if c.name === 'Information'}
-                        <Information/>
+                        <Information settings={c.settings}/>
                     {:else if c.name === 'Inventory'}
-                        <InventoryContainer/>
+                        <InventoryContainer settings={c.settings}/>
                     {:else if c.name === 'Island'}
                         <Island/>
                     {:else if c.name === 'ItemColumnHUD'}
                         <ItemColumnHUD/>
                     {:else if c.name === 'KeyBinds'}
-                        <KeyBinds/>
+                        <KeyBinds settings={c.settings}/>
                     {:else if c.name === 'Keystrokes'}
                         <Keystrokes/>
                     {:else if c.name === 'Logo'}
@@ -178,7 +178,7 @@
                     {:else if c.name === 'TitleControl'}
                         <TitleControl/>
                     {:else if c.name === 'Watermark'}
-                        <Watermark/>
+                        <Watermark settings={c.settings}/>
                     {/if}
                 </DraggableComponent>
             {/if}

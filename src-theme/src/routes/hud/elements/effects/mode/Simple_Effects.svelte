@@ -81,6 +81,9 @@
 </div>
 <style lang="scss">
   @use "../../../../../colors.scss" as *;
+  .name{
+  text-shadow:  0 1px 2px rgba(0,0,0,0.4);
+  }
 
   .effects {
     position: relative;

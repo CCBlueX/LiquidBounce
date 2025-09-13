@@ -11,6 +11,7 @@
     import Line from "../../common/Trims/Line.svelte";
 
     let stacks: ItemStack[] = [];
+    export let settings: { [name: string]: any };
 
     function updateStacks(inventory: PlayerInventory) {
         stacks = inventory.main.slice(9);
@@ -38,7 +39,9 @@
         <img alt="inventory" class="icon" src="img/hud/inventory/inventory.svg"/>
         <span>Inventory List</span>
     </div>
-    <Line/>
+    {#if settings?.line}
+        <Line />
+    {/if}
     <div class="container">
         {#each stacks as stack (stack)}
             <ItemStackView {stack}/>

@@ -4,6 +4,7 @@
     import type {ClientInfo} from "../../../../integration/types";
 
     export let clientInfo: ClientInfo;
+    export let gradient = false
 </script>
 <svg aria-hidden="true" height="0" width="0">
     <filter height="500%" id="glow" primitiveUnits="objectBoundingBox" width="200%" x="-50%" y="-200%">
@@ -12,9 +13,10 @@
         <feBlend in="SourceGraphic" in2="saturated" mode="normal"/>
     </filter>
 </svg>
-<div class="client client-glow" in:fade>
+<div class="client" class:client-glow={gradient} in:fade>
     {$clientName ? $clientName : `禁漫修復 ${clientInfo?.clientVersion ?? ''}`}
 </div>
+
 <style lang="scss">
   @use "../../../../colors" as *;
 
@@ -52,5 +54,6 @@
     font-variant-numeric: tabular-nums;
     font-weight: 700;
     text-transform: uppercase;
+    color: white;
   }
 </style>

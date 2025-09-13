@@ -9,6 +9,8 @@
     import {fly} from "svelte/transition"
     import {getBPS} from "../../../util/movement_utils";
 
+    export let settings: { [name: string]: any };
+
     let clientInfo: ClientInfo | null = null;
     let playerData: PlayerData | null = {
         position: {x: 0, y: 0, z: 0},
@@ -52,7 +54,7 @@
 </script>
 
 <div class="stats-container" transition:fly={{duration: 700, x: -50, easing: expoInOut}}>
-    {#if clientInfo}
+    {#if clientInfo && settings?.fps}
         <div class="stat">
             <span class="label">FPS:&nbsp;</span>
             <span class="value">{clientInfo.fps}</span>
@@ -61,17 +63,22 @@
     {#if playerData}
         {@const bpsValue = roundToDecimal(getBPS.current, 2).toString().padStart(6, " ")}
 
+        {#if settings?.bps}
         <div class="stat">
             <span class="label">BPS:&nbsp;</span>
             <span class="value">{bpsValue}</span>
         </div>
+        {/if}
         {@const x = formatCoordinate(xPos.current)}
         {@const y = formatCoordinate(yPos.current)}
         {@const z = formatCoordinate(zPos.current)}
+
+        {#if settings?.xyz}
         <div class="stat">
             <span class="label">XYZ:&nbsp;</span>
             <span class="value">{x}, {y}, {z}</span>
         </div>
+        {/if}
     {/if}
 </div>
 

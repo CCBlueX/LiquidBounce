@@ -8,6 +8,8 @@
     import {expoInOut} from "svelte/easing";
     import ClientName from "./ClientName.svelte";
 
+    export let settings: { [name: string]: any };
+
     let clientInfo: ClientInfo | null = null;
     let session: Session | null = null;
     let playerData: PlayerData | null = null;
@@ -53,8 +55,7 @@
 <div class="watermark hud-container" transition:fly|global={{ duration: 500, y: -50, easing: expoInOut }}>
     <div class="watermark-content">
         {#if clientInfo}
-            <ClientName {clientInfo}
-            />
+            <ClientName {clientInfo} gradient={settings?.gradient} />
 
             {#if session}
                 <div class="separator"></div>

@@ -7,5 +7,12 @@
     "horizontalOffset": 0,
     "verticalAlignment": "Top",
     "verticalOffset": 15
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "Gradient",
+      "value": false
+    }
+  ]
 }
