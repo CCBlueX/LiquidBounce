@@ -287,7 +287,6 @@
   "liquidbounce.module.mobOwners.description": "Shows you from which player a tamable entity or projectile belongs to.",
   "liquidbounce.module.noBob.description": "Disables the view bobbing effect.",
   "liquidbounce.module.noHurtCam.description": "Disables the hurt cam effect when getting hurt.",
-  "liquidbounce.module.noSignRender.description": "Prevents the sign text from being rendered.",
   "liquidbounce.module.noSwing.description": "Disables the swing effect.",
   "liquidbounce.module.noWeather.description": "Disables the rain effect.",
   "liquidbounce.module.elytraSwap.description": "Allows you to quickly swap between the chestplate and elytra.",

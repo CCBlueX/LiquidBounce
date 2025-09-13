@@ -602,7 +602,6 @@
   "liquidbounce.module.noPitchLimit.description": "Позволяет поворачивать голову сверх обычного предела высоты.",
   "liquidbounce.module.noPush.description": "Не даёт другим игрокам толкать вас.",
   "liquidbounce.module.noRotateSet.description": "Не даёт серверу поворачивать вашу голову.",
-  "liquidbounce.module.noSignRender.description": "Не даёт табличкам отображаться.",
   "liquidbounce.module.noSlow.description": "Убирает эффект замедления, вызванный блоками или использованием предметов.",
   "liquidbounce.module.noSlowBreak.description": "Автоматически меняет скорость ломания блоков в неблагоприятных условиях.",
   "liquidbounce.module.noSwing.description": "Убирает эффект взмахивания рукой.",

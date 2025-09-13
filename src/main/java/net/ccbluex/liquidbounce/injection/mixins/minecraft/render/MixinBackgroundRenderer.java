@@ -45,16 +45,16 @@ public abstract class MixinBackgroundRenderer {
 
     @Redirect(method = "getFogModifier", at = @At(value = "INVOKE", target = "Ljava/util/List;stream()Ljava/util/stream/Stream;"))
     private static Stream<BackgroundRenderer.StatusEffectFogModifier> injectAntiBlind(List<BackgroundRenderer.StatusEffectFogModifier> list) {
-        return list.stream().filter(modifier -> {
-            final var effect = modifier.getStatusEffect();
+        if (!ModuleAntiBlind.INSTANCE.getRunning()) {
+            return list.stream();
+        } else {
+            return list.stream().filter(modifier -> {
+                final var effect = modifier.getStatusEffect();
 
-            if (!ModuleAntiBlind.INSTANCE.getRunning()) {
-                return true;
-            }
-
-            return !(StatusEffects.BLINDNESS == effect && !ModuleAntiBlind.canRender(DoRender.BLINDING)) ||
-                    (StatusEffects.DARKNESS == effect && !ModuleAntiBlind.canRender(DoRender.DARKNESS));
-        });
+                return !((StatusEffects.BLINDNESS == effect && !ModuleAntiBlind.canRender(DoRender.BLINDING)) ||
+                    (StatusEffects.DARKNESS == effect && !ModuleAntiBlind.canRender(DoRender.DARKNESS)));
+            });
+        }
     }
 
     @ModifyReturnValue(method = "applyFog", at = @At("RETURN"))

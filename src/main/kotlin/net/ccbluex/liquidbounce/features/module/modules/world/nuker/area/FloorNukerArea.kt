@@ -33,7 +33,6 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
-import kotlin.jvm.optionals.getOrDefault
 
 object FloorNukerArea : NukerArea("Floor") {
 
@@ -70,6 +69,7 @@ object FloorNukerArea : NukerArea("Floor") {
         // Iterate through each Y range first, so we can as soon we find a block on the floor,
         // we can skip the rest
         // From top to bottom
+
         val start = BlockPos.Mutable(xRange.first, 0, zRange.first)
         val end = BlockPos.Mutable(xRange.last, 0, zRange.last)
 
@@ -77,36 +77,38 @@ object FloorNukerArea : NukerArea("Floor") {
         for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
             start.y = y
             end.y = y
-            val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
-            for (pos in start..end) {
-                val state = pos.getState() ?: continue
+            val m = buildList {
+                for (pos in start..end) {
+                    val state = pos.getState() ?: continue
 
-                if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
-                    continue
-                }
+                    if (state.isNotBreakable(pos) || !ModuleNuker.isValid(state)) {
+                        continue
+                    }
 
-                val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
+                    val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
 
-                if (!shape.isEmpty &&
-                    shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                        .getClosestPointTo(eyesPos)
-                        .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
-                        .getOrDefault(false)
-                ) {
-                    blocks.add(pos.toImmutable() to state)
+                    if (!shape.isEmpty &&
+                        shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                            .getClosestPointTo(eyesPos)
+                            .map { vec3d -> vec3d.squaredDistanceTo(eyesPos) <= rangeSquared }
+                            .orElse(false)
+                    ) {
+                        add(pos.toImmutable() to state)
+                    }
                 }
             }
 
             // Return when not empty
-            if (blocks.isNotEmpty()) {
+            if (m.isNotEmpty()) {
                 return if (count != null) {
-                    blocks.take(count)
+                    m.take(count)
                 } else {
-                    blocks
+                    m
                 }
             }
         }
 
         return emptyList()
     }
+
 }

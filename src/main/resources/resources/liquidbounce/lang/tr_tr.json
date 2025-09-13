@@ -538,7 +538,6 @@
   "liquidbounce.module.noPitchLimit.description": "Kafanızı normal sınırların ötesinde döndürmenizi sağlar.",
   "liquidbounce.module.noPush.description": "Diğer oyuncuların sizi itmesini engeller.",
   "liquidbounce.module.noRotateSet.description": "Sunucunun kafanızı döndürmesini engeller.",
-  "liquidbounce.module.noSignRender.description": "Tabelalardaki metinlerin görüntülenmesini engeller.",
   "liquidbounce.module.noSlow.description": "Bloklar ve eşya kullanımı nedeniyle oluşan yavaşlama efektlerini iptal eder.",
   "liquidbounce.module.noSlowBreak.description": "Olumsuz durumlarda kırma hızını otomatik olarak ayarlar.",
   "liquidbounce.module.noSwing.description": "El sallama animasyonunu devre dışı bırakır.",

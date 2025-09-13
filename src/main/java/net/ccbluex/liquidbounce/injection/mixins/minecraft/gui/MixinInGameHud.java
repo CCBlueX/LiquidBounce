@@ -69,9 +69,7 @@ public abstract class MixinInGameHud {
     @Final
     @Shadow
     private static Identifier POWDER_SNOW_OUTLINE;
-    @Shadow
-    @Final
-    private MinecraftClient client;
+
     @Shadow
     @Nullable
     public Text title;
@@ -86,6 +84,10 @@ public abstract class MixinInGameHud {
     @Shadow
     @Nullable
     protected abstract PlayerEntity getCameraPlayer();
+
+    @Shadow
+    @Final
+    private MinecraftClient client;
 
     @Shadow
     protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
@@ -118,7 +120,7 @@ public abstract class MixinInGameHud {
             return;
         }
 
-        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && liquid_bounce$PUMPKIN_BLUR.equals(texture)) {
+        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && ModuleAntiBlind.TEXTURE_PUMPKIN_BLUR.equals(texture)) {
             callback.cancel();
             return;
         }
@@ -258,7 +260,6 @@ public abstract class MixinInGameHud {
         }
     }
 
-
     @ModifyExpressionValue(method = "renderCrosshair",
             at = @At(
                     value = "INVOKE",
@@ -280,7 +281,6 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(method = "renderTitleAndSubtitle", at = @At("HEAD"), cancellable = true)
-
     private void hookRenderTitleAndSubtitle(CallbackInfo ci) {
 
         if (!ModuleAntiBlind.canRender(DoRender.TITLE) || ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_TITLE)) {

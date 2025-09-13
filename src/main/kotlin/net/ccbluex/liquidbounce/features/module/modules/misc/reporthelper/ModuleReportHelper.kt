@@ -16,15 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+
+package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
-/**
- * NoSignRender module
- *
- * Prevents the sign text from being rendered.
- */
+object ModuleReportHelper : ClientModule("ReportHelper", Category.PLAYER, aliases = arrayOf("AutoReport")) {
 
-object ModuleNoSignRender : ClientModule("NoSignRender", Category.RENDER)
+    init {
+        tree(ReportHelperAutoReport)
+        tree(ReportHelperAutoConfirm)
+    }
+
+}
