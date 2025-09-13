@@ -77,8 +77,11 @@ object FloorNukerArea : NukerArea("Floor") {
             end.y = y
             val m = (start..end).iterate().mapNotNull { pos ->
                 val state = pos.getState() ?: return@mapNotNull null
-                isPositionAvailable(eyesPos, rangeSquared, pos, state)
-                pos.toImmutable() to state
+                if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
+                    pos.toImmutable() to state
+                } else {
+                    null
+                }
             }
 
             // Return when not empty
