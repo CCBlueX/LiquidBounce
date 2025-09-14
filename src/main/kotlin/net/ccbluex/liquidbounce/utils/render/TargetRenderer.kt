@@ -97,7 +97,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             GlStateManager._depthMask(false)
             GlStateManager._disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.defaultBlendFunc()
+            defaultBlendFunc()
 
             with(mc.gameRenderer.camera.pos) {
                 env.matrixStack.translate(-this.x, -this.y, -this.z)
@@ -134,7 +134,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             }
 
             GlStateManager._depthMask(true)
-            RenderSystem.defaultBlendFunc()
+            defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
             GlStateManager._enableCull()
             env.matrixStack.pop()

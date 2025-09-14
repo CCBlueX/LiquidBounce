@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.isBlurEffectActive
+import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.shader.BlitShader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
@@ -163,12 +165,12 @@ object BlurEffectRenderer : MinecraftShortcuts {
         BlurShader.blit()
 
         GlStateManager._enableBlend()
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
+        GlStateManager._blendFunc(1, GlConst.GL_ONE_MINUS_SRC_ALPHA)
 
         this.overlayFramebuffer.drawInternal(mc.window.framebufferWidth, mc.window.framebufferHeight)
 
         RenderSystem.setProjectionMatrix(projectionMatrix, vertexSorting)
-        RenderSystem.defaultBlendFunc()
+        defaultBlendFunc()
     }
 
     fun setupDimensions(width: Int, height: Int) {

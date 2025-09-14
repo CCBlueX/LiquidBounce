@@ -22,6 +22,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
@@ -165,7 +166,7 @@ object NametagEnchantmentRenderer {
         }
 
         GlStateManager._enableBlend()
-        RenderSystem.defaultBlendFunc()
+        defaultBlendFunc()
         renderEnchantmentColumn(env, cells, x, y, fontRenderer)
     }
 
@@ -190,7 +191,7 @@ object NametagEnchantmentRenderer {
         }
 
         GlStateManager._enableBlend()
-        RenderSystem.defaultBlendFunc()
+        defaultBlendFunc()
 
         val columnData = itemsWithEnchantments.mapNotNull { item ->
             val cells = processItemEnchantments(item)

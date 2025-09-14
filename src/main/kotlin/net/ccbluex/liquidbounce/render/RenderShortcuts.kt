@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -64,6 +65,15 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 // Copied from 1.21.4
 
 val RENDER_THREAD_TESSELATOR = Tessellator(1536)
+
+fun defaultBlendFunc() {
+    GlStateManager._blendFuncSeparate(
+        GlConst.GL_SRC_ALPHA,
+        GlConst.GL_ONE_MINUS_SRC_ALPHA,
+        1,
+        0,
+    )
+}
 
 // Copied from 1.21.4 end
 

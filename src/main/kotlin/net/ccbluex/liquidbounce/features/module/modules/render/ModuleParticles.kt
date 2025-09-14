@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -132,7 +133,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
             GlStateManager._depthMask(true)
             GlStateManager._disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.defaultBlendFunc()
+            defaultBlendFunc()
 
             for (particle in particles) {
                 if (!particle.visible) continue
@@ -142,7 +143,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
             GlStateManager._depthMask(true)
             GlStateManager._enableCull()
-            RenderSystem.defaultBlendFunc()
+            defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
