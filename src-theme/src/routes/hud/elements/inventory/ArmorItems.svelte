@@ -128,8 +128,8 @@
         <img alt="armor" class="icon" src="img/hud/inventory/armor.svg"/>
         <span>ArmorItems</span>
     </div>
-    {#if settings?.line}
-        <Line />
+    {#if settings?.divider}
+        <Line gradient={settings?.gradient}/>
     {/if}
     <div class="armor-items">
         {#each [...armorSlots].reverse() as stack (stack)}

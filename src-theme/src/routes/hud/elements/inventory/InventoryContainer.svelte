@@ -39,8 +39,8 @@
         <img alt="inventory" class="icon" src="img/hud/inventory/inventory.svg"/>
         <span>Inventory List</span>
     </div>
-    {#if settings?.line}
-        <Line />
+    {#if settings?.divider}
+        <Line gradient={settings?.gradient}/>
     {/if}
     <div class="container">
         {#each stacks as stack (stack)}

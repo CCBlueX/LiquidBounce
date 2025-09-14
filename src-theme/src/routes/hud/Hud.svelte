@@ -22,7 +22,7 @@
     import KeyBinds from "./elements/KeyBinds.svelte";
     import MotionGraph from "./elements/MotionGraph.svelte";
     import TitleControl from "./elements/TitleControl.svelte";
-    import SessionInfo from "./elements/SessionInfo.svelte";
+    import SessionInfo from "./elements/sessioninfo/SessionInfo.svelte";
     import PlayerList from "./elements/PlayerList.svelte";
     import ChatHUD from "./elements/chat/Chat.svelte";
     import type {Component, ConfigurableSetting, Metadata, TogglableSetting} from "../../integration/types";
@@ -39,7 +39,6 @@
     import TargetHud from "./elements/targethud/TargetHud.svelte";
     import Effects from "./elements/effects/Effects.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
-    import HuJi_TargetHud from "./elements/targethud/Mode/HuJi_TargetHud.svelte";
 
     const {width, height, destroy} = WindowSize();
     let metadata: Metadata;
@@ -166,7 +165,7 @@
                     {:else if c.name === 'Scoreboard'}
                         <Scoreboard/>
                     {:else if c.name === 'SessionInfo'}
-                        <SessionInfo/>
+                        <SessionInfo settings={c.settings}/>
                     {:else if c.name === 'SilentHand'}
                         <SilentHand/>
                     {:else if c.name === 'StatusBar'}

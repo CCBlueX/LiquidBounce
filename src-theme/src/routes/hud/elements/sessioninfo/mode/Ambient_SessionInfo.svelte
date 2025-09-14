@@ -1,8 +1,8 @@
 <script lang="ts">
-    import {deathCount, kills, wins} from "../../../util/Theme/SessionManager";
-    import {listen} from "../../../integration/ws.js";
-    import type {ClientPlayerDataEvent} from "../../../integration/events";
-    import type {PlayerData} from "../../../integration/types";
+    import {deathCount, kills, wins} from "../../../../../util/Theme/SessionManager";
+    import {listen} from "../../../../../integration/ws.js";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
+    import type {PlayerData} from "../../../../../integration/types";
     import {expoInOut} from "svelte/easing";
     import {fly} from 'svelte/transition';
 
@@ -85,7 +85,7 @@
 
 
 <style lang="scss">
-  @use "../../../colors" as *;
+  @use "../../../../../colors" as *;
 
   .session-info {
     --ring-thickness: 10px;

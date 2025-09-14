@@ -12,11 +12,21 @@
     {
       "type": "CHOOSE",
       "name": "Mode",
-      "value": "Simple",
+      "value": "Modern",
       "choices": [
         "Simple",
         "Modern"
       ]
-    }
+    },
+      {
+        "type": "BOOLEAN",
+        "name": "Divider",
+        "value": true
+      },
+      {
+        "type": "BOOLEAN",
+        "name": "Gradient",
+        "value": false
+      }
   ]
 }

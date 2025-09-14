@@ -154,8 +154,8 @@
             <img class="icon" src="img/hud/keybinds/keyboard.svg" alt="keyboard" />
             <span>Keybindings</span>
         </div>
-        {#if settings?.line}
-        <Line />
+        {#if settings?.divider}
+        <Line gradient={settings?.gradient}/>
         {/if}
         {#each bindings as binding (binding.moduleName)}
             <div class:disabled={!binding.enabled} class="binding-item">

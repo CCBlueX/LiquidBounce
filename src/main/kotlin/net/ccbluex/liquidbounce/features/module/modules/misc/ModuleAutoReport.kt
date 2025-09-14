@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-
 import net.ccbluex.liquidbounce.event.events.HeypixelSWKillEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -14,11 +13,14 @@ import net.minecraft.screen.slot.SlotActionType
 
 object ModuleAutoReport : ClientModule("AutoReport", Category.MISC) {
 
+    private val reportedPlayers = mutableSetOf<String>()
+
+    @Suppress("unused")
     private val autoReportHandler = sequenceHandler<HeypixelSWKillEvent> { event ->
         val victim = event.victim
         val killer = event.killer
 
-        if (victim != player.name.string || FriendManager.isFriend(killer)) return@sequenceHandler
+        if (victim != player.name.string || FriendManager.isFriend(killer) || !reportedPlayers.add(killer)) return@sequenceHandler
 
         player.networkHandler?.sendChatCommand("report $killer")
 

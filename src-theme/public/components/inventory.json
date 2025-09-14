@@ -11,7 +11,12 @@
   "values": [
     {
       "type": "BOOLEAN",
-      "name": "Line",
+      "name": "Divider",
+      "value": true
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "Gradient",
       "value": false
     }
   ]
