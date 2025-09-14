@@ -41,13 +41,12 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -74,7 +73,7 @@ import kotlin.ranges.contains
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val rotationMode by enumChoice("RotationMode", RotationMode.LINEAR)
-    private val range by floatRange("Range", 3.5f..5f, 3f..10f)
+    private val range by floatRange("Range", 3.5f..5f, 2f..10f)
     private val scanExtraRange by floatRange("ScanExtraRange", 0.0f..0.0f, 0.0f..5.0f).onChanged { range ->
         currentScanExtraRange = range.random()
     }
@@ -90,12 +89,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
     )
 
-    private val hitTimeout by int("HitTimeout", 40, 5..200, "ticks")
+    private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val cooldown by intRange("Cooldown", 8..10, 1..50, "ticks")
+    private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
     private val rotationConfigurable = tree(RotationsConfigurable(this))
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
@@ -116,18 +115,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             (player.mainHandStack.isConsumable || player.offHandStack.isConsumable))
             && !(Ignore.OPEN_INVENTORY !in ignore
             && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
-
-    private fun HotbarItemSlot.interactHand() =
-        interaction.interactItem(
-            player,
-            this.useHand,
-            RotationManager.serverRotation.yaw,
-            RotationManager.serverRotation.pitch
-        ).also {
-            if (it.isAccepted) {
-                swingMode.swing(this.useHand)
-            }
-        }
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
         priority = FIRST_PRIORITY,
@@ -151,6 +138,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         if (!requirementsMet) {
             targetTracker.reset()
+            return@handler
         }
 
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
@@ -184,17 +172,20 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
-        // 1. select rod
-        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, slotResetDelay.last + hitTimeout)) {
-            return@tickHandler
-        }
+        // If the player used rod manually, skip use
+        if (fishingBobberEntity == null) {
+            // 1. select rod
+            if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, slotResetDelay.last + hitTimeout)) {
+                return@tickHandler
+            }
 
-        // 2. push
-        if (!slot.interactHand().isAccepted) {
-            // Action failed
-            return@tickHandler
+            // 2. push
+            if (!interactItem(slot.useHand, swingMode = swingMode).isAccepted) {
+                // Action failed
+                return@tickHandler
+            }
+            currentScanExtraRange = scanExtraRange.random()
         }
-        currentScanExtraRange = scanExtraRange.random()
 
         // 3. timeout / hit entity
         waitConditional(hitTimeout) {
@@ -203,7 +194,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         // 4. pull + reset slot
         if (slot.trySelect(ModuleAutoRod, selectSlotAutomatically, slotResetDelay.random())) {
-            slot.interactHand()
+            interactItem(slot.useHand, swingMode = swingMode)
         }
 
         waitTicks(cooldown.random())

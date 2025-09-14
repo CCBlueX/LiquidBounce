@@ -141,7 +141,7 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     /**
      * @return If the player successfully selected the slot
      */
-    fun trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
+    internal fun trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
         // Select the slot if we are not holding it.
         if (isSelectionNeeded) {
             if (!select) return false
