@@ -829,5 +829,7 @@
   "liquidbounce.module.notebot.messages.songInfoName": "Loaded song '%s'",
   "liquidbounce.module.notebot.messages.songInfoTicksPerGameTick": "Ticks per game tick: %s",
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
-  "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s"
+  "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
+  "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction.",
+  "liquidbounce.module.stuck.messages.disabledOnFlag": "Module disabled due to flag."
 }

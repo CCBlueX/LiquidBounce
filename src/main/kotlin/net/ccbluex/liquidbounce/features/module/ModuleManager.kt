@@ -311,6 +311,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleStuck,
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
