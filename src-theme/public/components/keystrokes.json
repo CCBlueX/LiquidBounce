@@ -17,12 +17,12 @@
     {
       "type": "BOOLEAN",
       "name": "ShowAttackAndUseKey",
-      "value": false
+      "value": true
     },
     {
       "type": "BOOLEAN",
       "name": "ShowSprintAndSneakKey",
-      "value": true
+      "value": false
     }
   ]
 }

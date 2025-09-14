@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleStuck
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
