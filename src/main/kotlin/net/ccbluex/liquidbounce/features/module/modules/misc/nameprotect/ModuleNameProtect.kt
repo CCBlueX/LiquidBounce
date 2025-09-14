@@ -70,7 +70,8 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     val applyGarbled by boolean("Garbled", false).onChanged {
         EventManager.callEvent(NameProtectEvent(ModuleNameProtect))
     }
-    private val disengageFix by boolean("脱盒修复", false)
+    private val originalColor by boolean("OriginalColor", true)
+    private val disengageFix by boolean("脱盒修复", true)
 
     private object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
         val friendsApplyGarbled by boolean("FriendsApplyGarbled", false)
@@ -282,7 +283,12 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
                     continue
                 }
 
-                val color = replacement.second.colorGetter()
+                val color: Color4b = if (originalColor) {
+                    originalCharacters[currentIndex].style.color?.rgb?.let { Color4b(it) }
+                        ?: replacement.second.colorGetter()
+                } else {
+                    replacement.second.colorGetter()
+                }
 
                 mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
                 replacement.second.newName.mapTo(mappedCharacters) { ch ->
