@@ -1,6 +1,10 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import type {ClientPlayerDataEvent, PlayerInventory, ClientPlayerInventoryEvent} from "../../../../integration/events";
+    import type {
+        ClientPlayerDataEvent,
+        PlayerInventory,
+        ClientPlayerInventoryEvent
+    } from "../../../../integration/events";
     import type {ItemStack, PlayerData} from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
     import {getPlayerData, getPlayerInventory} from "../../../../integration/rest";
@@ -53,7 +57,7 @@
 </script>
 
 
-<div class="hotbar-container hud-container" >
+<div class="hotbar-container hud-container">
     <div class="hotbar-track">
         {#each hotbar as stack, i (stack)}
             <div class="slot-wrapper" class:active={i === currentSlot}>
@@ -91,7 +95,6 @@
   @use "../../../../colors" as *;
 
 
-
   .hotbar-container {
     --slot-size: 50px;
     --spacing: 8px;
@@ -99,6 +102,7 @@
     padding: 12px;
     overflow: hidden;
   }
+
   .selection-overlay {
     position: absolute;
     width: 100%;

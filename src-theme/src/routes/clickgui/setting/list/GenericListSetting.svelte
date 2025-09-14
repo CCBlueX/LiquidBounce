@@ -7,6 +7,7 @@
     import ExpandArrow from "../common/ExpandArrow.svelte";
     import {setItem} from "../../../../integration/persistent_storage";
     import ListItem from "./ListItem.svelte";
+
     export let setting: ModuleSetting;
     export let path: string;
     export let items: NamedItem[];
@@ -67,6 +68,7 @@
   .setting {
     padding: 7px 0;
   }
+
   .head {
     display: flex;
     justify-content: space-between;
@@ -75,12 +77,14 @@
     &.expanded {
       margin-bottom: 10px;
     }
+
     .name {
       color: $text;
       font-size: var(--font-size);
       font-weight: 600;
     }
   }
+
   .results {
     height: 200px;
     overflow-y: auto;

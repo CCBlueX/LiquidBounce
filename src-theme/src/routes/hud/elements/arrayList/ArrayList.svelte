@@ -1,21 +1,21 @@
 <script lang="ts">
-    import { listen } from "../../../../integration/ws";
-    import { fly } from "svelte/transition";
-    import { expoInOut } from "svelte/easing";
+    import {listen} from "../../../../integration/ws";
+    import {fly} from "svelte/transition";
+    import {expoInOut} from "svelte/easing";
     import TextComponent from "../../../menu/common/TextComponent.svelte";
-    import type { PlayerData, Scoreboard } from "../../../../integration/types";
-    import type { ClientPlayerDataEvent } from "../../../../integration/events";
-    import { scoreboardIP } from "../../../../util/Theme/ThemeManager";
+    import type {PlayerData, Scoreboard} from "../../../../integration/types";
+    import type {ClientPlayerDataEvent} from "../../../../integration/events";
+    import {scoreboardIP} from "../../../../util/Theme/ThemeManager";
     import GradientAnimatedText from "../../common/FontRenderer/GradientAnimatedText.svelte";
     import Rise_Arraylist from "./mode/Rise_Arraylist.svelte";
     import Simple_Arraylist from "./mode/Simple_Arraylist.svelte";
 
     const modes: Record<string, any> = {
-        Simple:Simple_Arraylist,
-        Rise:Rise_Arraylist,
+        Simple: Simple_Arraylist,
+        Rise: Rise_Arraylist,
     }
     export let settings: { [name: string]: any };
-    $: ModeComponent = modes[settings?.mode] ??Rise_Arraylist ;
+    $: ModeComponent = modes[settings?.mode] ?? Rise_Arraylist;
     let scoreboard: Scoreboard | null = null;
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
         const playerData: PlayerData = e.playerData;
@@ -26,14 +26,14 @@
 <div class="combined-container">
     <div class="arraylist-section" id="arraylist"
          transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
-        <svelte:component this={ModeComponent} {settings} />
+        <svelte:component this={ModeComponent} {settings}/>
     </div>
 
-    {#if scoreboard  && settings?.scoreboard}
+    {#if scoreboard && settings?.scoreboard}
         <div class="scoreboard-section" transition:fly|global={{duration: 500, x: 50, easing: expoInOut}}>
             {#if scoreboard.header}
                 <div class="header">
-                    <TextComponent fontSize={18} allowPreformatting={true} textComponent={scoreboard.header} />
+                    <TextComponent fontSize={18} allowPreformatting={true} textComponent={scoreboard.header}/>
                 </div>
             {/if}
             <div class="entries">
@@ -41,13 +41,13 @@
                     <div class="row">
                         {#if i === scoreboard.entries.length - 1 && $scoreboardIP}
                             <div class="ip-address">
-                                <GradientAnimatedText text={$scoreboardIP} />
+                                <GradientAnimatedText text={$scoreboardIP}/>
                             </div>
                         {:else}
-                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={name} />
+                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={name}/>
                         {/if}
                         <div class="invisible-score">
-                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={score} />
+                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={score}/>
                         </div>
                     </div>
                 {/each}
@@ -58,7 +58,7 @@
 
 <style lang="scss">
   @use "sass:color";
-  @use"../../../../colors.scss" as *;
+  @use "../../../../colors.scss" as *;
 
   :root {
     --primary-color-rgb: var(--primary-color-rgb);

@@ -64,20 +64,20 @@
         {@const bpsValue = roundToDecimal(getBPS.current, 2).toString().padStart(6, " ")}
 
         {#if settings?.bps}
-        <div class="stat">
-            <span class="label">BPS:&nbsp;</span>
-            <span class="value">{bpsValue}</span>
-        </div>
+            <div class="stat">
+                <span class="label">BPS:&nbsp;</span>
+                <span class="value">{bpsValue}</span>
+            </div>
         {/if}
         {@const x = formatCoordinate(xPos.current)}
         {@const y = formatCoordinate(yPos.current)}
         {@const z = formatCoordinate(zPos.current)}
 
         {#if settings?.xyz}
-        <div class="stat">
-            <span class="label">XYZ:&nbsp;</span>
-            <span class="value">{x}, {y}, {z}</span>
-        </div>
+            <div class="stat">
+                <span class="label">XYZ:&nbsp;</span>
+                <span class="value">{x}, {y}, {z}</span>
+            </div>
         {/if}
     {/if}
 </div>

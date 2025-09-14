@@ -7,7 +7,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="20px"
      style="display: inline-block;">
 
-    <text x="0" y="50%" dy="0.4em" fill="url(#pattern)" font-family={fontFamily} font-size={fontSize} >{text}</text>
+    <text x="0" y="50%" dy="0.4em" fill="url(#pattern)" font-family={fontFamily} font-size={fontSize}>{text}</text>
     <defs>
 
         <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0">

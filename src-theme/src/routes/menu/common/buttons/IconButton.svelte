@@ -40,7 +40,7 @@
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
 
     img {
-      transition: transform,opacity 0.2s ease, filter 0.4s ease;
+      transition: transform, opacity 0.2s ease, filter 0.4s ease;
       transform-origin: center center;
       opacity: 0.75;
     }

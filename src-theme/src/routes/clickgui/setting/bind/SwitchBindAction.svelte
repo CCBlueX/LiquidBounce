@@ -63,9 +63,15 @@
   @use "../../../../colors" as *;
 
   @keyframes jiggle-right {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(2px); }
-    100% { transform: translateX(0); }
+    0% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(2px);
+    }
+    100% {
+      transform: translateX(0);
+    }
   }
 
   .arrow-wrapper {

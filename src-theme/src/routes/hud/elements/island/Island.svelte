@@ -9,7 +9,11 @@
         getSession
     } from "../../../../integration/rest";
     import type {ClientInfo, ItemStack, PlayerData, Session} from "../../../../integration/types";
-    import type {ClientPlayerDataEvent, ClientPlayerInventoryEvent, ProgressEvent,} from "../../../../integration/events";
+    import type {
+        ClientPlayerDataEvent,
+        ClientPlayerInventoryEvent,
+        ProgressEvent,
+    } from "../../../../integration/events";
     import {listen} from "../../../../integration/ws";
     import {Tween} from "svelte/motion";
     import {cubicOut} from "svelte/easing";
@@ -574,7 +578,7 @@
         NameProtectSetting(settings);
     });
 </script>
-{#if loaded  && playerData}
+{#if loaded && playerData}
     <div class="dynamic-island-container">
         <div class="dynamic-island hud-container {alertState}"
              class:notification-active={currentAlert !== null}
@@ -684,7 +688,7 @@
     overflow: hidden;
     color: var(--text-primary);
     padding: 0 16px;
-    border-radius:24px;
+    border-radius: 24px;
     display: flex;
     align-items: center;
     transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
@@ -748,6 +752,7 @@
       font-feature-settings: "tnum";
       font-variant-numeric: tabular-nums;
     }
+
     .username::after {
       content: "";
       display: inline-block;

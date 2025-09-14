@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { listen } from "../../../integration/ws";
-    import { fly } from "svelte/transition";
-    import { expoInOut } from "svelte/easing";
+    import {listen} from "../../../integration/ws";
+    import {fly} from "svelte/transition";
+    import {expoInOut} from "svelte/easing";
     import TextComponent from "../../menu/common/TextComponent.svelte";
-    import type { PlayerData, Scoreboard } from "../../../integration/types";
-    import type { ClientPlayerDataEvent } from "../../../integration/events";
-    import { scoreboardIP } from "../../../util/Theme/ThemeManager";
+    import type {PlayerData, Scoreboard} from "../../../integration/types";
+    import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import {scoreboardIP} from "../../../util/Theme/ThemeManager";
     import GradientAnimatedText from "../common/FontRenderer/GradientAnimatedText.svelte";
 
     export let settings: { [name: string]: any };
@@ -18,43 +18,43 @@
 </script>
 
 
-    {#if scoreboard}
-        <div class="scoreboard hud-container" transition:fly|global={{duration: 500, x: 50, easing: expoInOut}}>
-            {#if scoreboard.header}
-                <div class="header">
-                    <TextComponent fontSize={18} allowPreformatting={true} textComponent={scoreboard.header} />
-                </div>
-            {/if}
-            <div class="entries">
-                {#each scoreboard.entries as {name, score}, i}
-                    <div class="row">
-                        {#if i === scoreboard.entries.length - 1 && $scoreboardIP}
-                            <div class="ip-address">
-                                <GradientAnimatedText text={$scoreboardIP} />
-                            </div>
-                        {:else}
-                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={name} />
-                        {/if}
-                        <div class="score" class:hidden={!settings?.numbers}>
-                            <TextComponent fontSize={16} allowPreformatting={true} textComponent={score} />
-                        </div>
-                    </div>
-                {/each}
+{#if scoreboard}
+    <div class="scoreboard hud-container" transition:fly|global={{duration: 500, x: 50, easing: expoInOut}}>
+        {#if scoreboard.header}
+            <div class="header">
+                <TextComponent fontSize={18} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
+        {/if}
+        <div class="entries">
+            {#each scoreboard.entries as {name, score}, i}
+                <div class="row">
+                    {#if i === scoreboard.entries.length - 1 && $scoreboardIP}
+                        <div class="ip-address">
+                            <GradientAnimatedText text={$scoreboardIP}/>
+                        </div>
+                    {:else}
+                        <TextComponent fontSize={16} allowPreformatting={true} textComponent={name}/>
+                    {/if}
+                    <div class="score" class:hidden={!settings?.numbers}>
+                        <TextComponent fontSize={16} allowPreformatting={true} textComponent={score}/>
+                    </div>
+                </div>
+            {/each}
         </div>
-    {/if}
+    </div>
+{/if}
 
 
 <style lang="scss">
   @use "sass:color";
-  @use"../../../colors.scss" as *;
+  @use "../../../colors.scss" as *;
 
   :root {
     --primary-color-rgb: var(--primary-color-rgb);
     --secondary-color-rgb: var(--secondary-color-rgb);
   }
 
-  .scoreboard{
+  .scoreboard {
     position: relative;
     display: inline-block;
     width: max-content;

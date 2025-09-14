@@ -55,14 +55,14 @@
 
             <div class="health-container">
                 <div class="health-bg">
-                        <div
-                                class="health-fill previous-health"
-                                style="width: {Math.min(Math.floor((previousDisplayHealth / (target.maxHealth + target.absorption)) * 100), 100)}%;"
-                        ></div>
-                        <div
-                                class="health-fill"
-                                style="width: {Math.min(Math.floor((displayHealth / (target.maxHealth + target.absorption)) * 100), 100)}%;"
-                        ></div>
+                    <div
+                            class="health-fill previous-health"
+                            style="width: {Math.min(Math.floor((previousDisplayHealth / (target.maxHealth + target.absorption)) * 100), 100)}%;"
+                    ></div>
+                    <div
+                            class="health-fill"
+                            style="width: {Math.min(Math.floor((displayHealth / (target.maxHealth + target.absorption)) * 100), 100)}%;"
+                    ></div>
                 </div>
             </div>
         </div>
@@ -70,7 +70,9 @@
 {/if}
 
 <style lang="scss">
-    @use "../../../../../colors" as *;;
+  @use "../../../../../colors" as *;
+
+  ;
   .targethud {
     color: $text-color;
     font-size: 14px;
@@ -87,6 +89,7 @@
     width: 50px;
     height: 50px;
     position: relative;
+
     .avatar-inner {
       position: absolute;
       top: 45%;

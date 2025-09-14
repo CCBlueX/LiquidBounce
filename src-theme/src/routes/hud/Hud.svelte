@@ -29,7 +29,7 @@
     import {getComponents, getMetadata, getModuleSettings} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import Vignette from "./elements/Vignette.svelte";
-    import {gridSize, snappingEnabled, showGrid,ScaleFactor} from "./Hud_store";
+    import {gridSize, snappingEnabled, showGrid, ScaleFactor} from "./Hud_store";
     import {WindowSize} from "../../util/WindowSize";
     import {hudScaleFactor} from "../../util/Theme/ThemeManager";
     import {calcResolutionCoefficient} from "../../util/ResolutionScaler";
@@ -61,7 +61,7 @@
     };
 
     async function updateZoom(): Promise<void> {
-        $ScaleFactor = $hudScaleFactor  * calcResolutionCoefficient();
+        $ScaleFactor = $hudScaleFactor * calcResolutionCoefficient();
     }
 
     async function preloadComponents() {
@@ -79,7 +79,7 @@
             }
         }
 
-        components = components ;
+        components = components;
     }
 
 
@@ -152,7 +152,7 @@
                     {:else if c.name === 'Keystrokes'}
                         <Keystrokes settings={c.settings}/>
                     {:else if c.name === 'Logo'}
-                        <Logo  settings={c.settings}/>
+                        <Logo settings={c.settings}/>
                     {:else if c.name === 'Message'}
                         <Message/>
                     {:else if c.name === 'MotionGraph'}
@@ -186,7 +186,6 @@
     </div>
 </div>
 <Vignette/>
-
 
 
 <style lang="scss">

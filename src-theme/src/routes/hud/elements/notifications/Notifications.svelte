@@ -172,7 +172,7 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors" as *;
+  @use "../../../../colors" as *;
 
   .notifications {
     will-change: transform, opacity;

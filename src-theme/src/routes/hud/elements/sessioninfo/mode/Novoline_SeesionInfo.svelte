@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { listen } from "../../../../../integration/ws.js";
-    import type { ClientPlayerDataEvent } from "../../../../../integration/events";
-    import type { PlayerData } from "../../../../../integration/types";
-    import { fly } from 'svelte/transition';
-    import { expoInOut } from "svelte/easing";
+    import {listen} from "../../../../../integration/ws.js";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
+    import type {PlayerData} from "../../../../../integration/types";
+    import {fly} from 'svelte/transition';
+    import {expoInOut} from "svelte/easing";
     import Line from "../../../common/Trims/Line.svelte";
     import {kills, wins} from "../../../../../util/Theme/SessionManager";
+
     export let settings: { [name: string]: any };
 
     let playerData: PlayerData | null = null;
@@ -13,7 +14,7 @@
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         playerData = event.playerData;
         kills.set(playerData.killsCount ?? 0);
-        wins.set(playerData.winsCount?? 0);
+        wins.set(playerData.winsCount ?? 0);
     });
 </script>
 
@@ -57,6 +58,7 @@
     width: fit-content;
     color: white;
   }
+
   .session-info :global(.line) {
     margin: 0.25em 0;
   }

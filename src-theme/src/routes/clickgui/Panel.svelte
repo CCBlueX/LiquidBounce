@@ -561,6 +561,7 @@
 </div>
 <style lang="scss">
   @use "../../colors" as *;
+
   .gradient-icon {
     --gradient-start: var(--primary-color);
     --gradient-end: var(--secondary-color);

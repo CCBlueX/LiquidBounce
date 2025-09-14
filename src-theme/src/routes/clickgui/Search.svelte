@@ -5,7 +5,7 @@
     import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {highlightModuleName, filteredModules, showSearch, query} from "./clickgui_store";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
-    import { shrinkOut } from "../../util/animate_utils";
+    import {shrinkOut} from "../../util/animate_utils";
     import {fly, slide} from "svelte/transition";
     import {quintOut} from 'svelte/easing';
     import {onMount, onDestroy, tick} from "svelte";
@@ -39,6 +39,7 @@
     $: if (!$showSearch) {
         $query = '';
     }
+
     function handleFocus() {
         placeholder = "Search (A-Z only)";
 
@@ -138,7 +139,10 @@
         {text: "どこにでも行けるということは、どこにも居場所がないということ", weight: 1}, // ef - a tale of memories（悠久の翼）
         {text: "行きたい場所も、帰れる場所もない……", weight: 1},// ef - a tale of memories（悠久の翼）
         {text: "楽園と墓地は同義語ですか？", weight: 1}, // ATRI
-        {text: "宇宙に永遠なものなどない。だから物事の終わりを嘆いても意味がない。終わりを迎えるまでにどう過ごすかが重要なんだろう？", weight: 1}, // ATRI
+        {
+            text: "宇宙に永遠なものなどない。だから物事の終わりを嘆いても意味がない。終わりを迎えるまでにどう過ごすかが重要なんだろう？",
+            weight: 1
+        }, // ATRI
         {text: "いつか死ぬからといって諦めるなら、人間の一生に意味なんてない。", weight: 1}, // ATRI
         {text: "もし地球が救えなくても......地球には私も含まれますか？", weight: 1}, // ATRI
         {text: "私にとって、あなたは地球の中心です。", weight: 1}, // ATRI
@@ -242,7 +246,7 @@
 
     function handleInput() {
 
-        if (['0721', '1011010001','Ciallo~(∠・ω< )⌒★'].includes($query)) {
+        if (['0721', '1011010001', 'Ciallo~(∠・ω< )⌒★'].includes($query)) {
             $query = 'Ciallo~(∠・ω< )⌒★';
             isCialloActive = true;
             const temp = new Howl({
@@ -270,7 +274,8 @@
     }
 
     let lastArrowPressTime = 0;
-    const allowedInputs = [ 'Ciallo~(∠・ω< )⌒★'];
+    const allowedInputs = ['Ciallo~(∠・ω< )⌒★'];
+
     async function handleKeyDown(e: KeyboardKeyEvent) {
         const validatedQuery = $query.replace(/[^a-z0-9]/gi, '');
         if (validatedQuery !== $query && !allowedInputs.includes($query)) {
@@ -422,6 +427,7 @@
         if (recentPlaceholders.length > maxRecent) recentPlaceholders.pop();
         return fallback;
     }
+
     onMount(() => {
         const fetchSettings = async () => {
             const clickGuiSettings = await getModuleSettings("ClickGUI");

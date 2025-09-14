@@ -1,17 +1,17 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { listen } from "../../../../integration/ws";
-    import { getPlayerData } from "../../../../integration/rest";
-    import type { ClientPlayerDataEvent } from "../../../../integration/events";
-    import type { PlayerData } from "../../../../integration/types";
-    import { fade } from "svelte/transition";
-    import { calcArmorValue } from "../../../../util/Client/calcArmorValue";
+    import {onMount} from "svelte";
+    import {listen} from "../../../../integration/ws";
+    import {getPlayerData} from "../../../../integration/rest";
+    import type {ClientPlayerDataEvent} from "../../../../integration/events";
+    import type {PlayerData} from "../../../../integration/types";
+    import {fade} from "svelte/transition";
+    import {calcArmorValue} from "../../../../util/Client/calcArmorValue";
 
     let playerData: PlayerData | null = null;
     type BarKey = 'armor' | 'food';
 
     function updatePlayerData(newData: PlayerData) {
-        const updatedData = { ...newData };
+        const updatedData = {...newData};
         if (updatedData.armorItems) {
             updatedData.armor = calcArmorValue(updatedData.armorItems);
         }

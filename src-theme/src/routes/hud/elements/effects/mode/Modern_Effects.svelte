@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { listen } from "../../../../../integration/ws";
-    import type { ClientPlayerDataEvent } from "../../../../../integration/events";
-    import type { StatusEffect } from "../../../../../integration/types";
-    import { fade} from 'svelte/transition';
-    import { REST_BASE } from "../../../../../integration/host";
+    import {listen} from "../../../../../integration/ws";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
+    import type {StatusEffect} from "../../../../../integration/types";
+    import {fade} from 'svelte/transition';
+    import {REST_BASE} from "../../../../../integration/host";
     import {expoOut} from "svelte/easing";
     import {flip} from "svelte/animate";
     import {springTransition} from "../../../../../util/animate_utils";
@@ -132,7 +132,7 @@
       font-weight: 600;
       font-size: 16px;
       color: #fff;
-      text-shadow:  0 1px 2px rgba(0,0,0,0.4);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .duration {
@@ -185,7 +185,6 @@
       filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.3));
     }
   }
-
 
 
   @keyframes pulse {

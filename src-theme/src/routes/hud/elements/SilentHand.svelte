@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { onMount } from "svelte"
+    import {onMount} from "svelte"
     import type {
         BlockCountChangeEvent,
         ClientPlayerDataEvent, EventMap,
     } from "../../../integration/events"
-    import type { PlayerData} from "../../../integration/types"
-    import { listen } from "../../../integration/ws"
-    import { getPlayerData, getModules } from "../../../integration/rest"
-    import { FadeOut } from "../../../util/animate_utils"
-    import { REST_BASE } from "../../../integration/host"
+    import type {PlayerData} from "../../../integration/types"
+    import {listen} from "../../../integration/ws"
+    import {getPlayerData, getModules} from "../../../integration/rest"
+    import {FadeOut} from "../../../util/animate_utils"
+    import {REST_BASE} from "../../../integration/host"
 
     let selectingHotbar = false
     let silentHotbarEnabled = false
@@ -17,8 +17,8 @@
 
     listen("blockCountChange", (e: BlockCountChangeEvent) => count = e.count)
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => playerData = e.playerData)
-    listen("selectingHotbarSlotSilently"as keyof EventMap, () =>selectingHotbar = true)
-    listen("resetHotbarSlotSilently"as keyof EventMap, () => selectingHotbar = false)
+    listen("selectingHotbarSlotSilently" as keyof EventMap, () => selectingHotbar = true)
+    listen("resetHotbarSlotSilently" as keyof EventMap, () => selectingHotbar = false)
     listen("moduleToggle", () => checkSilentHotbar())
 
     async function checkSilentHotbar() {

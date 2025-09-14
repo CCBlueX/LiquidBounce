@@ -96,6 +96,7 @@
       .title {
         opacity: 1;
       }
+
       .icon img {
         opacity: 1;
       }

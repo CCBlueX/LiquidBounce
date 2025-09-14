@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { listen } from "../../../../../integration/ws";
-    import type { ClientPlayerDataEvent } from "../../../../../integration/events";
-    import type { StatusEffect } from "../../../../../integration/types";
+    import {listen} from "../../../../../integration/ws";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
+    import type {StatusEffect} from "../../../../../integration/types";
     import {fade, fly} from 'svelte/transition';
     import {expoInOut} from "svelte/easing";
     import {REST_BASE} from "../../../../../integration/host";
@@ -81,8 +81,9 @@
 </div>
 <style lang="scss">
   @use "../../../../../colors.scss" as *;
-  .name{
-  text-shadow:  0 1px 2px rgba(0,0,0,0.4);
+
+  .name {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 
   .effects {
@@ -95,11 +96,13 @@
     white-space: nowrap;
     font-family: 'Alibaba', sans-serif;
   }
+
   .effect-icon {
     height: 32px;
     width: 32px;
     filter: drop-shadow(0 0 4px rgba($base, 0.5));
   }
+
   .effect {
     font-weight: 600;
     font-size: 18px;

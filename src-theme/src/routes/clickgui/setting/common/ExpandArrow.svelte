@@ -22,6 +22,7 @@
 
 <style lang="scss">
   @use "../../../../colors" as *;
+
   .arrow {
     width: 20px;
     position: relative;
@@ -32,6 +33,7 @@
     &.compact {
       width: 10px;
     }
+
     &.dimmed {
       color: $clickgui-text-dimmed-color;
     }
@@ -52,9 +54,11 @@
       transition: ease opacity 0.2s,
       ease transform 0.4s;
     }
+
     &::after.compact {
       right: auto;
     }
+
     &.expanded::after {
       transform: translateY(-50%) rotate(0);
       opacity: 1;

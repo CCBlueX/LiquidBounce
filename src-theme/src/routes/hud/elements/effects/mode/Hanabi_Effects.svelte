@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { listen } from "../../../../../integration/ws";
-    import type { ClientPlayerDataEvent } from "../../../../../integration/events";
-    import type { StatusEffect } from "../../../../../integration/types";
-    import { fade} from 'svelte/transition';
-    import { forcedEnglish } from "../Effects"
-    import { REST_BASE } from "../../../../../integration/host";
+    import {listen} from "../../../../../integration/ws";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
+    import type {StatusEffect} from "../../../../../integration/types";
+    import {fade} from 'svelte/transition';
+    import {forcedEnglish} from "../Effects"
+    import {REST_BASE} from "../../../../../integration/host";
     import {expoOut} from "svelte/easing";
     import {flip} from "svelte/animate";
     import {springTransition} from "../../../../../util/animate_utils";
@@ -19,7 +19,6 @@
     }
 
     const initialDurations = new Map<string, number>();
-
 
 
     function formatTime(duration: number): string {
@@ -100,6 +99,7 @@
 
 <style lang="scss">
   @use "../../../../../colors" as *;
+
   .effect {
     position: relative;
     font-weight: 600;
@@ -147,7 +147,7 @@
       font-weight: 600;
       font-size: 16px;
       color: #fff;
-      text-shadow:  0 1px 2px rgba(0,0,0,0.4);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .duration {
