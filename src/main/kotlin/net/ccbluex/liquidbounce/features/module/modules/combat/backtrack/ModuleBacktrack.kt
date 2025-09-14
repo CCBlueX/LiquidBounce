@@ -342,7 +342,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
             target.shouldBeAttacked() &&
-            VelocityHeypixel.totalAttackCount == 0 &&
+            !VelocityHeypixel.isAttacking &&
             player.age > 10 &&
             currentChance < chance &&
             chronometer.hasElapsed() &&

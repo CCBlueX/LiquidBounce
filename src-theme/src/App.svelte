@@ -19,6 +19,7 @@
     import SpareModule from "./routes/menu/common/SpareModule.svelte";
     import Inventory from "./routes/menu/inventory/Inventory.svelte";
     import ConfigManager from "./routes/clickgui/ConfigManager.svelte";
+    import None from "./routes/menu/none/None.svelte";
 
     const routes = {
         "/loginmenu": LoginMenu,
@@ -37,6 +38,7 @@
         "/disconnected": Disconnected,
         "/connecting": ConnectionScreen,
         "/browser": Browser,
+        "/none": None,
     };
 
     const url = window.location.href;

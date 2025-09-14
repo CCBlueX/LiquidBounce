@@ -24,20 +24,17 @@ object AutoQueueKKCraftSW : Choice("KKCraftSW") {
         get() = ModuleAutoQueue.presets
 
     private val hasPaper: Boolean
-        get() = Slots.Hotbar.findSlot(Items.PAPER) != null
+        get() = player.inventory.getStack(7).item == Items.PAPER
 
     private var tasking = false
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (!player.isSpectator && !hasPaper) {
+        if (!player.isSpectator || !hasPaper) {
             return@tickHandler
         }
-        val paperSlot = Slots.OffhandWithHotbar.findSlot(Items.PAPER)
-        if (paperSlot == null) {
-            return@tickHandler
-        }
-        SilentHotbar.selectSlotSilently(ModuleAutoQueue, paperSlot, 0)
+
+        SilentHotbar.selectSlotSilently(ModuleAutoQueue, 7, 0)
         KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
         tasking = true
     }
@@ -49,7 +46,7 @@ object AutoQueueKKCraftSW : Choice("KKCraftSW") {
 
     @Suppress("unused")
     private val scheduleInventoryHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (!player.isSpectator && !hasPaper) return@handler
+        if (!player.isSpectator || !hasPaper) return@handler
 
         val screen = mc.currentScreen as? GenericContainerScreen ?: return@handler
         val fireworkSlot = screen.screenHandler.slots.firstOrNull {

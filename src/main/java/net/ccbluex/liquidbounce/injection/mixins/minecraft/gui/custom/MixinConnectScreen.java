@@ -43,6 +43,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.InetSocketAddress;
 
@@ -56,6 +57,10 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Unique
     private ServerAddress serverAddress = null;
 
+    @Inject(method = "shouldCloseOnEsc", at = @At("HEAD"), cancellable = true)
+    private void onShouldCloseOnEsc(CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(true);
+    }
     @Unique
     private static String getSocketAddress(ClientConnection clientConnection, ServerAddress serverAddress) {
         if (clientConnection.getAddress() instanceof InetSocketAddress addr) {

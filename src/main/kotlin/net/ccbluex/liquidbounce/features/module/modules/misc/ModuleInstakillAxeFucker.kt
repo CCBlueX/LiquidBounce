@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.session.GamingCheck.OnGlass
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.Items
@@ -40,7 +41,7 @@ object ModuleInstakillAxeFucker : ClientModule("InstakillAxeFucker", Category.MI
         if (paused) return@handler
 
         val paperSlot = Slots.OffhandWithHotbar.findSlot(Items.MAP)?.hotbarSlotForServer
-        if (paperSlot != null && player.inventory.main.any { it.item == Items.BOW }) {
+        if (paperSlot != null && OnGlass ) {
             SilentHotbar.selectSlotSilently(this,paperSlot, 0)
         } else {
             return@handler

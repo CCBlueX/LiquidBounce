@@ -690,9 +690,10 @@ fun isInVoid(pos: Vec3d, voidDistance: Int = -64, checkOnGround: Boolean = true)
     for (xOffset in xRange) {
         for (zOffset in zRange) {
             for (y in topY downTo voidDistance) {
-                val blockPos = BlockPos(pos.x.toInt() + xOffset, y, pos.z.toInt() + zOffset)
-                val state = blockPos.getState()
-                if (state != null && !state.isAir) return false
+                val block = BlockPos(player.x.toInt() + xOffset, y, player.z.toInt() + zOffset).getBlock()
+                if (block?.translationKey != "block.minecraft.air") {
+                    return false
+                }
             }
         }
     }

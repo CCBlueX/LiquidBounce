@@ -97,7 +97,7 @@ object GameWins: EventListener {
 
     private val winKeywordsTitle = listOf(
         "victory", "you win", "Good Game",
-        "胜", "赢", "游戏结束","恭喜你赢下了比赛","你是最后的站立者",
+        "恭喜你赢下了比赛","你是最后的站立者",
         "victoire", "gagné",
         "gewonnen",
         "vittoria",

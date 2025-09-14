@@ -25,7 +25,7 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     private val fallDistance by int("FallDistance", 15, 0..25, "blocks")
     private val resetTicks by int("ResetTicks", 300, 200..2000, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 20, 0..100, "ticks")
-    private val notCondition by multiEnumChoice("Not", NotCondition.WhileReceiveHit)
+    private val notCondition by multiEnumChoice("Not", NotCondition.WhilePearl)
 
     private const val LOWEST_Y = -64
     private var lastGroundY = LOWEST_Y
@@ -132,6 +132,6 @@ object ModuleAutoStuck : ClientModule("AutoStuck", Category.WORLD) {
     ) : NamedChoice {
         WhileReceiveHit("WhileReceiveHit", { !CombatManager.isReceiveHit }),
         WhileDuringCombat("WhileDuringCombat", { !CombatManager.isInCombat }),
-        WhilePearl("WhilePearl",{!hasPearlInHotbar()}),
+        WhilePearl("WhilePearl",{ hasPearlInHotbar() }),
     }
 }

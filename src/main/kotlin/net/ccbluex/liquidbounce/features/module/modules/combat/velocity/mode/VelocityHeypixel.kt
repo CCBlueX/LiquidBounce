@@ -41,10 +41,10 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
 
     private var canReduce = false
     private var target: Entity? = null
-    var totalAttackCount = 0
+    private var totalAttackCount = 0
     private var cooldownTicks = 0
     private var jump = false
-
+    var isAttacking = false
     private fun reset() {
         canReduce = false
         target = null
@@ -78,6 +78,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
             reset()
         }
 
+
         if (canReduce) {
             if (target != null
                 && player.isAlive
@@ -85,20 +86,10 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                 && !player.abilities.flying
                 && !player.usingItem
             ) {
-                val x = player.velocity.x
-                val z = player.velocity.z
-                val strength = kotlin.math.sqrt(x * x + z * z)
-
-                val reduction = when {
-                    strength >= 3.0 -> 0.1
-                    strength >= 1.0 -> 0.3
-                    else -> 0.5
-                }
-
                 player.setVelocity(
-                    player.velocity.x * reduction,
+                    player.velocity.x * 0.07776,
                     player.velocity.y,
-                    player.velocity.z * reduction
+                    player.velocity.z * 0.07776
                 )
             }
             reset()
@@ -140,7 +131,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                         cooldown()
                     } else {
                         var attacked = true
-
+                        isAttacking = true
                         for (i in 1..attackCount) {
                             val entityHitResult = raytraceEntity(
                                 ModuleKillAura.range.toDouble(),
@@ -159,6 +150,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                         }
 
                         this.canReduce = attacked
+                        isAttacking = false
                     }
 
                     if (!sprinting) {

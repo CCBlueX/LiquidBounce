@@ -43,11 +43,23 @@ object PlayerDeadEventListener : EventListener {
         val playerName = mc.player?.name?.string ?: return@handler
 
         val combinedPattern = Regex(
-            "you died! want to play again\\? click here!" +
-                "|\\b${Regex.escape(playerName)}\\b was killed by .+" +
-                "|\\b${Regex.escape(playerName)}\\b fell into the void\\." +
-                "|\\b${Regex.escape(playerName)}\\b died\\." +
-                "|\\b${Regex.escape(playerName)}\\b died in close combat to .+",
+            listOf(
+                //Minecraft
+                "\\b${Regex.escape(playerName)}\\b was killed by .+",
+                "\\b${Regex.escape(playerName)}\\b fell into the void\\.",
+                "\\b${Regex.escape(playerName)}\\b died\\.",
+                // Hypixel
+                "you died! want to play again\\? click here!",
+                "\\b${Regex.escape(playerName)}\\b died in close combat to .+",
+                // BMW
+                "${Regex.escape(playerName)} 被 .+? 击败.*",
+                "${Regex.escape(playerName)} 被炸成了粉尘, 最终还是被 .+? 击败.*",
+                "${Regex.escape(playerName)} 消逝了, 最终还是被 .+? 击败.*",
+                "${Regex.escape(playerName)} 被架在了烧烤架上, 熟透了, 最终还是被 .+? 击败.*",
+                "${Regex.escape(playerName)} 跑得很快, 但是他还是摔了一跤, 最终被 .+? 击败.*",
+                "${Regex.escape(playerName)} 被 .+? 用弓箭射穿了.*",
+                "${Regex.escape(playerName)} 被重压地无法呼吸, 最终还是被 .+? 击败.*"
+            ).joinToString("|"),
             RegexOption.IGNORE_CASE
         )
 
