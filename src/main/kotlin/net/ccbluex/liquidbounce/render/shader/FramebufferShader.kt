@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
+import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -42,8 +43,8 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
     init {
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
-        shaders.forEach { _ ->
-            val framebuffer = SimpleFramebuffer(width, height, false)
+        shaders.forEach {
+            val framebuffer = SimpleFramebuffer(it.toString(), width, height, false)
             framebuffer.setClearColor(0f, 0f, 0f, 0f)
             framebuffers.add(framebuffer)
         }
@@ -111,8 +112,8 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
     }
 
     protected open fun enableBlend() {
-        RenderSystem.enableBlend()
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
+        GlStateManager._enableBlend()
+        GlStateManager._blendFunc(GlConst.GL_SRC_ALPHA, GlConst.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     protected open fun endBlend() {

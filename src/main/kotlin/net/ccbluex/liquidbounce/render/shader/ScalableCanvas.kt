@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
@@ -33,7 +34,7 @@ class ScalableCanvas : Closeable {
 
     private val identity = Matrix4f()
     private val output = MinecraftClient.getInstance().framebuffer
-    private val input = SimpleFramebuffer(output.textureWidth, output.textureHeight, false)
+    private val input = SimpleFramebuffer(this.toString(), output.textureWidth, output.textureHeight, false)
     private val shaderProgram by lazy { mc.shaderLoader.getOrCreateProgram(ShaderProgramKeys.POSITION_TEX_COLOR) }
 
     fun resize(width: Int, height: Int) {
@@ -56,7 +57,7 @@ class ScalableCanvas : Closeable {
         RenderSystem.setShaderTexture(0, input.colorAttachment)
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha)
 
-        RenderSystem.enableBlend()
+        GlStateManager._enableBlend()
         buffer.draw(identity, identity, shaderProgram)
     }
 

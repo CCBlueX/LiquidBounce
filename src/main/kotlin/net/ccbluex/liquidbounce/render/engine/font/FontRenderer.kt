@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
@@ -28,7 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.texture.GlTexture
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
@@ -318,9 +320,9 @@ class FontRendererBuffers {
         this.textBuffers.forEach { (glyphPage, bufferBuilder) ->
             val tex = glyphPage.texture
 
-            RenderSystem.bindTexture(tex.glId)
+            GlStateManager._bindTexture((tex.glTexture as GlTexture).glId)
 
-            RenderSystem.setShaderTexture(0, tex.glId)
+            RenderSystem.setShaderTexture(0, tex.glTexture)
 
             bufferBuilder.draw()
         }
