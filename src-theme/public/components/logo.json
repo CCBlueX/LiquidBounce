@@ -7,5 +7,12 @@
     "horizontalOffset": 20,
     "verticalAlignment": "Bottom",
     "verticalOffset": 50
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "Glitched",
+      "value": true
+    }
+  ]
 }

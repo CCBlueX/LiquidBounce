@@ -55,7 +55,7 @@
 <div class="watermark hud-container" transition:fly|global={{ duration: 500, y: -50, easing: expoInOut }}>
     <div class="watermark-content">
         {#if clientInfo}
-            <ClientName {clientInfo} gradient={settings?.gradient} />
+            <ClientName {clientInfo} glow={settings?.glow} />
 
             {#if session}
                 <div class="separator"></div>

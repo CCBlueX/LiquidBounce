@@ -11,7 +11,7 @@
   "values": [
     {
       "type": "BOOLEAN",
-      "name": "Gradient",
+      "name": "Glow",
       "value": false
     }
   ]

@@ -151,7 +151,7 @@
                     {:else if c.name === 'Keystrokes'}
                         <Keystrokes/>
                     {:else if c.name === 'Logo'}
-                        <Logo/>
+                        <Logo  settings={c.settings}/>
                     {:else if c.name === 'Message'}
                         <Message/>
                     {:else if c.name === 'MotionGraph'}
