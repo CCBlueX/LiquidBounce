@@ -20,7 +20,9 @@ object ModuleAutoReport : ClientModule("AutoReport", Category.MISC) {
         val victim = event.victim
         val killer = event.killer
 
-        if (victim != player.name.string || FriendManager.isFriend(killer) || !reportedPlayers.add(killer)) return@sequenceHandler
+        if (victim != player.name.string || FriendManager.isFriend(killer) || !reportedPlayers.add(killer)){
+            return@sequenceHandler
+        }
 
         player.networkHandler?.sendChatCommand("report $killer")
 
@@ -28,7 +30,8 @@ object ModuleAutoReport : ClientModule("AutoReport", Category.MISC) {
             waitTicks(5)
 
             val screen = mc.currentScreen as? GenericContainerScreen ?: return@repeat
-            val swordSlot = screen.screenHandler.slots.find { it.stack.item == Items.DIAMOND_SWORD } ?: return@repeat
+            val swordSlot = screen.screenHandler.slots.find {
+                it.stack.item == Items.DIAMOND_SWORD } ?: return@repeat
 
             interaction.clickSlot(
                 screen.screenHandler.syncId,

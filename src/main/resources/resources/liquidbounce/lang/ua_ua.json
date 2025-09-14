@@ -504,7 +504,6 @@
   "liquidbounce.module.packetQueueColor.description": "Настройка цвета каркасной модели игрока для PacketQueue.",
   "liquidbounce.module.autoGG.description": "Автоматически отправляет указанное сообщение в чат после победы.",
   "liquidbounce.module.movePhysics.description": "Позволяет двигаться при определённых серверных античитах.",
-  "liquidbounce.module.pendant.description": "Отображает изображение на некоторых интерфейсах.",
   "liquidbounce.module.iQBoost.description": "Позволяет повысить ваш IQ.",
   "liquidbounce.module.hudLayoutEditor.description": "Отображает интерфейс редактирования HUD для быстрой настройки.",
   "liquidbounce.module.setbackOnRespawn.description": "Телепортирует вас в место смерти при возрождении.",
@@ -526,6 +525,5 @@
   "liquidbounce.module.bowBomb.description": "Использует баг OneShot для стрельбы стрелой с бесконечной силой.",
   "liquidbounce.module.bowBomb.potionAura": "Автоматически бросает зелья с побочными эффектами и уроном в цель.",
   "liquidbounce.module.antiInstakillAxe.description": "Когда противник держит одноударный топор и целится в вас, пытается поставить яйцо спавна для блокировки мгновенного убийства.",
-  "liquidbounce.module.motionCamera.description": "Динамически регулирует положение камеры в игре."
 
 }

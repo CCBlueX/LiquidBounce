@@ -652,7 +652,6 @@
   "liquidbounce.module.packetQueueColor.description": "PacketQueue oyuncu modelinin rengini ayarlar.",
   "liquidbounce.module.autoGG.description": "Zafer kazandığınızda otomatik olarak belirtilen mesajı sohbet kutusuna gönderir.",
   "liquidbounce.module.movePhysics.description": "Bazı özel sunucu anti-cheat sistemleri altında hareket etmenize izin verir.",
-  "liquidbounce.module.pendant.description": "Belirli arayüzlerde bir resim gösterir.",
   "liquidbounce.module.iQBoost.description": "Kendi IQ'nuzu yükseltmenize olanak tanır.",
   "liquidbounce.module.setbackOnRespawn.description": "Yeniden doğduğunuzda sizi öldüğünüz yere ışınlar.",
   "liquidbounce.module.autoStuck.description": "Void'e düşmeden önce sizi sıkıştırır.",
@@ -673,6 +672,5 @@
   "liquidbounce.module.antiExplosion.description": "Yakındaki patlayıcılara karşı koruma duvarı inşa eder.",
   "liquidbounce.module.bowBomb.description": "Bir açıktan yararlanarak sınırsız güce sahip bir ok atar.",
   "liquidbounce.module.potionAura.description": "Hedefe otomatik olarak yan etkili ve hasar verici iksirler fırlatır.",
-  "liquidbounce.module.antiInstakillAxe.description": "Rakip tek vuruş baltası tutuyorsa ve size nişan almışsa, yumurtalar yerleştirerek öldürmeyi engellemeye çalışır.",
-  "liquidbounce.module.motionCamera.description": "Oyundaki kamera konumunu dinamik olarak ayarlar."
+  "liquidbounce.module.antiInstakillAxe.description": "Rakip tek vuruş baltası tutuyorsa ve size nişan almışsa, yumurtalar yerleştirerek öldürmeyi engellemeye çalışır."
 }

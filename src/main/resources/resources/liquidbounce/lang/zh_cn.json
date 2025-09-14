@@ -839,7 +839,6 @@
   "liquidbounce.module.packetQueueColor.description": "设置PacketQueue的玩家模型颜色。",
   "liquidbounce.module.autoGG.description": "在你赢得胜利后自动在聊天框发送指定的信息。",
   "liquidbounce.module.movePhysics.description": "允许你在某些特殊的服务器反作弊下移动。",
-  "liquidbounce.module.pendant.description": "显示一个图片在某些界面。",
   "liquidbounce.module.iQBoost.description": "允许你提高自己的IQ。",
   "liquidbounce.module.setbackOnRespawn.description": "重生时将你传送到你死亡的位置。",
   "liquidbounce.module.autoStuck.description": "在进入虚空娘的怀抱之前将你冻结在半空。",

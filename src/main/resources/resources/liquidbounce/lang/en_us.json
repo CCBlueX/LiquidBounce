@@ -832,7 +832,6 @@
   "liquidbounce.module.packetQueueColor.description": "Set the player model color in PacketQueue.",
   "liquidbounce.module.autoGG.description": "Automatically send a specified message in chat when you win.",
   "liquidbounce.module.movePhysics.description": "Allows movement under certain special server anti-cheats.",
-  "liquidbounce.module.pendant.description": "Displays an image on certain interfaces.",
   "liquidbounce.module.iQBoost.description": "Boost your IQ.",
   "liquidbounce.module.hudLayoutEditor.description": "Show the HUD editor for quick layout configuration.",
   "liquidbounce.module.setbackOnRespawn.description": "Teleport to your death location upon respawn.",

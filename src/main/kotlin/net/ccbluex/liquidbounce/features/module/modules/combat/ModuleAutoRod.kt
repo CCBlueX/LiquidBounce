@@ -8,8 +8,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleStuck
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -56,12 +56,14 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         "Requires",
         KillAuraRequirements.VANILLA_NAME
     )
+
     private fun defaultHoldingItems(): MutableSet<Item> {
         val set = hashSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
         return set
     }
+
     private val ignore by multiEnumChoice<Ignore>("Ignore")
-    private val holdingItemsForIgnore by items("HoldingItemsForIgnore",defaultHoldingItems())
+    private val holdingItemsForIgnore by items("HoldingItemsForIgnore", defaultHoldingItems())
     private val rotationConfigurable = RotationsConfigurable(this)
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
@@ -87,7 +89,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 && player.mainHandStack.item !in holdingItemsForIgnore
                 && !ModuleBlink.running
                 && !ModuleScaffold.running
-                && !ModuleAutoStuck.shouldActivate
+                && !ModuleStuck.running
                 && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
                 && !(Ignore.HOLD_CONSUME !in ignore && player.mainHandStack.isConsumable)
                 && !(Ignore.OPEN_INVENTORY !in ignore
@@ -154,7 +156,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (rodInUse) return@tickHandler
 
         val enemiesList = targetTracker.targets()
-        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold){
+        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold) {
             return@tickHandler
         }
 
@@ -192,9 +194,11 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 val point = pointTracker.findPoint(eyes, target, 1)
                 Rotation.lookingAt(point.pos, eyes)
             }
+
             RotationMode.PROJECTILE -> {
                 SituationalProjectileAngleCalculator.calculateAngleForEntity(
-                    TrajectoryInfo.FISHING_ROD, target)
+                    TrajectoryInfo.FISHING_ROD, target
+                )
             }
         }
     }
