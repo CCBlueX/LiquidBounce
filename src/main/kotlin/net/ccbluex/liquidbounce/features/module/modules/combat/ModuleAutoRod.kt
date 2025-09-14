@@ -73,10 +73,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
 
-    private val requires by multiEnumChoice<KillAuraRequirements>(
-        "Requires",
-        KillAuraRequirements.VANILLA_NAME
-    )
+    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val ignore by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
@@ -155,10 +152,10 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             }
         }
 
-        if (rodInUse) return@handler
+        if (rodInUse || player.health <= escapeHealthThreshold) return@handler
 
         val enemiesList = targetTracker.targets()
-        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold) {
+        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby) {
             return@handler
         }
 
