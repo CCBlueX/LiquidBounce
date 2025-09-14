@@ -135,23 +135,6 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
 
     open val useHand = Hand.MAIN_HAND
 
-    protected open val isSelectionNeeded: Boolean
-        get() = this.hotbarSlot != SilentHotbar.serversideSlot
-
-    /**
-     * @return If the player successfully selected the slot
-     */
-    internal fun trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
-        // Select the slot if we are not holding it.
-        if (isSelectionNeeded) {
-            if (!select) return false
-            // If we are not holding the slot, we can't shoot.
-            SilentHotbar.selectSlotSilently(silentHotbarRequester, this, tickUntilReset)
-            if (isSelectionNeeded) return false
-        }
-        return true
-    }
-
     override fun getIdForServer(screen: HandledScreen<*>?): Int? {
         return if (screen == null) 36 + hotbarSlot else screen.itemCount() - 9 + this.hotbarSlot
     }
@@ -241,9 +224,6 @@ data object OffHandSlot : HotbarItemSlot(-1) {
         get() = true
 
     override val useHand = Hand.OFF_HAND
-
-    override val isSelectionNeeded: Boolean
-        get() = false
 
     override fun getIdForServer(screen: HandledScreen<*>?) = if (screen == null) 45 else null
 }

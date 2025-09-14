@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
@@ -95,6 +96,20 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
+
+    private val HotbarItemSlot.isSelectionNeeded: Boolean
+        get() = this != OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
+
+    private fun HotbarItemSlot.trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
+        // Select the slot if we are not holding it.
+        if (isSelectionNeeded) {
+            if (!select) return false
+            // If we are not holding the slot, we can't shoot.
+            SilentHotbar.selectSlotSilently(silentHotbarRequester, this, tickUntilReset)
+            if (isSelectionNeeded) return false
+        }
+        return true
+    }
 
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react

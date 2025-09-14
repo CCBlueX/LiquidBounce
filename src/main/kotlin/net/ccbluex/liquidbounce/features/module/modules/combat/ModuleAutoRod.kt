@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -58,17 +58,10 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.projectile.FishingBobberEntity
 import net.minecraft.item.Items
-import kotlin.ranges.contains
+import net.minecraft.util.math.Vec3d
 
 /**
  * Auto use rod for PvP.
- *
- * Action chain:
- * 1. select rod
- * 2. use (push)
- * 3. timeout/hooked entity
- * 4. use (pull)
- * 5. reset slot
  */
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
@@ -93,7 +86,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
-    private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
     private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
     private val rotationConfigurable = tree(RotationsConfigurable(this))
@@ -130,7 +122,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         initialValue = null,
     ) { _, old ->
         old?.takeIf {
-            (it.isSelected || selectSlotAutomatically) && it.itemStack.isOf(Items.FISHING_ROD)
+            it.isSelected && it.itemStack.isOf(Items.FISHING_ROD)
         } ?: Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD)
     }
 
@@ -175,27 +167,28 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         // If the player used rod manually, skip use
         if (fishingBobberEntity == null) {
             // 1. select rod
-            if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, slotResetDelay.last + hitTimeout)) {
-                return@tickHandler
-            }
-
             // 2. push
-            if (!interactItem(slot.useHand, swingMode = swingMode).isAccepted) {
+            if (!useHotbarSlotOrOffhand(
+                    slot,
+                    ticksUntilReset = slotResetDelay.last + hitTimeout,
+                    swingMode = swingMode
+                ).isAccepted
+            ) {
                 // Action failed
                 return@tickHandler
             }
             currentScanExtraRange = scanExtraRange.random()
         }
 
-        // 3. timeout / hit entity
+        // 3. timeout / hit entity / no movement
         waitConditional(hitTimeout) {
-            fishingBobberEntity?.hookedEntity != null
+            fishingBobberEntity?.hookedEntity != null ||
+                fishingBobberEntity?.movement == Vec3d.ZERO
         }
 
-        // 4. pull + reset slot
-        if (slot.trySelect(ModuleAutoRod, selectSlotAutomatically, slotResetDelay.random())) {
-            interactItem(slot.useHand, swingMode = swingMode)
-        }
+        // 4. pull
+        // 5. reset slot
+        useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
 
         waitTicks(cooldown.random())
     }
