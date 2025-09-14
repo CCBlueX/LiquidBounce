@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { getEffectiveEnchantmentStatus, type ItemStack } from "../../../../integration/types";
-    import { REST_BASE } from "../../../../integration/host";
-    import { mapToColor } from "../../../../util/color_utils";
+    import {getEffectiveEnchantmentStatus, type ItemStack} from "../../../../integration/types";
+    import {REST_BASE} from "../../../../integration/host";
+    import {mapToColor} from "../../../../util/color_utils";
 
     export let stack: ItemStack;
 
@@ -10,7 +10,7 @@
     export let durabilityColorMode = false;
     export let durabilityPosition: "outside" | "inside" = "inside";
 
-    const { count, damage, identifier, maxDamage, dyedColor } = stack;
+    const {count, damage, identifier, maxDamage, dyedColor} = stack;
     const showEnchantment = getEffectiveEnchantmentStatus(stack);
 
     const isDyed = dyedMode && dyedColor !== undefined;
@@ -25,7 +25,7 @@
 
 <div class="item-stack" class:dyed-mode={dyedMode}>
 
-    <img alt={identifier} class="item-icon" src={itemIconUrl} />
+    <img alt={identifier} class="item-icon" src={itemIconUrl}/>
 
     {#if showEnchantment}
         <div class="enchant-glint" style="mask-image: url({itemIconUrl})"></div>

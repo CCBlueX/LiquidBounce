@@ -61,6 +61,7 @@
         prevAbsorptionVal = prevAbsorptionTweened.current;
         requestAnimationFrame(animate);
     }
+
     animate();
 
     $: total = Math.max(healthVal + absorptionVal, maxHealthVal, 1);

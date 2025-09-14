@@ -5,9 +5,9 @@
 <svg height="98" viewBox="0 0 261.263 98" width="261.263" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="base-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="var(--primary-color)" />
-            <stop offset="50%" stop-color="var(--secondary-color)" />
-            <stop offset="100%" stop-color="var(--primary-color)" />
+            <stop offset="0%" stop-color="var(--primary-color)"/>
+            <stop offset="50%" stop-color="var(--secondary-color)"/>
+            <stop offset="100%" stop-color="var(--primary-color)"/>
         </linearGradient>
 
         <pattern id="gradient-pattern" x="0" y="0" width="300%" height="100%" patternUnits="userSpaceOnUse">
@@ -15,13 +15,13 @@
                 <animate attributeName="x"
                          from="0" to="150%"
                          dur="4s"
-                         repeatCount="indefinite" />
+                         repeatCount="indefinite"/>
             </rect>
             <rect x="-150%" y="0" width="150%" height="100%" fill="url(#base-gradient)">
                 <animate attributeName="x"
                          from="-150%" to="0"
                          dur="4s"
-                         repeatCount="indefinite" />
+                         repeatCount="indefinite"/>
             </rect>
         </pattern>
     </defs>

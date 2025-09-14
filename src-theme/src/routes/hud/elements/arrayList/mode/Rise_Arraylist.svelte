@@ -15,7 +15,7 @@
         destroyGradient,
         subscribeRenderSettings
     } from '../arraylist';
-    import type {EventMap} from "../../../../../integration/events";
+    import {expoOut} from "svelte/easing";
 
     let enabledModules: Array<Module & { prefix: string; formattedName: string; width: number }> = [];
     let intervalId: number;
@@ -67,7 +67,7 @@
         await updateEnabledModules();
 
         listen('moduleToggle', () => updateEnabledModules());
-        listen('refreshArrayList'as keyof EventMap, () => updateEnabledModules());
+        listen('refreshArrayList', () => updateEnabledModules());
         listen('hudValueChange', () => updateEnabledModules());
         spaceSeperatedNames.subscribe(() => updateEnabledModules());
 
@@ -91,18 +91,20 @@
     <div
             class="module"
             id="module-name"
-            animate:flip={{ duration: 200 }}
+            animate:flip={{ duration: 200,easing: expoOut }}
             in:fly={{ x: 50, duration: 200 }}
     >
         {$spaceSeperatedNames ? convertToSpacedString(formattedName) : formattedName}
-        {#if prefix}<span class="prefix">{prefix}</span>{/if}
+        {#if prefix}<span class="prefix">&nbsp;{prefix}</span>{/if}
         <span class="side-bar" id="side-bar"></span>
     </div>
 {/each}
 
 
 <style lang="scss">
-    @use "../../../../../colors" as *;;
+  @use "../../../../../colors" as *;
+
+  ;
 
 
   .module {

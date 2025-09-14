@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import {createEventDispatcher} from "svelte";
     import {REST_BASE} from "../../../../integration/host";
     import AvatarView from "../../../hud/common/PlayerView/AvatarView.svelte";
     import {removeColorCodes} from "../../../../util/color_utils";
@@ -19,22 +19,23 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="item" class:has-icon={icon !== undefined || isPlayer} on:click={() => dispatch("toggle", { enabled: !enabled, value })}>
+<div class="item" class:has-icon={icon !== undefined || isPlayer}
+     on:click={() => dispatch("toggle", { enabled: !enabled, value })}>
     {#if isPlayer}
         <div class="avatar">
             <div class="avatar-inner">
-        <AvatarView skinUrl={`${REST_BASE}/api/v1/client/resource/skin?uuid=${value}`}/>
+                <AvatarView skinUrl={`${REST_BASE}/api/v1/client/resource/skin?uuid=${value}`}/>
             </div>
         </div>
     {:else if icon}
-        <img class="icon" src="{icon}" alt={value} />
+        <img class="icon" src="{icon}" alt={value}/>
     {/if}
     <div class="name">{removeColorCodes(name)}</div>
     <div class="tick">
         {#if enabled}
-            <img src="img/clickgui/icon-tick-checked.svg" alt="enabled" />
+            <img src="img/clickgui/icon-tick-checked.svg" alt="enabled"/>
         {:else}
-            <img src="img/clickgui/icon-tick.svg" alt="disabled" />
+            <img src="img/clickgui/icon-tick.svg" alt="disabled"/>
         {/if}
     </div>
 </div>
@@ -54,6 +55,7 @@
       grid-template-columns: max-content 1fr max-content;
     }
   }
+
   .avatar {
     position: relative;
     display: flex;
@@ -71,10 +73,12 @@
       transform-origin: center center;
     }
   }
+
   .icon {
     height: 25px;
     width: 25px;
   }
+
   .name {
     font-size: 14px;
     color: $text;

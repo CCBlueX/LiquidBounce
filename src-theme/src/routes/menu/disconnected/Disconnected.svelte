@@ -47,11 +47,12 @@
 
 <Menu>
     <div class="reconnect" transition:fly|global={{duration:300, y:100}}>
-        <SimpleButton  on:click={reconnectToServer} title="Reconnect" disabled={$isLoggingIn}/>
+        <SimpleButton on:click={reconnectToServer} title="Reconnect" disabled={$isLoggingIn}/>
         <SimpleButton on:click={restoreSession} title="Restore initial session" disabled={$isLoggingIn}/>
         <SimpleButton disabled={premiumAccounts.length === 0 || $isLoggingIn} on:click={reconnectWithRandomAccount}
-                      title="Reconnect with random account" />
-        <SimpleButton on:click={reconnectWithRandomUsername} title="Reconnect with random username" disabled={$isLoggingIn}/>
+                      title="Reconnect with random account"/>
+        <SimpleButton on:click={reconnectWithRandomUsername} title="Reconnect with random username"
+                      disabled={$isLoggingIn}/>
     </div>
     <div class="back" transition:fly|global={{duration:300, y:100}}>
         <SimpleButton on:click={() => handleBackClick("altmanager")} title="Back to AltManager"/>

@@ -111,7 +111,7 @@
     <CtrlFTip showSearch={showSearch}/>
 
     {#if $moduleDescription}
-    <Description/>
+        <Description/>
     {/if}
     <Search modules={structuredClone(modules)}/>
 

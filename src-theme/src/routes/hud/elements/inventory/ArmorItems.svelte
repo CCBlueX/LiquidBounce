@@ -1,6 +1,10 @@
 <script lang="ts">
     import {listen} from "../../../../integration/ws";
-    import type {ClientPlayerDataEvent, PlayerInventory, ClientPlayerInventoryEvent} from "../../../../integration/events";
+    import type {
+        ClientPlayerDataEvent,
+        PlayerInventory,
+        ClientPlayerInventoryEvent
+    } from "../../../../integration/events";
     import type {PlayerData, ItemStack} from "../../../../integration/types";
     import {onMount} from "svelte";
     import {getPlayerInventory, getPlayerData} from "../../../../integration/rest";
@@ -121,7 +125,8 @@
 
 
 </script>
-<div class="armoritems-hud hud-container" id="armoritemshud" transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
+<div class="armoritems-hud hud-container" id="armoritemshud"
+     transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
     <div class="inventory-hud"></div>
 
     <div class="title">

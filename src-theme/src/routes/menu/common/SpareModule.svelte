@@ -18,21 +18,22 @@
   -->
 
 <script lang="ts">
-    import { setModuleEnabled } from "../../../integration/rest";
+    import {setModuleEnabled} from "../../../integration/rest";
     import ButtonSetting from "./setting/ButtonSetting.svelte";
-    import { listen } from "../../../integration/ws";
-    import type { ModuleToggleEvent } from "../../../integration/events";
+    import {listen} from "../../../integration/ws";
+    import type {ModuleToggleEvent} from "../../../integration/events";
 
 
     interface FixedModule {
         name: string;
         enabled: boolean;
     }
+
     let fixedModules: FixedModule[] = [
-        { name: "KillAura", enabled: false },
-        { name: "ChestStealer", enabled: false },
-        { name: "AutoArmor", enabled: false },
-        { name: "InventoryCleaner", enabled: false }
+        {name: "KillAura", enabled: false},
+        {name: "ChestStealer", enabled: false},
+        {name: "AutoArmor", enabled: false},
+        {name: "InventoryCleaner", enabled: false}
     ].sort((a, b) => b.name.length - a.name.length);
 
 
@@ -41,6 +42,7 @@
         mod.enabled = !mod.enabled;
         fixedModules = [...fixedModules];
     }
+
     listen("moduleToggle", (e: ModuleToggleEvent) => {
         const mod = fixedModules.find(m => m.name === e.moduleName);
         if (!mod) return;

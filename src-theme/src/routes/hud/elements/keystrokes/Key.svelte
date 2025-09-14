@@ -18,7 +18,7 @@
         if (e.key !== key?.key.translationKey) return;
         if (e.action === 1 && !isPressed) {
             isPressed = true;
-            ripples = [...ripples, { id: rippleCounter++ }];
+            ripples = [...ripples, {id: rippleCounter++}];
             setTimeout(() => {
                 ripples = ripples.filter(r => r.id !== ripples[0].id);
             }, 400);
@@ -31,7 +31,7 @@
         if (e.key !== key?.key.translationKey) return;
         if (e.action === 1 && !isPressed) {
             isPressed = true;
-            ripples = [...ripples, { id: rippleCounter++ }];
+            ripples = [...ripples, {id: rippleCounter++}];
             setTimeout(() => {
                 ripples = ripples.filter(r => r.id !== ripples[0].id);
             }, 400);

@@ -1,7 +1,7 @@
 <script lang="ts">
     import {fade} from "svelte/transition";
     import {listen} from "../../../integration/ws";
-    import type { OverlayTitleEvent} from "../../../integration/events";
+    import type {OverlayTitleEvent} from "../../../integration/events";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import {Interval} from "../../../util/timeout_utils";
 
@@ -35,7 +35,7 @@
 
 
 <style lang="scss">
-  @use"../../../colors.scss" as *;
+  @use "../../../colors.scss" as *;
 
   .overlay-container {
     position: fixed;

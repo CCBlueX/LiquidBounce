@@ -14,4 +14,4 @@
     $: ModeComponent = modes[settings?.mode] ?? Ambient_SessionInfo;
 </script>
 
-<svelte:component this={ModeComponent} {settings} />
+<svelte:component this={ModeComponent} {settings}/>

@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { getConfigs, loadConfig, saveConfig, deleteConfig } from "../../integration/rest";
-    import { getGameWindow } from "../../integration/rest";
+    import {onMount} from "svelte";
+    import {getConfigs, loadConfig, saveConfig, deleteConfig} from "../../integration/rest";
+    import {getGameWindow} from "../../integration/rest";
     import type {ScaleFactorChangeEvent} from "../../integration/events";
     import {listen} from "../../integration/ws";
 
@@ -11,7 +11,7 @@
     let moving = false;
     let offsetX = 0;
     let offsetY = 0;
-    let panelConfig = { top: 20, left: 20, zIndex: 0 };
+    let panelConfig = {top: 20, left: 20, zIndex: 0};
     let windowWidth = window.innerWidth;
     let windowHeight = window.innerHeight;
     let panelWidth = 0;
@@ -29,6 +29,7 @@
         scaleFactor = minecraftScaleFactor * clickGuiScaleFactor;
         scaleFactor = Math.min(window.innerWidth / gameWindow.width, window.innerHeight / gameWindow.height) * scaleFactor;
     }
+
     function toggleVisibility() {
         isVisible = !isVisible;
     }
@@ -40,8 +41,8 @@
                 console.log("Configs loaded:", configs);
                 const savedConfig = localStorage.getItem("config-manager.position");
                 if (savedConfig) {
-                    const { top, left, zIndex } = JSON.parse(savedConfig);
-                    panelConfig = { top, left, zIndex };
+                    const {top, left, zIndex} = JSON.parse(savedConfig);
+                    panelConfig = {top, left, zIndex};
                 }
                 await updateScale();
             } catch (error) {
@@ -80,7 +81,7 @@
     async function savePanelConfig() {
         localStorage.setItem(
             "config-manager.position",
-            JSON.stringify({ top: panelConfig.top, left: panelConfig.left, zIndex: panelConfig.zIndex })
+            JSON.stringify({top: panelConfig.top, left: panelConfig.left, zIndex: panelConfig.zIndex})
         );
     }
 
@@ -130,7 +131,7 @@
 
 </script>
 
-<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
+<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp}/>
 
 {#if isVisible}
     <div
@@ -164,7 +165,7 @@
                 <p>No configs available</p>
             {/if}
         </div>
-        <input bind:value={selectedConfig} placeholder="Config name" />
+        <input bind:value={selectedConfig} placeholder="Config name"/>
         <button on:click={handleSave}>Save</button>
     </div>
 {/if}
@@ -182,6 +183,7 @@
     &.no-transition {
       transition: none !important;
     }
+
     .title {
       cursor: grab;
       padding: 5px;
@@ -194,6 +196,7 @@
         font-size: 16px;
       }
     }
+
     .configs-list {
       height: calc(10 * 35px);
       overflow-y: auto;

@@ -12,10 +12,10 @@
     {
       "type": "CHOOSE",
       "name": "Mode",
-      "value": "Modern",
+      "value": "Simple",
       "choices": [
         "Simple",
-        "Modern"
+        "Rise"
       ]
     },
     {

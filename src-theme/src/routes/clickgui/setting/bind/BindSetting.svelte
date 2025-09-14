@@ -87,7 +87,7 @@
                 return undefined;
             }
 
-            return { key: e.key, keyCode: e.keyCode, modifier: modifierOrUndef };
+            return {key: e.key, keyCode: e.keyCode, modifier: modifierOrUndef};
         } else if (Object.hasOwn(event, 'button')) {
             const e = event as MouseButtonEvent;
             handleActionChange(e.key);
@@ -122,7 +122,7 @@
             if (timeout !== undefined) {
                 clearTimeout(timeout);
             }
-            const { key, modifier } = result;
+            const {key, modifier} = result;
 
             addedModifiers.add(modifier);
             addedModifiers = addedModifiers; // Trigger reactive update

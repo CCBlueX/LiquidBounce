@@ -13,7 +13,8 @@
     export let label: string | null = null;
     export let icon: string | null = null;
     export let animate: boolean = true;
-    export let onDone: () => void = () => {};
+    export let onDone: () => void = () => {
+    };
 
     $: ratio = Math.max(0, Math.min(value, max)) / max;
     $: tweenRatio = tweenStore(tween, ratio);

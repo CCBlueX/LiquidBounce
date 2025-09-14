@@ -1,14 +1,20 @@
 <script lang="ts">
-    import { listen } from "../../../integration/ws";
+    import {listen} from "../../../integration/ws";
     import type {OverlayPlayListEvent, KeyEvent, EventMap, PlayerEntry} from "../../../integration/events";
     import TextComponent from "../../menu/common/TextComponent.svelte";
-    import { onMount } from "svelte";
+    import {onMount} from "svelte";
     import {getTextWidth} from '../../../integration/text_measurement';
-    import { getMinecraftKeybinds, getModuleSettings } from "../../../integration/rest";
-    import type { ConfigurableSetting, MinecraftKeybind, MultiChooseSetting,ChoiceSetting, TextComponent as TTextComponent } from "../../../integration/types";
+    import {getMinecraftKeybinds, getModuleSettings} from "../../../integration/rest";
+    import type {
+        ConfigurableSetting,
+        MinecraftKeybind,
+        MultiChooseSetting,
+        ChoiceSetting,
+        TextComponent as TTextComponent
+    } from "../../../integration/types";
     import AvatarView from "../common/PlayerView/AvatarView.svelte";
-    import { scale } from "svelte/transition";
-    import { REST_BASE } from "../../../integration/host";
+    import {scale} from "svelte/transition";
+    import {REST_BASE} from "../../../integration/host";
 
     export let settings: { [name: string]: any };
 
@@ -55,6 +61,7 @@
         }
         return str;
     }
+
     const sortPlayers = (players: PlayerEntry[]) => {
         if (!settings?.sortBy) return players;
 
@@ -71,7 +78,7 @@
         return [...players].sort(comparator);
     };
 
-    const handleKeyDown = ({ key, action }: KeyEvent) => {
+    const handleKeyDown = ({key, action}: KeyEvent) => {
         if (key === keyPlayerList?.key.translationKey) {
             visible = action === 1 || action === 2;
         }
@@ -98,8 +105,8 @@
 
     listen("key", handleKeyDown);
 
-    listen("overlayPlayList", ({ players, ...rest }: OverlayPlayListEvent) => {
-        overlayPlayList = { players: sortPlayers(players), ...rest };
+    listen("overlayPlayList", ({players, ...rest}: OverlayPlayListEvent) => {
+        overlayPlayList = {players: sortPlayers(players), ...rest};
         players && calculateLayout(players);
     });
     onMount(async () => {
@@ -131,9 +138,9 @@
                 >
                     {#each overlayPlayList.players as player}
                         <div class="player-entry"
-                                class:friend={settings?.highlight.friend && player.isFriend}
-                                class:staff={settings?.highlight.staff && player.isStaff}
-                                class:self={settings?.highlight.self && player.isSelf}
+                             class:friend={settings?.highlight.friend && player.isFriend}
+                             class:staff={settings?.highlight.staff && player.isStaff}
+                             class:self={settings?.highlight.self && player.isSelf}
                         >
                             {#if !isVisible("NameOnly")}
                                 <div class="avatar">

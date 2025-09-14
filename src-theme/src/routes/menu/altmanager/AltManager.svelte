@@ -213,7 +213,8 @@
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" on:click={() => addAccountModalVisible = true} title="Add"/>
             <IconTextButton icon="icon-plane.svg" on:click={() => directLoginModalVisible = true} title="Direct"/>
-            <IconTextButton disabled={renderedAccounts.length === 0} icon="icon-random.svg" on:click={loginToRandomAccount}
+            <IconTextButton disabled={renderedAccounts.length === 0} icon="icon-random.svg"
+                            on:click={loginToRandomAccount}
                             title="Random"/>
             <IconTextButton icon="icon-refresh.svg" on:click={restoreSession} title="Restore"/>
         </ButtonContainer>

@@ -16,7 +16,7 @@
 
     const userData = JSON.parse(
         localStorage.getItem('userSettings') ||
-        JSON.stringify({ username: 'Customer' })
+        JSON.stringify({username: 'Customer'})
     );
 
     function updatePlayerData(s: PlayerData) {
@@ -55,7 +55,8 @@
         <div class="hotbar-elements">
             <div class="left-info">
                 <div class="ping">
-                    <span class="ping-dot" style="--dot-color: {pingColor(playerData.ping)}; background-color: {pingColor(playerData.ping)}"></span>
+                    <span class="ping-dot"
+                          style="--dot-color: {pingColor(playerData.ping)}; background-color: {pingColor(playerData.ping)}"></span>
                     PING: {playerData.ping ? `${playerData.ping}ms` : 'N/A'}
                 </div>
                 <div class="fps">FPS: {clientInfo.fps}</div>
@@ -73,7 +74,8 @@
                 </div>
             </div>
             <div class="build-version">
-                {$clientName ? $clientName : `JMcomicFix`} Build {clientInfo.clientVersion} Developer Version - {userData.username}
+                {$clientName ? $clientName : `JMcomicFix`} Build {clientInfo.clientVersion} Developer Version
+                - {userData.username}
             </div>
         </div>
     </div>
@@ -144,7 +146,7 @@
         width: 45px;
         height: 45px;
         border-radius: 8px;
-        background-color: rgba(255, 255, 255,.4);
+        background-color: rgba(255, 255, 255, .4);
         transition: left 0.1s ease-in;
         pointer-events: none;
         z-index: 1;

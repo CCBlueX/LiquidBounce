@@ -16,6 +16,7 @@ interface PanelConfig {
     scrollTop: number;
     zIndex: number;
 }
+
 export const os: Writable<string | null> = writable<string | null>(null);
 export const locked = writable(false);
 export const description: Writable<TDescription | null> = writable(null);

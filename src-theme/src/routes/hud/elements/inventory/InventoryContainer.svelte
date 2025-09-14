@@ -34,7 +34,8 @@
 
 </script>
 
-<div class="inventory-hud hud-container" id="inventoryhud" transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
+<div class="inventory-hud hud-container" id="inventoryhud"
+     transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
     <div class="title">
         <img alt="inventory" class="icon" src="img/hud/inventory/inventory.svg"/>
         <span>Inventory List</span>

@@ -56,7 +56,7 @@
         if (!chart) return;
         const ds = chart.data.datasets[0] as any;
         cSetting.value = ds.data.map((p: ScatterDataPoint) => ({x: p.x, y: p.y})) as Point[];
-        setting = { ...cSetting };
+        setting = {...cSetting};
         dispatch("change");
     }
 

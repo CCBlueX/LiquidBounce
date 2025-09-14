@@ -2,7 +2,7 @@
     import {createEventDispatcher, afterUpdate} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {fade} from 'svelte/transition';
-    import { FadeIn,FadeOut } from "../../../../util/animate_utils";
+    import {FadeIn, FadeOut} from "../../../../util/animate_utils";
     import {cubicOut} from "svelte/easing";
 
     export let name: string | null;
@@ -14,6 +14,7 @@
     let expanded = false;
     let optionRefs: HTMLElement[] = [];
     let optionMaxHeight = '0px';
+
     function updateValue(v: string) {
         value = v;
         dispatch("change");

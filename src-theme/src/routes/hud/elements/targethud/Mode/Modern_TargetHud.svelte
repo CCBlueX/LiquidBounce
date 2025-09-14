@@ -72,7 +72,6 @@
     }
 
 
-
     function getRandomThemeColor(): string {
 
         const pc = get(primaryColor);
@@ -195,7 +194,6 @@
         cancelAnimationFrame(animationFrame);
         clearInterval(hurtTimeTick);
     });
-
 
 
     listen("targetChange", (data: TargetChangeEvent) => {
@@ -344,7 +342,9 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../../colors" as *;;
+  @use "../../../../../colors" as *;
+
+  ;
 
   .targethud-container {
     display: flex;
@@ -459,19 +459,19 @@
     display: flex;
     align-items: center;
     gap: 4px;
-/*
-    .flag {
-      width: 16px;
-      height: 16px;
-      mask: url("/img/hud/targethud/icon-flag.svg") no-repeat center;
-      -webkit-mask: url("/img/hud/targethud/icon-flag.svg") no-repeat center;
-      -webkit-mask-size: contain;
-      mask-size: contain;
-      filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--team-color) 30%, transparent));
-      background-color: var(--team-color);
-      flex-shrink: 0;
-    }
-*/
+    /*
+        .flag {
+          width: 16px;
+          height: 16px;
+          mask: url("/img/hud/targethud/icon-flag.svg") no-repeat center;
+          -webkit-mask: url("/img/hud/targethud/icon-flag.svg") no-repeat center;
+          -webkit-mask-size: contain;
+          mask-size: contain;
+          filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--team-color) 30%, transparent));
+          background-color: var(--team-color);
+          flex-shrink: 0;
+        }
+    */
   }
 
   .armor-stats {

@@ -3,15 +3,16 @@
     import {onDestroy} from "svelte";
     import {WindowSize} from "../../../util/WindowSize";
     import {vignette} from "../../../util/Theme/ThemeManager";
+
     const {width, height, destroy} = WindowSize();
 
     onDestroy(destroy);
 </script>
 {#if $vignette}
-<div class="vignette"
-     style="width: { $width }px; height: { $height }px;"
-     transition:fade|global={{duration: 300}}>
-</div>
+    <div class="vignette"
+         style="width: { $width }px; height: { $height }px;"
+         transition:fade|global={{duration: 300}}>
+    </div>
 {/if}
 
 <style lang="scss">

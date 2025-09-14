@@ -27,6 +27,7 @@
     async function updateSession() {
         session = await getSession();
     }
+
     const userData = JSON.parse(
         localStorage.getItem('userSettings') ||
         JSON.stringify({
@@ -51,16 +52,15 @@
 </script>
 
 
-
 <div class="watermark hud-container" transition:fly|global={{ duration: 500, y: -50, easing: expoInOut }}>
     <div class="watermark-content">
         {#if clientInfo}
-            <ClientName {clientInfo} glow={settings?.glow} />
+            <ClientName {clientInfo} glow={settings?.glow}/>
 
             {#if session}
                 <div class="separator"></div>
                 <div class="info">
-                        {userData.username}
+                    {userData.username}
                 </div>
             {/if}
 

@@ -6,7 +6,12 @@
     import {onMount} from "svelte";
     import {getModuleSettings, setModuleSettings, setModuleEnabled} from "../../integration/rest";
     import GenericSetting from "./setting/common/GenericSetting.svelte";
-    import {description as descriptionStore, highlightModuleName, scaleFactor,moduleAutoCollapse} from "./clickgui_store";
+    import {
+        description as descriptionStore,
+        highlightModuleName,
+        scaleFactor,
+        moduleAutoCollapse
+    } from "./clickgui_store";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let name: string;
@@ -162,7 +167,7 @@
         <div class="settings-wrapper">
             <div class="settings">
                 {#each configurable.value as setting (setting.name)}
-                    <GenericSetting  {path} bind:setting on:change={updateModuleSettings}/>
+                    <GenericSetting {path} bind:setting on:change={updateModuleSettings}/>
                 {/each}
             </div>
         </div>

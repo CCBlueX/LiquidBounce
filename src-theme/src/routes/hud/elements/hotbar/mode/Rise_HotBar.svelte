@@ -51,7 +51,7 @@
 {/if}
 
 <style lang="scss">
-  @use"../../../../../colors.scss" as *;
+  @use "../../../../../colors.scss" as *;
 
   .hotbar {
     display: flex;

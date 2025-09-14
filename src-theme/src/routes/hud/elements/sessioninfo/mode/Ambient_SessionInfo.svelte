@@ -25,7 +25,7 @@
         playerData = event.playerData;
         kills.set(playerData.killsCount ?? 0);
         deathCount.set(playerData.deathCount ?? 0);
-        wins.set(playerData.winsCount?? 0);
+        wins.set(playerData.winsCount ?? 0);
     });
 
 </script>

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import type { ModuleSetting, BindSetting } from "../../../integration/types";
-    import { getModules, getModuleSettings, getPrintableKeyName } from "../../../integration/rest";
-    import { listen } from "../../../integration/ws";
-    import { expoInOut } from "svelte/easing";
-    import { fly } from "svelte/transition";
+    import {onMount} from "svelte";
+    import type {ModuleSetting, BindSetting} from "../../../integration/types";
+    import {getModules, getModuleSettings, getPrintableKeyName} from "../../../integration/rest";
+    import {listen} from "../../../integration/ws";
+    import {expoInOut} from "svelte/easing";
+    import {fly} from "svelte/transition";
     import Line from "../common/Trims/Line.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
@@ -72,6 +72,7 @@
             typeof (setting as BindSetting).value?.boundKey === "string"
         );
     }
+
     const formatKeyName = (key: string | undefined) => {
         if (!key) return key;
 
@@ -81,18 +82,19 @@
             'Middle Button': 'MMB',
             'Button 4': 'MB4',
             'Button 5': 'MB5',
-            'Left Control':'L Ctrl',
-            'Right Control':'R Ctrl',
-            'Left Shift':'L Shift',
-            'Right Shift':'R Shift',
-            'Left Alt':'L Alt',
-            'Right Alt':'R Alt',
-            'Left Win':'Win',
-            'Caps Lock':'Caps'
+            'Left Control': 'L Ctrl',
+            'Right Control': 'R Ctrl',
+            'Left Shift': 'L Shift',
+            'Right Shift': 'R Shift',
+            'Left Alt': 'L Alt',
+            'Right Alt': 'R Alt',
+            'Left Win': 'Win',
+            'Caps Lock': 'Caps'
         };
 
         return mouseButtonMap[key] || key;
     };
+
     async function updateBindings() {
         try {
             const modules = await getModules();
@@ -151,15 +153,15 @@
             transition:fly|global={{ duration: 500, y: -50, easing: expoInOut }}
     >
         <div class="title">
-            <img class="icon" src="img/hud/keybinds/keyboard.svg" alt="keyboard" />
+            <img class="icon" src="img/hud/keybinds/keyboard.svg" alt="keyboard"/>
             <span>Keybindings</span>
         </div>
         {#if settings?.divider}
-        <Line gradient={settings?.gradient}/>
+            <Line gradient={settings?.gradient}/>
         {/if}
         {#each bindings as binding (binding.moduleName)}
             <div class:disabled={!binding.enabled} class="binding-item">
-                <span class="module-name">       {$spaceSeperatedNames ? convertToSpacedString(binding.moduleName ) : binding.moduleName}</span>
+                <span class="module-name">       {$spaceSeperatedNames ? convertToSpacedString(binding.moduleName) : binding.moduleName}</span>
                 <span class="key-info">
                     {#if binding.keyName}
                         {#each binding.modifiers as modifier (modifier)}

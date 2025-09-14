@@ -121,8 +121,8 @@ function parseRgbString(str: string): RGBColor {
 export function colorInterpolate(a: RGBColor, b: RGBColor, t: number): RGBColor {
     t = Math.max(0, Math.min(1, t));
 
-    const colorA = new Color("srgb", [a.r/255, a.g/255, a.b/255]);
-    const colorB = new Color("srgb", [b.r/255, b.g/255, b.b/255]);
+    const colorA = new Color("srgb", [a.r / 255, a.g / 255, a.b / 255]);
+    const colorB = new Color("srgb", [b.r / 255, b.g / 255, b.b / 255]);
 
     const interpolated = colorA.mix(colorB, t, {space: "oklch", outputSpace: "srgb"});
 
@@ -130,6 +130,7 @@ export function colorInterpolate(a: RGBColor, b: RGBColor, t: number): RGBColor 
 
     return {r: red, g: green, b: blue};
 }
+
 let speed = 50;
 let progress = 0;
 const tSpeed = (0.04 / 20) * speed;

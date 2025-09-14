@@ -59,7 +59,7 @@
 
 <style lang="scss">
   @use "sass:color";
-    @use "../../../../colors" as *;
+  @use "../../../../colors" as *;
 
 
   .notification {

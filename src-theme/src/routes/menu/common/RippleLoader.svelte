@@ -1,8 +1,12 @@
 <script lang="ts">
-    const { size = 80 } = $props();
+    const {size = 80} = $props();
 </script>
 
-<div class="lds-ripple" style="--size: {size}px; --position: calc(var(--size) * 9 / 20); --small-size: calc(var(--size) / 10);"><div></div><div></div></div>
+<div class="lds-ripple"
+     style="--size: {size}px; --position: calc(var(--size) * 9 / 20); --small-size: calc(var(--size) / 10);">
+    <div></div>
+    <div></div>
+</div>
 
 <style lang="scss">
   /*
@@ -12,7 +16,7 @@
   @use "../../../colors.scss" as *;
 
   .lds-ripple {
-    color:$text;
+    color: $text;
   }
 
   .lds-ripple,

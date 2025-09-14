@@ -17,4 +17,4 @@
     $: ModeComponent = modes[settings?.mode] ?? Hanabi_Effects;
 </script>
 
-<svelte:component this={ModeComponent} {settings} />
+<svelte:component this={ModeComponent} {settings}/>
