@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
+import java.util.function.Predicate
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -44,9 +45,10 @@ open class TargetTracker(
 
     var target: LivingEntity? = null
 
-    fun selectFirst(predicate: ((LivingEntity) -> Boolean)? = null): LivingEntity? {
+    fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
         val enemies = targets()
-        return (if (predicate != null) enemies.firstOrNull(predicate) else enemies.firstOrNull()).also { target = it }
+        val selected = if (predicate != null) enemies.firstOrNull(predicate::test) else enemies.firstOrNull()
+        return selected.also { this.target = it }
     }
 
     fun <R> select(evaluator: (LivingEntity) -> R): R? {
@@ -66,10 +68,10 @@ open class TargetTracker(
         target = null
     }
 
-    fun validate(validator: ((LivingEntity) -> Boolean)? = null) {
+    fun validate(predicate: Predicate<LivingEntity>? = null) {
         val target = target ?: return
 
-        if (!validate(target) || validator != null && !validator(target)) {
+        if (!validate(target) || predicate != null && !predicate.test(target)) {
             reset()
         }
     }
