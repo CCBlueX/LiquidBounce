@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -58,13 +59,11 @@ open class InventoryConstraints : Configurable("Constraints") {
     internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
 
-    internal val requirements by multiEnumChoice<InventoryRequirements>(
-        "Requires",
+    internal val requirements by multiEnumChoice<InventoryRequirements>("Requires",
         default = emptyEnumSet(),
         choices = EnumSet.of(
             InventoryRequirements.NO_MOVEMENT,
-            InventoryRequirements.NO_ROTATION,
-            InventoryRequirements.NO_FALLING
+            InventoryRequirements.NO_ROTATION
         ).also {
             if (this is PlayerInventoryConstraints) {
                 it.add(InventoryRequirements.OPEN_INVENTORY)
@@ -95,13 +94,10 @@ internal enum class InventoryRequirements(
     NO_MOVEMENT("NoMovement", { _ ->
         player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
     }),
-    NO_FALLING("NoFalling", { _ ->
-        player.fallDistance == 0.0f
-    }),
+
     NO_ROTATION("NoRotation", { _ ->
         RotationManager.rotationMatchesPreviousRotation()
     }),
-
 
     /**
      * When this option is not enabled, the inventory will be opened silently
@@ -171,11 +167,12 @@ fun useHotbarSlotOrOffhand(
     ticksUntilReset: Int = 1,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult = when (item) {
-    OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch)
+    OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch, swingMode)
     else -> {
         SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
-        interactItem(Hand.MAIN_HAND, yaw, pitch)
+        interactItem(Hand.MAIN_HAND, yaw, pitch, swingMode)
     }
 }
 
@@ -184,12 +181,13 @@ fun interactItem(
     hand: Hand,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
     pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult {
     val result = interaction.interactItem(player, hand, yaw, pitch)
 
     if (result.isAccepted) {
         if (result.shouldSwingHand()) {
-            player.swingHand(hand)
+            swingMode.accept(hand)
         }
 
         mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)

@@ -1,6 +1,28 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -8,8 +30,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -17,116 +40,105 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.LivingEntity
-import net.minecraft.item.Item
+import net.minecraft.entity.projectile.FishingBobberEntity
 import net.minecraft.item.Items
+import net.minecraft.util.math.Vec3d
 
+/**
+ * Auto use rod for PvP.
+ */
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val rotationMode by enumChoice("RotationMode", RotationMode.LINEAR)
-    private val range by floatRange("Range", 3.5f..5f, 3f..10f)
+    private val range by floatRange("Range", 3.5f..5f, 2f..10f)
     private val scanExtraRange by floatRange("ScanExtraRange", 0.0f..0.0f, 0.0f..5.0f).onChanged { range ->
         currentScanExtraRange = range.random()
     }
     private var currentScanExtraRange: Float = scanExtraRange.random()
-    private val enemiesNearby by int("EnemiesNearby", 1, 1..10)
-    private val escapeHealthThreshold by int("EscapeHealthThreshold", 10, 1..20)
-    private val pushDelay by int("PushDelay", 100, 50..1000)
-    private val pullbackDelay by int("PullbackDelay", 500, 50..1000)
-    private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
-    private val tickUntilSlotReset by int("TicksUntilSlotReset", 1, 0..20)
-    private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
 
-    private val requires by multiEnumChoice<KillAuraRequirements>(
-        "Requires",
-        KillAuraRequirements.VANILLA_NAME
+    // Requirements
+    private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 1..10)
+    private val minHealth by float("MinHealth", 10f, 1f..20f)
+    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+    private val ignore by multiEnumChoice<Ignore>("Ignore")
+    private val holdingItemsForIgnore by items(
+        "HoldingItemsForIgnore",
+        ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
     )
 
-    private fun defaultHoldingItems(): MutableSet<Item> {
-        val set = hashSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
-        return set
-    }
+    private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
+    private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
+    private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
-    private val ignore by multiEnumChoice<Ignore>("Ignore")
-    private val holdingItemsForIgnore by items("HoldingItemsForIgnore", defaultHoldingItems())
-    private val rotationConfigurable = RotationsConfigurable(this)
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val requirementsMet
-        get() = requires.all { it.meets() }
+        get() = requires.all { it.asBoolean }
+            && player.health > minHealth
+            && targetTracker.countTargets() <= maxEnemiesNearby
+            && availableRodSlot != null
+            && player.mainHandStack.item !in holdingItemsForIgnore
+            && !ModuleBlink.running
+            && !ModuleScaffold.running
+            && !ModuleStuck.running
+            && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
+            && !(Ignore.HOLD_CONSUME !in ignore &&
+            (player.mainHandStack.isConsumable || player.offHandStack.isConsumable))
+            && !(Ignore.OPEN_INVENTORY !in ignore
+            && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
 
-    private val pushTimer = Chronometer()
-    private val pullbackTimer = Chronometer()
-    private var rodInUse = false
-
-    init {
-        tree(rotationConfigurable)
+    private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
+        priority = FIRST_PRIORITY,
+        initialValue = null,
+    ) { _, _ ->
+        world.entities.firstOrNull { entity ->
+            entity is FishingBobberEntity && entity.playerOwner === player
+        } as FishingBobberEntity?
     }
 
-    override val running: Boolean
-        get() =
-            super.running
-                && player.mainHandStack.item !in holdingItemsForIgnore
-                && !ModuleBlink.running
-                && !ModuleScaffold.running
-                && !ModuleStuck.running
-                && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
-                && !(Ignore.HOLD_CONSUME !in ignore && player.mainHandStack.isConsumable)
-                && !(Ignore.OPEN_INVENTORY !in ignore
-                && (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen))
-
-
-    private fun HotbarItemSlot.needsSelection(): Boolean =
-        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
-
-    private fun trySelect(slot: HotbarItemSlot): Boolean {
-        if (slot.needsSelection()) {
-            if (!selectSlotAutomatically) return false
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer) return false
-        }
-        return true
-    }
-
-    private fun commonChecks(target: LivingEntity?, slot: HotbarItemSlot?): Boolean {
-        if (target == null || slot == null) return false
-        if (!trySelect(slot)) return false
-        return true
+    private var availableRodSlot by computedOn<GameTickEvent, HotbarItemSlot?>(
+        priority = FIRST_PRIORITY,
+        initialValue = null,
+    ) { _, old ->
+        old?.takeIf {
+            it.isSelected && it.itemStack.isOf(Items.FISHING_ROD)
+        } ?: Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD)
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         if (!requirementsMet) {
             targetTracker.reset()
-            targetRenderer.reset()
             return@handler
         }
-        val target = targetTracker.selectFirst { enemy ->
-            val dist = player.squaredDistanceTo(enemy)
-            val maxRange = range.endInclusive + currentScanExtraRange
-            if (dist > maxRange * maxRange || dist < range.start * range.start) return@selectFirst false
-            player.canSee(enemy)
-        } ?: return@handler
 
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!commonChecks(target, slot)) return@handler
+        val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
+        val mixRangeSq = range.start.sq()
+
+        val target = targetTracker.selectFirst { enemy ->
+            player.squaredDistanceTo(enemy) in mixRangeSq..maxRangeSq && player.canSee(enemy)
+        } ?: return@handler
 
         val rotation = findRotation(target, rotationMode) ?: return@handler
         RotationManager.setRotationTarget(
@@ -138,48 +150,54 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     @Suppress("unused")
     private val handleAutoRod = tickHandler {
+        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedEntity }
+
+        if (!requirementsMet) {
+            return@tickHandler
+        }
+
+        val slot = availableRodSlot ?: return@tickHandler
+
         val target = targetTracker.target ?: return@tickHandler
-
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@tickHandler
-        if (!commonChecks(target, slot)) return@tickHandler
-        if (rodInUse && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
-            KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
-            rodInUse = false
-            pushTimer.reset()
-            currentScanExtraRange = scanExtraRange.random()
-            return@tickHandler
-        }
-
-        if (rodInUse) return@tickHandler
-
-        val enemiesList = targetTracker.targets()
-        if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby || player.health <= escapeHealthThreshold) {
-            return@tickHandler
-        }
 
         val rotation = findRotation(target, rotationMode) ?: return@tickHandler
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
-        if (pushTimer.hasElapsed(pushDelay.toLong())) {
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            interaction.syncSelectedSlot()
-            KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
-            rodInUse = true
-            pullbackTimer.reset()
+        // If the player used rod manually, skip use
+        if (fishingBobberEntity == null) {
+            // 1. select rod
+            // 2. push
+            if (!useHotbarSlotOrOffhand(
+                    slot,
+                    ticksUntilReset = slotResetDelay.last + hitTimeout,
+                    swingMode = swingMode
+                ).isAccepted
+            ) {
+                // Action failed
+                return@tickHandler
+            }
+            currentScanExtraRange = scanExtraRange.random()
         }
 
+        // 3. timeout / hit entity / no movement
+        waitConditional(hitTimeout) {
+            fishingBobberEntity?.hookedEntity != null ||
+                fishingBobberEntity?.movement == Vec3d.ZERO
+        }
+
+        // 4. pull
+        // 5. reset slot
+        useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
+
+        waitTicks(cooldown.random())
     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val target = targetTracker.target
-        if (target == null) {
-            targetRenderer.reset()
-            return@handler
-        }
-        renderEnvironmentForWorld(matrixStack) {
+        val target = targetTracker.target ?: return@handler
+
+        renderEnvironmentForWorld(event.matrixStack) {
             targetRenderer.render(this, target, event.partialTicks)
         }
     }
@@ -202,9 +220,11 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     override fun onDisabled() {
         targetTracker.reset()
-        targetRenderer.reset()
-        rodInUse = false
-        KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
+        fishingBobberEntity?.let {
+            interaction.stopUsingItem(player)
+            fishingBobberEntity = null
+        }
+        availableRodSlot = null
     }
 
     private enum class RotationMode(override val choiceName: String) : NamedChoice {

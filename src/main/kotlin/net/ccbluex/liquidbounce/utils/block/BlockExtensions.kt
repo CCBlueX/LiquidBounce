@@ -50,6 +50,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.RaycastContext
+import java.util.function.Consumer
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -490,15 +491,25 @@ fun BlockState.canBeReplacedWith(
 enum class SwingMode(
     override val choiceName: String,
     val serverSwing: Boolean,
-    val swing: (Hand) -> Unit = { }
-) : NamedChoice {
+) : NamedChoice, Consumer<Hand> {
 
-    DO_NOT_HIDE("DoNotHide", true, { player.swingHand(it) }),
+    DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),
-    HIDE_CLIENT("HideForClient", true, { network.sendPacket(HandSwingC2SPacket(it)) }),
-    HIDE_SERVER("HideForServer", false, { player.swingHand(it, false) });
+    HIDE_CLIENT("HideForClient", true),
+    HIDE_SERVER("HideForServer", false);
 
+    fun swing(hand: Hand) = accept(hand)
+
+    override fun accept(hand: Hand) {
+        when (this) {
+            DO_NOT_HIDE -> player.swingHand(hand)
+            HIDE_BOTH -> {}
+            HIDE_CLIENT -> network.sendPacket(HandSwingC2SPacket(hand))
+            HIDE_SERVER -> player.swingHand(hand, false)
+        }
+    }
 }
+
 
 fun doPlacement(
     rayTraceResult: BlockHitResult,

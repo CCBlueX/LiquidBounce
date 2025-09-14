@@ -53,7 +53,7 @@ abstract class Buff(
 
         CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
 
-        if (slot.isSelected || slot is OffHandSlot) {
+        if (slot.isSelected) {
             // Check main hand and offhand
             execute(sequence, slot)
             return true

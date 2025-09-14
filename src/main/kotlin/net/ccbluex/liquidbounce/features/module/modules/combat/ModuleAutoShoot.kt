@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoStuck
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -92,42 +90,25 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val tickUntilSlotReset by int("TicksUntilSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
     private val notDuringUsingItem by boolean("NotDuringUsingItem", true)
+
     private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
 
-    private fun HotbarItemSlot.needsSelection(): Boolean =
-        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
+    private val HotbarItemSlot.isSelectionNeeded: Boolean
+        get() = this != OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
 
-    /**
-     * @return If the player successfully selected [slot]
-     */
-    private fun trySelect(slot: HotbarItemSlot): Boolean {
-        // Select the throwable if we are not holding it.
-        if (slot.needsSelection()) {
-            if (!selectSlotAutomatically) {
-                return false
-            }
-            // If we are not holding the throwable, we can't shoot.
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer) {
-                return false
-            }
+    private fun HotbarItemSlot.trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
+        // Select the slot if we are not holding it.
+        if (isSelectionNeeded) {
+            if (!select) return false
+            // If we are not holding the slot, we can't shoot.
+            SilentHotbar.selectSlotSilently(silentHotbarRequester, this, tickUntilReset)
+            if (isSelectionNeeded) return false
         }
-        return true
-    }
-
-    private fun commonChecks(target: LivingEntity?, slot: HotbarItemSlot?): Boolean {
-        if (target == null || slot == null) return false
-        if (requiresKillAura && (!ModuleKillAura.running)) return false
-        if (notDuringCombat && CombatManager.isInCombat) return false
-        if (notDuringUsingItem && player.usingItem) return false
-        if (ModuleScaffold.enabled) return false
-        if (ModuleAutoStuck.shouldActivate) return false
-        if (!trySelect(slot)) return false
         return true
     }
 
@@ -143,9 +124,22 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             player.canSee(it)
         } ?: return@handler
 
-        val slot = getThrowable() ?: return@handler
-        if (!commonChecks(target, slot)) return@handler
+        if (notDuringCombat && CombatManager.isInCombat) {
+            return@handler
+        }
+        if (notDuringUsingItem && player.usingItem) {
+            return@handler
+        }
+        if (requiresKillAura && !ModuleKillAura.running) {
+            return@handler
+        }
 
+        // Check if we have a throwable, if not we can't shoot.
+        val slot = getThrowable() ?: return@handler
+
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
+            return@handler
+        }
 
         val rotation = findRotation(target, GravityType.from(slot))
 
@@ -166,20 +160,38 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     @Suppress("unused")
     private val handleAutoShoot = tickHandler {
         val target = targetTracker.target ?: return@tickHandler
+
+        if (notDuringCombat && CombatManager.isInCombat) {
+            return@tickHandler
+        }
+
+        if (notDuringUsingItem && player.usingItem) {
+            return@tickHandler
+        }
+
+        // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowable() ?: return@tickHandler
-        if (!commonChecks(target, slot)) return@tickHandler
+
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
+            return@tickHandler
+        }
+
         val rotation = findRotation(target, GravityType.from(slot))
 
+        // Check the difference between server and client rotation
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {
             return@tickHandler
         }
+
+        // Check if we are still aiming at the target
         clicker.click {
             if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
                 return@click false
             }
+
             interaction.interactItem(
                 player,
                 slot.useHand,
@@ -243,9 +255,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         PROJECTILE("Projectile");
 
         companion object {
+            @JvmStatic
             fun from(slot: HotbarItemSlot): GravityType =
                 from(slot.itemStack.item)
 
+            @JvmStatic
             fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {

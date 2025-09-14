@@ -29,7 +29,7 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
     private val jumpReset by boolean("JumpReset", true)
     private val requireKillAura by boolean("RequireKillAura", true)
 
-    private object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
+    private object Cooldown : ToggleableConfigurable(this, "Cooldown", false) {
         val maxAttackCount by int("MaxAttackCount", 30, 0..100)
         val cooldownTicks by int("CooldownTicks", 20, 0..100, "ticks")
         val byHighCPSWarning by boolean("ByHighCPSWarning", true)
@@ -85,14 +85,25 @@ internal object VelocityHeypixel : VelocityMode("Heypixel") {
                 && !player.abilities.flying
                 && !player.usingItem
             ) {
+                val x = player.velocity.x
+                val z = player.velocity.z
+                val strength = kotlin.math.sqrt(x * x + z * z)
+
+                val reduction = when {
+                    strength >= 3.0 -> 0.1
+                    strength >= 1.0 -> 0.3
+                    else -> 0.5
+                }
+
                 player.setVelocity(
-                    player.velocity.x * 0.07776,
+                    player.velocity.x * reduction,
                     player.velocity.y,
-                    player.velocity.z * 0.07776
+                    player.velocity.z * reduction
                 )
             }
             reset()
         }
+
     }
 
     @Suppress("unused")

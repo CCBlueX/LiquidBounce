@@ -363,6 +363,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleSpider,
             ModuleTargetStrafe,
             ModuleAnchor,
+            ModuleStuck,
 
             // Player
             ModuleAntiVoid,

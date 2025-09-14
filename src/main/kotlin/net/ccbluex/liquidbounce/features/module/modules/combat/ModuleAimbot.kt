@@ -56,7 +56,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
     )
 
     private val requirementsMet
-        get() = requires.all { it.meets() }
+        get() = requires.all { it.asBoolean }
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
@@ -75,7 +75,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
             targetRenderer.reset()
             targetRotation = null
 
-            if (!KillAuraRequirements.CLICK.meets()) {
+            if (!KillAuraRequirements.CLICK.asBoolean) {
                 lastTargetEntity = null
             }
             return@handler

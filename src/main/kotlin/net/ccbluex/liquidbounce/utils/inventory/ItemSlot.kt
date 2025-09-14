@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -127,9 +128,9 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     open val hotbarSlotForServer: Int = hotbarSlot
 
     /**
-     * If the player is holding this slot (main hand stack)
+     * If the player is holding this slot (main hand stack, or offhand stack)
      */
-    val isSelected: Boolean
+    open val isSelected: Boolean
         get() = hotbarSlotForServer == player.inventory.selectedSlot
 
     open val useHand = Hand.MAIN_HAND
@@ -215,6 +216,12 @@ data object OffHandSlot : HotbarItemSlot(-1) {
         get() = ItemSlotType.OFFHAND
 
     override val hotbarSlotForServer: Int = 40
+
+    /**
+     * OffHand is always "selected"
+     */
+    override val isSelected: Boolean
+        get() = true
 
     override val useHand = Hand.OFF_HAND
 
