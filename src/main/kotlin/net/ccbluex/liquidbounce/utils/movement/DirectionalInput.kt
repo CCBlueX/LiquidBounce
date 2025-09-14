@@ -59,14 +59,31 @@ data class DirectionalInput(
             (left && !right) || (right && !left)
 
     companion object {
+        @JvmField
         val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
+
+        @JvmField
         val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
+
+        @JvmField
         val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
+
+        @JvmField
         val LEFT = DirectionalInput(forwards = false, backwards = false, left = true, right = false)
+
+        @JvmField
         val RIGHT = DirectionalInput(forwards = false, backwards = false, left = false, right = true)
+
+        @JvmField
         val FORWARDS_LEFT = DirectionalInput(forwards = true, backwards = false, left = true, right = false)
+
+        @JvmField
         val FORWARDS_RIGHT = DirectionalInput(forwards = true, backwards = false, left = false, right = true)
+
+        @JvmField
         val BACKWARDS_LEFT = DirectionalInput(forwards = false, backwards = true, left = true, right = false)
+
+        @JvmField
         val BACKWARDS_RIGHT = DirectionalInput(forwards = false, backwards = true, left = false, right = true)
     }
 }
