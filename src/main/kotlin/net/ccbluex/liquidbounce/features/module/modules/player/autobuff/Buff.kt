@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -53,7 +52,7 @@ abstract class Buff(
 
         CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
 
-        if (slot.isSelected || slot is OffHandSlot) {
+        if (slot.isSelected) {
             // Check main hand and offhand
             execute(sequence, slot)
             return true
