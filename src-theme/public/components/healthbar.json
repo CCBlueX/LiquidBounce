@@ -8,10 +8,19 @@
     "verticalAlignment": "Bottom",
     "verticalOffset": 70
   },
+  "values": [
+    {
+      "type": "CHOOSE",
+      "name": "Mode",
+      "value": "Genshin",
+      "choices": [
+        "Genshin"
+      ]
+    }
+  ],
   "tweaks": [
     "DISABLE_STATUS_BAR",
-    "DISABLE_EXP_BAR",
-    "DISABLE_HELD_ITEM_TOOL_TIP",
-    "DISABLE_OVERLAY_MESSAGE"
+    "DISABLE_EXP_BAR"
   ]
 }
+

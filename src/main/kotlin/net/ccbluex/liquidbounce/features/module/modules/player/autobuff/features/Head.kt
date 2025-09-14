@@ -30,12 +30,14 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
 object Head : HealthBasedBuff("Head") {
-
+    val maxAbsorption by float("MaxAbsorption",1f,0f..4f)
     val cooldown by int("Cooldown", 0, 0..120, "s")
     val chronometer = Chronometer()
 
     override val passesRequirements: Boolean
-        get() = passesHealthRequirements && chronometer.hasElapsed(cooldown * 1000L)
+        get() = passesHealthRequirements
+            && chronometer.hasElapsed(cooldown * 1000L)
+            && player.absorptionAmount <=maxAbsorption
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
         return stack.item == Items.PLAYER_HEAD

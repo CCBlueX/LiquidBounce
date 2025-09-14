@@ -1,13 +1,15 @@
 <script lang="ts">
-    import {listen} from "../../../integration/ws";
-    import {getPlayerData} from "../../../integration/rest";
-    import type {PlayerData} from "../../../integration/types";
-    import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import {listen} from "../../../../../integration/ws";
+    import {getPlayerData} from "../../../../../integration/rest";
+    import type {PlayerData} from "../../../../../integration/types";
+    import type {ClientPlayerDataEvent} from "../../../../../integration/events";
     import {onDestroy, onMount, tick} from "svelte";
     import {cubicOut} from 'svelte/easing';
     import {fade} from "svelte/transition";
-    import {hsvToRgba} from "../../../util/color_utils";
+    import {hsvToRgba} from "../../../../../util/color_utils";
     import {Tween} from "svelte/motion";
+
+    export let settings: { [name: string]: any };
 
     let showHealthBar = false;
     let blink = false;

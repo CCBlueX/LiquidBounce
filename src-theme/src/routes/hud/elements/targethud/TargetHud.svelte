@@ -8,12 +8,11 @@ import {visible} from "./TargetHud";
 import type {PlayerData} from "../../../../integration/types";
 export let settings: { [name: string]: any };
 let target: PlayerData | null = null;
-    const modes: Record<string, any> = {
-        Modern:ModernTargetHud,
-        Simple:SimpleTargetHud,
-        户籍:HuJiTargetHud,
-
-    };
+const modes: Record<string, any> = {
+    Modern:ModernTargetHud,
+    Simple:SimpleTargetHud,
+    户籍:HuJiTargetHud,
+};
 let hideTimeout: ReturnType<typeof setTimeout>;
 
 let ModeComponent: any;

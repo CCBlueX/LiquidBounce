@@ -1,5 +1,5 @@
 {
-  "name": "ItemColumnHUD",
+  "name": "ItemColumn",
   "enabled": false,
   "singleton": true,
   "alignment": {

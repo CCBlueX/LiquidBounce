@@ -12,11 +12,17 @@
     {
       "type": "CHOOSE",
       "name": "Mode",
-      "value": "Simple",
+      "value": "Modern",
       "choices": [
         "Simple",
         "Modern"
       ]
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "Scoreboard",
+      "value": false
     }
-  ]
+  ],
+  "tweaks": ["DISABLE_SCOREBOARD"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "SessionInfo",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
@@ -12,10 +12,10 @@
     {
       "type": "CHOOSE",
       "name": "Mode",
-      "value": "Modern",
+      "value": "Simple",
       "choices": [
         "Simple",
-        "Modern"
+        "Ambient"
       ]
     },
       {

@@ -6,7 +6,7 @@
     export let settings: { [name: string]: any };
 
     const modes: Record<string, any> = {
-        Modern: Ambient_SessionInfo,
+        Ambient: Ambient_SessionInfo,
         Simple: Novoline_SeesionInfo,
     };
 

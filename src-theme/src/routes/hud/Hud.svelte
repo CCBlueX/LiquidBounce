@@ -3,12 +3,11 @@
     import ArrayList from "./elements/arrayList/ArrayList.svelte";
     import Notifications from "./elements/notifications/Notifications.svelte";
     import TabGui from "./elements/tabgui/TabGui.svelte";
-    import HealthBar from "./elements/HealthBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import Watermark from "./elements/watermark/Watermark.svelte";
     import Logo from "./elements/Logo.svelte";
     import Information from "./elements/Information.svelte";
-    import ItemColumnHUD from "./elements/inventory/ItemColumnHUD.svelte";
+    import ItemColumn from "./elements/inventory/ItemColumnHUD.svelte";
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import BlockCounter from "./elements/BlockCounter.svelte";
@@ -39,6 +38,8 @@
     import TargetHud from "./elements/targethud/TargetHud.svelte";
     import Effects from "./elements/effects/Effects.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import HealthBar from "./elements/healthhud/HealthBar.svelte";
+
 
     const {width, height, destroy} = WindowSize();
     let metadata: Metadata;
@@ -129,7 +130,7 @@
                     {:else if c.name === 'ArmorItems'}
                         <ArmorItems settings={c.settings}/>
                     {:else if c.name === 'ArrayList'}
-                        <ArrayList/>
+                        <ArrayList settings={c.settings}/>
                     {:else if c.name === 'BlockCounter'}
                         <BlockCounter/>
                     {:else if c.name === 'ChatHUD'}
@@ -137,15 +138,15 @@
                     {:else if c.name === "CraftingInventory"}
                         <CraftingInput/>
                     {:else if c.name === 'HealthBar'}
-                        <HealthBar/>
+                        <HealthBar settings={c.settings}/>
                     {:else if c.name === 'Information'}
                         <Information settings={c.settings}/>
                     {:else if c.name === 'Inventory'}
                         <InventoryContainer settings={c.settings}/>
                     {:else if c.name === 'Island'}
                         <Island/>
-                    {:else if c.name === 'ItemColumnHUD'}
-                        <ItemColumnHUD/>
+                    {:else if c.name === 'ItemColumn'}
+                        <ItemColumn/>
                     {:else if c.name === 'KeyBinds'}
                         <KeyBinds settings={c.settings}/>
                     {:else if c.name === 'Keystrokes'}
@@ -163,7 +164,7 @@
                     {:else if c.name === 'PlayerList'}
                         <PlayerList settings={c.settings}/>
                     {:else if c.name === 'Scoreboard'}
-                        <Scoreboard/>
+                        <Scoreboard settings={c.settings}/>
                     {:else if c.name === 'SessionInfo'}
                         <SessionInfo settings={c.settings}/>
                     {:else if c.name === 'SilentHand'}

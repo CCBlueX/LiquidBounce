@@ -5,8 +5,15 @@
   "alignment": {
     "horizontalAlignment": "Right",
     "horizontalOffset": 15,
-    "verticalAlignment": "Top",
+    "verticalAlignment": "Center",
     "verticalOffset": 0
   },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "Numbers",
+      "value": false
+    }
+  ],
   "tweaks": ["DISABLE_SCOREBOARD"]
 }

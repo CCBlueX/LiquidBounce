@@ -1,11 +1,11 @@
 <script lang="ts">
     import {onMount, onDestroy} from 'svelte';
-    import type {Module} from '../../../../integration/types';
-    import {getModules} from '../../../../integration/rest';
-    import {listen} from '../../../../integration/ws';
-    import {getTextWidth} from '../../../../integration/text_measurement';
-    import {convertToSpacedString, spaceSeperatedNames} from '../../../../theme/theme_config';
-    import {getPrefixAsync} from './arraylist';
+    import type {Module} from '../../../../../integration/types';
+    import {getModules} from '../../../../../integration/rest';
+    import {listen} from '../../../../../integration/ws';
+    import {getTextWidth} from '../../../../../integration/text_measurement';
+    import {convertToSpacedString, spaceSeperatedNames} from '../../../../../theme/theme_config';
+    import {getPrefixAsync} from '../arraylist';
     import {flip} from 'svelte/animate';
     import {fly} from 'svelte/transition';
 
@@ -14,8 +14,8 @@
         arraylistGradient,
         destroyGradient,
         subscribeRenderSettings
-    } from './arraylist';
-    import type {EventMap} from "../../../../integration/events";
+    } from '../arraylist';
+    import type {EventMap} from "../../../../../integration/events";
 
     let enabledModules: Array<Module & { prefix: string; formattedName: string; width: number }> = [];
     let intervalId: number;
@@ -102,7 +102,7 @@
 
 
 <style lang="scss">
-    @use "../../../../colors" as *;;
+    @use "../../../../../colors" as *;;
 
 
   .module {

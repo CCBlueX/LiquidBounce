@@ -6,8 +6,9 @@
     import type { PlayerData, Scoreboard } from "../../../integration/types";
     import type { ClientPlayerDataEvent } from "../../../integration/events";
     import { scoreboardIP } from "../../../util/Theme/ThemeManager";
-    import Modules from "./arrayList/Modules.svelte";
     import GradientAnimatedText from "../common/FontRenderer/GradientAnimatedText.svelte";
+
+    export let settings: { [name: string]: any };
 
     let scoreboard: Scoreboard | null = null;
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
@@ -16,14 +17,9 @@
     });
 </script>
 
-<div class="combined-container">
-    <div class="arraylist-section" id="arraylist"
-         transition:fly|global={{duration: 500, y: -50, easing: expoInOut}}>
-        <Modules />
-    </div>
 
     {#if scoreboard}
-        <div class="scoreboard-section" transition:fly|global={{duration: 500, x: 50, easing: expoInOut}}>
+        <div class="scoreboard hud-container" transition:fly|global={{duration: 500, x: 50, easing: expoInOut}}>
             {#if scoreboard.header}
                 <div class="header">
                     <TextComponent fontSize={18} allowPreformatting={true} textComponent={scoreboard.header} />
@@ -39,7 +35,7 @@
                         {:else}
                             <TextComponent fontSize={16} allowPreformatting={true} textComponent={name} />
                         {/if}
-                        <div class="invisible-score">
+                        <div class="score" class:hidden={!settings?.numbers}>
                             <TextComponent fontSize={16} allowPreformatting={true} textComponent={score} />
                         </div>
                     </div>
@@ -47,7 +43,7 @@
             </div>
         </div>
     {/if}
-</div>
+
 
 <style lang="scss">
   @use "sass:color";
@@ -58,32 +54,8 @@
     --secondary-color-rgb: var(--secondary-color-rgb);
   }
 
-  .combined-container {
-    top: 0;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    position: absolute;
-    gap: 5px;
-  }
-
-  .arraylist-section {
-    border-radius: 0;
-    overflow: visible;
-    margin-bottom: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    transform: translateZ(0);
-  }
-
-  .scoreboard-section {
+  .scoreboard{
     position: relative;
-    background: linear-gradient(
-                    90deg,
-                    transparent 0%,
-                    rgba(color.adjust($scoreboard-base-color, $lightness: -5%), 0.5) 100%);
     display: inline-block;
     width: max-content;
     max-width: 240px;
@@ -91,23 +63,6 @@
     transition: width 0.2s ease;
     transform: translateX(0);
     font-family: 'Alibaba', sans-serif;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(
-                      90deg,
-                      rgba($scoreboard-base-color, 0.1) 0%,
-                      rgba($scoreboard-base-color, 0.4) 100%);
-      z-index: -1;
-      filter: blur(10px);
-      opacity: 0.7;
-      transform: scale(0.95) translateY(5px);
-    }
   }
 
   .entries {
@@ -142,7 +97,7 @@
     flex-grow: 1;
   }
 
-  .invisible-score {
+  .hidden {
     visibility: hidden;
     opacity: 0;
   }

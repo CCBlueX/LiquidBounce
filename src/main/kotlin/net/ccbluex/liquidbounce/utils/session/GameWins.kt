@@ -18,7 +18,6 @@ object GameWins: EventListener {
     var victoryCount = 0
         private set
 
-
     init {
         try {
             titleField = mc.inGameHud.javaClass.getDeclaredField("title").apply { isAccessible = true }
@@ -37,7 +36,7 @@ object GameWins: EventListener {
                 val currentTitle = getTitle()
                 val currentSubtitle = getSubtitle()
 
-                if (checkWinCondition(currentTitle) || checkWinCondition(currentSubtitle)) {
+                if (checkWinCondition(currentTitle) || checkSubtitleWinCondition(currentSubtitle)) {
                     lastWinDetectionTime = currentTime
                     victoryCount++
                 }
@@ -87,6 +86,13 @@ object GameWins: EventListener {
         }
     }
 
+    private fun checkSubtitleWinCondition(text: Text?): Boolean {
+        if (text == null || text.string.isEmpty()) return false
+        return winKeywordsSubtitle.any { keyword ->
+            text.string.contains(keyword, ignoreCase = true)
+        }
+    }
+
     private fun checkChatWinCondition(text: Text): Boolean {
         val message = text.string
         if (message.isEmpty()) return false
@@ -96,8 +102,12 @@ object GameWins: EventListener {
     }
 
     private val winKeywordsTitle = listOf(
-        "victory", "you win", "Good Game",
-        "恭喜你赢下了比赛","你是最后的站立者",
+        "胜利","victory",
+    )
+
+    private val winKeywordsSubtitle = listOf(
+        "恭喜你赢下了比赛", "你是最后的站立者",
+        "you win", "Good Game",
         "victoire", "gagné",
         "gewonnen",
         "vittoria",
@@ -108,6 +118,6 @@ object GameWins: EventListener {
     )
 
     private val winKeywordsChatMessage = listOf(
-        "YOU WON!!!",
+        "YOU WON!!!"
     )
 }
