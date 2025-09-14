@@ -113,7 +113,11 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             this.useHand,
             RotationManager.serverRotation.yaw,
             RotationManager.serverRotation.pitch
-        )
+        ).also {
+            if (it.isAccepted) {
+                swingMode.swing(this.useHand)
+            }
+        }
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
         priority = FIRST_PRIORITY,
@@ -156,17 +160,14 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val target = targetTracker.target ?: return@handler
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) {
-            return@handler
-        }
 
         // Pull action
         if (fishingBobberEntity != null && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
-            if (slot.interactHand().isAccepted) {
-                swingMode.swing(slot.useHand)
+            if (slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) {
+                slot.interactHand()
                 pushTimer.reset()
+                pullbackTimer.reset()
                 currentScanExtraRange = scanExtraRange.random()
-                return@handler
             }
         }
 
@@ -183,9 +184,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (rotationDifference > aimOffThreshold) return@handler
 
         if (pushTimer.hasElapsed(pushDelay.toLong())) {
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilReset)
-            if (slot.interactHand().isAccepted) {
-                swingMode.swing(slot.useHand)
+            if (slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) {
+                slot.interactHand()
+                pushTimer.reset()
                 pullbackTimer.reset()
             }
         }
