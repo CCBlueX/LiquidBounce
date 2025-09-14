@@ -41,9 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -69,7 +67,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val pushDelay by int("PushDelay", 100, 50..1000)
     private val pullbackDelay by int("PullbackDelay", 500, 50..1000)
     private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
-    private val tickUntilSlotReset by int("TicksUntilSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
 
     private val requires by multiEnumChoice<KillAuraRequirements>(
@@ -88,7 +86,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val requirementsMet
-        get() = requires.all { it.meets() }
+        get() = requires.all { it.asBoolean }
 
     private val pushTimer = Chronometer()
     private val pullbackTimer = Chronometer()
@@ -106,19 +104,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 && !(Ignore.OPEN_INVENTORY !in ignore
                 && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
 
-    private fun HotbarItemSlot.needsSelection(): Boolean =
-        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
-
-    private fun trySelect(slot: HotbarItemSlot): Boolean {
-        if (slot.needsSelection()) {
-            if (!selectSlotAutomatically) return false
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer)
-                return false
-        }
-        return true
-    }
-
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         if (!requirementsMet) {
@@ -133,7 +118,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         } ?: return@handler
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!trySelect(slot)) return@handler
+        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
 
         val rotation = findRotation(target, rotationMode) ?: return@handler
         RotationManager.setRotationTarget(
@@ -148,7 +133,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val target = targetTracker.target ?: return@handler
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!trySelect(slot)) return@handler
+        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
         if (rodInUse && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
             KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
             rodInUse = false
@@ -169,7 +154,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (rotationDifference > aimOffThreshold) return@handler
 
         if (pushTimer.hasElapsed(pushDelay.toLong())) {
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
+            SilentHotbar.selectSlotSilently(this, slot, tickUntilReset)
             interaction.syncSelectedSlot()
             KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
             rodInUse = true

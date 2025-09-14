@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
@@ -90,33 +89,12 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val tickUntilSlotReset by int("TicksUntillSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
-
-    private fun HotbarItemSlot.needsSelection(): Boolean =
-        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
-
-    /**
-     * @return If the player successfully selected [slot]
-     */
-    private fun trySelect(slot: HotbarItemSlot): Boolean {
-        // Select the throwable if we are not holding it.
-        if (slot.needsSelection()) {
-            if (!selectSlotAutomatically) {
-                return false
-            }
-            // If we are not holding the throwable, we can't shoot.
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer) {
-                return false
-            }
-        }
-        return true
-    }
 
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
@@ -141,7 +119,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowable() ?: return@handler
 
-        if (!trySelect(slot)) {
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@handler
         }
 
@@ -172,7 +150,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowable() ?: return@tickHandler
 
-        if (!trySelect(slot)) {
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@tickHandler
         }
 
@@ -255,9 +233,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         PROJECTILE("Projectile");
 
         companion object {
+            @JvmStatic
             fun from(slot: HotbarItemSlot): GravityType =
                 from(slot.itemStack.item)
 
+            @JvmStatic
             fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {
