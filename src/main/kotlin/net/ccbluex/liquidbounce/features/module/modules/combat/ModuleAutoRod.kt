@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -47,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -54,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.projectile.FishingBobberEntity
 import net.minecraft.item.Items
 
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
@@ -90,7 +94,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val pushTimer = Chronometer()
     private val pullbackTimer = Chronometer()
-    private var rodInUse = false
 
     override val running: Boolean
         get() =
@@ -112,6 +115,15 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             RotationManager.serverRotation.pitch
         )
 
+    private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
+        priority = FIRST_PRIORITY,
+        initialValue = null
+    ) { _, _ ->
+        world.entities.firstOrNull { entity ->
+            entity is FishingBobberEntity && entity.playerOwner === player
+        } as FishingBobberEntity?
+    }
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         if (!requirementsMet) {
@@ -126,7 +138,8 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         } ?: return@handler
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
+        // Don't rotate if we can't select the rod
+        if (!selectSlotAutomatically && !slot.isSelected) return@handler
 
         val rotation = findRotation(target, rotationMode) ?: return@handler
         RotationManager.setRotationTarget(
@@ -138,22 +151,28 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     @Suppress("unused")
     private val handleAutoRod = handler<GameTickEvent> {
+        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedEntity }
+
         val target = targetTracker.target ?: return@handler
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
-        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
-        if (rodInUse && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
+        if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) {
+            return@handler
+        }
+
+        // Pull action
+        if (fishingBobberEntity != null && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
             if (slot.interactHand().isAccepted) {
                 swingMode.swing(slot.useHand)
-                rodInUse = false
                 pushTimer.reset()
                 currentScanExtraRange = scanExtraRange.random()
                 return@handler
             }
         }
 
-        if (rodInUse || player.health <= escapeHealthThreshold) return@handler
+        if (fishingBobberEntity != null || player.health <= escapeHealthThreshold) return@handler
 
+        // Push action
         val enemiesList = targetTracker.targets()
         if (enemiesList.isEmpty() || enemiesList.size > enemiesNearby) {
             return@handler
@@ -167,7 +186,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             SilentHotbar.selectSlotSilently(this, slot, tickUntilReset)
             if (slot.interactHand().isAccepted) {
                 swingMode.swing(slot.useHand)
-                rodInUse = true
                 pullbackTimer.reset()
             }
         }
@@ -200,7 +218,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     override fun onDisabled() {
         targetTracker.reset()
-        rodInUse = false
+        fishingBobberEntity = null
         interaction.stopUsingItem(player)
     }
 

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -96,15 +97,18 @@ open class TargetSelector(
      * Update should be called to always pick the best target out of the current world context
      */
     fun targets(): MutableList<LivingEntity> {
-        val entities = world.entities
-            .asSequence()
-            .filterIsInstance<LivingEntity>()
-            .filter(::validate)
-            // Sort by distance (closest first) - in case of tie at priority level
-            .sortedBy { it.squaredBoxedDistanceTo(player) }
-            .toMutableList()
+        val entities = ObjectArrayList<LivingEntity>()
 
-        if (entities.isEmpty()) {
+        for (entity in world.entities) {
+            if (entity is LivingEntity && validate(entity)) {
+                entities.add(entity)
+            }
+        }
+
+        // Sort by distance (closest first) - in case of tie at priority level
+        entities.sortBy { it.squaredBoxedDistanceTo(player) }
+
+        if (entities.isEmpty) {
             return entities
         }
 
