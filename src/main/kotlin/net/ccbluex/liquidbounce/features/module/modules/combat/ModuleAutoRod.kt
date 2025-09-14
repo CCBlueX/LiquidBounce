@@ -105,14 +105,15 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val requirementsMet
         get() = requires.all { it.asBoolean }
             && player.health > minHealth
-            && targetTracker.countTargets() > maxEnemiesNearby
+            && targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
             && player.mainHandStack.item !in holdingItemsForIgnore
             && !ModuleBlink.running
             && !ModuleScaffold.running
             && !ModuleStuck.running
             && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
-            && !(Ignore.HOLD_CONSUME !in ignore && (player.mainHandStack.isConsumable || player.offHandStack.isConsumable))
+            && !(Ignore.HOLD_CONSUME !in ignore &&
+            (player.mainHandStack.isConsumable || player.offHandStack.isConsumable))
             && !(Ignore.OPEN_INVENTORY !in ignore
             && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
 
