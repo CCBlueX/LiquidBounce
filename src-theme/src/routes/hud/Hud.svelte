@@ -149,7 +149,7 @@
                     {:else if c.name === 'KeyBinds'}
                         <KeyBinds settings={c.settings}/>
                     {:else if c.name === 'Keystrokes'}
-                        <Keystrokes/>
+                        <Keystrokes settings={c.settings}/>
                     {:else if c.name === 'Logo'}
                         <Logo  settings={c.settings}/>
                     {:else if c.name === 'Message'}

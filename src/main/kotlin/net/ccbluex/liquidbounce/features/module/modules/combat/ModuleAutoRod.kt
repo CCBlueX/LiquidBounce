@@ -78,9 +78,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     init {
         tree(rotationConfigurable)
-        tree(targetTracker)
-        tree(pointTracker)
-        tree(targetRenderer)
     }
 
     override val running: Boolean
@@ -207,7 +204,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         targetTracker.reset()
         targetRenderer.reset()
         rodInUse = false
-        interaction.stopUsingItem(player)
+        KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
     }
 
     private enum class RotationMode(override val choiceName: String) : NamedChoice {

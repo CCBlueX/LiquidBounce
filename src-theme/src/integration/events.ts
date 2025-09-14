@@ -54,6 +54,7 @@ export interface EventMap {
 
     //GameEvents.kt
     key: KeyEvent;
+    keyBindingCPS: KeyBindingCPSEvent;
     keybindChange: void;
     session: SessionEvent;
     chatSend: ChatSendEvent;
@@ -198,6 +199,11 @@ export interface ProgressEvent {
 export interface KeyEvent {
     key: MinecraftKey;
     action: number;
+}
+
+export interface KeyBindingCPSEvent {
+    key: string;
+    cps: number;
 }
 
 export interface TargetChangeEvent {

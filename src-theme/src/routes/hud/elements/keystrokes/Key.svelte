@@ -1,12 +1,15 @@
 <script lang="ts">
     import {listen} from "../../../../integration/ws";
-    import type {KeyEvent} from "../../../../integration/events";
+    import type {KeyBindingCPSEvent, KeyEvent, MouseButtonEvent} from "../../../../integration/events";
     import type {MinecraftKeybind} from "../../../../integration/types";
 
-    export let gridArea: string;
+    export let flexBasis: string = '50px';
     export let key: MinecraftKeybind | undefined;
     export let asBar: boolean = false;
+    export let showName: boolean = false;
+    export let showCPS: boolean = false;
 
+    let cps = 0;
     let active = false;
     let actived = false;
 
@@ -21,13 +24,41 @@
             setTimeout(() => (actived = false), 200);
         }
     });
+    listen("mouseButton", (e: MouseButtonEvent) => {
+        if (e.key !== key?.key.translationKey) {
+            return;
+        }
+        active = e.action === 1 || e.action === 2;
+    });
+    if (showCPS) {
+        listen("keyBindingCPS", (e: KeyBindingCPSEvent) => {
+            if (e.key !== key?.key.translationKey) {
+                return;
+            }
+            cps = e.cps;
+        });
+    }
+    $: displayName = (() => {
+        if (!key) return "???";
+        switch (key.bindName) {
+            case "key.sprint":
+                return "L Ctrl";
+            case "key.sneak":
+                return "L Shift";
+            default:
+                return key.key.localized;
+        }
+    })();
 
 </script>
-<div class="key" class:active class:actived class:asBar style="grid-area: {gridArea};">
-    {#if !asBar}
-        {key?.key.localized ?? "???"}
-    {:else}
+<div class="key" class:active class:actived class:asBar style="flex-basis: {flexBasis};">
+    {#if showName && key?.bindName !== "key.jump"}
+        {displayName}
+    {:else if asBar || key?.bindName === "key.jump"}
         <div class="bar"></div>
+    {/if}
+    {#if showCPS}
+        <span>{cps}</span>
     {/if}
 </div>
 
@@ -70,7 +101,8 @@
   .key {
     height: 50px;
     color: $text;
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 16px;
