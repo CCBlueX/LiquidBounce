@@ -10,26 +10,36 @@
     export let showCPS: boolean = false;
 
     let cps = 0;
-    let active = false;
-    let actived = false;
+    let ripples: { id: number }[] = [];
+    let rippleCounter = 0;
+    let isPressed = false;
 
     listen("key", (e: KeyEvent) => {
         if (e.key !== key?.key.translationKey) return;
-        if (e.action === 1 || e.action === 2) {
-            active = true;
-            actived = false;
-        } else {
-            active = false;
-            actived = true;
-            setTimeout(() => (actived = false), 200);
+        if (e.action === 1 && !isPressed) {
+            isPressed = true;
+            ripples = [...ripples, { id: rippleCounter++ }];
+            setTimeout(() => {
+                ripples = ripples.filter(r => r.id !== ripples[0].id);
+            }, 400);
+        } else if (e.action === 0) {
+            isPressed = false;
         }
     });
+
     listen("mouseButton", (e: MouseButtonEvent) => {
-        if (e.key !== key?.key.translationKey) {
-            return;
+        if (e.key !== key?.key.translationKey) return;
+        if (e.action === 1 && !isPressed) {
+            isPressed = true;
+            ripples = [...ripples, { id: rippleCounter++ }];
+            setTimeout(() => {
+                ripples = ripples.filter(r => r.id !== ripples[0].id);
+            }, 400);
+        } else if (e.action === 0) {
+            isPressed = false;
         }
-        active = e.action === 1 || e.action === 2;
     });
+
     if (showCPS) {
         listen("keyBindingCPS", (e: KeyBindingCPSEvent) => {
             if (e.key !== key?.key.translationKey) {
@@ -38,6 +48,7 @@
             cps = e.cps;
         });
     }
+
     $: displayName = (() => {
         if (!key) return "???";
         switch (key.bindName) {
@@ -49,9 +60,9 @@
                 return key.key.localized;
         }
     })();
-
 </script>
-<div class="key" class:active class:actived class:asBar style="flex-basis: {flexBasis};">
+
+<div class="key" style="flex-basis: {flexBasis};">
     {#if showName && key?.bindName !== "key.jump"}
         {displayName}
     {:else if asBar || key?.bindName === "key.jump"}
@@ -60,40 +71,22 @@
     {#if showCPS}
         <span>{cps}</span>
     {/if}
+    {#each ripples as ripple (ripple.id)}
+        <div class="ripple"></div>
+    {/each}
 </div>
-
 
 <style lang="scss">
   @use "sass:color";
   @use "../../../../colors.scss" as *;
 
-  @keyframes activeEffect {
+  @keyframes rippleEffect {
     0% {
-      border-radius: 50%;
-      transform: scale(0.1);
-      opacity: 0.1;
-    }
-    10% {
-      border-radius: 50%;
-      transform: scale(0.3);
-      opacity: 0.3;
-    }
-    100% {
-      border-radius: inherit;
-      transform: scale(1);
-      opacity: 0.4;
-    }
-  }
-
-  @keyframes activedEffect {
-    0% {
-      border-radius: inherit;
-      transform: scale(1);
+      transform: scale(0);
       opacity: 0.4;
     }
     100% {
-      border-radius: 50%;
-      transform: scale(0.1);
+      transform: scale(2.5);
       opacity: 0;
     }
   }
@@ -110,7 +103,6 @@
     text-transform: uppercase;
     position: relative;
     background: transparent;
-    cursor: pointer;
     overflow: hidden;
     border-radius: 12px;
     will-change: transform, opacity;
@@ -136,8 +128,7 @@
       pointer-events: none;
       z-index: -1;
       opacity: 0;
-      transition: opacity 0.5s ease,
-      transform 0.3s cubic-bezier(0.2, 0.8, 0.4, 1.2);
+      transition: opacity 0.5s ease;
     }
 
     .bar {
@@ -147,44 +138,16 @@
       border-radius: 2px;
     }
 
-    &:active {
-      box-shadow: 0 0 10px $key-color;
-
-    }
-
-    &:hover {
-      box-shadow: 0 0 6px rgba($key-color, 0.3);
-    }
-
-    &::before {
-      content: '';
+    .ripple {
       position: absolute;
       inset: 0;
-      background: rgba($base, 0.2);
-      border-radius: inherit;
-      z-index: 0;
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba($key-color, 0.8);
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      opacity: 0;
+      background: rgba($key-color, 0.3);
+      border-radius: 12px;
       z-index: 1;
+      transform: scale(0);
       transform-origin: center;
       pointer-events: none;
-      transform: scale(0.1);
-    }
-
-    &.active::after {
-      animation: activeEffect 0.2s ease forwards;
-    }
-
-    &.actived::after {
-      animation: activedEffect 0.2s ease forwards;
+      animation: rippleEffect 0.4s ease-out forwards;
     }
   }
 </style>
