@@ -94,6 +94,13 @@ open class TargetSelector(
     private val priority by enumChoice("Priority", defaultPriority)
 
     /**
+     * Counts available targets.
+     */
+    fun countTargets(): Int = world.entities.count { entity ->
+        entity is LivingEntity && validate(entity)
+    }
+
+    /**
      * Update should be called to always pick the best target out of the current world context
      */
     fun targets(): MutableList<LivingEntity> {
