@@ -39,8 +39,10 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.interactItem
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isConsumable
@@ -50,7 +52,6 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.Items
 
@@ -104,6 +105,14 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 && !(Ignore.OPEN_INVENTORY !in ignore
                 && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
 
+    private fun HotbarItemSlot.interactHand() =
+        interaction.interactItem(
+            player,
+            this.useHand,
+            RotationManager.serverRotation.yaw,
+            RotationManager.serverRotation.pitch
+        )
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         if (!requirementsMet) {
@@ -135,11 +144,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val slot = Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD) ?: return@handler
         if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
         if (rodInUse && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
-            KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
-            rodInUse = false
-            pushTimer.reset()
-            currentScanExtraRange = scanExtraRange.random()
-            return@handler
+            if (slot.interactHand().isAccepted) {
+                rodInUse = false
+                pushTimer.reset()
+                currentScanExtraRange = scanExtraRange.random()
+                return@handler
+            }
         }
 
         if (rodInUse) return@handler
@@ -155,12 +165,11 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         if (pushTimer.hasElapsed(pushDelay.toLong())) {
             SilentHotbar.selectSlotSilently(this, slot, tickUntilReset)
-            interaction.syncSelectedSlot()
-            KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
-            rodInUse = true
-            pullbackTimer.reset()
+            if (slot.interactHand().isAccepted) {
+                rodInUse = true
+                pullbackTimer.reset()
+            }
         }
-
     }
 
     @Suppress("unused")
