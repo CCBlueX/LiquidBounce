@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.interactItem
@@ -67,6 +68,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val escapeHealthThreshold by int("EscapeHealthThreshold", 10, 1..20)
     private val pushDelay by int("PushDelay", 100, 50..1000)
     private val pullbackDelay by int("PullbackDelay", 500, 50..1000)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
     private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
@@ -145,6 +147,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (!slot.trySelect(ModuleAutoRod, selectSlotAutomatically, tickUntilReset)) return@handler
         if (rodInUse && pullbackTimer.hasElapsed(pullbackDelay.toLong())) {
             if (slot.interactHand().isAccepted) {
+                swingMode.swing(slot.useHand)
                 rodInUse = false
                 pushTimer.reset()
                 currentScanExtraRange = scanExtraRange.random()
@@ -166,6 +169,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         if (pushTimer.hasElapsed(pushDelay.toLong())) {
             SilentHotbar.selectSlotSilently(this, slot, tickUntilReset)
             if (slot.interactHand().isAccepted) {
+                swingMode.swing(slot.useHand)
                 rodInUse = true
                 pullbackTimer.reset()
             }
