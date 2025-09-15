@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -75,6 +76,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     // Requirements
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 1..10)
     private val minHealth by float("MinHealth", 10f, 1f..20f)
+    private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
     private val ignore by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
@@ -138,6 +140,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         val target = targetTracker.selectFirst { enemy ->
             player.squaredDistanceTo(enemy) in mixRangeSq..maxRangeSq && player.canSee(enemy)
+                && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
         val rotation = findRotation(target, rotationMode) ?: return@handler
