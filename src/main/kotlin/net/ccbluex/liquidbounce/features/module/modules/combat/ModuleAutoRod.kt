@@ -171,6 +171,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             // 2. push
             if (!useHotbarSlotOrOffhand(
                     slot,
+                    // The player should hold the rod util pulling
                     ticksUntilReset = slotResetDelay.last + hitTimeout,
                     swingMode = swingMode
                 ).isAccepted
@@ -188,7 +189,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         }
 
         // 4. pull
-        // 5. reset slot
+        // 5. reset slot (this ticksUntilReset will override prev action)
         useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
 
         waitTicks(cooldown.random())
