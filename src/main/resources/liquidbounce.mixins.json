@@ -37,6 +37,8 @@
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.client.option.MixinServerListAccessor",
+    "minecraft.client.texture.MixinPlayerSkinProvider",
+    "minecraft.client.texture.MixinPlayerSkinTextureDownloader",
     "minecraft.crash.CrashReportMixin",
     "minecraft.entity.EquipmentRendererMixin",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
@@ -146,6 +148,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "authlib.MixinYggdrasilMinecraftSessionService",
     "minecraft.block.MixinAbstractBlock"
   ]
 }
