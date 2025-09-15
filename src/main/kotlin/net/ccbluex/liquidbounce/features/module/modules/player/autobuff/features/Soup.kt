@@ -32,7 +32,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 
-object Soup : HealthBasedBuff("Soup") {
+internal object Soup : HealthBasedBuff("Soup") {
 
     object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)

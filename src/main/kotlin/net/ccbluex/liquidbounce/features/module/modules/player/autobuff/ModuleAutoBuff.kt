@@ -42,7 +42,7 @@ object ModuleAutoBuff : ClientModule(
     /**
      * All buff features
      */
-    internal val features = arrayOf(
+    private val features = arrayOf(
         Soup,
         Head,
         Pot,
@@ -80,7 +80,7 @@ object ModuleAutoBuff : ClientModule(
         tree(Refill)
     }
 
-    internal class AutoBuffRotationsConfigurable : RotationsConfigurable(this) {
+    internal object AutoBuffRotationsConfigurable : RotationsConfigurable(this) {
 
         val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
 
@@ -95,12 +95,12 @@ object ModuleAutoBuff : ClientModule(
     /**
      * Rotation Configurable for every feature that depends on rotation change
      */
-    internal val rotations = tree(AutoBuffRotationsConfigurable())
+    internal val rotations = tree(AutoBuffRotationsConfigurable)
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
-    private val activeFeatures
+    internal val activeFeatures
         get() = features.filter { it.enabled }
 
     @Suppress("unused")
@@ -130,8 +130,6 @@ object ModuleAutoBuff : ClientModule(
 
     override fun onDisabled() {
         SilentHotbar.resetSlot(ModuleAutoBuff)
-
-        features.forEach { it.onDisabled() }
         super.onDisabled()
     }
 

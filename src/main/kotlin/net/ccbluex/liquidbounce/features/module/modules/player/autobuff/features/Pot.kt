@@ -49,7 +49,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
 
-object Pot : Buff("Pot") {
+internal object Pot : Buff("Pot") {
 
     private const val BENEFICIAL_SQUARE_RANGE = 16.0
 

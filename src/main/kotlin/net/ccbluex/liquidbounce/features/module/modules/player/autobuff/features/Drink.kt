@@ -35,7 +35,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
 
-object Drink : Buff("Drink") {
+internal object Drink : Buff("Drink") {
 
     private object HealthPotion : ToggleableConfigurable(Drink, "HealthPotion", true) {
         private val healthPercent by int("Health", 40, 1..100, "%HP")

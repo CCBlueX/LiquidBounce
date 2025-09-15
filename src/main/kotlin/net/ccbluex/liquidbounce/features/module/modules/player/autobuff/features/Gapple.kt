@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
-object Gapple : HealthBasedBuff("Gapple") {
+internal object Gapple : HealthBasedBuff("Gapple") {
 
     private var forceUseKey = false
 
