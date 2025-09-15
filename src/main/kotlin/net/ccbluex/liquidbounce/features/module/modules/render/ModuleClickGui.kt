@@ -74,7 +74,7 @@ object ModuleClickGui :
         }
     }
 
-    private val trackMousePosition by boolean("TrackMousePosition", true)
+    private val trackMousePosition by boolean("TrackMousePosition", false)
 
     @Suppress("UnusedPrivateProperty")
     private val searchBarAutoFocus by boolean("SearchBarAutoFocus", true).onChanged {
