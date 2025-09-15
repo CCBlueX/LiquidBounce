@@ -69,7 +69,7 @@ import java.util.function.Function
  */
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
-    private val rotationMode by enumChoice("RotationMode", RotationMode.LINEAR)
+    private val gravityType by enumChoice("GravityType", GravityType.LINEAR)
     private val range by floatRange("Range", 3.5f..5f, 2f..10f)
     private val scanExtraRange by floatRange("ScanExtraRange", 0.0f..0.0f, 0.0f..5.0f).onChanged { range ->
         currentScanExtraRange = range.random()
@@ -77,32 +77,34 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private var currentScanExtraRange: Float = scanExtraRange.random()
 
     // Requirements
-    private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 1..10)
+    private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
-        ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
+        ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
     )
-
-    private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
-    private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
-    private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
-    private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
-
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
+
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
+
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+
     private val targetRenderer = tree(WorldTargetRenderer(this))
+
+    private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
+    private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
+    private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
     private val requirementsMet
         get() = requires.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
-            && targetTracker.countTargets() <= maxEnemiesNearby
+            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
             && player.mainHandStack.item !in holdingItemsForIgnore
             && !ModuleBlink.running
@@ -142,7 +144,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
-        val rotation = rotationMode.apply(target) ?: return@handler
+        val rotation = gravityType.apply(target) ?: return@handler
         RotationManager.setRotationTarget(
             rotationConfigurable.toRotationTarget(rotation, considerInventory = false),
             Priority.IMPORTANT_FOR_USAGE_1,
@@ -162,7 +164,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         val target = targetTracker.target ?: return@tickHandler
 
-        val rotation = rotationMode.apply(target) ?: return@tickHandler
+        val rotation = gravityType.apply(target) ?: return@tickHandler
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
@@ -215,7 +217,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
-    private enum class RotationMode(override val choiceName: String) : NamedChoice, Function<LivingEntity, Rotation?> {
+    private enum class GravityType(override val choiceName: String) : NamedChoice, Function<LivingEntity, Rotation?> {
         LINEAR("Linear"),
         PROJECTILE("Projectile");
 
