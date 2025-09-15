@@ -64,7 +64,7 @@ import java.util.function.BooleanSupplier
 import java.util.function.Function
 
 /**
- * Auto use rod for PvP.
+ * Auto use fishing rod for combat.
  */
 object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
