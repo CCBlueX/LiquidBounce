@@ -1,6 +1,5 @@
-import {type Writable, writable} from "svelte/store";
+import {derived, type Writable, writable} from "svelte/store";
 import type {Module} from "../../integration/types";
-
 
 export interface TDescription {
     description: string;
@@ -35,7 +34,13 @@ export const moduleDescription: Writable<boolean> = writable(true);
 export const gridSize: Writable<number> = writable(10);
 
 export const showResults = writable<boolean>(false);
-
-export const filteredModules = writable<Module[]>([]);
+export const filteredModules: Writable<Module[]> = writable([]);
 
 export const showSearch = writable(false);
+export const effectiveFilteredModules = derived(
+    [filteredModules, query, showSearch],
+    ([$filteredModules, $query, $showSearch]) => {
+        if (!$showSearch || !$query.trim()) return [];
+        return $filteredModules;
+    }
+);

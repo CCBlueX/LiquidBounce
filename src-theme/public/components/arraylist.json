@@ -1,6 +1,6 @@
 {
   "name": "ArrayList",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Right",

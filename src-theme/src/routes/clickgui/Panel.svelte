@@ -19,6 +19,7 @@
         showGrid,
         snappingEnabled,
         filteredModules,
+        effectiveFilteredModules,
         locked,
         savedConfigs,
         panelLength
@@ -81,9 +82,9 @@
     const panelConfig = loadPanelConfig();
 
 
-    $: renderedModules = $filteredModules.length > 0
+    $: renderedModules = $effectiveFilteredModules.length > 0
         ? modules.filter(module =>
-            $filteredModules.some(fm => fm.name === module.name)
+            $effectiveFilteredModules.some(fm => fm.name === module.name)
         )
         : modules.filter(module => {
             if (!panelConfig.expanded) return false;
