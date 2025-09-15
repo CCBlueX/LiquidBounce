@@ -63,10 +63,10 @@ public abstract class MixinScreen implements ScreenAddition {
     @Nullable
     protected MinecraftClient client;
 
-  @Shadow
-  private boolean screenInitialized;
+    @Shadow
+    private boolean screenInitialized;
 
-  @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
         if (!LiquidBounce.INSTANCE.isInitialized()) {
             return;
