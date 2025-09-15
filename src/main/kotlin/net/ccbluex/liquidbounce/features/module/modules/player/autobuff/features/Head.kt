@@ -31,11 +31,14 @@ import net.minecraft.item.Items
 
 internal object Head : HealthBasedBuff("Head") {
 
+    private val maxAbsorption by float("MaxAbsorption", 1f, 0f..8f)
     private val cooldown by float("Cooldown", 0f, 0f..120f, "s")
     private val chronometer = Chronometer()
 
     override val passesRequirements: Boolean
-        get() = passesHealthRequirements && chronometer.hasElapsed((cooldown * 1000).toLong())
+        get() = passesHealthRequirements
+            && chronometer.hasElapsed((cooldown * 1000).toLong())
+            && player.absorptionAmount <= maxAbsorption
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
         return stack.isOf(Items.PLAYER_HEAD)

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -49,7 +50,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
 
-internal object Pot : Buff("Pot") {
+internal object Pot : StatusEffectBasedBuff("Pot") {
 
     private const val BENEFICIAL_SQUARE_RANGE = 16.0
 
@@ -80,7 +81,7 @@ internal object Pot : Buff("Pot") {
         }
 
 
-    private object HealthPotion : ToggleableConfigurable(Drink, "HealthPotion", true) {
+    private object HealthPotion : ToggleableConfigurable(this, "HealthPotion", true) {
         private val healthPercent by int("Health", 40, 1..100, "%HP")
 
         val health
@@ -88,7 +89,7 @@ internal object Pot : Buff("Pot") {
 
     }
 
-    private object RegenPotion : ToggleableConfigurable(Drink, "RegenPotion", true) {
+    private object RegenPotion : ToggleableConfigurable(this, "RegenPotion", true) {
         private val healthPercent by int("Health", 70, 1..100, "%HP")
 
         val health
