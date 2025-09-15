@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -75,11 +76,11 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val listeners = mutableListOf<ValueListener<T>>()
+    private val listeners: MutableList<ValueListener<T>> = ObjectArrayList()
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners = mutableListOf<ValueChangedListener<T>>()
+    private val changedListeners: MutableList<ValueChangedListener<T>> = ObjectArrayList()
 
     @Exclude
     @ProtocolExclude
