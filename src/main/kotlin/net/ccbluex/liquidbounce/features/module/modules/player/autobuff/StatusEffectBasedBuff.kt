@@ -19,8 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.registry.entry.RegistryEntry
+
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
+    protected class HealthBasedPotion(
+        parent: StatusEffectBasedBuff,
+        name: String,
+        val statusEffect: RegistryEntry<StatusEffect>,
+    ) : ToggleableConfigurable(parent, name, true) {
+        private val healthPercent by int("Health", 40, 1..100, "%HP")
 
+        val health
+            get() = player.maxHealth * healthPercent / 100
+    }
 
 }

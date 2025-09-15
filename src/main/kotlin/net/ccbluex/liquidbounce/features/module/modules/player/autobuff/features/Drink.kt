@@ -37,21 +37,8 @@ import net.minecraft.item.SplashPotionItem
 
 internal object Drink : StatusEffectBasedBuff("Drink") {
 
-    private object HealthPotion : ToggleableConfigurable(this, "HealthPotion", true) {
-        private val healthPercent by int("Health", 40, 1..100, "%HP")
-
-        val health
-            get() = player.maxHealth * healthPercent / 100
-
-    }
-
-    private object RegenPotion : ToggleableConfigurable(this, "RegenPotion", true) {
-        private val healthPercent by int("Health", 70, 1..100, "%HP")
-
-        val health
-            get() = player.maxHealth * healthPercent / 100
-
-    }
+    private val HealthPotion = HealthBasedPotion(this, "HealthPotion", StatusEffects.INSTANT_HEALTH)
+    private val RegenPotion = HealthBasedPotion(this, "RegenPotion", StatusEffects.REGENERATION)
 
     init {
         tree(HealthPotion)
