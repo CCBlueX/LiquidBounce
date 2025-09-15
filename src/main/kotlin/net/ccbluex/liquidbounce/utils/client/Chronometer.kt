@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-class Chronometer(private var lastUpdate: Long = 0) {
+class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
 
     val elapsed: Long
         get() = System.currentTimeMillis() - lastUpdate

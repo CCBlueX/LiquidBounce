@@ -32,6 +32,9 @@ fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(vararg items: Item): T? =
     findClosestSlot { it.item in items }
 
+fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(items: Collection<Item>): T? =
+    findClosestSlot { it.item in items }
+
 /**
  * Distance order:
  * current hand -> offhand -> other slots

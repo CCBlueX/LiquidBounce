@@ -63,7 +63,7 @@ internal object NoFallMLG : Choice("MLG") {
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
     private val netherItems =
-        arrayOf(
+        setOf(
             // overworld
             Items.COBWEB,
             Items.POWDER_SNOW_BUCKET,
@@ -73,7 +73,7 @@ internal object NoFallMLG : Choice("MLG") {
             // nether
             Items.TWISTING_VINES,
         )
-    private val normalItems = arrayOf(Items.WATER_BUCKET) + netherItems
+    private val normalItems = netherItems + Items.WATER_BUCKET
 
     private val itemsForMLG
         get() = if (world.dimension.ultrawarm) netherItems else normalItems
@@ -115,7 +115,7 @@ internal object NoFallMLG : Choice("MLG") {
             SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
             val onSuccess: () -> Boolean = {
-                lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
+                lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
 
                 true
             }
@@ -151,7 +151,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
-        val bestPickupItem = Slots.Hotbar.findClosestSlot(Items.BUCKET) ?: return null
+        val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
         this.lastPlacements.removeIf {
