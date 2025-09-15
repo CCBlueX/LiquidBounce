@@ -25,6 +25,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
+import net.ccbluex.liquidbounce.additions.MouseAddition;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -32,16 +33,31 @@ import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Mouse.class)
-public class MixinMouse {
+public class MixinMouse implements MouseAddition {
 
     @Shadow
     @Final
     private MinecraftClient client;
+
+    @Shadow
+    private double x;
+
+    @Shadow
+    private double y;
+
+    @Unique
+    @Override
+    public void liquidbounce$setPosition(double x, double y) {
+        this.x = x;
+        this.y = y;
+        InputUtil.setCursorParameters(this.client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_NORMAL, this.x, this.y);
+    }
 
     /**
      * Hook mouse button event

@@ -96,6 +96,7 @@ object CommandLocalConfig : Command.Factory {
                 }
             }.onFailure {
                 chat(regular(command.result("failedToCreate", variable(name))))
+                logger.error("Failed to create local config '$name'", it)
             }.onSuccess {
                 chat(regular(command.result("created", variable(name))))
             }

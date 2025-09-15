@@ -82,10 +82,21 @@ class ConfigurableSerializer(
         src: Configurable, typeOfSrc: Type, context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
-        add(
-            "value",
-            context.serialize(src.inner.filter { includeNotAnOption || !it.notAnOption }
-                .filter { includePrivate || checkIfInclude(it) }))
+        try {
+
+            add(
+                "value",
+                context.serialize(
+                    src.inner.filter { includeNotAnOption || !it.notAnOption }
+                        .filter {
+                            includePrivate || checkIfInclude(it)
+                        }
+                )
+            )
+        } catch (e: Exception) {
+            println("failed to serialize config for ${src.name}")
+            throw e
+        }
         if (withValueType) {
             add("valueType", context.serialize(src.valueType))
         }

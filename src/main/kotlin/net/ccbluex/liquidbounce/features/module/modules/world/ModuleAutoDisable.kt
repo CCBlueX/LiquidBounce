@@ -43,13 +43,41 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * Command: [CommandAutoDisable]
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
+    val modules: Set<ClientModule>
+        field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
-    val modules: MutableSet<ClientModule> by registryList(
-        "Modules",
-        ReferenceOpenHashSet.of(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura),
-        ValueType.CLIENT_MODULE
-    )
+    private val moduleNames by registryList("Modules", hashSetOf<String>(), ValueType.CLIENT_MODULE)
     private val disableOn by multiEnumChoice<DisableOn>("On")
+
+    fun clear() {
+        modules.clear()
+        moduleNames.clear()
+    }
+
+    fun add(module: ClientModule): Boolean {
+        return if (modules.add(module)) {
+            moduleNames.add(module.name)
+            true
+        } else {
+            false
+        }
+    }
+
+    fun remove(module: ClientModule): Boolean {
+        return if (modules.remove(module)) {
+            moduleNames.remove(module.name)
+            true
+        } else {
+            false
+        }
+    }
+
+    init {
+        add(ModuleFly)
+        add(ModuleSpeed)
+        add(ModuleNoClip)
+        add(ModuleKillAura)
+    }
 
     @Suppress("unused")
     val worldChangesHandler = handler<PacketEvent> {
