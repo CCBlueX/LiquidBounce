@@ -63,9 +63,9 @@ internal object Drink : Buff("Drink") {
 
     private var forceUseKey = false
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         forceUseKey = true
-        sequence.waitUntil { !passesRequirements }
+        waitUntil { !passesRequirements }
         forceUseKey = false
     }
 

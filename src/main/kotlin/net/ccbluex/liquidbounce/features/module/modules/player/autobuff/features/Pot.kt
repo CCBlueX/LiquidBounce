@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoBuffRotationsConfigurable.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -110,21 +110,21 @@ internal object Pot : Buff("Pot") {
 
     private val allowLingering by boolean("AllowLingering", false)
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         // TODO: Use movement prediction to splash against walls and away from the player
         //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
         var rotation = Rotation(player.yaw, (85f..90f).random())
 
-        when (ModuleAutoBuff.rotations.rotationTiming) {
+        when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
                 RotationManager.setRotationTarget(
                     rotation,
-                    configurable = ModuleAutoBuff.rotations,
+                    configurable = ModuleAutoBuff.Rotations,
                     provider = ModuleAutoBuff,
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                sequence.waitUntil {
+                waitUntil {
                     (currentRotation ?: player.rotation).pitch > 85
                 }
 
@@ -148,7 +148,7 @@ internal object Pot : Buff("Pot") {
             pitch = rotation.pitch,
         )
 
-        when (ModuleAutoBuff.rotations.rotationTiming) {
+        when (ModuleAutoBuff.Rotations.rotationTiming) {
             ON_TICK -> {
                 network.sendPacket(MovePacketType.FULL.generatePacket().apply {
                     yaw = player.withFixedYaw(currentRotation ?: player.rotation)
@@ -159,7 +159,7 @@ internal object Pot : Buff("Pot") {
         }
 
         // Wait at least 1 tick to make sure, we do not continue with something else too early
-        sequence.waitTicks(1)
+        waitTicks(1)
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {

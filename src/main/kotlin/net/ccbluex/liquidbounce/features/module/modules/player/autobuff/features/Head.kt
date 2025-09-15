@@ -41,7 +41,7 @@ internal object Head : HealthBasedBuff("Head") {
         return stack.isOf(Items.PLAYER_HEAD)
     }
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)
         chronometer.reset()
     }

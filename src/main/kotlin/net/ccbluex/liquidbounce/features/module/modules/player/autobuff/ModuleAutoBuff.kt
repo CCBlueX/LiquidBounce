@@ -80,7 +80,10 @@ object ModuleAutoBuff : ClientModule(
         tree(Refill)
     }
 
-    internal object AutoBuffRotationsConfigurable : RotationsConfigurable(this) {
+    /**
+     * Rotation Configurable for every feature that depends on rotation change
+     */
+    internal object Rotations : RotationsConfigurable(this) {
 
         val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
 
@@ -92,10 +95,9 @@ object ModuleAutoBuff : ClientModule(
 
     }
 
-    /**
-     * Rotation Configurable for every feature that depends on rotation change
-     */
-    internal val rotations = tree(AutoBuffRotationsConfigurable)
+    init {
+        tree(Rotations)
+    }
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
@@ -114,8 +116,10 @@ object ModuleAutoBuff : ClientModule(
         }
 
         for (feature in activeFeatures) {
-            if (feature.runIfPossible(this)) {
-                return@tickHandler
+            with(feature) {
+                if (runIfPossible()) {
+                    return@tickHandler
+                }
             }
         }
     }

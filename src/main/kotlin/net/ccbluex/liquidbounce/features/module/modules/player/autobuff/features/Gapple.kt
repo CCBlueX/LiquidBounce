@@ -34,12 +34,12 @@ internal object Gapple : HealthBasedBuff("Gapple") {
     private var forceUseKey = false
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.item == Items.GOLDEN_APPLE
+        return stack.isOf(Items.GOLDEN_APPLE)
     }
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         forceUseKey = true
-        sequence.waitUntil { !passesRequirements }
+        waitUntil { !passesRequirements }
         forceUseKey = false
     }
 
