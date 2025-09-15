@@ -64,7 +64,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
         private val jumpBoostPotion = Potion(parent, "JumpBoost", StatusEffects.JUMP_BOOST)
         private val waterBreathingPotion = Potion(parent, "WaterBreathing", StatusEffects.WATER_BREATHING)
 
-        private val potions = arrayOf(
+        private val values = arrayOf(
             healthPotion,
             regenPotion,
             strengthPotion,
@@ -74,7 +74,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
             waterBreathingPotion,
         ).onEach(::tree).associateBy { it.statusEffect }
 
-        operator fun get(statusEffect: RegistryEntry<StatusEffect>) = potions[statusEffect]
+        operator fun get(statusEffect: RegistryEntry<StatusEffect>) = values[statusEffect]
     }
 
     private val potions = tree(Potions(this))
