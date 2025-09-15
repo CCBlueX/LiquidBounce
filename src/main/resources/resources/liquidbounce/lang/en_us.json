@@ -545,6 +545,7 @@
   "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below the certain threshold.",
   "liquidbounce.module.autoPlay.description": "Automatically enters queues and plays the game for you.",
   "liquidbounce.module.autoRespawn.description": "Automatically respawns you after dying.",
+  "liquidbounce.module.autoRod.description": "Automatically uses fishing rod for combat.",
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",

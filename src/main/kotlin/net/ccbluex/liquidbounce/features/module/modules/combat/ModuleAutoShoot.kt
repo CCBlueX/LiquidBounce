@@ -90,30 +90,23 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val tickUntilSlotReset by int("TicksUntillSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
 
-    private fun HotbarItemSlot.needsSelection(): Boolean =
-        this !is OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
+    private val HotbarItemSlot.isSelectionNeeded: Boolean
+        get() = this != OffHandSlot && this.hotbarSlot != SilentHotbar.serversideSlot
 
-    /**
-     * @return If the player successfully selected [slot]
-     */
-    private fun trySelect(slot: HotbarItemSlot): Boolean {
-        // Select the throwable if we are not holding it.
-        if (slot.needsSelection()) {
-            if (!selectSlotAutomatically) {
-                return false
-            }
-            // If we are not holding the throwable, we can't shoot.
-            SilentHotbar.selectSlotSilently(this, slot, tickUntilSlotReset)
-            if (slot !is OffHandSlot && SilentHotbar.serversideSlot != slot.hotbarSlotForServer) {
-                return false
-            }
+    private fun HotbarItemSlot.trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
+        // Select the slot if we are not holding it.
+        if (isSelectionNeeded) {
+            if (!select) return false
+            // If we are not holding the slot, we can't shoot.
+            SilentHotbar.selectSlotSilently(silentHotbarRequester, this, tickUntilReset)
+            if (isSelectionNeeded) return false
         }
         return true
     }
@@ -141,7 +134,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowable() ?: return@handler
 
-        if (!trySelect(slot)) {
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@handler
         }
 
@@ -172,7 +165,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Check if we have a throwable, if not we can't shoot.
         val slot = getThrowable() ?: return@tickHandler
 
-        if (!trySelect(slot)) {
+        if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@tickHandler
         }
 
@@ -255,9 +248,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         PROJECTILE("Projectile");
 
         companion object {
+            @JvmStatic
             fun from(slot: HotbarItemSlot): GravityType =
                 from(slot.itemStack.item)
 
+            @JvmStatic
             fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {

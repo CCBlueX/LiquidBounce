@@ -27,14 +27,15 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBa
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 
-object Soup : HealthBasedBuff("Soup") {
+internal object Soup : HealthBasedBuff("Soup") {
 
-    object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
+    private object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
         val wait by intRange("Wait", 1..2, 1..20, "ticks")
     }
@@ -44,17 +45,17 @@ object Soup : HealthBasedBuff("Soup") {
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.item == Items.MUSHROOM_STEW
+        return stack.isOf(Items.MUSHROOM_STEW)
     }
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         // Use item (be aware, it will always return false in this case)
         useHotbarSlotOrOffhand(slot)
 
         if (DropAfterUse.enabled) {
-            sequence.waitTicks(wait.random())
+            waitTicks(wait.random())
 
-            if (assumeEmptyBowl || slot.itemStack.item == Items.BOWL) {
+            if (assumeEmptyBowl || slot.itemStack.isOf(Items.BOWL) && slot !is OffHandSlot) {
                 if (player.dropSelectedItem(true)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
