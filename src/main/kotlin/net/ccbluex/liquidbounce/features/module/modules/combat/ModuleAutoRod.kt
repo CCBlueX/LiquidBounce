@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -211,6 +212,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             fishingBobberEntity = null
         }
         availableRodSlot = null
+        SilentHotbar.resetSlot(this)
     }
 
     private enum class RotationMode(override val choiceName: String) : NamedChoice, Function<LivingEntity, Rotation?> {
