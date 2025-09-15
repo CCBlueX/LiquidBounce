@@ -234,12 +234,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private enum class Ignore(override val choiceName: String) : NamedChoice, BooleanSupplier {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem"),
-        HOLD_CONSUME("HoldConsume");
+        HOLDING_CONSUMABLE("HoldingConsumable");
 
         override fun getAsBoolean(): Boolean = when (this) {
             OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>
             USING_ITEM -> player.isUsingItem
-            HOLD_CONSUME -> player.mainHandStack.isConsumable || player.offHandStack.isConsumable
+            HOLDING_CONSUMABLE -> player.mainHandStack.isConsumable || player.offHandStack.isConsumable
         }
     }
 
