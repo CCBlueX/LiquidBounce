@@ -99,7 +99,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val requirementsMet
         get() = requires.all { it.asBoolean }
-            && ignores.any { it.asBoolean }
+            && !ignores.any { it.asBoolean }
             && player.health > minHealth
             && targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
