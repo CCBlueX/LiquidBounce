@@ -60,6 +60,8 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.projectile.FishingBobberEntity
 import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
+import java.util.function.BooleanSupplier
+import java.util.function.Function
 
 /**
  * Auto use rod for PvP.
@@ -78,7 +80,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
-    private val ignore by multiEnumChoice<Ignore>("Ignore")
+    private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
         ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
@@ -97,6 +99,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val requirementsMet
         get() = requires.all { it.asBoolean }
+            && ignores.any { it.asBoolean }
             && player.health > minHealth
             && targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
@@ -104,11 +107,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             && !ModuleBlink.running
             && !ModuleScaffold.running
             && !ModuleStuck.running
-            && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
-            && !(Ignore.HOLD_CONSUME !in ignore &&
-            (player.mainHandStack.isConsumable || player.offHandStack.isConsumable))
-            && !(Ignore.OPEN_INVENTORY !in ignore
-            && (InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>))
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
         priority = FIRST_PRIORITY,
@@ -143,7 +141,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
-        val rotation = findRotation(target, rotationMode) ?: return@handler
+        val rotation = rotationMode.apply(target) ?: return@handler
         RotationManager.setRotationTarget(
             rotationConfigurable.toRotationTarget(rotation, considerInventory = false),
             Priority.IMPORTANT_FOR_USAGE_1,
@@ -163,7 +161,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         val target = targetTracker.target ?: return@tickHandler
 
-        val rotation = findRotation(target, rotationMode) ?: return@tickHandler
+        val rotation = rotationMode.apply(target) ?: return@tickHandler
         val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
@@ -205,22 +203,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         }
     }
 
-    private fun findRotation(target: LivingEntity, mode: RotationMode): Rotation? {
-        return when (mode) {
-            RotationMode.LINEAR -> {
-                val eyes = player.eyePos
-                val point = pointTracker.findPoint(eyes, target, 1)
-                Rotation.lookingAt(point.pos, eyes)
-            }
-
-            RotationMode.PROJECTILE -> {
-                SituationalProjectileAngleCalculator.calculateAngleForEntity(
-                    TrajectoryInfo.FISHING_ROD, target
-                )
-            }
-        }
-    }
-
     override fun onDisabled() {
         targetTracker.reset()
         fishingBobberEntity?.let {
@@ -230,15 +212,35 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         availableRodSlot = null
     }
 
-    private enum class RotationMode(override val choiceName: String) : NamedChoice {
+    private enum class RotationMode(override val choiceName: String) : NamedChoice, Function<LivingEntity, Rotation?> {
         LINEAR("Linear"),
-        PROJECTILE("Projectile")
+        PROJECTILE("Projectile");
+
+        override fun apply(target: LivingEntity): Rotation? = when (this) {
+            LINEAR -> {
+                val eyes = player.eyePos
+                val point = pointTracker.findPoint(eyes, target, 1)
+                Rotation.lookingAt(point.pos, eyes)
+            }
+
+            PROJECTILE -> {
+                SituationalProjectileAngleCalculator.calculateAngleForEntity(
+                    TrajectoryInfo.FISHING_ROD, target
+                )
+            }
+        }
     }
 
-    private enum class Ignore(override val choiceName: String) : NamedChoice {
+    private enum class Ignore(override val choiceName: String) : NamedChoice, BooleanSupplier {
         OPEN_INVENTORY("OpenInventory"),
         USING_ITEM("UsingItem"),
-        HOLD_CONSUME("HoldConsume"),
+        HOLD_CONSUME("HoldConsume");
+
+        override fun getAsBoolean(): Boolean = when (this) {
+            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>
+            USING_ITEM -> player.isUsingItem
+            HOLD_CONSUME -> player.mainHandStack.isConsumable || player.offHandStack.isConsumable
+        }
     }
 
 }
