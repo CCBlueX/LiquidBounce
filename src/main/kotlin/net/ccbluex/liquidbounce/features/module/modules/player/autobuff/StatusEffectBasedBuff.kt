@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -27,39 +28,58 @@ import net.minecraft.registry.entry.RegistryEntry
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
-    private class HealthBasedPotion(
+    private open class Potion(
         parent: StatusEffectBasedBuff,
         name: String,
         val statusEffect: RegistryEntry<StatusEffect>,
     ) : ToggleableConfigurable(parent, name, true) {
+
+        open fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
+            return enabled && statusEffect != effect.effectType && !player.hasStatusEffect(statusEffect)
+        }
+    }
+
+    private class HealthBasedPotion(
+        parent: StatusEffectBasedBuff,
+        name: String,
+        statusEffect: RegistryEntry<StatusEffect>,
+    ) : Potion(parent, name, statusEffect) {
         private val healthPercent by int("Health", 40, 1..100, "%HP")
 
-        val health
+        private val health
             get() = player.maxHealth * healthPercent / 100
+
+        override fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
+            return super.isValid(effect, health) && health <= this.health
+        }
     }
 
-    private val healthPotion = HealthBasedPotion(this, "HealthPotion", StatusEffects.INSTANT_HEALTH)
-    private val regenPotion = HealthBasedPotion(this, "RegenPotion", StatusEffects.REGENERATION)
+    private class Potions(parent: StatusEffectBasedBuff) : Configurable("Potions") {
 
-    init {
-        tree(healthPotion)
-        tree(regenPotion)
+        private val healthPotion = HealthBasedPotion(parent, "Health", StatusEffects.INSTANT_HEALTH)
+        private val regenPotion = HealthBasedPotion(parent, "Regen", StatusEffects.REGENERATION)
+        private val strengthPotion = Potion(parent, "Strength", StatusEffects.STRENGTH)
+        private val speedPotion = Potion(parent, "Speed", StatusEffects.SPEED)
+        private val fireResistancePotion = Potion(parent, "FireResistance", StatusEffects.FIRE_RESISTANCE)
+        private val jumpBoostPotion = Potion(parent, "JumpBoost", StatusEffects.JUMP_BOOST)
+        private val waterBreathingPotion = Potion(parent, "WaterBreathing", StatusEffects.WATER_BREATHING)
+
+        private val potions = arrayOf(
+            healthPotion,
+            regenPotion,
+            strengthPotion,
+            speedPotion,
+            fireResistancePotion,
+            jumpBoostPotion,
+            waterBreathingPotion,
+        ).onEach(::tree).associateBy { it.statusEffect }
+
+        operator fun get(statusEffect: RegistryEntry<StatusEffect>) = potions[statusEffect]
     }
 
-    private val strengthPotion by boolean("StrengthPotion", true)
-    private val speedPotion by boolean("SpeedPotion", true)
-    private val fireResistancePotion by boolean("FireResistancePotion", true)
+    private val potions = tree(Potions(this))
 
     protected fun foundTargetEffect(effect: StatusEffectInstance, health: Float) =
-        when (effect.effectType) {
-            StatusEffects.INSTANT_HEALTH -> healthPotion.enabled && health <= healthPotion.health
-            StatusEffects.REGENERATION -> regenPotion.enabled && health <= regenPotion.health
-            && !player.hasStatusEffect(StatusEffects.REGENERATION)
-            StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
-            StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
-            StatusEffects.FIRE_RESISTANCE -> fireResistancePotion &&
-                !player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)
-            else -> false
-        }
+        potions[effect.effectType]?.isValid(effect, health) ?: false
 
 }
