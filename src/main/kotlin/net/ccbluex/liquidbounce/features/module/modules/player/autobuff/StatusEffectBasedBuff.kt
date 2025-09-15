@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.registry.entry.RegistryEntry
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
-    protected class HealthBasedPotion(
+    private class HealthBasedPotion(
         parent: StatusEffectBasedBuff,
         name: String,
         val statusEffect: RegistryEntry<StatusEffect>,
@@ -35,5 +37,29 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
         val health
             get() = player.maxHealth * healthPercent / 100
     }
+
+    private val healthPotion = HealthBasedPotion(this, "HealthPotion", StatusEffects.INSTANT_HEALTH)
+    private val regenPotion = HealthBasedPotion(this, "RegenPotion", StatusEffects.REGENERATION)
+
+    init {
+        tree(healthPotion)
+        tree(regenPotion)
+    }
+
+    private val strengthPotion by boolean("StrengthPotion", true)
+    private val speedPotion by boolean("SpeedPotion", true)
+    private val fireResistancePotion by boolean("FireResistancePotion", true)
+
+    protected fun foundTargetEffect(effect: StatusEffectInstance, health: Float) =
+        when (effect.effectType) {
+            StatusEffects.INSTANT_HEALTH -> healthPotion.enabled && health <= healthPotion.health
+            StatusEffects.REGENERATION -> regenPotion.enabled && health <= regenPotion.health
+            && !player.hasStatusEffect(StatusEffects.REGENERATION)
+            StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
+            StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
+            StatusEffects.FIRE_RESISTANCE -> fireResistancePotion &&
+                !player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)
+            else -> false
+        }
 
 }

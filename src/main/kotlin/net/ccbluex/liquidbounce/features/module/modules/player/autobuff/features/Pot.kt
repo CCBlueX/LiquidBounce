@@ -21,9 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
@@ -43,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.projectile.thrown.PotionEntity
 import net.minecraft.item.ItemStack
@@ -79,19 +76,6 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             // Do not check for health pass requirements, because this is already done in the potion check
             return isCloseGround && !isSplashNearby()
         }
-
-
-    private val HealthPotion = HealthBasedPotion(this, "HealthPotion", StatusEffects.INSTANT_HEALTH)
-    private val RegenPotion = HealthBasedPotion(this, "RegenPotion", StatusEffects.REGENERATION)
-
-    init {
-        tree(HealthPotion)
-        tree(RegenPotion)
-    }
-
-    private val strengthPotion by boolean("StrengthPotion", true)
-    private val speedPotion by boolean("SpeedPotion", true)
-    private val fireResistancePotion by boolean("FireResistancePotion", true)
 
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
     private val doNotBenefitOthers by boolean("DoNotBenefitOthers", true)
@@ -161,19 +145,6 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
     private fun isValidPotion(stack: ItemStack) =
         stack.item is SplashPotionItem || stack.item is LingeringPotionItem && allowLingering
-
-    private fun foundTargetEffect(effect: StatusEffectInstance, playerHealth: Float) =
-        when (effect.effectType) {
-            StatusEffects.INSTANT_HEALTH -> HealthPotion.enabled && playerHealth <= HealthPotion.health
-            StatusEffects.REGENERATION -> RegenPotion.enabled && playerHealth <= RegenPotion.health
-                && !player.hasStatusEffect(StatusEffects.REGENERATION)
-            StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
-            StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
-            StatusEffects.FIRE_RESISTANCE -> fireResistancePotion &&
-                !player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)
-            else -> false
-        }
-
 
     private fun hasBenefit(entity: LivingEntity): Boolean {
         if (!entity.isAffectedBySplashPotions) {
