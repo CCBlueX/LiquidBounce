@@ -18,26 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.module.modules.player.delayblink.ModuleDelayBlink
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
+//import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import java.util.EnumSet
@@ -50,44 +48,28 @@ import java.util.EnumSet
  * Command: [CommandAutoDisable]
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
-    val modules: Set<ClientModule>
-        field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
-    private val moduleNames by registryList("Modules", hashSetOf<String>(), ValueType.CLIENT_MODULE)
-    private val disableOn by multiEnumChoice<DisableOn>("On")
+    val listOfModules = arrayListOf(
+        ModuleFly,
+        ModuleSpeed,
+        ModuleNoClip,
+        ModuleKillAura,
+        ModuleScaffold,
+        ModuleDelayBlink,
+        ModuleBlink,
+    )
 
-    fun clear() {
-        modules.clear()
-        moduleNames.clear()
-    }
-
-    fun add(module: ClientModule): Boolean {
-        return if (modules.add(module)) {
-            moduleNames.add(module.name)
-            true
-        } else {
-            false
-        }
-    }
-
-    fun remove(module: ClientModule): Boolean {
-        return if (modules.remove(module)) {
-            moduleNames.remove(module.name)
-            true
-        } else {
-            false
-        }
-    }
-
-    init {
-        add(ModuleFly)
-        add(ModuleSpeed)
-        add(ModuleNoClip)
-        add(ModuleKillAura)
-    }
+    private val disableOn by multiEnumChoice<DisableOn>(
+        "On",
+        EnumSet.of(
+            DisableOn.SPECTATOR,
+            DisableOn.CHANGE_WORLD,
+            DisableOn.HEYPIXEL_END_MESSAGE
+        )
+    )
 
     @Suppress("unused")
-    val worldChangesHandler = handler<PacketEvent> {
+    val flagHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
@@ -127,33 +109,11 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         }
     }
 
-    @Suppress("unused")
-    private val disconnectEventHandler = handler<DisconnectEvent> {
-        if (DisableOn.QUIT in disableOn) {
-            disableAndNotify("quit")
-        }
-    }
-
-    @Suppress("unused")
-    private val clientShutdownEventHandler = handler<ClientShutdownEvent> {
-        if (DisableOn.QUIT in disableOn) {
-            disableAndNotify("quit")
-        }
-    }
-
     private fun disableAndNotify(reason: String) {
-        val anyDisabled = modules.any { module ->
-            if (module.enabled) {
-                module.enabled = false
-                true
-            } else {
-                false
-            }
+        for (module in listOfModules) {
+            module.enabled = false
         }
-
-        if (anyDisabled) {
-            notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
-        }
+        notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
     }
 
     private enum class DisableOn(override val choiceName: String) : NamedChoice {
@@ -161,7 +121,6 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         DEATH("Death"),
         SPECTATOR("Spectator"),
         CHANGE_WORLD("ChangeWorld"),
-        HEYPIXEL_END_MESSAGE("HeypixelEndMessage"),
-        QUIT("Quit")
+        HEYPIXEL_END_MESSAGE("HeypixelEndMessage")
     }
 }
