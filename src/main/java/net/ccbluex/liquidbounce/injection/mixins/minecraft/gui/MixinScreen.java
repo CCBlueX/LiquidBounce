@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.additions.ScreenAddition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -35,6 +36,7 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -43,22 +45,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
-public abstract class MixinScreen {
+public abstract class MixinScreen implements ScreenAddition {
+    @Shadow
+    protected abstract void remove(Element child);
+
+    @Shadow
+    protected TextRenderer textRenderer;
     @Shadow
     public int height;
     @Shadow
     public int width;
+
     @Shadow
-    protected TextRenderer textRenderer;
+    protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
+
     @Shadow
     @Nullable
     protected MinecraftClient client;
 
     @Shadow
-    protected abstract void remove(Element child);
-
-    @Shadow
-    protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
+    private boolean screenInitialized;
 
     @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
@@ -109,4 +115,9 @@ public abstract class MixinScreen {
         }
     }
 
+    @Unique
+    @Override
+    public boolean liquidbounce$screenInitialized() {
+        return screenInitialized;
+    }
 }
