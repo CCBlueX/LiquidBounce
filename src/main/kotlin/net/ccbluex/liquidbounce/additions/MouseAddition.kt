@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.additions
 
 import net.minecraft.client.Mouse
@@ -27,4 +28,5 @@ interface MouseAddition {
 
 }
 
-fun Mouse.setPosition(x: Double = this.x, y: Double = this.y) = (this as MouseAddition).`liquidbounce$setPosition`(x, y)
+inline fun Mouse.setPosition(x: Double = this.x, y: Double = this.y) =
+    (this as MouseAddition).`liquidbounce$setPosition`(x, y)

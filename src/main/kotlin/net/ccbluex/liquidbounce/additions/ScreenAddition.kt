@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.additions
 
 import net.minecraft.client.gui.screen.Screen
@@ -27,5 +28,5 @@ interface ScreenAddition {
 
 }
 
-val Screen.screenInitialized: Boolean
+inline val Screen.screenInitialized: Boolean
     get() = (this as ScreenAddition).`liquidbounce$screenInitialized`()
