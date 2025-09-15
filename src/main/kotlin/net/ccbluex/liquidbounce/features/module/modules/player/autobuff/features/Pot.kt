@@ -35,8 +35,6 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
@@ -134,16 +132,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
         waitTicks(1)
     }
 
-    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        if (stack.isNothing() || !isValidPotion(stack)) {
-            return false
-        }
-
-        val health = if (forUse) player.health else 0f
-        return stack.getPotionEffects().any { foundTargetEffect(it, health) }
-    }
-
-    private fun isValidPotion(stack: ItemStack) =
+    override fun isValidPotion(stack: ItemStack) =
         stack.item is SplashPotionItem || stack.item is LingeringPotionItem && allowLingering
 
     private fun hasBenefit(entity: LivingEntity): Boolean {

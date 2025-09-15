@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.item.ItemStack
 import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
@@ -54,17 +52,7 @@ internal object Drink : StatusEffectBasedBuff("Drink") {
         super.onDisabled()
     }
 
-    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        if (stack.isNothing() || !isValidPotion(stack)) {
-            return false
-        }
-
-        val health = if (forUse) player.health else 0f
-
-        return stack.getPotionEffects().any { foundTargetEffect(it, health) }
-    }
-
-    private fun isValidPotion(stack: ItemStack) =
+    override fun isValidPotion(stack: ItemStack) =
         stack.item is PotionItem && stack.item !is SplashPotionItem
 
 }

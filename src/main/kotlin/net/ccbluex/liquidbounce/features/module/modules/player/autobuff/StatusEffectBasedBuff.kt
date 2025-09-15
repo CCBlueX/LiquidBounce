@@ -21,9 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.item.ItemStack
 import net.minecraft.registry.entry.RegistryEntry
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
@@ -81,5 +84,17 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
     protected fun foundTargetEffect(effect: StatusEffectInstance, health: Float) =
         potions[effect.effectType]?.isValid(effect, health) ?: false
+
+    protected abstract fun isValidPotion(stack: ItemStack): Boolean
+
+    final override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
+        if (stack.isNothing() || !isValidPotion(stack)) {
+            return false
+        }
+
+        val health = if (forUse) player.health else 0f
+
+        return stack.getPotionEffects().any { foundTargetEffect(it, health) }
+    }
 
 }
