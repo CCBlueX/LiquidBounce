@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 public class MixinPlayerSkinTextureDownloader {
 
     /**
-     * @author ccbluex
+     * @author Chasteful
      * @reason Remove vanilla size check to allow non-64x64 skin textures (e.g. 128x128 from Netease servers).
      */
     @Overwrite

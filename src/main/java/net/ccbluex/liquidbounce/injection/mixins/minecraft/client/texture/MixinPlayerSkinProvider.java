@@ -34,42 +34,42 @@ import java.lang.reflect.Proxy;
 @Mixin(PlayerSkinProvider.class)
 public class MixinPlayerSkinProvider {
 
-    @Redirect(
-            method = "<clinit>",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/logging/LogUtils;getLogger()Lorg/slf4j/Logger;"
-            ),
-            remap = false
-    )
-    private static Logger replaceLogger() {
-        Logger original = LoggerFactory.getLogger("net.minecraft.client.texture.PlayerSkinProvider");
-
-        InvocationHandler handler = new InvocationHandler() {
-            @Override
-            public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if ("warn".equals(method.getName()) && args != null) {
-                    for (Object a : args) {
-                        if (a instanceof Throwable cause) {
-                            while (cause != null) {
-                                if (cause instanceof java.io.IOException && cause.getMessage() != null
-                                        && cause.getMessage().contains("Bad PNG Signature")) {
-
-                                    return null;
-                                }
-                                cause = cause.getCause();
-                            }
-                        }
-                    }
-                }
-                return method.invoke(original, args);
-            }
-        };
-
-        return (Logger) Proxy.newProxyInstance(
-                Logger.class.getClassLoader(),
-                new Class<?>[]{Logger.class},
-                handler
-        );
-    }
+//    @Redirect(
+//            method = "<clinit>",
+//            at = @At(
+//                    value = "INVOKE",
+//                    target = "Lcom/mojang/logging/LogUtils;getLogger()Lorg/slf4j/Logger;"
+//            ),
+//            remap = false
+//    )
+//    private static Logger replaceLogger() {
+//        Logger original = LoggerFactory.getLogger("net.minecraft.client.texture.PlayerSkinProvider");
+//
+//        InvocationHandler handler = new InvocationHandler() {
+//            @Override
+//            public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+//                if ("warn".equals(method.getName()) && args != null) {
+//                    for (Object a : args) {
+//                        if (a instanceof Throwable cause) {
+//                            while (cause != null) {
+//                                if (cause instanceof java.io.IOException && cause.getMessage() != null
+//                                        && cause.getMessage().contains("Bad PNG Signature")) {
+//
+//                                    return null;
+//                                }
+//                                cause = cause.getCause();
+//                            }
+//                        }
+//                    }
+//                }
+//                return method.invoke(original, args);
+//            }
+//        };
+//
+//        return (Logger) Proxy.newProxyInstance(
+//                Logger.class.getClassLoader(),
+//                new Class<?>[]{Logger.class},
+//                handler
+//        );
+//    }
 }

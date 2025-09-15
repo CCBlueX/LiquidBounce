@@ -40,6 +40,7 @@ public class MixinYggdrasilMinecraftSessionService {
     private void bypassSignature(Property property, CallbackInfoReturnable<SignatureState> cir) {
         cir.setReturnValue(SignatureState.SIGNED);
     }
+
     @Redirect(
             method = "unpackTextures",
             at = @At(
