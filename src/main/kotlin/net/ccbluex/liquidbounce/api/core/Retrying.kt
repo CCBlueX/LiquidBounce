@@ -26,8 +26,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.utils.client.logger
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 
 /**
@@ -70,13 +72,15 @@ inline fun <T : Any> CoroutineScope.retrying(
 
         if (attempt == maxRetries) {
             logger.error("Failed to get $name after $attempt attempts.")
+            stateFlow.value = RetryingJob.State.Stopped
         }
     }
 
     producerJob.invokeOnCompletion {
-        stateFlow.value = when (it) {
-            null -> RetryingJob.State.Stopped
-            else -> RetryingJob.State.Cancelled(it)
+         when (it) {
+            null -> {} // Normal completion
+            is CancellationException -> stateFlow.value = RetryingJob.State.Cancelled(it)
+            else -> stateFlow.value = RetryingJob.State.Error(it)
         }
     }
 
@@ -92,11 +96,19 @@ data class RetryingJob<T : Any>(
         return (stateFlow.value as? State.Success)?.value
     }
 
+    suspend fun getFinalState(): State.Final<T> {
+        return stateFlow.first { it is State.Final } as State.Final<T>
+    }
+
     sealed interface State<out T : Any> {
+        sealed interface Final<out T : Any> : State<T>
+
         data object Init : State<Nothing>
         data class Loading(val t: Throwable, val retryCount: Int) : State<Nothing>
-        data class Success<out T : Any>(val value: T, val retryCount: Int) : State<T>
-        data object Stopped: State<Nothing>
-        data class Cancelled(val t: Throwable?) : State<Nothing>
+
+        data object Stopped: Final<Nothing>
+        data class Success<out T : Any>(val value: T, val retryCount: Int) : Final<T>
+        data class Cancelled(val t: CancellationException) : Final<Nothing>
+        data class Error(val t: Throwable) : Final<Nothing>
     }
 }
