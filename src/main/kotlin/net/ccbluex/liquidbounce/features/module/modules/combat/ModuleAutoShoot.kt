@@ -50,7 +50,6 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import java.util.function.Function
-import java.util.function.Supplier
 
 /**
  * A module that automatically shoots at the nearest enemy.
@@ -136,7 +135,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val slot = throwableType.get() ?: return@handler
+        val slot = throwableType() ?: return@handler
 
         if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@handler
@@ -167,7 +166,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val slot = throwableType.get() ?: return@tickHandler
+        val slot = throwableType() ?: return@tickHandler
 
         if (!slot.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)) {
             return@tickHandler
@@ -205,11 +204,11 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         }
     }
 
-    private enum class ThrowableType(override val choiceName: String) : NamedChoice, Supplier<HotbarItemSlot?> {
+    private enum class ThrowableType(override val choiceName: String) : NamedChoice, () -> HotbarItemSlot? {
         EGG_AND_SNOWBALL("EggAndSnowball"),
         ANYTHING("Anything");
 
-        override fun get(): HotbarItemSlot? = when (this) {
+        override fun invoke(): HotbarItemSlot? = when (this) {
             EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot(Items.EGG, Items.SNOWBALL)
             ANYTHING -> when {
                 !player.mainHandStack.isNothing() -> Slots.Hotbar[player.inventory.selectedSlot]
