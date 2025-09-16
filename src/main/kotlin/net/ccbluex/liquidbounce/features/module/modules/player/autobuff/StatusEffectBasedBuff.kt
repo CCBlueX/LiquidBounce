@@ -38,7 +38,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
     ) : ToggleableConfigurable(parent, name, true) {
 
         open fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
-            return enabled && statusEffect != effect.effectType && !player.hasStatusEffect(statusEffect)
+            return enabled && statusEffect == effect.effectType && !player.hasStatusEffect(statusEffect)
         }
     }
 
