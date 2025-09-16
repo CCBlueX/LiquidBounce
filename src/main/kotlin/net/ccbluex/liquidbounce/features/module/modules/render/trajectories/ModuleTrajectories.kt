@@ -136,7 +136,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 if (ownerName && renderer.owner !== player) {
                     text.append(" ").append(renderer.owner.name)
                 }
-                if (distance) {
+                if (distance && result.positions.isNotEmpty()) {
                     text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
                 }
 
