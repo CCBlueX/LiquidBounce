@@ -38,8 +38,6 @@
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.client.option.MixinServerListAccessor",
-    "minecraft.client.texture.MixinPlayerSkinProvider",
-    "minecraft.client.texture.MixinPlayerSkinTextureDownloader",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
     "minecraft.entity.MixinAbstractHorseEntity",
     "minecraft.entity.MixinArmorFeatureRenderer",
