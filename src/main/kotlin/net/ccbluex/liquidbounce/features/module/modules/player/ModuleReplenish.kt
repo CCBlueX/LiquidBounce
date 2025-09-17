@@ -86,7 +86,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = ar
 
         chronometer.reset()
 
-        Slots.Hotbar.slots.forEach { slot ->
+        Slots.OffhandWithHotbar.slots.forEach { slot ->
             val itemStack = slot.itemStack
             val idx = if (slot is OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarSlot
 

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
@@ -63,7 +62,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
     }
 
     private fun findEmptyHotbarSlot(): Boolean {
-        return Slots.Hotbar.findSlot { it.isNothing() } != null
+        return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
     }
 
 }

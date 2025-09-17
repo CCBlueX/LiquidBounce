@@ -26,6 +26,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
+import kotlin.math.abs
 
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
@@ -154,6 +155,22 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
 
     override fun toString(): String {
         return "ItemSlot/Hotbar(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
+    }
+
+    companion object {
+
+        /**
+         * Distance order:
+         * current hand -> offhand -> other slots
+         */
+        @JvmField
+        val PREFER_NEARBY: Comparator<HotbarItemSlot> = Comparator.comparingInt<HotbarItemSlot> {
+            when {
+                it is OffHandSlot -> Int.MIN_VALUE + 1
+                it.hotbarSlotForServer == SilentHotbar.serversideSlot -> Int.MIN_VALUE
+                else -> abs(SilentHotbar.serversideSlot - it.hotbarSlotForServer)
+            }
+        }
     }
 
 }
