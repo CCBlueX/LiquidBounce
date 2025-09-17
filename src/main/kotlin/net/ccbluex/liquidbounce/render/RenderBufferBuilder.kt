@@ -29,7 +29,7 @@ import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Position
 
 
 /**
@@ -270,9 +270,9 @@ fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Co
 
 fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     env: RenderEnvironment,
-    pos1: Vec3d,
+    pos1: Position,
     uv1: UV2f,
-    pos2: Vec3d,
+    pos2: Position,
     uv2: UV2f,
     color: Color4b
 ) {

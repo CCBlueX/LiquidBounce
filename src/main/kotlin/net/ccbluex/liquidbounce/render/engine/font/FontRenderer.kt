@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.math.set
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.text.Text
@@ -36,7 +37,8 @@ import java.awt.Font
 import kotlin.math.max
 import kotlin.random.Random
 
-data class RenderedGlyph(
+@JvmRecord
+private data class RenderedGlyph(
     val style: Int,
     val glyph: GlyphDescriptor,
     val x1: Float,
@@ -47,7 +49,8 @@ data class RenderedGlyph(
     val color: Color4b
 )
 
-data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
+@JvmRecord
+private data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
 
 private class FontRendererCache {
     val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
@@ -72,9 +75,17 @@ class FontRenderer(
 ) : AbstractFontRenderer<TextProcessor.ProcessedText>() {
 
     private val cache = FontRendererCache()
-    override val height: Float = font.styles.firstNotNullOf { it?.height }
-    val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
     private val positionCache = Vector3f()
+    private val mutableVec3d1 = Vec3d(0.0, 0.0, 0.0)
+    private val mutableVec3d2 = Vec3d(0.0, 0.0, 0.0)
+    private val underlinesCache = ArrayDeque<IntRange>()
+    private val strikethroughCache = ArrayDeque<IntRange>()
+
+    override val height: Float = font.styles.firstNotNullOf { it?.height }
+
+    val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
+
+    private val shadowColor = Color4b(0, 0, 0, 150)
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
@@ -107,7 +118,7 @@ class FontRenderer(
                 text,
                 pos = positionCache.set(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
                 scale,
-                overrideColor = Color4b(0, 0, 0, 150)
+                overrideColor = shadowColor
             )
         }
 
@@ -132,9 +143,15 @@ class FontRenderer(
             return pos.x
         }
 
-        // remove from front
-        val underlineStack = ArrayDeque(text.underlines)
-        val strikethroughStack = ArrayDeque(text.strikeThroughs)
+        // remove from last
+        val underlineStack = underlinesCache.apply {
+            clear()
+            addAll(text.underlines)
+        }
+        val strikethroughStack = strikethroughCache.apply {
+            clear()
+            addAll(text.strikeThroughs)
+        }
 
         var x = pos.x
         var y = pos.y + this.ascent * scale
@@ -268,9 +285,9 @@ class FontRenderer(
 
             renderBuffer.drawQuad(
                 env,
-                Vec3d(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
+                mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
-                Vec3d(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
+                mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.max,
                 color
             )
