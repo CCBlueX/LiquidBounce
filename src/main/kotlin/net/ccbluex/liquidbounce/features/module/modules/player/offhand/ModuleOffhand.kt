@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -49,6 +48,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
 import java.util.function.Function
+import java.util.function.Predicate
 
 /**
  * Offhand module
@@ -58,7 +58,10 @@ import java.util.function.Function
 object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private val switchMode by enumChoice("SwitchMode", if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC)
+    private val switchMode by enumChoice(
+        "SwitchMode",
+        default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
+    )
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
 
@@ -241,17 +244,15 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
 
     fun isOperating() = running && activeMode != Mode.NONE
 
-    private enum class Mode(val modeName: String, private val item: Item, private val fallBackItem: Item? = null) {
-        BLOCK("Block", Items.AIR) {
+    private enum class Mode(
+        val modeName: String,
+        private val item: Predicate<ItemStack>? = null,
+        private val fallBackItem: Predicate<ItemStack>? = null,
+    ) {
+        BLOCK("Block", ScaffoldBlockItemSelection::isValidBlock) {
             override fun shouldEquip(): Boolean =
                 Block.enabled &&
                     ((Block.whileEagle && ModuleEagle.enabled) || (Block.whileScaffold && ModuleScaffold.enabled))
-
-            override fun getSlot(): ItemSlot? =
-                when {
-                    ScaffoldBlockItemSelection.isValidBlock(player.offHandStack) -> OffHandSlot
-                    else -> INVENTORY_MAIN_PRIORITY.findSlot(ScaffoldBlockItemSelection::isValidBlock)
-                }
 
             override fun canCycleTo() = Block.enabled
         },
@@ -273,11 +274,9 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
 
             override fun canCycleTo() = Totem.enabled
         },
-        STRENGTH("Strength", Items.POTION) {
-            private val isStrengthPotion = Predicate<ItemStack> { stack ->
-                stack.isOf(Items.POTION) && stack.getPotionEffects().any { it.effectType == StatusEffects.STRENGTH }
-            }
-
+        STRENGTH("Strength", Predicate { stack ->
+            stack.isOf(Items.POTION) && stack.getPotionEffects().any { it.effectType == StatusEffects.STRENGTH }
+        }) {
             override fun shouldEquip(): Boolean {
                 val killAura = Strength.onlyWhileKa && !ModuleKillAura.running
                 if (!Strength.enabled || killAura || player.hasStatusEffect(StatusEffects.STRENGTH)) {
@@ -285,14 +284,6 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 }
 
                 return player.mainHandStack.isSword || !Strength.onlyWhileHoldingSword
-            }
-
-            override fun getSlot(): ItemSlot? {
-                if (isStrengthPotion.test(player.offHandStack)) {
-                    return OffHandSlot
-                }
-
-                return INVENTORY_MAIN_PRIORITY.findSlot { isStrengthPotion.test(it) }
             }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
@@ -317,14 +308,20 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
             override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
         },
-        BACK("Back", Items.AIR) {
+        BACK("Back") {
             override fun getSlot(): ItemSlot? {
                 return last?.let {
                     if (it.first == it.second.itemStack.item) it.second else null
                 }
             }
         },
-        NONE("None", Items.AIR);
+        NONE("None");
+
+        constructor(
+            modeName: String,
+            item: Item,
+            fallBackItem: Item? = null,
+        ) : this(modeName, { it.isOf(item) }, fallBackItem?.let { item -> { it.isOf(item) } })
 
         private var modeBeforeDirectSwitch: Mode? = null
 
@@ -353,11 +350,11 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         }
 
         open fun getSlot(): ItemSlot? {
-            if (item == Items.AIR) {
+            if (item == null) {
                 return null
             }
 
-            if (player.offHandStack.item == item) {
+            if (item.test(player.offHandStack)) {
                 return OffHandSlot
             }
 
@@ -367,21 +364,22 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 INVENTORY_HOTBAR_PRIORITY
             }
 
-            var itemSlot = slots.findSlot(item)
+            var itemSlot = slots.findSlot(item::test)
             if (itemSlot == null && fallBackItem != null) {
-                if (player.offHandStack.item == fallBackItem) {
+                if (fallBackItem.test(player.offHandStack)) {
                     return OffHandSlot
                 }
 
-                itemSlot = slots.findSlot(fallBackItem)
+                itemSlot = slots.findSlot(fallBackItem::test)
             }
 
             return itemSlot
         }
     }
 
-    @Suppress("unused")
-    private enum class SwitchMode(override val choiceName: String) : NamedChoice, Function<ItemSlot, List<InventoryAction.Click>> {
+    private enum class SwitchMode(
+        override val choiceName: String
+    ) : NamedChoice, Function<ItemSlot, List<InventoryAction.Click>> {
         /**
          * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
          * Works on all versions.
