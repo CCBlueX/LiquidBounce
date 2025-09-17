@@ -17,18 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
+package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.TitleEvent
+import net.ccbluex.liquidbounce.event.handler
 
-object AutoQueueActionChat : AutoQueueAction("Chat") {
-    private val message by text("Message", "/play solo_normal")
+object AutoQueueTriggerSubtitle : AutoQueueTrigger("Title") {
+    override var isTriggered: Boolean = false
+        get() = field.apply { field = false }
 
-    override suspend fun execute(sequence: Sequence) {
-        if (message.startsWith("/")) {
-            network.sendCommand(message.substring(1))
-        } else {
-            network.sendChatMessage(message)
+    private val keywords by textList("Keywords", mutableListOf("恭喜"))
+
+    @Suppress("unused")
+    private val titleHandler = handler<TitleEvent.Subtitle> { event ->
+        val string = event.text?.string ?: return@handler
+        if (keywords.any { string.contains(it) }) {
+            isTriggered = true
         }
     }
 }
