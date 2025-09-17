@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -158,7 +157,7 @@ fun HandledScreen<*>.getSlotsInContainer() =
 
 fun HandledScreen<*>.findItemsInContainer() =
     this.screenHandler.slots
-        .filter { !it.stack.isNothing() && it.inventory !== player.inventory }
+        .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
 @JvmOverloads

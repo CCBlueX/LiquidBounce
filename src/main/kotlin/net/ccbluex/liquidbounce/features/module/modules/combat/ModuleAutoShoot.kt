@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
@@ -211,8 +210,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         override fun invoke(): HotbarItemSlot? = when (this) {
             EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot(Items.EGG, Items.SNOWBALL)
             ANYTHING -> when {
-                !player.mainHandStack.isNothing() -> Slots.Hotbar[player.inventory.selectedSlot]
-                !player.offHandStack.isNothing() -> OffHandSlot
+                !player.mainHandStack.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
+                !player.offHandStack.isEmpty -> OffHandSlot
                 else -> null
             }
         }

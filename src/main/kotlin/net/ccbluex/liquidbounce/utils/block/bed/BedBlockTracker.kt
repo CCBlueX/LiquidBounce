@@ -65,7 +65,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         triggerRescan()
     }
 
-    private val WHITELIST_NON_SOLID = setOf(
+    private val WHITELIST_NON_SOLID: Set<Block> = ReferenceOpenHashSet.of(
         Blocks.LADDER,
 
         Blocks.WATER,

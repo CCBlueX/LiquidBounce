@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.addEnchantment
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.item.removeEnchantment
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
@@ -186,7 +185,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
     private fun getItemOrThrow(command: Command): ItemStack {
         val itemStack = player.getStackInHand(Hand.MAIN_HAND)
 
-        if (itemStack.isNothing()) {
+        if (itemStack.isEmpty) {
             throw CommandException(command.resultWithTree("mustHoldItem"))
         }
 

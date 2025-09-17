@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArm
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.item.Items
 
@@ -92,7 +91,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
             return null
         }
 
-        return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isNothing())
+        return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isEmpty)
     }
 
     /**

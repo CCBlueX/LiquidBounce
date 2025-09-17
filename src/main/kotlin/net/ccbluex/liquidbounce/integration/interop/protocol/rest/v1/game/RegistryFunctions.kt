@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
@@ -314,7 +313,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
                     }
 
                     else -> {
-                        if (!pickStack.isNothing()) {
+                        if (!pickStack.isEmpty) {
                             logger.warn("Invalid pick stack for $id: $pickStack")
                         }
                     }
