@@ -47,7 +47,6 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
-import java.util.function.Function
 import java.util.function.Predicate
 
 /**
@@ -200,7 +199,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             last = slot.itemStack.item to slot
         }
 
-        val actions = switchMode.apply(slot)
+        val actions = switchMode.performSwitch(slot)
         if (actions.isEmpty()) {
             chronometer.reset()
             return@handler
@@ -377,9 +376,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         }
     }
 
-    private enum class SwitchMode(
-        override val choiceName: String
-    ) : NamedChoice, Function<ItemSlot, List<InventoryAction.Click>> {
+    @Suppress("unused")
+    private enum class SwitchMode(override val choiceName: String) : NamedChoice {
         /**
          * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
          * Works on all versions.
@@ -387,40 +385,45 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action
          * often and quickly.
          */
-        SMART("Smart"),
+        SMART("Smart") {
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, true)
+        },
 
         /**
          * Performs a switch action, works on 1.16.
          * The best method on newer servers.
          */
-        SWITCH("Switch"),
-
-        /**
-         * Performs 2-3 a pickup actions.
-         * Works on all versions.
-         */
-        PICKUP("PickUp"),
-
-        /**
-         * Chooses the switch action based on the version. Only works if vfp is installed.
-         */
-        AUTOMATIC("Automatic");
-
-        override fun apply(from: ItemSlot): List<InventoryAction.Click> = when (this) {
-            SMART -> performSwitch(from, true)
-            SWITCH -> listOf(
+        SWITCH("Switch") {
+            override fun performSwitch(from: ItemSlot) = listOf(
                 InventoryAction.Click.performSwap(
                     from = from,
                     to = OffHandSlot
                 )
             )
-            PICKUP -> performSwitch(from, false)
-            AUTOMATIC -> if (isNewerThanOrEquals1_16) {
-                SWITCH.apply(from)
-            } else {
-                PICKUP.apply(from)
+        },
+
+        /**
+         * Performs 2-3 a pickup actions.
+         * Works on all versions.
+         */
+        PICKUP("PickUp") {
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, false)
+        },
+
+        /**
+         * Chooses the switch action based on the version. Only works if vfp is installed.
+         */
+        AUTOMATIC("Automatic") {
+            override fun performSwitch(from: ItemSlot): List<InventoryAction.Click> {
+                return if (isNewerThanOrEquals1_16) {
+                    SWITCH.performSwitch(from)
+                } else {
+                    PICKUP.performSwitch(from)
+                }
             }
-        }
+        };
+
+        abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
     }
 
 }
