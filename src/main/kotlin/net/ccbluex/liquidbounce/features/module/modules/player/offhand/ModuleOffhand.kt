@@ -248,13 +248,6 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         private val item: Predicate<ItemStack>? = null,
         private val fallBackItem: Predicate<ItemStack>? = null,
     ) {
-        BLOCK("Block", ScaffoldBlockItemSelection::isValidBlock) {
-            override fun shouldEquip(): Boolean =
-                Block.enabled &&
-                    ((Block.whileEagle && ModuleEagle.enabled) || (Block.whileScaffold && ModuleScaffold.enabled))
-
-            override fun canCycleTo() = Block.enabled
-        },
         TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
             override fun shouldEquip() = Totem.shouldEquip()
 
@@ -306,6 +299,13 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         },
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
             override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
+        },
+        BLOCK("Block", ScaffoldBlockItemSelection::isValidBlock) {
+            override fun shouldEquip(): Boolean =
+                Block.enabled &&
+                    ((Block.whileEagle && ModuleEagle.enabled) || (Block.whileScaffold && ModuleScaffold.enabled))
+
+            override fun canCycleTo() = Block.enabled
         },
         BACK("Back") {
             override fun getSlot(): ItemSlot? {
