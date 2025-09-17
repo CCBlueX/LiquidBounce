@@ -252,7 +252,6 @@
   "liquidbounce.module.mobOwners.description": "Te deixa ver quem é o dono da entidade.",
   "liquidbounce.module.noBob.description": "Desativa o effeito de correr.",
   "liquidbounce.module.noHurtCam.description": "Desativa o efeito de quando leva dano.",
-  "liquidbounce.module.noSignRender.description": "Não deixa o texto em placas aparecer.",
   "liquidbounce.module.noSwing.description": "Desativa o efeito de bater.",
   "liquidbounce.module.noWeather.description": "Desativa o efeito da chuca.",
   "liquidbounce.module.rotations.description": "Deixa você ver rotações na sua cabeça feita pelo server.",

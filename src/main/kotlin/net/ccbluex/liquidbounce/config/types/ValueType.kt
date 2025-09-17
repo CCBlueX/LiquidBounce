@@ -35,6 +35,8 @@ enum class ValueType(
     INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
     TEXT(HumanInputDeserializer.textDeserializer),
     COLOR(HumanInputDeserializer.colorDeserializer),
+
+    // Registry Types
     BLOCK(HumanInputDeserializer.blockDeserializer),
     ITEM(HumanInputDeserializer.itemDeserializer),
     SOUND(HumanInputDeserializer.soundDeserializer),
@@ -43,6 +45,8 @@ enum class ValueType(
     ENTITY_TYPE,
     CLIENT_PACKET,
     SERVER_PACKET,
+    CLIENT_MODULE(HumanInputDeserializer.clientModuleDeserializer),
+
     KEY(HumanInputDeserializer.keyDeserializer),
     FILE(HumanInputDeserializer.fileDeserializer),
     BIND,

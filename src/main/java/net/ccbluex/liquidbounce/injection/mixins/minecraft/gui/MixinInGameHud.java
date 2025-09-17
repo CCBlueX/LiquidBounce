@@ -61,17 +61,12 @@ import java.util.function.Function;
 public abstract class MixinInGameHud {
 
     @Final
-    @Unique
-    private static final Identifier liquid_bounce$PUMPKIN_BLUR = Identifier.ofVanilla("misc/pumpkinblur");
-
-    @Final
     @Shadow
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
     @Nullable
     protected abstract PlayerEntity getCameraPlayer();
-
 
     @Shadow
     @Final
@@ -108,7 +103,7 @@ public abstract class MixinInGameHud {
             return;
         }
 
-        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && liquid_bounce$PUMPKIN_BLUR.equals(texture)) {
+        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && ModuleAntiBlind.TEXTURE_PUMPKIN_BLUR.equals(texture)) {
             callback.cancel();
             return;
         }

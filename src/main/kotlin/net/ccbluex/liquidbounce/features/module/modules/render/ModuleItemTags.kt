@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.component.ComponentChanges
@@ -168,7 +169,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
-        initialValue = ObjectArrayList()
+        initialValue = ObjectArrayList(16)
     ) { _, clusteredEntities ->
         val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
@@ -210,9 +211,9 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     private class ClusteredEntities(val entities: List<Entity>, val stacks: List<ItemStack>) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
-            return entities.fold(Vec3d.ZERO) { acc, entity ->
-                acc.add(entity.interpolateCurrentPosition(tickDelta))
-            }.multiply(1.0 / entities.size)
+            return entities.map { entity ->
+                entity.interpolateCurrentPosition(tickDelta)
+            }.average()
         }
     }
 

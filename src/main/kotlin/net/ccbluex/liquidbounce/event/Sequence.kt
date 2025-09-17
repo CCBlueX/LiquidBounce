@@ -98,7 +98,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         // which results in one or fewer ticks of actual wait time.
         @OptIn(DelicateCoroutinesApi::class)
         this.coroutine = GlobalScope.launch(
-            context = Dispatchers.Unconfined,
+            context = Dispatchers.Unconfined + CoroutineName("Sequence@$owner"),
             start = CoroutineStart.UNDISPATCHED
         ) {
             SequenceManager.sequences += this@Sequence

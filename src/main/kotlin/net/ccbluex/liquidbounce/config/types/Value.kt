@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
+import java.util.function.Consumer
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
@@ -74,11 +76,11 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val listeners = mutableListOf<ValueListener<T>>()
+    private val listeners: MutableList<ValueListener<T>> = ObjectArrayList()
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners = mutableListOf<ValueChangedListener<T>>()
+    private val changedListeners: MutableList<ValueChangedListener<T>> = ObjectArrayList()
 
     @Exclude
     @ProtocolExclude
@@ -222,7 +224,7 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: (T) -> Unit) {
+    fun set(t: T, apply: Consumer<T>) {
         var currT = t
         runCatching {
             listeners.forEach {
@@ -233,7 +235,7 @@ open class Value<T : Any>(
                 return
             }
         }.onSuccess {
-            apply(currT)
+            apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it(currT) }
             stateFlow.value = currT

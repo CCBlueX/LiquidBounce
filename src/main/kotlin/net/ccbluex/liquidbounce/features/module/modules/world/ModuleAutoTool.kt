@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -115,13 +114,11 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
-        if (!RequireNearBed.enabled || RequireNearBed.matches()) {
-            switchToBreakBlock(event.pos)
-        }
+        switchToBreakBlock(event.pos)
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isSneaking) {
+        if (requireSneaking && !player.isSneaking || RequireNearBed.enabled && !RequireNearBed.matches()) {
             return
         }
 
@@ -139,7 +136,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         val slot = filter {
             val stack = it.itemStack
             val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
-            stack.isNothing() || (!player.isCreative && durabilityCheck)
+            stack.isEmpty || (!player.isCreative && durabilityCheck)
         }.maxByOrNull {
             it.itemStack.getMiningSpeedMultiplier(blockState)
         } ?: return null

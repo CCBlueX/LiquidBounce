@@ -42,7 +42,6 @@ import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
-import kotlin.math.absoluteValue
 
 /**
  * SmartEat module
@@ -70,13 +69,13 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             compareByDescending { it.second.healthThreshold },
             compareBy { it.second.restoredHunger },
             // Use the closest slot
-            compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
+            Comparator.comparing({ it.first }, HotbarItemSlot.PREFER_NEARBY),
             // Just for stabilization reasons
             compareBy { SilentHotbar.serversideSlot }
         )
 
         fun findBestFood(): HotbarItemSlot? {
-            return Slots.Hotbar
+            return Slots.OffhandWithHotbar
                 .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
                 .maxWithOrNull(comparator)?.first
         }

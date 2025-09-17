@@ -13,16 +13,8 @@ import net.minecraft.util.Formatting
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
-    private var regexFilters = emptySet<Regex>()
-
     private val stack by boolean("StackMessages", false)
-    private val filters by textList("Filters", mutableListOf()).onChanged {
-        compileFilters()
-    }
-
-    private fun compileFilters() {
-        regexFilters = filters.mapTo(HashSet(filters.size, 1.0F), ::Regex)
-    }
+    private val regexFilters by regexList("Filters", linkedSetOf())
 
     @Suppress("unused", "CAST_NEVER_SUCCEEDS" /* succeed with mixins */)
     val chatHandler = handler<ChatReceiveEvent> { event ->
@@ -67,7 +59,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)
-            chat(texts = arrayOf(literalText), data)
+            chat(literalText, data)
         }
     }
 

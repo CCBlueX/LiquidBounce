@@ -21,11 +21,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoBuffRotationsConfigurable.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.Rotations.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -36,20 +35,17 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.projectile.thrown.PotionEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
 
-object Pot : Buff("Pot") {
+internal object Pot : StatusEffectBasedBuff("Pot") {
 
     private const val BENEFICIAL_SQUARE_RANGE = 16.0
 
@@ -79,52 +75,26 @@ object Pot : Buff("Pot") {
             return isCloseGround && !isSplashNearby()
         }
 
-
-    private object HealthPotion : ToggleableConfigurable(Drink, "HealthPotion", true) {
-        private val healthPercent by int("Health", 40, 1..100, "%HP")
-
-        val health
-            get() = player.maxHealth * healthPercent / 100
-
-    }
-
-    private object RegenPotion : ToggleableConfigurable(Drink, "RegenPotion", true) {
-        private val healthPercent by int("Health", 70, 1..100, "%HP")
-
-        val health
-            get() = player.maxHealth * healthPercent / 100
-
-    }
-
-    init {
-        tree(HealthPotion)
-        tree(RegenPotion)
-    }
-
-    private val strengthPotion by boolean("StrengthPotion", true)
-    private val speedPotion by boolean("SpeedPotion", true)
-    private val fireResistancePotion by boolean("FireResistancePotion", true)
-
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
     private val doNotBenefitOthers by boolean("DoNotBenefitOthers", true)
 
     private val allowLingering by boolean("AllowLingering", false)
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
         // TODO: Use movement prediction to splash against walls and away from the player
         //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
         var rotation = Rotation(player.yaw, (85f..90f).random())
 
-        when (ModuleAutoBuff.rotations.rotationTiming) {
+        when (ModuleAutoBuff.Rotations.rotationTiming) {
             NORMAL -> {
                 RotationManager.setRotationTarget(
                     rotation,
-                    configurable = ModuleAutoBuff.rotations,
+                    configurable = ModuleAutoBuff.Rotations,
                     provider = ModuleAutoBuff,
                     priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                 )
 
-                sequence.waitUntil {
+                waitUntil {
                     (currentRotation ?: player.rotation).pitch > 85
                 }
 
@@ -148,7 +118,7 @@ object Pot : Buff("Pot") {
             pitch = rotation.pitch,
         )
 
-        when (ModuleAutoBuff.rotations.rotationTiming) {
+        when (ModuleAutoBuff.Rotations.rotationTiming) {
             ON_TICK -> {
                 network.sendPacket(MovePacketType.FULL.generatePacket().apply {
                     yaw = player.withFixedYaw(currentRotation ?: player.rotation)
@@ -159,33 +129,11 @@ object Pot : Buff("Pot") {
         }
 
         // Wait at least 1 tick to make sure, we do not continue with something else too early
-        sequence.waitTicks(1)
+        waitTicks(1)
     }
 
-    override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        if (stack.isNothing() || !isValidPotion(stack)) {
-            return false
-        }
-
-        val health = if (forUse) player.health else 0f
-        return stack.getPotionEffects().any { foundTargetEffect(it, health) }
-    }
-
-    private fun isValidPotion(stack: ItemStack) =
+    override fun isValidPotion(stack: ItemStack) =
         stack.item is SplashPotionItem || stack.item is LingeringPotionItem && allowLingering
-
-    private fun foundTargetEffect(effect: StatusEffectInstance, playerHealth: Float) =
-        when (effect.effectType) {
-            StatusEffects.INSTANT_HEALTH -> HealthPotion.enabled && playerHealth <= HealthPotion.health
-            StatusEffects.REGENERATION -> RegenPotion.enabled && playerHealth <= RegenPotion.health
-                && !player.hasStatusEffect(StatusEffects.REGENERATION)
-            StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
-            StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
-            StatusEffects.FIRE_RESISTANCE -> fireResistancePotion &&
-                !player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)
-            else -> false
-        }
-
 
     private fun hasBenefit(entity: LivingEntity): Boolean {
         if (!entity.isAffectedBySplashPotions) {

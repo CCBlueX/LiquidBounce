@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.NativeImage
@@ -49,9 +49,9 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
-val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-fun withScope(block: suspend CoroutineScope.() -> Unit) = scope.launch { block() }
+fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch { block() }
 
 object HttpClient {
 
@@ -182,7 +182,7 @@ inline fun <reified T> Response.parse(): T {
         NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
             NativeImageBackedTexture(NativeImage.read(stream))
         } as T
-        else -> decode<T>(body.charStream())
+        else -> body.charStream().readJson<T>()
     }
 }
 

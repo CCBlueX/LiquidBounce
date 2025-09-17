@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
+import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
@@ -55,7 +55,7 @@ object CommandTargets : Command.Factory {
         .hub()
         .build()
 
-    private fun CommandBuilder.fromTargets(targets: MultiChooseEnumListValue<Targets>): CommandBuilder {
+    private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
         // Create sub-command for each value entry
         for (entry in targets.choices) {
             subcommand(

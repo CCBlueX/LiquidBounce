@@ -39,7 +39,7 @@ import net.ccbluex.netty.http.util.httpOk
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("name", name)
-    addProperty("category", category.readableName)
+    addProperty("category", category.choiceName)
     add("keyBind", interopGson.toJsonTree(bind))
     addProperty("enabled", enabled)
     addProperty("description", description.get())

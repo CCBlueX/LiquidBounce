@@ -45,9 +45,13 @@ abstract class ToggleableConfigurable(
     MinecraftShortcuts {
 
     @ScriptApiRequired
-    override var enabled by boolean("Enabled", enabled)
+    @get:JvmName("getEnabledValue")
+    val enabledValue: Value<Boolean> = boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
         .onChange { state -> onToggled(state) }
+
+    @ScriptApiRequired
+    override var enabled by enabledValue
 
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
         return value
@@ -93,9 +97,15 @@ abstract class ToggleableConfigurable(
 
     final override fun parent() = parent
 
-    @ScriptApiRequired
-    @Suppress("unused")
-    fun getEnabledValue(): Value<*> = this.inner[0]
+    protected fun <T : Choice> choices(name: String, active: T, choices: Array<T>) =
+        choices(this, name, active, choices)
+
+    protected fun <T : Choice> choices(
+        name: String,
+        activeIndex: Int = 0,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+    ) = choices(this, name, activeIndex, choicesCallback)
+
 }
 
 /**

@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonNull
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
@@ -42,12 +45,13 @@ import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
+import java.util.function.ToIntFunction
 import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(
     name: String,
-    value: MutableList<Value<*>> = mutableListOf(),
+    value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
 
     /**
@@ -63,7 +67,7 @@ open class Configurable(
      * Used for backwards compatibility when renaming.
      */
     aliases: Array<out String> = emptyArray(),
-) : Value<MutableList<Value<*>>>(
+) : Value<MutableCollection<Value<*>>>(
     name,
     aliases,
     defaultValue = value,
@@ -278,8 +282,13 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
+    fun regex(name: String, default: Regex) = value(name, default, ValueType.TEXT)
+
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
+
+    fun <C : MutableCollection<Regex>> regexList(name: String, default: C) =
+        mutableList<C, Regex>(name, default, ValueType.TEXT)
 
     fun easing(name: String, default: Easing) = enumChoice(name, default)
 
@@ -339,29 +348,29 @@ open class Configurable(
         vararg default: T,
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumEntries<T>,
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumSet<T> = emptyEnumSet(),
+        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), enumValues<T>().toEnumSet(), canBeNone)
+        multiEnumChoice(name, default, choices as Set<T>, canBeNone)
 
-    fun <T> multiEnumChoice(
+    fun <T : NamedChoice> multiEnumChoice(
         name: String,
-        default: EnumSet<T>,
-        choices: EnumSet<T>,
-        canBeNone: Boolean = true
-    ) where T : Enum<T>, T : NamedChoice =
-        MultiChooseEnumListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
+        default: MutableSet<T>,
+        choices: Set<T>,
+        canBeNone: Boolean
+    ) = MultiChooseListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
@@ -387,7 +396,7 @@ open class Configurable(
     protected fun <T : Choice> choices(
         eventListener: EventListener,
         name: String,
-        activeCallback: (List<T>) -> Int,
+        activeCallback: ToIntFunction<List<T>>,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ): ChoiceConfigurable<T> {
         return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {
@@ -429,17 +438,17 @@ open class Configurable(
      */
     @Suppress("LongMethod")
     fun json(valueObject: JsonObject) {
-        val type = valueObject["type"].asString
+        val type = enumValueOf<ValueType>(valueObject["type"].asString)
         val name = valueObject["name"].asString
 
         // todo: replace this with serious deserialization
         when (type) {
-            "BOOLEAN" -> {
+            ValueType.BOOLEAN -> {
                 val value = valueObject["value"].asBoolean
                 boolean(name, value)
             }
 
-            "INT" -> {
+            ValueType.INT -> {
                 val value = valueObject["value"].asInt
                 val min = valueObject["range"].asJsonObject["min"].asInt
                 val max = valueObject["range"].asJsonObject["max"].asInt
@@ -447,7 +456,7 @@ open class Configurable(
                 int(name, value, min..max, suffix)
             }
 
-            "INT_RANGE" -> {
+            ValueType.INT_RANGE -> {
                 val valueMin = valueObject["value"].asJsonObject["min"].asInt
                 val valueMax = valueObject["value"].asJsonObject["max"].asInt
                 val min = valueObject["range"].asJsonObject["min"].asInt
@@ -456,7 +465,7 @@ open class Configurable(
                 intRange(name, valueMin..valueMax, min..max, suffix)
             }
 
-            "FLOAT" -> {
+            ValueType.FLOAT -> {
                 val value = valueObject["value"].asFloat
                 val min = valueObject["range"].asJsonObject["min"].asFloat
                 val max = valueObject["range"].asJsonObject["max"].asFloat
@@ -464,7 +473,7 @@ open class Configurable(
                 float(name, value, min..max, suffix)
             }
 
-            "FLOAT_RANGE" -> {
+            ValueType.FLOAT_RANGE -> {
                 val valueMin = valueObject["value"].asJsonObject["min"].asFloat
                 val valueMax = valueObject["value"].asJsonObject["max"].asFloat
                 val min = valueObject["range"].asJsonObject["min"].asFloat
@@ -473,17 +482,17 @@ open class Configurable(
                 floatRange(name, valueMin..valueMax, min..max, suffix)
             }
 
-            "TEXT" -> {
+            ValueType.TEXT -> {
                 val value = valueObject["value"].asString
                 text(name, value)
             }
 
-            "COLOR" -> {
+            ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
                 color(name, Color4b(value, hasAlpha = true))
             }
 
-            "CONFIGURABLE" -> {
+            ValueType.CONFIGURABLE -> {
                 val subConfigurable = Configurable(name)
                 val values = valueObject["values"].asJsonArray
                 for (value in values) {
@@ -492,7 +501,7 @@ open class Configurable(
                 tree(subConfigurable)
             }
             // same as configurable but it is [ToggleableConfigurable]
-            "TOGGLEABLE" -> {
+            ValueType.TOGGLEABLE -> {
                 val value = valueObject["value"].asBoolean
                 // Parent is NULL in that case because we are not dealing with Listenable anyway and only use it
                 // as toggleable Configurable
@@ -504,11 +513,23 @@ open class Configurable(
                 tree(subConfigurable)
             }
 
-            "CHOICE" -> {
+            ValueType.CHOOSE -> {
                 val value = valueObject["value"].asString.asNamedChoice()
                 val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
 
                 enumChoice(name, value, choices)
+            }
+
+            ValueType.MULTI_CHOOSE -> {
+                val value = valueObject["value"].asJsonArray.mapTo(hashSetOf()) { it.asString.asNamedChoice() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+                val canBeNone = when (val json = valueObject["canBeNone"]) {
+                    null, is JsonNull -> true // default = true
+                    is JsonPrimitive, is JsonArray -> json.asBoolean
+                    else -> error("Unexpected JSON (${json.javaClass}): $json, should be boolean")
+                }
+
+                multiEnumChoice(name, value, choices, canBeNone)
             }
 
             else -> error("Unsupported type: $type")

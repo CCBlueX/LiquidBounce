@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
+import java.util.function.Predicate
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -44,9 +46,10 @@ open class TargetTracker(
 
     var target: LivingEntity? = null
 
-    fun selectFirst(predicate: ((LivingEntity) -> Boolean)? = null): LivingEntity? {
+    fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
         val enemies = targets()
-        return (if (predicate != null) enemies.firstOrNull(predicate) else enemies.firstOrNull()).also { target = it }
+        val selected = if (predicate != null) enemies.firstOrNull(predicate::test) else enemies.firstOrNull()
+        return selected.also { this.target = it }
     }
 
     fun <R> select(evaluator: (LivingEntity) -> R): R? {
@@ -66,10 +69,10 @@ open class TargetTracker(
         target = null
     }
 
-    fun validate(validator: ((LivingEntity) -> Boolean)? = null) {
+    fun validate(predicate: Predicate<LivingEntity>? = null) {
         val target = target ?: return
 
-        if (!validate(target) || validator != null && !validator(target)) {
+        if (!validate(target) || predicate != null && !predicate.test(target)) {
             reset()
         }
     }
@@ -91,18 +94,28 @@ open class TargetSelector(
     private val priority by enumChoice("Priority", defaultPriority)
 
     /**
+     * Counts available targets.
+     */
+    fun countTargets(): Int = world.entities.count { entity ->
+        entity is LivingEntity && validate(entity)
+    }
+
+    /**
      * Update should be called to always pick the best target out of the current world context
      */
     fun targets(): MutableList<LivingEntity> {
-        val entities = world.entities
-            .asSequence()
-            .filterIsInstance<LivingEntity>()
-            .filter(::validate)
-            // Sort by distance (closest first) - in case of tie at priority level
-            .sortedBy { it.squaredBoxedDistanceTo(player) }
-            .toMutableList()
+        val entities = ObjectArrayList<LivingEntity>()
 
-        if (entities.isEmpty()) {
+        for (entity in world.entities) {
+            if (entity is LivingEntity && validate(entity)) {
+                entities.add(entity)
+            }
+        }
+
+        // Sort by distance (closest first) - in case of tie at priority level
+        entities.sortBy { it.squaredBoxedDistanceTo(player) }
+
+        if (entities.isEmpty) {
             return entities
         }
 

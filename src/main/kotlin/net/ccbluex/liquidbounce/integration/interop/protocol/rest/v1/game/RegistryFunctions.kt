@@ -25,12 +25,12 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
@@ -266,6 +266,14 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
+        "client_module" -> {
+            ModuleManager.forEach { module ->
+                add(module.name, JsonObject().apply {
+                    addProperty("name", module.name)
+                })
+            }
+        }
+
         else -> return httpForbidden("Invalid registry name: $registryName")
     }
 })
@@ -305,7 +313,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
                     }
 
                     else -> {
-                        if (!pickStack.isNothing()) {
+                        if (!pickStack.isEmpty) {
                             logger.warn("Invalid pick stack for $id: $pickStack")
                         }
                     }

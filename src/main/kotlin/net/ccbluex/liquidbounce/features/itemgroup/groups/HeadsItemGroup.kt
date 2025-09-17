@@ -18,16 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup.groups
 
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.parse
+import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 data class Head(val name: String, val uuid: UUID, val value: String) {
 
@@ -56,32 +58,32 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
 
 }
 
-/**
- * The API endpoint to fetch heads from which is owned by CCBlueX
- * and therefore can reliably depend on.
- */
-const val HEAD_DB_API = "https://headdb.org/api/category/all"
-
-val heads by AsyncLazy {
-    runCatching {
-        val heads: HashMap<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).parse()
-
-        heads.values.toTypedArray().also {
-            logger.info("Successfully loaded ${it.size} heads from HeadDB")
-        }
-    }.onFailure { exception ->
-        logger.error("Unable to load heads", exception)
-    }.getOrElse { emptyArray() }
-}
-
 class HeadsItemGroup : ClientItemGroup(
     "Heads",
     icon = { ItemStack(Items.SKELETON_SKULL) },
     items = { items ->
-        items.addAll(
-            heads
-                .distinctBy { it.name }
-                .map(Head::asItemStack)
-        )
+        heads.getNow()?.let { heads ->
+            items.addAll(heads.distinctBy { it.name }.map(Head::asItemStack))
+        }
     }
-)
+) {
+    companion object {
+        /**
+         * The API endpoint to fetch heads from which is owned by CCBlueX
+         * and therefore can reliably depend on.
+         */
+        const val HEAD_DB_API = "https://headdb.org/api/category/all"
+
+        val heads = ioScope.retrying(
+            interval = 1.seconds,
+            name = "player-heads",
+            maxRetries = 3,
+        ) {
+            val heads: HashMap<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).parse()
+
+            heads.values.also {
+                logger.info("Successfully loaded ${it.size} heads from HeadDB")
+            } as Collection<Head>
+        }
+    }
+}

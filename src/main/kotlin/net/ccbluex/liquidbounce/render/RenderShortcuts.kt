@@ -37,6 +37,7 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
@@ -102,6 +103,10 @@ class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixS
 class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
+    }
+
+    fun relativeToCamera(pos: Vec3i): Vec3d {
+        return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
     }
 }
 
@@ -170,7 +175,7 @@ inline fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() 
  * @param pos The position vector.
  * @param draw The block of code to be executed in the transformed environment.
  */
-inline fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.() -> Unit) {
+inline fun <T : RenderEnvironment> T.withPosition(pos: Vec3d, draw: T.() -> Unit) {
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
@@ -186,6 +191,13 @@ inline fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.()
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
+    withPosition(relativeToCamera(pos), draw)
+}
+
+/**
+ * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
+ */
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
     val relativePos = relativeToCamera(pos)
 
     with(matrixStack) {
@@ -198,6 +210,7 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw:
         }
     }
 }
+
 
 /**
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].

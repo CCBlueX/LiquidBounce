@@ -27,20 +27,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.tag.ItemTags
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
-
-/**
- * Check if a stack is nothing (means empty slot)
- */
-@OptIn(ExperimentalContracts::class)
-fun ItemStack?.isNothing(): Boolean {
-    contract {
-        returns(true) implies (this@isNothing != null)
-    }
-
-    return this?.isEmpty == true
-}
 
 val ItemStack.isConsumable: Boolean
     get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET

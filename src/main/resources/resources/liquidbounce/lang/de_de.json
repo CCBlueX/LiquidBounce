@@ -487,7 +487,6 @@
   "liquidbounce.module.noPitchLimit.description": "Ermöglicht dir, deinen Kopf über die normalen Grenzen hinaus zu drehen.",
   "liquidbounce.module.noPush.description": "Schützt dich davor, von anderen Spielern herumgeschubst zu werden.",
   "liquidbounce.module.noRotateSet.description": "Verhindert, dass der Server deinen Kopf drehen kann.",
-  "liquidbounce.module.noSignRender.description": "Verhindert, dass Text auf Schildern gerendert wird.",
   "liquidbounce.module.noSlow.description": "Deaktiviert Verlangsamkeitseffekte, die durch Blöcke und die Verwendung von Items verursacht werden.",
   "liquidbounce.module.noSlowBreak.description": "Passt automatisch die Abbaugeschwindigkeit an, in Situationen die sich negativ auswirken.",
   "liquidbounce.module.noSwing.description": "Deaktiviert die Handschwunganimation.",
