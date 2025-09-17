@@ -30,13 +30,15 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -46,6 +48,7 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
+import java.util.function.Function
 
 /**
  * Offhand module
@@ -55,7 +58,7 @@ import org.lwjgl.glfw.GLFW
 object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private var switchMode = enumChoice("SwitchMode", SwitchMode.AUTOMATIC)
+    private val switchMode by enumChoice("SwitchMode", if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC)
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
 
@@ -83,17 +86,19 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         val strengthBind by key("StrengthBind")
     }
 
+    private object Block : ToggleableConfigurable(this, "Block", false) {
+        val whileScaffold by boolean("WhileScaffold", true)
+        val whileEagle by boolean("WhileEagle", true)
+    }
+
     init {
         treeAll(
             Totem,
             Crystal,
             Gapple,
-            Strength
+            Strength,
+            Block,
         )
-
-        if (!usesViaFabricPlus) {
-            switchMode = enumChoice("SwitchMode", SwitchMode.SWITCH)
-        }
     }
 
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
@@ -192,7 +197,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             last = slot.itemStack.item to slot
         }
 
-        val actions = switchMode.get().performSwitch(slot)
+        val actions = switchMode.apply(slot)
         if (actions.isEmpty()) {
             chronometer.reset()
             return@handler
@@ -205,10 +210,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         chronometer.reset()
     }
 
-    fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
-        val actions = ArrayList<InventoryAction.Click>(3)
-
-        if (smart && from is HotbarItemSlot) {
+    private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
+        return if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
             val targetSlot = from.hotbarSlot
             if (selectedSlot != targetSlot) {
@@ -224,20 +227,34 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             if (selectedSlot != targetSlot) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
             }
+            emptyList()
         } else {
-            actions += InventoryAction.Click.performPickup(slot = from)
-            actions += InventoryAction.Click.performPickup(slot = OffHandSlot)
-            if (!OffHandSlot.itemStack.isEmpty) {
-                actions += InventoryAction.Click.performPickup(slot = from)
+            buildList(3) {
+                this += InventoryAction.Click.performPickup(slot = from)
+                this += InventoryAction.Click.performPickup(slot = OffHandSlot)
+                if (!OffHandSlot.itemStack.isEmpty) {
+                    this += InventoryAction.Click.performPickup(slot = from)
+                }
             }
         }
-
-        return actions
     }
 
     fun isOperating() = running && activeMode != Mode.NONE
 
     private enum class Mode(val modeName: String, private val item: Item, private val fallBackItem: Item? = null) {
+        BLOCK("Block", Items.AIR) {
+            override fun shouldEquip(): Boolean =
+                Block.enabled &&
+                    ((Block.whileEagle && ModuleEagle.enabled) || (Block.whileScaffold && ModuleScaffold.enabled))
+
+            override fun getSlot(): ItemSlot? =
+                when {
+                    ScaffoldBlockItemSelection.isValidBlock(player.offHandStack) -> OffHandSlot
+                    else -> INVENTORY_MAIN_PRIORITY.findSlot(ScaffoldBlockItemSelection::isValidBlock)
+                }
+
+            override fun canCycleTo() = Block.enabled
+        },
         TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
             override fun shouldEquip() = Totem.shouldEquip()
 
@@ -257,19 +274,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             override fun canCycleTo() = Totem.enabled
         },
         STRENGTH("Strength", Items.POTION) {
-            val isStrengthPotion = Predicate<ItemStack> { stack ->
-                if (stack.item != Items.POTION) {
-                    return@Predicate false
-                }
-
-                val content = stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT)
-                content.effects.forEach { effect ->
-                    if (effect.effectType == StatusEffects.STRENGTH) {
-                        return@Predicate true
-                    }
-                }
-
-                return@Predicate false
+            private val isStrengthPotion = Predicate<ItemStack> { stack ->
+                stack.isOf(Items.POTION) && stack.getPotionEffects().any { it.effectType == StatusEffects.STRENGTH }
             }
 
             override fun shouldEquip(): Boolean {
@@ -375,7 +381,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
     }
 
     @Suppress("unused")
-    private enum class SwitchMode(override val choiceName: String) : NamedChoice {
+    private enum class SwitchMode(override val choiceName: String) : NamedChoice, Function<ItemSlot, List<InventoryAction.Click>> {
         /**
          * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
          * Works on all versions.
@@ -383,45 +389,40 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
          * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action
          * often and quickly.
          */
-        SMART("Smart") {
-            override fun performSwitch(from: ItemSlot) = performSwitch(from, true)
-        },
+        SMART("Smart"),
 
         /**
          * Performs a switch action, works on 1.16.
          * The best method on newer servers.
          */
-        SWITCH("Switch") {
-            override fun performSwitch(from: ItemSlot) = listOf(
-                InventoryAction.Click.performSwap(
-                    from = from,
-                    to = OffHandSlot
-                )
-            )
-        },
+        SWITCH("Switch"),
 
         /**
          * Performs 2-3 a pickup actions.
          * Works on all versions.
          */
-        PICKUP("PickUp") {
-            override fun performSwitch(from: ItemSlot) = performSwitch(from, false)
-        },
+        PICKUP("PickUp"),
 
         /**
          * Chooses the switch action based on the version. Only works if vfp is installed.
          */
-        AUTOMATIC("Automatic") {
-            override fun performSwitch(from: ItemSlot): List<InventoryAction.Click> {
-                return if (isNewerThanOrEquals1_16) {
-                    SWITCH.performSwitch(from)
-                } else {
-                    PICKUP.performSwitch(from)
-                }
-            }
-        };
+        AUTOMATIC("Automatic");
 
-        abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
+        override fun apply(from: ItemSlot): List<InventoryAction.Click> = when (this) {
+            SMART -> performSwitch(from, true)
+            SWITCH -> listOf(
+                InventoryAction.Click.performSwap(
+                    from = from,
+                    to = OffHandSlot
+                )
+            )
+            PICKUP -> performSwitch(from, false)
+            AUTOMATIC -> if (isNewerThanOrEquals1_16) {
+                SWITCH.apply(from)
+            } else {
+                PICKUP.apply(from)
+            }
+        }
     }
 
 }

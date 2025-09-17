@@ -71,7 +71,7 @@ class VirtualItemSlot(
         return id
     }
 
-    override fun toString(): String = "ItemSlot/Virtual(id=$id)"
+    override fun toString(): String = "ItemSlot/Virtual(id=$id, itemStack=$itemStack, slotType=$slotType)"
 
 }
 
