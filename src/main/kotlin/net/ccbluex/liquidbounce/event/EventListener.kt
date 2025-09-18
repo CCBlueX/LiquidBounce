@@ -85,11 +85,11 @@ inline fun <reified T : Event> EventListener.until(
     crossinline handler: (T) -> Boolean
 ): EventHook<T> {
     lateinit var eventHook: EventHook<T>
-    eventHook = EventHook(this, {
+    eventHook = handler(T::class.java, priority) {
         if (!this.running || handler(it)) {
             EventManager.unregisterEventHook(T::class.java, eventHook)
         }
-    }, priority)
+    }
     return EventManager.registerEventHook(T::class.java, eventHook)
 }
 

@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -31,6 +34,8 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -71,8 +76,77 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        override fun getToolSlot(blockState: BlockState) =
-            Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
+        private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+            private val inventoryConstraints = tree(InventoryConstraints())
+
+            @JvmField var currentBestTool: ItemSlot? = null
+            private var swappedTo: ItemSlot? = null
+
+            @Suppress("unused")
+            private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
+                val currentBestTool = currentBestTool ?: return@handler
+                event.schedule(
+                    inventoryConstraints,
+                    InventoryAction.Click.performSwap(
+                        from = currentBestTool,
+                        to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                    )
+                )
+                swappedTo = currentBestTool
+                this.currentBestTool = null
+            }
+
+            @JvmField var waitingTicks = 0
+
+            @Suppress("unused")
+            private val tickHandler = handler<GameTickEvent> {
+                waitingTicks++
+                if (waitingTicks <= swapPreviousDelay) return@handler
+
+                waitingTicks = 0
+                val swappedTo = swappedTo ?: return@handler
+                this.swappedTo = null
+                once<ScheduleInventoryActionEvent> { event ->
+                    event.schedule(
+                        inventoryConstraints,
+                        InventoryAction.Click.performSwap(
+                            from = swappedTo,
+                            to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                        )
+                    )
+                }
+            }
+
+            override fun onDisabled() {
+                waitingTicks = 0
+                currentBestTool = null
+                swappedTo = null
+                super.onDisabled()
+            }
+        }
+
+        init {
+            tree(ConsiderInventory)
+        }
+
+        override fun getToolSlot(blockState: BlockState): HotbarItemSlot? {
+            if (!ConsiderInventory.running) {
+                return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
+            } else {
+                val slot = (Slots.Hotbar + Slots.Inventory).findBestToolToMineBlock(blockState, ignoreDurability)
+
+                ConsiderInventory.waitingTicks = 0
+                if (slot is HotbarItemSlot?) {
+                    // We found the best tool in hotbar, don't need inventory action
+                    ConsiderInventory.currentBestTool = null
+                    return slot
+                } else {
+                    // Request inventory action
+                    ConsiderInventory.currentBestTool = slot
+                    return null
+                }
+            }
+        }
     }
 
     private object StaticSelectMode : ToolSelectorMode("Static") {
