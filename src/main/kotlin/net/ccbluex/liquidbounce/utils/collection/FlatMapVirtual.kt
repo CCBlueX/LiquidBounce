@@ -25,6 +25,7 @@ import kotlin.collections.AbstractList
  * Creates a virtual [List] represents the lists get from receiver with [transform].
  * It assumes all transformed list are immutable. Modify them leads to undefined behavior.
  */
+@Suppress("CognitiveComplexMethod")
 inline fun <T, R> List<T>.flatMapVirtual(transform: (T) -> List<R>): List<R> {
     val prefixSums = IntArray(this.size + 1)
 
