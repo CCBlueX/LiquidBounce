@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.text.Text
@@ -54,7 +53,7 @@ object CommandItemRename : Command.Factory {
                 }
 
                 val itemStack = player.getStackInHand(Hand.MAIN_HAND)
-                if (itemStack.isNothing()) {
+                if (itemStack.isEmpty) {
                     throw CommandException(command.result("mustHoldItem"))
                 }
 

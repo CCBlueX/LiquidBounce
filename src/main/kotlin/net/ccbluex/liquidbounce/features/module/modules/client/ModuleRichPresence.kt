@@ -31,7 +31,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.api.core.ioScope
+import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
@@ -46,19 +47,20 @@ import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
-
-val ipcConfiguration by AsyncLazy {
-    runCatching {
-        ClientCdn.requestDiscordConfiguration()
-    }.onSuccess {
-        LiquidBounce.logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
-    }.onFailure {
-        LiquidBounce.logger.error("Failed to load Discord IPC configuration.", it)
-    }.getOrNull()
-}
+import kotlin.time.Duration.Companion.seconds
 
 object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state = true, hide = true,
     aliases = arrayOf("DiscordPresence")) {
+
+    private val ipcConfiguration = ioScope.retrying(
+        interval = 5.seconds,
+        name = "IPC-Configuration",
+        maxRetries = 5,
+    ) {
+        ClientCdn.requestDiscordConfiguration().also {
+            LiquidBounce.logger.info("Successfully loaded Discord IPC configuration [${it.appID}].")
+        }
+    }
 
     private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
     private val stateText by text("State", "%enabledModules% of %totalModules% modules enabled")
@@ -83,15 +85,14 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
     }
 
     private fun connectIpc() {
-        val ipcConfiguration = ipcConfiguration ?: return
+        val ipcConfiguration = ipcConfiguration.getNow() ?: return
 
         if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
         }
 
         runCatching {
-            ipcClient = IPCClient(ipcConfiguration.appID)
-            ipcClient?.connect()
+            ipcClient = IPCClient(ipcConfiguration.appID).also { it.connect() }
         }.onFailure {
             logger.info("Failed to connect to Discord RPC.", it)
 
@@ -151,7 +152,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
                 return@waitFor
             }
 
-            val ipcConfiguration = ipcConfiguration ?: return@waitFor
+            val ipcConfiguration = ipcConfiguration.getNow() ?: return@waitFor
 
             ipcClient.sendRichPresence {
                 // Set playing time
@@ -185,7 +186,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
     }
 
     @Suppress("unused")
-    val serverConnectHandler = handler<ServerConnectEvent> {
+    private val serverConnectHandler = handler<ServerConnectEvent> {
         timestamp = System.currentTimeMillis()
     }
 

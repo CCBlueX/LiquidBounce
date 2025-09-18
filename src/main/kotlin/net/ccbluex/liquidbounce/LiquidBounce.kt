@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
-import net.ccbluex.liquidbounce.api.core.scope
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
@@ -42,13 +42,12 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.heads
+import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -275,15 +274,11 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Download player heads
-                heads
+                HeadsItemGroup.heads.getFinalState()
             }
             launch {
                 // Load configs
                 AutoConfig.reloadConfigs()
-            }
-            launch {
-                // IPC configuration
-                ipcConfiguration
             }
             launch {
                 IpInfoApi.original
@@ -321,7 +316,7 @@ object LiquidBounce : EventListener {
         }
         IntegrationListener
 
-        taskManager = TaskManager(scope).apply {
+        taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)

@@ -546,6 +546,7 @@
   "liquidbounce.module.autoLeave.description": "当你的血量低于一定值时，自动离开服务器。",
   "liquidbounce.module.autoPlay.description": "自动为你进入队列开始游戏。",
   "liquidbounce.module.autoRespawn.description": "在死后自动重生。",
+  "liquidbounce.module.autoRod.description": "自动在战斗中使用钓鱼竿。",
   "liquidbounce.module.autoTool.description": "自动用背包里最好的工具挖方块。",
   "liquidbounce.module.autoWalk.description": "自动向前移动。",
   "liquidbounce.module.autoWeapon.description": "自动切换到快捷栏中最好的武器。",

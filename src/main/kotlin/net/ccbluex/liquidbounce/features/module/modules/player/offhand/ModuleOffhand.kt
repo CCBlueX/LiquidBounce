@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -30,13 +29,15 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -46,6 +47,7 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
+import java.util.function.Predicate
 
 /**
  * Offhand module
@@ -55,7 +57,10 @@ import org.lwjgl.glfw.GLFW
 object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private var switchMode = enumChoice("SwitchMode", SwitchMode.AUTOMATIC)
+    private val switchMode by enumChoice(
+        "SwitchMode",
+        default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
+    )
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
 
@@ -83,17 +88,19 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         val strengthBind by key("StrengthBind")
     }
 
+    private object Block : ToggleableConfigurable(this, "Block", false) {
+        val whileScaffold by boolean("WhileScaffold", true)
+        val whileEagle by boolean("WhileEagle", true)
+    }
+
     init {
         treeAll(
             Totem,
             Crystal,
             Gapple,
-            Strength
+            Strength,
+            Block,
         )
-
-        if (!usesViaFabricPlus) {
-            switchMode = enumChoice("SwitchMode", SwitchMode.SWITCH)
-        }
     }
 
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
@@ -192,7 +199,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             last = slot.itemStack.item to slot
         }
 
-        val actions = switchMode.get().performSwitch(slot)
+        val actions = switchMode.performSwitch(slot)
         if (actions.isEmpty()) {
             chronometer.reset()
             return@handler
@@ -205,10 +212,8 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         chronometer.reset()
     }
 
-    fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
-        val actions = ArrayList<InventoryAction.Click>(3)
-
-        if (smart && from is HotbarItemSlot) {
+    private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
+        return if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
             val targetSlot = from.hotbarSlot
             if (selectedSlot != targetSlot) {
@@ -224,20 +229,25 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
             if (selectedSlot != targetSlot) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
             }
+            emptyList()
         } else {
-            actions += InventoryAction.Click.performPickup(slot = from)
-            actions += InventoryAction.Click.performPickup(slot = OffHandSlot)
-            if (!OffHandSlot.itemStack.isEmpty) {
-                actions += InventoryAction.Click.performPickup(slot = from)
+            buildList(3) {
+                this += InventoryAction.Click.performPickup(slot = from)
+                this += InventoryAction.Click.performPickup(slot = OffHandSlot)
+                if (!OffHandSlot.itemStack.isEmpty) {
+                    this += InventoryAction.Click.performPickup(slot = from)
+                }
             }
         }
-
-        return actions
     }
 
     fun isOperating() = running && activeMode != Mode.NONE
 
-    private enum class Mode(val modeName: String, private val item: Item, private val fallBackItem: Item? = null) {
+    private enum class Mode(
+        val modeName: String,
+        private val item: Predicate<ItemStack>? = null,
+        private val fallBackItem: Predicate<ItemStack>? = null,
+    ) {
         TOTEM("Totem", Items.TOTEM_OF_UNDYING) {
             override fun shouldEquip() = Totem.shouldEquip()
 
@@ -256,22 +266,9 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
 
             override fun canCycleTo() = Totem.enabled
         },
-        STRENGTH("Strength", Items.POTION) {
-            val isStrengthPotion = Predicate<ItemStack> { stack ->
-                if (stack.item != Items.POTION) {
-                    return@Predicate false
-                }
-
-                val content = stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT)
-                content.effects.forEach { effect ->
-                    if (effect.effectType == StatusEffects.STRENGTH) {
-                        return@Predicate true
-                    }
-                }
-
-                return@Predicate false
-            }
-
+        STRENGTH("Strength", Predicate { stack ->
+            stack.isOf(Items.POTION) && stack.getPotionEffects().any { it.effectType == StatusEffects.STRENGTH }
+        }) {
             override fun shouldEquip(): Boolean {
                 val killAura = Strength.onlyWhileKa && !ModuleKillAura.running
                 if (!Strength.enabled || killAura || player.hasStatusEffect(StatusEffects.STRENGTH)) {
@@ -279,14 +276,6 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 }
 
                 return player.mainHandStack.isSword || !Strength.onlyWhileHoldingSword
-            }
-
-            override fun getSlot(): ItemSlot? {
-                if (isStrengthPotion.test(player.offHandStack)) {
-                    return OffHandSlot
-                }
-
-                return INVENTORY_MAIN_PRIORITY.findSlot { isStrengthPotion.test(it) }
             }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
@@ -311,14 +300,27 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
             override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
         },
-        BACK("Back", Items.AIR) {
+        BLOCK("Block", ScaffoldBlockItemSelection::isValidBlock) {
+            override fun shouldEquip(): Boolean =
+                Block.enabled &&
+                    ((Block.whileEagle && ModuleEagle.enabled) || (Block.whileScaffold && ModuleScaffold.enabled))
+
+            override fun canCycleTo() = Block.enabled
+        },
+        BACK("Back") {
             override fun getSlot(): ItemSlot? {
                 return last?.let {
                     if (it.first == it.second.itemStack.item) it.second else null
                 }
             }
         },
-        NONE("None", Items.AIR);
+        NONE("None");
+
+        constructor(
+            modeName: String,
+            item: Item,
+            fallBackItem: Item? = null,
+        ) : this(modeName, { it.isOf(item) }, fallBackItem?.let { item -> { it.isOf(item) } })
 
         private var modeBeforeDirectSwitch: Mode? = null
 
@@ -347,11 +349,11 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
         }
 
         open fun getSlot(): ItemSlot? {
-            if (item == Items.AIR) {
+            if (item == null) {
                 return null
             }
 
-            if (player.offHandStack.item == item) {
+            if (item.test(player.offHandStack)) {
                 return OffHandSlot
             }
 
@@ -361,13 +363,13 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayO
                 INVENTORY_HOTBAR_PRIORITY
             }
 
-            var itemSlot = slots.findSlot(item)
+            var itemSlot = slots.findSlot(item::test)
             if (itemSlot == null && fallBackItem != null) {
-                if (player.offHandStack.item == fallBackItem) {
+                if (fallBackItem.test(player.offHandStack)) {
                     return OffHandSlot
                 }
 
-                itemSlot = slots.findSlot(fallBackItem)
+                itemSlot = slots.findSlot(fallBackItem::test)
             }
 
             return itemSlot

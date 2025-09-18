@@ -138,7 +138,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
 
     private fun getAvailableItemsCount(): Int {
         var itemCount = 0
-        Slots.Hotbar.forEach { slot ->
+        Slots.OffhandWithHotbar.forEach { slot ->
             val block = slot.itemStack.getBlock() ?: return@forEach
             if (filter(block, blocks)) {
                 itemCount += slot.itemStack.count

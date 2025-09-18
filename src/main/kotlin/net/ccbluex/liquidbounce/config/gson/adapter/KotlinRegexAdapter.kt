@@ -17,18 +17,28 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
+package net.ccbluex.liquidbounce.config.gson.adapter
 
-import net.ccbluex.liquidbounce.event.Sequence
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
+import java.util.regex.Pattern
 
-object AutoQueueActionChat : AutoQueueAction("Chat") {
-    private val message by text("Message", "/play solo_normal")
+object KotlinRegexAdapter : TypeAdapter<Regex>() {
 
-    override suspend fun execute(sequence: Sequence) {
-        if (message.startsWith("/")) {
-            network.sendCommand(message.substring(1))
+    override fun read(source: JsonReader): Regex? =
+        when (source.peek()) {
+            JsonToken.NULL -> null
+            JsonToken.STRING -> Pattern.compile(source.nextString()).toRegex()
+            else -> error("Unexpected token ${source.peek()} for kotlin.text.Regex, should be ${JsonToken.STRING}")
+        }
+
+    override fun write(sink: JsonWriter, value: Regex?) {
+        if (value == null) {
+            sink.nullValue()
         } else {
-            network.sendChatMessage(message)
+            sink.value(value.pattern)
         }
     }
 }

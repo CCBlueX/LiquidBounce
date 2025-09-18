@@ -49,9 +49,9 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
-val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-fun withScope(block: suspend CoroutineScope.() -> Unit) = scope.launch { block() }
+fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch { block() }
 
 object HttpClient {
 

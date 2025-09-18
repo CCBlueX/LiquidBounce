@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.isNothing
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
@@ -101,7 +100,7 @@ class CleanupPlanGenerator(
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack
 
-            if (stack.isNothing()) {
+            if (stack.isEmpty) {
                 continue
             }
             if (!stack.isStackable || stack.count >= stack.maxCount) {
