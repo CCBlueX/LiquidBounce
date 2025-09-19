@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
@@ -112,8 +113,13 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
+        if (behavior != Behaviour.STOP_ON_ACTION || !isInInventoryScreen) {
+            return@handler
+        }
+
         val packet = event.packet
-        if (behavior == Behaviour.STOP_ON_ACTION && isContainerPacket(packet)) {
+
+        if (isContainerPacket(packet) && player.input.playerInput.any) {
             event.cancelEvent()
             once<MovementInputEvent>(FIRST_PRIORITY) {
                 it.sneak = false
