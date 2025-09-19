@@ -832,5 +832,6 @@
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
   "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction.",
-  "liquidbounce.module.stuck.messages.disabledOnFlag": "Module disabled due to flag."
+  "liquidbounce.module.stuck.messages.disabledOnFlag": "Module disabled due to flag.",
+  "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers."
 }

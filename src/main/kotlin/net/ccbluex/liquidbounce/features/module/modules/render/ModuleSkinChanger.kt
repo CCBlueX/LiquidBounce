@@ -37,7 +37,10 @@ import kotlin.time.Duration.Companion.seconds
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
-    private val allowMixinAbstractClientPlayerEntity by boolean("AllowMixinPlayerEntity", false)
+    //Change the player model by forcefully modifying the PlayerEntity getSkinTextures method,
+    // as PlayerListEntry is unreliable on some servers.
+    private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
+    
     private val username = text("Username", "LiquidBounce")
         .apply(::tagBy)
 
@@ -66,5 +69,5 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     @JvmStatic
     fun shouldApplyChanges(): Boolean =
         running && allowMixinAbstractClientPlayerEntity
-    
+
 }

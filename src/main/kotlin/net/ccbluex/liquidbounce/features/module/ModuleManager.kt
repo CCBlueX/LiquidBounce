@@ -247,6 +247,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleTimeShift,
             ModuleTeleport,
             ModulePhase,
+            ModuleYggdrasilSignatureFix,
 
             // Fun
             ModuleDankBobbing,
