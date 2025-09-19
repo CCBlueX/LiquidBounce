@@ -194,7 +194,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
             if (facet.providedItemFunctions.isEmpty()) {
                 val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
-                val desiredAmount = this.desiredItemsPerCategory[facet.category] ?: defaultDesiredAmount
+                val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
 
                 val info = ItemConstraintInfo(
                     group = ItemCategoryConstraintGroup(

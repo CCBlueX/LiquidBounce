@@ -22,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.ReferenceObjectPair
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
@@ -34,12 +33,14 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
 import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
@@ -50,7 +51,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
 import net.minecraft.util.math.Vec3d
 
 /**
@@ -111,7 +111,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         NONE("None", { entities ->
             val stacks = entities.mapArray { it.stack }
             stacks.sortWith(itemStackComparator)
-            stacks.asList()
+            stacks.unmodifiable()
         }),
 
         /**
@@ -131,14 +131,14 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 }
             }
             result.sortWith(itemStackComparator)
-            result.asList()
+            result.unmodifiable()
         }),
 
         /**
          * [ItemStack]s with same [Item] and same [ComponentChanges] will be merged.
          */
         BY_COMPONENTS("ByComponents", { entities ->
-            val stacksWithComponents = Object2IntOpenHashMap<ReferenceObjectPair<Item, ComponentChanges>>()
+            val stacksWithComponents = Object2IntOpenHashMap<ItemAndComponents>()
             val simpleItems = Reference2IntOpenHashMap<Item>()
 
             for (entity in entities) {
@@ -147,7 +147,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                     simpleItems.addTo(stack.item, stack.count)
                 } else {
                     stacksWithComponents.addTo(
-                        ReferenceObjectPair.of(stack.item, stack.componentChanges),
+                        ItemAndComponents(stack),
                         stack.count
                     )
                 }
@@ -156,8 +156,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             val stacks = ObjectArrayList<ItemStack>(stacksWithComponents.size + simpleItems.size)
 
             stacksWithComponents.object2IntEntrySet().mapTo(stacks) { entry ->
-                val itemKey = Registries.ITEM.getEntry(entry.key.left())
-                ItemStack(itemKey, entry.intValue, entry.key.right())
+                entry.key.toItemStack(entry.intValue)
             }
             simpleItems.reference2IntEntrySet().mapTo(stacks) { entry ->
                 ItemStack(entry.key, entry.intValue)

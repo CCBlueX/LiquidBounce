@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
@@ -29,7 +30,7 @@ class CleanupPlanGenerator(
 
     private val packer = ItemPacker()
 
-    private val currentLimit = HashMap<ItemNumberContraintGroup, Int>()
+    private val currentLimit = Object2IntOpenHashMap<ItemNumberContraintGroup>()
 
     // TODO Implement greedy check
     /**
@@ -46,7 +47,7 @@ class CleanupPlanGenerator(
 
         // Contains all facets that the available items represent. i.e. if we have an axe in slot 5, this would be
         // (Axe(Slot 5), Weapon(Slot 5)) since the axe can also function as a weapon.
-        val itemFacets = availableItems.flatMap { categorizer.getItemFacets(it).asIterable() }
+        val itemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
 
         // i.e. BLOCK -> [Block(Slot 5), Block(Slot 6)]
         // Keep priority in mind (Tool slots are processed before weapon slots)
@@ -94,8 +95,8 @@ class CleanupPlanGenerator(
         this.hotbarSwaps.addAll(requiredMoves)
     }
 
-    private fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
-        val itemsByType = HashMap<ItemId, MutableList<ItemSlot>>()
+    private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
+        val itemsByType = HashMap<ItemAndComponents, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack
@@ -107,7 +108,7 @@ class CleanupPlanGenerator(
                 continue
             }
 
-            val itemType = ItemId(stack.item, stack.components)
+            val itemType = ItemAndComponents(stack)
             val stacksOfType = itemsByType.computeIfAbsent(itemType) { mutableListOf() }
 
             stacksOfType.add(availableSlot)
@@ -122,7 +123,7 @@ class CleanupPlanGenerator(
         constraints.sortBy { it.group.priority }
 
         for (constraintInfo in constraints) {
-            val currentCount = this.currentLimit[constraintInfo.group] ?: 0
+            val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
 
             if (currentCount > constraintInfo.group.acceptableRange.last) {
                 return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.OVERSATURATED
@@ -138,9 +139,7 @@ class CleanupPlanGenerator(
         val constraints = this.template.itemAmountConstraintProvider(item)
 
         for (constraintInfo in constraints) {
-            val current = this.currentLimit.getOrDefault(constraintInfo.group, 0)
-
-            this.currentLimit[constraintInfo.group] = current + constraintInfo.amountAddedByItem
+            this.currentLimit.addTo(constraintInfo.group, constraintInfo.amountAddedByItem)
         }
     }
 }

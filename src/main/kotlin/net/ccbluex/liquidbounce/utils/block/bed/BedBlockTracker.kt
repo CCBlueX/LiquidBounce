@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.component1
 import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -119,7 +120,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         result.sort()
 
         @Suppress("UNCHECKED_CAST")
-        return result.asList() as Collection<SurroundingBlock>
+        return result.unmodifiable() as Collection<SurroundingBlock>
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {

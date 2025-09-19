@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.Block
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
@@ -63,7 +64,7 @@ fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): Item
     itemStack.set(DataComponentTypes.CUSTOM_NAME, regular(name))
     itemStack.set<PotionContentsComponent>(
         DataComponentTypes.POTION_CONTENTS,
-        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.asList(), Optional.empty())
+        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
     )
 
     return itemStack

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableText
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.*
@@ -211,7 +212,7 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
  */
 fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
     val text: Text = MixinMutableTextAccessor.create(
-        PlainTextContent.EMPTY, texts.asList(), Style.EMPTY
+        PlainTextContent.EMPTY, texts.unmodifiable(), Style.EMPTY
     )
     chat(text, metadata)
 }
