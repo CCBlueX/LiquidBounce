@@ -80,7 +80,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
-            private var swappedTo: ItemSlot? = null
+            private var swapAction: InventoryAction? = null
 
             @Suppress("unused")
             private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
@@ -90,9 +90,8 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
                         to = Slots.Hotbar[SilentHotbar.serversideSlot],
-                    )
+                    ).also { swapAction = it }
                 )
-                swappedTo = currentBestTool
                 this.currentBestTool = null
             }
 
@@ -104,23 +103,17 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
                 if (waitingTicks <= swapPreviousDelay) return@handler
 
                 waitingTicks = 0
-                val swappedTo = swappedTo ?: return@handler
-                this.swappedTo = null
+                val swapAction = swapAction ?: return@handler
+                this.swapAction = null
                 once<ScheduleInventoryActionEvent> { event ->
-                    event.schedule(
-                        inventoryConstraints,
-                        InventoryAction.Click.performSwap(
-                            from = swappedTo,
-                            to = Slots.Hotbar[SilentHotbar.serversideSlot],
-                        )
-                    )
+                    event.schedule(inventoryConstraints, swapAction)
                 }
             }
 
             override fun onDisabled() {
                 waitingTicks = 0
                 currentBestTool = null
-                swappedTo = null
+                swapAction = null
                 super.onDisabled()
             }
         }
