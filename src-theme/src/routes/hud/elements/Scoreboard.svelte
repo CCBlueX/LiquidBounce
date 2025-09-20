@@ -27,12 +27,7 @@
             {#each scoreboard.entries as {name, score}, i}
                 <div class="row">
                     {#if i === scoreboard.entries.length - 1 && settings?.address}
-                        <div class="custom-ip" style="
-                            text-align: center;
-                            color: {rgbaToHex(intToRgba(settings.addressColor))};
-                            font-weight: bold;
-                            width: 100%;
-                        ">
+                        <div class="custom-ip" style="color: {rgbaToHex(intToRgba(settings.addressColor))}">
                             {settings.address}
                         </div>
                     {:else}
@@ -84,6 +79,7 @@
     display: block;
     text-align: center;
     width: 100%;
+    font-weight: bold;
   }
 </style>
 
