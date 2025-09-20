@@ -1,8 +1,6 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.text.StringVisitable
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.minecraft.text.StringVisitable.StyledVisitor
 import net.minecraft.text.Style
 import net.minecraft.text.Text
@@ -15,7 +13,7 @@ class LegacyTextSanitizerTest {
 
     @Test
     fun test() {
-        assertEquals(listOf("This is a Test!" to Style.EMPTY), getResults("This is a Test!".asText()))
+        assertEquals(listOf("This is a Test!" to Style.EMPTY), getResults("This is a Test!".asPlainText()))
     }
 
     private fun getResults(text: Text): ArrayList<Pair<String, Style>> {

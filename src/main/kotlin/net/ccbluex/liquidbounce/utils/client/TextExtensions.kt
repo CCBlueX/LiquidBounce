@@ -37,7 +37,16 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
+/**
+ * Returns a [MutableText] from the receiver.
+ * If you just need a [Text], use [asPlainText] instead.
+ */
 fun String.asText(): MutableText = Text.literal(this)
+
+/**
+ * Returns an immutable [Text] from the receiver.
+ */
+fun String.asPlainText(): Text = ImmutableText.of(this)
 
 fun Text.asNbt(world: World? = null): NbtString =
     NbtString.of(

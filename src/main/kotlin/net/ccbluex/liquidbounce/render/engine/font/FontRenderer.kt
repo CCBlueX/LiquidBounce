@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProces
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.math.set
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
@@ -96,7 +96,7 @@ class FontRenderer(
     }
 
     override fun process(text: String, defaultColor: Color4b): TextProcessor.ProcessedText {
-        return process(text.asText(), defaultColor)
+        return process(text.asPlainText(), defaultColor)
     }
 
     override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
