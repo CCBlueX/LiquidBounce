@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawSideBox
@@ -17,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
@@ -246,7 +246,7 @@ class TrajectoryInfoRenderer(
     ) {
         renderEnvironmentForWorld(matrixStack) {
             withColor(color) {
-                drawLineStrip(positions = positions.mapArray { relativeToCamera(it + renderOffset).toVec3() })
+                drawLineStrip(positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
             }
         }
     }

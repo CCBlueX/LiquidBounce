@@ -28,7 +28,7 @@ inline fun <T> Set<T>.unmodifiable(): Set<T> = Collections.unmodifiableSet(this)
 
 inline fun <T> List<T>.unmodifiable(): List<T> = Collections.unmodifiableList(this)
 
-inline fun <T> Array<out T>?.unmodifiable(): List<T> =
+fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
         isNullOrEmpty() -> emptyList()
         size == 1 -> Collections.singletonList(this[0])
