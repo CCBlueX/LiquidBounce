@@ -87,7 +87,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
 
                     // exclude blocks where the structure is...
                     // this useless because we already search the shortest path under all structure blocks?
-                    placer.blocks.contains(neighbor) ||
+                    placer.blocks.contains(neighbor.asLong()) ||
                     neighbor.getManhattanDistance(targetPos) > depth ||
                     player.eyePos.squaredDistanceTo(neighbor.toCenterPos()) > rangeSq ||
                     neighbor.isBlockedByEntities()

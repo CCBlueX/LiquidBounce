@@ -676,6 +676,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         || this is SweetBerryBushBlock && (blockState?.get(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapdoorBlock
 }
 
+val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
+
 fun BlockPos.isBlockedByEntities(): Boolean {
     val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
     return world.entities.any {
