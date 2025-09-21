@@ -23,6 +23,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.fastIterable
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -38,7 +40,6 @@ import net.ccbluex.liquidbounce.render.drawItemTags
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
@@ -109,7 +110,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
          * Nothing will be merged.
          */
         NONE("None", { entities ->
-            val stacks = entities.mapArray { it.stack }
+            val stacks = entities.mapToArray { it.stack }
             stacks.sortWith(itemStackComparator)
             stacks.unmodifiable()
         }),
@@ -123,7 +124,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 map.getOrPut(itemEntity.stack.item, ::ArrayList)
                     .add(itemEntity.stack)
             }
-            val result = map.values.mapArray { stacks ->
+            val result = map.values.mapToArray { stacks ->
                 if (stacks.size == 1) {
                     stacks[0]
                 } else {
@@ -155,10 +156,10 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
             val stacks = ObjectArrayList<ItemStack>(stacksWithComponents.size + simpleItems.size)
 
-            stacksWithComponents.object2IntEntrySet().mapTo(stacks) { entry ->
+            stacksWithComponents.fastIterable().mapTo(stacks) { entry ->
                 entry.key.toItemStack(entry.intValue)
             }
-            simpleItems.reference2IntEntrySet().mapTo(stacks) { entry ->
+            simpleItems.fastIterable().mapTo(stacks) { entry ->
                 ItemStack(entry.key, entry.intValue)
             }
 

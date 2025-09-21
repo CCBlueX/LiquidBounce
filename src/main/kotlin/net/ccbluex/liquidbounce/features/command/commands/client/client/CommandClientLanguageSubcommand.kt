@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 
 object CommandClientLanguageSubcommand {
     fun languageCommand() = CommandBuilder.begin("language")
@@ -63,6 +63,6 @@ object CommandClientLanguageSubcommand {
     private fun listSubcommand() = CommandBuilder.begin("list")
         .handler {
             chat(regular("Available languages:"))
-            chat(texts = LanguageManager.knownLanguages.mapArray { regular("-> $it") })
+            chat(texts = LanguageManager.knownLanguages.mapToArray { regular("-> $it") })
         }.build()
 }

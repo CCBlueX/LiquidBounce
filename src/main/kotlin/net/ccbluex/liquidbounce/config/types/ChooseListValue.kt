@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
@@ -57,7 +57,7 @@ class ChooseListValue<T : NamedChoice>(
 
     @ScriptApiRequired
     fun getChoicesStrings(): Array<String> {
-        return this.choices.mapArray { it.choiceName }
+        return choices.mapToArray { it.choiceName }
     }
 
 }

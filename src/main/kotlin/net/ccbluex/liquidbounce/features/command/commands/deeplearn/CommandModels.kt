@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
@@ -39,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
@@ -178,8 +178,8 @@ object CommandModels : Command.Factory {
 
         val (dataset, datasetTime) = measureTimedValue {
             Dataset(
-                samples.mapArray(TrainingData::asInput),
-                samples.mapArray(TrainingData::asOutput)
+                samples.mapToArray { it.asInput },
+                samples.mapToArray { it.asOutput }
             )
         }
 
