@@ -88,7 +88,7 @@ import kotlin.math.abs
 @Suppress("TooManyFunctions")
 object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
-    private var delay by intRange("Delay", 0..0, 0..40, "ticks")
+    private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
 

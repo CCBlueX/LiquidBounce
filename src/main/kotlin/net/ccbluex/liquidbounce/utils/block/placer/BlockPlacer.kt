@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
-import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -182,20 +181,21 @@ class BlockPlacer(
         }
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun findSupportPath(itemStack: ItemStack) {
-        val currentPlaceCandidates = LongLinkedOpenHashSet()
-        var supportPath: Set<BlockPos>? = null
+        val currentPlaceCandidates = hashSetOf<BlockPos>()
 
         // remove all positions of the current support path
         blocks.long2BooleanEntrySet().removeIf { entry ->
             if (entry.booleanValue) {
-                currentPlaceCandidates.add(entry.longKey)
+                currentPlaceCandidates.add(BlockPos.fromLong(entry.longKey))
                 true
             } else {
                 false
             }
         }
 
+        var supportPath: Set<BlockPos>? = null
         // find the best path
         for (entry in blocks.fastIterator()) {
             val posAsLong = entry.longKey
@@ -217,7 +217,7 @@ class BlockPlacer(
 
         // we found the same path again, updating is not required
         if (currentPlaceCandidates == supportPath) {
-            currentPlaceCandidates.forEach { blocks.put(it, true) }
+            currentPlaceCandidates.forEach { blocks.put(it.asLong(), true) }
             return
         }
 
@@ -241,13 +241,7 @@ class BlockPlacer(
         for (entry in blocks.fastIterator()) {
             val posAsLong = entry.longKey
 
-            if (inaccessible.contains(posAsLong)) {
-                continue
-            }
-
-            val pos = blockPosCache.set(posAsLong)
-
-            if (isBlocked(pos)) {
+            if (inaccessible.contains(posAsLong) || isBlocked(posAsLong)) {
                 continue
             }
 
@@ -262,6 +256,7 @@ class BlockPlacer(
             )
 
             // TODO prioritize faces where sneaking is not required
+            val pos = blockPosCache.set(posAsLong)
             val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: continue
 
             // Check if we can reach the target
@@ -289,9 +284,10 @@ class BlockPlacer(
         return hasPlaced
     }
 
-    private fun isBlocked(pos: BlockPos): Boolean {
+    private fun isBlocked(posAsLong: Long): Boolean {
+        val pos = blockPosCache.set(posAsLong)
         if (!pos.getState()!!.isReplaceable) {
-            inaccessible.add(pos.asLong())
+            inaccessible.add(posAsLong)
             return true
         }
 
@@ -303,7 +299,7 @@ class BlockPlacer(
         }
 
         if (blockedResult.keyBoolean()) {
-            inaccessible.add(pos.asLong())
+            inaccessible.add(posAsLong)
             return true
         }
 

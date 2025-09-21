@@ -138,7 +138,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         /**
          * With a higher priority so that it runs before [CrystalDestroyFeature].
          */
-        @Suppress("unused")
+        @Suppress("unused", "LoopWithTooManyJumpStatements")
         private val tickHandler = handler<GameTickEvent>(priority = 10) {
             // check if this feature isn't enabled and the extra layer forcefully applied or not enabled ->
             // checks are not needed
