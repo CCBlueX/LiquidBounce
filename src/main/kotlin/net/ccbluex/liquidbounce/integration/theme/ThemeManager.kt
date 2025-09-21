@@ -19,6 +19,8 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -35,6 +37,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
@@ -67,11 +70,9 @@ object ThemeManager : Configurable("theme") {
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                mc.execute {
-                    runBlocking {
-                        theme.compileShader()
-                        includedTheme.compileShader()
-                    }
+                CoroutineScope(MinecraftDispatcher).launch {
+                    theme.compileShader()
+                    includedTheme.compileShader()
                 }
             }
 
@@ -82,7 +83,7 @@ object ThemeManager : Configurable("theme") {
         ConfigSystem.root(this)
     }
 
-    fun init() = runBlocking {
+    suspend fun init() {
         // Load default theme
         includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
     }
@@ -99,8 +100,7 @@ object ThemeManager : Configurable("theme") {
         themes.clear()
 
         // 1st priority
-        themesFolder.listFiles()
-            ?.filter(File::isDirectory)
+        themesFolder.listFiles { it.isDirectory }
             ?.forEach { file ->
                 if (file.name.equals("default", true)) {
                     return@forEach

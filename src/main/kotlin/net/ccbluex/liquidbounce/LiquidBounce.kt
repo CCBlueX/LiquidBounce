@@ -305,15 +305,13 @@ object LiquidBounce : EventListener {
      * Prepares the GUI stage of the client.
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
-    private fun prepareGuiStage() {
+    private fun prepareGuiStage() = runBlocking(CoroutineName("GUI Initializer")) {
         BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
         // Preload marketplace items
         ConfigSystem.load(MarketplaceManager)
-        runBlocking {
-            ThemeManager.load()
-        }
+        ThemeManager.load()
         IntegrationListener
 
         taskManager = TaskManager(ioScope).apply {

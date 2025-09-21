@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.utils.kotlin.enumMap
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.component.DataComponentTypes
@@ -57,7 +58,7 @@ class ArmorKitParameters(
 
             // Return the parameter sum for each slot without the current slot
             return ArmorKitParameters(
-                currentKit.mapValues { (_, armorPiece) ->
+                currentKit.mapValuesTo(enumMap()) { (_, armorPiece) ->
                     if (armorPiece != null) {
                         ArmorParameter(
                             totalArmorKitParameters.defensePoints - armorPiece.defensePoints,

@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
@@ -28,7 +27,7 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
 }
 
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
-    val irrelevantPacket = !state.isReplaceable || pos !in blocks
+    val irrelevantPacket = !state.isReplaceable || pos.asLong() !in blocks
 
     val rotationMode = rotationMode.activeChoice
     if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
@@ -41,7 +40,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         ),
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
-        stackToPlaceWith = ItemStack(Items.SANDSTONE),
+        stackToPlaceWith = Items.SANDSTONE.defaultStack,
         PlayerLocationOnPlacement(position = player.pos, pose = player.pose),
     )
 
@@ -52,10 +51,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         return
     }
 
-    if (placementTarget.interactedBlockPos.getBlock().isInteractable(
-            placementTarget.interactedBlockPos.getState()
-        )
-    ) {
+    if (placementTarget.interactedBlockPos.getState().isInteractable) {
         return
     }
 

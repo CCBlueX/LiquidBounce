@@ -219,11 +219,11 @@ fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetada
 
 fun chat(text: Text, command: Command) = chat(text, metadata = MessageMetadata.byCommand(command))
 
-fun chat(text: String, module: ClientModule) = chat(text.asText(), module)
+fun chat(text: String, module: ClientModule) = chat(text.asPlainText(), module)
 
-fun chat(text: String, command: Command) = chat(text.asText(), command)
+fun chat(text: String, command: Command) = chat(text.asPlainText(), command)
 
-fun chat(text: String) = chat(text.asText())
+fun chat(text: String) = chat(text.asPlainText())
 
 fun notification(title: Text, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title.string, message, severity))

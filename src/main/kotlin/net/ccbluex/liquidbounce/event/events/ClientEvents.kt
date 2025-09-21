@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -202,7 +203,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Cha
         vararg actions: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryAction.Chain(constrains, actions.asList(), priority))
+        this.schedule.add(InventoryAction.Chain(constrains, actions.unmodifiable(), priority))
     }
 
     fun schedule(

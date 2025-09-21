@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -36,7 +37,6 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -223,7 +223,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapArray { tick ->
+                drawLineStrip(positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3()
                 })
             }
