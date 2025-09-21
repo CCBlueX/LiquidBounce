@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
@@ -88,7 +89,7 @@ import kotlin.math.abs
 @Suppress("TooManyFunctions")
 object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
-    private var delay by intRange("Delay", 0..0, 0..40, "ticks")
+    private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
 
@@ -147,8 +148,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     /**
      * Scaffold tower mode
      */
-    @Suppress("UnusedPrivateProperty")
-    val towerMode = choices("Tower", 0) { choices ->
+    val towerMode = choices("Tower", 0) {
         arrayOf(
             ScaffoldTowerNone,
             ScaffoldTowerMotion,
@@ -200,11 +200,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    private var swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
 
-    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
-
-        internal val clicker = tree(Clicker(ModuleScaffold, mc.options.useKey, null, maxCps = 100))
+    private object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
+        val clicker = tree(Clicker(ModuleScaffold, mc.options.useKey, null, maxCps = 100))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
@@ -330,11 +329,9 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
                 EntityPose.STANDING
             }
 
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "predictedPos",
+        debugGeometry("predictedPos") {
             ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
-        )
+        }
 
         val technique = if (isTowering) {
             ScaffoldNormalTechnique
@@ -345,21 +342,19 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
-        // Debug stuff
         if (optimalLine != null && target != null) {
-            val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
-            val a = optimalLine.getNearestPointTo(b)
+            debugGeometry("lineToBlock") {
+                // Debug stuff
+                val b = target.placedBlock.toVec3d(0.5, 1.0, 0.5)
+                val a = optimalLine.getNearestPointTo(b)
 
-            // Debug the line a-b
-            ModuleDebug.debugGeometry(
-                ModuleScaffold,
-                "lineToBlock",
+                // Debug the line a-b
                 ModuleDebug.DebuggedLineSegment(
                     from = a,
                     to = b,
                     Color4b(255, 0, 0, 255),
-                ),
-            )
+                )
+            }
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
@@ -485,14 +480,15 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         }
 
         // Prioritize by all means the main hand if it has a block
-        val suitableHand =
-            arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
+        val suitableHand = Hand.entries.firstOrNull {
+            isValidBlock(player.getStackInHand(it))
+        } ?: return@tickHandler
 
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, swingMode = swingMode)
+                doPlacement(currentCrosshairTarget!!, suitableHand, swingMode = swingMode)
                 true
             }
         }
@@ -547,9 +543,9 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         // Take the fall off position before placing the block
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
-        renderer.addBlock(target.placedBlock)
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
+            renderer.addBlock(target.placedBlock)
             currentTarget = null
 
             wasSuccessful = true
@@ -634,17 +630,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private fun simulatePlacementAttempts(
         hitResult: BlockHitResult?,
-        suitableHand: Hand?,
+        suitableHand: Hand,
     ): Boolean {
-        val stack = if (suitableHand == Hand.MAIN_HAND) {
-            player.mainHandStack
-        } else {
-            player.offHandStack
-        }
+        val stack = player.getStackInHand(suitableHand)
 
-        val option = SimulatePlacementAttempts
-
-        if (hitResult == null || suitableHand == null || !option.enabled) {
+        if (hitResult == null || !SimulatePlacementAttempts.enabled) {
             return false
         }
 
