@@ -215,12 +215,10 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         return null
     }
 
-    val comparator = Comparator<Vec3i> { a, b ->
+    val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith { a, b ->
         // Sort DESCENDING!
         options.offsetOptions.priorityComparator.compare(b.add(pos), a.add(pos))
     }
-
-    val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith(comparator)
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.add(offset)
@@ -304,7 +302,7 @@ private fun findTargetPointOnFace(
         )
     }.maxWithOrNull(
         Comparator.comparingDouble<PointOnFace> {
-            it.point.subtract(0.5, 0.5, 0.5,)
+            it.point.subtract(0.5, 0.5, 0.5)
                 .multiply(Vec3d.of(targetPlan.interactionDirection.vector))
                 .lengthSquared()
         }.thenComparingDouble { it.point.y }
