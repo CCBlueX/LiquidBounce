@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
 import it.unimi.dsi.fastutil.objects.Reference2BooleanArrayMap
+import net.ccbluex.fastutil.fastIterable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -83,7 +84,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
      * Restricts user from clicking while moving in inventory.
      */
     val doNotAllowClicking
-        get() = behavior == Behaviour.SAFE && movementKeys.reference2BooleanEntrySet().any {
+        get() = behavior == Behaviour.SAFE && movementKeys.fastIterable().any {
             it.booleanValue && shouldHandleInputs(it.key)
         }
 
