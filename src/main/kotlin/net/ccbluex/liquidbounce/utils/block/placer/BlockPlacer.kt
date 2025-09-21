@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap
+import net.ccbluex.fastutil.fastIterable
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
@@ -181,13 +183,12 @@ class BlockPlacer(
         var supportPath: Set<BlockPos>? = null
 
         // remove all positions of the current support path
-        blocks.object2BooleanEntrySet().iterator().apply {
-            while (hasNext()) {
-                val entry = next()
-                if (entry.booleanValue) {
-                    currentPlaceCandidates.add(entry.key)
-                    remove()
-                }
+        blocks.object2BooleanEntrySet().removeIf { entry ->
+            if (entry.booleanValue) {
+                currentPlaceCandidates.add(entry.key)
+                true
+            } else {
+                false
             }
         }
 
@@ -227,9 +228,7 @@ class BlockPlacer(
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
         var hasPlaced = false
 
-        val iterator = blocks.object2BooleanEntrySet().iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
+        for (entry in blocks.fastIterator()) {
             val pos = entry.key
 
             if (inaccessible.contains(pos)) {
