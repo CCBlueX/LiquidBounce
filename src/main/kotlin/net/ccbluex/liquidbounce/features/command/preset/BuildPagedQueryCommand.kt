@@ -146,7 +146,9 @@ fun <T> CommandBuilder.pagedQuery(
         val currentPageItems = if (all is List<T>) {
             all.subList((currentPage - 1) * pageSize, minOf(currentPage * pageSize, all.size))
         } else {
-            all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
+            all.drop((currentPage - 1) * pageSize).let {
+                it.subList(0, minOf(pageSize, it.size))
+            }
         }
 
         mc.gui.chat.removeMessage(msgId) // remove old

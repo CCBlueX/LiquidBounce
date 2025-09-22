@@ -236,29 +236,14 @@ inline fun <reified T> Response.parse(): T {
         Unit::class.java -> close() as T
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
+        Buffer::class.java -> body.source().use {
+            Buffer().apply { writeAll(it) }
+        } as T
         Reader::class.java -> body.charStream() as T
         NativeImage::class.java -> body.byteStream().toNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }
-
-/**
- * Read all UTF-8 lines from [BufferedSource] as an [Iterator].
- *
- * When there are no more lines to read, the source is closed automatically.
- */
-fun BufferedSource.utf8Lines(): Iterator<String> =
-    object : AbstractIterator<String>() {
-        override fun computeNext() {
-            val nextLine = readUtf8Line()
-            if (nextLine != null) {
-                setNext(nextLine)
-            } else {
-                close()
-                done()
-            }
-        }
-    }
 
 /**
  * Save response body to file.

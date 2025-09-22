@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
+import net.ccbluex.liquidbounce.render.FontManager.font
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.asPlainText
@@ -80,8 +81,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     private val expireTime by int("Expires", 5, 1..30, "secs")
 
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
+    private val font by font("Font")
 
     object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
@@ -129,7 +129,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 var posX = 300
                 var posY = 500
 
-                fontRenderer.draw("Graph".asPlainText()) {
+                font.renderer.draw("Graph".asPlainText()) {
                     x = posX.toFloat()
                     y = posY.toFloat()
                     shadow = true
@@ -294,7 +294,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         with(event.context) {
             // Draw
-            fontRenderer.draw("Debugging".asPlainText()) {
+            font.renderer.draw("Debugging".asPlainText()) {
                 x = 120f
                 y = 22f
                 shadow = true
@@ -303,9 +303,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
-                fontRenderer.draw(text) {
+                font.renderer.draw(text) {
                     x = 120f
-                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    y = 40 + ((font.renderer.height * 0.17f) * index)
                     shadow = true
                     scale = 0.17f
                 }

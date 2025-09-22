@@ -43,7 +43,7 @@ class LegacyTextSanitizer(
         var currentIndex = 0
 
         while (currentIndex < text.length) {
-            val nextCommand = text.indexOf('§', currentIndex)
+            val nextCommand = text.indexOf(Formatting.FORMATTING_CODE_PREFIX, currentIndex)
 
             // If there is no more paragraph or if the paragraph is the last in the text, stop the processing.
             if (nextCommand == -1 || nextCommand + 1 >= text.length) {

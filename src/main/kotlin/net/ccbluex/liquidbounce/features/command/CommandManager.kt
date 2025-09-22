@@ -134,6 +134,7 @@ object CommandManager : Collection<Command> by commandSet {
             CommandCenter,
             CommandHelp,
             CommandBinds,
+            CommandFonts,
             CommandClear,
             CommandHide,
             CommandInvsee,

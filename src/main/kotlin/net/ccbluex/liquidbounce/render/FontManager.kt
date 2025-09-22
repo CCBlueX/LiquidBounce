@@ -18,9 +18,15 @@
  */
 package net.ccbluex.liquidbounce.render
 
+import com.google.common.collect.BiMap
+import com.google.common.collect.HashBiMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.config.types.ChooseListValue
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -35,6 +41,17 @@ import java.io.InputStream
 
 object FontManager {
 
+    private val FONT_VALUES = mutableListOf<ChooseListValue<FontFace>>()
+
+    /**
+     * Creates a font value. The choices will be sync with [fontFaces].
+     */
+    fun Configurable.font(name: String, default: FontFace = COMMON_FONT) =
+        enumChoice(name, default, fontFaces.values).apply {
+            FONT_VALUES += this
+            doNotIncludeAlways()
+        }
+
     private val STYLES = intArrayOf(
         Font.BOLD,
         Font.BOLD,
@@ -48,14 +65,14 @@ object FontManager {
     private val COMMON_FONT by AsyncLazy {
         runCatching {
             when (Util.getPlatform()) {
-                WINDOWS -> systemFont("Segoe UI")
-                OSX -> systemFont("Helvetica")
-                LINUX -> systemFont("DejaVu Sans")
-                else -> systemFont("Arial")
+                WINDOWS -> queueSystemFont("Segoe UI")
+                OSX -> queueSystemFont("Helvetica")
+                LINUX -> queueSystemFont("DejaVu Sans")
+                else -> queueSystemFont("Arial")
             }
         }.onFailure { throwable ->
             logger.error("Failed to load common font.", throwable)
-        }.getOrNull() ?: systemFont("Arial")
+        }.getOrNull() ?: queueSystemFont("Arial")
     }
 
     /**
@@ -64,9 +81,9 @@ object FontManager {
     private val CJK_FONT by AsyncLazy {
         runCatching {
             when (Util.getPlatform()) {
-                WINDOWS -> systemFont("Microsoft YaHei")
-                OSX -> systemFont("PingFang SC")
-                LINUX -> systemFont("Noto Sans CJK")
+                WINDOWS -> queueSystemFont("Microsoft YaHei")
+                OSX -> queueSystemFont("PingFang SC")
+                LINUX -> queueSystemFont("Noto Sans CJK")
                 else -> null // No default CJK font available
             }
         }.onFailure { throwable ->
@@ -76,20 +93,24 @@ object FontManager {
 
     /**
      * All font faces that are known to the font manager.
+     *
+     * Use [BiMap] because the [BiMap.values] is [Set]. It's not allowed to add same font.
+     *
+     * Note: always add with [addFontFace]!
      */
-    internal val fontFaces = HashMap<String, FontFace>(8).apply { put(COMMON_FONT.name, COMMON_FONT) }
+    val fontFaces: BiMap<String, FontFace>
+        field = HashBiMap.create<String, FontFace>()
 
     private fun addFontFace(fontFace: FontFace) {
         fontFaces[fontFace.name] = fontFace
+        FONT_VALUES.forEach { it.choices = fontFaces.values }
+        ModuleClickGui.reload()
     }
 
     /**
-     * The active font renderer that all text rendering will be based on.
-     *
-     * TODO: Replaces this with Module-based Font Selection
+     * Returns the font by the given name.
      */
-    val FONT_RENDERER
-        get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
+    internal fun fontFace(name: String) = fontFaces[name]
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -104,33 +125,29 @@ object FontManager {
     val glyphManager: FontGlyphPageManager
         get() = requireNotNull(_glyphManager) { "Glyph manager was not initialized yet!" }
 
-    /**
-     * Returns the font by the given name.
-     */
-    internal fun fontFace(name: String) = fontFaces[name]
-
     internal fun createGlyphManager() {
         _glyphManager = FontGlyphPageManager(
             baseFonts = fontFaces.values,
             additionalFonts = setOfNotNull(CJK_FONT)
+            // TODO: CJK and COMMON is now base instead of additional (queueSystemFont)
         )
     }
 
-    internal suspend fun queueFontFromFile(file: File) {
-        try {
+    suspend fun queueFontFromFile(file: File): FontFace? {
+        return try {
             if (!file.exists()) {
                 logger.warn("Font file ${file.absolutePath} does not exist.")
-                return
+                return null
             }
 
-            if (file.extension != "ttf") {
+            if (file.extension.lowercase() != "ttf") {
                 logger.warn("Font file ${file.absolutePath} is not a TrueType font.")
-                return
+                return null
             }
 
             if (fontFaces.values.any { it.file == file }) {
                 logger.warn("Font file ${file.absolutePath} is already loaded.")
-                return
+                return null
             }
 
             val font = Font
@@ -142,21 +159,22 @@ object FontManager {
             val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
             // In this case, we have only one style available, which is the plain style.
             fontFace.fillStyle(font, 0)
-            addFontFace(fontFace)
+            fontFace.also(::addFontFace)
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
+            null
         }
     }
 
-    internal suspend fun queueFontFromStream(stream: InputStream) {
+    suspend fun queueFontFromStream(stream: InputStream): FontFace {
         val font = Font.createFont(Font.TRUETYPE_FONT, stream)
             .deriveFont(DEFAULT_FONT_SIZE)
         val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, null)
         fontFace.fillStyle(font, 0)
-        addFontFace(fontFace)
+        return fontFace.also(::addFontFace)
     }
 
-    private suspend fun systemFont(name: String): FontFace {
+    suspend fun queueSystemFont(name: String): FontFace {
         val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
 
         STYLES.forEachIndexed { index, style ->
@@ -165,7 +183,7 @@ object FontManager {
             fontFace.fillStyle(font, index)
         }
 
-        return fontFace
+        return fontFace.also(::addFontFace)
     }
 
     data class FontFace(
@@ -187,11 +205,13 @@ object FontManager {
          * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
          */
         val styles: Array<FontId?> = arrayOfNulls(4)
-    ) {
+    ) : NamedChoice {
+
+        override val choiceName: String get() = name
 
         // We only access it on the main thread so don't do synchronized
         val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
-            FontRenderer(this, glyphManager!!)
+            FontRenderer(this, glyphManager)
         }
 
         /**

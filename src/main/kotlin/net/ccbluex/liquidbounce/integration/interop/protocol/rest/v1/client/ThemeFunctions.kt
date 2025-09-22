@@ -63,8 +63,8 @@ fun postToggleShader(requestObject: RequestObject): FullHttpResponse {
 // GET /api/v1/client/fonts
 @Suppress("UNUSED_PARAMETER")
 fun getFonts(requestObject: RequestObject): FullHttpResponse = httpOk(JsonArray().apply {
-    FontManager.fontFaces.forEach { (name, _) ->
-        add(name)
+    FontManager.fontFaces.keys.forEach {
+        add(it)
     }
 })
 
