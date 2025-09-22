@@ -54,7 +54,7 @@ object ModuleMiddleClickAction : ClientModule(
 
     private val mode = choices(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
-    override fun disable() {
+    override fun onDisabled() {
         Pearl.disable()
     }
 
@@ -74,11 +74,11 @@ object ModuleMiddleClickAction : ClientModule(
 
             if (pickup) {
                 // visually select the slot
-                val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlotForServer ?: return@tickHandler
+                val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
                 SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
                 wasPressed = true
             } else if (wasPressed) { // the key was released
-                Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.let {
+                Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
 
@@ -97,7 +97,7 @@ object ModuleMiddleClickAction : ClientModule(
         fun cancelPick(): Boolean {
             return ModuleMiddleClickAction.running &&
                 mode.activeChoice == this &&
-                Slots.Hotbar.findSlot(Items.ENDER_PEARL) != null
+                Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) != null
         }
 
         override val parent: ChoiceConfigurable<*>

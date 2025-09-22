@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -47,18 +46,18 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = arr
     private var indicatedTeleport: Vec3d? = null
     private var teleportsToWait: Int = 0
 
-    override fun enable() {
+    override fun onEnabled() {
         if (indicatedTeleport == null) {
             chat(warning(message("useCommand")))
 
             // Disables module on next render tick
-            RenderSystem.recordRenderCall {
+            mc.execute {
                 this.enabled = false
             }
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         indicatedTeleport = null
         teleportsToWait = 0
     }

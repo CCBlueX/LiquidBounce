@@ -18,25 +18,31 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.Util
+import java.time.Instant
+import java.time.ZoneId
 
 /**
  * LocalConfig Command
  *
  * Allows you to load, list, and create local configurations.
  */
-object CommandLocalConfig : CommandFactory {
+object CommandLocalConfig : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -63,14 +69,12 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { s, _ ->
-                    arrayOf("binds", "hidden").filter { it.startsWith(s) }
-                }
+                .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
 
             @Suppress("UNCHECKED_CAST")
@@ -87,16 +91,19 @@ object CommandLocalConfig : CommandFactory {
                 }
 
                 createNewFile()
-                serializeAutoConfig(bufferedWriter(), includeConfiguration)
+                bufferedWriter().use {
+                    serializeAutoConfig(it, includeConfiguration)
+                }
             }.onFailure {
                 chat(regular(command.result("failedToCreate", variable(name))))
+                logger.error("Failed to create local config '$name'", it)
             }.onSuccess {
                 chat(regular(command.result("created", variable(name))))
             }
         }
         .build()
 
-    private fun browseSubcommand() = CommandBuilder.begin("browse").handler { command, _ ->
+    private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
         Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
         chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
@@ -110,10 +117,42 @@ object CommandLocalConfig : CommandFactory {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
-            chat("§cSettings:")
-            for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
-                chat(regular(files.name))
+        .handler {
+            val configFiles = ConfigSystem.userConfigsFolder.listFiles { file, name ->
+                name.endsWith(".json", ignoreCase = true)
+            }
+
+            if (configFiles.isNullOrEmpty()) {
+                chat("No local config!".asText().formatted(Formatting.RED))
+            } else {
+                chat("Settings:".asText().formatted(Formatting.AQUA))
+                for (file in configFiles) {
+                    val fileNameWithoutSuffix = file.name.removeSuffix(".json")
+
+                    chat(
+                        variable(file.name)
+                            .onClick(
+                                ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                    ".localconfig load $fileNameWithoutSuffix"
+                                )
+                            )
+                            .onHover(
+                                HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
+                                    Text.of("§7Click to load ${file.name}")
+                                )
+                            ),
+                        regular(" ("),
+                        regular(
+                            Instant.ofEpochMilli(file.lastModified())
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                                .format(AutoSettings.FORMATTER)
+                        ),
+                        regular(")"),
+                    )
+                }
             }
         }
         .build()
@@ -124,16 +163,18 @@ object CommandLocalConfig : CommandFactory {
             ParameterBuilder
                 .begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith { begin, _ -> this.autoComplete(begin) }
+                .autocompletedFrom {
+                    ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
+                }
                 .required()
                 .build()
         )
         .parameter(
-            Parameters.modules()
+            ParameterBuilder.modules()
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             val modules = args.getOrNull(1) as Set<ClientModule>? ?: emptySet()
 
@@ -156,10 +197,5 @@ object CommandLocalConfig : CommandFactory {
             }
         }
         .build()
-
-    private fun autoComplete(begin: String): List<String> {
-        return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
-            ?.filter { it.startsWith(begin) } ?: emptyList()
-    }
 
 }

@@ -19,24 +19,26 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
-import com.google.gson.JsonElement
-import net.ccbluex.liquidbounce.api.core.withScope
-import net.ccbluex.liquidbounce.config.gson.interopGson
+import com.google.gson.stream.JsonWriter
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
-import kotlin.reflect.KClass
+import net.minecraft.util.Util
+import org.apache.commons.io.output.StringBuilderWriter
 
-class SocketEventListener : EventListener {
+internal object SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
-        .filter { it.java.isAnnotationPresent(WebSocketEvent::class.java) }
+        .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
         .associateBy { it.eventName }
 
     /**
      * Contains all events that are registered in the current context
      */
-    private val registeredEvents = hashMapOf<KClass<out Event>, EventHook<in Event>>()
+    private val registeredEvents = Reference2ObjectOpenHashMap<Class<out Event>, EventHook<in Event>>()
+
+    private val writeBuffer = ThreadLocal.withInitial { StringBuilderWriter(DEFAULT_BUFFER_SIZE) }
 
     fun registerAll() {
         events.keys.forEach { register(it) }
@@ -53,7 +55,7 @@ class SocketEventListener : EventListener {
         val eventHook = EventHook(this, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
-        EventManager.registerEventHook(eventClass.java, eventHook)
+        EventManager.registerEventHook(eventClass, eventHook)
     }
 
     fun unregister(name: String) {
@@ -62,26 +64,25 @@ class SocketEventListener : EventListener {
         val eventHook = registeredEvents[eventClass] ?:
             throw IllegalArgumentException("No EventHook for event: $eventClass")
 
-        EventManager.unregisterEventHook(eventClass.java, eventHook)
+        EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = withScope {
-        data class WSEventData(val name: String, val event: JsonElement)
-
-        val json = runCatching {
-            val webSocketAnnotation = event::class.java.getAnnotation(WebSocketEvent::class.java)!!
-            interopGson.toJson(
-                WSEventData(
-                    name = event::class.eventName,
-                    event = webSocketAnnotation.serializer.gson.toJsonTree(event)
-                )
-            )
+    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
+        val json = writeBuffer.get().runCatching {
+            JsonWriter(this).use { writer ->
+                writer.beginObject()
+                writer.name("name").value(event.javaClass.eventName)
+                writer.name("event")
+                (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
+                writer.endObject()
+            }
+            toString().also { builder.clear() }
         }.onFailure {
             logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return@withScope
+        }.getOrNull() ?: return@execute
 
-        httpServer.webSocketController.broadcast(json) { channelHandlerContext, t ->
-            logger.error("WebSocket event broadcast failed", t)
+        httpServer.webSocketController.broadcast(json) { _, t ->
+            logger.error("WebSocket event broadcast failed, JSON: $json", t)
         }
     }
 

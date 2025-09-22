@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.commands.deeplearn
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiCombatRecorder
@@ -40,13 +40,12 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
-object CommandModels : CommandFactory {
+object CommandModels : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -69,7 +68,7 @@ object CommandModels : CommandFactory {
                     .required()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val name = args[0] as String
 
                 // Check if model exists
@@ -99,7 +98,7 @@ object CommandModels : CommandFactory {
                     .required()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val name = args[0] as String
                 val model = models.choices.find { model -> model.name.equals(name, true) } ?:
                     throw CommandException(command.result("modelNotFound", name))
@@ -121,7 +120,7 @@ object CommandModels : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val name = args[0] as String
                 val model = models.choices.find { model -> model.name.equals(name, true) }
 
@@ -141,7 +140,7 @@ object CommandModels : CommandFactory {
     private fun reloadModelCommand(): Command {
         return CommandBuilder
             .begin("reload")
-            .handler { command, _ ->
+            .handler {
                 ModelHolster.reload()
                 chat(command.result("modelsReloaded"))
             }
@@ -151,7 +150,7 @@ object CommandModels : CommandFactory {
     private fun browseModelCommand(): Command {
         return CommandBuilder
             .begin("browse")
-            .handler { command, _ ->
+            .handler {
                 Util.getOperatingSystem().open(modelsFolder)
                 chat(regular("Location: "), clickablePath(modelsFolder))
             }
@@ -175,13 +174,12 @@ object CommandModels : CommandFactory {
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
-        @Suppress("ArrayInDataClass")
-        data class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
+        class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
 
         val (dataset, datasetTime) = measureTimedValue {
             Dataset(
-                samples.mapArray(TrainingData::asInput),
-                samples.mapArray(TrainingData::asOutput)
+                samples.mapToArray { it.asInput },
+                samples.mapToArray { it.asOutput }
             )
         }
 

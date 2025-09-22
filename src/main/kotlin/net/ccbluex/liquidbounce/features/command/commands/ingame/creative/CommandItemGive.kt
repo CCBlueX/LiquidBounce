@@ -20,10 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.item
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
@@ -33,13 +32,13 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
  *
  * Allows you to give items to the player.
  */
-object CommandItemGive : CommandFactory {
+object CommandItemGive : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("give")
             .requiresIngame()
-            .parameter(Parameters.item().required().build())
+            .parameter(ParameterBuilder.item().required().build())
             .parameter(
                 ParameterBuilder
                     .begin<Int>("amount")
@@ -47,7 +46,7 @@ object CommandItemGive : CommandFactory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 if (!interaction.hasCreativeInventory()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }

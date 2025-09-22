@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.render
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -26,50 +29,62 @@ import net.minecraft.util.Util.OperatingSystem.*
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 
 object FontManager {
+
+    private val STYLES = intArrayOf(
+        Font.BOLD,
+        Font.BOLD,
+        Font.ITALIC,
+        Font.BOLD or Font.ITALIC
+    )
 
     /**
      * As fallback, we can use a common font that is available on all systems.
      */
-    private val COMMON_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Segoe UI")
-            OSX -> systemFont("Helvetica")
-            LINUX -> systemFont("DejaVu Sans")
-            else -> systemFont("Arial")
-        }
-    }.onFailure { throwable ->
-        logger.error("Failed to load common font.", throwable)
-    }.getOrNull() ?: systemFont("Arial")
+    private val COMMON_FONT by AsyncLazy {
+        runCatching {
+            when (Util.getOperatingSystem()) {
+                WINDOWS -> systemFont("Segoe UI")
+                OSX -> systemFont("Helvetica")
+                LINUX -> systemFont("DejaVu Sans")
+                else -> systemFont("Arial")
+            }
+        }.onFailure { throwable ->
+            logger.error("Failed to load common font.", throwable)
+        }.getOrNull() ?: systemFont("Arial")
+    }
 
     /**
      * Default font for displaying CJK (Chinese, Japanese, Korean) characters.
      */
-    private val CJK_FONT = runCatching {
-        when (Util.getOperatingSystem()) {
-            WINDOWS -> systemFont("Microsoft YaHei")
-            OSX -> systemFont("PingFang SC")
-            LINUX -> systemFont("Noto Sans CJK")
-            else -> null // No default CJK font available
-        }
-    }.onFailure { throwable ->
-        logger.error("Failed to load CJK font.", throwable)
-    }.getOrNull()
+    private val CJK_FONT by AsyncLazy {
+        runCatching {
+            when (Util.getOperatingSystem()) {
+                WINDOWS -> systemFont("Microsoft YaHei")
+                OSX -> systemFont("PingFang SC")
+                LINUX -> systemFont("Noto Sans CJK")
+                else -> null // No default CJK font available
+            }
+        }.onFailure { throwable ->
+            logger.error("Failed to load CJK font.", throwable)
+        }.getOrNull()
+    }
 
     /**
      * All font faces that are known to the font manager.
      */
-    internal val fontFaces = mutableSetOf(
-        COMMON_FONT
-    )
+    internal val fontFaces = HashMap<String, FontFace>(8).apply { put(COMMON_FONT.name, COMMON_FONT) }
+
+    private fun addFontFace(fontFace: FontFace) {
+        fontFaces[fontFace.name] = fontFace
+    }
 
     /**
      * The active font renderer that all text rendering will be based on.
      *
-     * TODO: Because PR #3884 is not merged yet, we have to define the active font renderer manually.
-     *    This will be removed once the PR is merged, because after the PR is merged, the font renderer
-     *    can be selected through the module settings instead.
+     * TODO: Replaces this with Module-based Font Selection
      */
     val FONT_RENDERER
         get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
@@ -83,32 +98,24 @@ object FontManager {
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */
-    var glyphManager: FontGlyphPageManager? = null
+    var glyphManager: FontGlyphPageManager
+        field: FontGlyphPageManager? = null
         private set
-        get() = field ?: error("Glyph manager was not initialized yet!")
+        get() = requireNotNull(field) { "Glyph manager was not initialized yet!" }
 
     /**
      * Returns the font by the given name.
      */
-    internal fun fontFace(name: String) = fontFaces.associateBy { fontFace -> fontFace.name }[name]
+    internal fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
         glyphManager = FontGlyphPageManager(
-            baseFonts = fontFaces,
-            additionalFonts = setOf(CJK_FONT).filterNotNull().toSet()
+            baseFonts = fontFaces.values,
+            additionalFonts = setOfNotNull(CJK_FONT)
         )
     }
 
-    internal fun queueFolder(path: File) {
-        try {
-            path.listFiles { file -> file.extension == "ttf" }
-                ?.forEach(::queueFile)
-        } catch (e: Exception) {
-            throw IllegalStateException("Failed to load font from folder $path", e)
-        }
-    }
-
-    internal fun queueFile(file: File) {
+    internal suspend fun queueFontFromFile(file: File) {
         try {
             if (!file.exists()) {
                 logger.warn("Font file ${file.absolutePath} does not exist.")
@@ -120,7 +127,7 @@ object FontManager {
                 return
             }
 
-            if (fontFaces.any { it.file == file }) {
+            if (fontFaces.values.any { it.file == file }) {
                 logger.warn("Font file ${file.absolutePath} is already loaded.")
                 return
             }
@@ -134,24 +141,26 @@ object FontManager {
             val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
             // In this case, we have only one style available, which is the plain style.
             fontFace.fillStyle(font, 0)
-            fontFaces += fontFace
+            addFontFace(fontFace)
         } catch (e: Exception) {
             logger.warn("Failed to load font from file ${file.absolutePath}", e)
         }
     }
 
-    private fun systemFont(name: String): FontFace {
+    internal suspend fun queueFontFromStream(stream: InputStream) {
+        val font = Font.createFont(Font.TRUETYPE_FONT, stream)
+            .deriveFont(DEFAULT_FONT_SIZE)
+        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, null)
+        fontFace.fillStyle(font, 0)
+        addFontFace(fontFace)
+    }
+
+    private suspend fun systemFont(name: String): FontFace {
         val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
 
-        arrayOf(
-            Font.BOLD,
-            Font.BOLD,
-            Font.ITALIC,
-            Font.BOLD or Font.ITALIC
-        ).map { style ->
-            Font(name, style, DEFAULT_FONT_SIZE.toInt())
+        STYLES.forEachIndexed { index, style ->
+            val font = Font(name, style, DEFAULT_FONT_SIZE.toInt())
                 .deriveFont(DEFAULT_FONT_SIZE)
-        }.forEachIndexed { index, font ->
             fontFace.fillStyle(font, index)
         }
 
@@ -165,7 +174,6 @@ object FontManager {
          * The file of the font. If the font is a system font, this will be null.
          */
         val file: File? = null,
-        @Suppress("ArrayInDataClass")
         /**
          * Style of the font. If an element is null, fall back to `[0]`
          *
@@ -180,14 +188,15 @@ object FontManager {
         val styles: Array<FontId?> = arrayOfNulls(4)
     ) {
 
-        val renderer: FontRenderer by lazy {
+        // We only access it on the main thread so don't do synchronized
+        val renderer: FontRenderer by lazy(LazyThreadSafetyMode.NONE) {
             FontRenderer(this, glyphManager!!)
         }
 
         /**
          * Fills the font style at the given index.
          */
-        fun fillStyle(font: Font, index: Int) {
+        suspend fun fillStyle(font: Font, index: Int) = withContext(Dispatchers.Default) {
             val metrics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
                 setFont(font)
             }.fontMetrics
@@ -195,9 +204,30 @@ object FontManager {
             styles[index] = FontId(index, font, metrics.height.toFloat(), metrics.ascent.toFloat())
         }
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is FontFace) return false
+
+            if (size != other.size) return false
+            if (name != other.name) return false
+            if (file != other.file) return false
+            if (!styles.contentEquals(other.styles)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = size.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + (file?.absolutePath?.hashCode() ?: 0)
+            result = 31 * result + styles.contentHashCode()
+            return result
+        }
+
     }
 
-    class FontId(
+    @JvmRecord
+    data class FontId(
         val style: Int,
         val awtFont: Font,
         val height: Float,

@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -29,17 +30,16 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
+import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.max
 import kotlin.random.Random
@@ -64,8 +64,8 @@ object InventoryManager : EventListener {
             field = value
         }
 
-    var lastClickedSlot: Int = 0
-        private set
+    var lastClickedSlot: Int = -1
+        internal set
 
     private var recentInventoryOpen = false
 
@@ -86,8 +86,8 @@ object InventoryManager : EventListener {
             return@tickHandler
         }
 
-        ModuleDebug.debugParameter(this, "Inventory Open", isInventoryOpen)
-        ModuleDebug.debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
+        debugParameter(this, "Inventory Open", isInventoryOpen)
+        debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
 
         var maximumCloseDelay = 0
 
@@ -104,28 +104,26 @@ object InventoryManager : EventListener {
             requiresUpdate = false
 
             val event = EventManager.callEvent(ScheduleInventoryActionEvent())
+            val schedule = event.schedule
+                .filterTo(ObjectArrayList()) { actionChain ->
+                    actionChain.canPerformAction() && actionChain.actions.isNotEmpty()
+                }
+
+            // If the schedule is empty, we can break the loop
+            if (schedule.isEmpty) {
+                break
+            }
 
             // Schedule of actions that have to be executed
             // The schedule is sorted by
             // 1. With Non-inventory open required actions
             // 2. With inventory open required actions
-            val schedule = event.schedule
-                .filter { actionChain -> actionChain.canPerformAction() && actionChain.actions.isNotEmpty() }
-                .groupBy(InventoryActionChain::requiresInventoryOpen)
-                .map { it.value.sortedByDescending { actionChain -> actionChain.priority } }
-                .reduceOrNull { acc, inventoryActionChains ->
-                    acc + inventoryActionChains
-                } ?: break
+            schedule.sortWith(COMPARATOR_ACTION_CHAIN)
 
-            ModuleDebug.debugParameter(this, "Schedule Size", schedule.size)
-
-            // If the schedule is empty, we can break the loop
-            if (schedule.isEmpty()) {
-                break
-            }
+            debugParameter(this, "Schedule Size", schedule.size)
 
             // Handle non-inventory open actions first
-            for (chained in schedule) {
+            for ((scheduleIndex, chained) in schedule.withIndex()) {
                 // Do not continue if we need to update the schedule
                 if (requiresUpdate) {
                     break
@@ -133,7 +131,10 @@ object InventoryManager : EventListener {
 
                 // These are chained actions that have to be executed in order
                 // We cannot interrupt them
+                debugParameter("Schedule Index") { scheduleIndex }
+                debugParameter("Action Size") { chained.actions.size }
                 for ((index, action) in chained.actions.withIndex()) {
+                    debugParameter("Action Index") { index }
                     val constraints = chained.inventoryConstraints
 
                     // Update close delay maximum
@@ -172,7 +173,7 @@ object InventoryManager : EventListener {
                     // Check if this is the first action in the chain, which allows us to simulate a miss click
                     // This is only possible for container-type slots and also does not make much sense when
                     // the action is a throw action (you cannot miss-click really when throwing)
-                    if (index == 0 && action is ClickInventoryAction
+                    if (index == 0 && action is InventoryAction.Click
                         && constraints.missChance.random() > Random.nextInt(100)
                         && action.actionType != SlotActionType.THROW) {
                         // Simulate a miss click (this is only possible for container-type slots)
@@ -183,12 +184,12 @@ object InventoryManager : EventListener {
                         }
                     }
 
-                    if (action is CloseContainerAction) {
+                    if (action is InventoryAction.CloseScreen) {
                         waitTicks(constraints.closeDelay.random())
                         cycles = 0
                     }
                     if (action.performAction()) {
-                        if (action !is CloseContainerAction) {
+                        if (action !is InventoryAction.CloseScreen) {
                             waitTicks(constraints.clickDelay.random())
                             cycles = 0
                         }
@@ -203,7 +204,7 @@ object InventoryManager : EventListener {
             closeInventorySilently()
         }
 
-        lastClickedSlot = 0
+        lastClickedSlot = -1
     }
 
     /**
@@ -227,7 +228,8 @@ object InventoryManager : EventListener {
      * Listener for packets that are related to the inventory
      * to keep track of the inventory state and timings
      */
-    val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
         if (event.isCancelled) {
@@ -260,11 +262,23 @@ object InventoryManager : EventListener {
     ) { event ->
         val screen = event.screen
 
+        debugParameter("Screen") { screen }
+
         if (event.isCancelled) {
             return@handler
         }
 
-        if (screen is InventoryScreen || screen is GenericContainerScreen) {
+        if (screen is HandledScreen<*>) {
+            debugParameter("Screen Handler Type") {
+                val type = runCatching { screen.screenHandler.type }.getOrNull()
+                type?.let {
+                    Registries.SCREEN_HANDLER.getId(it)
+                }
+            }
+            debugParameter("Screen Slot count") {
+                val slots = screen.screenHandler.slots
+                "${slots.size} (${slots.count { it.inventory !== player.inventory }})"
+            }
             // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
             // the easy way and just listen for the screen event.
             if (screen is InventoryScreen && isOlderThanOrEqual1_11_1) {
@@ -280,218 +294,11 @@ object InventoryManager : EventListener {
         isInventoryOpenServerSide = false
     }
 
-}
-
-interface InventoryAction {
-    fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean
-    fun performAction(): Boolean
-    fun requiresPlayerInventoryOpen(): Boolean
-}
-
-data class ClickInventoryAction(
-    val screen: GenericContainerScreen? = null,
-    val slot: ItemSlot,
-    val button: Int,
-    val actionType: SlotActionType,
-) : InventoryAction {
-
-    companion object {
-
-        fun click(screen: GenericContainerScreen? = null,
-                  slot: ItemSlot,
-                  button: Int,
-                  actionType: SlotActionType) = ClickInventoryAction(
-            screen,
-            slot = slot,
-            button = button,
-            actionType = actionType
-        )
-
-        fun performThrow(
-            screen: GenericContainerScreen? = null,
-            slot: ItemSlot
-        ) = ClickInventoryAction(
-            screen,
-            slot = slot,
-            button = 1,
-            actionType = SlotActionType.THROW
-        )
-
-        fun performQuickMove(
-            screen: GenericContainerScreen? = null,
-            slot: ItemSlot
-        ) = ClickInventoryAction(
-            screen,
-            slot = slot,
-            button = 0,
-            actionType = SlotActionType.QUICK_MOVE
-        )
-
-        fun performSwap(
-            screen: GenericContainerScreen? = null,
-            from: ItemSlot,
-            to: HotbarItemSlot
-        ) = ClickInventoryAction(
-            screen,
-            slot = from,
-            button = to.hotbarSlotForServer,
-            actionType = SlotActionType.SWAP
-        )
-
-        fun performPickupAll(
-            screen: GenericContainerScreen? = null,
-            slot: ItemSlot
-        ) = ClickInventoryAction(
-            screen,
-            slot = slot,
-            button = 0,
-            actionType = SlotActionType.PICKUP_ALL
-        )
-
-        fun performPickup(
-            screen: GenericContainerScreen? = null,
-            slot: ItemSlot
-        ) = ClickInventoryAction(
-            screen,
-            slot = slot,
-            button = 0,
-            actionType = SlotActionType.PICKUP
-        )
-
-    }
-
-    override fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean {
-        // Check constrains
-        if (!inventoryConstraints.passesRequirements(this)) {
-            return false
+    private val COMPARATOR_ACTION_CHAIN: Comparator<InventoryAction.Chain> =
+        compareBy<InventoryAction.Chain> {
+            it.requiresInventoryOpen()
+        }.thenByDescending {
+            it.priority
         }
-
-        // Screen is null, which means we are targeting the player inventory
-        if (requiresPlayerInventoryOpen() && player.currentScreenHandler.isPlayerInventory &&
-            !interaction.hasRidingInventory()) {
-            return true
-        }
-
-        // Check if current screen is the same as the screen we want to interact with
-        val screen = mc.currentScreen as? GenericContainerScreen ?: return false
-        return screen.syncId == this.screen.syncId
-    }
-
-    override fun performAction(): Boolean {
-        val slotId = slot.getIdForServer(screen) ?: return false
-        interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
-
-        return true
-    }
-
-    fun performMissClick(): Boolean {
-        if (slot !is ContainerItemSlot || screen == null) {
-            return false
-        }
-
-        val itemsInContainer = getSlotsInContainer(screen)
-        // Find the closest item to the slot which is empty
-        val closestEmptySlot = itemsInContainer
-            .filter { it.itemStack.isEmpty }
-            .minByOrNull { slot.distance(it) } ?: return false
-
-        interaction.clickSlot(screen.syncId, closestEmptySlot.getIdForServer(screen), 0,
-            SlotActionType.PICKUP, player)
-        return true
-    }
-
-    override fun requiresPlayerInventoryOpen() = screen == null
-
-}
-
-data class UseInventoryAction(
-    val hotbarItemSlot: HotbarItemSlot
-) : InventoryAction {
-
-    override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
-        !InventoryManager.isInventoryOpen && !isInContainerScreen && !isInInventoryScreen
-
-    override fun performAction(): Boolean {
-        useHotbarSlotOrOffhand(hotbarItemSlot)
-        return true
-    }
-
-    override fun requiresPlayerInventoryOpen() = false
-
-}
-
-data class CloseContainerAction(
-    val screen: GenericContainerScreen
-) : InventoryAction {
-
-    // Check if current handler is the same as the screen we want to close
-    override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
-        player.currentScreenHandler.syncId == screen.syncId
-
-    override fun performAction(): Boolean {
-        player.closeHandledScreen()
-        return true
-    }
-
-    override fun requiresPlayerInventoryOpen() = false
-
-}
-
-data class CreativeInventoryAction(
-    val itemStack: ItemStack,
-    val slot: ItemSlot? = null
-) : InventoryAction {
-
-    companion object {
-        fun performThrow(itemStack: ItemStack) = CreativeInventoryAction(itemStack)
-        fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = CreativeInventoryAction(itemStack, slot)
-    }
-
-    override fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean {
-        // Check constrains
-        if (!inventoryConstraints.passesRequirements(this)) {
-            return false
-        }
-
-        // Screen is null, which means we are targeting the player inventory
-        if (requiresPlayerInventoryOpen() && player.currentScreenHandler.isPlayerInventory &&
-            !interaction.hasRidingInventory()) {
-            return true
-        }
-
-        return player.isCreative
-    }
-
-    override fun performAction(): Boolean {
-        val slot = slot
-
-        if (slot != null) {
-            val slotId = slot.getIdForServer(null) ?: return false
-            interaction.clickCreativeStack(itemStack, slotId)
-        } else {
-            interaction.dropCreativeStack(itemStack)
-        }
-        return true
-    }
-
-    override fun requiresPlayerInventoryOpen() = false
-
-}
-
-/**
- * A chained inventory action is a list of inventory actions that have to be executed in order
- * and CANNOT be stopped in between
- */
-data class InventoryActionChain(
-    val inventoryConstraints: InventoryConstraints,
-    val actions: Array<out InventoryAction>,
-    val priority: Priority
-) {
-
-    fun canPerformAction(): Boolean {
-        return actions.all { action -> action.canPerformAction(inventoryConstraints) }
-    }
-
-    fun requiresInventoryOpen() = actions.filterIsInstance<ClickInventoryAction>().any { it.screen == null }
 
 }

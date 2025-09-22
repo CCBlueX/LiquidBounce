@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.ShieldItem
-import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 
@@ -43,13 +43,13 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     @JvmOverloads
     fun shouldHideOffhand(
         player: PlayerEntity = this.player,
-        offHandItem: Item = player.offHandStack.item,
-        mainHandItem: Item = player.mainHandStack.item,
-    ) = (running || KillAuraAutoBlock.blockVisual) && offHandItem is ShieldItem
-        && (mainHandItem is SwordItem || player === this.player && running && alwaysHideShield)
+        offHandStack: ItemStack = player.offHandStack,
+        mainHandStack: ItemStack = player.mainHandStack,
+    ) = (running || KillAuraAutoBlock.blockVisual) && offHandStack.item is ShieldItem
+        && (mainHandStack.isSword || player === this.player && running && alwaysHideShield)
 
     @Suppress("UNUSED")
-    private val packetHandler = sequenceHandler<PacketEvent> {
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
         if (onlyVisual) {
             return@sequenceHandler
         }
@@ -59,13 +59,13 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
             return@sequenceHandler
         }
 
-        val packet = it.packet
+        val packet = event.packet
 
         if (packet is PlayerInteractItemC2SPacket) {
             val hand = packet.hand
             val itemInHand = player.getStackInHand(hand) // or activeItem
 
-            if (hand == Hand.MAIN_HAND && itemInHand.item is SwordItem) {
+            if (hand == Hand.MAIN_HAND && itemInHand.isSword) {
                 val offHandItem = player.getStackInHand(Hand.OFF_HAND)
                 if (offHandItem?.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
@@ -76,7 +76,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
                             player.yaw, player.pitch)
                     }
                 } else {
-                    it.cancelEvent()
+                    event.cancelEvent()
                     // We use the old sequence
                     network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence,
                         player.yaw, player.pitch))

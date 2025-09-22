@@ -15,15 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
 import net.ccbluex.liquidbounce.event.Sequence
 
 object AutoQueueActionChat : AutoQueueAction("Chat") {
-
     private val message by text("Message", "/play solo_normal")
 
     override suspend fun execute(sequence: Sequence) {

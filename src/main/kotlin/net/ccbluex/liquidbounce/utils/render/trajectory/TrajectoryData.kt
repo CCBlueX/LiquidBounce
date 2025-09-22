@@ -9,8 +9,11 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.entity.projectile.thrown.*
 import net.minecraft.item.*
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 object TrajectoryData {
+    @JvmStatic
     fun getRenderedTrajectoryInfo(player: PlayerEntity, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
         return when (item) {
             is BowItem -> {
@@ -36,6 +39,7 @@ object TrajectoryData {
         }
     }
 
+    @JvmStatic
     fun getColorForEntity(it: Entity): Color4b {
         return when (it) {
             is ArrowEntity -> Color4b(255, 0, 0, 200)
@@ -44,6 +48,7 @@ object TrajectoryData {
         }
     }
 
+    @JvmStatic
     fun getRenderTrajectoryInfoForOtherEntity(
         entity: Entity,
         activeArrows: Boolean,
@@ -75,7 +80,7 @@ object TrajectoryData {
     }
 }
 
-
+@JvmRecord
 data class TrajectoryInfo(
     val gravity: Double,
     /**
@@ -88,20 +93,41 @@ data class TrajectoryInfo(
     val roll: Float = 0.0F,
     val copiesPlayerVelocity: Boolean = true,
 ) {
+    @JvmOverloads
+    fun hitbox(center: Vec3d = Vec3d.ZERO): Box = Box(
+        center.x - hitboxRadius,
+        center.y - hitboxRadius,
+        center.z - hitboxRadius,
+        center.x + hitboxRadius,
+        center.y + hitboxRadius,
+        center.z + hitboxRadius,
+    )
+
     companion object {
+        @JvmField
         val GENERIC = TrajectoryInfo(0.03, 0.25)
-        private val PERSISTENT = TrajectoryInfo(0.05, 0.5)
+        @JvmField
+        val PERSISTENT = TrajectoryInfo(0.05, 0.5)
+        @JvmField
         val POTION = GENERIC.copy(gravity = 0.05, initialVelocity = 0.5, roll = -20.0F)
+        @JvmField
         val EXP_BOTTLE = POTION.copy(initialVelocity = 0.7)
+        @JvmField
         val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
+        @JvmField
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
+        @JvmField
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
+        @JvmField
         val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
+        @JvmField
         val WIND_CHARGE = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0, copiesPlayerVelocity = false)
 
-        fun bowWithUsageDuration(usageDuration: Int = player.itemUseTime): TrajectoryInfo? {
+        @JvmStatic
+        @JvmOverloads
+        fun bowWithUsageDuration(usageDurationTicks: Int = player.itemUseTime): TrajectoryInfo? {
             // Calculate the power of bow
-            var power = usageDuration / 20f
+            var power = usageDurationTicks / 20f
             power = (power * power + power * 2F) / 3F
 
             if (power < 0.1F) {

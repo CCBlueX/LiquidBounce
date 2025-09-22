@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -64,9 +64,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
         private val ticksToBoostOff by int("TicksToBoostOff", 0, 0..20, "ticks")
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (!player.moving) {
-                return@tickHandler
+                return@handler
             }
 
             if (horizontalAcceleration != 0f) {
@@ -96,9 +96,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
         private val pullDownDuringFall by float("PullDownDuringFall", 0f, 0f..1f)
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (!player.moving) {
-                return@tickHandler
+                return@handler
             }
 
             val pullDown = if (player.velocity.y <= 0.0) pullDownDuringFall else pullDown
@@ -127,14 +127,14 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
         private var ticksTimeout = 0
 
         @Suppress("unused")
-        private val strafeHandler = tickHandler {
+        private val strafeHandler = handler<GameTickEvent> {
             if (ticksTimeout > 0) {
                 ticksTimeout--
-                return@tickHandler
+                return@handler
             }
 
             if (!player.moving) {
-                return@tickHandler
+                return@handler
             }
 
             when {
@@ -184,9 +184,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (!player.moving) {
-            return@tickHandler
+            return@handler
         }
 
         if (timerSpeed != 1f) {

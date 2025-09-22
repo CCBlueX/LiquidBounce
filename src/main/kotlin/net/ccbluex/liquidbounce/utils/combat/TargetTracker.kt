@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
+import java.util.function.Predicate
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -44,12 +46,10 @@ open class TargetTracker(
 
     var target: LivingEntity? = null
 
-    inline fun selectFirst(predicate: (LivingEntity) -> Boolean): LivingEntity? {
-        return targets().firstOrNull(predicate).also { target = it }
-    }
-
-    fun selectFirst(): LivingEntity? {
-        return targets().firstOrNull().also { target = it }
+    fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
+        val enemies = targets()
+        val selected = if (predicate != null) enemies.firstOrNull(predicate::test) else enemies.firstOrNull()
+        return selected.also { this.target = it }
     }
 
     fun <R> select(evaluator: (LivingEntity) -> R): R? {
@@ -69,10 +69,10 @@ open class TargetTracker(
         target = null
     }
 
-    fun validate(validator: ((LivingEntity) -> Boolean)? = null) {
+    fun validate(predicate: Predicate<LivingEntity>? = null) {
         val target = target ?: return
 
-        if (!validate(target) || validator != null && !validator(target)) {
+        if (!validate(target) || predicate != null && !predicate.test(target)) {
             reset()
         }
     }
@@ -93,6 +93,13 @@ open class TargetSelector(
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
     private val priority by enumChoice("Priority", defaultPriority)
+
+    /**
+     * Counts available targets.
+     */
+    fun countTargets(): Int = world.entities.count { entity ->
+        entity is LivingEntity && validate(entity)
+    }
 
     private val targetComparator: Comparator<LivingEntity> = Comparator.comparingInt<LivingEntity> { entity ->
         // Sort by entity type (player first, then hostile, then other)
@@ -123,7 +130,7 @@ open class TargetSelector(
      * Update should be called to always pick the best target out of the current world context
      */
     fun targets(): List<LivingEntity> {
-        val entities = mutableListOf<LivingEntity>()
+        val entities = ObjectArrayList<LivingEntity>()
 
         for (entity in world.entities) {
             if (entity is LivingEntity && validate(entity)) {

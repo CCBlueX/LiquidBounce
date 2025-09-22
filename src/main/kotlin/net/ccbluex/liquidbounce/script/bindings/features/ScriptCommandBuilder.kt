@@ -23,11 +23,12 @@ package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.STRING_VALIDATOR
 import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import org.graalvm.polyglot.Value
 
 class ScriptCommandBuilder(private val commandObject: Value) {
@@ -63,7 +64,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val handler = commandObject.getMember("onExecute")
 
             @Suppress("SpreadOperator")
-            commandBuilder.handler { _, args ->
+            commandBuilder.handler {
                 handler.execute(*args)
             }
         }
@@ -93,7 +94,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val completions = parameterObject.getMember("getCompletions")
 
             parameterBuilder.autocompletedWith { begin, args ->
-                completions.execute(begin, args).asArray<String>().asList()
+                completions.execute(begin, args).asArray<String>().unmodifiable()
             }
         }
 
@@ -104,9 +105,9 @@ class ScriptCommandBuilder(private val commandObject: Value) {
                 val result = validator.execute(param)
 
                 if (result.getMember("accept").asBoolean()) {
-                    ParameterValidationResult.ok(toObject(result.getMember("value")))
+                    Result.Ok(toObject(result.getMember("value")))
                 } else {
-                    ParameterValidationResult.error(result.getMember("error").asString())
+                    Result.Error(result.getMember("error").asString())
                 }
             }
         } else {

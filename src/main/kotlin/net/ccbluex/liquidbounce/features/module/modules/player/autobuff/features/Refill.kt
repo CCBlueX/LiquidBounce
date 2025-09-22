@@ -24,9 +24,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.features
-import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
@@ -39,7 +39,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             return
         }
 
-        val validFeatures = features.filter { it.enabled }
+        val validFeatures = ModuleAutoBuff.activeFeatures
 
         // Find valid items in the inventory
         val validItems = Slots.Inventory.filter {
@@ -55,14 +55,14 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         // Sort the items by the order of the features
         for (slot in validItems) {
             event.schedule(
-                inventoryConstraints, ClickInventoryAction.performQuickMove(slot = slot),
+                inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
                 Priority.IMPORTANT_FOR_USAGE_1
             )
         }
     }
 
     private fun findEmptyHotbarSlot(): Boolean {
-        return Slots.Hotbar.findSlot { it.isNothing() } != null
+        return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
     }
 
 }

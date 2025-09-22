@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -30,19 +29,16 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components
-import net.ccbluex.liquidbounce.integration.theme.component.customComponents
-import net.ccbluex.liquidbounce.integration.theme.component.types.minimap.ChunkRenderer
-import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen
 
@@ -77,36 +73,39 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     val isBlurEffectActive
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
 
-    var browserSettings: BrowserSettings? = null
+    private var browserSettings: BrowserSettings? = null
 
-    init {
-        tree(Configurable("In-built", value = components as MutableList<Value<*>>))
-        tree(Configurable("Custom", value = customComponents as MutableList<Value<*>>))
+    val themes = tree(Configurable("Themes"))
+
+    val components = tree(Configurable("AdditionalComponents")).apply {
+        tree(MinimapComponent)
     }
 
-    override fun enable() {
+    /**
+     * Updates [themes] content
+     */
+    fun updateThemes() {
+        themes.inner.clear()
+        for (theme in ThemeManager.themes) {
+            themes.tree(theme.settings)
+        }
+        themes.initConfigurable()
+        themes.walkKeyPath()
+    }
+
+    override fun onEnabled() {
         if (isHidingNow) {
             chat(markAsError(message("hidingAppearance")))
         }
-
-        // Minimap
-        RenderedEntities.subscribe(this)
-        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
 
         if (visible) {
             open()
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         // Closes tab entirely
-        browserBrowser?.close()
-        browserBrowser = null
-
-        // Minimap
-        RenderedEntities.unsubscribe(this)
-        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.unloadEverything()
+        close()
     }
 
     @Suppress("unused")
@@ -134,9 +133,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     private fun open(): Browser {
-        if (browserBrowser != null) {
-            return browserBrowser!!
-        }
+        browserBrowser?.let { return it }
 
         return ThemeManager.openImmediate(
             VirtualScreenType.HUD,
@@ -148,8 +145,10 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     private fun close() {
-        browserBrowser?.close()
-        browserBrowser = null
+        browserBrowser?.let {
+            it.close()
+            browserBrowser = null
+        }
     }
 
     fun reopen() {

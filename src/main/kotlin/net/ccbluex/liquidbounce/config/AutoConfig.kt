@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -105,8 +105,8 @@ object AutoConfig {
         reader: Reader,
         modules: Collection<Configurable> = emptyList()
     ) {
-        JsonParser.parseReader(publicGson.newJsonReader(reader))?.let { jsonElement ->
-            loadAutoConfig(jsonElement.asJsonObject, modules)
+        publicGson.newJsonReader(reader).use { reader ->
+            loadAutoConfig(reader.parseTree().asJsonObject, modules)
         }
     }
 

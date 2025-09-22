@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -26,9 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * InventoryCleaner module
@@ -38,7 +37,7 @@ import net.minecraft.screen.slot.SlotActionType
 object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
     aliases = arrayOf("InventoryManager")
 ) {
-  
+
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
@@ -114,54 +113,77 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
-        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, findNonEmptySlotsInInventory())
+        val currentInventorySlots = findNonEmptySlotsInInventory()
+        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots)
             .generatePlan()
 
-        // Step 1: Move items to the correct slots
-        for (hotbarSwap in cleanupPlan.swaps) {
-            check(hotbarSwap.to is HotbarItemSlot) { "Cannot swap to non-hotbar-slot" }
-
-            event.schedule(
-                inventoryConstraints,
-                ClickInventoryAction.performSwap(null, hotbarSwap.from, hotbarSwap.to)
-            )
-
-            // todo: run when successful or do not care?
-            cleanupPlan.remapSlots(
-                hashMapOf(
-                    Pair(hotbarSwap.from, hotbarSwap.to),
-                    Pair(hotbarSwap.to, hotbarSwap.from),
-                )
-            )
-        }
-
-        // Step 2: Merge stacks
-        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
-        for (slot in stacksToMerge) {
-            event.schedule(
-                inventoryConstraints,
-                ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP),
-                ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP_ALL),
-                ClickInventoryAction.click(null, slot, 0, SlotActionType.PICKUP),
-            )
-        }
-
-        // It is important that we call findItemSlotsInInventory() here again, because the inventory has changed.
-        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan, findNonEmptySlotsInInventory())
-
-        for (slot in itemsToThrowOut) {
-            event.schedule(
-                inventoryConstraints,
-                ClickInventoryAction.performThrow(screen = null, slot),
-                Priority.NOT_IMPORTANT
-            )
+        // Process inventory actions in priority order
+        when {
+            // Step 1: Prioritize hotbar swaps
+            processHotbarSwaps(event, cleanupPlan) -> return@handler
+            // Step 2: Merge stackable items to optimize space
+            processStackMerging(event, cleanupPlan) -> return@handler
+            // Step 3: Remove unwanted items (lowest priority)
+            processItemDisposal(event, cleanupPlan, currentInventorySlots) -> return@handler
         }
     }
 
-    fun findItemsToThrowOut(
+    /**
+     * Handles swapping items to correct hotbar positions
+     * @return true if a swap was scheduled, false otherwise
+     */
+    private fun processHotbarSwaps(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
+        val hotbarSwap = cleanupPlan.swaps.firstOrNull() ?: return false
+
+        require(hotbarSwap.to is HotbarItemSlot) {
+            "Invalid swap target: ${hotbarSwap.to}. Only hotbar slots are supported."
+        }
+
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
+        )
+
+        return true
+    }
+
+    /**
+     * Handles merging stackable items to optimize inventory space
+     * @return true if a merge was scheduled, false otherwise
+     */
+    private fun processStackMerging(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
+        val stacksToMerge = cleanupPlan.findSlotsToMerge()
+        val slotToMerge = stacksToMerge.firstOrNull() ?: return false
+
+        // pickup -> pickup all -> pickup to handle remaining items
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performMergeStack(slot = slotToMerge),
+        )
+
+        return true
+    }
+
+    /**
+     * Handles disposal of unwanted items
+     * @return true if an item was scheduled for disposal, false otherwise
+     */
+    private fun processItemDisposal(
+        event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        itemsInInv: List<ItemSlot>,
-    ) = itemsInInv.filter { it !in cleanupPlan.usefulItems }
+        currentInventorySlots: List<ItemSlot>
+    ): Boolean {
+        val itemsToDispose = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
+        val itemToThrow = itemsToDispose.firstOrNull() ?: return false
+
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performThrow(screen = null, itemToThrow),
+            Priority.NOT_IMPORTANT
+        )
+
+        return true
+    }
 
     private class AmountConstraintProvider(
         val desiredItemsPerCategory: Map<ItemCategory, Int>,
@@ -172,7 +194,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
             if (facet.providedItemFunctions.isEmpty()) {
                 val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
-                val desiredAmount = this.desiredItemsPerCategory[facet.category] ?: defaultDesiredAmount
+                val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
 
                 val info = ItemConstraintInfo(
                     group = ItemCategoryConstraintGroup(

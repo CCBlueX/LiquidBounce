@@ -15,35 +15,50 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueActionUseItem.itemName
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Hand
+import net.minecraft.item.Items
+import java.util.function.Predicate
 
 object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
 
-    /**
-     * The [itemName] of the item to click in order to queue.
-     */
-    private val itemName by text("Name", "Paper")
+    private val mode = choices("Mode", 0) {
+        arrayOf(Mode.Name, Mode.Item)
+    }
+
+    private sealed class Mode(name: String) : Choice(name), Predicate<ItemStack> {
+        final override val parent: ChoiceConfigurable<*>
+            get() = mode
+
+        object Name : Mode("Name") {
+            private val stackName by text("Name", "Paper")
+            override fun test(itemStack: ItemStack): Boolean =
+                itemStack.name.convertToString().contains(stackName)
+        }
+
+        object Item : Mode("Item") {
+            private val slotItem by item("Item", Items.PAPER)
+            override fun test(itemStack: ItemStack): Boolean =
+                itemStack.isOf(slotItem)
+        }
+    }
 
     override suspend fun execute(sequence: Sequence) {
-        val item = Slots.Hotbar.findSlot { itemStack: ItemStack ->
-            itemStack.name.convertToString().contains(itemName)
-        } ?: return
+        val slot = Slots.OffhandWithHotbar.findSlot(mode.activeChoice::test) ?: return
 
-        SilentHotbar.selectSlotSilently(ModuleAutoQueue, item, 20)
+        SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
         sequence.waitTicks(1)
-        interaction.interactItem(player, Hand.MAIN_HAND)
+        interaction.interactItem(player, slot.useHand)
     }
 
 }

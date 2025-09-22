@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
 import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
-import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
@@ -35,6 +35,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.SlimeEntity
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
 import java.util.*
@@ -103,14 +104,17 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
     }
 
     @Suppress("unused")
-    private val attackEntity = handler<AttackEntityEvent> { event ->
-        val attackEntity = event.entity
-        val targetEntity = target ?: return@handler
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
 
-        if (attackEntity == targetEntity) {
-            world.removeEntity(targetEntity.id, Entity.RemovalReason.DISCARDED)
-            target = null
-            event.cancelEvent()
+        if (packet is PlayerInteractEntityC2SPacket) {
+            val targetEntity = target ?: return@handler
+
+            if (packet.entityId == targetEntity.id) {
+                world.removeEntity(targetEntity.id, Entity.RemovalReason.DISCARDED)
+                target = null
+                event.cancelEvent()
+            }
         }
     }
 

@@ -19,38 +19,60 @@
 package net.ccbluex.liquidbounce.api.core
 
 import com.google.gson.JsonElement
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.gson.GsonInstance
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.coroutines.executeAsync
+import okio.Buffer
+import okio.BufferedSink
 import okio.BufferedSource
 import okio.sink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
-val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-fun withScope(block: suspend CoroutineScope.() -> Unit) = scope.launch { block() }
+fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch { block() }
 
 object HttpClient {
 
+    @JvmField
     val DEFAULT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion}" +
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
-    val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-    val FORM_MEDIA_TYPE = "application/x-www-form-urlencoded".toMediaType()
+    object MediaTypes {
+        @JvmField
+        val JSON = "application/json; charset=utf-8".toMediaType()
+
+        @JvmField
+        val FORM = "application/x-www-form-urlencoded".toMediaType()
+
+        @JvmField
+        val IMAGE_PNG = "image/png".toMediaType()
+
+        @JvmField
+        val OCTET_STREAM = "application/octet-stream".toMediaType()
+    }
 
     /**
      * Client default [OkHttpClient]
@@ -63,6 +85,7 @@ object HttpClient {
         .writeTimeout(20, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
+        .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
         .addInterceptor { chain ->
             val request = chain.request()
             try {
@@ -83,13 +106,15 @@ object HttpClient {
         }
         .build().also(McefFileUtils::setOkHttpClient)
 
+    @Suppress("LongParameterList")
     suspend fun request(
         url: String,
         method: HttpMethod,
         agent: String = DEFAULT_AGENT,
         headers: Headers.Builder.() -> Unit = {},
-        body: RequestBody? = null
-    ): Response = withContext(Dispatchers.IO) {
+        body: RequestBody? = null,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
+    ): Response {
         val request = Request.Builder()
             .url(url)
             .method(method.name, body)
@@ -97,11 +122,43 @@ object HttpClient {
             .header("User-Agent", agent)
             .build()
 
-        client.newCall(request).execute()
+        return if (progressListener == null) {
+            client.newCall(request).executeAsync()
+        } else {
+            client.newBuilder()
+                .addNetworkInterceptor(OkHttpProgressInterceptor(progressListener))
+                .build()
+                .newCall(request).executeAsync()
+        }
     }
 
-    suspend fun download(url: String, file: File, agent: String = DEFAULT_AGENT) =
-        request(url, HttpMethod.GET, agent).toFile(file)
+    suspend fun download(
+        url: String,
+        file: File,
+        agent: String = DEFAULT_AGENT,
+        progressListener: OkHttpProgressInterceptor.ProgressListener? = null
+    ) = request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+
+    // For Java and JS
+    @JvmStatic
+    fun Call.sendAsync(): CompletableFuture<Response> {
+        val future = CompletableFuture<Response>().exceptionally { throwable ->
+            if (throwable is CancellationException) this.cancel()
+            throw throwable
+        }
+        this.enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    if (!future.complete(response)) response.close()
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    future.completeExceptionally(e)
+                }
+            }
+        )
+        return future
+    }
 
 }
 
@@ -125,7 +182,7 @@ inline fun <reified T> Response.parse(): T {
         NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
             NativeImageBackedTexture(NativeImage.read(stream))
         } as T
-        else -> decode<T>(body.charStream())
+        else -> body.charStream().readJson<T>()
     }
 }
 
@@ -154,13 +211,24 @@ fun Response.toFile(file: File) = use { response ->
     file.sink().use(response.body.source()::readAll)
 }
 
+/**
+ * Creates request body from JSON.
+ */
 fun JsonElement.toRequestBody(): RequestBody {
-    return GsonInstance.ACCESSIBLE_INTEROP.gson.toJson(this)
-        .toRequestBody(HttpClient.JSON_MEDIA_TYPE)
+    val buffer = Buffer()
+    buffer.outputStream().writer(Charsets.UTF_8).use {
+        accessibleInteropGson.toJson(this, it)
+    }
+    return object : RequestBody() {
+        override fun contentType() = HttpClient.MediaTypes.JSON
+        override fun contentLength(): Long = buffer.size
+        override fun writeTo(sink: BufferedSink) {
+            sink.writeAll(buffer.copy())
+        }
+    }
 }
 
-fun String.asJson() = toRequestBody(HttpClient.JSON_MEDIA_TYPE)
-fun String.asForm() = toRequestBody(HttpClient.FORM_MEDIA_TYPE)
+fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
 
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
     : Exception("${method.name} $url failed with code $code: $content")

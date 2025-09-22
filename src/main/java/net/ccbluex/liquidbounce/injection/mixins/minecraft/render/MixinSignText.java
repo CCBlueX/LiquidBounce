@@ -19,7 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSignRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.utils.client.SignTranslationFixKt;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.text.OrderedText;
@@ -27,6 +28,7 @@ import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,12 +44,17 @@ public class MixinSignText {
     @Final
     private Text[] messages;
 
+    @Unique
+    private static final OrderedText[] LIQUIDBOUNCE$EMPTY = new OrderedText[4];
+
+    static {
+        Arrays.fill(LIQUIDBOUNCE$EMPTY, OrderedText.EMPTY);
+    }
+
     @Inject(method = "getOrderedMessages", at = @At("HEAD"), cancellable = true)
     private void injectNoSignRender(boolean filtered, Function<Text, OrderedText> messageOrderer, CallbackInfoReturnable<OrderedText[]> cir) {
-        if (ModuleNoSignRender.INSTANCE.getRunning()) {
-            var signText = new OrderedText[4];
-            Arrays.fill(signText, OrderedText.EMPTY);
-            cir.setReturnValue(signText);
+        if (!ModuleAntiBlind.canRender(DoRender.SIGN_TEXT)) {
+            cir.setReturnValue(LIQUIDBOUNCE$EMPTY);
         }
     }
 

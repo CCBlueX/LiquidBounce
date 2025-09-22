@@ -26,12 +26,12 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.Block
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.AttributeModifiersComponent
-import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.EnchantmentHelper
@@ -42,14 +42,11 @@ import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.*
-import net.minecraft.item.consume.UseAction
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.math.BlockPos
 import java.util.*
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 /**
  * Create item with NBT tags
@@ -67,22 +64,10 @@ fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): Item
     itemStack.set(DataComponentTypes.CUSTOM_NAME, regular(name))
     itemStack.set<PotionContentsComponent>(
         DataComponentTypes.POTION_CONTENTS,
-        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.asList(), Optional.empty())
+        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
     )
 
     return itemStack
-}
-
-/**
- * Check if a stack is nothing (means empty slot)
- */
-@OptIn(ExperimentalContracts::class)
-fun ItemStack?.isNothing(): Boolean {
-    contract {
-        returns(true) implies (this@isNothing != null)
-    }
-
-    return this?.isEmpty == true
 }
 
 fun ItemStack?.getEnchantmentCount(): Int {
@@ -97,57 +82,26 @@ fun ItemStack?.getEnchantment(enchantment: RegistryKey<Enchantment>): Int {
     return enchantments.getLevel(enchantment.toRegistryEntry())
 }
 
-val ItemStack.isConsumable: Boolean
-    get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
+/**
+ * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * with the other item stack
+ */
+fun ItemStack.isMergeable(other: ItemStack): Boolean {
+    return this.item == other.item && this.componentChanges == other.componentChanges
+}
 
-val ItemStack.isFood: Boolean
-    get() = foodComponent != null && this.useAction == UseAction.EAT
-
-val ItemStack.foodComponent: FoodComponent?
-    get() = this.get(DataComponentTypes.FOOD)
-
-private val BUNDLE_ITEMS = setOf(
-    Items.BUNDLE,
-    Items.WHITE_BUNDLE,
-    Items.ORANGE_BUNDLE,
-    Items.MAGENTA_BUNDLE,
-    Items.LIGHT_BLUE_BUNDLE,
-    Items.YELLOW_BUNDLE,
-    Items.LIME_BUNDLE,
-    Items.PINK_BUNDLE,
-    Items.GRAY_BUNDLE,
-    Items.LIGHT_GRAY_BUNDLE,
-    Items.CYAN_BUNDLE,
-    Items.PURPLE_BUNDLE,
-    Items.BLUE_BUNDLE,
-    Items.BROWN_BUNDLE,
-    Items.GREEN_BUNDLE,
-    Items.RED_BUNDLE,
-    Items.BLACK_BUNDLE
-)
-
-val ItemStack.isBundle
-    get() = this.item in BUNDLE_ITEMS
-
-fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
-
-val MiningToolItem.type: Int
-    get() = when (this) {
-        is AxeItem -> 0
-        is PickaxeItem -> 1
-        is ShovelItem -> 2
-        is HoeItem -> 3
-        else -> error("Unknown tool item $this (WTF?)")
-    }
+fun ItemStack.canMerge(other: ItemStack): Boolean {
+    return this.isMergeable(other) && this.count + other.count <= this.maxCount
+}
 
 fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
     .getOrDefault(
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
         AttributeModifiersComponent.DEFAULT
     )
-    .modifiers()
-    .filter { modifier -> modifier.attribute() == attribute }
-    .firstNotNullOfOrNull { modifier -> modifier.modifier().value() }
+    .modifiers
+    .filter { modifier -> modifier.attribute == attribute }
+    .firstNotNullOfOrNull { modifier -> modifier.modifier.value }
 
 val ItemStack.attackDamage: Double
     get() {
@@ -180,13 +134,13 @@ fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
         level * 1.25
     }
 
-val ItemStack.attackSpeed: Float
+val ItemStack.attackSpeed: Double
     get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
 
 val ItemStack.durability
     get() = this.maxDamage - this.damage
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Double {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     this.components
@@ -199,7 +153,7 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
             attribInstance.addTemporaryModifier(modifier)
         }
 
-    return attribInstance.value.toFloat()
+    return attribInstance.value
 }
 
 fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {

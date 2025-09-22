@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
@@ -88,6 +89,13 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
         }
 
         @Suppress("unused")
+        private val releaseModifierHandler = handler<KeyboardKeyEvent> {
+            if (it.key == modifierKey && it.action == GLFW.GLFW_RELEASE) {
+                reset()
+            }
+        }
+
+        @Suppress("unused")
         private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
             if (canPerformScroll) {
                 it.cancelEvent()
@@ -102,7 +110,7 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
             }
         }
 
-        override fun enable() {
+        override fun onEnabled() {
             reset()
         }
     }

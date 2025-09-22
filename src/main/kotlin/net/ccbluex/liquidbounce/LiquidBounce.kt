@@ -20,13 +20,10 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig
-import net.ccbluex.liquidbounce.api.core.scope
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
-import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
@@ -45,12 +42,12 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.heads
+import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -60,7 +57,6 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
@@ -69,11 +65,8 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -85,8 +78,6 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
-import org.apache.logging.log4j.LogManager
-import java.io.File
 import kotlin.time.measureTime
 
 /**
@@ -107,9 +98,12 @@ object LiquidBounce : EventListener {
     const val CLIENT_AUTHOR = "CCBlueX"
 
     private object Client : Configurable("Client") {
-        val version = text("Version", gitInfo["git.build.version"]?.toString() ?: "unknown").immutable()
-        val commit = text("Commit", gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown").immutable()
-        val branch = text("Branch", gitInfo["git.branch"]?.toString() ?: "nextgen").immutable()
+        val version = text("Version", GitInfo.version())
+            .immutable()
+        val commit = text("Commit", GitInfo.get("git.commit.id.abbrev")?.let { "git-$it" } ?: "unknown")
+            .immutable()
+        val branch = text("Branch", GitInfo.branch())
+            .immutable()
 
         init {
             ConfigSystem.root(this)
@@ -141,7 +135,7 @@ object LiquidBounce : EventListener {
     /**
      * Client logger to print out console messages
      */
-    val logger = LogManager.getLogger(CLIENT_NAME)!!
+    val logger get() = net.ccbluex.liquidbounce.utils.client.logger
 
     var taskManager: TaskManager? = null
 
@@ -192,6 +186,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.loadAll()
 
         isInitialized = true
+        logger.info("Client has been successfully initialized.")
     }
 
     /**
@@ -232,6 +227,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
@@ -256,42 +252,38 @@ object LiquidBounce : EventListener {
      * such as translations, cosmetics, player heads, configs and so on,
      * which do not rely on the main thread.
      */
-    private fun initializeResources() = runBlocking {
+    private fun initializeResources() = runBlocking(Dispatchers.IO + CoroutineName("Resource Initializer")) {
         logger.info("Initializing API...")
         // Lookup API config
         ApiConfig.config
 
-        listOf(
-            scope.async {
+        supervisorScope {
+            launch {
                 // Load translations
                 LanguageManager.loadDefault()
-            },
-            scope.async {
-                val update = update ?: return@async
+            }
+            launch {
+                val update = update ?: return@launch
                 logger.info("[Update] Update available: $clientVersion -> ${update.lbVersion}")
-            },
-            scope.async {
+            }
+            launch {
                 // Load cosmetics
                 CosmeticService.refreshCarriers(force = true) {
                     logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
-            },
-            scope.async {
+            }
+            launch {
                 // Download player heads
-                heads
-            },
-            scope.async {
+                HeadsItemGroup.heads.getFinalState()
+            }
+            launch {
                 // Load configs
                 AutoConfig.reloadConfigs()
-            },
-            scope.async {
-                // IPC configuration
-                ipcConfiguration
-            },
-            scope.async {
+            }
+            launch {
                 IpInfoApi.original
-            },
-            scope.async {
+            }
+            launch {
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -300,43 +292,29 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.storeConfigurable(ClientAccountManager)
+                        ConfigSystem.store(ClientAccountManager)
                     }
                 }
-            },
-            scope.async {
-                ThemeManager.themesFolder.listFiles()
-                    ?.filter { file -> file.isDirectory }
-                    ?.forEach { file ->
-                        runCatching {
-                            val assetsFolder = File(file, "assets")
-                            if (!assetsFolder.exists()) {
-                                return@forEach
-                            }
-
-                            FontManager.queueFolder(assetsFolder)
-                        }.onFailure {
-                            logger.error("Failed to queue fonts from theme '${file.name}'.", it)
-                        }
-                    }
             }
-        ).awaitAll()
+        }
+
+        logger.info("API initialization done.")
     }
 
     /**
      * Prepares the GUI stage of the client.
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
-    private fun prepareGuiStage() {
-        // Load theme and component overlay
-        ThemeManager
-        BrowserBackendManager
-
-        // Start Interop Server
+    private fun prepareGuiStage() = runBlocking(CoroutineName("GUI Initializer")) {
+        BrowserBackendManager.init()
         ClientInteropServer.start()
+        ThemeManager.init()
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        ThemeManager.load()
         IntegrationListener
 
-        taskManager = TaskManager(scope).apply {
+        taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
             BrowserBackendManager.makeDependenciesAvailable(this)
@@ -355,6 +333,16 @@ object LiquidBounce : EventListener {
                     logger.info("Failed to initialize deep learning.", exception)
                 }
             }
+
+            launch("Marketplace") { task ->
+                runCatching {
+                    MarketplaceManager.updateAll(task)
+                }.onFailure { exception ->
+                    logger.error("Failed to update marketplace items.", exception)
+                }
+
+                task.isCompleted = true
+            }
         }
 
         // Prepare glyph manager
@@ -362,10 +350,7 @@ object LiquidBounce : EventListener {
             FontManager.createGlyphManager()
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
-        logger.info("Fonts: [ ${FontManager.fontFaces.joinToString { face -> face.name }} ]")
-
-        // Insert default components on HUD
-        ComponentOverlay.insertDefaultComponents()
+        logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
     }
 
     /**
@@ -385,7 +370,7 @@ object LiquidBounce : EventListener {
         // Save all configurations
         ConfigSystem.storeAll()
 
-        // Shutdown browser as last step
+        // Shutdown browser
         BrowserBackendManager.stop()
     }
 

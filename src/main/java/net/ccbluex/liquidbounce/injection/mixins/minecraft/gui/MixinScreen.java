@@ -19,12 +19,13 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.additions.ScreenAddition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
-import net.ccbluex.liquidbounce.utils.math.Vec2i;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -35,6 +36,7 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -43,7 +45,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
-public abstract class MixinScreen {
+public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     protected abstract void remove(Element child);
 
@@ -61,14 +63,25 @@ public abstract class MixinScreen {
     @Nullable
     protected MinecraftClient client;
 
+    @Shadow
+    private boolean screenInitialized;
+
     @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initializeBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackground();
     }
 
     @Inject(method = "init()V", at = @At("TAIL"))
     protected void init(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initializeBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackground();
     }
 
     @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
@@ -81,7 +94,11 @@ public abstract class MixinScreen {
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
     private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
-            if (ThemeManager.INSTANCE.drawBackground(context, width, height, new Vec2i(mouseX, mouseY), delta)) {
+            if (!LiquidBounce.INSTANCE.isInitialized()) {
+                return;
+            }
+
+            if (ThemeManager.INSTANCE.drawBackground(context, width, height, mouseX, mouseY, delta)) {
                 ci.cancel();
             }
         }
@@ -98,4 +115,9 @@ public abstract class MixinScreen {
         }
     }
 
+    @Unique
+    @Override
+    public boolean liquidbounce$screenInitialized() {
+        return screenInitialized;
+    }
 }

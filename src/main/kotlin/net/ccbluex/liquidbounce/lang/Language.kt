@@ -5,10 +5,12 @@
  */
 package net.ccbluex.liquidbounce.lang
 
-import net.ccbluex.liquidbounce.config.gson.util.decode
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.lang.LanguageManager.knownLanguages
+import net.ccbluex.liquidbounce.lang.LanguageManager.languageMap
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.text.*
@@ -35,7 +37,7 @@ object LanguageManager : Configurable("lang") {
     private const val COMMON_UNDERSTOOD_LANGUAGE = "en_us"
 
     // List of all languages
-    val knownLanguages = arrayOf(
+    val knownLanguages = setOf(
         "en_us",
         "de_de",
         "ja_jp",
@@ -66,7 +68,7 @@ object LanguageManager : Configurable("lang") {
             runCatching {
                 languageMap.computeIfAbsent(language) {
                     val languageFile = javaClass.getResourceAsStream("/resources/liquidbounce/lang/$language.json")
-                    val translations = decode<HashMap<String, String>>(languageFile!!)
+                    val translations = languageFile!!.readJson<HashMap<String, String>>()
 
                     ClientLanguage(translations)
                 }

@@ -19,63 +19,69 @@
 
 package net.ccbluex.liquidbounce.features.command.builder
 
-import net.ccbluex.liquidbounce.features.command.*
+import net.ccbluex.liquidbounce.features.command.AutoCompletionProvider
+import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
+import net.ccbluex.liquidbounce.features.command.dsl.CommandBuilderDsl
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 
+@CommandBuilderDsl
 class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     private var verifier: Parameter.Verificator<T>? = null
     private var required: Boolean? = null
+    private var default: T? = null
     private var vararg: Boolean = false
     private var autocompletionHandler: AutoCompletionProvider? = null
 
     companion object {
+        @JvmField
         val STRING_VALIDATOR: Parameter.Verificator<String> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ok(sourceText)
+            Result.Ok(sourceText)
         }
+        @JvmField
         val MODULE_VALIDATOR: Parameter.Verificator<ClientModule> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ofNullable(
+            Result.ofNullable(
                 ModuleManager.find { it.name.equals(sourceText, true) }
-            ) {
-                "Module '$sourceText' not found"
-            }
+            ) { "Module '$sourceText' not found" }
         }
+        @JvmField
         val INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
-            ParameterValidationResult.ofNullable(
+            Result.ofNullable(
                 sourceText.toIntOrNull()
-            ) {
-                "'$sourceText' is not a valid integer"
-            }
+            ) { "'$sourceText' is not a valid integer" }
         }
+        @JvmField
         val POSITIVE_INTEGER_VALIDATOR: Parameter.Verificator<Int> = Parameter.Verificator { sourceText ->
-            val integer = sourceText.toIntOrNull() ?:
-                return@Verificator ParameterValidationResult.error("'$sourceText' is not a valid integer")
-
-            if (integer >= 0) {
-                ParameterValidationResult.ok(integer)
-            } else {
-                ParameterValidationResult.error("The integer must be positive")
+            val integer = sourceText.toIntOrNull()
+            when {
+                integer == null -> Result.Error("'$sourceText' is not a valid integer")
+                integer >= 0 -> Result.Ok(integer)
+                else -> Result.Error("The integer must be positive")
             }
         }
+        @JvmField
         val BOOLEAN_VALIDATOR: Parameter.Verificator<Boolean> = Parameter.Verificator { sourceText ->
             when (sourceText.lowercase()) {
-                "yes", "on", "true" -> ParameterValidationResult.ok(true)
-                "no", "off", "false" -> ParameterValidationResult.ok(false)
-                else -> ParameterValidationResult.error("'$sourceText' is not a valid boolean")
+                "yes", "on", "true" -> Result.Ok(true)
+                "no", "off", "false" -> Result.Ok(false)
+                else -> Result.Error("'$sourceText' is not a valid boolean")
             }
         }
 
         @JvmStatic
-        fun <T: Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
+        fun <T : Any> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
     }
 
     fun verifiedBy(verifier: Parameter.Verificator<T>): ParameterBuilder<T> = apply {
         this.verifier = verifier
     }
 
-    fun optional(): ParameterBuilder<T> = apply {
+    @JvmOverloads
+    fun optional(default: T? = null): ParameterBuilder<T> = apply {
         this.required = false
+        this.default = default
     }
 
     /**
@@ -97,11 +103,27 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
         this.autocompletionHandler = autocompletionHandler
     }
 
+    /**
+     * Filter from given strings provided by [placeholdersProvider].
+     */
+    inline fun autocompletedFrom(
+        ignoreCase: Boolean = true,
+        crossinline placeholdersProvider: () -> Iterable<String>?,
+    ) = autocompletedWith { begin, _ ->
+        val placeholders = placeholdersProvider()
+        if (placeholders == null || placeholders.none()) {
+            emptyList()
+        } else {
+            placeholders.filter { it.startsWith(begin, ignoreCase) }
+        }
+    }
+
     fun build(): Parameter<T> {
         return Parameter(
             this.name,
             this.required
                 ?: throw IllegalArgumentException("The parameter was neither marked as required nor as optional."),
+            this.default,
             this.vararg,
             this.verifier,
             autocompletionHandler

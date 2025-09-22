@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.preset
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
+import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
@@ -30,7 +30,7 @@ import net.minecraft.util.Formatting
 import java.util.function.IntConsumer
 import kotlin.math.ceil
 
-private val TEXT_SPACE: Text = " ".asText()
+private val TEXT_SPACE: Text = " ".asPlainText()
 
 @Suppress("CognitiveComplexMethod")
 private fun buildPaginationText(
@@ -42,7 +42,7 @@ private fun buildPaginationText(
 ): Text {
     fun MutableText.disabled() = withColor(Formatting.DARK_GRAY)
     fun MutableText.pageAction(page: Int) = this
-        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, page.toString().asText()))
+        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, page.toString().asPlainText()))
         .onClick { sendPage.accept(page) }
 
     val texts = mutableListOf<Text>()
@@ -137,7 +137,7 @@ fun <T> CommandBuilder.pagedQuery(
         val currentPageItems = if (all is List<T>) {
             all.subList((currentPage - 1) * pageSize, minOf(currentPage * pageSize, all.size))
         } else {
-            all.drop((currentPage - 1) * pageSize).subList(0, pageSize)
+            all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
         }
 
         mc.inGameHud.chatHud.removeMessage(msgId) // remove old
@@ -157,16 +157,16 @@ fun <T> CommandBuilder.pagedQuery(
     return parameter(
         ParameterBuilder.begin<Int>("page")
             .verifiedBy {
-                val input =
-                    it.toIntOrNull() ?: return@verifiedBy ParameterValidationResult.error("'$it' is not an integer")
+                val input = it.toIntOrNull() ?: return@verifiedBy Result.Error("'$it' is not an integer")
                 val maxPage = maxPage()
-                ParameterValidationResult.ofNullable(input.takeIf { i -> i in 1..maxPage }) {
-                    "'$it' is not in range 1..$maxPage"
+                if (input in 1..maxPage) {
+                    Result.Ok(input)
+                } else {
+                    Result.Error("'$it' is not in range 1..$maxPage")
                 }
             }.optional().build()
-    ).handler { command, args ->
+    ).handler {
         val currentPage = args.getOrNull(0) as Int? ?: 1
         command.sendPage(currentPage)
-    }
-        .build()
+    }.build()
 }

@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
 import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.*
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.option.KeyBinding
 import java.util.*
@@ -49,8 +51,7 @@ import java.util.*
 open class Clicker<T>(
     val parent: T,
     val keyBinding: KeyBinding,
-
-    showCooldown: Boolean,
+    val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
     name: String = "Clicker"
 ) : Configurable(name, aliases = arrayOf("ClickScheduler")), EventListener where T : EventListener {
@@ -74,10 +75,8 @@ open class Clicker<T>(
             fill()
         }
 
-    private val itemCooldown: ItemCooldown<T>? = if (showCooldown) {
-        tree(ItemCooldown(parent))
-    } else {
-        null
+    init {
+        itemCooldown?.let(this::tree)
     }
 
     /**
@@ -109,33 +108,34 @@ open class Clicker<T>(
     val isClickTick: Boolean
         get() = willClickAt(0)
 
+    val ticksUntilClick: Int
+        get() {
+            for (i in 0 until clickArray.iterations) {
+                if (willClickAt(i)) {
+                    return i
+                }
+            }
+
+            return clickArray.iterations
+        }
+
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
         if (isEnforcedClick()) {
             return 1
         }
-
-        if (itemCooldown?.isCooldownPassed(tick) == false) {
-            return 0
-        }
-
         return clickArray.get(tick)
     }
 
     private fun isEnforcedClick(tick: Int = 0): Boolean {
-        // Check if our last click is over 1000ms ago,
-        if (lastClickPassed + (tick * 50L) >= 1000L) {
+        val hasCooldown = player.hasCooldown
+        debugParameter("HasCooldown") { hasCooldown }
+        if (hasCooldown && itemCooldown?.isCooldownPassed(tick) == true) {
             return true
         }
 
-        // Our cooldown is over, we want to click now!
-        if (itemCooldown?.enabled == true && itemCooldown.isCooldownPassed(tick)) {
-            return true
-        }
-
-        // Otherwise, follow our pattern
-        return false
+        return lastClickPassed + (tick * 50L) >= 1000L
     }
 
     @Suppress("unused")

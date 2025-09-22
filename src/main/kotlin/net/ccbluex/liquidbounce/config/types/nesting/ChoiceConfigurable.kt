@@ -18,15 +18,16 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import java.util.function.ToIntFunction
 
 /**
  * Allows configuring and manage modes
@@ -34,13 +35,15 @@ import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 class ChoiceConfigurable<T : Choice>(
     @Exclude @ProtocolExclude val eventListener: EventListener,
     name: String,
-    activeChoiceIndexCallback: (List<T>) -> Int,
+    activeChoiceIndexCallback: ToIntFunction<List<T>>,
     choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
-    var choices: MutableList<T> = choicesCallback(this).toMutableList()
-    private var defaultChoice: T = choices[activeChoiceIndexCallback(choices)]
+    var choices: MutableList<T> = ObjectArrayList(choicesCallback(this))
+        internal set
+    private var defaultChoice: T = choices[activeChoiceIndexCallback.applyAsInt(choices)]
     var activeChoice: T = defaultChoice
+        private set
 
     init {
         for (choice in choices) {
@@ -48,26 +51,16 @@ class ChoiceConfigurable<T : Choice>(
         }
     }
 
-    fun newState(state: Boolean) {
+    internal fun updateChildState(state: Boolean) {
         if (state) {
             this.activeChoice.enable()
         } else {
             this.activeChoice.disable()
         }
-
-        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
-        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
     }
 
-    override fun setByString(name: String) {
-        val newChoice = choices.firstOrNull { it.choiceName == name }
-
-        if (newChoice == null) {
-            throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
-                " (available options are ${this.choices.joinToString { it.choiceName }})")
-        }
-
-        if (activeChoice === newChoice) {
+    private fun setAndUpdate(newChoice: T) {
+        if (this.activeChoice === newChoice) {
             return
         }
 
@@ -79,34 +72,31 @@ class ChoiceConfigurable<T : Choice>(
         // the other systems accordingly. For whatever reason the conditional configurable is bypassing the value system
         // which the other configurables use, so we do it manually.
         set(mutableListOf(newChoice), apply = {
-            this.activeChoice = it[0] as T
+            this.activeChoice = it.first() as T
         })
 
         if (this.activeChoice.running) {
             this.activeChoice.enable()
         }
+    }
+
+    override fun setByString(name: String) {
+        val newChoice = choices.firstOrNull { it.choiceName == name }
+
+        if (newChoice == null) {
+            throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})")
+        }
+
+        this.setAndUpdate(newChoice)
     }
 
     override fun restore() {
-        if (activeChoice === defaultChoice) {
-            return
-        }
-
-        if (this.activeChoice.running) {
-            this.activeChoice.disable()
-        }
-
-        set(mutableListOf(defaultChoice), apply = {
-            this.activeChoice = it[0] as T
-        })
-
-        if (this.activeChoice.running) {
-            this.activeChoice.enable()
-        }
+        this.setAndUpdate(defaultChoice)
     }
 
     @ScriptApiRequired
-    fun getChoicesStrings(): Array<String> = this.choices.mapArray { it.name }
+    fun getChoicesStrings(): Array<String> = choices.mapToArray { it.name }
 
 }
 
@@ -115,7 +105,7 @@ class ChoiceConfigurable<T : Choice>(
  */
 abstract class Choice(name: String) : Configurable(name), EventListener, NamedChoice, MinecraftShortcuts {
 
-    override val choiceName: String
+    final override val choiceName: String
         get() = this.name
 
     abstract val parent: ChoiceConfigurable<*>

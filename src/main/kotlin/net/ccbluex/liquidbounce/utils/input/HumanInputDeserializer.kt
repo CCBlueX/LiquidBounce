@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
@@ -28,6 +30,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import java.awt.Color
+import java.io.File
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -85,7 +88,15 @@ object HumanInputDeserializer {
         requireNotNull(effect) { "Unknown status effect '$it'" }
     }
 
+    val clientModuleDeserializer: StringDeserializer<ClientModule> = StringDeserializer {
+        val module = ModuleManager[it]
+
+        requireNotNull(module) { "Unknown module '$it'" }
+    }
+
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)
+
+    val fileDeserializer: StringDeserializer<File> = StringDeserializer(::File)
 
     fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
         return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)

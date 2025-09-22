@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.script
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+
 data class ScriptDebugOptions(
     val enabled: Boolean = false,
     val protocol: DebugProtocol = DebugProtocol.INSPECT,
@@ -8,7 +10,7 @@ data class ScriptDebugOptions(
     val port: Int = 4242
 )
 
-enum class DebugProtocol {
-    DAP,
-    INSPECT
+enum class DebugProtocol(override val choiceName: String) : NamedChoice {
+    DAP("DAP"),
+    INSPECT("INSPECT"),
 }

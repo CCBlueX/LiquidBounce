@@ -19,12 +19,14 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.google.gson.JsonArray
-import com.google.gson.annotations.SerializedName
-import com.mojang.blaze3d.systems.RenderSystem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.util.decode
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -33,69 +35,105 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
-import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlay
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentType
-import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.extractZip
-import net.ccbluex.liquidbounce.utils.io.resource
-import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.ccbluex.liquidbounce.utils.math.Vec2i
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Identifier
-import java.io.Closeable
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    internal val defaultTheme = Theme.defaults()
+
+    val themes = mutableListOf<Theme>()
+    val themeIds get() = themes.map { theme -> theme.metadata.id }
+
+    var currentTheme by text("Theme", "liquidbounce").onChanged {
+        // Update integration browser
+        mc.execute {
+            IntegrationListener.update()
+            ModuleHud.reopen()
+            ModuleClickGui.reload(true)
+        }
+    }
+
+    internal lateinit var includedTheme: Theme
+        private set
+
+    val theme: Theme
+        get() = themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
+            ?: includedTheme
+
+    private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                RenderSystem.recordRenderCall {
-                    activeTheme.compileShader()
-                    defaultTheme.compileShader()
+                CoroutineScope(MinecraftDispatcher).launch {
+                    theme.compileShader()
+                    includedTheme.compileShader()
                 }
             }
 
             return@onChange enabled
         }
 
-    var activeTheme = defaultTheme
-        set(value) {
-            if (!value.exists) {
-                logger.warn("Unable to set theme to ${value.name}, theme does not exist")
-                return
+    init {
+        ConfigSystem.root(this)
+    }
+
+    suspend fun init() {
+        // Load default theme
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
+    }
+
+    suspend fun load() {
+        fun Theme.addIfUnloaded() {
+            if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
+                themes += this
+            } else {
+                logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
+            }
+        }
+
+        themes.clear()
+
+        // 1st priority
+        themesFolder.listFiles { it.isDirectory }
+            ?.forEach { file ->
+                if (file.name.equals("default", true)) {
+                    return@forEach
+                }
+
+                runCatching {
+                    Theme.load(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
+                        .addIfUnloaded()
+                }.onFailure { err ->
+                    logger.error("Failed to load theme '${file.name}'.", err)
+                }
             }
 
-            if (field != defaultTheme) {
-                activeTheme.close()
+        // 2nd priority
+        MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.THEME).forEach { item ->
+            runCatching {
+                val installationFolder = item.getInstallationFolder() ?: return@forEach
+                val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
+                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
+                    .addIfUnloaded()
+            }.onFailure { err ->
+                logger.error("Failed to load theme '${item.name}'.", err)
             }
+        }
 
-            field = value
+        themes.add(includedTheme)
 
-            // Update components
-            ComponentOverlay.insertDefaultComponents()
-
-            // Update integration browser
+        ModuleHud.updateThemes()
+        if (LiquidBounce.isInitialized) {
             IntegrationListener.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
         }
-
-    private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
-
-    init {
-        ConfigSystem.root(this)
     }
 
     /**
@@ -108,7 +146,7 @@ object ThemeManager : Configurable("theme") {
         settings: BrowserSettings
     ): Browser =
         BrowserBackendManager.browserBackend.createBrowser(
-            route(virtualScreenType, markAsStatic).url,
+            getScreenLocation(virtualScreenType, markAsStatic).url,
             settings = settings
         )
 
@@ -123,7 +161,7 @@ object ThemeManager : Configurable("theme") {
         priority: Short = 10,
         inputAcceptor: InputAcceptor = takesInputHandler
     ): Browser = BrowserBackendManager.browserBackend.createBrowser(
-        route(virtualScreenType, markAsStatic).url,
+        getScreenLocation(virtualScreenType, markAsStatic).url,
         settings = settings,
         priority = priority,
         inputAcceptor = inputAcceptor
@@ -134,218 +172,42 @@ object ThemeManager : Configurable("theme") {
         virtualScreenType: VirtualScreenType? = null,
         markAsStatic: Boolean = false
     ) {
-        browser?.url = route(virtualScreenType, markAsStatic).url
+        browser?.url = getScreenLocation(virtualScreenType, markAsStatic).url
     }
 
-    fun route(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Route {
-        val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType.routeName)) {
-            activeTheme
-        } else if (defaultTheme.doesAccept(virtualScreenType.routeName)) {
-            defaultTheme
-        } else {
-            error("No theme supports the route ${virtualScreenType.routeName}")
-        }
+    fun getScreenLocation(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ScreenLocation {
+        val theme = theme.takeIf { theme ->
+            virtualScreenType == null || theme.isSupported(virtualScreenType.routeName)
+        } ?: includedTheme.takeIf { theme ->
+            virtualScreenType == null || theme.isSupported(virtualScreenType.routeName)
+        } ?: error("No theme supports the route ${virtualScreenType?.routeName}")
 
-        return Route(
+        return ScreenLocation(
             theme,
             theme.getUrl(virtualScreenType?.routeName, markAsStatic)
         )
     }
 
-    fun initializeBackground() {
-        // Load background image of active theme and fallback to default theme if not available
-        if (!activeTheme.loadBackgroundImage()) {
-            defaultTheme.loadBackgroundImage()
-        }
-
-        // Compile shader of active theme and fallback to default theme if not available
-        if (shaderEnabled && !activeTheme.compileShader()) {
-            defaultTheme.compileShader()
-        }
-    }
-
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mousePos: Vec2i, delta: Float): Boolean {
+    fun loadBackground() = runBlocking {
+        theme.loadBackgroundImage()
         if (shaderEnabled) {
-            val shader = activeTheme.compiledShaderBackground ?: defaultTheme.compiledShaderBackground
-
-            if (shader != null) {
-                shader.draw(mousePos.x, mousePos.y, delta)
-                return true
-            }
-        }
-
-        val image = activeTheme.loadedBackgroundImage ?: defaultTheme.loadedBackgroundImage
-        if (image != null) {
-            context.drawTexture(
-                RenderLayer::getGuiTextured,
-                image,
-                0,
-                0,
-                0f,
-                0f,
-                width,
-                height,
-                width,
-                height
-            )
-            return true
-        }
-
-        return false
-    }
-
-    fun chooseTheme(name: String) {
-        activeTheme = Theme(name)
-    }
-
-    fun themes() = themesFolder.listFiles()?.filter { it.isDirectory }?.mapNotNull { it.name } ?: emptyList()
-
-    data class Route(val theme: Theme, val url: String)
-
-}
-
-class Theme(val name: String) : Closeable {
-
-    private val folder = File(ThemeManager.themesFolder, name)
-
-    init {
-        if (!exists) {
-            error("Theme $name does not exist")
+            theme.compileShader()
         }
     }
 
-    private val metadata: ThemeMetadata = run {
-        val metadataFile = File(folder, "metadata.json")
-        if (!metadataFile.exists()) {
-            error("Theme $name does not contain a metadata file")
-        }
+    @Suppress("LongParameterList")
+    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+        val background = if (shaderEnabled) {
+            theme.themeBackgroundShader
+        } else {
+            theme.themeBackgroundTexture
+        } ?: return false
 
-        decode<ThemeMetadata>(metadataFile.inputStream())
-    }
-
-    val exists: Boolean
-        get() = folder.exists()
-
-    private val url: String
-        get() = "${ClientInteropServer.url}/$name/#/"
-
-    private val backgroundShader: File
-        get() = File(folder, "background.frag")
-    private val backgroundImage: File
-        get() = File(folder, "background.png")
-    var compiledShaderBackground: CanvasShader? = null
-        private set
-    var loadedBackgroundImage: Identifier? = null
-        private set
-
-    fun compileShader(): Boolean {
-        if (compiledShaderBackground != null) {
-            return true
-        }
-
-        readShaderBackground()?.let { shaderBackground ->
-            compiledShaderBackground = CanvasShader(resourceToString("/resources/liquidbounce/shaders/vertex.vert"),
-                shaderBackground)
-            logger.info("Compiled background shader for theme $name")
-            return true
-        }
-        return false
-    }
-
-    private fun readShaderBackground() = backgroundShader.takeIf { it.exists() }?.readText()
-    private fun readBackgroundImage() = backgroundImage.takeIf { it.exists() }
-        ?.inputStream()?.use { NativeImage.read(it) }
-
-    fun loadBackgroundImage(): Boolean {
-        if (loadedBackgroundImage != null) {
-            return true
-        }
-
-        val image = NativeImageBackedTexture(readBackgroundImage() ?: return false)
-        loadedBackgroundImage = Identifier.of("liquidbounce", "theme-bg-${name.lowercase()}")
-        mc.textureManager.registerTexture(loadedBackgroundImage, image)
-        logger.info("Loaded background image for theme $name")
+        background.draw(context, width, height, mouseX, mouseY, delta)
         return true
     }
 
-    /**
-     * Get the URL to the given page name in the theme.
-     */
-    fun getUrl(name: String? = null, markAsStatic: Boolean = false) = "$url${name.orEmpty()}".let {
-        if (markAsStatic) {
-            "$it?static"
-        } else {
-            it
-        }
-    }
-
-    fun doesAccept(name: String?) = doesSupport(name) || doesOverlay(name)
-
-    fun doesSupport(name: String?) = name != null && metadata.supports.contains(name)
-
-    fun doesOverlay(name: String?) = name != null && metadata.overlays.contains(name)
-
-    fun parseComponents(): MutableList<Component> {
-        val themeComponent = metadata.rawComponents
-            .map { it.asJsonObject }
-            .associateBy { it["name"].asString!! }
-
-        val componentList = mutableListOf<Component>()
-
-        for ((name, obj) in themeComponent) {
-            runCatching {
-                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
-                val component = componentType.createComponent()
-
-                runCatching {
-                    ConfigSystem.deserializeConfigurable(component, obj)
-                }.onFailure {
-                    logger.error("Failed to deserialize component $name", it)
-                }
-
-                componentList.add(component)
-            }.onFailure {
-                logger.error("Failed to create component $name", it)
-            }
-        }
-
-        return componentList
-    }
-
-    override fun close() {
-        mc.textureManager.destroyTexture(loadedBackgroundImage)
-    }
-
-    companion object {
-
-        fun defaults() = runCatching {
-            val folder = ThemeManager.themesFolder.resolve("default")
-            val stream = resource("/resources/liquidbounce/default_theme.zip")
-
-            if (folder.exists()) {
-                folder.deleteRecursively()
-            }
-
-            extractZip(stream, folder)
-            folder.deleteOnExit()
-
-            Theme("default")
-        }.onFailure {
-            logger.error("Unable to extract default theme", it)
-        }.onSuccess {
-            logger.info("Successfully extracted default theme")
-        }.getOrThrow()
-
-    }
+    data class ScreenLocation(val theme: Theme, val url: String)
 
 }
 
-data class ThemeMetadata(
-    val name: String,
-    val author: String,
-    val version: String,
-    val supports: List<String>,
-    val overlays: List<String>,
-    @SerializedName("components")
-    val rawComponents: JsonArray
-)

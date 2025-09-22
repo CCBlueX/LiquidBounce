@@ -106,7 +106,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     "FakeLag", "Unable to evade arrow. Blinking.",
                     NotificationEvent.Severity.INFO
                 )
-                PacketQueueManager.flush { snapshot -> snapshot.origin == TransferOrigin.OUTGOING }
+                PacketQueueManager.flush(TransferOrigin.OUTGOING)
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("FakeLag", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
                 PacketQueueManager.flush(evadingPacket.idx + 1)
@@ -239,9 +239,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
         }
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         isEnemyNearby = false
-        super.disable()
+        super.onDisabled()
     }
 
 }

@@ -18,14 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -33,6 +36,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.TntEntity
 import net.minecraft.util.math.MathHelper
+import java.text.DecimalFormat
+import java.util.function.IntFunction
 import kotlin.math.sin
 
 /**
@@ -52,30 +57,24 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
         val scale by float("Scale", 1.5F, 0.25F..4F)
         val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
         val border by boolean("Border", true)
-        val timeUnit = choices(this, "TimeUnit", Ticks, arrayOf(Ticks, Seconds))
+        val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
 
-        sealed class TimeUnit(name: String) : Choice(name) {
-            override val parent: ChoiceConfigurable<*>
-                get() = timeUnit
+        enum class TimeUnit(override val choiceName: String): NamedChoice, IntFunction<String> {
+            TICKS("Ticks"),
+            SECONDS("Seconds");
 
-            abstract operator fun invoke(t: Int): String
+            override fun apply(t: Int): String = when (this) {
+                TICKS -> t.toString()
+                SECONDS -> SECONDS_FORMAT.format(t.toLong())
+            }
         }
 
-        private object Ticks : TimeUnit("Ticks") {
-            override fun invoke(t: Int) = t.toString()
-        }
-
-        private object Seconds : TimeUnit("Seconds") {
-            override fun invoke(t: Int) = "%.2fs".format(t * 0.05F)
-        }
+        private val SECONDS_FORMAT = DecimalFormat("0.00s")
     }
 
     init {
         tree(ShowTimer)
     }
-
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
 
     private const val DEFAULT_FUSE = 80
 
@@ -87,16 +86,27 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
         return Color4b(red, 0, 0)
     }
 
+    private val tntEntities by computedOn<GameTickEvent, MutableSet<TntEntity>>(ReferenceOpenHashSet()) { _, set ->
+        set.clear()
+        world.entities.filterIsInstanceTo(set)
+        set
+    }
+
+    override fun onDisabled() {
+        tntEntities.clear()
+        super.onDisabled()
+    }
+
     @Suppress("unused")
-    val render2DHandler = handler<OverlayRenderEvent> {
+    private val render2DHandler = handler<OverlayRenderEvent> {
         if (!ShowTimer.enabled) return@handler
 
         renderEnvironmentForGUI {
-            fontRenderer.withBuffers { buf ->
+            FontManager.FONT_RENDERER.withBuffers { buf ->
                 val c = size
                 val fontScale = 1.0F / (c * 0.15F) * ShowTimer.scale
 
-                world.entities.filterIsInstanceTo(hashSetOf<TntEntity>()).forEachWithSelf { tnt, i, self ->
+                tntEntities.forEachWithSelf { tnt, i, self ->
                     if (tnt.fuse <= 0) return@forEachWithSelf
 
                     val pos = tnt.box.center.add(0.0, ShowTimer.renderY.toDouble(), 0.0)
@@ -108,7 +118,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
 
                     // ticks to seconds
                     val text = process(
-                        ShowTimer.timeUnit.activeChoice(tnt.fuse),
+                        ShowTimer.timeUnit.apply(tnt.fuse),
                         color,
                     )
 

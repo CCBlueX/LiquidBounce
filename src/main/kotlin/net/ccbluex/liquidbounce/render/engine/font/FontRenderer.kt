@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProces
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.math.set
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.text.Text
@@ -36,7 +37,8 @@ import java.awt.Font
 import kotlin.math.max
 import kotlin.random.Random
 
-data class RenderedGlyph(
+@JvmRecord
+private data class RenderedGlyph(
     val style: Int,
     val glyph: GlyphDescriptor,
     val x1: Float,
@@ -47,7 +49,8 @@ data class RenderedGlyph(
     val color: Color4b
 )
 
-data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
+@JvmRecord
+private data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
 
 private class FontRendererCache {
     val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
@@ -72,9 +75,17 @@ class FontRenderer(
 ) : AbstractFontRenderer<TextProcessor.ProcessedText>() {
 
     private val cache = FontRendererCache()
+    private val positionCache = Vector3f()
+    private val mutableVec3d1 = Vec3d(0.0, 0.0, 0.0)
+    private val mutableVec3d2 = Vec3d(0.0, 0.0, 0.0)
+    private val underlinesCache = ArrayDeque<IntRange>()
+    private val strikethroughCache = ArrayDeque<IntRange>()
+
     override val height: Float = font.styles.firstNotNullOf { it?.height }
+
     val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
 
+    private val shadowColor = Color4b(0, 0, 0, 150)
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
@@ -85,7 +96,7 @@ class FontRenderer(
     }
 
     override fun process(text: String, defaultColor: Color4b): TextProcessor.ProcessedText {
-        return process(text.asText(), defaultColor)
+        return process(text.asPlainText(), defaultColor)
     }
 
     override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
@@ -105,13 +116,13 @@ class FontRenderer(
         if (shadow) {
             len = drawInternal(
                 text,
-                pos = Vector3f(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
+                pos = positionCache.set(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
                 scale,
-                overrideColor = Color4b(0, 0, 0, 150)
+                overrideColor = shadowColor
             )
         }
 
-        return max(len, drawInternal(text, Vector3f(x0, y0, z * 2.0F), scale))
+        return max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
     }
 
     /**
@@ -132,8 +143,15 @@ class FontRenderer(
             return pos.x
         }
 
-        val underlineStack = ArrayList<IntRange>(text.underlines.asReversed())
-        val strikethroughStack = ArrayList<IntRange>(text.strikeThroughs.asReversed())
+        // remove from last
+        val underlineStack = underlinesCache.apply {
+            clear()
+            addAll(text.underlines)
+        }
+        val strikethroughStack = strikethroughCache.apply {
+            clear()
+            addAll(text.strikeThroughs)
+        }
 
         var x = pos.x
         var y = pos.y + this.ascent * scale
@@ -148,10 +166,10 @@ class FontRenderer(
                 ?: fallbackGlyph
             val color = overrideColor ?: processedChar.color
 
-            if (underlineStack.lastOrNull()?.start == charIdx) {
+            if (underlineStack.firstOrNull()?.start == charIdx) {
                 underlineStartX = x
             }
-            if (strikethroughStack.lastOrNull()?.start == charIdx) {
+            if (strikethroughStack.firstOrNull()?.start == charIdx) {
                 strikeThroughStartX = x
             }
 
@@ -181,13 +199,13 @@ class FontRenderer(
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
-            if (underlineStack.lastOrNull()?.endInclusive == charIdx) {
-                underlineStack.removeLast()
+            if (underlineStack.firstOrNull()?.endInclusive == charIdx) {
+                underlineStack.removeFirst()
 
                 drawLine(underlineStartX!!, x, y, pos.z, color, false)
             }
-            if (strikethroughStack.lastOrNull()?.endInclusive == charIdx) {
-                strikethroughStack.removeLast()
+            if (strikethroughStack.firstOrNull()?.endInclusive == charIdx) {
+                strikethroughStack.removeFirst()
 
                 drawLine(strikeThroughStartX!!, x, y, pos.z, color, true)
             }
@@ -267,9 +285,9 @@ class FontRenderer(
 
             renderBuffer.drawQuad(
                 env,
-                Vec3d(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
+                mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
-                Vec3d(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
+                mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.max,
                 color
             )
@@ -303,8 +321,8 @@ class FontRendererBuffers {
     val textBuffers = HashMap<GlyphPage, RenderBufferBuilder<VertexInputType.PosTexColor>>()
 
     fun getTextBufferForGlyphPage(glyphPage: GlyphPage): RenderBufferBuilder<VertexInputType.PosTexColor> {
-        return this.textBuffers.computeIfAbsent(glyphPage) {
-            val tessellator = getTesselatorForGlyphPage(glyphPage)
+        return this.textBuffers.computeIfAbsent(glyphPage) { key ->
+            val tessellator = getTesselatorForGlyphPage(key)
 
             RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, tessellator)
         }
@@ -328,7 +346,7 @@ class FontRendererBuffers {
     }
 
     fun reset() {
-        this.textBuffers.forEach { (_, bufferBuilder) ->
+        this.textBuffers.values.forEach { bufferBuilder ->
             bufferBuilder.reset()
         }
 

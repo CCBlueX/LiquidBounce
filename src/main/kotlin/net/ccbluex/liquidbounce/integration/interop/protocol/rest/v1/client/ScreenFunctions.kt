@@ -22,9 +22,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
@@ -57,7 +55,7 @@ fun postVirtualScreen(requestObject: RequestObject): FullHttpResponse {
     }
 
     IntegrationListener.acknowledgement.confirm()
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // GET /api/v1/client/screen
@@ -87,7 +85,7 @@ fun putScreen(requestObject: RequestObject): FullHttpResponse {
 
     VirtualScreenType.byName(screenName)?.open()
         ?: return httpForbidden("No screen with name $screenName")
-    return httpOk(emptyJsonObject())
+    return httpNoContent()
 }
 
 // DELETE /api/v1/client/screen
@@ -96,13 +94,13 @@ fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
     val screen = mc.currentScreen ?: return httpForbidden("No screen")
 
     if (screen is VirtualDisplayScreen && screen.parentScreen != null) {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             mc.setScreen(screen.parentScreen)
         }
         return httpNoContent()
     }
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         mc.setScreen(
             if (inGame) {
                 null

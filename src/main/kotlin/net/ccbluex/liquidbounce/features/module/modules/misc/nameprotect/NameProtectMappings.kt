@@ -1,7 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.randomUsername
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import org.ahocorasick.trie.Emit
 import org.ahocorasick.trie.Trie
 import java.nio.ByteBuffer
@@ -95,8 +97,9 @@ class NameProtectMappings {
         val currentInstructions = this.replacementInstructions ?: return emptyList()
 
         return currentInstructions.matcher.parseText(text)
-            .map { it to currentInstructions.replacements[it.keyword]!! }
-            .sortedBy { it.first.start }
+            .mapToArray { it to currentInstructions.replacements[it.keyword]!! }
+            .apply { sortBy { it.first.start } }
+            .unmodifiable()
     }
 
     /**

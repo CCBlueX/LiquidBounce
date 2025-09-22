@@ -28,10 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -44,6 +41,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.TntEntity
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
@@ -102,6 +100,12 @@ val ClientPlayerEntity.onGroundTicks: Int
 
 val ClientPlayerEntity.direction: Float
     get() = getMovementDirectionOfInput(DirectionalInput(input))
+
+/**
+ * Check if the attack speed is below 1 tick. If so, we have a cooldown.
+ */
+val ClientPlayerEntity.hasCooldown: Boolean
+    get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(EntityAttributes.ATTACK_SPEED) < 20.0
 
 fun ClientPlayerEntity.getMovementDirectionOfInput(input: DirectionalInput): Float {
     return getMovementDirectionOfInput(this.yaw, input)
@@ -193,7 +197,6 @@ fun ClientPlayerEntity.canStep(height: Double = 1.0): Boolean {
         shape != VoxelShapes.empty()
     }
 }
-
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     val forwards = input.forwards && !input.backwards
@@ -310,21 +313,16 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
-fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
-    val origin = doubleArrayOf(eyes.x, eyes.y, eyes.z)
-    val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
-    val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
-
-    // It loops through every coordinate of the double arrays and picks the nearest point
-    for (i in 0..2) {
-        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
-    }
-
-    return Vec3d(origin[0], origin[1], origin[2])
+fun getNearestPoint(from: Vec3d, box: Box): Vec3d {
+    return Vec3d(
+        from.x.coerceIn(box.minX, box.maxX),
+        from.y.coerceIn(box.minY, box.maxY),
+        from.z.coerceIn(box.minZ, box.maxZ),
+    )
 }
 
-fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
-    val nearestPointInBlock = getNearestPoint(eyes, box)
+fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
+    val nearestPointInBlock = getNearestPoint(from, box)
 
     val x = nearestPointInBlock.x
     val y = nearestPointInBlock.y
@@ -342,17 +340,6 @@ fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
 
     return nearestPointOnSide
 
-}
-
-fun LivingEntity.wouldBlockHit(source: PlayerEntity): Boolean {
-    if (!this.isBlocking) {
-        return false
-    }
-
-    val facingVec = getRotationVec(1.0f)
-    val deltaPos = (pos - source.pos).multiply(1.0, 0.0, 1.0)
-
-    return deltaPos.dotProduct(facingVec) < 0.0
 }
 
 /**
@@ -375,19 +362,15 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     var amount = damage
 
     if (this is PlayerEntity) {
-        if (this.abilities.invulnerable && source.type.msgId != mc.world!!.damageSources.outOfWorld().type.msgId)
+        if (this.abilities.invulnerable && source.type.msgId != world.damageSources.outOfWorld().type.msgId)
             return 0.0F
 
         if (source.isScaledWithDifficulty) {
             if (world.difficulty == Difficulty.PEACEFUL) {
                 amount = 0.0f
-            }
-
-            if (world.difficulty == Difficulty.EASY) {
+            } else if (world.difficulty == Difficulty.EASY) {
                 amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
-            }
-
-            if (world.difficulty == Difficulty.HARD) {
+            } else if (world.difficulty == Difficulty.HARD) {
                 amount = amount * 3.0f / 2.0f
             }
         }
@@ -396,9 +379,8 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     if (amount == 0.0F)
         return 0.0F
 
-    if (source == mc.world!!.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+    if (source == world.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
         return 0.0F
-
 
     if (!ignoreShield && blockedByShield(source))
         return 0.0F
@@ -493,7 +475,7 @@ fun LivingEntity.getExposureToExplosion(
             isDescending,
             entityBoundingBox1.minY,
             mainHandStack,
-            { state -> canWalkOnFluid(state) },
+            ::canWalkOnFluid,
             this
         )
     } ?: ShapeContext.of(this)
@@ -663,3 +645,7 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
+
+val LivingEntity.wouldBlockHit
+    get() = !isOlderThanOrEqual1_8 &&
+        this.blockedByShield(world.damageSources.playerAttack(player))

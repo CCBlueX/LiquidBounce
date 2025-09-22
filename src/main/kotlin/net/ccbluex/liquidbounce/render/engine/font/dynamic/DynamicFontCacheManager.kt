@@ -19,7 +19,7 @@ class DynamicFontCacheManager(
     /**
      * Available fonts, sorted by priority
      */
-    private val availableFonts: Set<FontManager.FontFace>
+    private val availableFonts: Collection<FontManager.FontFace>
 ) {
     private val glyphPageLock = ReentrantLock()
     private val glyphPageDirtyFlag = AtomicBoolean(false)
@@ -134,19 +134,18 @@ class DynamicFontCacheManager(
 
         val allocationList = createAllocationRequests(requestedChars)
 
-        val unsuccessfullAllocations = this.glyphPageLock.withLock {
+        val unsuccessfulAllocations = this.glyphPageLock.withLock {
             tryAllocations(allocationList)
         }
 
-        if (unsuccessfullAllocations.isEmpty()) {
+        if (unsuccessfulAllocations.isEmpty()) {
             return
         }
 
-       freeSpace()
-
+        freeSpace()
 
         val stillUnsuccessfulAllocations =
-            createAllocationRequests(unsuccessfullAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
+            createAllocationRequests(unsuccessfulAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
 
         // TODO: Optimize the atlas in this situation
         // We weren't able to allocate those chars even after freeing some space. Don't ask us ever again about
@@ -228,14 +227,8 @@ class DynamicFontCacheManager(
     }
 
     private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
-        return this.availableFonts.firstNotNullOfOrNull {
-            val fontInStyle = it.styles.get(ch.font)
-
-            if (fontInStyle != null && fontInStyle.awtFont.canDisplay(ch.codepoint)) {
-                fontInStyle
-            } else {
-                null
-            }
+        return this.availableFonts.firstNotNullOfOrNull { fontFace ->
+            fontFace.styles[ch.font]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
@@ -254,6 +247,6 @@ private class CharCacheData(
     /**
      * Possible values: [UNCACHED], [CACHED] and [BLOCKED]
      */
-    var cacheState: AtomicInteger = AtomicInteger(UNCACHED),
+    val cacheState: AtomicInteger = AtomicInteger(UNCACHED),
     val lastUsage: AtomicLong = AtomicLong(0L)
 )

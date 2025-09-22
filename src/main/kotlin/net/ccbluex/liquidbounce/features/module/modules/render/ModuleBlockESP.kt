@@ -48,11 +48,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
+        findBlocksEndingWith("_BED", "DRAGON_EGG")
     ).onChange {
         if (running) {
-            disable()
-            enable()
+            onDisabled()
+            onEnabled()
         }
         it
     }
@@ -177,11 +177,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         ChunkScanner.subscribe(BlockTracker)
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 

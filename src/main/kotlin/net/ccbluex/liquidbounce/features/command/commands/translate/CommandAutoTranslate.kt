@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.command.commands.translate
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 
-object CommandAutoTranslate : Configurable("AutoTranslate"), CommandFactory {
+object CommandAutoTranslate : Configurable("AutoTranslate"), Command.Factory {
 
     init {
         ConfigSystem.root(this)
@@ -41,7 +41,7 @@ object CommandAutoTranslate : Configurable("AutoTranslate"), CommandFactory {
         .build()
 
     private fun languageCommand() = CommandBuilder.begin("language")
-        .handler { command, _ ->
+        .handler {
             chat(command.result("code", languageCode, languageCodes[languageCode]?.displayName ?: "Unknown"), command)
         }
         .subcommand(setLanguageCommand())
@@ -51,11 +51,11 @@ object CommandAutoTranslate : Configurable("AutoTranslate"), CommandFactory {
         .parameter(
             ParameterBuilder.begin<String>("languageCode")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompleteWithLanguageCodes()
+                .autocompletedFrom { languageCodes.keys }
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val code = args[0] as String
             val name = languageCodes[code]?.displayName ?: throw CommandException(command.result("unrecognized", code))
             languageCode = code

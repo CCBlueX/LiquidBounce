@@ -1,3 +1,19 @@
+
+export interface Metadata {
+    id: string;
+    name: string;
+    version: string;
+    authors: string[];
+    screens: string[];
+    overlays: string[];
+    components: string[];
+    fonts: string[];
+    backgrounds: {
+        name: string;
+        types: string[];
+    }[];
+}
+
 export interface Module {
     name: string;
     category: string;
@@ -32,134 +48,105 @@ export type ModuleSetting =
     | TextSetting
     | BindSetting
     | VectorSetting
-    | KeySetting;
+    | KeySetting
+    | FileSetting
+    | CurveSetting;
 
-export interface BlocksSetting {
-    valueType: string;
-    name: string;
-    value: string[];
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface KeySetting {
-    valueType: string;
-    name: string;
-    value: string;
+export interface FileSelectResult {
+    file: File | undefined;
 }
 
-export interface BindSetting {
+export interface Setting<V> {
     valueType: string;
     name: string;
-    value: {
-        boundKey: string;
-        action: string;
-    };
-    defaultValue: {
-        boundKey: string;
-        action: string;
-    };
+    value: V;
+    description: string;
+    key: string;
 }
 
-export interface TextSetting {
-    valueType: string;
-    name: string;
-    value: string;
+export interface FileSetting extends Setting<File> {
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface VectorSetting {
-    valueType: string;
-    name: string;
-    value: Vec3;
+export interface CurveSetting extends Setting<Vector2f[]> {
+    xAxis: {
+        label: string;
+        range: Range;
+    },
+    yAxis: {
+        label: string;
+        range: Range;
+    }
+    tension: number;
 }
 
-export interface ColorSetting {
-    valueType: string;
-    name: string;
-    value: number;
+export interface BlocksSetting extends Setting<string[]> {
 }
 
-export interface BooleanSetting {
-    valueType: string;
-    name: string;
-    value: boolean;
+export interface KeySetting extends Setting<string> {
 }
 
-export interface FloatSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface BindSetting extends Setting<InputBind> {
+    defaultValue: InputBind;
+}
+
+export interface TextSetting extends Setting<string> {
+}
+
+export interface VectorSetting extends Setting<Vec3> {
+}
+
+export interface ColorSetting extends Setting<number> {
+}
+
+export interface BooleanSetting extends Setting<boolean> {
+}
+
+export interface FloatSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface FloatRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface FloatRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface IntSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface IntRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface ChoiceSetting {
-    valueType: string;
-    name: string;
+export interface ChoiceSetting extends Setting<ModuleSetting[]> {
     active: string;
     choices: { [name: string]: ModuleSetting }
-    value: ModuleSetting[];
 }
 
-export interface ChooseSetting {
-    valueType: string;
-    name: string;
+export interface ChooseSetting extends Setting<string> {
     choices: string[];
-    value: string;
 }
 
-export interface MultiChooseSetting {
-    valueType: string;
-    name: string;
+export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
-    value: string[];
     canBeNone: boolean;
 }
 
-export interface ListSetting {
-    valueType: string;
-    name: string;
-    value: string[];
+export interface ListSetting extends Setting<string[]> {
     innerValueType: string;
 }
 
@@ -177,16 +164,15 @@ export interface NamedItem {
     icon: string | undefined;
 }
 
-export interface ConfigurableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface ConfigurableSetting extends Setting<ModuleSetting[]> {
 }
 
-export interface TogglableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface TogglableSetting extends Setting<ModuleSetting[]> {
+}
+
+export interface InputBind {
+    boundKey: string;
+    action: "Toggle" | "Hold";
 }
 
 export interface PersistentStorageItem {
@@ -370,9 +356,37 @@ export interface GameWindow {
     guiScale: number;
 }
 
+export interface Theme {
+    name: string;
+    id: string;
+    settings: { [name: string]: any };
+}
+
 export interface Component {
     name: string;
+    id: string;
     settings: { [name: string]: any };
+}
+
+export interface Alignment {
+    horizontalAlignment: HorizontalAlignment;
+    verticalAlignment: VerticalAlignment;
+    horizontalOffset: number;
+    verticalOffset: number;
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
 }
 
 export interface ClientInfo {
@@ -381,7 +395,8 @@ export interface ClientInfo {
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
@@ -437,3 +452,68 @@ export interface RegistryItem {
     name: string;
     icon: string | undefined;
 }
+
+export interface Range {
+    from: number;
+    to: number;
+}
+
+export interface Vector2f {
+    x: number;
+    y: number;
+}
+
+
+type MouseKeyName =
+    | "left"
+    | "right"
+    | "middle"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8";
+
+type KeyboardKeyName =
+    | "unknown"
+    | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+    | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+    | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+    | "u" | "v" | "w" | "x" | "y" | "z"
+    | `f${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25}`
+    | "escape"
+    | "enter"
+    | "tab"
+    | "space"
+    | "backspace"
+    | "caps.lock"
+    | "left.shift" | "right.shift"
+    | "left.control" | "right.control"
+    | "left.alt" | "right.alt"
+    | "left.win" | "right.win"
+    | "menu"
+    | "print.screen"
+    | "scroll.lock"
+    | "pause"
+    | "insert"
+    | "delete"
+    | "home"
+    | "end"
+    | "page.up" | "page.down"
+    | "up" | "down" | "left" | "right"
+    | "num.lock"
+    | "keypad.0" | "keypad.1" | "keypad.2" | "keypad.3"
+    | "keypad.4" | "keypad.5" | "keypad.6" | "keypad.7"
+    | "keypad.8" | "keypad.9"
+    | "keypad.add" | "keypad.subtract"
+    | "keypad.multiply" | "keypad.divide"
+    | "keypad.enter" | "keypad.decimal" | "keypad.equal"
+    | "semicolon" | "equal" | "comma"
+    | "minus" | "period" | "slash"
+    | "grave.accent" | "left.bracket" | "backslash"
+    | "right.bracket" | "apostrophe"
+    | "world.1" | "world.2";
+
+export type MinecraftMouseKey = `key.mouse.${MouseKeyName}`;
+export type MinecraftKeyboardKey = `key.keyboard.${KeyboardKeyName}`;
+export type MinecraftKey = MinecraftMouseKey | MinecraftKeyboardKey;

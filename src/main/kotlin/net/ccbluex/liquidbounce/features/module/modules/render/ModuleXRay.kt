@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -210,17 +209,17 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
         blocks.addAll(defaultBlocks)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
         mc.worldRenderer.reload()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         mc.worldRenderer.reload()
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun valueChangedReload(it: Any) {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             // Reload world renderer on block list change
             mc.worldRenderer.reload()
         }

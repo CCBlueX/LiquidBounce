@@ -1,5 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isHoe
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
+import net.ccbluex.liquidbounce.utils.item.isShovel
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.block.Blocks
 import net.minecraft.item.*
 
@@ -66,17 +71,18 @@ object MurderMysterySwordDetection {
             Blocks.CHORUS_PLANT,
         )
 
-    fun isSword(item: Item?): Boolean {
-        return when (item) {
-            in KNOWN_NON_SWORD_ITEMS -> false
-            in KNOWN_SWORD_ITEMS -> true
-            is SwordItem -> true
-            is PickaxeItem -> true
-            is ShovelItem -> true
-            is AxeItem -> true
-            is HoeItem -> true
-            is BoatItem -> true
-            is BlockItem -> this.KNOWN_SWORD_BLOCKS.contains(item.block)
+    fun isSword(itemStack: ItemStack): Boolean {
+        val item = itemStack.item
+        return when {
+            item in KNOWN_NON_SWORD_ITEMS -> false
+            item in KNOWN_SWORD_ITEMS -> true
+            itemStack.isSword -> true
+            itemStack.isPickaxe -> true
+            itemStack.isShovel -> true
+            itemStack.isAxe -> true
+            itemStack.isHoe -> true
+            item is BoatItem -> true
+            item is BlockItem -> this.KNOWN_SWORD_BLOCKS.contains(item.block)
             else -> false
         }
     }

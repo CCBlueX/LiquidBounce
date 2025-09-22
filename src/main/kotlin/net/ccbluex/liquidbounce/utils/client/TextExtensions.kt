@@ -20,11 +20,13 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
+import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import it.unimi.dsi.fastutil.chars.CharSets
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
+import net.minecraft.util.Formatting
 import net.minecraft.world.World
 import java.util.*
 import java.util.regex.Pattern
@@ -35,7 +37,16 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
+/**
+ * Returns a [MutableText] from the receiver.
+ * If you just need a [Text], use [asPlainText] instead.
+ */
 fun String.asText(): MutableText = Text.literal(this)
+
+/**
+ * Returns an immutable [Text] from the receiver.
+ */
+fun String.asPlainText(): Text = ImmutableText.of(this)
 
 fun Text.asNbt(world: World? = null): NbtString =
     NbtString.of(
@@ -123,9 +134,11 @@ fun String.translateColorCodes(): String {
     return String(chars)
 }
 
-fun String.toLowerCamelCase() = String(this.toCharArray().apply {
-    this[0] = this[0].lowercaseChar()
-})
+fun String.capitalize(): String = replaceFirstChar {
+    if (it.isLowerCase()) it.titlecase() else it.toString()
+}
+
+fun String.toLowerCamelCase(): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, this)
 
 fun String.dropPort(): String {
     return this.substringBefore(':')
@@ -205,4 +218,32 @@ fun String.hideSensitiveAddress(): String {
         this.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
         else -> this
     }
+}
+
+data class ColoredChar(val char: Char, val color: Formatting) {
+    init {
+        requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
+    }
+}
+
+fun Char.colored(color: Formatting) = ColoredChar(this, color)
+
+/**
+ * Generates a progress bar based on the [percent]age (range 0 to 100).
+ */
+fun textLoadingBar(
+    percent: Int,
+    progress: ColoredChar = '█'.colored(Formatting.WHITE),
+    remaining: ColoredChar = '░'.colored(Formatting.DARK_GRAY),
+    length: Int = 10
+): Text {
+    val clampedPercent = percent.coerceIn(0, 100)
+    val filledBars = clampedPercent * length / 100
+
+    val progressPart = progress.char.toString().repeat(filledBars)
+    val remainingPart = remaining.char.toString().repeat(length - filledBars)
+
+    return Text.empty()
+        .append(progressPart.asText().formatted(progress.color))
+        .append(remainingPart.asText().formatted(remaining.color))
 }

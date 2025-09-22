@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
-import com.mojang.blaze3d.systems.RenderSystem
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
-import net.ccbluex.liquidbounce.api.core.scope
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -73,7 +73,7 @@ object HideAppearance : EventListener {
     var isHidingNow = false
         set(value) {
             field = value
-            RenderSystem.recordRenderCall(::updateClient)
+            mc.execute(::updateClient)
 
             if (modMenuPresent) {
                 if (value) {
@@ -135,7 +135,7 @@ object HideAppearance : EventListener {
         }
 
         // Cancel all async tasks
-        scope.cancel()
+        ioScope.cancel()
 
         callEvent(ClientShutdownEvent)
         EventManager.unregisterAll()

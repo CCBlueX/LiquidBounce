@@ -27,23 +27,25 @@ import com.google.gson.GsonBuilder
 import com.mojang.authlib.exceptions.InvalidCredentialsException
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
+import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.DefaultHttpHeaders
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.awaitSuspend
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import java.net.URI
 import java.util.*
@@ -90,22 +92,16 @@ class ChatClient {
             .create()
     }
 
-    fun connectAsync() {
-        if (isConnecting || connected) {
-            return
-        }
-
-        withScope {
-            connect()
-        }
-    }
-
     /**
      * Connect to chat server via websocket.
      * Supports SSL and non-SSL connections.
      * Be aware SSL takes insecure certificates.
      */
-    private fun connect() = runCatching {
+    suspend fun connect() = runCatching {
+        if (isConnecting || connected) {
+            return@runCatching
+        }
+
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTING))
         isConnecting = true
         loggedIn = false
@@ -154,8 +150,8 @@ class ChatClient {
 
             })
 
-        channel = bootstrap.connect(uri.host, uri.port).sync()!!.channel()!!
-        handler.handshakeFuture.sync()
+        channel = bootstrap.connect(uri.host, uri.port).awaitSuspend().channel()!!
+        handler.handshakeFuture.awaitSuspend()
     }.onFailure {
         EventManager.callEvent(ClientChatErrorEvent(it.localizedMessage ?: it.message ?: it.javaClass.name))
 
@@ -169,7 +165,7 @@ class ChatClient {
     }
 
     fun disconnect() {
-        channel?.close()
+        channel?.writeAndFlush(CloseWebSocketFrame(1000, ""))?.addListener(ChannelFutureListener.CLOSE)
         channel = null
 
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
@@ -177,9 +173,9 @@ class ChatClient {
         loggedIn = false
     }
 
-    fun reconnect() {
+    suspend fun reconnect() {
         disconnect()
-        connectAsync()
+        connect()
     }
 
 

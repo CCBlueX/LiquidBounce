@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.utils.kotlin.enumMap
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.RegistryKey
 import net.minecraft.util.math.MathHelper
@@ -58,7 +58,7 @@ class ArmorKitParameters(
 
             // Return the parameter sum for each slot without the current slot
             return ArmorKitParameters(
-                currentKit.mapValues { (_, armorPiece) ->
+                currentKit.mapValuesTo(enumMap()) { (_, armorPiece) ->
                     if (armorPiece != null) {
                         ArmorParameter(
                             totalArmorKitParameters.defensePoints - armorPiece.defensePoints,
@@ -125,16 +125,12 @@ class ArmorComparator(
     }
 
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
-        val item = itemStack.item as ArmorItem
-        val parameters = this.armorKitParametersForSlot.getParametersForSlot(
-            itemStack.get(DataComponentTypes.EQUIPPABLE)!!.slot
-        )
+        val parameters = this.armorKitParametersForSlot.getParametersForSlot(itemStack.equipmentSlot!!)
 
-        val material = item.material()
         return getDamageFactor(
             damage = expectedDamage,
-            defensePoints = parameters.defensePoints + material.defense.getOrDefault(item.type(), 0),
-            toughness = parameters.toughness + material.toughness
+            defensePoints = parameters.defensePoints + itemStack.armorValue!!.toFloat(),
+            toughness = parameters.toughness + itemStack.armorToughness!!.toFloat()
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 

@@ -20,13 +20,14 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.Parameters
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoices
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.HoverEvent
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * ServerInfo Command
@@ -50,18 +51,18 @@ import net.minecraft.text.HoverEvent
  *
  * The command supports active detection modes for more thorough analysis.
  */
-object CommandServerInfo : CommandFactory, EventListener {
+object CommandServerInfo : Command.Factory, EventListener {
 
     override fun createCommand(): Command {
         return CommandBuilder
             .begin("serverinfo")
             .requiresIngame()
             .parameter(
-                Parameters.enumChoices<DetectionType>("detect")
+                ParameterBuilder.enumChoices<DetectionType>("detect")
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .suspendHandler {
                 val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
 
                 if (!detectionTypes.isNullOrEmpty()) {
@@ -79,28 +80,22 @@ object CommandServerInfo : CommandFactory, EventListener {
      * @param command The command instance
      * @param detectionTypes Collection of detection types to run
      */
-    private fun runActiveDetection(command: Command, detectionTypes: Collection<DetectionType>) {
-        Sequence(this) {
-            chat(regular(command.result("detecting")))
+    private suspend fun runActiveDetection(command: Command, detectionTypes: Collection<DetectionType>) {
+        chat(regular(command.result("detecting")))
 
-            // Run plugin detection if requested
-            if (DetectionType.PLUGINS in detectionTypes) {
-                ServerObserver.captureCommandSuggestions()
-                // Timeout after 5 seconds
-                waitConditional(20 * 5) { ServerObserver.plugins != null }
-
-                if (ServerObserver.plugins == null) {
-                    chat(markAsError(command.result("pluginsDetectionTimeout")))
-                }
+        // Run plugin detection if requested
+        if (DetectionType.PLUGINS in detectionTypes) {
+            if (!ServerObserver.captureCommandSuggestions(10.seconds)) {
+                chat(markAsError(command.result("pluginsDetectionTimeout")))
             }
-
-            // Request hosting information if requested
-            if (DetectionType.HOSTING in detectionTypes) {
-                ServerObserver.requestHostingInformation()
-            }
-
-            printInformation(command, detectionTypes)
         }
+
+        // Request hosting information if requested
+        if (DetectionType.HOSTING in detectionTypes) {
+            ServerObserver.requestHostingInformation()
+        }
+
+        printInformation(command, detectionTypes)
     }
 
     /**

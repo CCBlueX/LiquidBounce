@@ -25,8 +25,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-private val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-
 data class AutoSettings(
     @SerializedName("setting_id") val settingId: String,
     val name: String,
@@ -39,8 +37,13 @@ data class AutoSettings(
     @SerializedName("server_address") val serverAddress: String?
 ) {
     val dateFormatted: String
-        get() = date.format(formatter)
+        get() = date.format(FORMATTER)
 
     val statusDateFormatted: String
-        get() = statusDate.format(formatter)
+        get() = statusDate.format(FORMATTER)
+
+    companion object {
+        @JvmField
+        internal val FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+    }
 }

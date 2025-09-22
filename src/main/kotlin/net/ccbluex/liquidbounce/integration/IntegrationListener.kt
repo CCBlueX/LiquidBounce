@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
+import kotlin.math.min
 
 object IntegrationListener : EventListener {
 
@@ -53,13 +54,13 @@ object IntegrationListener : EventListener {
      */
     lateinit var browser: Browser
         private set
-    lateinit var browserSettings: BrowserSettings
+    lateinit var browserSettings: IntegrationBrowserSettings
         private set
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
 
-    var runningTheme = ThemeManager.activeTheme
+    var theme: Theme? = null
         private set
 
     /**
@@ -105,7 +106,7 @@ object IntegrationListener : EventListener {
         logger.info("Browser is ready.")
 
         // Fires up the client tab
-        browserSettings = BrowserSettings(0, ::restart)
+        browserSettings = IntegrationBrowserSettings(0, ::restart)
         browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         browserIsReady = true
     }
@@ -116,14 +117,14 @@ object IntegrationListener : EventListener {
         virtualOpen(type = type)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme = ThemeManager.theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
         }
 
-        if (runningTheme != theme) {
-            runningTheme = theme
+        if (this.theme != theme) {
+            this.theme = theme
             ThemeManager.updateImmediate(browser, type)
         }
 
@@ -131,8 +132,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
@@ -144,8 +145,8 @@ object IntegrationListener : EventListener {
         acknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
+                virtualScreen.type,
+                action = VirtualScreenEvent.Action.CLOSE
             )
         )
     }
@@ -182,7 +183,7 @@ object IntegrationListener : EventListener {
 
         logger.info(
             "Reloading integration browser ${browser.javaClass.simpleName} " +
-                "to ${ThemeManager.route()}"
+                "to ${ThemeManager.getScreenLocation()}"
         )
         ThemeManager.updateImmediate(browser, momentaryVirtualScreen?.type)
     }
@@ -220,6 +221,15 @@ object IntegrationListener : EventListener {
     @Suppress("unused")
     private val worldChangeEvent = handler<WorldChangeEvent> {
         update()
+    }
+
+    @Suppress("unused")
+    private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
+        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+            return@handler
+        }
+
+        event.fps = min(event.fps, browserSettings.currentFps)
     }
 
     @Suppress("unused")
@@ -279,7 +289,7 @@ object IntegrationListener : EventListener {
 
         val name = virtualScreenType.routeName
         val route = runCatching {
-            ThemeManager.route(virtualScreenType, false)
+            ThemeManager.getScreenLocation(virtualScreenType, false)
         }.getOrNull()
 
         if (route == null) {
@@ -290,12 +300,12 @@ object IntegrationListener : EventListener {
         val theme = route.theme
 
         return when {
-            theme.doesSupport(name) -> {
+            theme.isScreenSupported(name) -> {
                 mc.setScreen(VirtualDisplayScreen(virtualScreenType, theme, originalScreen = virtScreen))
 
                 true
             }
-            theme.doesOverlay(name) -> {
+            theme.isOverlaySupported(name) -> {
                 virtualOpen(theme, virtualScreenType)
 
                 false
@@ -307,5 +317,12 @@ object IntegrationListener : EventListener {
             }
         }
     }
+
+    /**
+     * Checks if the given screen is an active client screen.
+     */
+    @JvmStatic
+    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is BrowserScreen
 
 }

@@ -20,18 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 
@@ -68,8 +76,70 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        override fun getToolSlot(blockState: BlockState) =
-            Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
+        private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+            private val inventoryConstraints = tree(InventoryConstraints())
+
+            @JvmField var currentBestTool: ItemSlot? = null
+            private var swapAction: InventoryAction? = null
+
+            @Suppress("unused")
+            private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
+                val currentBestTool = currentBestTool ?: return@handler
+                event.schedule(
+                    inventoryConstraints,
+                    InventoryAction.Click.performSwap(
+                        from = currentBestTool,
+                        to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                    ).also { swapAction = it }
+                )
+                this.currentBestTool = null
+            }
+
+            @JvmField var waitingTicks = 0
+
+            @Suppress("unused")
+            private val tickHandler = handler<GameTickEvent> {
+                waitingTicks++
+                if (waitingTicks <= swapPreviousDelay) return@handler
+
+                waitingTicks = 0
+                val swapAction = swapAction ?: return@handler
+                this.swapAction = null
+                once<ScheduleInventoryActionEvent> { event ->
+                    event.schedule(inventoryConstraints, swapAction)
+                }
+            }
+
+            override fun onDisabled() {
+                waitingTicks = 0
+                currentBestTool = null
+                swapAction = null
+                super.onDisabled()
+            }
+        }
+
+        init {
+            tree(ConsiderInventory)
+        }
+
+        override fun getToolSlot(blockState: BlockState): HotbarItemSlot? {
+            if (!ConsiderInventory.running) {
+                return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability)
+            } else {
+                val slot = (Slots.Hotbar + Slots.Inventory).findBestToolToMineBlock(blockState, ignoreDurability)
+
+                ConsiderInventory.waitingTicks = 0
+                if (slot is HotbarItemSlot?) {
+                    // We found the best tool in hotbar, don't need inventory action
+                    ConsiderInventory.currentBestTool = null
+                    return slot
+                } else {
+                    // Request inventory action
+                    ConsiderInventory.currentBestTool = slot
+                    return null
+                }
+            }
+        }
     }
 
     private object StaticSelectMode : ToolSelectorMode("Static") {
@@ -85,13 +155,37 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
     private val requireSneaking by boolean("RequireSneaking", false)
 
+    private object RequireNearBed : ToggleableConfigurable(
+        this, "RequireNearBed", enabled = false
+    ), BedBlockTracker.Subscriber {
+        override val maxLayers: Int get() = 1
+
+        override fun onEnabled() {
+            BedBlockTracker.subscribe(this)
+        }
+
+        override fun onDisabled() {
+            BedBlockTracker.unsubscribe(this)
+        }
+
+        private val distance by float("Distance", 10.0f, 3.0f..50.0f)
+
+        fun matches(): Boolean {
+            return BedBlockTracker.allPositions().any { it.getCenterDistanceSquaredEyes() <= distance.sq() }
+        }
+    }
+
+    init {
+        tree(RequireNearBed)
+    }
+
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
         switchToBreakBlock(event.pos)
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isSneaking) {
+        if (requireSneaking && !player.isSneaking || RequireNearBed.enabled && !RequireNearBed.matches()) {
             return
         }
 
@@ -109,7 +203,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         val slot = filter {
             val stack = it.itemStack
             val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
-            stack.isNothing() || (!player.isCreative && durabilityCheck)
+            stack.isEmpty || (!player.isCreative && durabilityCheck)
         }.maxByOrNull {
             it.itemStack.getMiningSpeedMultiplier(blockState)
         } ?: return null
