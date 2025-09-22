@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
  *
  * Command: [CommandAutoAccount]
  */
-object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
+object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = listOf("AutoLogin", "AutoRegister")) {
 
     private val password by text("Password", "a1b2c3d4")
         .doNotIncludeAlways()

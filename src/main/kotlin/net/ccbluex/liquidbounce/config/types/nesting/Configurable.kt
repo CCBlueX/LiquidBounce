@@ -66,7 +66,7 @@ open class Configurable(
     /**
      * Used for backwards compatibility when renaming.
      */
-    aliases: Array<out String> = emptyArray(),
+    aliases: List<String> = emptyList(),
 ) : Value<MutableCollection<Value<*>>>(
     name,
     aliases,

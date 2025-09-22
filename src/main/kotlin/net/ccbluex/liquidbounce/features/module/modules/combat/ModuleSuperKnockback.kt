@@ -44,7 +44,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  * Increases knockback dealt to other entities.
  */
 @Suppress("MagicNumber")
-object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = arrayOf("WTap")) {
+object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = listOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)

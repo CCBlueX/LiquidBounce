@@ -60,7 +60,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") val name: String,
-    @Exclude @ProtocolExclude val aliases: Array<out String> = emptyArray(),
+    @Exclude @ProtocolExclude val aliases: List<String> = emptyList(),
     @Exclude @ProtocolExclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
 

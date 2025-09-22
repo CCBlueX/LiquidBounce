@@ -40,7 +40,7 @@ abstract class ToggleableConfigurable(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
     enabled: Boolean,
-    aliases: Array<out String> = emptyArray(),
+    aliases: List<String> = emptyList(),
 ) : Configurable(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
     MinecraftShortcuts {
 

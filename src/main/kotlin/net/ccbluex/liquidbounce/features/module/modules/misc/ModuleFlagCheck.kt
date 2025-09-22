@@ -44,7 +44,7 @@ import kotlin.math.roundToLong
  *
  * Alerts you about set backs.
  */
-object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
+object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = listOf("FlagDetect")) {
 
     private var chatMessage by boolean("ChatMessage", true)
     private var notification by boolean("Notification", false)

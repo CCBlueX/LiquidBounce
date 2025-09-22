@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * Automatically throws away useless items and sorts them.
  */
 object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
-    aliases = arrayOf("InventoryManager")
+    aliases = listOf("InventoryManager")
 ) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())

@@ -42,7 +42,7 @@ import net.minecraft.item.Items
 object ModuleElytraSwap : ClientModule(
     "ElytraSwap",
     Category.PLAYER,
-    aliases = arrayOf("ChestSwap"),
+    aliases = listOf("ChestSwap"),
     disableOnQuit = true
 ) {
 
