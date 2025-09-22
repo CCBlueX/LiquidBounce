@@ -40,16 +40,18 @@ import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
 import java.util.function.Consumer
+import java.util.function.Function
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
-typealias ValueListener<T> = (T) -> T
-typealias ValueChangedListener<T> = (T) -> Unit
+typealias ValueListener<T> = Function<T, T>
+typealias ValueChangedListener<T> = Consumer<T>
 
 /**
  * Order by name of [Value] (ignoreCase)
  */
+@JvmField
 val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
 /**
@@ -228,7 +230,7 @@ open class Value<T : Any>(
         var currT = t
         runCatching {
             listeners.forEach {
-                currT = it(t)
+                currT = it.apply(t)
             }
 
             if (isImmutable) {
@@ -237,7 +239,7 @@ open class Value<T : Any>(
         }.onSuccess {
             apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
-            changedListeners.forEach { it(currT) }
+            changedListeners.forEach { it.accept(currT) }
             stateFlow.value = currT
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
