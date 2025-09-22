@@ -29,7 +29,9 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.player.PlayerEntity
 import java.util.function.Predicate
 
@@ -105,8 +107,9 @@ open class TargetSelector(
         // Sort by entity type (player first, then hostile, then other)
         when (entity) {
             is PlayerEntity -> 0
-            is HostileEntity -> 1
-            else -> 2
+            is HostileEntity, is Monster -> 1
+            is Angerable if entity.angryAt == player.uuid -> 2
+            else -> Int.MAX_VALUE
         }
     }.thenBy {
         when (priority) {
