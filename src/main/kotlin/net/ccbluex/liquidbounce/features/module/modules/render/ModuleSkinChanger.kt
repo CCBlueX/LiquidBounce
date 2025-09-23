@@ -39,6 +39,7 @@ import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
 import net.minecraft.util.Identifier
+import okio.ByteString.Companion.encodeUtf8
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -104,7 +105,10 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                             delay(1.seconds)
                         }
 
-                        val id = Identifier.of(LiquidBounce.CLIENT_NAME.lowercase(), file.nameWithoutExtension)
+                        val id = Identifier.of(
+                            LiquidBounce.CLIENT_NAME.lowercase(),
+                            "Skin-${file.name.encodeUtf8().md5().hex()}"
+                        )
 
                         NativeImage.read(file.inputStream()).registerTexture(id)
 
