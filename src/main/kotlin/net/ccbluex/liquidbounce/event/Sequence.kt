@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.BooleanSupplier
+import java.util.function.Consumer
 import java.util.function.IntSupplier
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
@@ -54,20 +55,8 @@ object SequenceManager : EventListener {
      */
     @Suppress("unused")
     private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        sequences.removeIf { sequence ->
-            // Prevent modules handling events when not supposed to
-            if (sequence.isJobInActive) {
-                true
-            } else {
-                if (!sequence.owner.running) {
-                    sequence.cancel()
-                    true
-                } else {
-                    sequence.tick()
-                    sequence.isJobInActive
-                }
-            }
-        }
+        sequences.removeIf { it.isJobInActive || !it.owner.running }
+        sequences.forEach(Consumer(Sequence::tick))
     }
 
     /**
