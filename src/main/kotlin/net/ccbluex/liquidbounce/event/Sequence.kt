@@ -57,6 +57,8 @@ object SequenceManager : EventListener {
         sequences.removeIf { sequence ->
             // Prevent modules handling events when not supposed to
             if (sequence.isJobInActive) {
+                true
+            } else {
                 if (!sequence.owner.running) {
                     sequence.cancel()
                     true
@@ -64,8 +66,6 @@ object SequenceManager : EventListener {
                     sequence.tick()
                     sequence.isJobInActive
                 }
-            } else {
-                true
             }
         }
     }
