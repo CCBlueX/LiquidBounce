@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  * Legit trick to build faster.
  */
 object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
-    aliases = arrayOf("FastBridge", "BridgeAssistant", "LegitScaffold")
+    aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
 
     private val edgeDistance by floatRange("EdgeDistance", 0.4f..0.6f, 0.01f..1.3f)

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -105,7 +106,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             val perform: suspend Sequence.() -> Unit,
         ): NamedChoice {
             JUMP("Jump", {
-                waitNext<MovementInputEvent> { event ->
+                once<MovementInputEvent> { event ->
                     event.jump = true
                 }
             }),
@@ -175,7 +176,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                waitNext<MovementInputEvent> { event ->
+                once<MovementInputEvent> { event ->
                     event.jump = true
                 }
             }

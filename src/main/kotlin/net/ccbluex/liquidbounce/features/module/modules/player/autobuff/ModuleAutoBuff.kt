@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
     category = Category.PLAYER,
-    aliases = arrayOf("AutoPot", "AutoGapple", "AutoSoup")
+    aliases = listOf("AutoPot", "AutoGapple", "AutoSoup")
 ) {
 
     /**

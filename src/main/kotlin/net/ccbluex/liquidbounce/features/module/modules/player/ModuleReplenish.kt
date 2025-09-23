@@ -47,7 +47,7 @@ import net.minecraft.item.Items
  * @author ccetl
  */
 @Suppress("MagicNumber")
-object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = arrayOf("Refill")) {
+object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = listOf("Refill")) {
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")

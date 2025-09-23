@@ -34,7 +34,7 @@ import net.minecraft.util.Hand
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
-object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = arrayOf("OldBlocking")) {
+object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()

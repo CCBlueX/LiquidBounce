@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.script.ScriptApiRequired
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
-    aliases: Array<String> = emptyArray(),
+    aliases: List<String> = emptyList(),
     defaultValue: T,
     @Exclude val choices: Set<T>
 ) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {

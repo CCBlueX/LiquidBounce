@@ -305,7 +305,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return
         }
 
-        debuggedGeometry[DebuggedOwner(owner, name)] = geometry
+        debuggedGeometry[DebuggedOwner((owner as? Sequence)?.owner ?: owner, name)] = geometry
     }
 
     inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
@@ -316,8 +316,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugGeometry(owner = this, name, lazyGeometry())
     }
 
+    @JvmRecord
     private data class DebuggedOwner(val owner: Any, val name: String)
 
+    @JvmRecord
     private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
 
     private val debugParameters = hashMapOf<DebuggedOwner, ParameterCapture>()
@@ -327,7 +329,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return
         }
 
-        debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
+        debugParameters[DebuggedOwner((owner as? Sequence)?.owner ?: owner, name)] = ParameterCapture(value = value)
     }
 
     inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
@@ -343,11 +345,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         return Color4b(Color.getHSBColor(hue, 1f, 1f)).with(a = 32)
     }
 
-    sealed class DebuggedGeometry(val color: Color4b) {
-        abstract fun render(env: WorldRenderEnvironment)
+    sealed interface DebuggedGeometry {
+        val color: Color4b
+        fun render(env: WorldRenderEnvironment)
     }
 
-    class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedLine(line: Line, override val color: Color4b) : DebuggedGeometry {
         val from: Vec3d
         val to: Vec3d
 
@@ -365,7 +368,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawQuad(relativeToCamera(p1).toVec3(), relativeToCamera(p2).toVec3())
@@ -373,7 +376,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
@@ -381,7 +384,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
+    open class DebuggedBox(val box: Box, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawSolidBox(box.offset(env.camera.pos.negate()))
@@ -394,7 +397,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         color
     )
 
-    class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
+    class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry {
+        override val color: Color4b get() = Color4b.WHITE
         override fun render(env: WorldRenderEnvironment) {
             this.geometry.forEach { it.render(env) }
         }

@@ -39,7 +39,7 @@ import net.minecraft.client.gui.screen.DeathScreen
  *
  * Quality of life improvements to the in-game chat.
  */
-object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = arrayOf("AntiSpam")) {
+object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = listOf("AntiSpam")) {
     private val features by multiEnumChoice("Features",
         Features.INFINITE,
         Features.ANTI_CLEAR,

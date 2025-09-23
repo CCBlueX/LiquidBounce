@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
@@ -48,6 +49,8 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
+
+val renderScope = CoroutineScope(Dispatchers.Minecraft + SupervisorJob())
 
 val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 

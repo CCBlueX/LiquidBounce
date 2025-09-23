@@ -36,7 +36,14 @@ typealias SuspendableHandler = suspend Sequence.() -> Unit
 object SequenceManager : EventListener {
 
     // Running sequences
-    internal val sequences = CopyOnWriteArrayList<Sequence>()
+    private val sequences = CopyOnWriteArrayList<Sequence>()
+
+    /**
+     * Registers a sequence to be ticked.
+     */
+    fun register(sequence: Sequence) {
+        sequences.add(sequence)
+    }
 
     /**
      * Tick sequences
@@ -46,15 +53,20 @@ object SequenceManager : EventListener {
      * in the same tick
      */
     @Suppress("unused")
-    val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        for (sequence in sequences) {
+    private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        sequences.removeIf { sequence ->
             // Prevent modules handling events when not supposed to
-            if (!sequence.owner.running) {
-                sequence.cancel()
-                continue
+            if (sequence.isJobInActive) {
+                if (!sequence.owner.running) {
+                    sequence.cancel()
+                    true
+                } else {
+                    sequence.tick()
+                    sequence.isJobInActive
+                }
+            } else {
+                true
             }
-
-            sequence.tick()
         }
     }
 
@@ -76,14 +88,19 @@ object SequenceManager : EventListener {
 }
 
 @Suppress("TooManyFunctions")
-open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
-    var coroutine: Job
-        private set
+class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
+    /**
+     * The coroutine that is running the sequence.
+     * Once it's finished (inactive), it should be removed from the [SequenceManager.sequences].
+     */
+    private var coroutine: Job
 
-    open fun cancel() {
+    val isJobInActive: Boolean
+        get() = !coroutine.isActive
+
+    fun cancel() {
         coroutine.cancel()
         cancellationTask?.run()
-        SequenceManager.sequences -= this@Sequence
     }
 
     private var continuation: Continuation<Unit>? = null
@@ -101,18 +118,13 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             context = Dispatchers.Unconfined + CoroutineName("Sequence@$owner"),
             start = CoroutineStart.UNDISPATCHED
         ) {
-            SequenceManager.sequences += this@Sequence
-            coroutineRun()
-            SequenceManager.sequences -= this@Sequence
-        }
-    }
-
-    internal open suspend fun coroutineRun() {
-        if (owner.running) {
-            runCatching {
-                handler()
-            }.onFailure {
-                logger.error("Exception occurred during subroutine", it)
+            SequenceManager.register(this@Sequence)
+            if (owner.running) {
+                runCatching {
+                    handler()
+                }.onFailure {
+                    logger.error("Exception occurred during subroutine", it)
+                }
             }
         }
     }
@@ -198,7 +210,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * Syncs the coroutine to the game tick.
      * It does not matter if we wait 0 or 1 ticks, it will always sync to the next tick.
      */
-    internal suspend fun sync() = wait { 0 }
+    private suspend fun sync() = wait { 0 }
 
     /**
      * Private utility function for waiting external [deferred].
@@ -219,40 +231,5 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         context: CoroutineContext,
         block: suspend CoroutineScope.() -> T
     ): T = waitFor(CoroutineScope(coroutine + context).async(context, block = block))
-
-    /**
-     * Wait for next event with type of [E],
-     * handle it with [handler] and [priority],
-     * and get the instance.
-     */
-    suspend inline fun <reified E : Event> waitNext(
-        priority: Short = 0,
-        crossinline handler: (E) -> Unit
-    ): E {
-        val deferred = CompletableDeferred<E>(parent = coroutine)
-        owner.once<E>(priority) {
-            handler(it)
-            deferred.complete(it)
-        }
-        return waitFor(deferred)
-    }
-
-}
-
-class TickSequence(owner: EventListener, handler: SuspendableHandler) : Sequence(owner, handler) {
-    private var continueLoop = true
-
-    override suspend fun coroutineRun() {
-        sync()
-
-        while (continueLoop && owner.running) {
-            super.coroutineRun()
-            sync()
-        }
-    }
-
-    override fun cancel() {
-        continueLoop = false
-    }
 
 }

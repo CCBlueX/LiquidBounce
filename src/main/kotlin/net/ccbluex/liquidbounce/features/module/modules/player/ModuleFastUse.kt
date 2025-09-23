@@ -42,7 +42,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * Allows you to use items faster.
  */
 
-object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = arrayOf("FastEat")) {
+object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf("FastEat")) {
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
 

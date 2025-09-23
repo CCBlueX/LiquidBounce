@@ -42,7 +42,7 @@ import net.minecraft.util.Hand
  *
  * Move with your vehicle however you want.
  */
-object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, aliases = arrayOf("BoatFly")) {
+object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, aliases = listOf("BoatFly")) {
 
     init {
         enableLock()
