@@ -90,7 +90,7 @@ inline fun <reified T : Event> EventListener.until(
             EventManager.unregisterEventHook(T::class.java, eventHook)
         }
     }
-    return EventManager.registerEventHook(T::class.java, eventHook)
+    return eventHook
 }
 
 inline fun <reified T : Event> EventListener.once(
@@ -118,16 +118,16 @@ fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
     // We store our sequence in this variable.
     // That can be done because our variable will survive the scope of this function
     // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.
-    var sequence: TickSequence? = TickSequence(this, eventHandler)
+    var sequence: Sequence? = null
 
     SequenceManager.handler<GameTickEvent> {
         // Check if we should start or stop the sequence
         if (this.running) {
-            // Check if the sequence is already running
-            if (sequence == null) {
+            // Check if the sequence is already running (completed or null)
+            if (sequence == null || sequence!!.coroutine.isCompleted) {
                 // If not, start it
                 // This will start a new repeating sequence which will run until the condition is false
-                sequence = TickSequence(this, eventHandler)
+                sequence = Sequence(this, eventHandler)
             }
         } else if (sequence != null) { // This condition is only true if the sequence is running
             // If the sequence is running, we should stop it

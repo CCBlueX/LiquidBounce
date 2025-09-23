@@ -47,14 +47,15 @@ object SequenceManager : EventListener {
      */
     @Suppress("unused")
     val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        for (sequence in sequences) {
+        sequences.removeIf { sequence ->
             // Prevent modules handling events when not supposed to
             if (!sequence.owner.running) {
                 sequence.cancel()
-                continue
+                true
+            } else {
+                sequence.tick()
+                false
             }
-
-            sequence.tick()
         }
     }
 
@@ -76,14 +77,13 @@ object SequenceManager : EventListener {
 }
 
 @Suppress("TooManyFunctions")
-open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
+class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     var coroutine: Job
         private set
 
-    open fun cancel() {
+    fun cancel() {
         coroutine.cancel()
         cancellationTask?.run()
-        SequenceManager.sequences -= this@Sequence
     }
 
     private var continuation: Continuation<Unit>? = null
@@ -107,7 +107,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         }
     }
 
-    internal open suspend fun coroutineRun() {
+    private suspend fun coroutineRun() {
         if (owner.running) {
             runCatching {
                 handler()
@@ -198,7 +198,7 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * Syncs the coroutine to the game tick.
      * It does not matter if we wait 0 or 1 ticks, it will always sync to the next tick.
      */
-    internal suspend fun sync() = wait { 0 }
+    private suspend fun sync() = wait { 0 }
 
     /**
      * Private utility function for waiting external [deferred].
@@ -235,24 +235,6 @@ open class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             deferred.complete(it)
         }
         return waitFor(deferred)
-    }
-
-}
-
-class TickSequence(owner: EventListener, handler: SuspendableHandler) : Sequence(owner, handler) {
-    private var continueLoop = true
-
-    override suspend fun coroutineRun() {
-        sync()
-
-        while (continueLoop && owner.running) {
-            super.coroutineRun()
-            sync()
-        }
-    }
-
-    override fun cancel() {
-        continueLoop = false
     }
 
 }

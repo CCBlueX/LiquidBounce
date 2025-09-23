@@ -103,14 +103,12 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Match won", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(winMessage)
         } else if (ev.message.contains("Du wurdest von") && ev.message.contains("getötet")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(loseMessage)
         }
@@ -141,7 +139,6 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        sync()
         waitSeconds(5)
     }
 
