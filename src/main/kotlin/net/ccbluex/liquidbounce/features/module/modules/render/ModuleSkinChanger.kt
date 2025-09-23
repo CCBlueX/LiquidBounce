@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -68,7 +69,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 try {
                     action(it)
                 } catch (e: Exception) {
-                    chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
+                    if (this@ModuleSkinChanger.running) {
+                        chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
+                    }
                     logger.error("Unable to load custom skin", e)
                 }
             }
@@ -120,7 +123,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             override var skinTextures: Supplier<SkinTextures>? = null
 
             init {
-                image.asStateFlow().debounceUntilInGame { file ->
+                image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     val id = Identifier.of(
                         LiquidBounce.CLIENT_NAME.lowercase(),
                         "skin-changer-from-file"
