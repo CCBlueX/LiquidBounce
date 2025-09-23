@@ -34,6 +34,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.registerTexture
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
@@ -47,6 +49,12 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     private val mode = choices("Mode", 0) {
         arrayOf(Mode.Online, Mode.File)
+    }
+
+    private suspend fun waitUntilInGame() {
+        while (!inGame) {
+            delay(1.seconds)
+        }
     }
 
     private sealed class Mode(name: String) : Choice(name) {
@@ -64,9 +72,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             init {
                 withScope {
                     username.asStateFlow().debounce { 2.seconds }.collectLatest { username ->
-                        while (mc.player == null) {
-                            delay(1.seconds)
-                        }
+                        waitUntilInGame()
                         skinTextures = textureSupplier(username)
                     }
                 }
@@ -101,13 +107,11 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             init {
                 withScope {
                     image.asStateFlow().debounce { 2.seconds }.collectLatest { file ->
-                        while (mc.player == null) {
-                            delay(1.seconds)
-                        }
+                        waitUntilInGame()
 
                         val id = Identifier.of(
                             LiquidBounce.CLIENT_NAME.lowercase(),
-                            "Skin-${file.name.encodeUtf8().md5().hex()}"
+                            "skin-${file.name.encodeUtf8().md5().hex()}"
                         )
 
                         NativeImage.read(file.inputStream()).registerTexture(id)
