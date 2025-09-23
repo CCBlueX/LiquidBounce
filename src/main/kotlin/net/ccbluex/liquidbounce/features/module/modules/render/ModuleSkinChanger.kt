@@ -21,12 +21,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.withScope
+import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -36,12 +40,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.registerTexture
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
 import net.minecraft.util.Identifier
-import okio.ByteString.Companion.encodeUtf8
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -57,6 +61,20 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         }
     }
 
+    private inline fun <T> Flow<T>.debounceUntilInGame(crossinline action: suspend (T) -> Unit) {
+        renderScope.launch {
+            this@debounceUntilInGame.debounce { 2.seconds }.collectLatest {
+                waitUntilInGame()
+                try {
+                    action(it)
+                } catch (e: Exception) {
+                    chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
+                    logger.error("Unable to load custom skin", e)
+                }
+            }
+        }
+    }
+
     private sealed class Mode(name: String) : Choice(name) {
         final override val parent: ChoiceConfigurable<*>
             get() = mode
@@ -66,23 +84,21 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         object Online : Mode("Online") {
             private val username = text("Username", "LiquidBounce")
 
-            @Volatile
-            override var skinTextures: Supplier<SkinTextures>? = null
-
             init {
-                withScope {
-                    username.asStateFlow().debounce { 2.seconds }.collectLatest { username ->
-                        waitUntilInGame()
-                        skinTextures = textureSupplier(username)
-                    }
+                username.asStateFlow().debounceUntilInGame { username ->
+                    skinTextures = textureSupplier(username)
                 }
             }
 
-            private fun textureSupplier(username: String): Supplier<SkinTextures> {
-                val uuid = GameProfileRepository().fetchUuidByUsername(username)
-                    ?: generateOfflinePlayerUuid(username)
-                val profile = mc.sessionService.fetchProfile(uuid, false)?.profile
-                    ?: GameProfile(uuid, username)
+            override var skinTextures: Supplier<SkinTextures>? = null
+
+            private suspend fun textureSupplier(username: String): Supplier<SkinTextures> {
+                val profile = withContext(Dispatchers.IO) {
+                    val uuid = GameProfileRepository().fetchUuidByUsername(username)
+                        ?: generateOfflinePlayerUuid(username)
+                    mc.sessionService.fetchProfile(uuid, false)?.profile
+                        ?: GameProfile(uuid, username)
+                }
 
                 return PlayerListEntry.texturesSupplier(profile)
             }
@@ -101,26 +117,24 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 WIDE("Default", SkinTextures.Model.WIDE),
             }
 
-            @Volatile
             override var skinTextures: Supplier<SkinTextures>? = null
 
             init {
-                withScope {
-                    image.asStateFlow().debounce { 2.seconds }.collectLatest { file ->
-                        waitUntilInGame()
+                image.asStateFlow().debounceUntilInGame { file ->
+                    val id = Identifier.of(
+                        LiquidBounce.CLIENT_NAME.lowercase(),
+                        "skin-changer-from-file"
+                    )
 
-                        val id = Identifier.of(
-                            LiquidBounce.CLIENT_NAME.lowercase(),
-                            "skin-${file.name.encodeUtf8().md5().hex()}"
-                        )
+                    // New texture will replace the old one
+                    val nativeImage = withContext(Dispatchers.IO) {
+                        NativeImage.read(file.inputStream())
+                    }
 
-                        NativeImage.read(file.inputStream()).registerTexture(id)
+                    nativeImage.registerTexture(id)
 
-                        skinTextures?.get()?.texture?.let(mc.textureManager::destroyTexture)
-
-                        skinTextures = Supplier {
-                            SkinTextures(id, null, null, null, model.model, false)
-                        }
+                    skinTextures = Supplier {
+                        SkinTextures(id, null, null, null, model.model, false)
                     }
                 }
             }
