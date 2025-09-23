@@ -482,13 +482,13 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         // Prioritize by all means the main hand if it has a block
         val suitableHand = Hand.entries.firstOrNull {
             isValidBlock(player.getStackInHand(it))
-        } ?: return@tickHandler
+        }
 
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, suitableHand, swingMode = swingMode)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, swingMode = swingMode)
                 true
             }
         }
@@ -630,9 +630,9 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
     private fun simulatePlacementAttempts(
         hitResult: BlockHitResult?,
-        suitableHand: Hand,
+        suitableHand: Hand?,
     ): Boolean {
-        val stack = player.getStackInHand(suitableHand)
+        val stack = suitableHand?.let(player::getStackInHand) ?: return false
 
         if (hitResult == null || !SimulatePlacementAttempts.enabled) {
             return false
