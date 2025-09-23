@@ -56,12 +56,17 @@ object SequenceManager : EventListener {
     private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         sequences.removeIf { sequence ->
             // Prevent modules handling events when not supposed to
-            if (!sequence.owner.running) {
-                sequence.cancel()
+            if (sequence.isJobInActive) {
+                if (!sequence.owner.running) {
+                    sequence.cancel()
+                    true
+                } else {
+                    sequence.tick()
+                    sequence.isJobInActive
+                }
             } else {
-                sequence.tick()
+                true
             }
-            !sequence.coroutine.isActive
         }
     }
 
@@ -88,8 +93,10 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * The coroutine that is running the sequence.
      * Once it's finished (inactive), it should be removed from the [SequenceManager.sequences].
      */
-    var coroutine: Job
-        private set
+    private var coroutine: Job
+
+    val isJobInActive: Boolean
+        get() = !coroutine.isActive
 
     fun cancel() {
         coroutine.cancel()
@@ -102,7 +109,6 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     private var cancellationTask: Runnable? = null
 
     init {
-        SequenceManager.register(this)
         // Note: It is important that this is in the constructor and NOT in the variable declaration, because
         // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
         // overwritten by the initialization of the `totalTicks` field
@@ -112,6 +118,7 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             context = Dispatchers.Unconfined + CoroutineName("Sequence@$owner"),
             start = CoroutineStart.UNDISPATCHED
         ) {
+            SequenceManager.register(this@Sequence)
             if (owner.running) {
                 runCatching {
                     handler()
@@ -224,22 +231,5 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         context: CoroutineContext,
         block: suspend CoroutineScope.() -> T
     ): T = waitFor(CoroutineScope(coroutine + context).async(context, block = block))
-
-    /**
-     * Wait for next event with type of [E],
-     * handle it with [handler] and [priority],
-     * and get the instance.
-     */
-    suspend inline fun <reified E : Event> waitNext(
-        priority: Short = 0,
-        crossinline handler: (E) -> Unit
-    ): E {
-        val deferred = CompletableDeferred<E>(parent = coroutine)
-        owner.once<E>(priority) {
-            handler(it)
-            deferred.complete(it)
-        }
-        return waitFor(deferred)
-    }
 
 }
