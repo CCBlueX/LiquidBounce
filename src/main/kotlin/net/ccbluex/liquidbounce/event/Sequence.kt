@@ -36,7 +36,14 @@ typealias SuspendableHandler = suspend Sequence.() -> Unit
 object SequenceManager : EventListener {
 
     // Running sequences
-    internal val sequences = CopyOnWriteArrayList<Sequence>()
+    private val sequences = CopyOnWriteArrayList<Sequence>()
+
+    /**
+     * Registers a sequence to be ticked.
+     */
+    fun register(sequence: Sequence) {
+        sequences.add(sequence)
+    }
 
     /**
      * Tick sequences
@@ -46,16 +53,15 @@ object SequenceManager : EventListener {
      * in the same tick
      */
     @Suppress("unused")
-    val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         sequences.removeIf { sequence ->
             // Prevent modules handling events when not supposed to
             if (!sequence.owner.running) {
                 sequence.cancel()
-                true
             } else {
                 sequence.tick()
-                false
             }
+            !sequence.coroutine.isActive
         }
     }
 
@@ -78,6 +84,10 @@ object SequenceManager : EventListener {
 
 @Suppress("TooManyFunctions")
 class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
+    /**
+     * The coroutine that is running the sequence.
+     * Once it's finished (inactive), it should be removed from the [SequenceManager.sequences].
+     */
     var coroutine: Job
         private set
 
@@ -92,6 +102,7 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     private var cancellationTask: Runnable? = null
 
     init {
+        SequenceManager.register(this)
         // Note: It is important that this is in the constructor and NOT in the variable declaration, because
         // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
         // overwritten by the initialization of the `totalTicks` field
@@ -101,18 +112,12 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             context = Dispatchers.Unconfined + CoroutineName("Sequence@$owner"),
             start = CoroutineStart.UNDISPATCHED
         ) {
-            SequenceManager.sequences += this@Sequence
-            coroutineRun()
-            SequenceManager.sequences -= this@Sequence
-        }
-    }
-
-    private suspend fun coroutineRun() {
-        if (owner.running) {
-            runCatching {
-                handler()
-            }.onFailure {
-                logger.error("Exception occurred during subroutine", it)
+            if (owner.running) {
+                runCatching {
+                    handler()
+                }.onFailure {
+                    logger.error("Exception occurred during subroutine", it)
+                }
             }
         }
     }

@@ -128,6 +128,7 @@ fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
                 // If not, start it
                 // This will start a new repeating sequence which will run until the condition is false
                 sequence = Sequence(this, eventHandler)
+                // The old one will be cancelled by [SequenceManager]
             }
         } else if (sequence != null) { // This condition is only true if the sequence is running
             // If the sequence is running, we should stop it
