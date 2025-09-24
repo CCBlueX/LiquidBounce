@@ -29,6 +29,7 @@ abstract class NoSlowUseActionHandler(name: String) : ToggleableConfigurable(Mod
     private val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
 
     companion object {
+        @JvmField
         val DEFAULT_USE_MUL = FloatFloatImmutablePair(0.2f, 0.2f)
     }
 

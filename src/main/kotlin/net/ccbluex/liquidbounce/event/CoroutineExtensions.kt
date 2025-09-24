@@ -263,9 +263,10 @@ suspend inline fun <reified T : Event> EventListener.waitMatchesWithTimeout(
  * the listener's running state at suspension
  * to determine whether to resume the continuation.
  */
-private fun EventListener.continuationInterceptor(original: ContinuationInterceptor?): ContinuationInterceptor =
-    original as? EventListenerRunningContinuationInterceptor
-        ?: EventListenerRunningContinuationInterceptor(original, this)
+internal fun EventListener.continuationInterceptor(
+    original: ContinuationInterceptor? = null,
+): ContinuationInterceptor = original as? EventListenerRunningContinuationInterceptor
+    ?: EventListenerRunningContinuationInterceptor(original, this)
 
 /**
  * Remove cached scope and cancel it.
