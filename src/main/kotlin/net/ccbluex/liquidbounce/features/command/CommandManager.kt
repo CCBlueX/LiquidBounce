@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
@@ -47,7 +49,16 @@ import net.ccbluex.liquidbounce.utils.math.levenshtein
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
-private val commands = mutableListOf<Command>()
+/**
+ * Key: Command name or alias
+ * Value: Command
+ */
+private val rootCommandMap = Object2ObjectRBTreeMap<String, Command>(String.CASE_INSENSITIVE_ORDER)
+
+/**
+ * Command set. Sorted with name.
+ */
+private val commandSet = ObjectRBTreeSet<Command>(Comparator.comparing({ it.name }, String.CASE_INSENSITIVE_ORDER))
 
 /**
  * Contains routines for handling commands
@@ -55,7 +66,7 @@ private val commands = mutableListOf<Command>()
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
-object CommandManager : Iterable<Command> by commands {
+object CommandManager : Collection<Command> by commandSet {
 
     object Options : Configurable("Commands") {
 
@@ -136,11 +147,19 @@ object CommandManager : Iterable<Command> by commands {
     }
 
     fun addCommand(command: Command) {
-        commands.add(command)
+        if (!commandSet.add(command)) {
+            error("Command '${command.name}' already exists")
+        }
+        rootCommandMap.putCommand(command)
     }
 
     fun removeCommand(command: Command) {
-        commands.remove(command)
+        if (!commandSet.remove(command) ||
+            rootCommandMap.remove(command.name) !== command ||
+            command.aliases.any { rootCommandMap.remove(it) !== command }
+        ) {
+            error("Command '${command.name}' does not exist")
+        }
     }
 
     /**
@@ -174,19 +193,12 @@ object CommandManager : Iterable<Command> by commands {
         }
 
         // If currentCommand is null, idx must be 0, so search in all commands
-        val commandSupplier = currentCommand?.first?.subcommands?.asIterable() ?: commands
+        val commandMap = currentCommand?.first?.subcommandMap ?: rootCommandMap
 
         // Look if something matches the current index, if it does, look if there are further matches
-        commandSupplier
-            .firstOrNull {
-                it.name.equals(args[idx], true) || it.aliases.any { alias ->
-                    alias.equals(
-                        args[idx],
-                        true
-                    )
-                }
-            }
-            ?.let { return getSubCommand(args, Pair(it, idx), idx + 1) }
+        commandMap[args[idx]]?.let {
+            return getSubCommand(args, Pair(it, idx), idx + 1)
+        }
 
         // If no match was found, currentCommand is the subcommand that we searched for
         return currentCommand
@@ -215,10 +227,10 @@ object CommandManager : Iterable<Command> by commands {
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
             ),
-            usageInfo = if (commands.isEmpty() || Options.hintCount == 0) {
+            usageInfo = if (rootCommandMap.isEmpty() || Options.hintCount == 0) {
                 null
             } else {
-                commands.sortedBy { command ->
+                commandSet.sortedBy { command ->
                     var distance = levenshtein(args[0], command.name)
                     if (command.aliases.isNotEmpty()) {
                         distance = min(
@@ -445,12 +457,13 @@ object CommandManager : Iterable<Command> by commands {
             val pair = getSubCommand(args)
 
             if (args.size == 1 && (pair == null || !nextParameter)) {
-                for (command in commands) {
-                    if (command.name.startsWith(args[0], true)) {
-                        builder.suggest(command.name)
-                    }
-
-                    command.aliases.filter { it.startsWith(args[0], true) }.forEach { builder.suggest(it) }
+                val arg = args[0]
+                // get all commands that start with the argument
+                rootCommandMap.subMap(
+                    arg,
+                    arg + Char.MAX_VALUE,
+                ).values.forEach { command ->
+                    builder.suggest(command.name)
                 }
 
                 return builder.buildFuture()

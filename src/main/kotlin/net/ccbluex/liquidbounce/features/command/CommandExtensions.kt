@@ -16,24 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
-import net.minecraft.util.math.BlockPos
+package net.ccbluex.liquidbounce.features.command
 
-sealed class ScaffoldTower(name: String) : Choice(name) {
+import java.util.SortedMap
 
-    final override val parent: ChoiceConfigurable<*>
-        get() = towerMode
-
-    /**
-     * Overwrites the [ModuleScaffold.getTargetedPosition] with a tower-specific one.
-     */
-    open fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        return blockPos.down()
+internal fun SortedMap<String, Command>.putCommand(command: Command) {
+    fun putCommand(name: String, command: Command) {
+        put(name, command)?.let { old ->
+            error("Command name '$name' already used by command '${old.name}'")
+        }
     }
 
+    putCommand(command.name, command)
+    command.aliases.forEach { putCommand(it, command) }
 }

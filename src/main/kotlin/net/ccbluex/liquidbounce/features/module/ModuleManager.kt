@@ -103,7 +103,7 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
 /**
  * A fairly simple module manager
  */
-object ModuleManager : EventListener, Iterable<ClientModule> by modules {
+object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
     val modulesConfigurable = ConfigSystem.root("modules", modules)
 
@@ -443,17 +443,21 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
     }
 
     fun addModule(module: ClientModule) {
+        if (!modules.add(module)) {
+            error("Module '${module.name}' is already registered.")
+        }
         module.initConfigurable()
         module.onRegistration()
-        modules += module
     }
 
     fun removeModule(module: ClientModule) {
+        if (!modules.remove(module)) {
+            error("Module '${module.name}' is not registered.")
+        }
         if (module.running) {
             module.onDisabled()
         }
         module.unregister()
-        modules -= module
     }
 
     fun clear() {
@@ -469,7 +473,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
 
     @JvmName("getModules")
     @ScriptApiRequired
-    fun getModules(): Iterable<ClientModule> = modules
+    fun getModules(): Collection<ClientModule> = modules
 
     @JvmName("getModuleByName")
     @ScriptApiRequired

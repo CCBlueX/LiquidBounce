@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
@@ -48,11 +49,19 @@ class Command(
     val description: String
         get() = translation("$translationBaseKey.description").convertToString()
 
+    /**
+     * For navigation purposes.
+     * Key: name or alias
+     * Value: corresponding subcommand
+     */
+    internal val subcommandMap = Object2ObjectRBTreeMap<String, Command>(String.CASE_INSENSITIVE_ORDER)
+
     init {
         subcommands.forEachIndexed { i, command ->
             check(command.parentCommand == null) {
                 "Subcommand already has parent command"
             }
+            subcommandMap.putCommand(command)
 
             command.index = i
             command.parentCommand = this
