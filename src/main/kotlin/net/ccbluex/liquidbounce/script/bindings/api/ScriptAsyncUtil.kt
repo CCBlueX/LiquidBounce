@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpClient.sendAsync
 import net.ccbluex.liquidbounce.event.EventListener
@@ -50,26 +51,26 @@ class ScriptAsyncUtil(
     companion object TickScheduler : EventListener {
 
         /** Client async tasks */
-        private val scriptFutures = mutableListOf<Future<*>>()
+        private val scriptFutures = ReferenceArrayList<Future<*>>()
 
-        private val currentTickTasks = arrayListOf<BooleanSupplier>()
-        private val nextTickTasks = arrayListOf<BooleanSupplier>()
+        private val runningList = ReferenceArrayList<BooleanSupplier>()
+        private val pendingList = ReferenceArrayList<BooleanSupplier>()
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-            currentTickTasks.removeIf { it.asBoolean }
-            currentTickTasks += nextTickTasks
-            nextTickTasks.clear()
+            runningList.addAll(pendingList)
+            pendingList.clear()
+            runningList.removeIf { it.asBoolean }
         }
 
-        private fun schedule(breakLoop: BooleanSupplier) {
-            mc.execute { nextTickTasks += breakLoop }
+        private fun schedule(breakLoop: BooleanSupplier) = mc.execute {
+            pendingList += breakLoop
         }
 
         fun clear() {
             mc.execute {
-                currentTickTasks.clear()
-                nextTickTasks.clear()
+                runningList.clear()
+                pendingList.clear()
                 scriptFutures.forEach {
                     it.cancel(true)
                 }

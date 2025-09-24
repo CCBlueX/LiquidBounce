@@ -31,6 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : Choice("Grim2371") {
 
     companion object {
+        @JvmStatic
         var shouldPreventNoSlow = false
             private set
     }
