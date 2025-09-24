@@ -208,13 +208,6 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             it.itemStack.getMiningSpeedMultiplier(blockState)
         } ?: return null
 
-        val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
-
-        // The current slot already matches the best
-        if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-            return null
-        }
-
         return slot
     }
 
