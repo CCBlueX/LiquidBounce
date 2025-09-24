@@ -18,13 +18,12 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.BooleanSupplier
-import java.util.function.Consumer
 import java.util.function.IntSupplier
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
@@ -37,38 +36,36 @@ typealias SuspendableHandler = suspend Sequence.() -> Unit
 object SequenceManager : EventListener {
 
     // Running sequences
-    private val sequences = CopyOnWriteArrayList<Sequence>()
+    private val runningList = ReferenceArrayList<Sequence>()
+
+    // Next tick sequences
+    private val pendingList = ReferenceArrayList<Sequence>()
 
     /**
      * Registers a sequence to be ticked.
+     *
+     * @param sequence The [Sequence] to be ticked from next tick.
      */
     fun register(sequence: Sequence) {
-        sequences.add(sequence)
+        mc.execute { pendingList.add(sequence) }
     }
 
     /**
      * Tick sequences
      *
-     * We want it to run before everything else, so we set the priority to 1000
+     * We want it to run before everything else, so we set the priority to [FIRST_PRIORITY]
      * This is because we want to tick the existing sequences before new ones are added and might be ticked
      * in the same tick
      */
     @Suppress("unused")
     private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        sequences.removeIf { it.isJobInActive || !it.owner.running }
-        sequences.forEach(Consumer(Sequence::tick))
-    }
-
-    /**
-     * Cancels all sequences associated with an event listener.
-     * This is called when a module is disabled to ensure no sequences continue running.
-     */
-    fun cancelAllSequences(owner: EventListener) {
-        sequences.removeIf { sequence ->
-            if (sequence.owner == owner) {
-                sequence.cancel()
+        runningList.addAll(pendingList)
+        pendingList.clear()
+        runningList.removeIf {
+            if (it.isJobInActive) {
                 true
             } else {
+                it.tick()
                 false
             }
         }
@@ -78,45 +75,28 @@ object SequenceManager : EventListener {
 
 @Suppress("TooManyFunctions")
 class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
-    /**
-     * The coroutine that is running the sequence.
-     * Once it's finished (inactive), it should be removed from the [SequenceManager.sequences].
-     */
-    private var coroutine: Job
-
-    val isJobInActive: Boolean
-        get() = !coroutine.isActive
-
-    fun cancel() {
-        coroutine.cancel()
-        cancellationTask?.run()
-    }
 
     private var continuation: Continuation<Unit>? = null
     private var elapsedTicks = 0
     private var totalTicks = IntSupplier { 0 }
-    private var cancellationTask: Runnable? = null
 
-    init {
-        // Note: It is important that this is in the constructor and NOT in the variable declaration, because
-        // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
-        // overwritten by the initialization of the `totalTicks` field
-        // which results in one or fewer ticks of actual wait time.
-        @OptIn(DelicateCoroutinesApi::class)
-        this.coroutine = GlobalScope.launch(
-            context = Dispatchers.Unconfined + CoroutineName("Sequence@$owner"),
-            start = CoroutineStart.UNDISPATCHED
-        ) {
-            SequenceManager.register(this@Sequence)
-            if (owner.running) {
-                runCatching {
-                    handler()
-                }.onFailure {
-                    logger.error("Exception occurred during subroutine", it)
-                }
-            }
+    /**
+     * Use [owner]'s [kotlin.coroutines.ContinuationInterceptor] and [CoroutineScope] to handle:
+     * - Exception
+     * - [EventListener.running] aware cancellation
+     */
+    private val coroutine: Job = owner.eventListenerScope.launch(
+        context = owner.continuationInterceptor() + CoroutineName("Sequence-${owner}"),
+        start = CoroutineStart.UNDISPATCHED
+    ) {
+        SequenceManager.register(this@Sequence)
+        if (owner.running) {
+            handler()
         }
     }
+
+    val isJobInActive: Boolean
+        get() = !coroutine.isActive
 
     internal fun tick() {
         if (++this.elapsedTicks >= this.totalTicks.asInt) {
@@ -130,7 +110,11 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * Adds a task to be executed when the sequence is cancelled.
      */
     fun onCancellation(task: Runnable) {
-        cancellationTask = task
+        coroutine.invokeOnCompletion {
+            if (it is CancellationException) {
+                task.run()
+            }
+        }
     }
 
     /**
