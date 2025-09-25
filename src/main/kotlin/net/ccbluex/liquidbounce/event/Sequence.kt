@@ -74,7 +74,11 @@ object SequenceManager : EventListener {
 }
 
 @Suppress("TooManyFunctions")
-class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
+class Sequence(
+    val owner: EventListener,
+    val handler: SuspendableHandler,
+    val onCancellation: Runnable?,
+) {
 
     private var continuation: Continuation<Unit>? = null
     private var elapsedTicks = 0
@@ -84,6 +88,11 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * Use [owner]'s [kotlin.coroutines.ContinuationInterceptor] and [CoroutineScope] to handle:
      * - Exception
      * - [EventListener.running] aware cancellation
+     *
+     * The [handler] block will be executed on the thread
+     * where constructor of [Sequence] be called until first suspension.
+     *
+     * All `wait` functions will be resumed on render thread. (Based on [GameTickEvent] handler)
      */
     private val coroutine: Job = owner.eventListenerScope.launch(
         context = owner.continuationInterceptor() + CoroutineName("Sequence-${owner}"),
@@ -92,6 +101,14 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
         SequenceManager.register(this@Sequence)
         if (owner.running) {
             handler()
+        }
+    }.apply {
+        onCancellation?.let {
+            invokeOnCompletion { t ->
+                if (t is CancellationException) {
+                    it.run()
+                }
+            }
         }
     }
 
@@ -103,17 +120,6 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             val continuation = this.continuation ?: return
             this.continuation = null
             continuation.resume(Unit)
-        }
-    }
-
-    /**
-     * Adds a task to be executed when the sequence is cancelled.
-     */
-    fun onCancellation(task: Runnable) {
-        coroutine.invokeOnCompletion {
-            if (it is CancellationException) {
-                task.run()
-            }
         }
     }
 
@@ -133,7 +139,7 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
      * Returns true when we passed the time of [ticks] without breaking the loop.
      */
-    suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier = BooleanSupplier { false }): Boolean {
+    suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier): Boolean {
         // Don't wait if ticks is 0
         if (ticks == 0) {
             return !breakLoop.asBoolean
@@ -154,20 +160,14 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
             return
         }
 
-        this.wait { ticks }
+        wait { ticks }
     }
 
     /**
      * Waits a fixed amount of seconds on tick level before continuing.
      * Re-entry at the game tick.
      */
-    suspend fun waitSeconds(seconds: Int) {
-        if (seconds == 0) {
-            return
-        }
-
-        this.wait { seconds * 20 }
-    }
+    suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
     /**
      * Waits for the amount of ticks that is retrieved via [ticksToWait]
@@ -192,7 +192,7 @@ class Sequence(val owner: EventListener, val handler: SuspendableHandler) {
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun <T> waitFor(deferred: Deferred<T>): T {
         // Use `waitUntil` to avoid duplicated resumption
-        waitUntil(deferred::isCompleted)
+        waitUntil { deferred.isCompleted }
         return deferred.getCompleted()
     }
 
