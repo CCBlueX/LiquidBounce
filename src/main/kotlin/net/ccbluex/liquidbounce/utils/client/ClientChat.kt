@@ -134,7 +134,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
  * @return Styled text with copy functionality
  */
 fun MutableText.copyable(
-    copyContent: String = convertToString(),
+    copyContent: String = this.string,
     hover: HoverEvent? = HoverEvent(
         HoverEvent.Action.SHOW_TEXT,
         translation("liquidbounce.tooltip.clickToCopy")
@@ -193,7 +193,7 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
     val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
 
     if (mc.player == null) {
-        logger.info("(Chat) ${realText.convertToString()}")
+        logger.info("(Chat) ${realText.string}")
         return
     }
 

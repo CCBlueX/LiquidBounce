@@ -47,7 +47,7 @@ class Command(
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
     val description: String
-        get() = translation("$translationBaseKey.description").convertToString()
+        get() = translation("$translationBaseKey.description").string
 
     /**
      * For navigation purposes.
@@ -131,7 +131,7 @@ class Command(
         hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy"))
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
-        val content = copyContent ?: displayComponent.convertToString()
+        val content = copyContent ?: displayComponent.string
 
         chat(formatting(result(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }

@@ -110,7 +110,7 @@ object CommandServerInfo : Command.Factory, EventListener {
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()
         val tps = ServerObserver.tps
         val ping = network.getPlayerListEntry(player.uuid)?.latency ?: 0
-        val advertisedVersion = "${serverInfo?.version?.convertToString()} (${serverInfo?.protocolVersion})"
+        val advertisedVersion = "${serverInfo?.version?.string} (${serverInfo?.protocolVersion})"
         val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
 
         chat(warning(command.result("header")))

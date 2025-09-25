@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import net.minecraft.client.network.Address
@@ -93,7 +92,7 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
             serverMetadata = metadata
             startTime = Util.getMeasuringTimeMs()
             clientConnection.send(QueryPingC2SPacket(startTime))
-            logger.info("Proxy Metadata [$host:$port]: ${metadata.description.convertToString()}")
+            logger.info("Proxy Metadata [$host:$port]: ${metadata.description.string}")
         }
 
         override fun onPingResult(packet: PingResultS2CPacket) {
@@ -103,7 +102,7 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
                 logger.info("Proxy Ping [$host:$port]: $ping ms")
 
                 runCatching {
-                    val ipInfo = IpInfoApi.someoneElse(serverMetadata.description.convertToString())
+                    val ipInfo = IpInfoApi.someoneElse(serverMetadata.description.string)
                     this@check.ipInfo = ipInfo
                     logger.info("Proxy Info [$host:$port]: ${ipInfo.ip} [${ipInfo.country}, ${ipInfo.org}]")
                 }.onFailure { throwable ->

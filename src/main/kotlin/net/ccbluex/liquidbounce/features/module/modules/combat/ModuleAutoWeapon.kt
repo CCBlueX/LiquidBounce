@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
@@ -217,7 +216,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
         val itemStack = determineWeaponSlot(null)?.itemStack ?: return original
         val itemAttackSpeed = itemStack.attackSpeed
-        debugParameter("Item") { itemStack.itemName.convertToString() }
+        debugParameter("Item") { itemStack.itemName.string }
         debugParameter("Attack Speed") { itemAttackSpeed }
 
         return itemAttackSpeed
