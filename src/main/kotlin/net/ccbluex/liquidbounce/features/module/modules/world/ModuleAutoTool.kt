@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -202,18 +203,16 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         val slot = filter {
             val stack = it.itemStack
-            val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
-            stack.isEmpty || (!player.isCreative && durabilityCheck)
+            val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
+            !player.isCreative && durabilityCheck
         }.maxByOrNull {
             it.itemStack.getMiningSpeedMultiplier(blockState)
+            // Gives the priority to the currently selected slot
+            // if all slots are equal in terms of mining speed
+            val currentSlotBonus = if (player.mainHandStack === it.itemStack) 1 else 0
+
+            it.itemStack.getMiningSpeedMultiplier(blockState) + currentSlotBonus
         } ?: return null
-
-        val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
-
-        // The current slot already matches the best
-        if (miningSpeedMultiplier == player.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-            return null
-        }
 
         return slot
     }

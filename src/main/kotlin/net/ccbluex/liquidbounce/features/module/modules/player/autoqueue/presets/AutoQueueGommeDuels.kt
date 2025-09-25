@@ -66,7 +66,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         }
 
         // Check if we are on GommeHD.net
-        val headerText = playerListHeader.convertToString()
+        val headerText = playerListHeader.string
         if (!headerText.contains("GommeHD.net")) {
             inMatch = false
 

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import java.util.function.Predicate
 
 /**
  * An eagle module
@@ -49,40 +50,33 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
 
     private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
         private val conditions by multiEnumChoice("Conditions",
-            Conditions.ON_GROUND
+            Condition.ON_GROUND
         )
 
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.pitch in pitch && conditions.all { it.meetsCondition(event) }
+            !enabled || player.pitch in pitch && conditions.all { it.test(event) }
 
         @Suppress("unused")
-        private enum class Conditions(
-            override val choiceName: String,
-            val meetsCondition: (event: MovementInputEvent) -> Boolean
-        ) : NamedChoice {
-            LEFT("Left", { event ->
-                event.directionalInput.left
-            }),
-            RIGHT("Right", { event ->
-                event.directionalInput.right
-            }),
-            FORWARDS("Forwards", { event ->
-                event.directionalInput.forwards
-            }),
-            BACKWARDS("Backwards", { event ->
-                event.directionalInput.backwards
-            }),
-            HOLDING_BLOCKS("HoldingBlocks", { _ ->
-                isValidBlock(player.mainHandStack) || isValidBlock(player.offHandStack)
-            }),
-            ON_GROUND("OnGround", { _ ->
-                player.isOnGround
-            }),
-            SNEAK("Sneak", { event ->
-                event.sneak
-            })
+        private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
+            LEFT("Left"),
+            RIGHT("Right"),
+            FORWARDS("Forwards"),
+            BACKWARDS("Backwards"),
+            HOLDING_BLOCKS("HoldingBlocks"),
+            ON_GROUND("OnGround"),
+            SNEAK("Sneak");
+
+            override fun test(event: MovementInputEvent): Boolean = when (this) {
+                LEFT -> event.directionalInput.left
+                RIGHT -> event.directionalInput.right
+                FORWARDS -> event.directionalInput.forwards
+                BACKWARDS -> event.directionalInput.backwards
+                HOLDING_BLOCKS -> isValidBlock(player.mainHandStack) || isValidBlock(player.offHandStack)
+                ON_GROUND -> player.isOnGround
+                SNEAK -> event.sneak
+            }
         }
     }
 

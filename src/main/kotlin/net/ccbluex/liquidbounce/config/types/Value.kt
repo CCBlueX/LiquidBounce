@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
@@ -136,7 +135,7 @@ open class Value<T : Any>(
 
     @Exclude
     open var description = Supplier {
-        descriptionKey?.let { key -> translation(key).convertToString() }
+        descriptionKey?.let { key -> translation(key).string }
     }
 
     /**
