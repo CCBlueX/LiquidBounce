@@ -209,7 +209,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             it.itemStack.getMiningSpeedMultiplier(blockState)
             // Gives the priority to the currently selected slot
             // if all slots are equal in terms of mining speed
-            val currentSlotBonus = if (player.inventory.mainHandStack === it.itemStack) 1 else 0
+            val currentSlotBonus = if (player.inventory.mainHandStack === it.itemStack) 0.001f else 0f
 
             it.itemStack.getMiningSpeedMultiplier(blockState) + currentSlotBonus
         } ?: return null
