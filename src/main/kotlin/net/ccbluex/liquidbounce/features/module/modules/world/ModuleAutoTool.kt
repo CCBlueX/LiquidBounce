@@ -91,7 +91,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
                         to = Slots.Hotbar[SilentHotbar.serversideSlot],
-                    ).also { swapAction = it }
+                    ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
             }
