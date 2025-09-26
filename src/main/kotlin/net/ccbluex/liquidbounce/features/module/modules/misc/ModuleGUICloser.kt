@@ -27,29 +27,17 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.text.Text
 
-
 /**
- * Closes GenericContainerScreen with its title contains specified words
+ * Closes HandledScreen with its title contains specified words
  */
-object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = arrayOf("AutoClose", "ContainerCloser")) {
+object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = listOf("AutoClose", "ContainerCloser")) {
     override val baseKey: String
         get() = "liquidbounce.module.guiCloser"
 
-    private var filters = setOf<Regex>()
-
-    @Suppress("unused")
-    private val filterBy = textList("Filter", mutableSetOf("Vote")).onChanged { newValue ->
-        filters = newValue.mapTo(HashSet(newValue.size, 1.0F)) {
-            val regexPattern = it
-                .replace("*", ".*")
-                .replace("?", ".")
-
-            Regex("^$regexPattern\$")
-        }
-    }
+    private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
 
     private val printScreenTitle by boolean("PrintScreenTitle", false).doNotIncludeAlways()
 
@@ -59,7 +47,7 @@ object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = arra
 
     @Suppress("unused")
     private val openScreenHandler = handler<ScreenEvent> {
-        val screen = it.screen as? GenericContainerScreen ?: return@handler
+        val screen = it.screen as? HandledScreen<*> ?: return@handler
 
         if (isInFilter(screen.title)) {
             it.cancelEvent()
