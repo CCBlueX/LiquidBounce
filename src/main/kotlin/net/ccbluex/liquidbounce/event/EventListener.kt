@@ -106,22 +106,26 @@ inline fun <reified T : Event> EventListener.once(
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
-    crossinline eventHandler: SuspendableEventHandler<T>
+    onCancellation: Runnable? = null,
+    crossinline eventHandler: SuspendableEventHandler<T>,
 ) {
-    handler<T>(priority) { event -> Sequence(this) { eventHandler(event) } }
+    handler<T>(priority) { event -> Sequence(this, { eventHandler(event) }, onCancellation) }
 }
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
  */
-fun EventListener.tickHandler(eventHandler: SuspendableHandler): EventHook<GameTickEvent> {
+fun EventListener.tickHandler(
+    onCancellation: Runnable? = null,
+    eventHandler: SuspendableHandler,
+): EventHook<GameTickEvent> {
     // The sequence's lifecycle is under SequenceManager's control.
     var sequence: Sequence? = null
 
     return handler<GameTickEvent> {
         // Check if the sequence is already running (completed or null)
         if (sequence == null || sequence!!.isJobInActive) {
-            sequence = Sequence(this, eventHandler)
+            sequence = Sequence(this, eventHandler, onCancellation)
         }
     }
 }

@@ -37,9 +37,7 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        onCancellation { shouldPreventNoSlow = false }
-
+    private val tickHandler = tickHandler(onCancellation = { shouldPreventNoSlow = false }) {
         repeat(2) {
             waitTicks(1)
             shouldPreventNoSlow = false
