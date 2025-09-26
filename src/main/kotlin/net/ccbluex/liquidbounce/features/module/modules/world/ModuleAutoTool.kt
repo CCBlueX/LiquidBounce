@@ -91,7 +91,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
                         to = Slots.Hotbar[SilentHotbar.serversideSlot],
-                    ).also { swapAction = it }
+                    ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
             }
@@ -205,14 +205,11 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             val stack = it.itemStack
             val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
             !player.isCreative && durabilityCheck
-        }.maxByOrNull {
-            it.itemStack.getMiningSpeedMultiplier(blockState)
-            // Gives the priority to the currently selected slot
-            // if all slots are equal in terms of mining speed
-            val currentSlotBonus = if (player.inventory.mainHandStack === it.itemStack) 0.001f else 0f
-
-            it.itemStack.getMiningSpeedMultiplier(blockState) + currentSlotBonus
-        } ?: return null
+        }.maxWithOrNull(
+            Comparator.comparingDouble<T> {
+                it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()
+            }.thenComparing(ItemSlot.PREFER_NEARBY)
+        ) ?: return null
 
         return slot
     }

@@ -8,9 +8,9 @@ import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-private const val HASH_FILE_NAME = ".hash"
-
 object HashValidator {
+
+    private const val HASH_FILE_NAME = ".hash"
 
     private fun containsHashFile(f: File) = f.resolve(HASH_FILE_NAME).exists()
 
@@ -19,28 +19,27 @@ object HashValidator {
             return
         }
 
-        if (!file.isDirectory) {
-            file.delete()
-            return
+        if (!file.isDirectory || !containsHashFile(file)) {
+            deleteFolder(file)
         }
 
-        expectHashOrDelete(file)
-
         file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
-            .map {
+            .mapTo(mutableListOf()) {
                 CompletableFuture.runAsync({ validateHashFile(it) }, Util.getMainWorkerExecutor())
             }.forEach {
                 it.join()
             }
     }
 
+    @JvmStatic
     private fun validateHashFile(hashFile: File) {
-        val delete = runCatching {
+        val delete = try {
             val hashes = hashFile.readJson<Map<String, String>>()
             shouldDelete(hashFile, hashes)
-        }.onFailure {
-            logger.warn("Invalid hash file ${hashFile.absolutePath}", it)
-        }.getOrDefault(true)
+        } catch (e: Exception) {
+            logger.warn("Invalid hash file ${hashFile.absolutePath}", e)
+            false
+        }
 
         if (delete) {
             val folderToDelete = hashFile.parentFile
@@ -51,53 +50,45 @@ object HashValidator {
     }
 
     private fun deleteFolder(folderToDelete: File) {
-        runCatching {
+        try {
             folderToDelete.deleteRecursively()
-        }.onSuccess { return }
+        } catch (e: Exception) {
+            logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...", e)
 
-        logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
-
-        Runtime.getRuntime().addShutdownHook(Thread {
-            runCatching {
-                folderToDelete.deleteRecursively()
-            }.onFailure {
-                LiquidBounce.logger.error("Failed to delete ${folderToDelete.absolutePath}.", it)
-            }
-        })
+            Runtime.getRuntime().addShutdownHook(Thread {
+                runCatching {
+                    folderToDelete.deleteRecursively()
+                }.onFailure {
+                    LiquidBounce.logger.error("Failed to delete ${folderToDelete.absolutePath}.", it)
+                }
+            })
+        }
     }
 
     private fun shouldDelete(hashFile: File, hashes: Map<String, String>): Boolean {
         try {
-            for (checkedFile in hashes.entries) {
-                val resolveSibling = hashFile.resolveSibling(checkedFile.key)
-
+            val folder = hashFile.parentFile
+            val hashAndFile = hashes.mapKeys { (k, _) -> File(folder, k) }
+            hashAndFile.keys.find {
+                !it.exists() || !it.isFile
+            }?.let {
                 // A file went missing? A file is not a file anymore? Better delete it.
-                if (!resolveSibling.exists() || !resolveSibling.isFile) {
-                    logger.warn("File ${resolveSibling.absolutePath} went missing.")
+                logger.warn("File ${it.absolutePath} went missing.")
 
-                    return true
-                }
+                return true
+            }
 
+            return hashAndFile.entries.any { (file, expected) ->
                 // Read the file, hash it and compare it to the hash in the hash file
                 // Use the InputStream, don't read the full file
-                val sha256Hex = resolveSibling.inputStream().use(DigestUtils::sha256Hex)
+                val sha256Hex = file.inputStream().use(DigestUtils::sha256Hex)
 
-                if (!sha256Hex.equals(checkedFile.value, ignoreCase = true)) {
-                    return true
-                }
+                !sha256Hex.equals(expected, ignoreCase = true)
             }
         } catch (e: Exception) {
             logger.error("Failed to validate ${hashFile.absolutePath}", e)
 
             return true
-        }
-
-        return false
-    }
-
-    private fun expectHashOrDelete(f: File) {
-        if (!f.isDirectory || !containsHashFile(f)) {
-            deleteFolder(f)
         }
     }
 
