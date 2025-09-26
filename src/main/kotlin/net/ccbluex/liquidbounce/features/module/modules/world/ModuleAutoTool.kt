@@ -208,7 +208,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         }.maxWithOrNull(
             Comparator.comparingDouble<T> {
                 it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()
-            }.thenComparing(ItemSlot.PREFER_NEARBY)
+            }.thenDescending(ItemSlot.PREFER_NEARBY)
         ) ?: return null
 
         return slot
