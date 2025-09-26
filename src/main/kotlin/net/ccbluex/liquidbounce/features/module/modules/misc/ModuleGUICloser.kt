@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.text.Text
+import java.util.function.BiPredicate
 
 /**
  * Closes HandledScreen with its title contains specified words
@@ -37,12 +39,23 @@ object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = list
     override val baseKey: String
         get() = "liquidbounce.module.guiCloser"
 
+    private val mode by enumChoice("Mode", Mode.MATCHES)
     private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
+
+    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Text> {
+        MATCHES("Matches"),
+        CONTAINS("Contains");
+
+        override fun test(regex: Regex, text: Text): Boolean = when (this) {
+            MATCHES -> regex.matches(text.string)
+            CONTAINS -> regex.containsMatchIn(text.string)
+        }
+    }
 
     private val printScreenTitle by boolean("PrintScreenTitle", false).doNotIncludeAlways()
 
     private fun isInFilter(entry: Text) = filters.any { regex ->
-        regex.matches(entry.string)
+        mode.test(regex, entry)
     }
 
     @Suppress("unused")
