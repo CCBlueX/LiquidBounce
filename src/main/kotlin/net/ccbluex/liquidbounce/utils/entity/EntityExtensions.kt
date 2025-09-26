@@ -660,4 +660,4 @@ val ClientPlayerEntity.immuneToMagmaBlocks
         || (this.getStatusEffect(StatusEffects.RESISTANCE)?.amplifier ?: -1) >= 4
         || this.isCreative
         || this.isSpectator
-        || this.inventory.getArmorStack(0).getEnchantment(Enchantments.FROST_WALKER) > 0
+        || this.getEquippedStack(EquipmentSlot.FEET).getEnchantment(Enchantments.FROST_WALKER) > 0
