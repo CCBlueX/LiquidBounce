@@ -20,23 +20,23 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
-import kotlin.reflect.KClass
 
 internal object SocketEventListener : EventListener {
 
     private val events = ALL_EVENT_CLASSES
-        .filter { WebSocketEvent::class.java.isAssignableFrom(it.java) }
+        .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
         .associateBy { it.eventName }
 
     /**
      * Contains all events that are registered in the current context
      */
-    private val registeredEvents = hashMapOf<KClass<out Event>, EventHook<in Event>>()
+    private val registeredEvents = Reference2ObjectOpenHashMap<Class<out Event>, EventHook<in Event>>()
 
     private val writeBuffer = ThreadLocal.withInitial { StringBuilderWriter(DEFAULT_BUFFER_SIZE) }
 
@@ -55,7 +55,7 @@ internal object SocketEventListener : EventListener {
         val eventHook = EventHook(this, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
-        EventManager.registerEventHook(eventClass.java, eventHook)
+        EventManager.registerEventHook(eventClass, eventHook)
     }
 
     fun unregister(name: String) {
@@ -64,16 +64,16 @@ internal object SocketEventListener : EventListener {
         val eventHook = registeredEvents[eventClass] ?:
             throw IllegalArgumentException("No EventHook for event: $eventClass")
 
-        EventManager.unregisterEventHook(eventClass.java, eventHook)
+        EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
     private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
         val json = writeBuffer.get().runCatching {
             JsonWriter(this).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(event::class.eventName)
+                writer.name("name").value(event.javaClass.eventName)
                 writer.name("event")
-                (event as WebSocketEvent).serializer.toJson(event, event::class.java, writer)
+                (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
             }
             toString().also { builder.clear() }

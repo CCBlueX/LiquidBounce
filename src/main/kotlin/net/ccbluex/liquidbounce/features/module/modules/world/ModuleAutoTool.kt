@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -90,7 +91,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
                         to = Slots.Hotbar[SilentHotbar.serversideSlot],
-                    ).also { swapAction = it }
+                    ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
             }
@@ -202,18 +203,13 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         val slot = filter {
             val stack = it.itemStack
-            val durabilityCheck = (ignoreDurability || stack.damage < (stack.maxDamage - 2))
-            stack.isEmpty || (!player.isCreative && durabilityCheck)
-        }.maxByOrNull {
-            it.itemStack.getMiningSpeedMultiplier(blockState)
-        } ?: return null
-
-        val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
-
-        // The current slot already matches the best
-        if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-            return null
-        }
+            val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
+            !player.isCreative && durabilityCheck
+        }.maxWithOrNull(
+            Comparator.comparingDouble<T> {
+                it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()
+            }.thenDescending(ItemSlot.PREFER_NEARBY)
+        ) ?: return null
 
         return slot
     }

@@ -165,7 +165,7 @@ private fun <T : Any> ParameterBuilder.Companion.fromRegistry(
             registry.getOptionalValue(id).getOrNull()
         ) { "$sourceText is not a valid $typeName" }
     }
-    .autocompletedFrom {
+    .autocompletedFrom(minecraftPlaceholders = true) {
         registry.ids.map { it.toString() }
     }
 
@@ -173,7 +173,7 @@ fun ParameterBuilder.Companion.enchantment(
     name: String = "enchantment",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
-    .autocompletedFrom {
+    .autocompletedFrom(minecraftPlaceholders = true) {
         world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map { it.idAsString }
     }
 
@@ -185,7 +185,7 @@ fun ParameterBuilder.Companion.item(
     name: String = "item",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
-    .autocompletedFrom {
+    .autocompletedFrom(minecraftPlaceholders = true) {
         Registries.ITEM.ids.map { it.toString() }
     }
 

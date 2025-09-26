@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.utils.client.Nameable
-import kotlin.reflect.KClass
 
 /**
  * A callable event
@@ -62,9 +63,19 @@ enum class EventState(val stateName: String) {
 /**
  * Retrieves the name that the event is supposed to be associated with in JavaScript.
  */
-val KClass<out Event>.eventName: String
+val Class<out Event>.eventName: String
     get() = EVENT_CLASS_TO_NAME[this]!!
 
-private val EVENT_CLASS_TO_NAME = ALL_EVENT_CLASSES.associateWith {
-    it.java.getAnnotation(Nameable::class.java)!!.name
+private val EVENT_CLASS_TO_NAME: Map<Class<out Event>, String> = ALL_EVENT_CLASSES.associateWithTo(
+    Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
+) {
+    it.getAnnotation(Nameable::class.java)!!.name
 }
+
+@JvmField
+internal val EVENT_NAME_TO_CLASS: Map<String, Class<out Event>> = ALL_EVENT_CLASSES.associateByTo(
+    Object2ReferenceRBTreeMap(String.CASE_INSENSITIVE_ORDER)
+) {
+    it.getAnnotation(Nameable::class.java)!!.name
+}
+

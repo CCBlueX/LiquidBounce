@@ -23,7 +23,7 @@ import kotlin.math.floor
  *
  * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
  */
-object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = arrayOf("tp")) {
+object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = listOf("tp")) {
 
     private val allFull by boolean("AllFullPacket", false)
     private val paperExploit by boolean("PaperBypass", false)

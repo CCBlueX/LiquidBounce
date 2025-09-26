@@ -46,7 +46,7 @@ import net.minecraft.entity.projectile.ShulkerBulletEntity
  *
  * Shoots back incoming projectiles around you.
  */
-object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
+object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = listOf("AntiFireball")) {
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, null))
 

@@ -45,7 +45,7 @@ import net.minecraft.item.Items
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
     Category.MISC,
-    aliases = arrayOf("FriendClicker", "MiddleClickPearl")
+    aliases = listOf("FriendClicker", "MiddleClickPearl")
 ) {
 
     init {

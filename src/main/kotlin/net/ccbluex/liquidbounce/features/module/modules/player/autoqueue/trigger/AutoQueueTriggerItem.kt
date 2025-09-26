@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 /**
@@ -40,7 +39,7 @@ object AutoQueueTriggerItem : AutoQueueTrigger("Item") {
 
     override val isTriggered: Boolean
         get() = Slots.Hotbar.findSlot { itemStack ->
-            itemStack.name.convertToString().contains(itemName)
+            itemStack.name.string.contains(itemName)
         } != null
 
 }

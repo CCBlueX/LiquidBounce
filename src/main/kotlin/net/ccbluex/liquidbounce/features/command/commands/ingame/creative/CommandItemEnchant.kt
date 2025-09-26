@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.item.addEnchantment
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
 import net.ccbluex.liquidbounce.utils.item.removeEnchantment
 import net.minecraft.enchantment.Enchantment
@@ -92,7 +91,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                         val itemStack = getItemOrThrow(command)
 
                         val enchantment = enchantmentByName(enchantmentName, command)
-                        removeEnchantment(itemStack, enchantment)
+                        itemStack.removeEnchantment(enchantment)
 
                         sendItemPacket(itemStack)
                         chat(
@@ -110,7 +109,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-                        clearEnchantments(itemStack)
+                        itemStack.clearEnchantments()
 
                         sendItemPacket(itemStack)
                     }
@@ -204,12 +203,12 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
     private fun enchantAnyLevel(item: ItemStack, enchantment: RegistryEntry<Enchantment>, level: Int?) {
         if (level == null || level <= 255) {
-            addEnchantment(item, enchantment, level ?: enchantment.value().maxLevel)
+            item.addEnchantment(enchantment, level ?: enchantment.value().maxLevel)
         } else {
             var next = level
 
             while (next > 255) {
-                addEnchantment(item, enchantment, min(next, 255))
+                item.addEnchantment(enchantment, min(next, 255))
                 next -= 255
             }
         }

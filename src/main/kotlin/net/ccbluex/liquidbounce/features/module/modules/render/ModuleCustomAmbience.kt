@@ -41,7 +41,7 @@ import org.lwjgl.opengl.GL13
  *
  * Override the ambience of the game
  */
-object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = arrayOf("FogChanger")) {
+object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = listOf("FogChanger")) {
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)

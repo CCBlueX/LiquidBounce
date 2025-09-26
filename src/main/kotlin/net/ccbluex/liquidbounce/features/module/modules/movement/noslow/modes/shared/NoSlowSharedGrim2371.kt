@@ -31,14 +31,13 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) : Choice("Grim2371") {
 
     companion object {
+        @JvmStatic
         var shouldPreventNoSlow = false
             private set
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        onCancellation { shouldPreventNoSlow = false }
-
+    private val tickHandler = tickHandler(onCancellation = { shouldPreventNoSlow = false }) {
         repeat(2) {
             waitTicks(1)
             shouldPreventNoSlow = false

@@ -66,7 +66,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         }
 
         // Check if we are on GommeHD.net
-        val headerText = playerListHeader.convertToString()
+        val headerText = playerListHeader.string
         if (!headerText.contains("GommeHD.net")) {
             inMatch = false
 
@@ -103,14 +103,12 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Match won", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(winMessage)
         } else if (ev.message.contains("Du wurdest von") && ev.message.contains("getötet")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(loseMessage)
         }
@@ -141,7 +139,6 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        sync()
         waitSeconds(5)
     }
 

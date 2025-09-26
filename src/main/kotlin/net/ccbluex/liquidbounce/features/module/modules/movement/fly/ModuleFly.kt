@@ -51,7 +51,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * Allows you to fly.
  */
 
-object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
+object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glide", "Jetpack")) {
 
     init {
         enableLock()

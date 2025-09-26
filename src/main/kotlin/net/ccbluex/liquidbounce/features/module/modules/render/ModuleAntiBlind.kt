@@ -30,7 +30,7 @@ import net.minecraft.util.Identifier
  * Protects you from potentially annoying screen effects that block your view.
  */
 @Suppress("MagicNumber")
-object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = arrayOf("NoRender")) {
+object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = listOf("NoRender")) {
     /**
      * @see Items.CARVED_PUMPKIN
      * @see net.minecraft.client.gui.hud.InGameHud.renderMiscOverlays
