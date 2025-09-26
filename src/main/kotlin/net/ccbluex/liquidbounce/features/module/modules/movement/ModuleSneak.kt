@@ -27,17 +27,18 @@ import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.MagmaBlock
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
 /**
@@ -171,11 +172,16 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             .expand(0.0, 0.1,0.0)
             .offset(0.0, -0.1, 0.0)
 
-        return expandedBox.edgePoints
-            .filter { it.y == expandedBox.minY }
-            .map { it.toBlockPos() }
-            .filter { it.getBlock() is MagmaBlock }
-            .map { it.collisionShape.boundingBox.offset(it) }
-            .any { expandedBox.intersects(it) }
+        return BlockPos.iterate(
+            expandedBox.minX.floorToInt(),
+            expandedBox.minY.floorToInt(),
+            expandedBox.minZ.floorToInt(),
+            expandedBox.maxX.ceilToInt(),
+            expandedBox.minY.ceilToInt(),
+            expandedBox.maxZ.ceilToInt(),
+        ).any {
+            it.getBlock() is MagmaBlock &&
+                expandedBox.intersects(it.collisionShape.boundingBox.offset(it))
+        }
     }
 }
