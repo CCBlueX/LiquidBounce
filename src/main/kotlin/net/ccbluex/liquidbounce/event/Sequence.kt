@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import java.util.function.BooleanSupplier
-import java.util.function.IntSupplier
+import java.util.function.IntPredicate
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -80,9 +80,9 @@ class Sequence(
     val onCancellation: Runnable?,
 ) {
 
-    private var continuation: Continuation<Unit>? = null
+    private var continuation: Continuation<Int>? = null
     private var elapsedTicks = 0
-    private var totalTicks = IntSupplier { 0 }
+    private var shouldResume = IntPredicate { true }
 
     /**
      * Use [owner]'s [kotlin.coroutines.ContinuationInterceptor] and [CoroutineScope] to handle:
@@ -116,23 +116,11 @@ class Sequence(
         get() = !coroutine.isActive
 
     internal fun tick() {
-        if (++this.elapsedTicks >= this.totalTicks.asInt) {
+        if (this.shouldResume.test(++this.elapsedTicks)) {
             val continuation = this.continuation ?: return
             this.continuation = null
-            continuation.resume(Unit)
+            continuation.resume(this.elapsedTicks)
         }
-    }
-
-    /**
-     * Waits until the [case] is true, then continues. Checks every tick.
-     */
-    suspend fun waitUntil(case: BooleanSupplier): Int {
-        var ticks = 0
-        while (!case.asBoolean) {
-            sync()
-            ticks++
-        }
-        return ticks
     }
 
     /**
@@ -145,7 +133,7 @@ class Sequence(
             return !breakLoop.asBoolean
         }
 
-        wait { if (breakLoop.asBoolean) 0 else ticks }
+        waitUntil { breakLoop.asBoolean || it >= ticks }
 
         return elapsedTicks >= ticks
     }
@@ -160,7 +148,7 @@ class Sequence(
             return
         }
 
-        wait { ticks }
+        waitUntil { it >= ticks }
     }
 
     /**
@@ -170,20 +158,21 @@ class Sequence(
     suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
     /**
-     * Waits for the amount of ticks that is retrieved via [ticksToWait]
+     * Waits until [stopAt] returns true.
+     * The elapsed ticks (starting from 1) will be passed to [stopAt].
+     *
+     * Example:
+     * - `waitUntil { true }` --> `1`
+     * - `waitUntil { it >= 2 }` --> `2`
+     *
+     * @return the times of [stopAt] to be executed (equals to elapsed ticks)
      */
-    private suspend fun wait(ticksToWait: IntSupplier) {
-        elapsedTicks = 0
-        totalTicks = ticksToWait
+    suspend fun waitUntil(stopAt: IntPredicate): Int {
+        this.elapsedTicks = 0
+        this.shouldResume = stopAt
 
-        suspendCoroutine { continuation = it }
+        return suspendCoroutine { this.continuation = it }
     }
-
-    /**
-     * Syncs the coroutine to the game tick.
-     * It does not matter if we wait 0 or 1 ticks, it will always sync to the next tick.
-     */
-    private suspend fun sync() = wait { 0 }
 
     /**
      * Private utility function for waiting external [deferred].
