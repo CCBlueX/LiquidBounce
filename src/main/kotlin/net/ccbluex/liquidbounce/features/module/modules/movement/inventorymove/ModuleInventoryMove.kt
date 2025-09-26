@@ -114,7 +114,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        if (behavior != Behaviour.STOP_ON_ACTION || !isInInventoryScreen) {
+        if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isInventoryOpen) {
             return@handler
         }
 
