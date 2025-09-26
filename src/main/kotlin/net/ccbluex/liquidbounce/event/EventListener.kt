@@ -85,12 +85,12 @@ inline fun <reified T : Event> EventListener.until(
     crossinline handler: (T) -> Boolean
 ): EventHook<T> {
     lateinit var eventHook: EventHook<T>
-    eventHook = EventHook(this, {
+    eventHook = handler(T::class.java, priority) {
         if (!this.running || handler(it)) {
             EventManager.unregisterEventHook(T::class.java, eventHook)
         }
-    }, priority)
-    return EventManager.registerEventHook(T::class.java, eventHook)
+    }
+    return eventHook
 }
 
 inline fun <reified T : Event> EventListener.once(
@@ -106,33 +106,26 @@ inline fun <reified T : Event> EventListener.once(
  */
 inline fun <reified T : Event> EventListener.sequenceHandler(
     priority: Short = 0,
-    crossinline eventHandler: SuspendableEventHandler<T>
+    onCancellation: Runnable? = null,
+    crossinline eventHandler: SuspendableEventHandler<T>,
 ) {
-    handler<T>(priority) { event -> Sequence(this) { eventHandler(event) } }
+    handler<T>(priority) { event -> Sequence(this, { eventHandler(event) }, onCancellation) }
 }
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
  */
-fun EventListener.tickHandler(eventHandler: SuspendableHandler) {
-    // We store our sequence in this variable.
-    // That can be done because our variable will survive the scope of this function
-    // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.
-    var sequence: TickSequence? = TickSequence(this, eventHandler)
+fun EventListener.tickHandler(
+    onCancellation: Runnable? = null,
+    eventHandler: SuspendableHandler,
+): EventHook<GameTickEvent> {
+    // The sequence's lifecycle is under SequenceManager's control.
+    var sequence: Sequence? = null
 
-    SequenceManager.handler<GameTickEvent> {
-        // Check if we should start or stop the sequence
-        if (this.running) {
-            // Check if the sequence is already running
-            if (sequence == null) {
-                // If not, start it
-                // This will start a new repeating sequence which will run until the condition is false
-                sequence = TickSequence(this, eventHandler)
-            }
-        } else if (sequence != null) { // This condition is only true if the sequence is running
-            // If the sequence is running, we should stop it
-            sequence?.cancel()
-            sequence = null
+    return handler<GameTickEvent> {
+        // Check if the sequence is already running (completed or null)
+        if (sequence == null || sequence!!.isJobInActive) {
+            sequence = Sequence(this, eventHandler, onCancellation)
         }
     }
 }

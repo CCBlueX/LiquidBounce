@@ -44,7 +44,7 @@ import net.minecraft.util.hit.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
+object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = listOf("TriggerBot")) {
 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 

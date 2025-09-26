@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
@@ -95,7 +96,6 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import org.lwjgl.glfw.GLFW
 
 private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
@@ -103,7 +103,7 @@ private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
 /**
  * A fairly simple module manager
  */
-object ModuleManager : EventListener, Iterable<ClientModule> by modules {
+object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
     val modulesConfigurable = ConfigSystem.root("modules", modules)
 
@@ -444,17 +444,21 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
     }
 
     fun addModule(module: ClientModule) {
+        if (!modules.add(module)) {
+            error("Module '${module.name}' is already registered.")
+        }
         module.initConfigurable()
         module.onRegistration()
-        modules += module
     }
 
     fun removeModule(module: ClientModule) {
+        if (!modules.remove(module)) {
+            error("Module '${module.name}' is not registered.")
+        }
         if (module.running) {
             module.onDisabled()
         }
         module.unregister()
-        modules -= module
     }
 
     fun clear() {
@@ -466,11 +470,11 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
      */
     @JvmName("getCategories")
     @ScriptApiRequired
-    fun getCategories() = Category.entries.mapArray { it.choiceName }
+    fun getCategories() = Category.entries.mapToArray { it.choiceName }
 
     @JvmName("getModules")
     @ScriptApiRequired
-    fun getModules(): Iterable<ClientModule> = modules
+    fun getModules(): Collection<ClientModule> = modules
 
     @JvmName("getModuleByName")
     @ScriptApiRequired

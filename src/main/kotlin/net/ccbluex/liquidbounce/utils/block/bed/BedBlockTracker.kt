@@ -20,14 +20,16 @@ package net.ccbluex.liquidbounce.utils.block.bed
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -112,14 +114,14 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         var idx = 0
 
         layers.forEachIndexed { i, map ->
-            map.reference2IntEntrySet().forEach { (block, count) ->
-                result[idx++] = SurroundingBlock(block, count, i + 1)
+            map.fastIterator().forEach {
+                result[idx++] = SurroundingBlock(it.key, it.intValue, i + 1)
             }
         }
         result.sort()
 
         @Suppress("UNCHECKED_CAST")
-        return result.asList() as Collection<SurroundingBlock>
+        return result.unmodifiable() as Collection<SurroundingBlock>
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {

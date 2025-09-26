@@ -20,15 +20,21 @@
 @file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import java.util.*
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import java.util.Collections
+import java.util.EnumMap
+import kotlin.experimental.ExperimentalTypeInference
 
-inline fun <T> Set<T>.unmodifiable(): Set<T> = Collections.unmodifiableSet(this)
-
-inline fun <T> List<T>.unmodifiable(): List<T> = Collections.unmodifiableList(this)
-
-inline fun <T> Array<out T>?.unmodifiable(): List<T> =
+fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
         isNullOrEmpty() -> emptyList()
         size == 1 -> Collections.singletonList(this[0])
-        else -> this.asList().unmodifiable()
+        else -> ObjectImmutableList(this)
     }
+
+inline fun <reified K : Enum<K>, V> enumMap(): EnumMap<K, V> = EnumMap(K::class.java)
+
+@OptIn(ExperimentalTypeInference::class)
+inline fun <reified K : Enum<K>, V> enumMap(
+    @BuilderInference block: EnumMap<K, V>.() -> Unit
+): EnumMap<K, V> = EnumMap<K, V>(K::class.java).apply(block)

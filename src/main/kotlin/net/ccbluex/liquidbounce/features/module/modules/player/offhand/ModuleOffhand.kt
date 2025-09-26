@@ -54,7 +54,7 @@ import java.util.function.Predicate
  *
  * Manages your offhand.
  */
-object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = arrayOf("AutoTotem")) {
+object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf("AutoTotem")) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val switchMode by enumChoice(

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -26,8 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
 
 /**
  * InventoryCleaner module
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.component2
  * Automatically throws away useless items and sorts them.
  */
 object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
-    aliases = arrayOf("InventoryManager")
+    aliases = listOf("InventoryManager")
 ) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
@@ -194,7 +194,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
             if (facet.providedItemFunctions.isEmpty()) {
                 val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
-                val desiredAmount = this.desiredItemsPerCategory[facet.category] ?: defaultDesiredAmount
+                val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
 
                 val info = ItemConstraintInfo(
                     group = ItemCategoryConstraintGroup(

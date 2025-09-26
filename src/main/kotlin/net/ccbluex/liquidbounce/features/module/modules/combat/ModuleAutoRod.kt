@@ -97,6 +97,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
+    private val pullOnOutOfRange by boolean("PullOnOutOfRange", true)
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
     private val cooldown by intRange("Cooldown", 4..8, 1..50, "ticks")
 
@@ -137,10 +138,10 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         }
 
         val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
-        val mixRangeSq = range.start.sq()
+        val minRangeSq = range.start.sq()
 
         val target = targetTracker.selectFirst { enemy ->
-            player.squaredDistanceTo(enemy) in mixRangeSq..maxRangeSq && player.canSee(enemy)
+            player.squaredDistanceTo(enemy) in minRangeSq..maxRangeSq && player.canSee(enemy)
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
@@ -185,10 +186,14 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
             currentScanExtraRange = scanExtraRange.random()
         }
 
-        // 3. timeout / hit entity / no movement
+        val maxRangeSq = (range.endInclusive + currentScanExtraRange).sq()
+        val minRangeSq = range.start.sq()
+
+        // 3. timeout / hit entity / no movement / out of range
         waitConditional(hitTimeout) {
             fishingBobberEntity?.hookedEntity != null ||
-                fishingBobberEntity?.movement == Vec3d.ZERO
+                fishingBobberEntity?.movement == Vec3d.ZERO ||
+                pullOnOutOfRange && player.squaredDistanceTo(target) !in minRangeSq..maxRangeSq
         }
 
         // 4. pull

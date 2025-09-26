@@ -20,18 +20,33 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.component.ComponentMap
+import net.minecraft.component.ComponentChanges
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
 import kotlin.math.ceil
 
+@JvmRecord
 data class InventorySwap(val from: ItemSlot, val to: ItemSlot, val priority: Priority)
 
-data class ItemId(val item: Item, val nbt: ComponentMap)
+/**
+ * Represents the "id" of [ItemStack].
+ * [ItemStack]s with same [Item] and [ComponentChanges] can be merged.
+ */
+@JvmRecord
+data class ItemAndComponents(val item: Item, val componentChanges: ComponentChanges) {
+    constructor(itemStack: ItemStack) : this(itemStack.item, itemStack.componentChanges)
+
+    fun toItemStack(count: Int): ItemStack {
+        val itemKey = Registries.ITEM.getEntry(item)
+        return ItemStack(itemKey, count, componentChanges)
+    }
+}
 
 class InventoryCleanupPlan(
     val usefulItems: MutableSet<ItemSlot>,
     val swaps: MutableList<InventorySwap>,
-    val mergeableItems: HashMap<ItemId, MutableList<ItemSlot>>,
+    val mergeableItems: MutableMap<ItemAndComponents, MutableList<ItemSlot>>,
 ) {
     /**
      * Replaces the slot from key to value

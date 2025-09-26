@@ -141,7 +141,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     @Suppress("unused")
     private val tickHandler = tickHandler {
         blockPlacer.update(blockList)
-        waitUntil(blockPlacer::isDone)
+        waitUntil { blockPlacer.isDone() }
 
         if (autoDisable) {
             notification(name, message("filled"), NotificationEvent.Severity.SUCCESS)

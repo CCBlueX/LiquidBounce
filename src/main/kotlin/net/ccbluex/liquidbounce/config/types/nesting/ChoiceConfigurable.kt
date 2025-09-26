@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.nesting
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import java.util.function.ToIntFunction
 
 /**
@@ -96,7 +96,7 @@ class ChoiceConfigurable<T : Choice>(
     }
 
     @ScriptApiRequired
-    fun getChoicesStrings(): Array<String> = this.choices.mapArray { it.name }
+    fun getChoicesStrings(): Array<String> = choices.mapToArray { it.name }
 
 }
 

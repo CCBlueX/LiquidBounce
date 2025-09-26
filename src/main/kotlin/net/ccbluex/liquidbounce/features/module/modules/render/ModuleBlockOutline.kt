@@ -47,7 +47,7 @@ import net.minecraft.util.shape.VoxelShape
  *
  * [MixinWorldRenderer.cancelBlockOutline]
  */
-object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = arrayOf("BlockOverlay")) {
+object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = listOf("BlockOverlay")) {
 
     private val sideOnly by boolean("SideOnly", true)
     private val color by color("Color", Color4b(68, 117, 255, 70))

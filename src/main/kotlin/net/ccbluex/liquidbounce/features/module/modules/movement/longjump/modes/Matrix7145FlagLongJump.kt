@@ -29,12 +29,10 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
     private const val ACCEPTED_AIR_TIME = 5
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = tickHandler(onCancellation = { flagTicks = 0 }) {
         if (!player.isOnGround) {
             return@tickHandler
         }
-
-        onCancellation { flagTicks = 0 }
 
         // Wait until we are not on ground and reached the delay
         waitUntil { !player.isOnGround && player.airTicks >= delay }

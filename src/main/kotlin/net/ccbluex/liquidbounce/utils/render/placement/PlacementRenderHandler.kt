@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render.placement
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
@@ -76,54 +77,52 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                         }
                     }
 
-                    inList.long2ObjectEntrySet().iterator().apply {
-                        while (hasNext()) {
-                            // Do not use destructuring declaration which returns boxed [Long] values
-                            val entry = next()
-                            val pos = entry.longKey
-                            val value = entry.value
+                    inList.long2ObjectEntrySet().removeIf { entry ->
+                        // Do not use destructuring declaration which returns boxed [Long] values
+                        val pos = entry.longKey
+                        val value = entry.value
 
-                            val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
-                            val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                            val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
-                            val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
+                        val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
+                        val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
+                        val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
+                        val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
-                            drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                        drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                            if (time - value.startTime >= outTime) {
-                                if (keep) {
-                                    currentList[pos] = value.toCurrent()
-                                } else {
-                                    outList[pos] = value.copy(startTime = time)
-                                }
-                                remove()
+                        if (time - value.startTime >= outTime) {
+                            if (keep) {
+                                currentList.put(pos, value.toCurrent())
+                            } else {
+                                outList.put(pos, value.copy(startTime = time))
                             }
+                            true
+                        } else {
+                            false
                         }
                     }
 
-                    currentList.long2ObjectEntrySet().forEach { entry ->
+                    currentList.fastIterator().forEach { entry ->
                         val pos = entry.longKey
                         val value = entry.value
                         drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
                     }
 
-                    outList.long2ObjectEntrySet().iterator().apply {
-                        while (hasNext()) {
-                            val entry = next()
-                            val pos = entry.longKey
-                            val value = entry.value
+                    outList.long2ObjectEntrySet().removeIf { entry ->
+                        val pos = entry.longKey
+                        val value = entry.value
 
-                            val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
-                            val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
-                            val box = getBox(expand, value.box)
-                            val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
+                        val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
+                        val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
+                        val box = getBox(expand, value.box)
+                        val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
-                            drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                        drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                            if (time - value.startTime >= outTime) {
-                                remove()
-                                updateNeighbors(blockPosCache.set(pos))
-                            }
+                        if (time - value.startTime >= outTime) {
+                            updateNeighbors(blockPosCache.set(pos))
+                            true
+                        } else {
+                            false
                         }
                     }
                 }
@@ -225,13 +224,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * so that positions don't get updated multiple times.
      */
     fun updateAll() {
-        inList.long2ObjectEntrySet().forEach { entry ->
+        inList.fastIterator().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
             entry.setValue(value.copy(cullData = this.culler.getCullData(key)))
         }
 
-        currentList.long2ObjectEntrySet().forEach { entry ->
+        currentList.fastIterator().forEach { entry ->
             val key = entry.longKey
             val value = entry.value
             entry.setValue(value.copy(cullData = this.culler.getCullData(key)))
@@ -267,25 +266,20 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * all animations have been finished even though the module might be already disabled.
      */
     fun clearSilently() {
-        inList.long2ObjectEntrySet().iterator().apply {
-            while (hasNext()) {
-                val entry = next()
-                val pos = entry.longKey
-                val value = entry.value
-                outList.put(pos, value.copy(startTime = System.currentTimeMillis()))
-                remove()
-            }
+        val startTime = System.currentTimeMillis()
+        inList.fastIterator().forEach { entry ->
+            val pos = entry.longKey
+            val value = entry.value
+            outList.put(pos, value.copy(startTime = startTime))
         }
+        inList.clear()
 
-        currentList.long2ObjectEntrySet().iterator().apply {
-            while (hasNext()) {
-                val entry = next()
-                val pos = entry.longKey
-                val value = entry.value
-                outList.put(pos, value.toInOut(startTime = System.currentTimeMillis()))
-                remove()
-            }
+        currentList.fastIterator().forEach { entry ->
+            val pos = entry.longKey
+            val value = entry.value
+            outList.put(pos, value.toInOut(startTime = startTime))
         }
+        currentList.clear()
     }
 
     /**

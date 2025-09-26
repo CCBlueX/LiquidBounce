@@ -54,7 +54,7 @@ open class Clicker<T>(
     val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
     name: String = "Clicker"
-) : Configurable(name, aliases = arrayOf("ClickScheduler")), EventListener where T : EventListener {
+) : Configurable(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
         internal val RNG = Random()

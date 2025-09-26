@@ -50,7 +50,8 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import kotlin.time.Duration.Companion.seconds
 
 object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state = true, hide = true,
-    aliases = arrayOf("DiscordPresence")) {
+    aliases = listOf("DiscordPresence")
+) {
 
     private val ipcConfiguration = ioScope.retrying(
         interval = 5.seconds,

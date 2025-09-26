@@ -19,7 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import net.minecraft.text.MutableText
+import java.util.SortedMap
 
-class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(text.string, cause)
+internal fun SortedMap<String, Command>.putCommand(command: Command) {
+    fun putCommand(name: String, command: Command) {
+        put(name, command)?.let { old ->
+            error("Command name '$name' already used by command '${old.name}'")
+        }
+    }
+
+    putCommand(command.name, command)
+    command.aliases.forEach { putCommand(it, command) }
+}
