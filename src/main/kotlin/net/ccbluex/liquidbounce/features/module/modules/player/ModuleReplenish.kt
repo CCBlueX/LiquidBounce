@@ -46,7 +46,6 @@ import net.minecraft.item.Items
  *
  * @author ccetl
  */
-@Suppress("MagicNumber")
 object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = listOf("Refill")) {
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
@@ -80,19 +79,18 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
     @Suppress("unused")
     private val inventoryScheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (!chronometer.hasElapsed(delay.toLong())) {
+        if (!chronometer.hasElapsed(delay.toLong()) || !player.currentScreenHandler.cursorStack.isEmpty) {
             return@handler
         }
 
         chronometer.reset()
 
         Slots.OffhandWithHotbar.slots.forEach { slot ->
-            val itemStack = slot.itemStack
             val idx = if (slot is OffHandSlot) trackedHotbarItems.lastIndex else slot.hotbarSlot
 
             // find the desired item
-            val item = itemStack.item.takeUnless { it == Items.AIR } ?: trackedHotbarItems[idx]
-            if (item == Items.AIR) {
+            val itemStack = slot.itemStack.takeUnless { it.isEmpty } ?: ItemStack(trackedHotbarItems[idx], 0)
+            if (itemStack.isEmpty) {
                 return@forEach
             }
 
@@ -137,7 +135,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 refillNormal(itemStack, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
             }
 
-            trackedHotbarItems[idx] = item
+            trackedHotbarItems[idx] = itemStack.item
             return@handler
         }
     }
@@ -150,7 +148,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         event: ScheduleInventoryActionEvent
     ) {
         var neededToRefill = itemStack.maxCount - count
-        inventorySlots.forEach { inventorySlot ->
+        for (inventorySlot in inventorySlots) {
             neededToRefill -= inventorySlot.itemStack.count
             val actions = ArrayList<Click>(3)
             actions += Click.performPickup(slot = inventorySlot)
@@ -163,7 +161,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
             event.schedule(constraints, actions)
 
             if (neededToRefill <= 0) {
-                return
+                break
             }
         }
     }
