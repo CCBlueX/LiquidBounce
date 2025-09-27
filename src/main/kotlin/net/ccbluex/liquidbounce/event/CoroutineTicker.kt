@@ -25,64 +25,114 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 typealias SuspendableEventHandler<T> = suspend Sequence.(T) -> Unit
 typealias SuspendableHandler = suspend Sequence.() -> Unit
 
-object SequenceManager : EventListener {
+object CoroutineTicker : EventListener {
 
-    // Running sequences
-    private val runningList = ReferenceArrayList<Sequence>()
+    // Running callbacks
+    private val runningList = ReferenceArrayList<BooleanSupplier>()
 
-    // Next tick sequences
-    private val pendingList = ReferenceArrayList<Sequence>()
+    // Next tick callbacks
+    private val pendingList = ReferenceArrayList<BooleanSupplier>()
 
     /**
-     * Registers a sequence to be ticked.
+     * Registers a task to be ticked.
      *
-     * @param sequence The [Sequence] to be ticked from next tick.
+     * @param task The callback to be run from next tick. It will be removed once returns true.
      */
-    fun register(sequence: Sequence) {
-        mc.execute { pendingList.add(sequence) }
+    fun register(task: BooleanSupplier) {
+        mc.execute { pendingList.add(task) }
     }
 
     /**
-     * Tick sequences
-     *
      * We want it to run before everything else, so we set the priority to [FIRST_PRIORITY]
-     * This is because we want to tick the existing sequences before new ones are added and might be ticked
+     * This is because we want to tick the existing tasks before new ones are added and might be ticked
      * in the same tick
      */
     @Suppress("unused")
-    private val tickSequences = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    private val taskTicker = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         runningList.addAll(pendingList)
         pendingList.clear()
-        runningList.removeIf {
-            if (!it.isActive) {
-                true
-            } else {
-                it.tick()
-                false
-            }
-        }
+        runningList.removeIf { it.asBoolean }
     }
 
 }
 
-@Suppress("TooManyFunctions")
+/**
+ * Ticks with [stopAt] until it returns true.
+ * The elapsed ticks (starting from 1) will be passed to [stopAt].
+ *
+ * Resumes on Render thread.
+ *
+ * Example:
+ * - `tickUntil { true }` --> `1`
+ * - `tickUntil { it >= 2 }` --> `2`
+ *
+ * @param stopAt the callback of elapsed ticks. Will be called on game tick.
+ * @return the times of [stopAt] to be executed (equals to elapsed ticks)
+ */
+private suspend fun tickUntil(
+    stopAt: IntPredicate,
+): Int = suspendCancellableCoroutine { continuation ->
+    var elapsedTicks = 0
+    CoroutineTicker.register {
+        when {
+            !continuation.isActive -> true
+            stopAt.test(++elapsedTicks) -> {
+                continuation.resume(elapsedTicks)
+                true
+            }
+
+            else -> false
+        }
+    }
+}
+
+/**
+ * Waits a fixed amount of ticks before continuing.
+ * Re-entry at the game tick.
+ */
+suspend fun delayTicks(ticks: Int) {
+    // Don't wait if ticks is 0
+    if (ticks == 0) {
+        return
+    }
+
+    tickUntil { it >= ticks }
+}
+
+//fun Sequence(
+//    owner: EventListener,
+//    dispatcher: CoroutineDispatcher? = null,
+//    handler: SuspendableHandler,
+//    onCancellation: Runnable?,
+//): Job =
+//    owner.eventListenerScope.launch(
+//        context = owner.continuationInterceptor(dispatcher),
+//        start = CoroutineStart.UNDISPATCHED
+//    ) {
+//        if (owner.running) {
+//            handler()
+//        }
+//    }.apply {
+//        onCancellation?.let {
+//            invokeOnCompletion { t ->
+//                if (t is CancellationException) {
+//                    it.run()
+//                }
+//            }
+//        }
+//    }
+
 class Sequence(
     val owner: EventListener,
     dispatcher: CoroutineDispatcher? = null,
     val handler: SuspendableHandler,
     val onCancellation: Runnable?,
 ) : CoroutineScope {
-
-    private var continuation: Continuation<Int>? = null
-    private var elapsedTicks = 0
-    private var shouldResume = IntPredicate { true }
 
     /**
      * Use [owner]'s [kotlin.coroutines.ContinuationInterceptor] and [CoroutineScope] to handle:
@@ -98,7 +148,6 @@ class Sequence(
         context = owner.continuationInterceptor(dispatcher) + CoroutineName("Sequence-${owner}"),
         start = CoroutineStart.UNDISPATCHED
     ) {
-        SequenceManager.register(this@Sequence)
         if (owner.running) {
             handler()
         }
@@ -112,17 +161,10 @@ class Sequence(
         }
     }
 
-    internal fun tick() {
-        if (this.shouldResume.test(++this.elapsedTicks)) {
-            val continuation = this.continuation ?: return
-            this.continuation = null
-            continuation.resume(this.elapsedTicks)
-        }
-    }
-
     /**
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
-     * Returns true when we passed the time of [ticks] without breaking the loop.
+     *
+     * @returns if we passed the time of [ticks] without breaking the loop.
      */
     suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier): Boolean {
         // Don't wait if ticks is 0
@@ -130,27 +172,20 @@ class Sequence(
             return !breakLoop.asBoolean
         }
 
-        waitUntil { breakLoop.asBoolean || it >= ticks }
-
-        return elapsedTicks >= ticks
+        return waitUntil { breakLoop.asBoolean || it >= ticks } >= ticks
     }
 
     /**
      * Waits a fixed amount of ticks before continuing.
      * Re-entry at the game tick.
      */
-    suspend fun waitTicks(ticks: Int) {
-        // Don't wait if ticks is 0
-        if (ticks == 0) {
-            return
-        }
-
-        waitUntil { it >= ticks }
-    }
+    suspend fun waitTicks(ticks: Int) = delayTicks(ticks)
 
     /**
      * Waits a fixed amount of seconds on tick level before continuing.
      * Re-entry at the game tick.
+     *
+     * Note: When TPS is not 20, this won't be actual `seconds`.
      */
     suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
@@ -164,11 +199,6 @@ class Sequence(
      *
      * @return the times of [stopAt] to be executed (equals to elapsed ticks)
      */
-    suspend fun waitUntil(stopAt: IntPredicate): Int {
-        this.elapsedTicks = 0
-        this.shouldResume = stopAt
-
-        return suspendCoroutine { this.continuation = it }
-    }
+    suspend fun waitUntil(stopAt: IntPredicate): Int = tickUntil(stopAt)
 
 }

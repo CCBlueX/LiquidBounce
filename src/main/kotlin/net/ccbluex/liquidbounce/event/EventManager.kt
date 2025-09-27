@@ -160,7 +160,7 @@ object EventManager {
         ) { CopyOnWriteArrayList() }
 
     init {
-        SequenceManager
+        CoroutineTicker
     }
 
     /**
