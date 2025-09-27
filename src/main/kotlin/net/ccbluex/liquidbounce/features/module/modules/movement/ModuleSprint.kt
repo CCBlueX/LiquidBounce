@@ -30,11 +30,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.util.math.MathHelper
 
 /**
  * Sprint module
@@ -120,19 +122,17 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
             this@ModuleSprint)
     }
 
-    @Suppress("MagicNumber")
-    fun shouldPreventSprint(): Boolean {
-        val deltaYaw = player.yaw - (RotationManager.currentRotation ?: return false).yaw
-        val (forward, sideways) = Pair(player.input.movementForward, player.input.movementSideways)
+    private fun shouldPreventSprint(): Boolean {
+        val deltaYawRad = (player.yaw - (RotationManager.currentRotation ?: return false).yaw).toRadians()
+        val forward = player.input.movementForward
+        val sideways = player.input.movementSideways
 
-        val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
-            MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-        val preventSprint = (if (player.isOnGround) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
+        val hasForwardMovement = forward * deltaYawRad.fastCos() + sideways * deltaYawRad.fastSin() > 1.0E-5
+
+        return (if (player.isOnGround) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
             && !shouldSprintOmnidirectional
             && RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.OFF
             && !hasForwardMovement
-
-        return running && preventSprint
     }
 
     private enum class Ignore(override val choiceName: String) : NamedChoice {
@@ -143,6 +143,6 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
-        AIR("Air")
+        AIR("Air"),
     }
 }
