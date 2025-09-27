@@ -68,7 +68,7 @@ class SimulatedPlayer(
     var input: SimulatedPlayerInput,
     override var pos: Vec3d,
     var velocity: Vec3d,
-    private var boundingBox: Box,
+    var boundingBox: Box,
     var yaw: Float,
     var pitch: Float,
     private var sprinting: Boolean,
@@ -633,7 +633,7 @@ class SimulatedPlayer(
     }
 
     protected fun shouldClipAtLedge(): Boolean {
-        return this.input.playerInput.sneak || this.input.forceSafeWalk
+        return !this.input.ignoreClippingAtLedge && (this.input.playerInput.sneak || this.input.forceSafeWalk)
     }
 
     private fun method_30263(): Boolean {
@@ -879,7 +879,8 @@ class SimulatedPlayer(
         val directionalInput: DirectionalInput,
         jumping: Boolean,
         var sprinting: Boolean,
-        sneaking: Boolean
+        sneaking: Boolean,
+        var ignoreClippingAtLedge: Boolean = false
     ) : Input() {
         var forceSafeWalk: Boolean = false
 

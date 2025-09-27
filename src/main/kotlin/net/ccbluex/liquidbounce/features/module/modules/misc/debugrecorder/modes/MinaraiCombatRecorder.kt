@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.BoxRenderer
@@ -149,9 +150,9 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         // Wait until entity is not in combat
         var inactivity = 0
         var buffer: MutableList<TrainingData>? = null
-        waitUntil {
+        tickUntil {
             if (entity.isDead || entity.isRemoved || doNotTrack) {
-                return@waitUntil true
+                return@tickUntil true
             }
 
             val rotation = RotationManager.currentRotation ?: player.rotation
@@ -164,13 +165,13 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             if (raytraceTarget?.entity == null) {
                 inactivity++
                 ModuleDebug.debugParameter(this, "Inactivity", inactivity)
-                return@waitUntil inactivity > 20
+                return@tickUntil inactivity > 20
             } else {
                 buffer = trainingCollection[entityId]
                 inactivity = 0
             }
 
-            return@waitUntil false
+            return@tickUntil false
         }
 
         targetEntityId = null

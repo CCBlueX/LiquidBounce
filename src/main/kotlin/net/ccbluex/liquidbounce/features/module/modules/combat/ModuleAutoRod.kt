@@ -22,10 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -190,7 +192,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val minRangeSq = range.start.sq()
 
         // 3. timeout / hit entity / no movement / out of range
-        waitConditional(hitTimeout) {
+        tickConditional(hitTimeout) {
             fishingBobberEntity?.hookedEntity != null ||
                 fishingBobberEntity?.movement == Vec3d.ZERO ||
                 pullOnOutOfRange && player.squaredDistanceTo(target) !in minRangeSq..maxRangeSq

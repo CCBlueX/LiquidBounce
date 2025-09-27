@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -90,7 +90,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
         @Suppress("unused")
         val repeatable = tickHandler {
             interactions.randomOrNull()?.let {
-                it.perform(this@tickHandler)
+                it.perform()
                 waitTicks(delay.random())
             }
         }
@@ -103,7 +103,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
         @Suppress("unused", "MagicNumber")
         private enum class Interaction(
             override val choiceName: String,
-            val perform: suspend Sequence.() -> Unit,
+            val perform: suspend () -> Unit,
         ): NamedChoice {
             JUMP("Jump", {
                 once<MovementInputEvent> { event ->
