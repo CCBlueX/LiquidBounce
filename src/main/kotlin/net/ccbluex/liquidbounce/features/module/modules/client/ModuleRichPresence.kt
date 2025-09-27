@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler

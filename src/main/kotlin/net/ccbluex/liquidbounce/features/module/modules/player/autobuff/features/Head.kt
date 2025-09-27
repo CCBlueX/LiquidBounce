@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.event.Sequence
+import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -44,7 +44,7 @@ internal object Head : HealthBasedBuff("Head") {
         return stack.isOf(Items.PLAYER_HEAD)
     }
 
-    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
+    override suspend fun execute(slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)
         chronometer.reset()
     }

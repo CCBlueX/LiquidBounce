@@ -27,8 +27,8 @@ import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import kotlin.coroutines.resume
 
-typealias SuspendableEventHandler<T> = suspend Sequence.(T) -> Unit
-typealias SuspendableHandler = suspend Sequence.() -> Unit
+typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
+typealias SuspendableHandler = suspend CoroutineScope.() -> Unit
 
 object CoroutineTicker : EventListener {
 
@@ -74,7 +74,7 @@ object CoroutineTicker : EventListener {
  * @param stopAt the callback of elapsed ticks. Will be called on game tick.
  * @return the times of [stopAt] to be executed (equals to elapsed ticks)
  */
-private suspend fun tickUntil(
+suspend fun tickUntil(
     stopAt: IntPredicate,
 ): Int = suspendCancellableCoroutine { continuation ->
     var elapsedTicks = 0
@@ -92,10 +92,24 @@ private suspend fun tickUntil(
 }
 
 /**
+ * Ticks until the fixed amount of ticks ran out or the [breakLoop] says to continue.
+ *
+ * @returns if we passed the time of [ticks] without breaking the loop.
+ */
+suspend fun tickConditional(ticks: Int, breakLoop: BooleanSupplier): Boolean {
+    // Don't wait if ticks is 0
+    if (ticks == 0) {
+        return !breakLoop.asBoolean
+    }
+
+    return tickUntil { breakLoop.asBoolean || it >= ticks } >= ticks
+}
+
+/**
  * Waits a fixed amount of ticks before continuing.
  * Re-entry at the game tick.
  */
-suspend fun delayTicks(ticks: Int) {
+suspend fun waitTicks(ticks: Int) {
     // Don't wait if ticks is 0
     if (ticks == 0) {
         return
@@ -104,101 +118,32 @@ suspend fun delayTicks(ticks: Int) {
     tickUntil { it >= ticks }
 }
 
-//fun Sequence(
-//    owner: EventListener,
-//    dispatcher: CoroutineDispatcher? = null,
-//    handler: SuspendableHandler,
-//    onCancellation: Runnable?,
-//): Job =
-//    owner.eventListenerScope.launch(
-//        context = owner.continuationInterceptor(dispatcher),
-//        start = CoroutineStart.UNDISPATCHED
-//    ) {
-//        if (owner.running) {
-//            handler()
-//        }
-//    }.apply {
-//        onCancellation?.let {
-//            invokeOnCompletion { t ->
-//                if (t is CancellationException) {
-//                    it.run()
-//                }
-//            }
-//        }
-//    }
+/**
+ * Waits a fixed amount of seconds on tick level before continuing.
+ * Re-entry at the game tick.
+ *
+ * Note: When TPS is not 20, this won't be actual `seconds`.
+ */
+suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
-class Sequence(
-    val owner: EventListener,
+fun EventListener.Sequence(
     dispatcher: CoroutineDispatcher? = null,
-    val handler: SuspendableHandler,
-    val onCancellation: Runnable?,
-) : CoroutineScope {
-
-    /**
-     * Use [owner]'s [kotlin.coroutines.ContinuationInterceptor] and [CoroutineScope] to handle:
-     * - Exception
-     * - [EventListener.running] aware cancellation
-     *
-     * The [handler] block will be executed on the thread
-     * where constructor of [Sequence] be called until first suspension.
-     *
-     * All `wait` functions will be resumed on render thread. (Based on [GameTickEvent] handler)
-     */
-    override val coroutineContext: Job = owner.eventListenerScope.launch(
-        context = owner.continuationInterceptor(dispatcher) + CoroutineName("Sequence-${owner}"),
+    handler: SuspendableHandler,
+    onCancellation: Runnable?,
+): Job =
+    eventListenerScope.launch(
+        context = continuationInterceptor(dispatcher),
         start = CoroutineStart.UNDISPATCHED
     ) {
-        if (owner.running) {
+        if (running) {
             handler()
         }
     }.apply {
         onCancellation?.let {
-            invokeOnCompletion { t ->
+            this.invokeOnCompletion { t ->
                 if (t is CancellationException) {
                     it.run()
                 }
             }
         }
     }
-
-    /**
-     * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
-     *
-     * @returns if we passed the time of [ticks] without breaking the loop.
-     */
-    suspend fun waitConditional(ticks: Int, breakLoop: BooleanSupplier): Boolean {
-        // Don't wait if ticks is 0
-        if (ticks == 0) {
-            return !breakLoop.asBoolean
-        }
-
-        return waitUntil { breakLoop.asBoolean || it >= ticks } >= ticks
-    }
-
-    /**
-     * Waits a fixed amount of ticks before continuing.
-     * Re-entry at the game tick.
-     */
-    suspend fun waitTicks(ticks: Int) = delayTicks(ticks)
-
-    /**
-     * Waits a fixed amount of seconds on tick level before continuing.
-     * Re-entry at the game tick.
-     *
-     * Note: When TPS is not 20, this won't be actual `seconds`.
-     */
-    suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
-
-    /**
-     * Waits until [stopAt] returns true.
-     * The elapsed ticks (starting from 1) will be passed to [stopAt].
-     *
-     * Example:
-     * - `waitUntil { true }` --> `1`
-     * - `waitUntil { it >= 2 }` --> `2`
-     *
-     * @return the times of [stopAt] to be executed (equals to elapsed ticks)
-     */
-    suspend fun waitUntil(stopAt: IntPredicate): Int = tickUntil(stopAt)
-
-}

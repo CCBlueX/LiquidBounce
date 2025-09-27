@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
@@ -48,7 +48,7 @@ internal object Soup : HealthBasedBuff("Soup") {
         return stack.isOf(Items.MUSHROOM_STEW)
     }
 
-    override suspend fun Sequence.execute(slot: HotbarItemSlot) {
+    override suspend fun execute(slot: HotbarItemSlot) {
         // Use item (be aware, it will always return false in this case)
         useHotbarSlotOrOffhand(slot)
 

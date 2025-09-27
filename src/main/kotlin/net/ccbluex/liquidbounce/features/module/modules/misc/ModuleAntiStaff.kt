@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
@@ -42,7 +43,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
         serverStaffList[address] = emptySet()
 
         // Keeps us from loading the staff list multiple times
-        waitUntil { inGame && mc.currentScreen != null }
+        tickUntil { inGame && mc.currentScreen != null }
 
         // Load the staff list
         loadStaffList(address)

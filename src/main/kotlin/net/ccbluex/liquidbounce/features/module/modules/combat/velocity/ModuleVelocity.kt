@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.*
@@ -94,7 +95,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
                     if (ticks > 0) {
                         val timeToWait = System.currentTimeMillis() + (ticks * 50L)
 
-                        waitUntil { System.currentTimeMillis() >= timeToWait }
+                        tickUntil { System.currentTimeMillis() >= timeToWait }
                     }
                 }
 

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.OpenAiApi
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -135,10 +136,10 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
 
     @Suppress("unused")
     val tickHandler = tickHandler {
-        waitUntil {
+        tickUntil {
             // Has the trigger word been said and has the buffer time elapsed?
             triggerWordChronometer.hasElapsed(bufferTime.toLong())
-            // Is the buffer empty? - If it is we already answered the question.
+                // Is the buffer empty? - If it is we already answered the question.
                 && chatBuffer.isNotEmpty()
         }
 

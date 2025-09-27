@@ -22,11 +22,13 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
@@ -126,7 +128,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
-            waitUntil { !player.isSprinting && !player.lastSprinting }
+            tickUntil { !player.isSprinting && !player.lastSprinting }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
             this@SprintTap.debugParameter("State") { "Allowing Sprint" }
@@ -179,7 +181,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
             waitTicks(ticksUntilMovementBlock.random())
             this@WTap.debugParameter("State") { "Disallowing Movement" }
             cancelMovement = true
-            waitUntil { !player.input.hasForwardMovement() }
+            tickUntil { !player.input.hasForwardMovement() }
             this@WTap.debugParameter("State") { "Waiting for Allowed Movement" }
             waitTicks(ticksUntilAllowedMovement.random())
             this@WTap.debugParameter("State") { "Allowing Movement" }

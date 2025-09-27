@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
@@ -154,7 +155,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val handleWorldChange = sequenceHandler<WorldChangeEvent> { event ->
         // Delayed start handling
         if (event.world != null) {
-            waitUntil { inGame }
+            tickUntil { inGame }
             AutoConfig.withLoading {
                 for (module in modules) {
                     if (!module.enabled || module.calledSinceStartup) continue

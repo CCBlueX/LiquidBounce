@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -254,7 +255,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                                 .append(
                                     owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
                                 )
-                        is Sequence -> ownerName(owner.owner)
+                        is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asText()
+                            ?.formatted(Formatting.GRAY) ?: owner.toString().asText()
                         else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
                     }
                 }
@@ -305,7 +307,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return
         }
 
-        debuggedGeometry[DebuggedOwner((owner as? Sequence)?.owner ?: owner, name)] = geometry
+        debuggedGeometry[DebuggedOwner(owner, name)] = geometry
     }
 
     inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
@@ -329,7 +331,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return
         }
 
-        debugParameters[DebuggedOwner((owner as? Sequence)?.owner ?: owner, name)] = ParameterCapture(value = value)
+        debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
     }
 
     inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {

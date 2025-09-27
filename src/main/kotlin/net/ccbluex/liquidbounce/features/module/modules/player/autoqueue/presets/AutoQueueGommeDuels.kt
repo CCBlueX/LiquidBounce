@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.preset
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitSeconds
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -120,7 +121,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         inMatch = false
     }
 
-    private suspend fun Sequence.handleLobbySituation() {
+    private suspend fun handleLobbySituation() {
         inMatch = false
 
         val duelsEntity = world.entities.filterIsInstance<ArmorStandEntity>().find {
@@ -142,7 +143,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         waitSeconds(5)
     }
 
-    private suspend fun Sequence.handleDuelsSituation() {
+    private suspend fun handleDuelsSituation() {
         // Check if player inventory has a head
         if (!inMatch) {
             if (controlKillAura) {

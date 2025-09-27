@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.syncId
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -50,7 +51,7 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
                 }
 
                 // Wait for screen update
-                if (!waitConditional(5) { mc.currentScreen === screen }) {
+                if (!tickConditional(5) { mc.currentScreen === screen }) {
                     return@sequenceHandler
                 }
 

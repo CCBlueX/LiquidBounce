@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.action
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -52,11 +52,11 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
         }
     }
 
-    override suspend fun execute(sequence: Sequence) {
+    override suspend fun execute() {
         val slot = Slots.OffhandWithHotbar.findSlot(mode.activeChoice::test) ?: return
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
-        sequence.waitTicks(1)
+        waitTicks(1)
         interaction.interactItem(player, slot.useHand)
     }
 

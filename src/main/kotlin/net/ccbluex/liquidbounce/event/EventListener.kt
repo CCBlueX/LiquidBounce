@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import java.util.function.Consumer
@@ -113,7 +112,7 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
     onCancellation: Runnable? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
 ) {
-    handler<T>(priority) { event -> Sequence(this, dispatcher, { eventHandler(event) }, onCancellation) }
+    handler<T>(priority) { event -> this.Sequence(dispatcher, { eventHandler(event) }, onCancellation) }
 }
 
 /**
@@ -124,13 +123,12 @@ fun EventListener.tickHandler(
     onCancellation: Runnable? = null,
     eventHandler: SuspendableHandler,
 ): EventHook<GameTickEvent> {
-    // The sequence's lifecycle is under SequenceManager's control.
-    var sequence: Sequence? = null
+    var sequence: Job? = null
 
     return handler<GameTickEvent> {
         // Check if the sequence is already running (completed or null)
         if (sequence == null || !sequence!!.isActive) {
-            sequence = Sequence(this, dispatcher, eventHandler, onCancellation)
+            sequence = this.Sequence(dispatcher, eventHandler, onCancellation)
         }
     }
 }

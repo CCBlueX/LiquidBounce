@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -119,7 +119,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
     /**
      * Waits and closes the inventory after the armor is replaced.
      */
-    private suspend fun Sequence.closeInventory(hasArmorToEquip: Boolean) {
+    private suspend fun closeInventory(hasArmorToEquip: Boolean) {
         if (!hasOpenedInventory || hasArmorToEquip) {
             return
         }
@@ -136,7 +136,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
     /**
      * Closes the previous game screen and opens the inventory.
      */
-    private suspend fun Sequence.openInventory(hasArmorToReplace : Boolean) {
+    private suspend fun openInventory(hasArmorToReplace: Boolean) {
         while (hasArmorToReplace && mc.currentScreen !is InventoryScreen) {
 
             if (mc.currentScreen is HandledScreen<*>) {
