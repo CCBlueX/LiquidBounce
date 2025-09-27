@@ -90,7 +90,7 @@ object AutoQueueCustom : Choice("Custom") {
         if (trigger.isTriggered) {
             AutoQueueControl.wasInQueue = true
 
-            actions.activeChoice.execute(this)
+            actions.activeChoice.execute()
 
             if (waitUntilWorldChange) {
                 tickUntil { worldChangeOccurred }

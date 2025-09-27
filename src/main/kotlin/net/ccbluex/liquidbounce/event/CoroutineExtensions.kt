@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.update
+import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -140,7 +143,7 @@ private fun <T : Event> EventListener.suspendHandlerCancelPrevious(
     priority: Short,
     handler: suspend CoroutineScope.(T) -> Unit
 ): EventHook<T> {
-    val jobRef = AtomicReference<Job?>(null)
+    val jobRef = atomic<Job?>(null)
     return handler(eventClass, priority) { event ->
         jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
             handler(event)
@@ -154,12 +157,12 @@ private fun <T : Event> EventListener.suspendHandlerDiscardLatest(
     priority: Short,
     handler: suspend CoroutineScope.(T) -> Unit
 ): EventHook<T> {
-    val jobRef = AtomicReference<Job?>(null)
+    val jobRef = atomic<Job?>(null)
     return handler(eventClass, priority) { event ->
         var newJob: Job? = null
 
         while (true) {
-            val currentJob = jobRef.get()
+            val currentJob = jobRef.value
             if (currentJob?.isActive == true) break
 
             if (newJob == null) {

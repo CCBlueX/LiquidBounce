@@ -112,7 +112,7 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
     onCancellation: Runnable? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
 ) {
-    handler<T>(priority) { event -> this.Sequence(dispatcher, { eventHandler(event) }, onCancellation) }
+    handler<T>(priority) { event -> launchSequence(dispatcher, onCancellation) { eventHandler(event) } }
 }
 
 /**
@@ -128,7 +128,7 @@ fun EventListener.tickHandler(
     return handler<GameTickEvent> {
         // Check if the sequence is already running (completed or null)
         if (sequence == null || !sequence!!.isActive) {
-            sequence = this.Sequence(dispatcher, eventHandler, onCancellation)
+            sequence = launchSequence(dispatcher, onCancellation, eventHandler)
         }
     }
 }

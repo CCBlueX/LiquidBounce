@@ -126,10 +126,11 @@ suspend fun waitTicks(ticks: Int) {
  */
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
 
-fun EventListener.Sequence(
+// A special version of [suspendHandler]...
+fun EventListener.launchSequence(
     dispatcher: CoroutineDispatcher? = null,
-    handler: SuspendableHandler,
     onCancellation: Runnable?,
+    handler: SuspendableHandler,
 ): Job =
     eventListenerScope.launch(
         context = continuationInterceptor(dispatcher),
