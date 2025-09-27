@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn.requestStaffList
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -46,9 +45,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
         waitUntil { inGame && mc.currentScreen != null }
 
         // Load the staff list
-        waitFor(Dispatchers.IO) {
-            loadStaffList(address)
-        }
+        loadStaffList(address)
     }
 
     @Suppress("unused")

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -62,7 +61,7 @@ object SequenceManager : EventListener {
         runningList.addAll(pendingList)
         pendingList.clear()
         runningList.removeIf {
-            if (it.isJobInActive) {
+            if (!it.isActive) {
                 true
             } else {
                 it.tick()
@@ -76,9 +75,10 @@ object SequenceManager : EventListener {
 @Suppress("TooManyFunctions")
 class Sequence(
     val owner: EventListener,
+    dispatcher: CoroutineDispatcher? = null,
     val handler: SuspendableHandler,
     val onCancellation: Runnable?,
-) {
+) : CoroutineScope {
 
     private var continuation: Continuation<Int>? = null
     private var elapsedTicks = 0
@@ -94,8 +94,8 @@ class Sequence(
      *
      * All `wait` functions will be resumed on render thread. (Based on [GameTickEvent] handler)
      */
-    private val coroutine: Job = owner.eventListenerScope.launch(
-        context = owner.continuationInterceptor() + CoroutineName("Sequence-${owner}"),
+    override val coroutineContext: Job = owner.eventListenerScope.launch(
+        context = owner.continuationInterceptor(dispatcher) + CoroutineName("Sequence-${owner}"),
         start = CoroutineStart.UNDISPATCHED
     ) {
         SequenceManager.register(this@Sequence)
@@ -111,9 +111,6 @@ class Sequence(
             }
         }
     }
-
-    val isJobInActive: Boolean
-        get() = !coroutine.isActive
 
     internal fun tick() {
         if (this.shouldResume.test(++this.elapsedTicks)) {
@@ -173,25 +170,5 @@ class Sequence(
 
         return suspendCoroutine { this.continuation = it }
     }
-
-    /**
-     * Private utility function for waiting external [deferred].
-     * Resume without changing [CoroutineContext].
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun <T> waitFor(deferred: Deferred<T>): T {
-        // Use `waitUntil` to avoid duplicated resumption
-        waitUntil { deferred.isCompleted }
-        return deferred.getCompleted()
-    }
-
-    /**
-     * Start a task with given context, and wait for its completion.
-     * @see withContext
-     */
-    suspend fun <T> waitFor(
-        context: CoroutineContext,
-        block: suspend CoroutineScope.() -> T
-    ): T = waitFor(CoroutineScope(coroutine + context).async(context, block = block))
 
 }

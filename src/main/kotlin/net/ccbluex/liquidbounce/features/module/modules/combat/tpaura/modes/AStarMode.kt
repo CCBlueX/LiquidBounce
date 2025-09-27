@@ -1,11 +1,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
@@ -51,14 +54,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         waitTicks(stickAt)
         travel(path.asReversed())
         desyncPlayerPosition = null
-        pathCache = null
-    }
-
-    @Suppress("unused")
-    private val pathFinder = tickHandler {
-        waitTicks(1)
-
-        pathCache = waitFor(Dispatchers.Default) {
+        pathCache = withContext(Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")) {
             val playerPosition = player.pos
 
             val maximumDistanceSq = maximumDistance.sq()
@@ -79,6 +75,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                 }
             }
         }
+        waitTicks(1)
     }
 
     override fun disable() {
