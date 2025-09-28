@@ -122,4 +122,5 @@ public abstract class MixinClientPlayerInteractionManager {
     private void hookBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         ClientBlockBreakTrigger.INSTANCE.clientBreakHandler();
     }
+
 }

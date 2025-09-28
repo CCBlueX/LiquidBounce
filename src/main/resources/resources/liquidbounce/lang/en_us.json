@@ -806,6 +806,7 @@
   "liquidbounce.module.betterTab.description": "Multiple improvements to the tab list.",
   "liquidbounce.module.betterTitle.description": "Improvements to the title and subtitle.",
   "liquidbounce.module.betterInventory.description": "Additional inventory-related visual features.",
+  "liquidbounce.module.noBlockInteract.description": "Prevents you from interacting with blocks.",
   "liquidbounce.module.noEntityInteract.description": "Prevents you from interacting with entities.",
   "liquidbounce.module.autoPearl.description": "Aims and throws a pearl at an enemies pearl trajectory.",
   "liquidbounce.module.replenish.description": "Automatically refills your hotbar with items from your inventory when the count drops to a certain threshold.",
