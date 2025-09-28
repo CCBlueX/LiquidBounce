@@ -19,12 +19,16 @@
 
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.additions.drawCooldownProgress
+import net.ccbluex.liquidbounce.additions.drawItemBar
+import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.ItemStack
@@ -53,7 +57,7 @@ class ItemStackListRenderer private constructor(
     private var backgroundColor = Int.MIN_VALUE
     private var backgroundMargin = 2
     private var useTexture = false
-    private var drawStackOverlay = true
+    private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
 
     @JvmOverloads
     fun title(title: String, color: Int = this.titleColor) = apply {
@@ -107,8 +111,8 @@ class ItemStackListRenderer private constructor(
             is BackgroundChoice.Texture -> textureBackground()
         }
 
-    fun drawStackOverlay(drawStackOverlay: Boolean) = apply {
-        this.drawStackOverlay = drawStackOverlay
+    fun itemStackRenderer(itemStackRenderer: SingleItemStackRenderer) = apply {
+        this.itemStackRenderer = itemStackRenderer
     }
 
     private fun fillBackground(width: Int, height: Int) {
@@ -176,10 +180,8 @@ class ItemStackListRenderer private constructor(
             if (stack.isEmpty) continue
 
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
-
-            drawContext.drawItem(stack, leftX + diff, topY + diff)
-            if (drawStackOverlay) {
-                drawContext.drawStackOverlay(textRenderer, stack, leftX + diff, topY + diff, null)
+            with(itemStackRenderer) {
+                drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
             }
         }
 
@@ -208,6 +210,40 @@ class ItemStackListRenderer private constructor(
                 Rect(parent),
                 Texture(parent),
             )
+        }
+    }
+
+    fun interface SingleItemStackRenderer {
+        fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
+
+        companion object : SingleItemStackRenderer {
+
+            override fun DrawContext.drawItemStack(
+                textRenderer: TextRenderer,
+                index: Int,
+                stack: ItemStack,
+                x: Int,
+                y: Int,
+            ) {
+                drawItem(stack, x, y)
+                drawStackOverlay(textRenderer, stack, x, y)
+            }
+
+            @JvmStatic
+            fun of(
+                drawItemBar: Boolean = true,
+                drawStackCount: Boolean = true,
+                drawCooldownProgress: Boolean = true,
+            ): SingleItemStackRenderer {
+                return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                    drawItem(stack, x, y)
+                    matrices.push()
+                    if (drawItemBar) drawItemBar(stack, x, y)
+                    if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
+                    if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
+                    matrices.pop()
+                }
+            }
         }
     }
 

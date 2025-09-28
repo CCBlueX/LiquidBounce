@@ -27,9 +27,9 @@ import net.minecraft.util.math.Vec3d
 data class BedState(
     val block: Block,
     val pos: Vec3d,
-    val surroundingBlocks: Collection<SurroundingBlock>,
+    val surroundingBlocks: List<SurroundingBlock>,
 ) {
-    val compactSurroundingBlocks: Collection<SurroundingBlock> by lazy {
+    val compactSurroundingBlocks: List<SurroundingBlock> by lazy {
         surroundingBlocks.groupBy { surrounding ->
             surrounding.block
         }.map { (block, group) ->
