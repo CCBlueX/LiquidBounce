@@ -16,6 +16,7 @@
     "minecraft.block.MixinCobwebBlock",
     "minecraft.block.MixinPowderSnowBlock",
     "minecraft.block.MixinSlimeBlock",
+    "minecraft.client.MinecraftClientAccessor",
     "minecraft.client.MixinClientWorld",
     "minecraft.client.MixinClientWorldProperties",
     "minecraft.client.MixinGameMode",

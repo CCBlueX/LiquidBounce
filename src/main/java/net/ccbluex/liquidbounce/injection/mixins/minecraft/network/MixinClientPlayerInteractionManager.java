@@ -23,12 +23,15 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ClientBlockBreakTrigger;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoInteract;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -123,4 +126,56 @@ public abstract class MixinClientPlayerInteractionManager {
         ClientBlockBreakTrigger.INSTANCE.clientBreakHandler();
     }
 
+    // Block right-click
+    @Inject(method = "interactBlock", at = @At("HEAD"), cancellable = true)
+    private void onRightClickBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
+        if (ModuleNoInteract.INSTANCE.getRunning() && !ModuleNoInteract.INSTANCE.getCanInteract()) {
+            EventManager.INSTANCE.callEvent(new WorldInteractEvent(player, hand, hitResult));
+            cir.setReturnValue(ActionResult.FAIL);
+        }
+    }
+
+//    // Item right-click (in air)
+//    @Inject(method = "interactItem", at = @At("HEAD"))
+//    private void onRightClickItem(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+//        if (!(player instanceof ClientPlayerEntity _player)) {
+//            return;
+//        }
+//
+//        if (ModuleNoInteract.INSTANCE.getRunning() && !ModuleNoInteract.INSTANCE.getCanInteract()) {
+////            EventManager.INSTANCE.callEvent(new WorldInteractEvent(player, hand));
+////            _player.input.playerInput = new PlayerInput(
+////                    _player.input.playerInput.forward(),
+////                    _player.input.playerInput.backward(),
+////                    _player.input.playerInput.left(),
+////                    _player.input.playerInput.right(),
+////                    _player.input.playerInput.jump(),
+////                    true,
+////                    _player.input.playerInput.sprint()
+////            );
+//            //cir.setReturnValue(ActionResult.FAIL);
+//        }
+//    }
+//
+//    // Entity right-click
+//    @Inject(method = "interactEntity", at = @At("HEAD"))
+//    private void onRightClickEntity(PlayerEntity player, Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+//        if (!(player instanceof ClientPlayerEntity _player)) {
+//            return;
+//        }
+//
+//        if (ModuleNoInteract.INSTANCE.getRunning() && !ModuleNoInteract.INSTANCE.getCanInteract()) {
+////            EventManager.INSTANCE.callEvent(new WorldInteractEvent(player, hand));
+////            _player.input.playerInput = new PlayerInput(
+////                    _player.input.playerInput.forward(),
+////                    _player.input.playerInput.backward(),
+////                    _player.input.playerInput.left(),
+////                    _player.input.playerInput.right(),
+////                    _player.input.playerInput.jump(),
+////                    true,
+////                    _player.input.playerInput.sprint()
+////            );
+//            //cir.setReturnValue(ActionResult.FAIL);
+//        }
+//    }
 }

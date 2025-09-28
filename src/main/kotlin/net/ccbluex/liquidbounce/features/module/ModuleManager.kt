@@ -340,6 +340,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleFastExp,
             ModuleFastUse,
             ModuleInventoryCleaner,
+            ModuleNoInteract,
             ModuleNoEntityInteract,
             ModuleNoFall,
             ModuleNoRotateSet,
