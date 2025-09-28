@@ -21,18 +21,41 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.WorldInteractEvent
+import net.ccbluex.liquidbounce.event.events.BlockInteractEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftClientAccessor
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.item.isInteractable
+import net.minecraft.util.hit.BlockHitResult
 
-object ModuleNoInteract : ClientModule("NoInteract", Category.PLAYER) {
-    val canInteract
-        get() = player.isSneaking
+/**
+ * NoBlockInteract module
+ *
+ * Allows to use items without interacting with blocks.
+ */
+object ModuleNoBlockInteract : ClientModule("NoBlockInteract", Category.PLAYER) {
+
     private var sneaking = false
     private var interacting = false
 
+    @Suppress("unused")
+    private val handleBlockInteract = handler<BlockInteractEvent> {
+        sneaking = true
+    }
+
+    @Suppress("unused")
+    private val handleMovementInput = handler<MovementInputEvent> { event ->
+        if (sneaking) {
+            event.sneak = true
+            interacting = true
+        }
+    }
+
+    @Suppress("unused")
     private val handleGameTick = handler<GameTickEvent> {
         if (interacting) {
             (mc as MinecraftClientAccessor).callDoItemUse()
@@ -41,14 +64,16 @@ object ModuleNoInteract : ClientModule("NoInteract", Category.PLAYER) {
         }
     }
 
-    private val handleMovementInput = handler<MovementInputEvent> { event ->
-        if (sneaking) {
-            event.sneak = true
-            interacting = true
+    fun shouldSneak(blockHitResult: BlockHitResult): Boolean {
+        if (player.isSneaking) {
+            return false
         }
-    }
 
-    private val handleWorldInteract = handler<WorldInteractEvent> { event ->
-        sneaking = true
+        val blockPos = blockHitResult.blockPos
+        if (!blockPos.getBlock().isInteractable(blockPos.getState())) {
+            return false
+        }
+
+        return player.mainHandStack.isInteractable() || player.offHandStack.isInteractable()
     }
 }

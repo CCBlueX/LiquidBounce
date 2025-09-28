@@ -30,8 +30,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
+
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.shape.VoxelShape
@@ -77,5 +76,5 @@ class FluidPushEvent : CancellableEvent()
 @Nameable("worldEntityRemove")
 class WorldEntityRemoveEvent(val entity: Entity) : Event()
 
-@Nameable("worldNoInteract")
-class WorldInteractEvent(val player: PlayerEntity, val hand: Hand, val hitResult: BlockHitResult) : Event()
+@Nameable("blockInteractEvent")
+class BlockInteractEvent() : Event()
