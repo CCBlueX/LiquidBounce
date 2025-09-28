@@ -111,9 +111,7 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
     dispatcher: CoroutineDispatcher? = null,
     onCancellation: Runnable? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
-) {
-    handler<T>(priority) { event -> launchSequence(dispatcher, onCancellation) { eventHandler(event) } }
-}
+) = handler<T>(priority) { event -> launchSequence(dispatcher, onCancellation) { eventHandler(event) } }
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.

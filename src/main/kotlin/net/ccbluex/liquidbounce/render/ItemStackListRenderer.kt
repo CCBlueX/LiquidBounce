@@ -32,6 +32,7 @@ import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 private const val SLOT_SIZE = 18
@@ -47,7 +48,7 @@ class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
 ) {
-    private var title = ""
+    private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
     private var centerX = 0.0F
     private var centerY = 0.0F
@@ -60,7 +61,7 @@ class ItemStackListRenderer private constructor(
     private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
 
     @JvmOverloads
-    fun title(title: String, color: Int = this.titleColor) = apply {
+    fun title(title: Text?, color: Int = this.titleColor) = apply {
         this.title = title
         this.titleColor = color
     }
@@ -149,7 +150,7 @@ class ItemStackListRenderer private constructor(
 
         val textRenderer = mc.textRenderer
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             width = maxOf(width, textRenderer.getWidth(title))
             height += textRenderer.fontHeight + 2
         }
@@ -164,7 +165,7 @@ class ItemStackListRenderer private constructor(
             fillBackground(width, height)
         }
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
             matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
         }
@@ -176,8 +177,6 @@ class ItemStackListRenderer private constructor(
             if (this.useTexture) {
                 drawSlotTexture(leftX, topY)
             }
-
-            if (stack.isEmpty) continue
 
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
             with(itemStackRenderer) {

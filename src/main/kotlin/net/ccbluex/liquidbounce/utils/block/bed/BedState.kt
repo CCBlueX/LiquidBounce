@@ -18,28 +18,28 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
+import it.unimi.dsi.fastutil.ints.IntIntMutablePair
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.minecraft.block.Block
 import net.minecraft.util.math.Vec3d
 
 /**
  * Represents a bed state.
  */
+@JvmRecord
 data class BedState(
     val block: Block,
     val pos: Vec3d,
     val surroundingBlocks: List<SurroundingBlock>,
-) {
-    val compactSurroundingBlocks: List<SurroundingBlock> by lazy {
-        surroundingBlocks.groupBy { surrounding ->
-            surrounding.block
-        }.map { (block, group) ->
-            group.reduce { acc, item ->
-                SurroundingBlock(
-                    block = block,
-                    count = acc.count + item.count,
-                    layer = minOf(acc.layer, item.layer)
-                )
-            }
+    val compactSurroundingBlocks: List<SurroundingBlock> = run {
+        val map = Reference2ObjectOpenHashMap<Block, IntIntMutablePair>()
+
+        surroundingBlocks.forEach { surrounding ->
+            val pair = map.computeIfAbsent(surrounding.block) { IntIntMutablePair(0, 0) }
+            pair.left(pair.leftInt() + surrounding.count)
+            pair.right(minOf(pair.rightInt(), surrounding.layer))
         }
-    }
-}
+
+        map.map { SurroundingBlock(block = it.key, count = it.value.leftInt(), layer = it.value.rightInt()) }
+    },
+)
