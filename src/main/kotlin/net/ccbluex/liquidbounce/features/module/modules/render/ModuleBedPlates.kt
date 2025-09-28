@@ -53,6 +53,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
     }
+    private val textShadow by boolean("TextShadow", true)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
     private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
@@ -170,10 +171,17 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         matrices.translate(0.0F, 0.0F, 200.0F)
                         // draw layer text
                         if (!compact) {
-                            drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, true)
+                            drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
                         }
-                        // drawStackCount, with custom color
-                        drawText(textRenderer, countString, x + 19 - 2 - textRenderer.getWidth(countString), y + 6 + 3, color, true)
+                        // drawStackCount, with custom color (copied from DrawContext)
+                        drawText(
+                            textRenderer,
+                            countString,
+                            x + 19 - 2 - textRenderer.getWidth(countString),
+                            y + 6 + 3,
+                            color,
+                            textShadow,
+                        )
                         matrices.pop()
                     }
                 }.draw()

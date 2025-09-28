@@ -218,7 +218,13 @@ class ItemStackListRenderer private constructor(
 
         companion object : SingleItemStackRenderer {
 
-            override fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int) {
+            override fun DrawContext.drawItemStack(
+                textRenderer: TextRenderer,
+                index: Int,
+                stack: ItemStack,
+                x: Int,
+                y: Int,
+            ) {
                 drawItem(stack, x, y)
                 drawStackOverlay(textRenderer, stack, x, y)
             }

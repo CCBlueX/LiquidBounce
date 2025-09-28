@@ -36,6 +36,7 @@ interface DrawContextAddition {
     /**
      * drawTexture with floats
      */
+    @Suppress("LongParameterList")
     fun `liquid_bounce$drawTexture`(
         renderLayers: Function<Identifier, RenderLayer>,
         texture: Identifier,
@@ -48,6 +49,7 @@ interface DrawContextAddition {
     /**
      * drawTexturedQuad with floats
      */
+    @Suppress("LongParameterList")
     fun `liquid_bounce$drawTexturedQuad`(
         renderLayers: Function<Identifier, RenderLayer>,
         texture: Identifier,
