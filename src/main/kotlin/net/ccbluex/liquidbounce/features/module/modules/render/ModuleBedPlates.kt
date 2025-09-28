@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -158,7 +159,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
             val blocksAsItemStacks = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
             blocksAsItemStacks.add(bedState.block.asItem().defaultStack)
-            surrounding.mapTo(blocksAsItemStacks) { ItemStack(it.block, it.count) }
+            surrounding.mapTo(blocksAsItemStacks) { it.block.createItemStackForRendering(it.count) }
 
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)

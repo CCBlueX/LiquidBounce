@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.liquidbounce.additions.drawCooldownProgress
 import net.ccbluex.liquidbounce.additions.drawItemBar
 import net.ccbluex.liquidbounce.additions.drawStackCount
@@ -28,10 +29,14 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -189,9 +194,20 @@ class ItemStackListRenderer private constructor(
 
     companion object {
         @JvmStatic
+        private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
+            put(Blocks.WATER, Items.WATER_BUCKET)
+            put(Blocks.LAVA, Items.LAVA_BUCKET)
+        }
+
+        @JvmStatic
         @JvmName("create")
         fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
             return ItemStackListRenderer(this, stacks)
+        }
+
+        @JvmStatic
+        fun Block.createItemStackForRendering(count: Int): ItemStack {
+            return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
         }
     }
 
