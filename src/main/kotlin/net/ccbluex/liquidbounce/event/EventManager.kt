@@ -119,6 +119,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ServerPingedEvent::class.java,
     TargetChangeEvent::class.java,
     BlockCountChangeEvent::class.java,
+    BedStateChangeEvent::class.java,
     GameModeChangeEvent::class.java,
     ComponentsUpdate::class.java,
     ResourceReloadEvent::class.java,

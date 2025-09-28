@@ -23,17 +23,17 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.fastIterator
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -141,6 +141,11 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
 
             null
         }
+    }
+
+    override fun onUpdated() {
+        val beds = iterate().mapTo(mutableListOf()) { it.value }
+        EventManager.callEvent(BedStateChangeEvent(beds))
     }
 
     interface Subscriber {
