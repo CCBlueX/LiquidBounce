@@ -96,7 +96,7 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
         val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
             player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
 
-        event.sneak = event.sneak && !Conditional.shouldSneak(event) || shouldBeActive
+        event.sneak = event.sneak || shouldBeActive
 
         if (event.sneak) {
             wasSneaking = true
