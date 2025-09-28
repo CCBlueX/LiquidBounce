@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -33,7 +34,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
 import net.minecraft.item.ItemStack
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import kotlin.math.sqrt
 
@@ -51,6 +55,30 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+
+    private val WHITELIST_NON_SOLID: Set<Block> = ReferenceOpenHashSet.of(
+        Blocks.LADDER,
+
+        Blocks.WATER,
+
+        Blocks.GLASS,
+        Blocks.WHITE_STAINED_GLASS,
+        Blocks.ORANGE_STAINED_GLASS,
+        Blocks.MAGENTA_STAINED_GLASS,
+        Blocks.LIGHT_BLUE_STAINED_GLASS,
+        Blocks.YELLOW_STAINED_GLASS,
+        Blocks.LIME_STAINED_GLASS,
+        Blocks.PINK_STAINED_GLASS,
+        Blocks.GRAY_STAINED_GLASS,
+        Blocks.LIGHT_GRAY_STAINED_GLASS,
+        Blocks.CYAN_STAINED_GLASS,
+        Blocks.PURPLE_STAINED_GLASS,
+        Blocks.BLUE_STAINED_GLASS,
+        Blocks.BROWN_STAINED_GLASS,
+        Blocks.GREEN_STAINED_GLASS,
+        Blocks.RED_STAINED_GLASS,
+        Blocks.BLACK_STAINED_GLASS,
+    )
 
     @JvmRecord
     private data class BedStateAndDistance(val bedState: BedState, val distanceSq: Double)
@@ -79,7 +107,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         for ((bedState, distanceSq) in bedStatesWithSquaredDistance) {
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
             val distance = sqrt(distanceSq).toInt()
-            val surrounding = if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks
+            val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
+                .filterNot {
+                    val defaultState = it.block.defaultState
+                    defaultState.isAir || !defaultState.isSolidBlock(world, BlockPos.ORIGIN) && it.block !in WHITELIST_NON_SOLID
+                }
 
             val blocksAsItemStacks = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
             blocksAsItemStacks.add(bedState.block.asItem().defaultStack)
