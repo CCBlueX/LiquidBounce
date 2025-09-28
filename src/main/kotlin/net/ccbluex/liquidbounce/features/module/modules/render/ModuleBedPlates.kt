@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.removeRange
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -110,21 +109,20 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     }
 
     @JvmRecord
-    private data class BedStateAndDistance(val bedState: BedState, val distanceSq: Double)
+    private data class BedStateAndDistance(val bedState: BedState, val distance: Double)
 
     private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<BedStateAndDistance>>(
         initialValue = mutableListOf()
     ) { _, list ->
         val cameraPos = (mc.cameraEntity ?: player).blockPos
-        val maxDistanceSquared = maxDistance.sq()
         list.clear()
 
         BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
-            BedStateAndDistance(bedState, pos.getSquaredDistance(cameraPos))
+            BedStateAndDistance(bedState, sqrt(pos.getSquaredDistance(cameraPos)))
         }
 
-        list.removeIf { it.distanceSq > maxDistanceSquared } // filter items out of range
-        list.sortBy { it.distanceSq } // order by distance asc
+        list.removeIf { it.distance > maxDistance } // filter items out of range
+        list.sortBy { it.distance } // order by distance asc
         if (list.size > maxCount) {
             list.removeRange(fromInclusive = maxCount)
         }
@@ -133,9 +131,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        for ((bedState, distanceSq) in bedStatesWithSquaredDistance) {
+        for ((bedState, distance) in bedStatesWithSquaredDistance) {
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
-            val distance = sqrt(distanceSq).toInt()
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
                 .filter { filterMode.activeChoice.test(it.block) }
 
