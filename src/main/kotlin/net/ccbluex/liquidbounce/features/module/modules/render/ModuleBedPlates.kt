@@ -18,30 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
-import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-private const val ITEM_SIZE: Int = 16
-private const val BACKGROUND_PADDING: Int = 2
-
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
-    private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V")
+    private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
 
@@ -55,10 +52,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
 
-    private val fontRenderer
-        get() = FontManager.FONT_RENDERER
-
-    private class BedStateAndDistance(@JvmField val bedState: BedState, @JvmField val distanceSq: Double)
+    @JvmRecord
+    private data class BedStateAndDistance(val bedState: BedState, val distanceSq: Double)
 
     private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<BedStateAndDistance>>(
         initialValue = mutableListOf()
@@ -81,103 +76,50 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        renderEnvironmentForGUI {
-            fontRenderer.withBuffers { buf ->
-                bedStatesWithSquaredDistance.forEach {
-                    val bedState = it.bedState
-                    val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset))
-                        ?: return@forEach
-                    val distance = sqrt(it.distanceSq)
-                    val surrounding = if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks
+        for ((bedState, distanceSq) in bedStatesWithSquaredDistance) {
+            val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
+            val distance = sqrt(distanceSq).toInt()
+            val surrounding = if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks
 
-                    // without padding
-                    val rectWidth = ITEM_SIZE * (1 + surrounding.size)
-                    val rectHeight = ITEM_SIZE
+            val blocksAsItemStacks = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
+            blocksAsItemStacks.add(bedState.block.asItem().defaultStack)
+            surrounding.mapTo(blocksAsItemStacks) { ItemStack(it.block, it.count) }
 
-                    // draw items and background
-                    with(event.context) {
-                        with(matrices) {
-                            push()
-                            translate(screenPos.x, screenPos.y, screenPos.z)
-                            scale(scale, scale, 1.0F)
-                            translate(-0.5F * rectWidth, -0.5F * rectHeight, -1F)
+            event.context.drawItemStackList(blocksAsItemStacks)
+                .rowLength(Int.MAX_VALUE)
+                .scale(scale)
+                .center(screenPos)
+                .rectBackground(color = backgroundColor.toARGB())
+                .itemStackRenderer { textRenderer, index, stack, x, y ->
+                    if (index == 0) {
+                        // bed
+                        drawItem(stack, x, y)
+                        drawStackCount(textRenderer, stack, x, y, "${distance}m")
+                    } else {
+                        val surroundingBlock = surrounding[index - 1]
+                        val defaultState = surroundingBlock.block.defaultState
+                        val color =
+                            if (highlightUnbreakable && defaultState.isToolRequired
+                                && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
+                            ) {
+                                Color4b.RED
+                            } else {
+                                Color4b.WHITE
+                            }.toARGB()
 
-                            fill(
-                                -BACKGROUND_PADDING,
-                                -BACKGROUND_PADDING,
-                                rectWidth + BACKGROUND_PADDING,
-                                rectHeight + BACKGROUND_PADDING,
-                                backgroundColor.toARGB()
-                            )
-
-                            var itemX = 0
-                            drawItem(bedState.block.asItem().defaultStack, itemX, 0)
-                            surrounding.forEach { surrounding ->
-                                itemX += ITEM_SIZE
-                                drawItem(surrounding.block.asItem().defaultStack, itemX, 0)
-                            }
-                            pop()
+                        drawItem(stack, x, y)
+                        val countString = stack.count.toString()
+                        matrices.push()
+                        matrices.translate(0.0F, 0.0F, 200.0F)
+                        // draw layer text
+                        if (!compact) {
+                            drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, true)
                         }
+                        // drawStackCount, with custom color
+                        drawText(textRenderer, countString, x + 19 - 2 - textRenderer.getWidth(countString), y + 6 + 3, color, true)
+                        matrices.pop()
                     }
-
-                    // draw texts
-                    withMatrixStack {
-                        translate(screenPos.x, screenPos.y, screenPos.z)
-                        scale(scale, scale, 1.0F)
-                        translate(-0.5F * rectWidth, -0.5F * rectHeight, 150F + 20F)
-
-                        val fontScale = 1.0F / (size * 0.15F)
-                        val heightScaled = fontScale * height
-
-                        var topLeftX = 0
-                        draw(
-                            process("${distance.roundToInt()}m"),
-                            0F,
-                            rectHeight - heightScaled,
-                            shadow = true,
-                            scale = fontScale,
-                        )
-                        commit(buf)
-                        surrounding.forEach { surrounding ->
-                            topLeftX += ITEM_SIZE
-
-                            val defaultState = surrounding.block.defaultState
-                            val color =
-                                if (highlightUnbreakable && defaultState.isToolRequired
-                                    && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
-                                ) {
-                                    Color4b.RED
-                                } else {
-                                    Color4b.WHITE
-                                }
-
-                            // count
-                            val countText = process(surrounding.count.toString(), color)
-                            draw(
-                                countText,
-                                topLeftX + ITEM_SIZE - countText.widthWithShadow * fontScale,
-                                rectHeight - heightScaled,
-                                shadow = true,
-                                scale = fontScale,
-                            )
-                            commit(buf)
-
-                            if (!compact) {
-                                // layer
-                                val layerText = process(ROMAN_NUMERALS[surrounding.layer], color)
-                                draw(
-                                    layerText,
-                                    topLeftX.toFloat(),
-                                    0F,
-                                    shadow = true,
-                                    scale = fontScale,
-                                )
-                                commit(buf)
-                            }
-                        }
-                    }
-                }
-            }
+                }.draw()
         }
     }
 

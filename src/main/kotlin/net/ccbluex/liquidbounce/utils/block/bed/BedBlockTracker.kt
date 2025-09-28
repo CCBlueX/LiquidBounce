@@ -91,7 +91,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         Blocks.BLACK_STAINED_GLASS,
     )
 
-    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): Collection<SurroundingBlock> {
+    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): List<SurroundingBlock> {
         val layers = Array<Reference2IntOpenHashMap<Block>>(maxLayers) { Reference2IntOpenHashMap() }
 
         val pos = CACHE.get()
@@ -121,7 +121,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         result.sort()
 
         @Suppress("UNCHECKED_CAST")
-        return result.unmodifiable() as Collection<SurroundingBlock>
+        return result.unmodifiable() as List<SurroundingBlock>
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {

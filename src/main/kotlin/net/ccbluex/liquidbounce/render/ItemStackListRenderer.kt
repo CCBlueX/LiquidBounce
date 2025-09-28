@@ -181,7 +181,7 @@ class ItemStackListRenderer private constructor(
 
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
             with(itemStackRenderer) {
-                drawContext.drawItemStack(textRenderer, stack, leftX + diff, topY + diff)
+                drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
             }
         }
 
@@ -214,11 +214,11 @@ class ItemStackListRenderer private constructor(
     }
 
     fun interface SingleItemStackRenderer {
-        fun DrawContext.drawItemStack(textRenderer: TextRenderer, stack: ItemStack, x: Int, y: Int)
+        fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
 
         companion object : SingleItemStackRenderer {
 
-            override fun DrawContext.drawItemStack(textRenderer: TextRenderer, stack: ItemStack, x: Int, y: Int) {
+            override fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int) {
                 drawItem(stack, x, y)
                 drawStackOverlay(textRenderer, stack, x, y)
             }
@@ -229,7 +229,7 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
-                return SingleItemStackRenderer { textRenderer, stack, x, y ->
+                return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
                     drawItem(stack, x, y)
                     matrices.push()
                     if (drawItemBar) drawItemBar(stack, x, y)
