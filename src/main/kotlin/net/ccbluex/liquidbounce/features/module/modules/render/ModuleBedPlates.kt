@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.additions.drawStackCount
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -30,6 +32,7 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.removeRange
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -39,6 +42,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import java.util.function.Predicate
 import kotlin.math.sqrt
 
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
@@ -55,30 +59,54 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+    private val filterMode = choices("FilterMode", 0) {
+        arrayOf(FilterMode.Predefined, FilterMode.Custom)
+    }
 
-    private val WHITELIST_NON_SOLID: Set<Block> = ReferenceOpenHashSet.of(
-        Blocks.LADDER,
+    private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
+        final override val parent: ChoiceConfigurable<*>
+            get() = filterMode
 
-        Blocks.WATER,
+        object Predefined : FilterMode("Predefined") {
+            private val WHITELIST_NON_SOLID: Set<Block> = ReferenceOpenHashSet.of(
+                Blocks.LADDER,
 
-        Blocks.GLASS,
-        Blocks.WHITE_STAINED_GLASS,
-        Blocks.ORANGE_STAINED_GLASS,
-        Blocks.MAGENTA_STAINED_GLASS,
-        Blocks.LIGHT_BLUE_STAINED_GLASS,
-        Blocks.YELLOW_STAINED_GLASS,
-        Blocks.LIME_STAINED_GLASS,
-        Blocks.PINK_STAINED_GLASS,
-        Blocks.GRAY_STAINED_GLASS,
-        Blocks.LIGHT_GRAY_STAINED_GLASS,
-        Blocks.CYAN_STAINED_GLASS,
-        Blocks.PURPLE_STAINED_GLASS,
-        Blocks.BLUE_STAINED_GLASS,
-        Blocks.BROWN_STAINED_GLASS,
-        Blocks.GREEN_STAINED_GLASS,
-        Blocks.RED_STAINED_GLASS,
-        Blocks.BLACK_STAINED_GLASS,
-    )
+                Blocks.WATER,
+
+                Blocks.GLASS,
+                Blocks.WHITE_STAINED_GLASS,
+                Blocks.ORANGE_STAINED_GLASS,
+                Blocks.MAGENTA_STAINED_GLASS,
+                Blocks.LIGHT_BLUE_STAINED_GLASS,
+                Blocks.YELLOW_STAINED_GLASS,
+                Blocks.LIME_STAINED_GLASS,
+                Blocks.PINK_STAINED_GLASS,
+                Blocks.GRAY_STAINED_GLASS,
+                Blocks.LIGHT_GRAY_STAINED_GLASS,
+                Blocks.CYAN_STAINED_GLASS,
+                Blocks.PURPLE_STAINED_GLASS,
+                Blocks.BLUE_STAINED_GLASS,
+                Blocks.BROWN_STAINED_GLASS,
+                Blocks.GREEN_STAINED_GLASS,
+                Blocks.RED_STAINED_GLASS,
+                Blocks.BLACK_STAINED_GLASS,
+            )
+
+            override fun test(block: Block): Boolean {
+                val state = block.defaultState
+                return !(state.isAir || !state.isSolidBlock(world, BlockPos.ORIGIN) && block !in WHITELIST_NON_SOLID)
+            }
+        }
+
+        object Custom : FilterMode("Custom") {
+            private val blocks by blocks("Blocks", ReferenceOpenHashSet())
+            private val filter by enumChoice("Filter", Filter.BLACKLIST)
+
+            override fun test(block: Block): Boolean {
+                return filter(block, blocks)
+            }
+        }
+    }
 
     @JvmRecord
     private data class BedStateAndDistance(val bedState: BedState, val distanceSq: Double)
@@ -108,10 +136,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
             val distance = sqrt(distanceSq).toInt()
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
-                .filterNot {
-                    val defaultState = it.block.defaultState
-                    defaultState.isAir || !defaultState.isSolidBlock(world, BlockPos.ORIGIN) && it.block !in WHITELIST_NON_SOLID
-                }
+                .filter { filterMode.activeChoice.test(it.block) }
 
             val blocksAsItemStacks = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
             blocksAsItemStacks.add(bedState.block.asItem().defaultStack)
