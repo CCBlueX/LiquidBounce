@@ -65,7 +65,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
 
             override fun apply(t: Int): String = when (this) {
                 TICKS -> t.toString()
-                SECONDS -> SECONDS_FORMAT.format(t.toLong())
+                SECONDS -> SECONDS_FORMAT.format(t / 20.0)
             }
         }
 
