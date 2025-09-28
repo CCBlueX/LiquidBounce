@@ -87,8 +87,8 @@ object InventoryManager : EventListener {
             return@tickHandler
         }
 
-        debugParameter(this, "Inventory Open", isInventoryOpen)
-        debugParameter(this, "Inventory Open Server Side", isInventoryOpenServerSide)
+        debugParameter("Inventory Open") { isInventoryOpen }
+        debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
 
         var maximumCloseDelay = 0
 
@@ -121,7 +121,7 @@ object InventoryManager : EventListener {
             // 2. With inventory open required actions
             schedule.sortWith(COMPARATOR_ACTION_CHAIN)
 
-            debugParameter(this, "Schedule Size", schedule.size)
+            debugParameter("Schedule Size") { schedule.size }
 
             // Handle non-inventory open actions first
             for ((scheduleIndex, chained) in schedule.withIndex()) {

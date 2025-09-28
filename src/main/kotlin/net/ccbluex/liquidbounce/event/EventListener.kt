@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.event
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
@@ -32,7 +33,7 @@ class EventHook<T : Event>(
     val priority: Short = 0
 )
 
-interface EventListener {
+interface EventListener : DebuggedOwner {
 
     /**
      * Returns whether the listenable is running or not, this is based on the parent listenable

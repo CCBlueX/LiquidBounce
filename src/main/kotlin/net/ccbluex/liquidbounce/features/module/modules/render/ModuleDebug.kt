@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -164,7 +165,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         tree(Graph)
     }
 
-    private val debuggedGeometry = hashMapOf<DebuggedOwner, DebuggedGeometry>()
+    @JvmRecord
+    private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
+
+    @JvmRecord
+    private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
+
+    private val debugParameters = hashMapOf<DebuggedKey, ParameterCapture>()
+
+    private val debuggedGeometry = hashMapOf<DebuggedKey, DebuggedGeometry>()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -246,7 +255,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                 val currentTime = System.currentTimeMillis()
 
-                fun ownerName(owner: Any): MutableText {
+                fun ownerName(owner: DebuggedOwner): MutableText {
                     return when (owner) {
                         is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
                         is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
@@ -301,16 +310,16 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    fun debugGeometry(owner: Any, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry) {
         // Do not take any new debugging while the module is off
         if (!running) {
             return
         }
 
-        debuggedGeometry[DebuggedOwner(owner, name)] = geometry
+        debuggedGeometry[DebuggedKey(owner, name)] = geometry
     }
 
-    inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
         if (!ModuleDebug.running) {
             return
         }
@@ -318,23 +327,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugGeometry(owner = this, name, lazyGeometry())
     }
 
-    @JvmRecord
-    private data class DebuggedOwner(val owner: Any, val name: String)
-
-    @JvmRecord
-    private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
-
-    private val debugParameters = hashMapOf<DebuggedOwner, ParameterCapture>()
-
-    fun debugParameter(owner: Any, name: String, value: Any?) {
+    fun debugParameter(owner: DebuggedOwner, name: String, value: Any?) {
         if (!running) {
             return
         }
 
-        debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
+        debugParameters[DebuggedKey(owner, name)] = ParameterCapture(value = value)
     }
 
-    inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
+    inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
         if (!ModuleDebug.running) {
             return
         }
