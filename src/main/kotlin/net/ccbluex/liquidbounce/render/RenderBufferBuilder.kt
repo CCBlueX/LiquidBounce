@@ -114,33 +114,30 @@ class RenderBufferBuilder<I : VertexInputType>(
     }
 }
 
-class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
-    private val faceRenderer = RenderBufferBuilder(
+/**
+ * Draws colored boxes. Renders automatically
+ */
+inline fun WorldRenderEnvironment.drawBoxes(fn: BoxRenderer.() -> Unit) {
+    val renderer = BoxRenderer(this)
+
+    try {
+        fn(renderer)
+    } finally {
+        renderer.draw()
+    }
+}
+
+class BoxRenderer(val env: WorldRenderEnvironment) {
+    val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_A
     )
-    private val outlinesRenderer = RenderBufferBuilder(
+    val outlinesRenderer = RenderBufferBuilder(
         DrawMode.DEBUG_LINES,
         VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_B
     )
-
-    companion object {
-        /**
-         * Draws colored boxes. Renders automatically
-         */
-        @JvmStatic
-        fun drawWith(env: WorldRenderEnvironment, fn: BoxRenderer.() -> Unit) {
-            val renderer = BoxRenderer(env)
-
-            try {
-                fn(renderer)
-            } finally {
-                renderer.draw()
-            }
-        }
-    }
 
     fun drawBox(
         box: Box,
@@ -156,7 +153,7 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
         }
     }
 
-    private fun draw() {
+    fun draw() {
         faceRenderer.draw()
         outlinesRenderer.draw()
     }

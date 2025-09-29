@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -103,7 +104,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ): Boolean {
             var dirty = false
 
-            BoxRenderer.drawWith(this) {
+            drawBoxes {
                 for (blockPos in blocks) {
                     val blockState = blockPos.getState() ?: continue
 

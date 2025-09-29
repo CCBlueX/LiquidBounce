@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -50,7 +50,7 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
                 matrix.rotate(Quaternionf().rotationY(Math.toRadians(yRot).toFloat()))
                 matrix.scale(1.9f)
 
-                BoxRenderer.drawWith(this) {
+                drawBoxes {
                     drawBox(RENDER_LEFT_LEG, color, outlineColor)
                     drawBox(RENDER_RIGHT_LEG, color, outlineColor)
                     drawBox(RENDER_BODY, color, outlineColor)
