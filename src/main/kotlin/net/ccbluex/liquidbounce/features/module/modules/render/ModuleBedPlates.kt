@@ -19,22 +19,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.computedOn
+import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.removeRange
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -42,7 +45,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import java.util.function.Predicate
-import kotlin.math.sqrt
 
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
@@ -108,37 +110,56 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
     }
 
-    @JvmRecord
-    private data class BedStateAndDistance(val bedState: BedState, val distance: Double)
-
-    private val bedStatesWithSquaredDistance by computedOn<GameTickEvent, MutableList<BedStateAndDistance>>(
-        initialValue = mutableListOf()
-    ) { _, list ->
-        val cameraPos = (mc.cameraEntity ?: player).blockPos
-        list.clear()
-
-        BedBlockTracker.iterate().mapTo(list) { (pos, bedState) ->
-            BedStateAndDistance(bedState, sqrt(pos.getSquaredDistance(cameraPos)))
+    private data class BedStateAndDistance(
+        @JvmField val bedState: BedState,
+        @JvmField var distance: Double,
+    ) : Comparable<BedStateAndDistance> {
+        override fun compareTo(other: BedStateAndDistance): Int {
+            return distance.compareTo(other.distance)
         }
+    }
 
-        list.removeIf { it.distance > maxDistance } // filter items out of range
-        list.sortBy { it.distance } // order by distance asc
-        if (list.size > maxCount) {
-            list.removeRange(fromInclusive = maxCount)
+    private val beds = ArrayList<BedStateAndDistance>()
+
+    private fun updateAndSortBeds() {
+        val cameraPos = (mc.cameraEntity ?: player).pos
+        beds.forEach {
+            it.distance = it.bedState.pos.distanceTo(cameraPos)
         }
-        list
+        beds.sort()
+    }
+
+    @Suppress("unused")
+    // Run on render thread because the scanner runs async
+    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
+        beds.clear()
+        beds.ensureCapacity(event.bedStates.size)
+        event.bedStates.mapTo(beds) { BedStateAndDistance(it, 0.0) }
+        updateAndSortBeds()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        updateAndSortBeds()
     }
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        for ((bedState, distance) in bedStatesWithSquaredDistance) {
+        beds.sort()
+
+        var i = 0
+        for ((bedState, distance) in beds) {
+            if (distance > maxDistance || i++ > maxCount) {
+                break // because list beds are sorted by distance (ASC), so we break at first item out of range
+            }
+
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
                 .filter { filterMode.activeChoice.test(it.block) }
 
             val blocksAsItemStacks = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
             blocksAsItemStacks.add(bedState.block.asItem().defaultStack)
-            surrounding.mapTo(blocksAsItemStacks) { ItemStack(it.block, it.count) }
+            surrounding.mapTo(blocksAsItemStacks) { it.block.createItemStackForRendering(it.count) }
 
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)
@@ -149,7 +170,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                     if (index == 0) {
                         // bed
                         drawItem(stack, x, y)
-                        drawStackCount(textRenderer, stack, x, y, "${distance}m")
+                        drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[index - 1]
                         val defaultState = surroundingBlock.block.defaultState
@@ -191,6 +212,6 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
     override fun onDisabled() {
         BedBlockTracker.unsubscribe(this)
-        bedStatesWithSquaredDistance.clear()
+        beds.clear()
     }
 }

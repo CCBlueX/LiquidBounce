@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
@@ -37,7 +38,7 @@ class Command(
     val executable: Boolean,
     val handler: Handler?,
     val requiresIngame: Boolean,
-) : MinecraftShortcuts {
+) : MinecraftShortcuts, DebuggedOwner {
     var parentCommand: Command? = null
         private set
     var index: Int = -1

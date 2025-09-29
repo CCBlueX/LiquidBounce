@@ -463,6 +463,18 @@ export interface Vector2f {
     y: number;
 }
 
+export interface BedState {
+    block: string;
+    pos: Vec3;
+    surroundingBlocks: SurroundingBlock[];
+    compactSurroundingBlocks: SurroundingBlock[];
+}
+
+export interface SurroundingBlock {
+    block: string;
+    count: number;
+    layer: number;
+}
 
 type MouseKeyName =
     | "left"

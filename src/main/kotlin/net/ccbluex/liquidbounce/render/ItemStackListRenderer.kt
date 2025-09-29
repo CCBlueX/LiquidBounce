@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.liquidbounce.additions.drawCooldownProgress
 import net.ccbluex.liquidbounce.additions.drawItemBar
 import net.ccbluex.liquidbounce.additions.drawStackCount
@@ -28,10 +29,15 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 private const val SLOT_SIZE = 18
@@ -47,7 +53,7 @@ class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
 ) {
-    private var title = ""
+    private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
     private var centerX = 0.0F
     private var centerY = 0.0F
@@ -60,7 +66,7 @@ class ItemStackListRenderer private constructor(
     private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
 
     @JvmOverloads
-    fun title(title: String, color: Int = this.titleColor) = apply {
+    fun title(title: Text?, color: Int = this.titleColor) = apply {
         this.title = title
         this.titleColor = color
     }
@@ -149,7 +155,7 @@ class ItemStackListRenderer private constructor(
 
         val textRenderer = mc.textRenderer
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             width = maxOf(width, textRenderer.getWidth(title))
             height += textRenderer.fontHeight + 2
         }
@@ -164,7 +170,7 @@ class ItemStackListRenderer private constructor(
             fillBackground(width, height)
         }
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
             matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
         }
@@ -177,8 +183,6 @@ class ItemStackListRenderer private constructor(
                 drawSlotTexture(leftX, topY)
             }
 
-            if (stack.isEmpty) continue
-
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
             with(itemStackRenderer) {
                 drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
@@ -190,9 +194,20 @@ class ItemStackListRenderer private constructor(
 
     companion object {
         @JvmStatic
+        private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
+            put(Blocks.WATER, Items.WATER_BUCKET)
+            put(Blocks.LAVA, Items.LAVA_BUCKET)
+        }
+
+        @JvmStatic
         @JvmName("create")
         fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
             return ItemStackListRenderer(this, stacks)
+        }
+
+        @JvmStatic
+        fun Block.createItemStackForRendering(count: Int): ItemStack {
+            return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
         }
     }
 

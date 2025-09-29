@@ -181,7 +181,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see State2BlockPos
      * @see AbstractBlockLocationTracker
      */
-    abstract class BlockPos2State<T> : AbstractBlockLocationTracker<T>() {
+    abstract class BlockPos2State<T : Any> : AbstractBlockLocationTracker<T>() {
         private val positionAndState = ConcurrentHashMap<BlockPos, T>()
 
         final override fun allPositions() = positionAndState.keys.asSequence()
@@ -192,18 +192,31 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
 
         final override fun track(pos: BlockPos, state: T) {
             positionAndState[pos.immutable] = state
+            onUpdated()
         }
 
         final override fun untrack(pos: BlockPos): Boolean {
-            return positionAndState.remove(pos) != null
+            return if (positionAndState.remove(pos) != null) {
+                onUpdated()
+                true
+            } else {
+                false
+            }
         }
 
         final override fun clearAllChunks() {
             positionAndState.clear()
+            onUpdated()
         }
 
         final override fun clearChunk(pos: ChunkPos) {
-            positionAndState.keys.removeIf { it.x shr 4 == pos.x && it.z shr 4 == pos.z }
+            if (positionAndState.keys.removeIf { it.x shr 4 == pos.x && it.z shr 4 == pos.z }) {
+                onUpdated()
+            }
+        }
+
+        open fun onUpdated() {
+            // NOP
         }
     }
 }
