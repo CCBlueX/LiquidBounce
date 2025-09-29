@@ -66,8 +66,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
             renderEnvironmentForWorld(matrixStack) {
                 // Do not use destructuring declaration which returns boxed [Long] values
-                drawBoxes // Do not use destructuring declaration which returns boxed [Long] values
-                {
+                drawBoxes {
                     fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
                         withPositionRelativeToCamera(blockPos.toVec3d()) {
                             drawBox(

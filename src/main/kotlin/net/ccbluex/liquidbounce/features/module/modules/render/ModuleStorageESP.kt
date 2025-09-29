@@ -187,9 +187,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             renderEnvironmentForWorld(event.matrixStack) {
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
-                drawBoxes // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                // their outline
-                {
+                drawBoxes {
                     for ((pos, type) in StorageScanner.iterate()) {
                         if (!type.enabled) continue
 

@@ -128,12 +128,12 @@ inline fun WorldRenderEnvironment.drawBoxes(fn: BoxRenderer.() -> Unit) {
 }
 
 class BoxRenderer(val env: WorldRenderEnvironment) {
-    val faceRenderer = RenderBufferBuilder(
+    private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_A
     )
-    val outlinesRenderer = RenderBufferBuilder(
+    private val outlinesRenderer = RenderBufferBuilder(
         DrawMode.DEBUG_LINES,
         VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_B

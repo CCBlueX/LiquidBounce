@@ -31,15 +31,14 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.VertexInputType
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
@@ -94,8 +93,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             val lines = height == 0f
             drawCustomMesh(
                 if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-                VertexFormats.POSITION_COLOR,
-                ShaderProgramKeys.POSITION_COLOR
+                VertexInputType.PosColor,
             ) { matrix ->
                 val renderData = RenderData(matrix, this, colorF, lines)
                 trails.forEach { (entity, trail) ->

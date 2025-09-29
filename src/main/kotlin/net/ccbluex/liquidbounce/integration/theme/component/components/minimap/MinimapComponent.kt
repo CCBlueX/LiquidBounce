@@ -38,10 +38,8 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
@@ -131,16 +129,14 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
-                VertexFormats.POSITION_TEXTURE_COLOR,
-                ShaderProgramKeys.POSITION_TEX_COLOR,
+                VertexInputType.PosTexColor,
             ) { matrix ->
                 buildMinimapMesh(this, matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
 
             drawCustomMesh(
                 VertexFormat.DrawMode.TRIANGLES,
-                VertexFormats.POSITION_COLOR,
-                ShaderProgramKeys.POSITION_COLOR,
+                VertexInputType.PosColor,
             ) {
                 for (renderedEntity in RenderedEntities) {
                     drawEntityOnMinimap(

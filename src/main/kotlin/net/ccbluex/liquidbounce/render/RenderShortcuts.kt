@@ -260,18 +260,15 @@ inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit
     }
 }
 
-/**
- */
 inline fun RenderEnvironment.drawCustomMesh(
     drawMode: DrawMode,
-    vertexFormat: VertexFormat,
-    shader: ShaderProgramKey,
+    vertexInputType: VertexInputType,
     drawer: BufferBuilder.(Matrix4f) -> Unit
 ) {
-    val tessellator = RenderSystem.renderThreadTesselator()
-    val buffer = tessellator.begin(drawMode, vertexFormat)
+    val tessellator = Tessellator.getInstance()
+    val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
 
-    RenderSystem.setShader(shader)
+    RenderSystem.setShader(vertexInputType.shaderProgram)
 
     val matrix = matrixStack.peek().positionMatrix
 
@@ -323,8 +320,7 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
 
     drawCustomMesh(
         mode,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION,
+        VertexInputType.Pos,
     ) { matrix ->
         lines.forEach { (x, y, z) ->
             vertex(matrix, x, y, z)
@@ -337,8 +333,7 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
 fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexFormats.POSITION_TEXTURE_COLOR,
-        ShaderProgramKeys.POSITION_TEX_COLOR,
+        VertexInputType.PosTexColor,
     ) { matrix ->
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F)
             .texture(0f, 1.0F)
@@ -361,8 +356,7 @@ fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
 fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION
+        VertexInputType.Pos,
     ) { matrix ->
         vertex(matrix, pos1.x, pos2.y, pos1.z)
         vertex(matrix, pos2.x, pos2.y, pos2.z)
@@ -374,8 +368,7 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
 fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
     drawCustomMesh(
         DrawMode.DEBUG_LINES,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION
+        VertexInputType.Pos,
     ) { matrix ->
         vertex(matrix, pos1.x, pos1.y, pos1.z)
         vertex(matrix, pos1.x, pos2.y, pos1.z)
@@ -394,8 +387,7 @@ fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
 fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
     drawCustomMesh(
         DrawMode.TRIANGLES,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION
+        VertexInputType.Pos,
     ) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z)
         vertex(matrix, p2.x, p2.y, p2.z)
@@ -419,8 +411,7 @@ fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Ve
 fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false) {
     drawCustomMesh(
         if (onlyOutline) DrawMode.DEBUG_LINE_STRIP else DrawMode.QUADS,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION
+        VertexInputType.Pos,
     ) { matrix ->
         val vertices = box.getVerticesForSide(side)
 
@@ -438,8 +429,7 @@ fun RenderEnvironment.drawBoxSide(box: Box, side: Direction, face: Color4b, outl
     val vertices = box.getVerticesForSide(side)
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexFormats.POSITION_COLOR,
-        ShaderProgramKeys.POSITION_COLOR,
+        VertexInputType.PosColor,
     ) { matrix ->
         vertices.forEach { (x, y, z) ->
             vertex(matrix, x, y, z).color(face.r, face.g, face.b, face.a)
@@ -449,8 +439,7 @@ fun RenderEnvironment.drawBoxSide(box: Box, side: Direction, face: Color4b, outl
     if (outline.a != 0) {
         drawCustomMesh(
             DrawMode.DEBUG_LINE_STRIP,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR,
+            VertexInputType.PosColor,
         ) { matrix ->
             vertices.forEach { (x, y, z) ->
                 vertex(matrix, x, y, z)
@@ -520,8 +509,7 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexFormats.POSITION_COLOR,
-        ShaderProgramKeys.POSITION_COLOR
+        VertexInputType.PosColor,
     ) { matrix ->
         vertices.forEachIndexed { index, (x, y, z) ->
             val color4b = colors[index]
@@ -555,8 +543,7 @@ fun RenderEnvironment.drawGradientCircle(
 ) {
     drawCustomMesh(
         DrawMode.TRIANGLE_STRIP,
-        VertexFormats.POSITION_COLOR,
-        ShaderProgramKeys.POSITION_COLOR,
+        VertexInputType.PosColor,
     ) { matrix ->
         for (p in circlePoints) {
             val outerP = p * outerRadius
@@ -579,8 +566,7 @@ fun RenderEnvironment.drawGradientCircle(
 fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     drawCustomMesh(
         DrawMode.DEBUG_LINE_STRIP,
-        VertexFormats.POSITION_COLOR,
-        ShaderProgramKeys.POSITION_COLOR,
+        VertexInputType.PosColor,
     ) { matrix ->
         for (p in circlePoints) {
             val point = p * radius
@@ -594,8 +580,7 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
 private fun RenderEnvironment.drawBox(box: Box, mode: DrawMode) {
     drawCustomMesh(
         mode,
-        VertexFormats.POSITION,
-        ShaderProgramKeys.POSITION,
+        VertexInputType.Pos,
     ) { matrix ->
         box.forEachCornerVertex { _, x, y, z ->
             vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
