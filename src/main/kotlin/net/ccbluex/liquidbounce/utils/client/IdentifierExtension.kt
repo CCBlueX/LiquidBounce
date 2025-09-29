@@ -22,7 +22,7 @@ internal inline fun String.registerAsDynamicImageFromClientResources(): Identifi
     }
 
 fun NativeImage.registerTexture(identifier: Identifier) {
-    mc.textureManager.registerTexture(identifier, NativeImageBackedTexture(::toName, this))
+    mc.textureManager.registerTexture(identifier, NativeImageBackedTexture(identifier::toName, this))
 }
 
 /**

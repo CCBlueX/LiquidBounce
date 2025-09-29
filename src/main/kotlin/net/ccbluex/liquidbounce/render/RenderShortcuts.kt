@@ -65,8 +65,6 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 // Copied from 1.21.4
 
-val RENDER_THREAD_TESSELATOR = Tessellator(1536)
-
 fun defaultBlendFunc() {
     GlStateManager._blendFuncSeparate(
         GlConst.GL_SRC_ALPHA,
@@ -143,7 +141,8 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     val camera = mc.entityRenderDispatcher.camera ?: return
 
     GlStateManager._enableBlend()
-    RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
+    // FIXME
+//    RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     GlStateManager._disableDepthTest()
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
@@ -158,7 +157,8 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 }
 
 inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
-    GlStateManager._setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
+    // FIXME
+//    GlStateManager._setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     GlStateManager._enableBlend()
 
@@ -283,10 +283,10 @@ inline fun RenderEnvironment.drawCustomMesh(
     shader: ShaderProgramKey,
     drawer: BufferBuilder.(Matrix4f) -> Unit
 ) {
-    val tessellator = RenderSystem.renderThreadTesselator()
+    val tessellator = Tessellator.getInstance()
     val buffer = tessellator.begin(drawMode, vertexFormat)
 
-    RenderSystem.setShader(shader)
+//    RenderSystem.setShader(shader)
 
     val matrix = matrixStack.peek().positionMatrix
 
@@ -297,7 +297,8 @@ inline fun RenderEnvironment.drawCustomMesh(
         drawer(this, matrix)
 
         // Draw the custom mesh
-        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+        // FIXME
+//        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
     }
 }
 
