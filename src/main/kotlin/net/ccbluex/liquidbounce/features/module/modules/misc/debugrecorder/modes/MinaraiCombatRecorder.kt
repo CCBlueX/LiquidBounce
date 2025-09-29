@@ -31,9 +31,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -188,7 +187,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
-            BoxRenderer.drawWith(this) {
+            drawBoxes {
                 targetTracker.targets().forEach { entity ->
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
                     val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)

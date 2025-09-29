@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -44,7 +44,7 @@ object EspBoxMode : EspMode("Box") {
         }
 
         renderEnvironmentForWorld(matrixStack) {
-            BoxRenderer.Companion.drawWith(this) {
+            drawBoxes {
                 entitiesWithBoxes.forEach { (entity, box) ->
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
                     val color = getColor(entity)

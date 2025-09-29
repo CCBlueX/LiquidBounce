@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
+import net.ccbluex.liquidbounce.render.VertexInputType
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
@@ -330,8 +330,7 @@ object NametagEnchantmentRenderer {
         val argb = color.toARGB()
         env.drawCustomMesh(
             VertexFormat.DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
+            VertexInputType.PosColor,
         ) { matrix ->
             vertex(matrix, rect.x1, rect.y1, 0.0f).color(argb)
             vertex(matrix, rect.x1, rect.y2, 0.0f).color(argb)
@@ -377,8 +376,7 @@ object NametagEnchantmentRenderer {
         // Drawing a semi-transparent background instead of just lines for better visibility
         env.drawCustomMesh(
             VertexFormat.DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
+            VertexInputType.PosColor,
         ) { matrix ->
             val bgColor = Color4b.BLACK.with(a = 120).toARGB()
 
@@ -391,8 +389,7 @@ object NametagEnchantmentRenderer {
         // Still drawing the border lines
         env.drawCustomMesh(
             VertexFormat.DrawMode.DEBUG_LINES,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
+            VertexInputType.PosColor,
         ) { matrix ->
             val color = Color4b.RED.toARGB()
 

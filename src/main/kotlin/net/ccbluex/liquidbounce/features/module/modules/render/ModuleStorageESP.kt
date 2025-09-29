@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -111,7 +112,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             val queuedBoxes = collectBoxesToDraw(event)
 
             renderEnvironmentForWorld(matrixStack) {
-                BoxRenderer.drawWith(this) {
+                drawBoxes {
                     for ((pos, box, color) in queuedBoxes) {
                         val baseColor = color.with(a = 50)
                         val outlineColor = color.with(a = 100)
@@ -184,7 +185,9 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
 
             renderEnvironmentForWorld(event.matrixStack) {
-                BoxRenderer.drawWith(this) {
+                // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                // their outline
+                drawBoxes {
                     for ((pos, type) in StorageScanner.iterate()) {
                         if (!type.enabled) continue
 

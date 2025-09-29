@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -64,7 +65,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             val outlineColor = getOutlineColor(id)
 
             renderEnvironmentForWorld(matrixStack) {
-                BoxRenderer.drawWith(this) {
+                // Do not use destructuring declaration which returns boxed [Long] values
+                drawBoxes {
                     fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
                         withPositionRelativeToCamera(blockPos.toVec3d()) {
                             drawBox(
