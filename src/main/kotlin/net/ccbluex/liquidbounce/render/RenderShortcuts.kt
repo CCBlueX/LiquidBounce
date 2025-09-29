@@ -597,35 +597,9 @@ private fun RenderEnvironment.drawBox(box: Box, mode: DrawMode) {
         VertexFormats.POSITION,
         ShaderProgramKeys.POSITION,
     ) { matrix ->
-        val minXf = box.minX.toFloat()
-        val maxXf = box.maxX.toFloat()
-        val minYf = box.minY.toFloat()
-        val maxYf = box.maxY.toFloat()
-        val minZf = box.minZ.toFloat()
-        val maxZf = box.maxZ.toFloat()
-
-        vertex(matrix, minXf, minYf, minZf)
-        vertex(matrix, maxXf, minYf, minZf)
-        vertex(matrix, maxXf, minYf, minZf)
-        vertex(matrix, maxXf, minYf, maxZf)
-        vertex(matrix, maxXf, minYf, maxZf)
-        vertex(matrix, minXf, minYf, maxZf)
-        vertex(matrix, minXf, maxYf, maxZf)
-        vertex(matrix, minXf, maxYf, maxZf)
-        vertex(matrix, minXf, maxYf, minZf)
-        vertex(matrix, minXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, maxZf)
-        vertex(matrix, minXf, minYf, maxZf)
-        vertex(matrix, minXf, maxYf, maxZf)
-        vertex(matrix, minXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, maxZf)
-        vertex(matrix, minXf, maxYf, maxZf)
-        vertex(matrix, minXf, maxYf, minZf)
-        vertex(matrix, maxXf, maxYf, minZf)
+        box.forEachCornerVertex { _, x, y, z ->
+            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+        }
     }
 }
 
