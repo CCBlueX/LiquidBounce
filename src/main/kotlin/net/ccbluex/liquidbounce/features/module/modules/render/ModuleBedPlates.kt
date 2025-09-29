@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
+import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
@@ -64,6 +65,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val filterMode = choices("FilterMode", 0) {
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
+    private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
 
     private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
         final override val parent: ChoiceConfigurable<*>
@@ -149,6 +151,10 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
         var i = 0
         for ((bedState, distance) in beds) {
+            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, bedState.trackedBlockPos)) {
+                continue
+            }
+
             if (distance > maxDistance || i++ > maxCount) {
                 break // because list beds are sorted by distance (ASC), so we break at first item out of range
             }

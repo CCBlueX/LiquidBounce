@@ -100,14 +100,14 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {
         val bedDirection = headState.get(BedBlock.FACING)
 
-        val bedBlock = headState.block
+        val bedBlock = headState.block as BedBlock
         val renderPos = Vec3d(
             x - (bedDirection.offsetX * 0.5) + 0.5,
             y + 1.0,
             z - (bedDirection.offsetZ * 0.5) + 0.5,
         )
 
-        return BedState(bedBlock, renderPos, getBedSurroundingBlocks(headState))
+        return BedState(bedBlock, this, renderPos, getBedSurroundingBlocks(headState))
     }
 
     @Suppress("detekt:CognitiveComplexMethod")

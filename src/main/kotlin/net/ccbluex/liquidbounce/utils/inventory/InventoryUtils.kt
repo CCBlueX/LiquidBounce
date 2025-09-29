@@ -217,10 +217,9 @@ fun getArmorColor() = Slots.Armor.firstNotNullOfOrNull { slot ->
  *
  * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
  */
-@Suppress("MagicNumber")
 fun ItemStack.getArmorColor(): Int? {
     return if (isIn(ItemTags.DYEABLE)) {
-        DyedColorComponent.getColor(this, -6265536) // #FFA06540
+        DyedColorComponent.getColor(this, DyedColorComponent.DEFAULT_COLOR) // #FFA06540
     } else {
         null
     }

@@ -465,6 +465,7 @@ export interface Vector2f {
 
 export interface BedState {
     block: string;
+    trackedBlockPos: Vec3;
     pos: Vec3;
     surroundingBlocks: SurroundingBlock[];
     compactSurroundingBlocks: SurroundingBlock[];
