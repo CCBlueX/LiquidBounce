@@ -37,10 +37,8 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.Camera
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
