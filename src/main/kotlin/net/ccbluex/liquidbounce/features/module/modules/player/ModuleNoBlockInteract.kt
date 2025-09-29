@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.BlockInteractEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -42,8 +41,7 @@ object ModuleNoBlockInteract : ClientModule("NoBlockInteract", Category.PLAYER) 
     private var sneaking = false
     private var interacting = false
 
-    @Suppress("unused")
-    private val handleBlockInteract = handler<BlockInteractEvent> {
+    fun startSneaking() {
         sneaking = true
     }
 

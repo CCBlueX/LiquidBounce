@@ -74,6 +74,3 @@ class FluidPushEvent : CancellableEvent()
 
 @Nameable("worldEntityRemove")
 class WorldEntityRemoveEvent(val entity: Entity) : Event()
-
-@Nameable("blockInteractEvent")
-class BlockInteractEvent() : Event()

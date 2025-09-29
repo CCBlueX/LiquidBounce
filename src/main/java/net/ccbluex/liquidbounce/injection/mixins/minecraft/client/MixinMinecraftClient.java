@@ -469,13 +469,14 @@ public abstract class MixinMinecraftClient {
     }
 
     @Inject(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"), cancellable = true)
-    private void hookDoItemUse(CallbackInfo ci) {
+    private void hookBlockInteract(CallbackInfo ci) {
         final BlockHitResult blockHitResult = (BlockHitResult) this.crosshairTarget;
         if (blockHitResult == null) return; // it should never be null
 
         if (ModuleNoBlockInteract.INSTANCE.getRunning() &&
                 ModuleNoBlockInteract.INSTANCE.shouldSneak(blockHitResult)) {
-            EventManager.INSTANCE.callEvent(new BlockInteractEvent());
+
+            ModuleNoBlockInteract.INSTANCE.startSneaking();
             ci.cancel();
         }
     }

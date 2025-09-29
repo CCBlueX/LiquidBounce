@@ -191,7 +191,9 @@ fun ItemStack.isInteractable(): Boolean {
         || item is BoatItem
         || (item is BowItem && Slots.All.any { it.itemStack.item is ArrowItem })
         || item is BucketItem // TODO: water/lava between an interactable block and the player (for empty buckets)
-        || (item is CrossbowItem && (Slots.All.any { it.itemStack.item is ArrowItem}) || player.offHandStack.item is FireworkRocketItem)
+        || (item is CrossbowItem &&
+            (Slots.All.any { it.itemStack.item is ArrowItem}
+                || player.offHandStack.item is FireworkRocketItem))
         || item is EggItem
         || item is EmptyMapItem
         || item is EnderEyeItem
