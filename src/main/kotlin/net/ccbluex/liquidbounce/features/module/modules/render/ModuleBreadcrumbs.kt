@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -30,17 +31,17 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
+import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -68,52 +69,43 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     }
 
     private val trails = IdentityHashMap<Entity, Trail>()
-    private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
+    private val lastPositions = IdentityHashMap<Entity, Vec3d>()
 
     override fun onDisabled() {
         clear()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
+        if (trails.isEmpty()) {
+            return@handler
+        }
+
         val matrixStack = event.matrixStack
         val color = if (colorRainbow) rainbow() else color
 
         renderEnvironmentForWorld(matrixStack) {
-            draw(matrixStack, color)
-        }
-    }
+            if (height > 0) {
+                RenderSystem.disableCull()
+            }
 
-    private fun draw(matrixStack: MatrixStack, color: Color4b) {
-        if (trails.isEmpty()) {
-            return
-        }
+            val camera = mc.entityRenderDispatcher.camera ?: return@handler
+            val time = System.currentTimeMillis()
+            val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+            val lines = height == 0f
+            drawCustomMesh(
+                if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
+                VertexFormats.POSITION_COLOR,
+                ShaderProgramKeys.POSITION_COLOR
+            ) { matrix ->
+                val renderData = RenderData(matrix, this, colorF, lines)
+                trails.forEach { (entity, trail) ->
+                    trail.verifyAndRenderTrail(renderData, camera, entity, time)
+                }
+            }
 
-        if (height > 0) {
-            RenderSystem.disableCull()
-        }
-
-        val matrix = matrixStack.peek().positionMatrix
-
-        @Suppress("SpellCheckingInspection")
-        val tessellator = RenderSystem.renderThreadTesselator()
-        val camera = mc.entityRenderDispatcher.camera ?: return
-        val time = System.currentTimeMillis()
-        val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-        val lines = height == 0f
-        val buffer = tessellator.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR)
-        val renderData = RenderData(matrix, buffer, colorF, lines)
-
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR)
-
-        trails.forEach { (entity, trail) ->
-            trail.verifyAndRenderTrail(renderData, camera, entity, time)
-        }
-
-        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
-
-        if (height > 0) {
-            RenderSystem.enableCull()
+            if (height > 0) {
+                RenderSystem.enableCull()
+            }
         }
     }
 
@@ -139,11 +131,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
         val last = lastPositions[entity]
-        if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) {
+        if (last != null && entity.x == last.x && entity.y == last.y && entity.z == last.z) {
             return
         }
 
-        lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
+        lastPositions[entity] = Vec3d(entity.x, entity.y, entity.z)
         trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
@@ -190,7 +182,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             }
 
             val shouldFade = TemporaryConfigurable.fade && TemporaryConfigurable.enabled
-            val pointsWithAlpha = positions.map { position ->
+            val pointsWithAlpha = positions.mapToArray { position ->
                 val alpha = if (shouldFade) {
                     val deltaTime = time - position.creationTime
                     val multiplier = (1F - deltaTime.toFloat() / aliveDurationF)
@@ -216,7 +208,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             return point
         }
 
-        private fun addVerticesToBuffer(renderData: RenderData, list: List<ObjectFloatPair<Vector3f>>) {
+        private fun addVerticesToBuffer(renderData: RenderData, list: Array<out ObjectFloatPair<Vector3f>>) {
             val red = renderData.color.x
             val green = renderData.color.y
             val blue = renderData.color.z
