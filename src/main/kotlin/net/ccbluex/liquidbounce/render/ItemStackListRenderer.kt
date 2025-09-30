@@ -19,15 +19,25 @@
 
 package net.ccbluex.liquidbounce.render
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.liquidbounce.additions.drawCooldownProgress
+import net.ccbluex.liquidbounce.additions.drawItemBar
+import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
+import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 private const val SLOT_SIZE = 18
@@ -43,7 +53,7 @@ class ItemStackListRenderer private constructor(
     private val drawContext: DrawContext,
     private val stacks: List<ItemStack>,
 ) {
-    private var title = ""
+    private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
     private var centerX = 0.0F
     private var centerY = 0.0F
@@ -53,10 +63,10 @@ class ItemStackListRenderer private constructor(
     private var backgroundColor = Int.MIN_VALUE
     private var backgroundMargin = 2
     private var useTexture = false
-    private var drawStackOverlay = true
+    private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
 
     @JvmOverloads
-    fun title(title: String, color: Int = this.titleColor) = apply {
+    fun title(title: Text?, color: Int = this.titleColor) = apply {
         this.title = title
         this.titleColor = color
     }
@@ -107,8 +117,8 @@ class ItemStackListRenderer private constructor(
             is BackgroundChoice.Texture -> textureBackground()
         }
 
-    fun drawStackOverlay(drawStackOverlay: Boolean) = apply {
-        this.drawStackOverlay = drawStackOverlay
+    fun itemStackRenderer(itemStackRenderer: SingleItemStackRenderer) = apply {
+        this.itemStackRenderer = itemStackRenderer
     }
 
     private fun fillBackground(width: Int, height: Int) {
@@ -145,7 +155,7 @@ class ItemStackListRenderer private constructor(
 
         val textRenderer = mc.textRenderer
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             width = maxOf(width, textRenderer.getWidth(title))
             height += textRenderer.fontHeight + 2
         }
@@ -160,7 +170,7 @@ class ItemStackListRenderer private constructor(
             fillBackground(width, height)
         }
 
-        if (title.isNotEmpty()) {
+        if (title != null) {
             drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
             matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
         }
@@ -173,13 +183,9 @@ class ItemStackListRenderer private constructor(
                 drawSlotTexture(leftX, topY)
             }
 
-            if (stack.isEmpty) continue
-
             val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
-
-            drawContext.drawItem(stack, leftX + diff, topY + diff)
-            if (drawStackOverlay) {
-                drawContext.drawStackOverlay(textRenderer, stack, leftX + diff, topY + diff, null)
+            with(itemStackRenderer) {
+                drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
             }
         }
 
@@ -188,9 +194,20 @@ class ItemStackListRenderer private constructor(
 
     companion object {
         @JvmStatic
+        private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
+            put(Blocks.WATER, Items.WATER_BUCKET)
+            put(Blocks.LAVA, Items.LAVA_BUCKET)
+        }
+
+        @JvmStatic
         @JvmName("create")
         fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
             return ItemStackListRenderer(this, stacks)
+        }
+
+        @JvmStatic
+        fun Block.createItemStackForRendering(count: Int): ItemStack {
+            return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
         }
     }
 
@@ -208,6 +225,40 @@ class ItemStackListRenderer private constructor(
                 Rect(parent),
                 Texture(parent),
             )
+        }
+    }
+
+    fun interface SingleItemStackRenderer {
+        fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
+
+        companion object : SingleItemStackRenderer {
+
+            override fun DrawContext.drawItemStack(
+                textRenderer: TextRenderer,
+                index: Int,
+                stack: ItemStack,
+                x: Int,
+                y: Int,
+            ) {
+                drawItem(stack, x, y)
+                drawStackOverlay(textRenderer, stack, x, y)
+            }
+
+            @JvmStatic
+            fun of(
+                drawItemBar: Boolean = true,
+                drawStackCount: Boolean = true,
+                drawCooldownProgress: Boolean = true,
+            ): SingleItemStackRenderer {
+                return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                    drawItem(stack, x, y)
+                    matrices.push()
+                    if (drawItemBar) drawItemBar(stack, x, y)
+                    if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
+                    if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
+                    matrices.pop()
+                }
+            }
         }
     }
 

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.item.PotionItem
@@ -44,7 +43,7 @@ class AutoShopInventoryManager : EventListener {
         }
 
         val newItems = mutableMapOf<String, Int>()
-        inventoryItems.filter { !it.isNothing() }.forEach { stack ->
+        inventoryItems.filter { !it.isEmpty }.forEach { stack ->
             val id = Registries.ITEM.getId(stack.item).path
             newItems.incrementOrSet(id, stack.count)
 

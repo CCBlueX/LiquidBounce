@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.network.AbstractClientPlayerEntity
-import kotlin.math.pow
 
 /**
  * TargetLock module
@@ -118,11 +118,13 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
             }
 
             val currentTime = System.currentTimeMillis()
-            lockList.int2LongEntrySet().removeIf { (entityId, time) ->
+            lockList.int2LongEntrySet().removeIf {
+                val entityId = it.intKey
+                val time = it.longValue
                 // Remove if entity is out of range
                 val entity = world.getEntityById(entityId) as? AbstractClientPlayerEntity ?: return@removeIf true
 
-                if (entity.isRemoved || entity.squaredDistanceTo(player) > outOfRange.pow(2)) {
+                if (entity.isRemoved || entity.squaredDistanceTo(player) > outOfRange.sq()) {
                     notification(
                         "TargetLock",
                         message("outOfRange", entity.gameProfile.name),

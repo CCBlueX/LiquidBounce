@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
 import com.google.gson.JsonObject
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -34,8 +36,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity

@@ -45,6 +45,7 @@ import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
+import java.util.function.ToIntFunction
 import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
@@ -65,7 +66,7 @@ open class Configurable(
     /**
      * Used for backwards compatibility when renaming.
      */
-    aliases: Array<out String> = emptyArray(),
+    aliases: List<String> = emptyList(),
 ) : Value<MutableCollection<Value<*>>>(
     name,
     aliases,
@@ -281,8 +282,13 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
+    fun regex(name: String, default: Regex) = value(name, default, ValueType.TEXT)
+
     fun <C : MutableCollection<String>> textList(name: String, default: C) =
         mutableList<C, String>(name, default, ValueType.TEXT)
+
+    fun <C : MutableCollection<Regex>> regexList(name: String, default: C) =
+        mutableList<C, Regex>(name, default, ValueType.TEXT)
 
     fun easing(name: String, default: Easing) = enumChoice(name, default)
 
@@ -390,7 +396,7 @@ open class Configurable(
     protected fun <T : Choice> choices(
         eventListener: EventListener,
         name: String,
-        activeCallback: (List<T>) -> Int,
+        activeCallback: ToIntFunction<List<T>>,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ): ChoiceConfigurable<T> {
         return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {

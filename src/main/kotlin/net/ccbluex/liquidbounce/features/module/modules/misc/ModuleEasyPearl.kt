@@ -56,7 +56,7 @@ import net.minecraft.util.math.Vec3d
  **/
 @Suppress("MagicNumber")
 object ModuleEasyPearl :
-    ClientModule("EasyPearl", Category.MISC, aliases = arrayOf("PearlHelper", "PearlAssist", "PearlTP")) {
+    ClientModule("EasyPearl", Category.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
     private val reachableCheck by boolean("ReachableCheck", true)
     private val rotation = tree(RotationsConfigurable(this))

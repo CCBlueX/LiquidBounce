@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -30,13 +32,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -148,7 +150,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
                     tickBalance -= 1
                 }
 
-                ModuleDebug.debugParameter(this, "Recommended Skip", bestTick)
+                debugParameter("Recommended Skip") { bestTick }
                 ticksToSkip = 0
             }
 
@@ -165,8 +167,8 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
                     }
                 }
 
-                ModuleDebug.debugParameter(this, "Total Skipped", totalSkipped)
-                ModuleDebug.debugParameter(this, "Recommended Skip", bestTick)
+                debugParameter("Total Skipped") { totalSkipped }
+                debugParameter("Recommended Skip") { bestTick }
 
                 ticksToSkip = totalSkipped + pause
                 waitTicks(ticksToSkip)
@@ -223,7 +225,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapArray { tick ->
+                drawLineStrip(positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3()
                 })
             }

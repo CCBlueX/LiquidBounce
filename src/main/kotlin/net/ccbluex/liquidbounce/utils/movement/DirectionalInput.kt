@@ -38,35 +38,36 @@ data class DirectionalInput(
         )
     }
 
-    override fun equals(other: Any?): Boolean =
-        other is DirectionalInput &&
-            forwards == other.forwards &&
-            backwards == other.backwards &&
-            left == other.left &&
-            right == other.right
-
-
-    override fun hashCode(): Int {
-        var result = forwards.hashCode()
-        result = 30 * result + backwards.hashCode()
-        result = 30 * result + left.hashCode()
-        result = 30 * result + right.hashCode()
-        return result
-    }
-
     val isMoving: Boolean
         get() = (forwards && !backwards) || (backwards && !forwards) ||
             (left && !right) || (right && !left)
 
     companion object {
+        @JvmField
         val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
+
+        @JvmField
         val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
+
+        @JvmField
         val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
+
+        @JvmField
         val LEFT = DirectionalInput(forwards = false, backwards = false, left = true, right = false)
+
+        @JvmField
         val RIGHT = DirectionalInput(forwards = false, backwards = false, left = false, right = true)
+
+        @JvmField
         val FORWARDS_LEFT = DirectionalInput(forwards = true, backwards = false, left = true, right = false)
+
+        @JvmField
         val FORWARDS_RIGHT = DirectionalInput(forwards = true, backwards = false, left = false, right = true)
+
+        @JvmField
         val BACKWARDS_LEFT = DirectionalInput(forwards = false, backwards = true, left = true, right = false)
+
+        @JvmField
         val BACKWARDS_RIGHT = DirectionalInput(forwards = false, backwards = true, left = false, right = true)
     }
 }

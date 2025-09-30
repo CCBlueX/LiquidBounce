@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStage
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStageHandler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.renderer
@@ -59,11 +59,11 @@ class NotebotEngine(
         causingNoteBlock.setObservedNote((12f + 12f * log2(packet.pitch)).roundToInt())
     }
 
-    suspend fun onTick(sequence: Sequence) {
+    suspend fun onTick() {
         val ticks = ticksToWait
 
         if (ticks != null) {
-            sequence.waitTicks(ticks)
+            waitTicks(ticks)
 
             ticksToWait = null
         }

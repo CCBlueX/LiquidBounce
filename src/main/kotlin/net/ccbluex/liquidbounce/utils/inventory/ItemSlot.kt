@@ -19,12 +19,14 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
+import kotlin.math.abs
 
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
@@ -43,6 +45,25 @@ sealed interface ItemSlot {
     override fun hashCode(): Int
 
     override fun equals(other: Any?): Boolean
+
+    companion object {
+
+        /**
+         * Distance order:
+         * current hand -> offhand -> other hotbar slots -> other slots
+         */
+        @JvmField
+        val PREFER_NEARBY: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
+            val leftIsHotbar = left is HotbarItemSlot
+            val rightIsHotbar = right is HotbarItemSlot
+            when {
+                leftIsHotbar && rightIsHotbar -> HotbarItemSlot.PREFER_NEARBY.compare(left, right)
+                leftIsHotbar -> -1
+                rightIsHotbar -> 1
+                else -> 0
+            }
+        }
+    }
 }
 
 /**
@@ -69,7 +90,7 @@ class VirtualItemSlot(
         return id
     }
 
-    override fun toString(): String = "ItemSlot/Virtual(id=$id)"
+    override fun toString(): String = "ItemSlot/Virtual(id=$id, itemStack=$itemStack, slotType=$slotType)"
 
 }
 
@@ -127,9 +148,9 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     open val hotbarSlotForServer: Int = hotbarSlot
 
     /**
-     * If the player is holding this slot (main hand stack)
+     * If the player is holding this slot (main hand stack, or offhand stack)
      */
-    val isSelected: Boolean
+    open val isSelected: Boolean
         get() = hotbarSlotForServer == player.inventory.selectedSlot
 
     open val useHand = Hand.MAIN_HAND
@@ -153,6 +174,22 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
 
     override fun toString(): String {
         return "ItemSlot/Hotbar(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
+    }
+
+    companion object {
+
+        /**
+         * Distance order:
+         * current hand -> offhand -> other slots
+         */
+        @JvmField
+        val PREFER_NEARBY: Comparator<HotbarItemSlot> = Comparator.comparingInt<HotbarItemSlot> {
+            when {
+                it is OffHandSlot -> Int.MIN_VALUE + 1
+                it.hotbarSlotForServer == SilentHotbar.serversideSlot -> Int.MIN_VALUE
+                else -> abs(SilentHotbar.serversideSlot - it.hotbarSlotForServer)
+            }
+        }
     }
 
 }
@@ -215,6 +252,12 @@ data object OffHandSlot : HotbarItemSlot(-1) {
         get() = ItemSlotType.OFFHAND
 
     override val hotbarSlotForServer: Int = 40
+
+    /**
+     * OffHand is always "selected"
+     */
+    override val isSelected: Boolean
+        get() = true
 
     override val useHand = Hand.OFF_HAND
 

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
@@ -25,12 +27,11 @@ import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.kotlin.enumMap
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.util.Formatting
-import java.util.*
-import kotlin.collections.ArrayDeque
 
 object NotebotScanner : MinecraftShortcuts {
     fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {
@@ -41,7 +42,7 @@ object NotebotScanner : MinecraftShortcuts {
     }
 
     private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
-        val result = EnumMap<_, ArrayDeque<NoteBlockTracker>>(NoteBlockInstrument::class.java)
+        val result = enumMap<NoteBlockInstrument, ArrayDeque<NoteBlockTracker>>()
 
         val surroundings = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range)
         val noteBlocks = surroundings.filter { pos ->
@@ -64,9 +65,9 @@ object NotebotScanner : MinecraftShortcuts {
     // it has the advantage that we don't get super huge requirements for very fast songs -
     // and well playing the same sound multiple times a tick due to minecraft's limitations
     // would sound weird anyways
-    private fun calculateRequirements(songData: SongData): Map<InstrumentNote, Int> {
-        val maxConcurrentCounts = hashMapOf<InstrumentNote, Int>()
-        val countsInTick = hashMapOf<InstrumentNote, Int>()
+    private fun calculateRequirements(songData: SongData): Object2IntMap<InstrumentNote> {
+        val maxConcurrentCounts = Object2IntOpenHashMap<InstrumentNote>()
+        val countsInTick = Object2IntOpenHashMap<InstrumentNote>()
         for (notes in songData.notesByTick.values) {
             countsInTick.clear()
             for (note in notes) {
@@ -75,7 +76,7 @@ object NotebotScanner : MinecraftShortcuts {
                 if (ModuleNotebot.reuseBlocks) {
                     maxConcurrentCounts.put(instrumentNote, 1)
                 } else {
-                    countsInTick.inlineMerge(instrumentNote, 1, Int::plus)
+                    countsInTick.addTo(instrumentNote, 1)
                 }
             }
 
@@ -84,7 +85,7 @@ object NotebotScanner : MinecraftShortcuts {
             }
 
             for ((instrumentNote, count) in countsInTick) {
-                maxConcurrentCounts.inlineMerge(instrumentNote, count, ::maxOf)
+                maxConcurrentCounts.mergeInt(instrumentNote, count, ::maxOf)
             }
         }
 
@@ -93,7 +94,7 @@ object NotebotScanner : MinecraftShortcuts {
 
     class BlocksAndRequirements(
         val availableBlocks: Map<NoteBlockInstrument, List<NoteBlockTracker>>,
-        val requirements: Map<InstrumentNote, Int>
+        val requirements: Object2IntMap<InstrumentNote>,
     ) {
         fun validateRequirements(): Boolean {
             val totalRequired = requirements.values.sum()
@@ -102,7 +103,7 @@ object NotebotScanner : MinecraftShortcuts {
                 return false
             }
 
-            val requirementByInstrument = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+            val requirementByInstrument = enumMap<NoteBlockInstrument, Int>()
 
             requirements.forEach { (key, value) ->
                 requirementByInstrument.inlineMerge(key.instrumentEnum, value, Int::plus)
@@ -114,7 +115,7 @@ object NotebotScanner : MinecraftShortcuts {
         }
 
         fun printRequirements() {
-            val aggregatedRequirements = EnumMap<_, Int>(NoteBlockInstrument::class.java)
+            val aggregatedRequirements = enumMap<NoteBlockInstrument, Int>()
             for ((key1, count) in requirements) {
                 aggregatedRequirements.inlineMerge(key1.instrumentEnum, count, Int::plus)
             }

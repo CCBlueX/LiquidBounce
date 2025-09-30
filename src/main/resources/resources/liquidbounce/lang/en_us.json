@@ -545,6 +545,7 @@
   "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below the certain threshold.",
   "liquidbounce.module.autoPlay.description": "Automatically enters queues and plays the game for you.",
   "liquidbounce.module.autoRespawn.description": "Automatically respawns you after dying.",
+  "liquidbounce.module.autoRod.description": "Automatically uses fishing rod for combat.",
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
@@ -692,7 +693,6 @@
   "liquidbounce.module.noPush.description": "Protects you from being pushed around by other players.",
   "liquidbounce.module.noRotateSet.description": "Prevents the server from being able to rotate your head.",
   "liquidbounce.module.noSlotSet.description": "Disallows forced slot changes by server.",
-  "liquidbounce.module.noSignRender.description": "Prevents text on signs from being rendered.",
   "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
   "liquidbounce.module.noSwim.description": "Prevents player pose change to swimming, for low version servers.",
@@ -806,6 +806,7 @@
   "liquidbounce.module.betterTab.description": "Multiple improvements to the tab list.",
   "liquidbounce.module.betterTitle.description": "Improvements to the title and subtitle.",
   "liquidbounce.module.betterInventory.description": "Additional inventory-related visual features.",
+  "liquidbounce.module.noBlockInteract.description": "Prevents you from interacting with blocks.",
   "liquidbounce.module.noEntityInteract.description": "Prevents you from interacting with entities.",
   "liquidbounce.module.autoPearl.description": "Aims and throws a pearl at an enemies pearl trajectory.",
   "liquidbounce.module.replenish.description": "Automatically refills your hotbar with items from your inventory when the count drops to a certain threshold.",
@@ -830,5 +831,8 @@
   "liquidbounce.module.notebot.messages.songInfoName": "Loaded song '%s'",
   "liquidbounce.module.notebot.messages.songInfoTicksPerGameTick": "Ticks per game tick: %s",
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
-  "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s"
+  "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
+  "liquidbounce.module.guiCloser.description": "Closes GUIs if their title matches specified patterns.",
+  "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction.",
+  "liquidbounce.module.stuck.messages.disabledOnFlag": "Module disabled due to flag."
 }

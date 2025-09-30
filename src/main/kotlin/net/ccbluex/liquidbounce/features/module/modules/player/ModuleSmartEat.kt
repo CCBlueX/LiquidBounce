@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -42,7 +43,6 @@ import net.minecraft.item.Items
 import net.minecraft.item.consume.UseAction
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
-import kotlin.math.absoluteValue
 
 /**
  * SmartEat module
@@ -70,13 +70,13 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             compareByDescending { it.second.healthThreshold },
             compareBy { it.second.restoredHunger },
             // Use the closest slot
-            compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
+            Comparator.comparing({ it.first }, HotbarItemSlot.PREFER_NEARBY),
             // Just for stabilization reasons
             compareBy { SilentHotbar.serversideSlot }
         )
 
         fun findBestFood(): HotbarItemSlot? {
-            return Slots.Hotbar
+            return Slots.OffhandWithHotbar
                 .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
                 .maxWithOrNull(comparator)?.first
         }
@@ -221,7 +221,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 }
 
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
-                waitUntil {
+                tickUntil {
                     eat()
                     player.hungerManager.foodLevel > minHunger
                 }

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.minecraft.util.math.BlockPos
 
-abstract class ScaffoldTower(name: String) : Choice(name) {
+sealed class ScaffoldTower(name: String) : Choice(name) {
 
     final override val parent: ChoiceConfigurable<*>
         get() = towerMode

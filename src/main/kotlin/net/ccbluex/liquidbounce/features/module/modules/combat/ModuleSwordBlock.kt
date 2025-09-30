@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -34,7 +35,7 @@ import net.minecraft.util.Hand
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
-object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = arrayOf("OldBlocking")) {
+object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
@@ -72,8 +73,10 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
                     waitTicks(1)
                     interaction.sendSequencedPacket(world) { sequence ->
                         // This time we use a new sequence
-                        PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence,
-                            player.yaw, player.pitch)
+                        PlayerInteractItemC2SPacket(
+                            Hand.OFF_HAND, sequence,
+                            player.yaw, player.pitch
+                        )
                     }
                 } else {
                     event.cancelEvent()

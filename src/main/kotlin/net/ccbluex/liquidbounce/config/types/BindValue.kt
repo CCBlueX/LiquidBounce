@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 
 class BindValue(
     name: String,
-    aliases: Array<String> = emptyArray(),
+    aliases: List<String> = emptyList(),
     defaultValue: InputBind,
 ) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
     override fun setByString(string: String) {

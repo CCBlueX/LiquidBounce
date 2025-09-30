@@ -32,7 +32,7 @@ import net.minecraft.block.RespawnAnchorBlock
 import net.minecraft.entity.EntityPose
 import net.minecraft.util.math.BlockPos
 
-object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
+internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
     /**
      * The totem mode might have a lower switch delay than other items.
@@ -47,7 +47,7 @@ object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
     /**
      * Switch to a totem on low health and back to the original item when the health goes up again.
      */
-    object Health : ToggleableConfigurable(ModuleOffhand, "Health", true) {
+    object Health : ToggleableConfigurable(this, "Health", true) {
 
         /**
          * At which health we switch to a totem.
@@ -58,7 +58,7 @@ object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * For crystal pvp, allows to have longer a useful item in your offhand if you're not in danger of
          * the main damage source.
          */
-        private object Safety : ToggleableConfigurable(ModuleOffhand, "Safety", true) {
+        private object Safety : ToggleableConfigurable(this, "Safety", true) {
             // TODO option for 2x2 and 2x1
 
             /**

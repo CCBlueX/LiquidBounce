@@ -1,10 +1,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
@@ -19,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.blockVecPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.*
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -51,14 +55,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         waitTicks(stickAt)
         travel(path.asReversed())
         desyncPlayerPosition = null
-        pathCache = null
-    }
-
-    @Suppress("unused")
-    private val pathFinder = tickHandler {
-        waitTicks(1)
-
-        pathCache = waitFor(Dispatchers.Default) {
+        pathCache = withContext(Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")) {
             val playerPosition = player.pos
 
             val maximumDistanceSq = maximumDistance.sq()
@@ -79,6 +76,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                 }
             }
         }
+        waitTicks(1)
     }
 
     override fun disable() {
@@ -94,7 +92,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(positions = path.mapArray {
+                drawLineStrip(positions = path.mapToArray {
                     relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3()
                 })
             }

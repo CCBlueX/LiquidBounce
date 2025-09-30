@@ -49,6 +49,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.RaycastContext
+import java.util.function.Consumer
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -463,14 +464,23 @@ fun BlockState.canBeReplacedWith(
 enum class SwingMode(
     override val choiceName: String,
     val serverSwing: Boolean,
-    val swing: (Hand) -> Unit = { }
-) : NamedChoice {
+) : NamedChoice, Consumer<Hand> {
 
-    DO_NOT_HIDE("DoNotHide", true, { player.swingHand(it) }),
+    DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),
-    HIDE_CLIENT("HideForClient", true, { network.sendPacket(HandSwingC2SPacket(it)) }),
-    HIDE_SERVER("HideForServer", false, { player.swingHand(it, false) });
+    HIDE_CLIENT("HideForClient", true),
+    HIDE_SERVER("HideForServer", false);
 
+    fun swing(hand: Hand) = accept(hand)
+
+    override fun accept(hand: Hand) {
+        when (this) {
+            DO_NOT_HIDE -> player.swingHand(hand)
+            HIDE_BOTH -> {}
+            HIDE_CLIENT -> network.sendPacket(HandSwingC2SPacket(hand))
+            HIDE_SERVER -> player.swingHand(hand, false)
+        }
+    }
 }
 
 fun doPlacement(
@@ -577,17 +587,17 @@ fun doBreak(
     if (immediate) {
         EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
 
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         swingMode.swing(Hand.MAIN_HAND)
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         return
     }
 
@@ -665,6 +675,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         || this is ShulkerBoxBlock || this is StonecutterBlock
         || this is SweetBerryBushBlock && (blockState?.get(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapdoorBlock
 }
+
+val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
 fun BlockPos.isBlockedByEntities(): Boolean {
     val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())

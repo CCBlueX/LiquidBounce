@@ -24,7 +24,6 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
@@ -39,7 +38,7 @@ fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"
 
     httpOk(JsonObject().apply {
         addProperty("translationKey", input.translationKey)
-        addProperty("localized", input.localizedText.convertToString())
+        addProperty("localized", input.localizedText.string)
     })
 } ?: httpBadRequest("Missing key parameter")
 
@@ -52,7 +51,7 @@ fun getKeybinds(requestObject: RequestObject) = httpOk(
                 addProperty("bindName", key.translationKey)
                 add("key", JsonObject().apply {
                     addProperty("translationKey", key.boundKeyTranslationKey)
-                    addProperty("localized", key.boundKeyLocalizedText?.convertToString())
+                    addProperty("localized", key.boundKeyLocalizedText?.string)
                 })
             })
         }

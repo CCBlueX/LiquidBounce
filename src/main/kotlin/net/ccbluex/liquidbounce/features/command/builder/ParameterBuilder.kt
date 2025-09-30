@@ -105,16 +105,22 @@ class ParameterBuilder<T: Any> private constructor(val name: String) {
 
     /**
      * Filter from given strings provided by [placeholdersProvider].
+     *
+     * If [minecraftPlaceholders] is `true`, the prefix `minecraft:` will be ignored,
+     * meaning that typing the beginning like `diam` (without the prefix `minecraft:`)
+     * will be enough to match strings such as `minecraft:diamond`, `minecraft:diamond_axe`, etc.
      */
     inline fun autocompletedFrom(
         ignoreCase: Boolean = true,
+        minecraftPlaceholders: Boolean = false,
         crossinline placeholdersProvider: () -> Iterable<String>?,
     ) = autocompletedWith { begin, _ ->
         val placeholders = placeholdersProvider()
         if (placeholders == null || placeholders.none()) {
             emptyList()
         } else {
-            placeholders.filter { it.startsWith(begin, ignoreCase) }
+            placeholders.filter { it.startsWith(begin, ignoreCase)
+                || minecraftPlaceholders && it.removePrefix("minecraft:").startsWith(begin, ignoreCase) }
         }
     }
 

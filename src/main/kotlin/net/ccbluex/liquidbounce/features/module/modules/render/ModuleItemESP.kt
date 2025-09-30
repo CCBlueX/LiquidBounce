@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
@@ -69,7 +70,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             val filtered = world.entities.filter(::shouldRender)
 
             renderEnvironmentForWorld(matrixStack) {
-                BoxRenderer.drawWith(this) {
+                drawBoxes {
                     for (entity in filtered) {
                         val pos = entity.interpolateCurrentPosition(event.partialTicks)
 

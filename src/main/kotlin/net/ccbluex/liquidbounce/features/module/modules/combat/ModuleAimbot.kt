@@ -54,7 +54,7 @@ import net.minecraft.util.math.MathHelper
  * Automatically faces selected entities around you.
  */
 @Suppress("MagicNumber")
-object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf("AimAssist", "AutoAim")) {
+object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
     private val range = float("Range", 4.2f, 1f..8f)
 
@@ -65,7 +65,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.meets() }
+        get() = requires.all { it.asBoolean }
 
     private var angleSmooth = choices(this, "AngleSmooth") {
         arrayOf(

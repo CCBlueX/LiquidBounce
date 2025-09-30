@@ -16,15 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
+package net.ccbluex.liquidbounce.features.misc
 
-/**
- * NoSignRender module
- *
- * Prevents the sign text from being rendered.
- */
-
-object ModuleNoSignRender : ClientModule("NoSignRender", Category.RENDER)
+interface DebuggedOwner

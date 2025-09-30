@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -42,8 +44,6 @@ import net.minecraft.block.Block
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Hand
 
 internal object FlyEnderpearl : Choice("Enderpearl") {
 
@@ -63,7 +63,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     }
 
     val repeatable = tickHandler {
-        val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlot
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
 
         if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
             return@tickHandler
@@ -71,10 +71,6 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
 
         if (!threwPearl && !canFly) {
             if (slot != null) {
-                if (slot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-                }
-
                 if (player.pitch <= 80) {
                     RotationManager.setRotationTarget(
                         Rotation(player.yaw, (80f..90f).random()),
@@ -85,12 +81,9 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
                 }
 
                 waitTicks(2)
+                SilentHotbar.selectSlotSilently(this, slot, 1)
                 interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
-                }
-
-                if (slot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                    PlayerInteractItemC2SPacket(slot.useHand, sequence, player.yaw, player.pitch)
                 }
 
                 threwPearl = true

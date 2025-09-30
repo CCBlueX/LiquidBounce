@@ -27,8 +27,19 @@ import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.block.collisionShape
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.set
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.block.MagmaBlock
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 
 /**
  * Sneak module
@@ -42,12 +53,18 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
     private object Legit : Choice("Legit") {
 
+        var onMagmaBlocksOnly by boolean("OnMagmaBlocksOnly", false)
+
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
         private val inputHandler = handler<MovementInputEvent> { event ->
             if (player.moving && notDuringMove) {
+                return@handler
+            }
+
+            if (onMagmaBlocksOnly && (player.immuneToMagmaBlocks || !isOnMagmaBlock(event.directionalInput))) {
                 return@handler
             }
 
@@ -122,4 +139,49 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
         }
     }
 
+    private fun isOnMagmaBlock(directionalInput: DirectionalInput): Boolean {
+        val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
+        simulatedInput.set(jump = false)
+
+        // Doesn't keep the player stuck at the edge of a magma block while sneaking
+        simulatedInput.ignoreClippingAtLedge = true
+
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
+        simulatedPlayer.pos = player.pos
+
+        simulatedPlayer.tick()
+        val isOnMagmaBlockAfterOneTick = isOnMagmaBlock(simulatedPlayer.boundingBox)
+
+        simulatedPlayer.tick()
+        val isOnMagmaBlockAfterTwoTicks = isOnMagmaBlock(simulatedPlayer.boundingBox)
+
+        return isOnMagmaBlockAfterOneTick || isOnMagmaBlockAfterTwoTicks
+    }
+
+    /**
+     * [boundingBox] - the specific bounding box of a player, mob or even another block.
+     */
+    private fun isOnMagmaBlock(boundingBox: Box): Boolean {
+
+        // Blocks that are the height of a trapdoor or lower
+        // (such as snow layers, carpets, repeaters, or comparators)
+        // do not prevent a magma block from damaging mobs and players above it.
+
+        // Therefore, we expand the box downward by 0.2 blocks.
+        val expandedBox = boundingBox
+            .expand(0.0, 0.1,0.0)
+            .offset(0.0, -0.1, 0.0)
+
+        return BlockPos.iterate(
+            expandedBox.minX.floorToInt(),
+            expandedBox.minY.floorToInt(),
+            expandedBox.minZ.floorToInt(),
+            expandedBox.maxX.ceilToInt(),
+            expandedBox.minY.ceilToInt(),
+            expandedBox.maxZ.ceilToInt(),
+        ).any {
+            it.getBlock() is MagmaBlock &&
+                expandedBox.intersects(it.collisionShape.boundingBox.offset(it))
+        }
+    }
 }

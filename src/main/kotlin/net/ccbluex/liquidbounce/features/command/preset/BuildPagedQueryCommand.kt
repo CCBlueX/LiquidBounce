@@ -30,7 +30,7 @@ import net.minecraft.util.Formatting
 import java.util.function.IntConsumer
 import kotlin.math.ceil
 
-private val TEXT_SPACE: Text = " ".asText()
+private val TEXT_SPACE: Text = " ".asPlainText()
 
 @Suppress("CognitiveComplexMethod")
 private fun buildPaginationText(
@@ -42,7 +42,7 @@ private fun buildPaginationText(
 ): Text {
     fun MutableText.disabled() = withColor(Formatting.DARK_GRAY)
     fun MutableText.pageAction(page: Int) = this
-        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, page.toString().asText()))
+        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, page.toString().asPlainText()))
         .onClick { sendPage.accept(page) }
 
     val texts = mutableListOf<Text>()
@@ -137,7 +137,7 @@ fun <T> CommandBuilder.pagedQuery(
         val currentPageItems = if (all is List<T>) {
             all.subList((currentPage - 1) * pageSize, minOf(currentPage * pageSize, all.size))
         } else {
-            all.drop((currentPage - 1) * pageSize).subList(0, pageSize)
+            all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
         }
 
         mc.inGameHud.chatHud.removeMessage(msgId) // remove old
