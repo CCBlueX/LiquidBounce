@@ -225,7 +225,7 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: Consumer<T>) {
+    fun set(t: T, apply: Consumer<in T>) {
         var currT = t
         runCatching {
             listeners.forEach {
