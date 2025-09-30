@@ -19,6 +19,7 @@
 @file:Suppress("TooManyFunctions")
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.minecraft.text.TextColor
 import org.lwjgl.opengl.GL20
 import java.awt.Color
 
@@ -170,4 +171,6 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
      * @return The Color object representation
      */
     fun toAwtColor(): Color = Color(r, g, b, a)
+
+    fun toTextColor(): TextColor = TextColor.fromRgb(toARGB())
 }

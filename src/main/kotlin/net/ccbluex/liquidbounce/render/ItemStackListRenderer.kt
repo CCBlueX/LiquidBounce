@@ -144,7 +144,7 @@ class ItemStackListRenderer private constructor(
 
     @Suppress("CognitiveComplexMethod")
     fun draw() {
-        if (stacks.isEmpty()) return
+        if (stacks.isEmpty() && title == null) return
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
 
@@ -157,7 +157,7 @@ class ItemStackListRenderer private constructor(
 
         if (title != null) {
             width = maxOf(width, textRenderer.getWidth(title))
-            height += textRenderer.fontHeight + 2
+            height += textRenderer.fontHeight + (if (stacks.isEmpty()) 0 else 2)
         }
 
         matrices.push()
