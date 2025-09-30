@@ -237,11 +237,13 @@ class ItemStackListRenderer private constructor(
 
         private const val MAX_ITER = 100
 
+        /**
+         * Calculates overlap rectangles
+         */
+        @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
         private fun adjustPlannedPositions() {
-            // calculate overlap rectangles
             var iter = 0
             var moved = false
-            planned.sortWith { o1, o2 -> comparatorVec3f.compare(o1.center, o2.center) }
             while (iter++ < MAX_ITER) {
                 for (i in 0 until planned.size) {
                     for (j in i + 1 until planned.size) {
@@ -258,17 +260,9 @@ class ItemStackListRenderer private constructor(
                         val dy = (ah + bh) / 2 - abs(ay - by)
                         if (dx > 0 && dy > 0) {
                             if (dx < dy) {
-                                if (ax < bx) {
-                                    b.center.x += dx
-                                } else {
-                                    b.center.x -= dx
-                                }
+                                b.center.x = bx + (if (ax < bx) dx else -dx)
                             } else {
-                                if (ay < by) {
-                                    b.center.y += dy
-                                } else {
-                                    b.center.y -= dy
-                                }
+                                b.center.y = by + (if (ay < by) dy else -dy)
                             }
                             moved = true
                         }
@@ -290,6 +284,7 @@ class ItemStackListRenderer private constructor(
                 }
 
                 else -> {
+                    planned.sortWith { o1, o2 -> comparatorVec3f.compare(o1.center, o2.center) }
                     adjustPlannedPositions()
                     planned.forEach { it.drawNow() }
                     planned.clear()
