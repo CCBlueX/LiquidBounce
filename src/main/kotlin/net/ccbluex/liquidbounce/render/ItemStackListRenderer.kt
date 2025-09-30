@@ -240,7 +240,7 @@ class ItemStackListRenderer private constructor(
 
                         val (ax, ay) = a.center
                         val (bx, by) = b.center
-                        val (aw, ah) = a.dimensions
+                        val (aw, ah) = a.dimensions // TODO: scale
                         val (bw, bh) = b.dimensions
                         if (overlap(a, b)) {
                             val dx = (aw + bw) / 2 - abs(ax - bx)
