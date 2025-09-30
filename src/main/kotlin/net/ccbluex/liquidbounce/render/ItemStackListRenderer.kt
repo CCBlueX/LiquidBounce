@@ -223,18 +223,19 @@ class ItemStackListRenderer private constructor(
 
     companion object : EventListener {
         private val planned = ArrayList<ItemStackListRenderer>()
+
+        // y -> x -> z
         private val comparatorVec3f = Comparator<Vector3f> { o1, o2 ->
             when {
-                o1.x != o2.x -> o1.x.compareTo(o2.x)
                 o1.y != o2.y -> o1.y.compareTo(o2.y)
+                o1.x != o2.x -> o1.x.compareTo(o2.x)
                 else -> o1.z.compareTo(o2.z)
             }
         }
 
         private const val MAX_ITER = 100
 
-        @Suppress("unused")
-        private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { event ->
+        private fun adjustPlannedPositions() {
             // calculate overlap rectangles
             var iter = 0
             var moved = false
@@ -275,12 +276,23 @@ class ItemStackListRenderer private constructor(
                     break
                 }
             }
+        }
 
-            planned.forEach {
-                it.draw()
+        @Suppress("unused")
+        private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { event ->
+            when (planned.size) {
+                0 -> return@handler
+                1 -> {
+                    planned[0].draw()
+                    planned.clear()
+                }
+
+                else -> {
+                    adjustPlannedPositions()
+                    planned.forEach { it.draw() }
+                    planned.clear()
+                }
             }
-
-            planned.clear()
         }
 
         @JvmStatic
