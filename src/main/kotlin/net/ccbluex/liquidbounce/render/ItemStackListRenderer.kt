@@ -72,6 +72,10 @@ class ItemStackListRenderer private constructor(
     private var useTexture = false
     private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
 
+    // Unscaled, without margin
+    private val dimensions = Vector2i()
+    private val textRenderer = mc.textRenderer
+
     @JvmOverloads
     fun title(title: Text?, color: Int = this.titleColor) = apply {
         this.title = title
@@ -152,23 +156,8 @@ class ItemStackListRenderer private constructor(
         )
     }
 
-    private val dimensions by lazy(LazyThreadSafetyMode.NONE) {
-        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
-        var width = size * minOf(stacks.size, rowLength)
-        var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
-
-        val textRenderer = mc.textRenderer
-
-        if (title != null) {
-            width = maxOf(width, textRenderer.getWidth(title))
-            height += textRenderer.fontHeight + (if (stacks.isEmpty()) 0 else 2)
-        }
-
-        Vector2i(width, height)
-    }
-
     @Suppress("CognitiveComplexMethod")
-    fun draw() {
+    private fun drawNow() {
         if (stacks.isEmpty() && title == null) return
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
@@ -177,8 +166,6 @@ class ItemStackListRenderer private constructor(
 
         val width = dimensions.x
         val height = dimensions.y
-
-        val textRenderer = mc.textRenderer
 
         matrices.push()
 
@@ -213,12 +200,28 @@ class ItemStackListRenderer private constructor(
     }
 
     /**
-     * Add this render config to plan.
+     * Add this render config to plan or draw immediately.
      * All planned renderer will adjust their position to avoid overlapping.
-     * [draw] will be called later.
+     * [drawNow] will be called later.
      */
-    fun planToDraw() {
-        planned += this
+    @JvmOverloads
+    fun draw(immediately: Boolean = false) {
+        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
+        var width = size * minOf(stacks.size, rowLength)
+        var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
+
+        if (title != null) {
+            width = maxOf(width, textRenderer.getWidth(title))
+            height += textRenderer.fontHeight + (if (stacks.isEmpty()) 0 else 2)
+        }
+
+        this.dimensions.set(width, height)
+
+        if (immediately) {
+            drawNow()
+        } else {
+            planned += this
+        }
     }
 
     companion object : EventListener {
@@ -283,13 +286,13 @@ class ItemStackListRenderer private constructor(
             when (planned.size) {
                 0 -> return@handler
                 1 -> {
-                    planned[0].draw()
+                    planned[0].drawNow()
                     planned.clear()
                 }
 
                 else -> {
                     adjustPlannedPositions()
-                    planned.forEach { it.draw() }
+                    planned.forEach { it.drawNow() }
                     planned.clear()
                 }
             }
@@ -386,4 +389,4 @@ fun DrawContext.drawItemTags(
     .scale(scale)
     .rectBackground(backgroundColor, backgroundMargin)
     .rowLength(rowLength)
-    .planToDraw()
+    .draw()

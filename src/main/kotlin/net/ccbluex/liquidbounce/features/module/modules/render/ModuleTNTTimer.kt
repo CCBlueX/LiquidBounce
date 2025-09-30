@@ -95,7 +95,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
                     .center(screenPos)
                     .title(text)
                     .scale(scale)
-                    .planToDraw()
+                    .draw()
             }
         }
     }
