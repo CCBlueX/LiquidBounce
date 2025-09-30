@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -368,25 +367,3 @@ class ItemStackListRenderer private constructor(
     }
 
 }
-
-/**
- * Draw a tag for a list of [ItemStack]s.
- *
- * @param centerPos The render position, also the center of the whole tag.
- * @param rowLength The maximum count of stack which can be placed in one row.
- */
-@Suppress("LongParameterList")
-@JvmOverloads
-fun DrawContext.drawItemTags(
-    stacks: List<ItemStack>,
-    centerPos: Vec3,
-    backgroundColor: Int = Int.MIN_VALUE,
-    backgroundMargin: Int = 2,
-    scale: Float = 1.0F,
-    rowLength: Int = 9,
-) = drawItemStackList(stacks)
-    .center(centerPos)
-    .scale(scale)
-    .rectBackground(backgroundColor, backgroundMargin)
-    .rowLength(rowLength)
-    .draw()

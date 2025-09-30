@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
-import net.ccbluex.liquidbounce.render.drawItemTags
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -199,13 +199,12 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
             val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
 
-            event.context.drawItemTags(
-                stacks = result.stacks,
-                centerPos = renderPos,
-                backgroundColor = backgroundColor.toARGB(),
-                scale = scale,
-                rowLength = rowLength
-            )
+            event.context.drawItemStackList(result.stacks)
+                .center(renderPos)
+                .rectBackground(color = backgroundColor.toARGB())
+                .scale(scale)
+                .rowLength(rowLength)
+                .draw()
         }
     }
 
