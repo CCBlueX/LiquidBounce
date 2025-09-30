@@ -404,6 +404,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleItemChams,
             ModuleCrystalView,
             ModuleSkinChanger,
+            ModuleProtectionViewer,
 
             // World
             ModuleAirPlace,
