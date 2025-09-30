@@ -25,10 +25,14 @@ import net.ccbluex.liquidbounce.additions.drawItemBar
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.font.TextRenderer
@@ -39,6 +43,11 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import org.joml.Vector2i
+import org.joml.Vector3f
+import org.joml.component1
+import org.joml.component2
+import kotlin.math.abs
 
 private const val SLOT_SIZE = 18
 private const val ITEM_SIZE = 16
@@ -55,9 +64,7 @@ class ItemStackListRenderer private constructor(
 ) {
     private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
-    private var centerX = 0.0F
-    private var centerY = 0.0F
-    private var centerZ = 0.0F
+    private val center = Vector3f(0f, 0f, 0f)
     private var scale = 1.0F
     private var rowLength = 9
     private var backgroundColor = Int.MIN_VALUE
@@ -72,21 +79,21 @@ class ItemStackListRenderer private constructor(
     }
 
     fun centerX(centerX: Float) = apply {
-        this.centerX = centerX
+        this.center.x = centerX
     }
 
     fun centerY(centerY: Float) = apply {
-        this.centerY = centerY
+        this.center.y = centerY
     }
 
     fun centerZ(centerZ: Float) = apply {
-        this.centerZ = centerZ
+        this.center.z = centerZ
     }
 
     fun center(center: Vec3) = apply {
-        this.centerX = center.x
-        this.centerY = center.y
-        this.centerZ = center.z
+        this.center.x = center.x
+        this.center.y = center.y
+        this.center.z = center.z
     }
 
     /**
@@ -142,14 +149,8 @@ class ItemStackListRenderer private constructor(
         )
     }
 
-    @Suppress("CognitiveComplexMethod")
-    fun draw() {
-        if (stacks.isEmpty() && title == null) return
-
+    private val dimensions by lazy(LazyThreadSafetyMode.NONE) {
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
-
-        val matrices = drawContext.matrices
-
         var width = size * minOf(stacks.size, rowLength)
         var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
 
@@ -160,9 +161,25 @@ class ItemStackListRenderer private constructor(
             height += textRenderer.fontHeight + (if (stacks.isEmpty()) 0 else 2)
         }
 
+        Vector2i(width, height)
+    }
+
+    @Suppress("CognitiveComplexMethod")
+    private fun doRender() {
+        if (stacks.isEmpty() && title == null) return
+
+        val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
+
+        val matrices = drawContext.matrices
+
+        val width = dimensions.x
+        val height = dimensions.y
+
+        val textRenderer = mc.textRenderer
+
         matrices.push()
 
-        matrices.translate(centerX, centerY, centerZ)
+        matrices.translate(center.x, center.y, center.z)
         matrices.scale(scale, scale, 1.0F)
         matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
 
@@ -192,7 +209,74 @@ class ItemStackListRenderer private constructor(
         matrices.pop()
     }
 
-    companion object {
+    fun draw() {
+        planned += this
+//        doRender()
+    }
+
+    companion object : EventListener {
+        private val planned = ArrayList<ItemStackListRenderer>()
+
+        private const val MAX_ITER = 100
+
+        @Suppress("unused")
+        private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { event ->
+            fun overlap(a: ItemStackListRenderer, b: ItemStackListRenderer): Boolean {
+                val (ax, ay) = a.center
+                val (bx, by) = b.center
+                val (aw, ah) = a.dimensions
+                val (bw, bh) = b.dimensions
+                return abs(ax - bx) < (aw + bw) / 2 && abs(ay - by) < (ah + bh) / 2
+            }
+
+            // calculate overlap rectangles
+            var iter = 0
+            var moved = false
+            while (iter++ < MAX_ITER) {
+                for (i in planned.indices) {
+                    for (j in i + 1 until planned.size) {
+                        val a = planned[i]
+                        val b = planned[j]
+
+                        val (ax, ay) = a.center
+                        val (bx, by) = b.center
+                        val (aw, ah) = a.dimensions
+                        val (bw, bh) = b.dimensions
+                        if (overlap(a, b)) {
+                            val dx = (aw + bw) / 2 - abs(ax - bx)
+                            val dy = (ah + bh) / 2 - abs(ay - by)
+
+                            if (dx < dy) {
+                                if (ax < bx) {
+                                    b.center.x += dx
+                                } else {
+                                    b.center.x -= dx
+                                }
+                            } else {
+                                if (ay < by) {
+                                    b.center.y += dy
+                                } else {
+                                    b.center.y -= dy
+                                }
+                            }
+                            b.center.x = bx
+                            b.center.y = by
+                            moved = true
+                        }
+                    }
+                }
+                if (!moved) {
+                    break
+                }
+            }
+
+            planned.forEach {
+                it.doRender()
+            }
+
+            planned.clear()
+        }
+
         @JvmStatic
         private val block2Item = Reference2ReferenceOpenHashMap<Block, Item>().apply {
             put(Blocks.WATER, Items.WATER_BUCKET)
