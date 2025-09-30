@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -34,7 +34,7 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
         get() = fireworkChronometer.hasElapsed((fireworkCooldown * MILLISECONDS_PER_TICK).toLong())
 
     @Suppress("ComplexCondition")
-    private suspend inline fun Sequence.canUseFirework(): Boolean {
+    private suspend fun canUseFirework(): Boolean {
         if (!KillAura.running
             || !syncCooldownWithKillAura
             || (

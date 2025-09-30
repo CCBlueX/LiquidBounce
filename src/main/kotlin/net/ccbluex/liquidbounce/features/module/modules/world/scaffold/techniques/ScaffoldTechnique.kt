@@ -25,16 +25,16 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 
-abstract class ScaffoldTechnique(name: String) : Choice(name) {
-
-    override val parent: ChoiceConfigurable<ScaffoldTechnique>
+sealed class ScaffoldTechnique(name: String) : Choice(name) {
+    final override val parent: ChoiceConfigurable<ScaffoldTechnique>
         get() = ModuleScaffold.technique
-
 
     abstract fun findPlacementTarget(
         predictedPos: Vec3d,
@@ -48,4 +48,20 @@ abstract class ScaffoldTechnique(name: String) : Choice(name) {
     open fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
         raycast(rotation)
 
+    companion object {
+        @JvmField
+        internal val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2)
+
+        @JvmField
+        internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1)
+
+        private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
+            for (x in xzOffsets) {
+                for (z in xzOffsets) {
+                    add(Vec3i(x, 0, z))
+                    add(Vec3i(x, -1, z))
+                }
+            }
+        }
+    }
 }

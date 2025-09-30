@@ -34,9 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -174,8 +172,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
                 drawCustomMesh(
                     VertexFormat.DrawMode.QUADS,
-                    VertexFormats.POSITION_TEXTURE_COLOR,
-                    ShaderProgramKeys.POSITION_TEX_COLOR
+                    VertexInputType.PosTexColor,
                 ) { matrix ->
                     vertex(matrix, 0.0f, -size, 0.0f)
                         .texture(0.0f, 0.0f)
@@ -431,8 +428,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
                 withColor(color) {
                     drawCustomMesh(
                         VertexFormat.DrawMode.TRIANGLE_STRIP,
-                        VertexFormats.POSITION,
-                        ShaderProgramKeys.POSITION
+                        VertexInputType.Pos,
                     ) {
                         vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f)
                         vertex(it, screenPos.x, screenPos.y, 1f)

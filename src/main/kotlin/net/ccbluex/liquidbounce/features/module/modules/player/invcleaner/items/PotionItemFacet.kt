@@ -1,13 +1,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.asIntList
+import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.kotlin.mapInt
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.Tier
 import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.PotionItem
@@ -52,7 +54,7 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int = compareValuesBy(o1, o2) { o ->
                 o.itemStack.getPotionEffects()
                     .sortedByDescending { it.effectType.value().tier }
-                    .mapInt { it.amplifier }
+                    .mapToIntArray { it.amplifier }.asIntList()
             }
         }
 
@@ -85,7 +87,7 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int = compareValuesBy(o1, o2) { o ->
                 o.itemStack.getPotionEffects()
                     .sortedByDescending { it.effectType.value().tier }
-                    .mapInt { it.duration }
+                    .mapToIntArray { it.duration }.asIntList()
             }
         }
 

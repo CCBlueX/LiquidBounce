@@ -25,12 +25,11 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
@@ -182,7 +181,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             Registries.BLOCK.forEach { block ->
                 val id = Registries.BLOCK.getId(block)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", block.name.convertToString())
+                    addProperty("name", block.name.string)
                     addProperty("icon", iconUrl(id))
                 })
             }
@@ -192,7 +191,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             Registries.ITEM.forEach { item ->
                 val id = Registries.ITEM.getId(item)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", item.name.convertToString())
+                    addProperty("name", item.name.string)
                     addProperty("icon", iconUrl(id))
                 })
             }
@@ -216,7 +215,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             Registries.STATUS_EFFECT.forEach { effect ->
                 val id = Registries.STATUS_EFFECT.getId(effect)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", effect.name.convertToString())
+                    addProperty("name", effect.name.string)
                     addProperty("icon", iconUrl(potionId))
                 })
             }
@@ -248,7 +247,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             Registries.ENTITY_TYPE.forEach { entityType ->
                 val id = Registries.ENTITY_TYPE.getId(entityType)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", entityType.name.convertToString())
+                    addProperty("name", entityType.name.string)
                     addProperty("icon", iconUrl(id)) // TODO: fix icon
                 })
             }
@@ -262,6 +261,14 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", converter.convert(id.toName()))
                     addProperty("icon", iconUrl(iconId)) // TODO: better icon?
+                })
+            }
+        }
+
+        "client_module" -> {
+            ModuleManager.forEach { module ->
+                add(module.name, JsonObject().apply {
+                    addProperty("name", module.name)
                 })
             }
         }
@@ -305,7 +312,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
                     }
 
                     else -> {
-                        if (!pickStack.isNothing()) {
+                        if (!pickStack.isEmpty) {
                             logger.warn("Invalid pick stack for $id: $pickStack")
                         }
                     }

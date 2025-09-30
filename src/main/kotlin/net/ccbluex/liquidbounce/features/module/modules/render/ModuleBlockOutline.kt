@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinWorldRenderer
-import net.ccbluex.liquidbounce.render.BoxRenderer
 import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawBoxes
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -47,7 +47,7 @@ import net.minecraft.util.shape.VoxelShape
  *
  * [MixinWorldRenderer.cancelBlockOutline]
  */
-object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = arrayOf("BlockOverlay")) {
+object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = listOf("BlockOverlay")) {
 
     private val sideOnly by boolean("SideOnly", true)
     private val color by color("Color", Color4b(68, 117, 255, 70))
@@ -111,9 +111,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             if (sideOnly) {
                 drawBoxSide(translatedPosition, side, color, outlineColor)
             } else {
-                BoxRenderer.drawWith(this) {
-                    drawBox(translatedPosition, color, outlineColor)
-                }
+                drawBoxes { drawBox(translatedPosition, color, outlineColor) }
             }
         }
     }

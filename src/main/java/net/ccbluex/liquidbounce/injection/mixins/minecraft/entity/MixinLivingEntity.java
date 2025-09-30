@@ -209,7 +209,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        float yaw = rotation.getYaw() * 0.017453292F;
+        float yaw = rotation.getYaw() * MathHelper.RADIANS_PER_DEGREE;
 
         return new Vec3d(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }

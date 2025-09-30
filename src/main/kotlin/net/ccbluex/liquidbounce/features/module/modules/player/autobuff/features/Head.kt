@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.event.Sequence
+import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -29,22 +29,24 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
-object Head : HealthBasedBuff("Head") {
+internal object Head : HealthBasedBuff("Head") {
 
-    val cooldown by int("Cooldown", 0, 0..120, "s")
-    val chronometer = Chronometer()
+    private val maxAbsorption by float("MaxAbsorption", 1f, 0f..8f)
+    private val cooldown by float("Cooldown", 0f, 0f..120f, "s")
+    private val chronometer = Chronometer()
 
     override val passesRequirements: Boolean
-        get() = passesHealthRequirements && chronometer.hasElapsed(cooldown * 1000L)
+        get() = passesHealthRequirements
+            && chronometer.hasElapsed((cooldown * 1000).toLong())
+            && player.absorptionAmount <= maxAbsorption
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.item == Items.PLAYER_HEAD
+        return stack.isOf(Items.PLAYER_HEAD)
     }
 
-    override suspend fun execute(sequence: Sequence, slot: HotbarItemSlot) {
+    override suspend fun execute(slot: HotbarItemSlot) {
         useHotbarSlotOrOffhand(slot)
         chronometer.reset()
     }
-
 
 }

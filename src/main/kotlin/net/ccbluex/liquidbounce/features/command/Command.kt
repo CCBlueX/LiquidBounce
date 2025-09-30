@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
@@ -36,7 +38,7 @@ class Command(
     val executable: Boolean,
     val handler: Handler?,
     val requiresIngame: Boolean,
-) : MinecraftShortcuts {
+) : MinecraftShortcuts, DebuggedOwner {
     var parentCommand: Command? = null
         private set
     var index: Int = -1
@@ -46,13 +48,21 @@ class Command(
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
     val description: String
-        get() = translation("$translationBaseKey.description").convertToString()
+        get() = translation("$translationBaseKey.description").string
+
+    /**
+     * For navigation purposes.
+     * Key: name or alias
+     * Value: corresponding subcommand
+     */
+    internal val subcommandMap = Object2ObjectRBTreeMap<String, Command>(String.CASE_INSENSITIVE_ORDER)
 
     init {
         subcommands.forEachIndexed { i, command ->
             check(command.parentCommand == null) {
                 "Subcommand already has parent command"
             }
+            subcommandMap.putCommand(command)
 
             command.index = i
             command.parentCommand = this
@@ -122,7 +132,7 @@ class Command(
         hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy"))
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
-        val content = copyContent ?: displayComponent.convertToString()
+        val content = copyContent ?: displayComponent.string
 
         chat(formatting(result(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }

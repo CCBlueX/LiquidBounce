@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -70,7 +71,7 @@ object ModuleFastExp : ClientModule(
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
         if (Rotate.enabled) {
-            waitUntil {
+            tickUntil {
                 val rotation = Rotation(player.yaw, 90f)
                 RotationManager.setRotationTarget(
                     Rotate.rotations.toRotationTarget(rotation),

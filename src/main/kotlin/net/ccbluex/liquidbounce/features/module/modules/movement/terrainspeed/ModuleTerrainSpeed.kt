@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ic
  *
  * Move faster on specific surfaces.
  */
-object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, aliases = arrayOf("FastClimb")) {
+object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, aliases = listOf("FastClimb")) {
 
     init {
         enableLock()

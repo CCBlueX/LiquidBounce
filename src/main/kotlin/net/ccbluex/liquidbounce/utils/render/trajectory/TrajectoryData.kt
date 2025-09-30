@@ -9,8 +9,11 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.entity.projectile.thrown.*
 import net.minecraft.item.*
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 object TrajectoryData {
+    @JvmStatic
     fun getRenderedTrajectoryInfo(player: PlayerEntity, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
         return when (item) {
             is BowItem -> {
@@ -36,6 +39,7 @@ object TrajectoryData {
         }
     }
 
+    @JvmStatic
     fun getColorForEntity(it: Entity): Color4b {
         return when (it) {
             is ArrowEntity -> Color4b(255, 0, 0, 200)
@@ -44,6 +48,7 @@ object TrajectoryData {
         }
     }
 
+    @JvmStatic
     fun getRenderTrajectoryInfoForOtherEntity(
         entity: Entity,
         activeArrows: Boolean,
@@ -75,7 +80,7 @@ object TrajectoryData {
     }
 }
 
-
+@JvmRecord
 data class TrajectoryInfo(
     val gravity: Double,
     /**
@@ -88,6 +93,16 @@ data class TrajectoryInfo(
     val roll: Float = 0.0F,
     val copiesPlayerVelocity: Boolean = true,
 ) {
+    @JvmOverloads
+    fun hitbox(center: Vec3d = Vec3d.ZERO): Box = Box(
+        center.x - hitboxRadius,
+        center.y - hitboxRadius,
+        center.z - hitboxRadius,
+        center.x + hitboxRadius,
+        center.y + hitboxRadius,
+        center.z + hitboxRadius,
+    )
+
     companion object {
         @JvmField
         val GENERIC = TrajectoryInfo(0.03, 0.25)
@@ -110,9 +125,9 @@ data class TrajectoryInfo(
 
         @JvmStatic
         @JvmOverloads
-        fun bowWithUsageDuration(usageDuration: Int = player.itemUseTime): TrajectoryInfo? {
+        fun bowWithUsageDuration(usageDurationTicks: Int = player.itemUseTime): TrajectoryInfo? {
             // Calculate the power of bow
-            var power = usageDuration / 20f
+            var power = usageDurationTicks / 20f
             power = (power * power + power * 2F) / 3F
 
             if (power < 0.1F) {

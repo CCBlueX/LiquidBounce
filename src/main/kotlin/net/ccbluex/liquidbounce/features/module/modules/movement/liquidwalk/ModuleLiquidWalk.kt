@@ -36,7 +36,7 @@ import net.minecraft.block.FluidBlock
  *
  * Allows you to walk on water like jesus. Also known as Jesus module.
  */
-object ModuleLiquidWalk : ClientModule("LiquidWalk", Category.MOVEMENT, aliases = arrayOf("Jesus", "WaterWalk")) {
+object ModuleLiquidWalk : ClientModule("LiquidWalk", Category.MOVEMENT, aliases = listOf("Jesus", "WaterWalk")) {
 
     init {
         enableLock()

@@ -18,16 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -36,7 +39,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
@@ -123,7 +125,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         var posX = 300
                         var posY = 500
 
-                        for (x in curve.xAxis.range step 0.1f) {
+                        for (x in curve.xAxis.range.step(0.1f)) {
                             var y = curve.transform(x)
                             this.fill(
                                 posX + x,
@@ -163,7 +165,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         tree(Graph)
     }
 
-    private val debuggedGeometry = hashMapOf<DebuggedOwner, DebuggedGeometry>()
+    @JvmRecord
+    private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
+
+    @JvmRecord
+    private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
+
+    private val debugParameters = hashMapOf<DebuggedKey, ParameterCapture>()
+
+    private val debuggedGeometry = hashMapOf<DebuggedKey, DebuggedGeometry>()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
@@ -245,7 +255,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                 val currentTime = System.currentTimeMillis()
 
-                fun ownerName(owner: Any): MutableText {
+                fun ownerName(owner: DebuggedOwner): MutableText {
                     return when (owner) {
                         is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
                         is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
@@ -254,7 +264,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                                 .append(
                                     owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
                                 )
-                        is Sequence -> ownerName(owner.owner)
+                        is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asText()
+                            ?.formatted(Formatting.GRAY) ?: owner.toString().asText()
                         else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
                     }
                 }
@@ -299,16 +310,16 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    fun debugGeometry(owner: Any, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry) {
         // Do not take any new debugging while the module is off
         if (!running) {
             return
         }
 
-        debuggedGeometry[DebuggedOwner(owner, name)] = geometry
+        debuggedGeometry[DebuggedKey(owner, name)] = geometry
     }
 
-    inline fun Any.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
         if (!ModuleDebug.running) {
             return
         }
@@ -316,21 +327,15 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         debugGeometry(owner = this, name, lazyGeometry())
     }
 
-    private data class DebuggedOwner(val owner: Any, val name: String)
-
-    private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
-
-    private val debugParameters = hashMapOf<DebuggedOwner, ParameterCapture>()
-
-    fun debugParameter(owner: Any, name: String, value: Any?) {
+    fun debugParameter(owner: DebuggedOwner, name: String, value: Any?) {
         if (!running) {
             return
         }
 
-        debugParameters[DebuggedOwner(owner, name)] = ParameterCapture(value = value)
+        debugParameters[DebuggedKey(owner, name)] = ParameterCapture(value = value)
     }
 
-    inline fun Any.debugParameter(name: String, lazyValue: () -> Any?) {
+    inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
         if (!ModuleDebug.running) {
             return
         }
@@ -343,11 +348,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         return Color4b(Color.getHSBColor(hue, 1f, 1f)).with(a = 32)
     }
 
-    sealed class DebuggedGeometry(val color: Color4b) {
-        abstract fun render(env: WorldRenderEnvironment)
+    sealed interface DebuggedGeometry {
+        val color: Color4b
+        fun render(env: WorldRenderEnvironment)
     }
 
-    class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedLine(line: Line, override val color: Color4b) : DebuggedGeometry {
         val from: Vec3d
         val to: Vec3d
 
@@ -365,7 +371,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawQuad(relativeToCamera(p1).toVec3(), relativeToCamera(p2).toVec3())
@@ -373,7 +379,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
@@ -381,7 +387,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
+    open class DebuggedBox(val box: Box, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawSolidBox(box.offset(env.camera.pos.negate()))
@@ -394,7 +400,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         color
     )
 
-    class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
+    class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry {
+        override val color: Color4b get() = Color4b.WHITE
         override fun render(env: WorldRenderEnvironment) {
             this.geometry.forEach { it.render(env) }
         }

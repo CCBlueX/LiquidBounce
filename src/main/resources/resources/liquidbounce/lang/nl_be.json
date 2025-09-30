@@ -538,7 +538,6 @@
     "liquidbounce.module.noPitchLimit.description": "Laat je verder omhoog/omlaag kijken dan normaal.",
     "liquidbounce.module.noPush.description": "Voorkomt dat je door andere spelers wordt geduwd.",
     "liquidbounce.module.noRotateSet.description": "Blokkeert pogingen van de server om je kijkrichting te forceren.",
-    "liquidbounce.module.noSignRender.description": "Verbergt tekst op borden.",
     "liquidbounce.module.noSlow.description": "Annuleert vertragingen door blokken of bij itemgebruik.",
     "liquidbounce.module.noSlowBreak.description": "Past je breeksnelheid aan in hinderlijke situaties.",
     "liquidbounce.module.noSwing.description": "Schakelt de zwaai-animatie met de hand uit.",

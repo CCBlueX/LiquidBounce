@@ -16,18 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector2f
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-fun Float.toRadians() = this / 180.0F * Math.PI.toFloat()
-fun Float.toDegrees() = this / Math.PI.toFloat() * 180.0F
+inline fun Float.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
+inline fun Float.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
+
+inline fun Float.floorToInt() = MathHelper.floor(this)
+inline fun Double.floorToInt() = MathHelper.floor(this)
+inline fun Float.ceilToInt() = MathHelper.ceil(this)
+inline fun Double.ceilToInt() = MathHelper.ceil(this)
+
+inline fun Float.fastSin() = MathHelper.sin(this)
+inline fun Float.fastCos() = MathHelper.cos(this)
 
 fun Box.getFace(direction: Direction): AlignedFace {
     return when (direction) {

@@ -202,8 +202,12 @@ dependencies {
     // Name Protect
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
+    // Kotlin add-on for Java library
+    includeDependency("net.ccbluex:fastutil-kt-ext:0.1.2")
+
     // Test libraries
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${project.property("kotlinx_coroutines_version")}")
 //    testImplementation("net.fabricmc:fabric-loader-junit:${project.property("loader_version")}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 

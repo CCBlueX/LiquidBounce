@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.preset
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitSeconds
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -66,7 +67,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         }
 
         // Check if we are on GommeHD.net
-        val headerText = playerListHeader.convertToString()
+        val headerText = playerListHeader.string
         if (!headerText.contains("GommeHD.net")) {
             inMatch = false
 
@@ -103,14 +104,12 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Match won", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(winMessage)
         } else if (ev.message.contains("Du wurdest von") && ev.message.contains("getötet")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
 
-            sync()
             waitSeconds(2)
             network.sendChatMessage(loseMessage)
         }
@@ -122,7 +121,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
         inMatch = false
     }
 
-    private suspend fun Sequence.handleLobbySituation() {
+    private suspend fun handleLobbySituation() {
         inMatch = false
 
         val duelsEntity = world.entities.filterIsInstance<ArmorStandEntity>().find {
@@ -141,11 +140,10 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
-        sync()
         waitSeconds(5)
     }
 
-    private suspend fun Sequence.handleDuelsSituation() {
+    private suspend fun handleDuelsSituation() {
         // Check if player inventory has a head
         if (!inMatch) {
             if (controlKillAura) {

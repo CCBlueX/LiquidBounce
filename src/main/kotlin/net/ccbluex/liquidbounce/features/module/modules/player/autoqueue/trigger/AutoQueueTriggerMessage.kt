@@ -32,7 +32,9 @@ object AutoQueueTriggerMessage : AutoQueueTrigger("Message") {
     override var isTriggered: Boolean = false
         get() = field.apply { field = false }
 
-    private val text by text("Text", "Новая игра")
+    private val keywords by textList("Keywords",
+        mutableListOf("Новая игра", "游戏结束")
+    )
 
     @Suppress("unused")
     private val chatReceive = handler<ChatReceiveEvent> { event ->
@@ -42,7 +44,7 @@ object AutoQueueTriggerMessage : AutoQueueTrigger("Message") {
             return@handler
         }
 
-        if (event.message.contains(text)) {
+        if (keywords.any { message.contains(it) }) {
             isTriggered = true
         }
     }

@@ -28,24 +28,24 @@ import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
+import java.util.function.BooleanSupplier
 
 @Suppress("unused")
 enum class KillAuraRequirements(
     override val choiceName: String,
-    val meets: () -> Boolean
-) : NamedChoice {
-    CLICK("Click", {
-        mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
-    }),
-    WEAPON("Weapon", {
-        player.inventory.mainHandStack.isWeapon()
-    }),
-    VANILLA_NAME("VanillaName", {
-        player.inventory.mainHandStack.customName == null
-    }),
-    NOT_BREAKING("NotBreaking", {
-        mc.interactionManager?.isBreakingBlock == false
-    });
+) : NamedChoice, BooleanSupplier {
+    CLICK("Click"),
+    WEAPON("Weapon"),
+    VANILLA_NAME("VanillaName"),
+    NOT_BREAKING("NotBreaking");
+
+    override fun getAsBoolean(): Boolean =
+        when (this) {
+            CLICK -> mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
+            WEAPON -> player.inventory.mainHandStack.isWeapon()
+            VANILLA_NAME -> player.inventory.mainHandStack.customName == null
+            NOT_BREAKING -> mc.interactionManager?.isBreakingBlock == false
+        }
 }
 
 /**

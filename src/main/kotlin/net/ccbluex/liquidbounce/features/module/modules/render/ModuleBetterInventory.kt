@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
@@ -175,7 +176,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         }
 
         @Suppress("UNCHECKED_CAST")
-        drawItemStackList(stacks.asList() as List<ItemStack>)
+        drawItemStackList(stacks.unmodifiable() as List<ItemStack>)
             .centerX(renderX)
             .centerY(renderY)
             .centerZ(renderZ)

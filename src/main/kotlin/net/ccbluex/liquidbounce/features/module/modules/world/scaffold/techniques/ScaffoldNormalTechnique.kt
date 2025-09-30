@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
@@ -60,9 +59,6 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         tree(ScaffoldCeilingFeature)
         tree(ScaffoldHeadHitterFeature)
     }
-
-    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2)
-    internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1)
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
 
@@ -109,7 +105,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
         if (requiresSight) {
             val target = target ?: return null
-            val raycast = raycast(rotation = target.rotation) ?: return null
+            val raycast = raycast(rotation = target.rotation)
 
             if (raycast.type == HitResult.Type.BLOCK && raycast.blockPos == target.interactedBlockPos) {
                 return target.rotation
@@ -119,7 +115,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         return super.getRotations(target)
     }
 
-    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):
+    private fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):
         FaceTargetPositionFactory {
         val config = PositionFactoryConfiguration(
             predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
@@ -139,17 +135,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     }
 
     @Suppress("unused")
-    val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    private val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         randomization = Random.nextDouble(-0.01, 0.01)
-    }
-
-    private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
-        for (x in xzOffsets) {
-            for (z in xzOffsets) {
-                add(Vec3i(x, 0, z))
-                add(Vec3i(x, -1, z))
-            }
-        }
     }
 
 }

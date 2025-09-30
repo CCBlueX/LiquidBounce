@@ -43,6 +43,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
+
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends MixinInput {
 
@@ -121,10 +123,10 @@ public abstract class MixinKeyboardInput extends MixinInput {
 
         float deltaYaw = player.getYaw() - rotation.getYaw();
 
-        float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z *
-                MathHelper.sin(deltaYaw * 0.017453292f);
-        float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x *
-                MathHelper.sin(deltaYaw * 0.017453292f);
+        float newX = x * MathHelper.cos(deltaYaw * RADIANS_PER_DEGREE) - z *
+                MathHelper.sin(deltaYaw * RADIANS_PER_DEGREE);
+        float newZ = z * MathHelper.cos(deltaYaw * RADIANS_PER_DEGREE) + x *
+                MathHelper.sin(deltaYaw * RADIANS_PER_DEGREE);
 
         var movementSideways = Math.round(newX);
         var movementForward = Math.round(newZ);
