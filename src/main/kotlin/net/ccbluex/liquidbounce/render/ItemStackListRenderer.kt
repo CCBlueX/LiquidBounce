@@ -259,8 +259,6 @@ class ItemStackListRenderer private constructor(
                                     b.center.y -= dy
                                 }
                             }
-                            b.center.x = bx
-                            b.center.y = by
                             moved = true
                         }
                     }
