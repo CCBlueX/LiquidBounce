@@ -86,6 +86,7 @@ class ItemStackListRenderer private constructor(
         this.center.y = centerY
     }
 
+    @Deprecated("Z-index of 2D rendering is going to be removed since 1.21.6")
     fun centerZ(centerZ: Float) = apply {
         this.center.z = centerZ
     }
@@ -116,6 +117,8 @@ class ItemStackListRenderer private constructor(
 
     fun textureBackground() = apply {
         this.useTexture = true
+        this.backgroundColor = Color4b.TRANSPARENT.toARGB()
+        this.backgroundMargin = 0
     }
 
     fun background(choice: BackgroundChoice) =
@@ -165,7 +168,7 @@ class ItemStackListRenderer private constructor(
     }
 
     @Suppress("CognitiveComplexMethod")
-    private fun doRender() {
+    fun draw() {
         if (stacks.isEmpty() && title == null) return
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
@@ -209,43 +212,48 @@ class ItemStackListRenderer private constructor(
         matrices.pop()
     }
 
-    fun draw() {
+    /**
+     * Add this render config to plan.
+     * All planned renderer will adjust their position to avoid overlapping.
+     * [draw] will be called later.
+     */
+    fun planToDraw() {
         planned += this
-//        doRender()
     }
 
     companion object : EventListener {
         private val planned = ArrayList<ItemStackListRenderer>()
+        private val comparatorVec3f = Comparator<Vector3f> { o1, o2 ->
+            when {
+                o1.x != o2.x -> o1.x.compareTo(o2.x)
+                o1.y != o2.y -> o1.y.compareTo(o2.y)
+                else -> o1.z.compareTo(o2.z)
+            }
+        }
 
         private const val MAX_ITER = 100
 
         @Suppress("unused")
         private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { event ->
-            fun overlap(a: ItemStackListRenderer, b: ItemStackListRenderer): Boolean {
-                val (ax, ay) = a.center
-                val (bx, by) = b.center
-                val (aw, ah) = a.dimensions
-                val (bw, bh) = b.dimensions
-                return abs(ax - bx) < (aw + bw) / 2 && abs(ay - by) < (ah + bh) / 2
-            }
-
             // calculate overlap rectangles
             var iter = 0
             var moved = false
+            planned.sortWith { o1, o2 -> comparatorVec3f.compare(o1.center, o2.center) }
             while (iter++ < MAX_ITER) {
-                for (i in planned.indices) {
+                for (i in 0 until planned.size) {
                     for (j in i + 1 until planned.size) {
                         val a = planned[i]
                         val b = planned[j]
 
                         val (ax, ay) = a.center
                         val (bx, by) = b.center
-                        val (aw, ah) = a.dimensions // TODO: scale
-                        val (bw, bh) = b.dimensions
-                        if (overlap(a, b)) {
-                            val dx = (aw + bw) / 2 - abs(ax - bx)
-                            val dy = (ah + bh) / 2 - abs(ay - by)
-
+                        val aw = (a.dimensions.x + a.backgroundMargin * 2) * a.scale
+                        val ah = (a.dimensions.y + a.backgroundMargin * 2) * a.scale
+                        val bw = (b.dimensions.x + b.backgroundMargin * 2) * b.scale
+                        val bh = (b.dimensions.y + b.backgroundMargin * 2) * b.scale
+                        val dx = (aw + bw) / 2 - abs(ax - bx)
+                        val dy = (ah + bh) / 2 - abs(ay - by)
+                        if (dx > 0 && dy > 0) {
                             if (dx < dy) {
                                 if (ax < bx) {
                                     b.center.x += dx
@@ -269,7 +277,7 @@ class ItemStackListRenderer private constructor(
             }
 
             planned.forEach {
-                it.doRender()
+                it.draw()
             }
 
             planned.clear()
@@ -362,10 +370,8 @@ fun DrawContext.drawItemTags(
     scale: Float = 1.0F,
     rowLength: Int = 9,
 ) = drawItemStackList(stacks)
-    .centerX(centerPos.x)
-    .centerY(centerPos.y)
-    .centerZ(centerPos.z)
+    .center(centerPos)
     .scale(scale)
     .rectBackground(backgroundColor, backgroundMargin)
     .rowLength(rowLength)
-    .draw()
+    .planToDraw()

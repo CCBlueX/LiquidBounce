@@ -91,7 +91,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
                 .center(pos)
                 .scale(scale)
                 .background(background.activeChoice)
-                .draw()
+                .planToDraw()
         }
     }
 

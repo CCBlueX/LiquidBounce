@@ -213,7 +213,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         )
                         matrices.pop()
                     }
-                }.draw()
+                }.planToDraw()
         }
     }
 
