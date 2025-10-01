@@ -61,8 +61,10 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
 
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent> {
-        if (player.isOnGround) {
-            ticksUntilJump++
+        if (player.isOnGround && ticksUntilJump < jumpTicks + 10) ticksUntilJump++
+        else if (player.airTicks > straightTicks + 5) {
+            ticksUntilJump = 0
+            jumpTicks = jumpTicksOpt.random()
         }
     }
 
