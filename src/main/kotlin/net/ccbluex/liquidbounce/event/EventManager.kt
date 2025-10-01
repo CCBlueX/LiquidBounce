@@ -147,7 +147,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     TitleEvent.Title::class.java,
     TitleEvent.Subtitle::class.java,
     TitleEvent.Fade::class.java,
-    TitleEvent.Clear::class.java,
+    TitleEvent.Clear::class.java
 )
 
 /**

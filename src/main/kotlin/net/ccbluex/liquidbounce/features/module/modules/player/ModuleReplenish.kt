@@ -26,12 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
-import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
-import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -105,19 +101,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
             // find replacement items
             val inventorySlots = Slots.Inventory.slots
-                .filter { it.itemStack.isMergeable(itemStack) }
-                .sortedWith(
-                    // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
-                    if (Features.CLEANUP in features) {
-                        compareBy {
-                            it.itemStack.count
-                        }
-                    } else {
-                        compareByDescending {
-                            it.itemStack.count
-                        }
-                    }
-                )
+                .filterTo(mutableListOf()) { it.itemStack.isMergeable(itemStack) }
 
             // no stack to refill found
             if (inventorySlots.isEmpty()) {
@@ -125,14 +109,35 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 return@forEach
             }
 
+            inventorySlots.sortWith(ItemSlot.PREFER_MORE_ITEM)
+            val slotWithMaxCount = inventorySlots.first()
+
+            if (Features.CLEANUP in features) {
+                // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
+                inventorySlots.reverse()
+            }
+
             // refill
-            if (Features.USE_PICKUP_ALL in features && currentStackNotEmpty) {
-                event.schedule(
-                    constraints,
-                    Click.performMergeStack(slot = slot),
+            when {
+                Features.USE_SWAP in features &&
+                    slotWithMaxCount.itemStack.count.let { it > itemStack.count && it > itemThreshold } ->
+                    event.schedule(
+                        constraints,
+                        Click.performSwap(from = slotWithMaxCount, to = slot)
+                    )
+
+                Features.USE_PICKUP_ALL in features && currentStackNotEmpty ->
+                    event.schedule(
+                        constraints,
+                        Click.performMergeStack(slot = slot),
+                    )
+
+                else -> event.scheduleNormalRefill(
+                    itemStack,
+                    if (currentStackNotEmpty) itemStack.count else 0,
+                    inventorySlots,
+                    slot,
                 )
-            } else {
-                refillNormal(itemStack, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
             }
 
             trackedHotbarItems[idx] = itemStack.item
@@ -140,12 +145,11 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         }
     }
 
-    private fun refillNormal(
+    private fun ScheduleInventoryActionEvent.scheduleNormalRefill(
         itemStack: ItemStack,
         count: Int,
         inventorySlots: List<InventoryItemSlot>,
         slot: HotbarItemSlot,
-        event: ScheduleInventoryActionEvent
     ) {
         var neededToRefill = itemStack.maxCount - count
         for (inventorySlot in inventorySlots) {
@@ -158,7 +162,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 actions += Click.performPickup(slot = slot)
             }
 
-            event.schedule(constraints, actions)
+            schedule(constraints, actions)
 
             if (neededToRefill <= 0) {
                 break
@@ -171,16 +175,17 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
             (InsideOf.CHESTS in insideOf
                 || (mc.currentScreen !is HandledScreen<*>
                 || mc.currentScreen is InventoryScreen)
-            ) &&
+                ) &&
             (InsideOf.INVENTORIES in insideOf
                 || mc.currentScreen !is InventoryScreen
-            )
+                )
 
     private enum class Features(
         override val choiceName: String
     ) : NamedChoice {
         CLEANUP("CleanUp"),
-        USE_PICKUP_ALL("UsePickupAll")
+        USE_PICKUP_ALL("UsePickupAll"),
+        USE_SWAP("UseSwap"),
     }
 
     @Suppress("unused")

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.fucker
+package net.ccbluex.liquidbounce.utils.block.bed
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -75,7 +75,7 @@ class IsSelfBedSpawnLocationChoice(parent: ChoiceConfigurable<*>) : IsSelfBedCho
 class IsSelfBedColorChoice(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Color", parent) {
     override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
         val color = block.color
-        val colorRgb = color.mapColor.color
+        val colorRgb = color.entityColor
         val (_, armorColor) = getArmorColor() ?: return false
 
         return armorColor == colorRgb

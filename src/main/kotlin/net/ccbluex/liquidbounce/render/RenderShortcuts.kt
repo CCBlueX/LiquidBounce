@@ -87,15 +87,6 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
 
-    inline fun withMatrixStack(block: MatrixStack.() -> Unit) = with(matrixStack) {
-        push()
-        try {
-            block()
-        } finally {
-            pop()
-        }
-    }
-
     inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
         val fontBuffers = FontRendererBuffers()
         try {
@@ -167,6 +158,15 @@ inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), dra
     GlStateManager._disableBlend()
 }
 
+inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
+    push()
+    try {
+        block()
+    } finally {
+        pop()
+    }
+}
+
 /**
  * Extension function to apply a position transformation to the current rendering environment.
  *
@@ -174,14 +174,9 @@ inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), dra
  * @param draw The block of code to be executed in the transformed environment.
  */
 inline fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
-    with(matrixStack) {
-        push()
+    matrixStack.withPush {
         translate(pos.x, pos.y, pos.z)
-        try {
-            draw()
-        } finally {
-            pop()
-        }
+        draw()
     }
 }
 
@@ -192,14 +187,9 @@ inline fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() 
  * @param draw The block of code to be executed in the transformed environment.
  */
 inline fun <T : RenderEnvironment> T.withPosition(pos: Vec3d, draw: T.() -> Unit) {
-    with(matrixStack) {
-        push()
+    matrixStack.withPush {
         translate(pos.x, pos.y, pos.z)
-        try {
-            draw()
-        } finally {
-            pop()
-        }
+        draw()
     }
 }
 
@@ -216,14 +206,9 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw:
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
     val relativePos = relativeToCamera(pos)
 
-    with(matrixStack) {
-        push()
+    matrixStack.withPush {
         translate(relativePos.x, relativePos.y, relativePos.z)
-        try {
-            draw()
-        } finally {
-            pop()
-        }
+        draw()
     }
 }
 

@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.utils.block.bed
 
 import it.unimi.dsi.fastutil.ints.IntIntMutablePair
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
 /**
@@ -28,7 +30,8 @@ import net.minecraft.util.math.Vec3d
  */
 @JvmRecord
 data class BedState(
-    val block: Block,
+    val block: BedBlock,
+    val trackedBlockPos: BlockPos,
     val pos: Vec3d,
     val surroundingBlocks: List<SurroundingBlock>,
     val compactSurroundingBlocks: List<SurroundingBlock> = run {

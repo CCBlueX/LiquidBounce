@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.Block
 import net.minecraft.command.argument.ItemStackArgument
@@ -176,4 +177,50 @@ fun ItemStack.getBlock(): Block? {
 fun ItemStack.isFullBlock(): Boolean {
     val block = this.getBlock() ?: return false
     return block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
+}
+
+fun ItemStack.isInteractable(): Boolean {
+    if (this.isEmpty) {
+        return false
+    }
+
+    return this.get(DataComponentTypes.EQUIPPABLE) != null // TODO: curse of binding
+        || this.get(DataComponentTypes.CONSUMABLE) != null
+
+        // from the use() method:
+        || item is BoatItem
+        || (item is BowItem && Slots.All.any { it.itemStack.item is ArrowItem })
+        || item is BucketItem // TODO: water/lava between an interactable block and the player (for empty buckets)
+        || (item is CrossbowItem &&
+            (Slots.All.any { it.itemStack.item is ArrowItem}
+                || player.offHandStack.item is FireworkRocketItem))
+        || item is EggItem
+        || item is EmptyMapItem
+        || item is EnderEyeItem
+        || item is EnderPearlItem
+        || item is ExperienceBottleItem
+        || item is FireworkRocketItem
+        || item is FishingRodItem
+        || item is GlassBottleItem // TODO: water between an interactable block and the player
+        || item is GoatHornItem // TODO: item delay?
+        || item is KnowledgeBookItem
+        || (item is SwordItem && isOlderThanOrEqual1_8)
+        || item is PlaceableOnWaterItem // TODO: water between an interactable block and the player
+        || item is ShieldItem
+        || item is SnowballItem
+        || item is SpawnEggItem
+        || item is SpyglassItem
+        || item is TridentItem
+        || item is WindChargeItem
+        || item is WritableBookItem
+        || item is WrittenBookItem
+
+        // from the useOnBlock() method:
+        || item is ArmorStandItem
+        || item is BlockItem
+        || item is BrushItem
+        || item is DecorationItem // TODO: presence of other item frames and paintings on target blocks
+        || item is FireChargeItem
+        || item is FlintAndSteelItem
+        || item is PotionItem
 }

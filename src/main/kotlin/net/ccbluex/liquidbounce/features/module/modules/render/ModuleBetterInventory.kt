@@ -182,7 +182,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             .centerZ(renderZ)
             .scale(ContainerItemView.scale)
             .textureBackground()
-            .draw()
+            .draw(immediately = true)
 
         return true
     }

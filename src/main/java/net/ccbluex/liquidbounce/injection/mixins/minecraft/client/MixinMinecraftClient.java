@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.IntegrationListener;
@@ -60,6 +61,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Util;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
@@ -466,4 +468,16 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(DisconnectEvent.INSTANCE);
     }
 
+    @Inject(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"), cancellable = true)
+    private void hookBlockInteract(CallbackInfo ci) {
+        final BlockHitResult blockHitResult = (BlockHitResult) this.crosshairTarget;
+        if (blockHitResult == null) return; // it should never be null
+
+        if (ModuleNoBlockInteract.INSTANCE.getRunning() &&
+                ModuleNoBlockInteract.INSTANCE.shouldSneak(blockHitResult)) {
+
+            ModuleNoBlockInteract.INSTANCE.startSneaking();
+            ci.cancel();
+        }
+    }
 }
