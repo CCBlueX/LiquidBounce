@@ -26,13 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
-import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
-import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -124,15 +119,18 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
             // refill
             when {
-                Features.USE_SWAP in features && slotWithMaxCount.itemStack.count > itemStack.count -> event.schedule(
-                    constraints,
-                    Click.performSwap(from = slotWithMaxCount, to = slot)
-                )
+                Features.USE_SWAP in features &&
+                    slotWithMaxCount.itemStack.count.let { it > itemStack.count && it > itemThreshold } ->
+                    event.schedule(
+                        constraints,
+                        Click.performSwap(from = slotWithMaxCount, to = slot)
+                    )
 
-                Features.USE_PICKUP_ALL in features && currentStackNotEmpty -> event.schedule(
-                    constraints,
-                    Click.performMergeStack(slot = slot),
-                )
+                Features.USE_PICKUP_ALL in features && currentStackNotEmpty ->
+                    event.schedule(
+                        constraints,
+                        Click.performMergeStack(slot = slot),
+                    )
 
                 else -> event.scheduleNormalRefill(
                     itemStack,
@@ -177,10 +175,10 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
             (InsideOf.CHESTS in insideOf
                 || (mc.currentScreen !is HandledScreen<*>
                 || mc.currentScreen is InventoryScreen)
-            ) &&
+                ) &&
             (InsideOf.INVENTORIES in insideOf
                 || mc.currentScreen !is InventoryScreen
-            )
+                )
 
     private enum class Features(
         override val choiceName: String
