@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
 import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -105,19 +106,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
             // find replacement items
             val inventorySlots = Slots.Inventory.slots
-                .filter { it.itemStack.isMergeable(itemStack) }
-                .sortedWith(
-                    // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
-                    if (Features.CLEANUP in features) {
-                        compareBy {
-                            it.itemStack.count
-                        }
-                    } else {
-                        compareByDescending {
-                            it.itemStack.count
-                        }
-                    }
-                )
+                .filterTo(mutableListOf()) { it.itemStack.isMergeable(itemStack) }
 
             // no stack to refill found
             if (inventorySlots.isEmpty()) {
@@ -125,14 +114,32 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 return@forEach
             }
 
+            inventorySlots.sortWith(ItemSlot.PREFER_MORE_ITEM)
+            val slotWithMaxCount = inventorySlots.first()
+
+            if (Features.CLEANUP in features) {
+                // clean up small stacks first when cleanUp is enabled otherwise prioritize larger stacks
+                inventorySlots.reverse()
+            }
+
             // refill
-            if (Features.USE_PICKUP_ALL in features && currentStackNotEmpty) {
-                event.schedule(
+            when {
+                Features.USE_SWAP in features && slotWithMaxCount.itemStack.count > itemStack.count -> event.schedule(
+                    constraints,
+                    Click.performSwap(from = slotWithMaxCount, to = slot)
+                )
+
+                Features.USE_PICKUP_ALL in features && currentStackNotEmpty -> event.schedule(
                     constraints,
                     Click.performMergeStack(slot = slot),
                 )
-            } else {
-                refillNormal(itemStack, if (currentStackNotEmpty) itemStack.count else 0, inventorySlots, slot, event)
+
+                else -> event.scheduleNormalRefill(
+                    itemStack,
+                    if (currentStackNotEmpty) itemStack.count else 0,
+                    inventorySlots,
+                    slot,
+                )
             }
 
             trackedHotbarItems[idx] = itemStack.item
@@ -140,12 +147,11 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         }
     }
 
-    private fun refillNormal(
+    private fun ScheduleInventoryActionEvent.scheduleNormalRefill(
         itemStack: ItemStack,
         count: Int,
         inventorySlots: List<InventoryItemSlot>,
         slot: HotbarItemSlot,
-        event: ScheduleInventoryActionEvent
     ) {
         var neededToRefill = itemStack.maxCount - count
         for (inventorySlot in inventorySlots) {
@@ -158,7 +164,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
                 actions += Click.performPickup(slot = slot)
             }
 
-            event.schedule(constraints, actions)
+            schedule(constraints, actions)
 
             if (neededToRefill <= 0) {
                 break
@@ -180,7 +186,8 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         override val choiceName: String
     ) : NamedChoice {
         CLEANUP("CleanUp"),
-        USE_PICKUP_ALL("UsePickupAll")
+        USE_PICKUP_ALL("UsePickupAll"),
+        USE_SWAP("UseSwap"),
     }
 
     @Suppress("unused")
