@@ -95,6 +95,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
 
     init {
+        tree(ScaffoldBlockItemSelection)
         tree(ScaffoldAutoBlockFeature)
         tree(ScaffoldMovementPrediction)
     }
