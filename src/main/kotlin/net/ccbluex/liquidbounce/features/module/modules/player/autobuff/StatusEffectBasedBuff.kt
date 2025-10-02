@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
@@ -38,7 +37,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
     ) : ToggleableConfigurable(parent, name, true) {
 
         open fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
-            return enabled && statusEffect != effect.effectType && !player.hasStatusEffect(statusEffect)
+            return enabled && statusEffect == effect.effectType && !player.hasStatusEffect(statusEffect)
         }
     }
 
@@ -88,7 +87,7 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
     protected abstract fun isValidPotion(stack: ItemStack): Boolean
 
     final override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        if (stack.isNothing() || !isValidPotion(stack)) {
+        if (stack.isEmpty || !isValidPotion(stack)) {
             return false
         }
 

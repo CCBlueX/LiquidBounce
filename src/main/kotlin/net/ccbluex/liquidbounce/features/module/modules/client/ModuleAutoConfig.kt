@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 
-object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = true, aliases = arrayOf("AutoSettings")) {
+object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = true, aliases = listOf("AutoSettings")) {
 
     private val blacklistedServer = mutableListOf(
         // Common anticheat test server

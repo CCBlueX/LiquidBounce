@@ -22,10 +22,11 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import java.util.EnumMap
+import net.ccbluex.liquidbounce.utils.kotlin.enumMap
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -72,8 +73,9 @@ open class ListValue<T : MutableCollection<E>, E>(
 
         val currValue = this.inner
 
+        val newItems = element.asList().mapToArray { gson.fromJson(it, this.innerType) }
         currValue.clear()
-        element.mapTo(currValue) { gson.fromJson(it, this.innerType) }
+        currValue.addAll(newItems)
 
         set(currValue) { /** Trigger listener callbacks */ }
     }
@@ -149,7 +151,7 @@ class RegistryListValue<T : MutableSet<E>, E>(
 
     companion object {
         @JvmField
-        internal val TYPE_TO_REGISTRY_NAME = EnumMap<_, String>(ValueType::class.java).apply {
+        internal val TYPE_TO_REGISTRY_NAME = enumMap<ValueType, String> {
             put(ValueType.BLOCK, "blocks")
             put(ValueType.ITEM, "items")
             put(ValueType.SOUND, "sounds")

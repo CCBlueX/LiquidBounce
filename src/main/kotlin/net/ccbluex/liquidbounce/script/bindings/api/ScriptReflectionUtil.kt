@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -50,20 +50,20 @@ class ScriptReflectionUtil {
 
     @JvmName("newInstance")
     fun newInstance(clazz: Class<*>, vararg args: Any?): Any? =
-        clazz.getDeclaredConstructor(*args.mapArray { it!!::class.java }).apply {
+        clazz.getDeclaredConstructor(*args.mapToArray { it!!::class.java }).apply {
             isAccessible = true
         }.newInstance(*args)
 
     @JvmName("newInstanceByName")
     fun newInstanceByName(name: String, vararg args: Any?): Any? =
         Class.forName(EnvironmentRemapper.remapClassName(name).replace('/', '.'))
-            .getDeclaredConstructor(*args.mapArray { it!!::class.java }).apply {
+            .getDeclaredConstructor(*args.mapToArray { it!!::class.java }).apply {
                 isAccessible = true
             }.newInstance(*args)
 
     @JvmName("newInstanceByObject")
     fun newInstanceByObject(obj: Any, vararg args: Any?): Any? =
-        obj::class.java.getDeclaredConstructor(*args.mapArray { it!!::class.java }).apply {
+        obj::class.java.getDeclaredConstructor(*args.mapToArray { it!!::class.java }).apply {
             isAccessible = true
         }.newInstance(*args)
 
@@ -190,7 +190,7 @@ class ScriptReflectionUtil {
         return methodCache.computeIfAbsent(cacheKey) {
             val potentialMatches = methodProvider(clazz).filter { method ->
                 method.parameterTypes.size == args.size &&
-                    method.parameterTypes.mapArray { arg -> primitiveTypeMap[arg] ?: arg }
+                    method.parameterTypes.mapToArray { arg -> primitiveTypeMap[arg] ?: arg }
                         .zip(argTypes).all { (paramType, argType) ->
                             paramType == argType || (!paramType.isPrimitive && paramType.isAssignableFrom(argType))
                         }

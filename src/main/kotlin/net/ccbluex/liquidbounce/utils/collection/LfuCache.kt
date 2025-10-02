@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.fastutil.fastIterator
 
 /**
  * A simple least frequency used cache. Non-thread-safe.
@@ -87,7 +88,7 @@ class LfuCache<K : Any, V : Any>(
      * Discards one of the least-used keys.
      */
     private fun discard() {
-        val entryIter = countTable.int2ObjectEntrySet().iterator()
+        val entryIter = countTable.fastIterator()
         while (entryIter.hasNext()) {
             val entry = entryIter.next()
             val set = entry.value

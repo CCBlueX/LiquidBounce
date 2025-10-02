@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -215,7 +216,7 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     }
 }
 
-private object PositionFactoryDebug
+private object PositionFactoryDebug : DebuggedOwner
 
 abstract class BaseYawTargetPositionFactory(
     protected val config: PositionFactoryConfiguration,

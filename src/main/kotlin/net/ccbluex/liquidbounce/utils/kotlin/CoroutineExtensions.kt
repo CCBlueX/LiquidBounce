@@ -30,6 +30,6 @@ inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KPrope
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
 
 @JvmField
-internal val MinecraftDispatcher = mc.asCoroutineDispatcher()
+val MinecraftDispatcher = mc.asCoroutineDispatcher()
 
-internal inline val Dispatchers.Minecraft get() = MinecraftDispatcher
+inline val Dispatchers.Minecraft get() = MinecraftDispatcher

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,16 +42,16 @@ object ModuleAutoLeave : ClientModule("AutoLeave", Category.COMBAT) {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val passed = waitConditional(delay.random()) {
+        val passed = tickConditional(delay.random()) {
             if (player.abilities.creativeMode || mc.isIntegratedServerRunning) {
-                return@waitConditional true
+                return@tickConditional true
             }
 
             // Player can heal himself
             if (player.mainHandStack.components.contains(DataComponentTypes.DEATH_PROTECTION)
                 || player.offHandStack.components.contains(DataComponentTypes.DEATH_PROTECTION)
             ) {
-                return@waitConditional true
+                return@tickConditional true
             }
 
             player.health >= health

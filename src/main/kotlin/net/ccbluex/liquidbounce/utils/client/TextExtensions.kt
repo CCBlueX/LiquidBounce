@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
-import it.unimi.dsi.fastutil.chars.CharSets
+import net.ccbluex.fastutil.unmodifiable
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
@@ -37,17 +37,21 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
+/**
+ * Returns a [MutableText] from the receiver.
+ * If you just need a [Text], use [asPlainText] instead.
+ */
 fun String.asText(): MutableText = Text.literal(this)
+
+/**
+ * Returns an immutable [Text] from the receiver.
+ */
+fun String.asPlainText(): Text = ImmutableText.of(this)
 
 fun Text.asNbt(world: World? = null): NbtString =
     NbtString.of(
         Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
     )
-
-fun Text.convertToString(): String = buildString {
-    append(string)
-    siblings.forEach { append(it.convertToString()) }
-}
 
 fun OrderedText.toText(): Text {
     val text = Text.empty()
@@ -106,9 +110,7 @@ fun TranslatableTextContent.toPlainContent(): TextContent {
     return PlainTextContent.of(stringBuilder.toString())
 }
 
-private val COLOR_CODE_CHARS = CharSets.unmodifiable(
-    CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray())
-)
+private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
 
 /**
  * Translate alt color codes to minecraft color codes

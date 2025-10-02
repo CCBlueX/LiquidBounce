@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -59,7 +60,7 @@ private const val MAX_SIMULATED_TICKS = 240
  *
  * @author sqlerrorthing
  */
-object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = arrayOf("PearlFollower", "PearlTarget")) {
+object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = listOf("PearlFollower", "PearlTarget")) {
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 
@@ -126,7 +127,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
                 return RotationManager.serverRotation.angleTo(rotation) <= 1.0f
             }
 
-            waitConditional(20) {
+            tickConditional(20) {
                 RotationManager.setRotationTarget(
                     Rotate.rotations.toRotationTarget(rotation),
                     Priority.IMPORTANT_FOR_USAGE_3,

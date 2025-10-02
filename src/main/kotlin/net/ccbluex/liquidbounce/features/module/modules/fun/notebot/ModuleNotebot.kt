@@ -75,7 +75,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        engine?.onTick(this)
+        engine?.onTick()
     }
 
     @Suppress("unused")

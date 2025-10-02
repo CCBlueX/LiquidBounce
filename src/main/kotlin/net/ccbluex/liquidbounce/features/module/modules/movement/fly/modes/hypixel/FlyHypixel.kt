@@ -23,10 +23,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypi
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -55,7 +57,7 @@ object FlyHypixel : Choice("Hypixel") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        waitUntil { isFlying }
+        tickUntil { isFlying }
 
         player.velocity.y = 0.8
         waitTicks(1)
@@ -70,7 +72,7 @@ object FlyHypixel : Choice("Hypixel") {
         waitTicks(19)
         player.velocity.y += 0.42
 
-        waitUntil { player.isOnGround }
+        tickUntil { player.isOnGround }
         ModuleFly.enabled = false
     }
 

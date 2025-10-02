@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -42,7 +42,7 @@ abstract class Buff(
     /**
      * Try to run feature if possible, otherwise return false
      */
-    internal suspend fun Sequence.runIfPossible(): Boolean {
+    internal suspend fun runIfPossible(): Boolean {
         if (!enabled || !passesRequirements) {
             return false
         }
@@ -72,7 +72,7 @@ abstract class Buff(
 
     abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
 
-    abstract suspend fun Sequence.execute(slot: HotbarItemSlot)
+    abstract suspend fun execute(slot: HotbarItemSlot)
 
 }
 

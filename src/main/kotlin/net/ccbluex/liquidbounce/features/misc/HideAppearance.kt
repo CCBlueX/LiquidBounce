@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.misc
 
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
-import net.ccbluex.liquidbounce.api.core.scope
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -135,7 +135,7 @@ object HideAppearance : EventListener {
         }
 
         // Cancel all async tasks
-        scope.cancel()
+        ioScope.cancel()
 
         callEvent(ClientShutdownEvent)
         EventManager.unregisterAll()

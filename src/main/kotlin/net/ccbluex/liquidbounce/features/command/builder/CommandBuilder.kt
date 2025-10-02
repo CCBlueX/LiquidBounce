@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.command.builder
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.dsl.CommandBuilderDsl

@@ -60,7 +60,7 @@ internal object NoFallMLG : Choice("MLG") {
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private var currentTarget: PlacementPlan? = null
-    private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
+    private val lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
     private val netherItems =
         setOf(

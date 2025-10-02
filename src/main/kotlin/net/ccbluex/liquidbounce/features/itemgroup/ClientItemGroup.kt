@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.minecraft.item.ItemGroup
@@ -42,7 +42,7 @@ open class ClientItemGroup(
     fun setup(): ItemGroup {
         // Expand array
         val itemGroup = FabricItemGroup.builder()
-            .displayName(plainName.asText())
+            .displayName(plainName.asPlainText())
             .icon(icon)
             .entries { displayContext, entries ->
                 runCatching {

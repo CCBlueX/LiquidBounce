@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.block.placer
 
-import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
@@ -28,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -120,13 +123,15 @@ class BlockPlacer(
         keep = false
     ))
 
+    private val blockPosCache = BlockPos.Mutable()
+
     /**
      * Stores all block positions where blocks should be placed paired with a boolean that is `true`
      * if the position was added by [support].
      */
-    val blocks = Object2BooleanLinkedOpenHashMap<BlockPos>()
+    val blocks = Long2BooleanLinkedOpenHashMap()
 
-    val inaccessible = hashSetOf<BlockPos>()
+    private val inaccessible = LongOpenHashSet()
     var ticksToWait = 0
     var ranAction = false
     private var sneakTimes = 0
@@ -176,47 +181,53 @@ class BlockPlacer(
         }
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun findSupportPath(itemStack: ItemStack) {
-        val currentPlaceCandidates = mutableSetOf<BlockPos>()
-        var supportPath: Set<BlockPos>? = null
+        val currentPlaceCandidates = hashSetOf<BlockPos>()
 
         // remove all positions of the current support path
-        blocks.object2BooleanEntrySet().iterator().apply {
-            while (hasNext()) {
-                val entry = next()
-                if (entry.booleanValue) {
-                    currentPlaceCandidates.add(entry.key)
-                    remove()
-                }
+        blocks.long2BooleanEntrySet().removeIf { entry ->
+            if (entry.booleanValue) {
+                currentPlaceCandidates.add(BlockPos.fromLong(entry.longKey))
+                true
+            } else {
+                false
             }
         }
 
+        var supportPath: Set<BlockPos>? = null
         // find the best path
-        (blocks.keys - inaccessible).forEach { pos ->
+        for (entry in blocks.fastIterator()) {
+            val posAsLong = entry.longKey
+            if (posAsLong in inaccessible) continue
+            val pos = blockPosCache.set(posAsLong)
+
             support.findSupport(pos)?.let { path ->
                 val size = path.size
-                if (supportPath == null || supportPath!!.size > size) {
+                if (supportPath == null || supportPath.size > size) {
                     supportPath = path
                 }
 
                 // one block is almost the best we can get, so why bother scanning the other blocks
                 if (size <= 1) {
-                    return@forEach
+                    continue
                 }
             }
         }
 
         // we found the same path again, updating is not required
         if (currentPlaceCandidates == supportPath) {
-            currentPlaceCandidates.forEach { blocks.put(it, true) }
+            currentPlaceCandidates.forEach { blocks.put(it.asLong(), true) }
             return
         }
 
-        currentPlaceCandidates.forEach(this::removeFromQueue)
+        currentPlaceCandidates.forEach { removeFromQueue(blockPosCache.set(it)) }
 
         supportPath?.let { path ->
-            (path - blocks.keys).forEach { pos ->
-                addToQueue(pos, isSupport = true)
+            for (pos in path) {
+                if (pos.asLong() !in blocks.keys) {
+                    addToQueue(pos, isSupport = true)
+                }
             }
             scheduleCurrentPlacements(itemStack)
         }
@@ -227,16 +238,10 @@ class BlockPlacer(
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
         var hasPlaced = false
 
-        val iterator = blocks.object2BooleanEntrySet().iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            val pos = entry.key
+        for (entry in blocks.fastIterator()) {
+            val posAsLong = entry.longKey
 
-            if (inaccessible.contains(pos)) {
-                continue
-            }
-
-            if (isBlocked(pos)) {
+            if (inaccessible.contains(posAsLong) || isBlocked(posAsLong)) {
                 continue
             }
 
@@ -251,24 +256,21 @@ class BlockPlacer(
             )
 
             // TODO prioritize faces where sneaking is not required
+            val pos = blockPosCache.set(posAsLong)
             val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: continue
 
             // Check if we can reach the target
             if (!canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
-                inaccessible.add(pos)
+                inaccessible.add(posAsLong)
                 continue
             }
 
-            ModuleDebug.debugGeometry(
-                this, "PlacementTarget",
+            debugGeometry("PlacementTarget") {
                 ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.GREEN.with(a = 100))
-            )
+            }
 
             // sneak when placing on interactable block to not trigger their action
-            if (placementTarget.interactedBlockPos.getBlock().isInteractable(
-                    placementTarget.interactedBlockPos.getState()
-                )
-            ) {
+            if (placementTarget.interactedBlockPos.getState().isInteractable) {
                 sneakTimes = sneak - 1
             }
 
@@ -282,9 +284,10 @@ class BlockPlacer(
         return hasPlaced
     }
 
-    private fun isBlocked(pos: BlockPos): Boolean {
+    private fun isBlocked(posAsLong: Long): Boolean {
+        val pos = blockPosCache.set(posAsLong)
         if (!pos.getState()!!.isReplaceable) {
-            inaccessible.add(pos)
+            inaccessible.add(posAsLong)
             return true
         }
 
@@ -296,7 +299,7 @@ class BlockPlacer(
         }
 
         if (blockedResult.keyBoolean()) {
-            inaccessible.add(pos)
+            inaccessible.add(posAsLong)
             return true
         }
 
@@ -304,7 +307,7 @@ class BlockPlacer(
     }
 
     fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget) {
-        blocks.removeBoolean(pos)
+        blocks.remove(pos.asLong())
 
         // choose block to place
         val slot = if (isSupport) {
@@ -375,14 +378,15 @@ class BlockPlacer(
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      */
     fun update(positions: Set<BlockPos>) {
-        val iterator = blocks.keys.iterator()
+        val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
-            val position = iterator.next()
+            val entry = iterator.next()
+            val position = blockPosCache.set(entry.longKey)
             if (position !in positions) {
                 targetRenderer.removeBlock(position)
                 iterator.remove()
             } else {
-                blocks.put(position, false)
+                entry.setValue(false)
             }
         }
 
@@ -393,22 +397,23 @@ class BlockPlacer(
     /**
      * Adds a block to be placed.
      *
+     * @param pos The position, can be [BlockPos.Mutable].
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        if (blocks.containsKey(pos)) {
-            return
+        blocks.computeIfAbsent(pos.asLong()) {
+            targetRenderer.addBlock(blockPosCache.set(it), update, FULL_BOX)
+            isSupport
         }
-
-        blocks.put(pos, isSupport)
-        targetRenderer.addBlock(pos, update, FULL_BOX)
     }
 
     /**
      * Removes a block from the queue.
+     *
+     * @param pos The position, can be [BlockPos.Mutable].
      */
     fun removeFromQueue(pos: BlockPos) {
-        blocks.removeBoolean(pos)
+        blocks.remove(pos.asLong())
         targetRenderer.removeBlock(pos)
     }
 
@@ -416,7 +421,7 @@ class BlockPlacer(
      * Discards all blocks.
      */
     fun clear() {
-        blocks.keys.forEach { targetRenderer.removeBlock(it) }
+        blocks.fastIterator().forEach { targetRenderer.removeBlock(blockPosCache.set(it.longKey)) }
         blocks.clear()
     }
 

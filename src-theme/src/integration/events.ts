@@ -1,4 +1,5 @@
 import type {
+    BedState,
     Component,
     ConfigurableSetting,
     ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
@@ -27,6 +28,7 @@ export interface EventMap {
     gameModeChange: GameModeChangeEvent;
     targetChange: TargetChangeEvent;
     blockCountChange: BlockCountChangeEvent;
+    bedStateChange: BedStateChangeEvent;
     clientChatStateChange: ClientChatStateChangeEvent;
     clientChatMessage: ClientChatMessageEvent;
     clientChatError: ClientChatErrorEvent;
@@ -135,6 +137,10 @@ export interface TargetChangeEvent {
 
 export interface BlockCountChangeEvent {
     count?: number;
+}
+
+export interface BedStateChangeEvent {
+    bedStates: BedState[];
 }
 
 export interface AccountManagerAdditionEvent {

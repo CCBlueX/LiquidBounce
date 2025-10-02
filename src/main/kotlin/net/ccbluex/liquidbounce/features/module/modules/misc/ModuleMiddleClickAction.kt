@@ -45,7 +45,7 @@ import net.minecraft.item.Items
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
     Category.MISC,
-    aliases = arrayOf("FriendClicker", "MiddleClickPearl")
+    aliases = listOf("FriendClicker", "MiddleClickPearl")
 ) {
 
     init {
@@ -74,11 +74,11 @@ object ModuleMiddleClickAction : ClientModule(
 
             if (pickup) {
                 // visually select the slot
-                val slot = Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.hotbarSlotForServer ?: return@tickHandler
+                val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
                 SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
                 wasPressed = true
             } else if (wasPressed) { // the key was released
-                Slots.Hotbar.findSlot(Items.ENDER_PEARL)?.let {
+                Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
 
@@ -97,7 +97,7 @@ object ModuleMiddleClickAction : ClientModule(
         fun cancelPick(): Boolean {
             return ModuleMiddleClickAction.running &&
                 mode.activeChoice == this &&
-                Slots.Hotbar.findSlot(Items.ENDER_PEARL) != null
+                Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) != null
         }
 
         override val parent: ChoiceConfigurable<*>

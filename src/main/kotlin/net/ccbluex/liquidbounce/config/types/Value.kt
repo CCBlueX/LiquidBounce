@@ -34,22 +34,23 @@ import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.minecraft.client.util.InputUtil
 import java.util.function.Consumer
+import java.util.function.Function
 import java.util.function.Supplier
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
-typealias ValueListener<T> = (T) -> T
-typealias ValueChangedListener<T> = (T) -> Unit
+typealias ValueListener<T> = Function<T, T>
+typealias ValueChangedListener<T> = Consumer<T>
 
 /**
  * Order by name of [Value] (ignoreCase)
  */
+@JvmField
 val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
 
 /**
@@ -58,7 +59,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") val name: String,
-    @Exclude @ProtocolExclude val aliases: Array<out String> = emptyArray(),
+    @Exclude @ProtocolExclude val aliases: List<String> = emptyList(),
     @Exclude @ProtocolExclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
 
@@ -134,7 +135,7 @@ open class Value<T : Any>(
 
     @Exclude
     open var description = Supplier {
-        descriptionKey?.let { key -> translation(key).convertToString() }
+        descriptionKey?.let { key -> translation(key).string }
     }
 
     /**
@@ -224,11 +225,11 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: Consumer<T>) {
+    fun set(t: T, apply: Consumer<in T>) {
         var currT = t
         runCatching {
             listeners.forEach {
-                currT = it(t)
+                currT = it.apply(t)
             }
 
             if (isImmutable) {
@@ -237,7 +238,7 @@ open class Value<T : Any>(
         }.onSuccess {
             apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
-            changedListeners.forEach { it(currT) }
+            changedListeners.forEach { it.accept(currT) }
             stateFlow.value = currT
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)

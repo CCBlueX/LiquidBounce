@@ -39,6 +39,9 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.Ownable
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
+import java.text.DecimalFormat
+import java.util.function.BiFunction
+import java.util.function.IntFunction
 
 /**
  * Trajectories module
@@ -64,31 +67,37 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
         private enum class ShowAt(
             override val choiceName: String,
-            val getPosition: (TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult) -> Vec3d
-        ) : NamedChoice {
-            OWNER("Owner", { renderer, _ ->
-                renderer.owner.pos
-            }),
-            ENTITY("Entity", { _, result ->
-                result.positions.first()
-            }),
-            LANDING("Landing", { _, result ->
-                result.positions.last()
-            }),
+        ) : NamedChoice, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3d> {
+            OWNER("Owner"),
+            ENTITY("Entity"),
+            LANDING("Landing");
+
+            override fun apply(
+                renderer: TrajectoryInfoRenderer,
+                result: TrajectoryInfoRenderer.SimulationResult,
+            ): Vec3d = when (this) {
+                OWNER -> renderer.owner.pos
+                ENTITY -> result.positions.firstOrNull()
+                LANDING -> result.positions.lastOrNull()
+            } ?: renderer.owner.pos
         }
 
         private val ownerName by boolean("OwnerName", true)
         private val distance by boolean("Distance", true)
         private val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
 
+        private val TICK_FORMATTER = DecimalFormat("0.#s")
+
         private enum class DurationUnit(
             override val choiceName: String,
-            val getString: (ticks: Int) -> String,
-        ) : NamedChoice {
-            TICKS("Ticks", Int::toString),
-            SECONDS("Seconds", { ticks ->
-                (ticks * 0.05).toFixed(1) + "s"
-            }),
+        ) : NamedChoice, IntFunction<String> {
+            TICKS("Ticks"),
+            SECONDS("Seconds");
+
+            override fun apply(ticks: Int): String = when (this) {
+                TICKS -> ticks.toString()
+                SECONDS -> TICK_FORMATTER.format(ticks * 0.05)
+            }
         }
 
         private val scale by float("Scale", 1F, 0.25F..4F)
@@ -108,25 +117,26 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                             // If this renderer is created by player holding items and showAt is OWNER,
                             // then show at the landing position
                             TrajectoryInfoRenderer.Type.HYPOTHETICAL ->
-                                ShowAt.LANDING.getPosition(renderer, result).calcScreenPosWithOffset()
+                                ShowAt.LANDING.apply(renderer, result).calcScreenPosWithOffset()
                             else -> {
                                 val centerX = mc.window.scaledWidth * 0.5F
                                 val centerY = mc.window.scaledHeight * 0.5F
                                 Vec3(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
                             }
                         }
-                        else -> showAt.getPosition(renderer, result).calcScreenPosWithOffset()
+
+                        else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
                     } ?: return@forEachIndexed
 
                 context.matrices.push()
                 context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
                 context.matrices.scale(scale, scale, 1.0F)
 
-                val text = durationUnit.getString(result.positions.size).asText()
+                val text = durationUnit.apply(result.positions.size).asText()
                 if (ownerName && renderer.owner !== player) {
                     text.append(" ").append(renderer.owner.name)
                 }
-                if (distance) {
+                if (distance && result.positions.isNotEmpty()) {
                     text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
                 }
 
