@@ -20,13 +20,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import kotlin.random.Random
 
 internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelper, "AutoReport", false) {
@@ -59,6 +63,11 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
+        reported.clear()
+    }
+
+    @Suppress("unused")
+    private val sessionHandler = suspendHandler<SessionEvent>(Dispatchers.Minecraft) {
         reported.clear()
     }
 

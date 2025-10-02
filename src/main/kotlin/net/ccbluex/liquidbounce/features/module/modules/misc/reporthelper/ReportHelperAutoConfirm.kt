@@ -51,7 +51,7 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
                 }
 
                 // Wait for screen update
-                if (!tickConditional(5) { mc.currentScreen === screen }) {
+                if (tickConditional(5) { mc.currentScreen === screen }) {
                     return@sequenceHandler
                 }
 

@@ -41,6 +41,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import java.util.*
@@ -224,6 +226,9 @@ fun ItemStack.getArmorColor(): Int? {
         null
     }
 }
+
+val ScreenHandler.typeOrNull: ScreenHandlerType<*>?
+    get() = runCatching { type }.getOrNull()
 
 /**
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold
