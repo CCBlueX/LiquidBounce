@@ -129,24 +129,21 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
             @Suppress("unused")
             private val renderHandler = handler<OverlayRenderEvent> { event ->
-                renderEnvironmentForGUI {
-                    // MC-Rendering code for off-hand
-
-                    val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
-                    val dc = event.context
-                    val scaledWidth = dc.scaledWindowWidth
-                    val scaledHeight = dc.scaledWindowHeight
-                    val i: Int = scaledWidth / 2
-                    val x = i - 91 - 26 - offset
-                    val y = scaledHeight - 16 - 3
-                    dc.drawStackOverlay(mc.textRenderer, currentFood.itemStack, x, y)
-                    dc.drawItem(currentFood.itemStack, x, y)
-                    dc.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
-                        HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
-                        scaledHeight - 23, 29, 24
-                    )
-                }
+                // MC-Rendering code for off-hand
+                val currentFood = Estimator.findBestFood() ?: return@handler
+                val dc = event.context
+                val scaledWidth = dc.scaledWindowWidth
+                val scaledHeight = dc.scaledWindowHeight
+                val i: Int = scaledWidth / 2
+                val x = i - 91 - 26 - offset
+                val y = scaledHeight - 16 - 3
+                dc.drawStackOverlay(mc.textRenderer, currentFood.itemStack, x, y)
+                dc.drawItem(currentFood.itemStack, x, y)
+                dc.drawGuiTexture(
+                    RenderLayer::getGuiTextured,
+                    HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
+                    scaledHeight - 23, 29, 24
+                )
             }
 
         }
