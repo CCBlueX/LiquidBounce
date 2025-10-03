@@ -1,71 +1,47 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import type { Module } from "../../../integration/types";
-    import { getModules, getPrintableKeyName } from "../../../integration/rest";
-    import { listen } from "../../../integration/ws";
-    import { convertToSpacedString, spaceSeperatedNames } from "../../../theme/theme_config";
+    import { onMount, onDestroy } from "svelte";
     import { fly } from "svelte/transition";
     import { flip } from "svelte/animate";
+    import type { Unsubscriber } from "svelte/store";
+    import { getModules } from "../../../integration/rest";
+    import { listen } from "../../../integration/ws";
+    import { convertToSpacedString, spaceSeperatedNames } from "../../../theme/theme_config";
+    import { hasValidKeyBind, createModuleWithKeyBind, type ModuleWithKeyBind } from "../../../integration/key_utils";
 
-    let modulesWithBinds: Array<{
-        module: Module;
-        keyName: string;
-        displayName: string;
-    }> = [];
+    let modulesWithBinds: ModuleWithKeyBind[] = [];
 
-    async function updateModulesWithBinds() {
+    const cleanupFunctions: Array<() => void> = [];
+
+    function getDisplayName(moduleName: string): string {
+        return $spaceSeperatedNames ? convertToSpacedString(moduleName) : moduleName;
+    }
+
+    async function updateModulesWithBinds(): Promise<void> {
         try {
             const modules = await getModules();
-            
-            const filtered = modules.filter(m => {
-                return m.keyBind && 
-                       m.keyBind.boundKey && 
-                       m.keyBind.boundKey !== "key.keyboard.unknown";
-            });
+            const filtered = modules.filter(hasValidKeyBind);
 
-            const modulesWithKeys = await Promise.all(
-                filtered.map(async (module) => {
-                    try {
-                        const printableKey = await getPrintableKeyName(module.keyBind.boundKey);
-                        const displayName = $spaceSeperatedNames ? convertToSpacedString(module.name) : module.name;
-                        
-                        return {
-                            module,
-                            keyName: printableKey.localized,
-                            displayName
-                        };
-                    } catch (error) {
-                        const displayName = $spaceSeperatedNames ? convertToSpacedString(module.name) : module.name;
-                        
-                        let fallbackKey = module.keyBind.boundKey;
-                        if (fallbackKey.startsWith("key.keyboard.")) {
-                            fallbackKey = fallbackKey.replace("key.keyboard.", "").toUpperCase();
-                        } else if (fallbackKey.startsWith("key.mouse.")) {
-                            fallbackKey = fallbackKey.replace("key.mouse.", "Mouse ").toUpperCase();
-                        }
-                        
-                        return {
-                            module,
-                            keyName: fallbackKey,
-                            displayName
-                        };
-                    }
-                })
+            modulesWithBinds = await Promise.all(
+                filtered.map(module => createModuleWithKeyBind(module, getDisplayName(module.name)))
             );
-
-            modulesWithBinds = modulesWithKeys;
-        } catch (error) {
+        } catch {
             modulesWithBinds = [];
         }
     }
 
-    spaceSeperatedNames.subscribe(updateModulesWithBinds);
+    onMount(() => {
+        const unsubscribe: Unsubscriber = spaceSeperatedNames.subscribe(updateModulesWithBinds);
+        cleanupFunctions.push(unsubscribe);
 
-    onMount(updateModulesWithBinds);
+        cleanupFunctions.push(listen("moduleToggle", updateModulesWithBinds));
+        cleanupFunctions.push(listen("clickGuiValueChange", updateModulesWithBinds));
 
-    listen("moduleToggle", updateModulesWithBinds);
+        updateModulesWithBinds();
+    });
 
-    listen("clickGuiValueChange", updateModulesWithBinds);
+    onDestroy(() => {
+        cleanupFunctions.forEach(cleanup => cleanup());
+    });
 </script>
 
 <div class="keybinds-panel" transition:fly={{ y: -10, duration: 200 }}>
