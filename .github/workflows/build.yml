@@ -28,7 +28,7 @@ jobs:
         env:
           CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew genSources build -x test -x detekt
+        run: ./gradlew build -x test -x detekt
       - name: Upload artifact
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -86,7 +86,7 @@ jobs:
       - name: Build
         env:
           CI: true
-        run: ./gradlew genSources build
+        run: ./gradlew build
       # Make sure we always run this upload task,
       # because the previous step may fail if there are findings.
       - name: Upload SARIF to GitHub using the upload-sarif action

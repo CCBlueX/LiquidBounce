@@ -52,6 +52,12 @@ import kotlin.time.Duration.Companion.seconds
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
+    /**
+     * Changes the player model by forcefully modifying [PlayerEntity.getSkinTextures],
+     * as PlayerListEntry is unreliable on some servers.
+     */
+    private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
+
     private val mode = choices("Mode", 0) {
         arrayOf(Mode.Online, Mode.File)
     }
@@ -145,5 +151,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     }
 
     val skinTextures: Supplier<SkinTextures>? get() = mode.activeChoice.skinTextures
+
+    @JvmStatic
+    fun shouldApplyChanges(): Boolean =
+        running && allowMixinAbstractClientPlayerEntity
 
 }

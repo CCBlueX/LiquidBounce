@@ -340,9 +340,8 @@ tasks.withType<JavaCompile>().configureEach {
     options.release = 21
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
-    dependsOn("genSources")
 }
 
 // Detekt check

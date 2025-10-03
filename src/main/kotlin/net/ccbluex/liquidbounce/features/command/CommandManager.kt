@@ -107,7 +107,6 @@ object CommandManager : Collection<Command> by commandSet {
             CommandClear,
             CommandHide,
             CommandInvsee,
-            CommandItems,
             CommandPanic,
             CommandValue,
             CommandPing,

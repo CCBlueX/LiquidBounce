@@ -25,7 +25,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
@@ -36,13 +35,14 @@ import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Block
-import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.component.type.DyedColorComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import java.util.*
@@ -227,29 +227,5 @@ fun ItemStack.getArmorColor(): Int? {
     }
 }
 
-/**
- * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold
- * won't count them as blocks
- *
- * TODO: move to configurable
- */
-val DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
-    Blocks.TNT,
-    Blocks.COBWEB,
-    Blocks.NETHER_PORTAL,
-)
-
-/**
- * @see [ScaffoldBlockItemSelection.isBlockUnfavourable]
- *
- * TODO: move to configurable
- */
-val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
-    Blocks.CRAFTING_TABLE,
-    Blocks.JIGSAW,
-    Blocks.SMITHING_TABLE,
-    Blocks.FLETCHING_TABLE,
-    Blocks.ENCHANTING_TABLE,
-    Blocks.CAULDRON,
-    Blocks.MAGMA_BLOCK,
-)
+val ScreenHandler.typeOrNull: ScreenHandlerType<*>?
+    get() = runCatching { type }.getOrNull()

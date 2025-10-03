@@ -271,8 +271,7 @@ object InventoryManager : EventListener {
 
         if (screen is HandledScreen<*>) {
             debugParameter("Screen Handler Type") {
-                val type = runCatching { screen.screenHandler.type }.getOrNull()
-                type?.let {
+                screen.screenHandler.typeOrNull?.let {
                     Registries.SCREEN_HANDLER.getId(it)
                 }
             }

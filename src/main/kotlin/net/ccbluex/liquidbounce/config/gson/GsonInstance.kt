@@ -56,7 +56,7 @@ import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import org.joml.Vector2f
+import org.joml.Vector2fc
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -131,7 +131,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
         .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
-        .registerTypeHierarchyAdapter(Vector2f::class.java, Vector2fAdapter)
+        .registerTypeHierarchyAdapter(Vector2fc::class.java, Vector2fcAdapter)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
         .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)

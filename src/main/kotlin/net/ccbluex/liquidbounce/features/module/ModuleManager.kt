@@ -248,6 +248,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleTimeShift,
             ModuleTeleport,
             ModulePhase,
+            ModuleYggdrasilSignatureFix,
 
             // Fun
             ModuleDankBobbing,
