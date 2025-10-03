@@ -305,6 +305,11 @@ class ItemStackListRenderer private constructor(
         }
 
         @JvmStatic
+        @JvmName("create")
+        fun DrawContext.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderer =
+            drawItemStackList(stacks.asList())
+
+        @JvmStatic
         fun Block.createItemStackForRendering(count: Int): ItemStack {
             return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
         }

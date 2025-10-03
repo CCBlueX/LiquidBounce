@@ -20,10 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.fastutil.fastIterable
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
@@ -44,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
@@ -112,19 +110,19 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.MORE.thenComparing { it.item.translationKey }
+        PreferStackSize.LESS.thenComparing { it.item.translationKey }
 
     @Suppress("unused")
     private enum class MergeMode(
         override val choiceName: String,
-        val merge: (stacks: Array<ItemStack>) -> List<ItemStack>,
+        val merge: (stacks: Array<ItemStack>) -> Array<ItemStack>,
     ) : NamedChoice {
         /**
          * Nothing will be merged.
          */
         NONE("None", { stacks ->
             stacks.sortWith(itemStackComparator)
-            stacks.unmodifiable()
+            stacks
         }),
 
         /**
@@ -135,46 +133,35 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             for (stack in stacks) {
                 map.computeIfAbsent(stack.item) { ObjectArrayList() }.add(stack)
             }
-            val result = map.values.mapToArray { stacks ->
+
+            map.values.mapToArray { stacks ->
                 if (stacks.size == 1) {
                     stacks[0]
                 } else {
                     ItemStack(stacks[0].item, stacks.sumOf { it.count })
                 }
+            }.apply {
+                sortWith(itemStackComparator)
             }
-            result.sortWith(itemStackComparator)
-            result.unmodifiable()
         }),
 
         /**
          * [ItemStack]s with same [Item] and same [ComponentChanges] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
-            val stacksWithComponents = Object2IntOpenHashMap<ItemAndComponents>()
-            val simpleItems = Reference2IntOpenHashMap<Item>()
+            val map = Object2IntOpenHashMap<ItemAndComponents>()
 
             for (stack in stacks) {
-                if (stack.componentChanges.isEmpty) {
-                    simpleItems.addTo(stack.item, stack.count)
-                } else {
-                    stacksWithComponents.addTo(
-                        ItemAndComponents(stack),
-                        stack.count
-                    )
-                }
+                map.addTo(ItemAndComponents(stack), stack.count)
             }
 
-            val stacks = ObjectArrayList<ItemStack>(stacksWithComponents.size + simpleItems.size)
-
-            stacksWithComponents.fastIterable().mapTo(stacks) { entry ->
+            val iter = map.fastIterator()
+            Array(map.size) {
+                val entry = iter.next()
                 entry.key.toItemStack(entry.intValue)
+            }.apply {
+                sortWith(itemStackComparator)
             }
-            simpleItems.fastIterable().mapTo(stacks) { entry ->
-                ItemStack(entry.key, entry.intValue)
-            }
-
-            stacks.sortWith(itemStackComparator)
-            stacks
         }),
     }
 
@@ -209,7 +196,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
             val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
 
-            event.context.drawItemStackList(result.stacks)
+            event.context.drawItemStackList(result.stacks.asList())
                 .center(renderPos)
                 .rectBackground(color = backgroundColor.toARGB())
                 .scale(scale)
@@ -224,7 +211,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                         return@forEach
                     }
 
-                    event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks.unmodifiable())
+                    event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
                         .title(stack.name.takeIf { Shulker.showTitle })
                         .center(renderPos)
                         .rectBackground(color = backgroundColor.toARGB())
@@ -236,7 +223,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: List<ItemStack>) {
+    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: Array<ItemStack>) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
             return entities.map { entity ->
                 entity.interpolateCurrentPosition(tickDelta)

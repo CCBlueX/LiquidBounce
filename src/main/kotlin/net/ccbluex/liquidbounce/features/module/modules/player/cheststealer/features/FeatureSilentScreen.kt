@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -86,7 +87,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             val containerScreen = mc.currentScreen as HandledScreen<*>
 
-            event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
+            event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })
                 .center(pos)
                 .scale(scale)
