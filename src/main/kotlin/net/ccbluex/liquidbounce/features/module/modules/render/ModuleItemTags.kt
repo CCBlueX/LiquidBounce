@@ -28,6 +28,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -40,7 +41,9 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -48,6 +51,7 @@ import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.component.ComponentChanges
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
@@ -98,19 +102,27 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
 
+    private object Shulker : ToggleableConfigurable(this, "Shulker", false) {
+        val mergeStacks by boolean("MergeStacks", true)
+        val showTitle by boolean("ShowTitle", true)
+    }
+
+    init {
+        tree(Shulker)
+    }
+
     private val itemStackComparator: Comparator<ItemStack> =
-        Comparator.comparingInt<ItemStack> { -it.count }.thenBy { it.itemName.string }
+        PreferStackSize.MORE.thenComparing { it.item.translationKey }
 
     @Suppress("unused")
     private enum class MergeMode(
         override val choiceName: String,
-        val merge: (entities: List<ItemEntity>) -> List<ItemStack>,
+        val merge: (stacks: Array<ItemStack>) -> List<ItemStack>,
     ) : NamedChoice {
         /**
          * Nothing will be merged.
          */
-        NONE("None", { entities ->
-            val stacks = entities.mapToArray { it.stack }
+        NONE("None", { stacks ->
             stacks.sortWith(itemStackComparator)
             stacks.unmodifiable()
         }),
@@ -118,11 +130,10 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         /**
          * [ItemStack]s with same [Item] will be merged.
          */
-        BY_ITEM("ByItem", { entities ->
+        BY_ITEM("ByItem", { stacks ->
             val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
-            for (itemEntity in entities) {
-                map.getOrPut(itemEntity.stack.item, ::ArrayList)
-                    .add(itemEntity.stack)
+            for (stack in stacks) {
+                map.computeIfAbsent(stack.item) { ObjectArrayList() }.add(stack)
             }
             val result = map.values.mapToArray { stacks ->
                 if (stacks.size == 1) {
@@ -138,12 +149,11 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         /**
          * [ItemStack]s with same [Item] and same [ComponentChanges] will be merged.
          */
-        BY_COMPONENTS("ByComponents", { entities ->
+        BY_COMPONENTS("ByComponents", { stacks ->
             val stacksWithComponents = Object2IntOpenHashMap<ItemAndComponents>()
             val simpleItems = Reference2IntOpenHashMap<Item>()
 
-            for (entity in entities) {
-                val stack = entity.stack
+            for (stack in stacks) {
                 if (stack.componentChanges.isEmpty) {
                     simpleItems.addTo(stack.item, stack.count)
                 } else {
@@ -169,7 +179,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
-        initialValue = ObjectArrayList(16)
+        initialValue = ObjectArrayList()
     ) { _, clusteredEntities ->
         val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
@@ -205,10 +215,28 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 .scale(scale)
                 .rowLength(rowLength)
                 .draw()
+
+            if (Shulker.enabled) {
+                result.stacks.forEach { stack ->
+                    val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return@forEach
+                    val stacks = containerComponent.streamNonEmpty().toTypedArray()
+                    if (stacks.isEmpty()) {
+                        return@forEach
+                    }
+
+                    event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks.unmodifiable())
+                        .title(stack.name.takeIf { Shulker.showTitle })
+                        .center(renderPos)
+                        .rectBackground(color = backgroundColor.toARGB())
+                        .scale(scale)
+                        .rowLength(rowLength)
+                        .draw()
+                }
+            }
         }
     }
 
-    private class ClusteredEntities(val entities: List<Entity>, val stacks: List<ItemStack>) {
+    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: List<ItemStack>) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
             return entities.map { entity ->
                 entity.interpolateCurrentPosition(tickDelta)
@@ -238,8 +266,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         // Output
         output.clear()
         output.ensureCapacity(groups.size)
-        groups.mapTo(output) {
-            ClusteredEntities(it, mergeMode.merge(it))
+        groups.mapTo(output) { entities ->
+            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray { it.stack }))
         }
     }
 

@@ -156,7 +156,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
     ): Boolean {
         if (!running || stack.isEmpty || !ContainerItemView.enabled) return false
 
-        val containerComponent = stack.getComponents()[DataComponentTypes.CONTAINER] ?: return false
+        val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return false
 
         val stacks = if (ContainerItemView.skipEmptyStack) {
             containerComponent.streamNonEmpty()
