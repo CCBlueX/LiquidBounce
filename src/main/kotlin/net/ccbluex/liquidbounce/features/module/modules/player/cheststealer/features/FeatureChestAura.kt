@@ -21,9 +21,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -208,7 +210,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             var wasInteractionSuccessful = false
 
             if (AwaitContainerSettings.enabled) {
-                waitConditional(AwaitContainerSettings.retryTimeout) {
+                tickConditional(AwaitContainerSettings.retryTimeout) {
                     val currentScreen = mc.currentScreen
                     if (currentScreen is HandledScreen<*>) { // TODO: check if the inner type matches?
                         // Interaction was successful if the inventory screen is open

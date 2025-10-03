@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -29,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
@@ -87,14 +87,12 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             val containerScreen = mc.currentScreen as HandledScreen<*>
 
-            renderEnvironmentForGUI {
-                event.context.drawItemStackList(containerScreen.getSlotsInContainer().map { it.itemStack })
-                    .title(if (showTitle) containerScreen.title.string else "")
-                    .center(pos)
-                    .scale(scale)
-                    .background(background.activeChoice)
-                    .draw()
-            }
+            event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
+                .title(containerScreen.title.takeIf { showTitle })
+                .center(pos)
+                .scale(scale)
+                .background(background.activeChoice)
+                .draw()
         }
     }
 

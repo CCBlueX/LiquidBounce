@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -220,7 +221,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 }
 
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
-                waitUntil {
+                tickUntil {
                     eat()
                     player.hungerManager.foodLevel > minHunger
                 }

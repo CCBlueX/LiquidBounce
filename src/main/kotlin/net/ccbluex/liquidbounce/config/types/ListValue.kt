@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
@@ -72,8 +73,9 @@ open class ListValue<T : MutableCollection<E>, E>(
 
         val currValue = this.inner
 
+        val newItems = element.asList().mapToArray { gson.fromJson(it, this.innerType) }
         currValue.clear()
-        element.mapTo(currValue) { gson.fromJson(it, this.innerType) }
+        currValue.addAll(newItems)
 
         set(currValue) { /** Trigger listener callbacks */ }
     }

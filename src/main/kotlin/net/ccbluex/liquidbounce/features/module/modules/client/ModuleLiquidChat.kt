@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.DISCARD_LATEST
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.ChatClient
 import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -129,7 +130,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    private val repeatable = suspendHandler<GameTickEvent>(context = Dispatchers.IO, behavior = DISCARD_LATEST) {
+    private val repeatable = tickHandler(Dispatchers.IO) {
         if (!chatClient.connected) {
             chatClient.connect()
         } else {

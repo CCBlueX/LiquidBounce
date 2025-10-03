@@ -23,17 +23,17 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.fastIterator
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -67,31 +67,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         triggerRescan()
     }
 
-    private val WHITELIST_NON_SOLID: Set<Block> = ReferenceOpenHashSet.of(
-        Blocks.LADDER,
-
-        Blocks.WATER,
-
-        Blocks.GLASS,
-        Blocks.WHITE_STAINED_GLASS,
-        Blocks.ORANGE_STAINED_GLASS,
-        Blocks.MAGENTA_STAINED_GLASS,
-        Blocks.LIGHT_BLUE_STAINED_GLASS,
-        Blocks.YELLOW_STAINED_GLASS,
-        Blocks.LIME_STAINED_GLASS,
-        Blocks.PINK_STAINED_GLASS,
-        Blocks.GRAY_STAINED_GLASS,
-        Blocks.LIGHT_GRAY_STAINED_GLASS,
-        Blocks.CYAN_STAINED_GLASS,
-        Blocks.PURPLE_STAINED_GLASS,
-        Blocks.BLUE_STAINED_GLASS,
-        Blocks.BROWN_STAINED_GLASS,
-        Blocks.GREEN_STAINED_GLASS,
-        Blocks.RED_STAINED_GLASS,
-        Blocks.BLACK_STAINED_GLASS,
-    )
-
-    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): Collection<SurroundingBlock> {
+    private fun BlockPos.getBedSurroundingBlocks(blockState: BlockState): List<SurroundingBlock> {
         val layers = Array<Reference2IntOpenHashMap<Block>>(maxLayers) { Reference2IntOpenHashMap() }
 
         val pos = CACHE.get()
@@ -103,11 +79,8 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
                 continue
             }
 
-            val block = state.block
-            if (state.isSolidBlock(world, pos) || block in WHITELIST_NON_SOLID) {
-                // Count blocks (default = 0)
-                layers[layer - 1].addTo(block, 1)
-            }
+            // Count blocks (default = 0)
+            layers[layer - 1].addTo(state.block, 1)
         }
 
         val result = arrayOfNulls<SurroundingBlock>(layers.sumOf { it.size })
@@ -121,20 +94,20 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         result.sort()
 
         @Suppress("UNCHECKED_CAST")
-        return result.unmodifiable() as Collection<SurroundingBlock>
+        return result.unmodifiable() as List<SurroundingBlock>
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {
         val bedDirection = headState.get(BedBlock.FACING)
 
-        val bedBlock = headState.block
+        val bedBlock = headState.block as BedBlock
         val renderPos = Vec3d(
             x - (bedDirection.offsetX * 0.5) + 0.5,
             y + 1.0,
             z - (bedDirection.offsetZ * 0.5) + 0.5,
         )
 
-        return BedState(bedBlock, renderPos, getBedSurroundingBlocks(headState))
+        return BedState(bedBlock, this, renderPos, getBedSurroundingBlocks(headState))
     }
 
     @Suppress("detekt:CognitiveComplexMethod")
@@ -168,6 +141,11 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
 
             null
         }
+    }
+
+    override fun onUpdated() {
+        val beds = iterate().mapTo(mutableListOf()) { it.value }
+        EventManager.callEvent(BedStateChangeEvent(beds))
     }
 
     interface Subscriber {

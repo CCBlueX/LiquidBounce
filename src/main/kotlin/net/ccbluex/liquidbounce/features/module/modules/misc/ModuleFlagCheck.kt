@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -38,6 +41,7 @@ import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.abs
 import kotlin.math.roundToLong
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Module Flag Check.
@@ -52,12 +56,12 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
 
     private object ResetFlags : ToggleableConfigurable(this, "ResetFlags", true) {
 
-        private var afterSeconds by int("After", 30, 1..300, "s")
+        private val afterSeconds by int("After", 30, 1..300, "s")
 
         @Suppress("unused")
-        private val repeatable = tickHandler {
-            flagCount = 0
-            waitSeconds(afterSeconds)
+        private val repeatable = tickHandler(Dispatchers.Default) {
+            flagCount.getAndSet(0)
+            delay(afterSeconds.seconds)
         }
 
     }
@@ -113,7 +117,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         tree(Render)
     }
 
-    private var flagCount = 0
+    private val flagCount = atomic(0)
     private var lastYaw = 0F
     private var lastPitch = 0F
 
@@ -129,7 +133,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
                 val deltaYaw = calculateAngleDelta(change.yaw, lastYaw)
                 val deltaPitch = calculateAngleDelta(change.pitch, lastPitch)
 
-                flagCount++
+                flagCount.incrementAndGet()
                 if (deltaYaw >= 90 || deltaPitch >= 90) {
                     alert(AlertReason.FORCEROTATE, "(${deltaYaw.roundToLong()}° | ${deltaPitch.roundToLong()}°)")
                 } else {
@@ -145,7 +149,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
             }
 
             is DisconnectS2CPacket -> {
-                flagCount = 0
+                flagCount.getAndSet(0)
             }
         }
     }
@@ -174,7 +178,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         }
 
         if (invalidReasons.isNotEmpty()) {
-            flagCount++
+            flagCount.incrementAndGet()
 
             val reasonString = invalidReasons.joinToString()
             alert(AlertReason.INVALID, reasonString)

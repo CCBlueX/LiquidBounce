@@ -79,9 +79,9 @@ class RenderBufferBuilder<I : VertexInputType>(
                 }
             }
         } else {
-            box.forEachVertex { i, x, y, z ->
+            box.forEachFaceVertex { i, x, y, z ->
                 if (check && (verticesToUse and (1 shl i)) != 0) {
-                    return@forEachVertex
+                    return@forEachFaceVertex
                 }
 
                 val bb = buffer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
@@ -114,7 +114,20 @@ class RenderBufferBuilder<I : VertexInputType>(
     }
 }
 
-class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
+/**
+ * Draws colored boxes. Renders automatically
+ */
+inline fun WorldRenderEnvironment.drawBoxes(fn: BoxRenderer.() -> Unit) {
+    val renderer = BoxRenderer(this)
+
+    try {
+        fn(renderer)
+    } finally {
+        renderer.draw()
+    }
+}
+
+class BoxRenderer(val env: WorldRenderEnvironment) {
     private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.PosColor,
@@ -125,22 +138,6 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
         VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_B
     )
-
-    companion object {
-        /**
-         * Draws colored boxes. Renders automatically
-         */
-        @JvmStatic
-        fun drawWith(env: WorldRenderEnvironment, fn: BoxRenderer.() -> Unit) {
-            val renderer = BoxRenderer(env)
-
-            try {
-                fn(renderer)
-            } finally {
-                renderer.draw()
-            }
-        }
-    }
 
     fun drawBox(
         box: Box,
@@ -156,105 +153,11 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
         }
     }
 
-    private fun draw() {
+    fun draw() {
         faceRenderer.draw()
         outlinesRenderer.draw()
     }
 
-}
-
-private inline fun Box.forEachVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
-    var i = 0
-    // down
-    fn(i++, minX, minY, minZ)
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, minX, minY, maxZ)
-
-    // up
-    fn(i++, minX, maxY, minZ)
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, maxX, maxY, minZ)
-
-    // north
-    fn(i++, minX, minY, minZ)
-    fn(i++, minX, maxY, minZ)
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, maxX, minY, minZ)
-
-    // east
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, maxX, minY, maxZ)
-
-    // south
-    fn(i++, minX, minY, maxZ)
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-
-    // west
-    fn(i++, minX, minY, minZ)
-    fn(i++, minX, minY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, minX, maxY, minZ)
-
-    // i == 24
-}
-
-private inline fun Box.forEachOutlineVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
-    var i = 0
-    // down north
-    fn(i++, minX, minY, minZ)
-    fn(i++, maxX, minY, minZ)
-
-    // down east
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, minY, maxZ)
-
-    // down south
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, minX, minY, maxZ)
-
-    // down west
-    fn(i++, minX, minY, maxZ)
-    fn(i++, minX, minY, minZ)
-
-    // north west
-    fn(i++, minX, minY, minZ)
-    fn(i++, minX, maxY, minZ)
-
-    // north east
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, maxY, minZ)
-
-    // south east
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, maxX, maxY, maxZ)
-
-    // south west
-    fn(i++, minX, minY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-
-    // up north
-    fn(i++, minX, maxY, minZ)
-    fn(i++, maxX, maxY, minZ)
-
-    // up east
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, maxX, maxY, maxZ)
-
-    // up south
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-
-    // up west
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, minX, maxY, minZ)
-
-    // i == 24
 }
 
 fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Color4b) {
@@ -262,7 +165,7 @@ fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Co
     val argb = color.toARGB()
 
     // Draw the vertices of the box
-    box.forEachVertex { _, x, y, z ->
+    box.forEachFaceVertex { _, x, y, z ->
         consumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
             .color(argb)
     }

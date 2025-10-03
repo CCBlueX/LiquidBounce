@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -295,7 +296,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 stepping = true
                 player.velocity.y = 0.42
                 waitTicks(1)
-                if(currentStepHeight > 1.0) {
+                if (currentStepHeight > 1.0) {
                     player.velocity.y += 0.061
                 }
                 waitTicks(2)
@@ -305,7 +306,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                     player.velocity.y -= 0.095
                     if (currentStepHeight > 1.25) {
                         waitTicks(5)
-                        if(alternateBypass) {
+                        if (alternateBypass) {
                             player.isOnGround = true
                         } else {
                             player.velocity.y = 0.42

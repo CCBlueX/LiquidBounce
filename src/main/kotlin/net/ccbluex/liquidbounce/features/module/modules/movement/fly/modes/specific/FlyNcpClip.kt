@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -79,14 +80,14 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // If fall damage is required, wait for damage to be true
         if (fallDamage) {
-            waitUntil { damage }
+            tickUntil { damage }
         }
 
         if (startPos == null) {
             startPosition = player.pos
 
             // Wait until there is a vertical collision
-            waitUntil { collidesVertical() }
+            tickUntil { collidesVertical() }
 
             if (clipping != 0f) {
                 network.sendPacket(
@@ -108,14 +109,14 @@ object FlyNcpClip : Choice("NcpClip") {
             }
 
             // Wait until there is no vertical collision
-            waitUntil { !collidesVertical() }
+            tickUntil { !collidesVertical() }
 
             // Proceed to jump (just like speeding up) and boost strafe entry
             player.jump()
             player.velocity = player.velocity.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
-            waitUntil { !player.isOnGround }
+            tickUntil { !player.isOnGround }
 
             // Proceed to strafe with the normal speed
             player.velocity = player.velocity.withStrafe(speed = speed.toDouble())

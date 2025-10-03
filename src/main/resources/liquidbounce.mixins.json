@@ -7,6 +7,7 @@
   "mixinPriority": 1337,
   "client": [
     "authlib.MixinMinecraftClient",
+    "authlib.MixinYggdrasilMinecraftSessionService",
     "blaze3d.MixinRenderSystem",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeper",
@@ -16,6 +17,7 @@
     "minecraft.block.MixinCobwebBlock",
     "minecraft.block.MixinPowderSnowBlock",
     "minecraft.block.MixinSlimeBlock",
+    "minecraft.client.MinecraftClientAccessor",
     "minecraft.client.MixinClientWorld",
     "minecraft.client.MixinClientWorldProperties",
     "minecraft.client.MixinGameMode",
@@ -33,6 +35,7 @@
     "minecraft.client.MixinTranslationStorage",
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorld",
+    "minecraft.client.MixinWorldBorderRendering",
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.client.option.MixinServerListAccessor",
@@ -114,7 +117,6 @@
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWeatherRendering",
-    "minecraft.client.MixinWorldBorderRendering",
     "minecraft.render.MixinWorldRenderer",
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",
@@ -128,12 +130,12 @@
     "minecraft.world.chuck.MixinChunkSkyLightProvider",
     "sodium.MixinSodiumBlockOcclusionCache",
     "sodium.MixinSodiumLightDataAccessMixin",
+    "truffle.MixinCommonJSRequireBuiltin",
     "truffle.MixinHostClassDesc",
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
-    "truffle.MixinTruffleLanguage",
-    "truffle.MixinCommonJSRequireBuiltin",
-    "truffle.MixinNpmCompatibleESModuleLoader"
+    "truffle.MixinNpmCompatibleESModuleLoader",
+    "truffle.MixinTruffleLanguage"
   ],
   "server": [],
   "injectors": {

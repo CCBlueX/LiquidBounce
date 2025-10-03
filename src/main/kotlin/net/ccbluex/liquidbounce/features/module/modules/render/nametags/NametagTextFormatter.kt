@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
@@ -80,7 +79,7 @@ class NametagTextFormatter(private val entity: Entity) {
                 isBot -> Formatting.DARK_AQUA.toTextColor()
                 entity.isInvisible -> Formatting.GOLD.toTextColor()
                 entity.isSneaking -> Formatting.DARK_RED.toTextColor()
-                tagColor != null -> TextColor.fromRgb(tagColor.toARGB())
+                tagColor != null -> tagColor.toTextColor()
                 else -> null
             }
         }

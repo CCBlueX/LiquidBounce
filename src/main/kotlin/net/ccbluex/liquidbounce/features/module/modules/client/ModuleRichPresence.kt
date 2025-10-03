@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.json
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -134,44 +135,41 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
     }
 
     @Suppress("unused")
-    val updateCycle = tickHandler {
-        waitSeconds(1)
+    val updateCycle = tickHandler(Dispatchers.IO) {
+        waitTicks(20)
 
-        /**
-         * Don't block the render thread
-         */
-        waitFor(Dispatchers.IO) {
-            if (enabled) {
-                connectIpc()
-            } else {
-                shutdownIpc()
+        if (enabled) {
+            connectIpc()
+        } else {
+            shutdownIpc()
+        }
+
+        val ipcClient = ipcClient
+        // Check ipc client is connected and send rpc
+        if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
+            return@tickHandler
+        }
+
+        val ipcConfiguration = ipcConfiguration.getNow() ?: return@tickHandler
+
+        ipcClient.sendRichPresence {
+            // Set playing time
+            setStartTimestamp(timestamp)
+
+            // Check assets contains logo and set logo
+            if ("logo" in ipcConfiguration.assets) {
+                setLargeImage(ipcConfiguration.assets["logo"], formatText(largeImageText))
             }
 
-            val ipcClient = ipcClient
-            // Check ipc client is connected and send rpc
-            if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
-                return@waitFor
+            if ("smallLogo" in ipcConfiguration.assets) {
+                setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
             }
 
-            val ipcConfiguration = ipcConfiguration.getNow() ?: return@waitFor
+            setDetails(formatText(detailsText))
+            setState(formatText(stateText))
 
-            ipcClient.sendRichPresence {
-                // Set playing time
-                setStartTimestamp(timestamp)
-
-                // Check assets contains logo and set logo
-                if ("logo" in ipcConfiguration.assets) {
-                    setLargeImage(ipcConfiguration.assets["logo"], formatText(largeImageText))
-                }
-
-                if ("smallLogo" in ipcConfiguration.assets) {
-                    setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
-                }
-
-                setDetails(formatText(detailsText))
-                setState(formatText(stateText))
-
-                setButtons(jsonArrayOf(
+            setButtons(
+                jsonArrayOf(
                     json {
                         "label" to "Download"
                         "url" to "https://liquidbounce.net/"
@@ -181,8 +179,8 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
                         "label" to "GitHub"
                         "url" to "https://github.com/CCBlueX/LiquidBounce"
                     },
-                ))
-            }
+                )
+            )
         }
     }
 

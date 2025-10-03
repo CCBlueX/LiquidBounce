@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -20,11 +21,11 @@ object ScaffoldTowerKarhu : ScaffoldTower("Karhu") {
             return@sequenceHandler
         }
 
-        waitUntil { !player.isOnGround }
+        tickUntil { !player.isOnGround }
         Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
 
         if (pulldown) {
-            waitUntil { !player.isOnGround && player.velocity.y < triggerMotion }
+            tickUntil { !player.isOnGround && player.velocity.y < triggerMotion }
 
             if (!isBlockBelow) {
                 return@sequenceHandler

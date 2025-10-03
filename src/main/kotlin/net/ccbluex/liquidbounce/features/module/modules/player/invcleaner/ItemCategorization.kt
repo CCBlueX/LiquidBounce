@@ -34,10 +34,15 @@ import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
 import java.util.function.Predicate
 
+@JvmField
 val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
+
+@JvmField
 val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.hashCode()
 }
+
+@JvmField
 val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
     it.itemStack.maxDamage - it.itemStack.damage
 }

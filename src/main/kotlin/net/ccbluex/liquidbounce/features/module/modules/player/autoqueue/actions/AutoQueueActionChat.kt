@@ -19,12 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
-import net.ccbluex.liquidbounce.event.Sequence
-
 object AutoQueueActionChat : AutoQueueAction("Chat") {
     private val message by text("Message", "/play solo_normal")
 
-    override suspend fun execute(sequence: Sequence) {
+    override suspend fun execute() {
         if (message.startsWith("/")) {
             network.sendCommand(message.substring(1))
         } else {

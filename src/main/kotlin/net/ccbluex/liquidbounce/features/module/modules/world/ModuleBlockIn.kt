@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -141,7 +142,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
     @Suppress("unused")
     private val tickHandler = tickHandler {
         blockPlacer.update(blockList)
-        waitUntil { blockPlacer.isDone() }
+        tickUntil { blockPlacer.isDone() }
 
         if (autoDisable) {
             notification(name, message("filled"), NotificationEvent.Severity.SUCCESS)

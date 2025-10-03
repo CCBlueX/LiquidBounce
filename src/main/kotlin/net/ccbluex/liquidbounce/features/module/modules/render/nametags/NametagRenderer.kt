@@ -33,7 +33,6 @@ private const val NAMETAG_PADDING: Int = 5
 private const val ITEM_SIZE: Int = 20
 private const val ITEM_SCALE: Float = 1.0F
 
-@Suppress("MagicNumber")
 class NametagRenderer {
 
     private val quadBuffers =

@@ -29,8 +29,8 @@ import org.joml.Vector2f
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-fun Float.toRadians() = this / 180.0F * Math.PI.toFloat()
-fun Float.toDegrees() = this / Math.PI.toFloat() * 180.0F
+inline fun Float.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
+inline fun Float.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
 
 inline fun Float.floorToInt() = MathHelper.floor(this)
 inline fun Double.floorToInt() = MathHelper.floor(this)

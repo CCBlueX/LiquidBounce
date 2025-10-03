@@ -38,22 +38,6 @@ data class DirectionalInput(
         )
     }
 
-    override fun equals(other: Any?): Boolean =
-        other is DirectionalInput &&
-            forwards == other.forwards &&
-            backwards == other.backwards &&
-            left == other.left &&
-            right == other.right
-
-
-    override fun hashCode(): Int {
-        var result = forwards.hashCode()
-        result = 30 * result + backwards.hashCode()
-        result = 30 * result + left.hashCode()
-        result = 30 * result + right.hashCode()
-        return result
-    }
-
     val isMoving: Boolean
         get() = (forwards && !backwards) || (backwards && !forwards) ||
             (left && !right) || (right && !left)
