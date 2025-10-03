@@ -81,6 +81,7 @@
     "minecraft.item.MixinItem",
     "minecraft.item.MixinItemStack",
     "minecraft.network.MixinAllowedAddressResolver",
+    "minecraft.network.MixinClientCommonNetworkHandler",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientLoginNetworkHandlerMixin",
     "minecraft.network.MixinClientPlayerInteractionManager",
