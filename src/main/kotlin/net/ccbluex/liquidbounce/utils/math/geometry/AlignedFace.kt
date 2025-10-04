@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
@@ -100,9 +101,8 @@ class AlignedFace(from: Vec3d, to: Vec3d) {
     }
 
     fun offset(vec: Vec3d): AlignedFace {
-        return AlignedFace(this.from.add(vec), this.to.add(vec))
+        return AlignedFace(this.from + vec, this.to + vec)
     }
-
 
     fun randomPointOnFace(): Vec3d {
         return Vec3d(

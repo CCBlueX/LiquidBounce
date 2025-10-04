@@ -55,7 +55,7 @@ object InventoryMoveSprintControlFeature : ToggleableConfigurable(ModuleInventor
     }
 
     override val running: Boolean
-        get() = super.running && InventoryManager.isInventoryOpen
+        get() = super.running && InventoryManager.isHandledScreenOpen
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(

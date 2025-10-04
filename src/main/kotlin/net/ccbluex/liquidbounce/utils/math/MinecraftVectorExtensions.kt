@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.util.math.*
-import kotlin.math.floor
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
@@ -32,29 +31,22 @@ inline operator fun Vec3i.component3() = this.z
 
 inline fun BlockPos.copy(x: Int = this.x, y: Int = this.y, z: Int = this.z) = BlockPos(x, y, z)
 
-inline operator fun Vec3i.plus(other: Vec3i): Vec3i {
-    return this.add(other)
-}
+inline operator fun Vec3i.plus(other: Vec3i): Vec3i = add(other)
 
-inline operator fun Vec3i.minus(other: Vec3i): Vec3i {
-    return this.subtract(other)
-}
+inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
-inline operator fun Vec3i.times(scalar: Int): Vec3i {
-    return this.multiply(scalar)
-}
+inline operator fun Vec3i.times(scalar: Int): Vec3i = multiply(scalar)
 
-inline operator fun Vec3d.plus(other: Vec3d): Vec3d {
-    return this.add(other)
-}
+inline operator fun Vec3d.plus(other: Vec3d): Vec3d = add(other)
 
-inline operator fun Vec3d.minus(other: Vec3d): Vec3d {
-    return this.subtract(other)
-}
+inline operator fun Vec3d.plus(other: Vec3i): Vec3d = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
-inline operator fun Vec3d.times(scalar: Double): Vec3d {
-    return this.multiply(scalar)
-}
+inline operator fun Vec3d.minus(other: Vec3d): Vec3d = subtract(other)
+
+inline operator fun Vec3d.minus(other: Vec3i): Vec3d =
+    subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
+
+inline operator fun Vec3d.times(scalar: Double): Vec3d = multiply(scalar)
 
 val Vec3d.isLikelyZero: Boolean
     get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6)
@@ -124,17 +116,17 @@ inline fun forEach3D(v0: Vec3i, v1: Vec3i, step: Int = 1, fn: (Int, Int, Int) ->
     }
 }
 
-fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
-fun Vec3i.toVec3d(
+inline fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
+inline fun Vec3i.toVec3d(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,
 ): Vec3d = Vec3d(x + xOffset, y + yOffset, z + zOffset)
 
-fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
-fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
+inline fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
+inline fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 
-fun Vec3d.toBlockPos(
+inline fun Vec3d.toBlockPos(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,

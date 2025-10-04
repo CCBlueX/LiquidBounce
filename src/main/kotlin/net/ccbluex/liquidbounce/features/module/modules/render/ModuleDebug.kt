@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -125,7 +126,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         var posX = 300
                         var posY = 500
 
-                        for (x in curve.xAxis.range.step(0.1f)) {
+                        curve.xAxis.range.step(0.1f).forEachFloat { x ->
                             var y = curve.transform(x)
                             this.fill(
                                 posX + x,

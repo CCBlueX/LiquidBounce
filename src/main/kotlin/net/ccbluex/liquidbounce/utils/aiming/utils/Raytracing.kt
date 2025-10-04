@@ -140,13 +140,15 @@ fun raycast(
 
 /**
  * Allows you to check if a point is behind a wall
+ *
+ * @see player#canSee
  */
 fun canSeePointFrom(
     eyes: Vec3d,
     vec3: Vec3d,
 ) = mc.world?.raycast(
     RaycastContext(
-        eyes, vec3, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player,
+        eyes, vec3, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player,
     ),
 )?.type == HitResult.Type.MISS
 
