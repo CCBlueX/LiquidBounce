@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -19,8 +20,8 @@ class PlaneSection(
     inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3d) -> Unit) {
         val (dz, dy) = getFairStepSide(maxPoints)
 
-        for (y in 0.0..1.0 step dy) {
-            for (z in 0.0..1.0 step dz) {
+        (0.0..1.0 step dy).forEachDouble { y ->
+            (0.0..1.0 step dz).forEachDouble { z ->
                 val point = this.originPoint + this.dirVec1 * y + this.dirVec2 * z
 
                 consumer(point)
