@@ -32,8 +32,8 @@ import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.util.NetworkUtils
 import java.net.BindException
+import java.net.Socket
 
 /**
  * A client server implementation.
@@ -46,12 +46,15 @@ object ClientInteropServer {
 
     private const val DEFAULT_PORT = 15000
 
-    private var port = if (NetworkUtils.isPortAvailable(DEFAULT_PORT)) {
+    private var port = try {
+        Socket("127.0.0.1", DEFAULT_PORT).use {
+            logger.info("Default port unavailable. Falling back to random port.")
+            (15001..17000).random()
+        }
+    } catch (_: Exception) {
         logger.info("Default port $DEFAULT_PORT available.")
+
         DEFAULT_PORT
-    } else {
-        logger.info("Default port unavailable. Falling back to random port.")
-        (15001..17000).random()
     }
 
     val url get() = "http://127.0.0.1:$port"
