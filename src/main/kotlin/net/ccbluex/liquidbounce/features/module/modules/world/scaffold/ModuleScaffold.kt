@@ -152,6 +152,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     val towerMode = choices("Tower", 0) {
         arrayOf(
             ScaffoldTowerNone,
+            ScaffoldTowerVanilla,
             ScaffoldTowerMotion,
             ScaffoldTowerPulldown,
             ScaffoldTowerKarhu,
