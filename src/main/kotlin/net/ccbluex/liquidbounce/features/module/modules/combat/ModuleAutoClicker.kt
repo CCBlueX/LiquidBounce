@@ -100,7 +100,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isCriticalHit(entity: Entity): Boolean {
-            return criticalsSelectionMode.isCriticalHit(entity)
+            return criticalsSelectionMode.isCriticalHit()
         }
 
         suspend fun encounterItemUse(): Boolean {

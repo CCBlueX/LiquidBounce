@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.minecraft.block.CobwebBlock
@@ -161,10 +162,11 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
         IGNORE("Ignore"),
         ALWAYS("Always");
 
-        fun isCriticalHit(target: Entity): Boolean {
+        fun isCriticalHit(): Boolean {
             return when (this) {
                 IGNORE -> true
-                SMART -> !shouldWaitForCrit(target, ignoreState = true)
+                SMART -> !allowsCriticalHit(ignoreOnGround = true, ignoreWater = true) || wouldDoCriticalHit()
+                    || (!player.jumping && !running && (player.isOnGround || player.isTouchingWater))
                 ALWAYS -> wouldDoCriticalHit()
             }
         }
@@ -176,7 +178,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             }
 
             // On ground, we cannot do critical hits anyway.
-            if (player.isOnGround) {
+            if (!allowsCriticalHit()) {
                 return false
             }
 
@@ -186,19 +188,14 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
 
     }
 
-    fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false) = when {
-        CriticalsBlink.running && CriticalsBlink.isInState -> false
-        else -> CriticalsJump.shouldWaitForCrit(target, ignoreState)
-    }
-
-    fun allowsCriticalHit(ignoreOnGround: Boolean = false): Boolean {
+    fun allowsCriticalHit(ignoreOnGround: Boolean = false, ignoreWater: Boolean = false): Boolean {
         val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
 
         val blockingConditions = booleanArrayOf(
             // Modules
             ModuleFly.running,
             ModuleLiquidWalk.running && ModuleLiquidWalk.standingOnWater(),
-            player.isInLava, player.isTouchingWater, player.hasVehicle(),
+            player.isInLava, player.isTouchingWater && !ignoreWater, player.hasVehicle(),
             // Cobwebs
             player.box.collideBlockIntersects(checkCollisionShape = false) { it is CobwebBlock },
             // Effects
@@ -219,6 +216,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             (!player.isSprinting || ignoreSprint)
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =
-        canDoCriticalHit(false, ignoreSprint) && player.fallDistance > 0.0
-
+        canDoCriticalHit(true, ignoreSprint)
+            && player.fallDistance > 0.0f && (player.fallDistance < 0.08f
+            || !PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(1).onGround)
 }

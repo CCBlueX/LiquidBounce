@@ -436,7 +436,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
      * Check if we can attack the target at the current moment
      */
     internal fun validateAttack(target: Entity? = null): Boolean {
-        val criticalHit = target == null || player.isGliding || criticalsSelectionMode.isCriticalHit(target)
+        val criticalHit = target == null || player.isGliding || criticalsSelectionMode.isCriticalHit()
         val isInInventoryScreen = isInventoryOpen || isInContainerScreen
 
         return criticalHit && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
