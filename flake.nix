@@ -17,7 +17,7 @@
       libs = with pkgs; [
         temurin-bin
         pciutils
-        nodejs_24
+        bun
         libpulseaudio
         libGL
         glfw
