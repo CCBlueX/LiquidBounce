@@ -28,7 +28,8 @@ open class RotationsConfigurable(
             SigmoidAngleSmooth(it),
             interpolationAngleSmooth,
             AccelerationAngleSmooth(it),
-            if (combatSpecific) MinaraiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null
+            if (combatSpecific) MinaraiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null,
+            if (combatSpecific) UnobservedAngleSmooth(it) else null
         ).toTypedArray()
     }
 
