@@ -17,8 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import com.github.gradle.node.npm.task.NpmTask
-import com.github.gradle.node.task.NodeTask
+import com.github.gradle.bun.task.BunTask
 import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
@@ -269,18 +268,18 @@ tasks.processResources {
 
 // The following code will include the theme into the build
 
-tasks.register<NpmTask>("npmInstallTheme") {
+tasks.register<BunTask>("bunInstallTheme") {
     workingDir = file("src-theme")
     args.set(listOf("i"))
     doLast {
         logger.info("Successfully installed dependencies for theme")
     }
-    inputs.files("src-theme/package.json", "src-theme/package-lock.json")
+    inputs.files("src-theme/package.json", "src-theme/bun.lock")
     outputs.dir("src-theme/node_modules")
 }
 
-tasks.register<NpmTask>("buildTheme") {
-    dependsOn("npmInstallTheme")
+tasks.register<BunTask>("buildTheme") {
+    dependsOn("bunInstallTheme")
     workingDir = file("src-theme")
     args.set(listOf("run", "build"))
     doLast {
@@ -289,7 +288,7 @@ tasks.register<NpmTask>("buildTheme") {
 
     inputs.files(
         "src-theme/package.json",
-        "src-theme/package-lock.json",
+        "src-theme/bun.lock",
         "src-theme/bundle.cjs",
         "src-theme/rollup.config.js"
     )
@@ -297,7 +296,7 @@ tasks.register<NpmTask>("buildTheme") {
     outputs.dir("src-theme/dist")
 }
 
-tasks.register<NodeTask>("bundleTheme") {
+tasks.register<BunTask>("bundleTheme") {
     dependsOn("buildTheme")
     workingDir = file("src-theme")
     script = file("src-theme/bundle.cjs")
@@ -308,7 +307,7 @@ tasks.register<NodeTask>("bundleTheme") {
     // Incremental stuff
     inputs.files(
         "src-theme/package.json",
-        "src-theme/package-lock.json",
+        "src-theme/bun.lock",
         "src-theme/bundle.cjs",
         "src-theme/rollup.config.js"
     )
