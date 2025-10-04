@@ -51,12 +51,6 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     @Suppress("unused")
-    private val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
-        val chunk = world.getChunk(event.x, event.z)
-        ChunkScannerThread.process(UpdateRequest.ChunkUpdate(chunk))
-    }
-
-    @Suppress("unused")
     private val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         ChunkScannerThread.process(UpdateRequest.ChunkUnload(event.pos))
 
@@ -208,7 +202,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                             for (z in 0..15) {
                                 val blockState = section.getBlockState(x, sectionY, z)
                                 val pos = blockPos.set(startX or x, y, startZ or z)
-                                subscribersForRecordBlock.forEach { it.recordBlock(pos, blockState, cleared = true) }
+                                subscribersForRecordBlock.forEach { it.recordBlock(pos, blockState, cleared = false) }
                             }
                         }
                     }

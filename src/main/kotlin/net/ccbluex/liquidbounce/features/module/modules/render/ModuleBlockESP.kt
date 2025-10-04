@@ -67,6 +67,9 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
+    // It will not directly bypass anti xray plugins but may help filter fake blocks
+    private val bypassAX by boolean("BypassAntiXray", false)
+
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -190,6 +193,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
             state.block?.takeIf { it in targets }
-    }
 
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = !bypassAX
+    }
 }
