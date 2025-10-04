@@ -69,6 +69,8 @@ open class InventoryConstraints : Configurable("Constraints") {
         InventoryRequirements.NO_ROTATION
     )
 
+    internal val cancelMovement by boolean("CancelMovement", false)
+
     /**
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
      */

@@ -22,18 +22,12 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
@@ -69,6 +63,8 @@ object InventoryManager : EventListener {
         internal set
 
     private var recentInventoryOpen = false
+
+    private var cancelMovement = false
 
     /**
      * As soon the inventory changes unexpectedly,
@@ -151,6 +147,10 @@ object InventoryManager : EventListener {
                     // Handle player inventory open requirements
                     val requiresPlayerInventory = action.requiresPlayerInventoryOpen()
                     if (requiresPlayerInventory) {
+                        if (constraints.cancelMovement) {
+                            cancelMovement = true
+                            waitTicks(1)
+                        }
                         if (!isInventoryOpen) {
                             openInventorySilently()
                             waitTicks(constraints.startDelay.random())
@@ -205,7 +205,16 @@ object InventoryManager : EventListener {
             closeInventorySilently()
         }
 
+        cancelMovement = false
         lastClickedSlot = -1
+    }
+
+    @Suppress("unused")
+    private val movementHandler = handler<MovementInputEvent> { event ->
+        if (cancelMovement) {
+            event.directionalInput = DirectionalInput.NONE
+            event.jump = false
+        }
     }
 
     /**
