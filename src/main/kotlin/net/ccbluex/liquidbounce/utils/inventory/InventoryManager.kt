@@ -57,6 +57,9 @@ object InventoryManager : EventListener {
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
+    val isHandledScreenOpen
+        get() = mc.currentScreen is HandledScreen<*> || isInventoryOpenServerSide
+
     var isInventoryOpenServerSide = false
         internal set(value) {
             if (!field && value) {
