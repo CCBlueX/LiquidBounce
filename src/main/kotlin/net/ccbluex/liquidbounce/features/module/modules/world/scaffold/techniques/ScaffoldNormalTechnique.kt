@@ -75,6 +75,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
+
         val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleStuck.enabled) {
             FULL_INVESTIGATION_OFFSETS
         } else if (ScaffoldDownFeature.shouldGoDown) {
@@ -82,6 +83,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         } else {
             NORMAL_INVESTIGATION_OFFSETS
         }
+
         // Face position factory for current config
         val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose, optimalLine)
 
