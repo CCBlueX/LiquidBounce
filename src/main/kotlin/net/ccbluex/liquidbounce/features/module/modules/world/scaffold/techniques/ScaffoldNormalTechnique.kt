@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
@@ -74,20 +75,25 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
-
+        val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleStuck.enabled) {
+            FULL_INVESTIGATION_OFFSETS
+        } else if (ScaffoldDownFeature.shouldGoDown) {
+            INVESTIGATE_DOWN_OFFSETS
+        } else {
+            NORMAL_INVESTIGATION_OFFSETS
+        }
         // Face position factory for current config
         val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose, optimalLine)
 
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                offsets,
                 priorityComparator,
             ),
             FaceHandlingOptions(facePositionFactory),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
         )
-
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
     }
 
