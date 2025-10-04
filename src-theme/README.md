@@ -5,13 +5,13 @@ This directory contains the source code of LiquidBounce's default theme built wi
 ## Development
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/en) (latest or stable version)
+- [Bun](https://bun.com) (latest version)
 
 ### Setup
 
 1. **Install dependencies**
    ```bash
-   npm install
+   bun install
    ```
 
 2. **Configure development mode**
@@ -21,7 +21,7 @@ This directory contains the source code of LiquidBounce's default theme built wi
 
 4. **Start development server**
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 5. **Set theme in client**
@@ -38,7 +38,7 @@ To build the theme for production use, follow these steps:
 
 2. **Build the theme**
    ```bash
-   npm run build
+   bun run build
    ```
 
 3. **Locate build output**
