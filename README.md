@@ -48,7 +48,7 @@ our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
 1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`.
 2. CD into the local repository. (`cd LiquidBounce`)
-3. Run `./gradlew genSources`.
+3. Run `./gradlew genSources` for better development experience (Optional).
 4. Open the folder as a Gradle project in your preferred IDE.
 5. Run the client. (`./gradlew runClient`)
 
