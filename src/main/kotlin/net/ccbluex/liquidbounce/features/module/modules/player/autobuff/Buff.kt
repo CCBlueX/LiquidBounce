@@ -43,7 +43,7 @@ abstract class Buff(
      * Try to run feature if possible, otherwise return false
      */
     internal suspend fun runIfPossible(): Boolean {
-        if (!enabled || !passesRequirements) {
+        if (!enabled || !passesRequirements || player.usingItem) {
             return false
         }
 
@@ -56,7 +56,7 @@ abstract class Buff(
             // Check main hand and offhand
             execute(slot)
             return true
-        } else if (AutoSwap.enabled) {
+        } else if (AutoSwap.enabled && (AutoSwap.longSwap || !isLongConsumable)) {
             // Check if we should auto swap
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
@@ -71,6 +71,8 @@ abstract class Buff(
     }
 
     abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
+
+    open val isLongConsumable = false
 
     abstract suspend fun execute(slot: HotbarItemSlot)
 

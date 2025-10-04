@@ -47,7 +47,8 @@ object ModuleAutoBuff : ClientModule(
         Head,
         Pot,
         Drink,
-        Gapple
+        Gapple,
+        GappleSaturation
     )
 
     init {
@@ -72,6 +73,8 @@ object ModuleAutoBuff : ClientModule(
          * How long should we wait after using the item?
          */
         val delayOut by intRange("DelayOut", 1..1, 0..20, "ticks")
+
+        val longSwap by boolean("LongSwap", true)
 
     }
 

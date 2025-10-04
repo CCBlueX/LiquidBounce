@@ -21,32 +21,49 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import kotlinx.coroutines.CoroutineScope
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
-internal object Head : HealthBasedBuff("Head") {
+internal object GappleSaturation : Buff("GappleBySaturation") {
 
-    private val maxAbsorption by float("MaxAbsorption", 1f, 0f..8f)
-    private val cooldown by float("Cooldown", 0f, 0f..120f, "s")
-    private val chronometer = Chronometer()
+    private var forceUseKey = false
+
+    override val isLongConsumable = true
 
     override val passesRequirements: Boolean
-        get() = passesHealthRequirements
-            && chronometer.hasElapsed((cooldown * 1000).toLong())
-            && player.absorptionAmount <= maxAbsorption
+        get() {
+            val passesSaturationRequirements = 20 - player.hungerManager.saturationLevel +
+                (player.maxHealth - player.health) * 1.5f >= 9.6f && player.hungerManager.saturationLevel <= 14.9f
+            return super.passesRequirements && passesSaturationRequirements
+        }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.isOf(Items.PLAYER_HEAD)
+        return stack.isOf(Items.GOLDEN_APPLE)
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
+        forceUseKey = true
         interactItem(slot.useHand)
-        chronometer.reset()
+        tickUntil { !passesRequirements || !player.isUsingItem }
+        forceUseKey = false
+    }
+
+    override fun onDisabled() {
+        forceUseKey = false
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.useKey && forceUseKey) {
+            event.isPressed = true
+        }
     }
 
 }

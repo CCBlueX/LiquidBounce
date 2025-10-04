@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
@@ -33,13 +34,16 @@ internal object Gapple : HealthBasedBuff("Gapple") {
 
     private var forceUseKey = false
 
+    override val isLongConsumable = true
+
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
         return stack.isOf(Items.GOLDEN_APPLE)
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
         forceUseKey = true
-        tickUntil { !passesRequirements }
+        interactItem(slot.useHand)
+        tickUntil { !passesRequirements || !player.isUsingItem }
         forceUseKey = false
     }
 

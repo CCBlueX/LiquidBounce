@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
@@ -73,7 +73,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
 
             // Do not check for health pass requirements, because this is already done in the potion check
-            return isCloseGround && !isSplashNearby()
+            return isCloseGround && !isSplashNearby() && super.passesRequirements
         }
 
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
@@ -115,8 +115,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             }
         }
 
-        useHotbarSlotOrOffhand(
-            slot,
+        interactItem(
+            slot.useHand,
             yaw = rotation.yaw,
             pitch = rotation.pitch,
         )
@@ -170,7 +170,8 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
     /**
      * Check if splash potion is nearby to prevent throwing a potion that is not needed
      */
-    private fun isSplashNearby() =
+    private fun
+        isSplashNearby() =
         world.entities.filterIsInstance<PotionEntity>().any {
             it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE
         }

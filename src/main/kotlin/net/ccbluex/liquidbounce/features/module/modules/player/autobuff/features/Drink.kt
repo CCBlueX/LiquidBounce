@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
@@ -34,8 +35,11 @@ internal object Drink : StatusEffectBasedBuff("Drink") {
 
     private var forceUseKey = false
 
+    override val isLongConsumable = true
+
     override suspend fun execute(slot: HotbarItemSlot) {
         forceUseKey = true
+        interactItem(slot.useHand)
         tickUntil { !passesRequirements }
         forceUseKey = false
     }

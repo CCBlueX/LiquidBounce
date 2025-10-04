@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
@@ -50,7 +50,7 @@ internal object Soup : HealthBasedBuff("Soup") {
 
     override suspend fun execute(slot: HotbarItemSlot) {
         // Use item (be aware, it will always return false in this case)
-        useHotbarSlotOrOffhand(slot)
+        interactItem(slot.useHand)
 
         if (DropAfterUse.enabled) {
             waitTicks(wait.random())
