@@ -38,7 +38,7 @@
   "liquidbounce.command.client.subcommand.info.result.clientName": "Client Name: %s",
   "liquidbounce.command.client.subcommand.info.result.clientVersion": "Client Version: %s",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.showingAppearance": "The client appearance is now visible again. Enjoy the view!",
-  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "The client appearance is now hidden. If you want to restore it, type the command '.client appearance show' or press 2x CRTL+SHIFT in any non-game GUI with.",
+  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "The client appearance is now hidden. If you want to restore it, type the command '.client appearance show' or press 2x CTRL+SHIFT in any non-game GUI with.",
   "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.alreadyHidingAppearance": "The client appearance is already hidden. If you want to restore it, type the command '.client appearance show' instead.",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.alreadyShowingAppearance": "The client appearance is already visible. Are you looking to re-enable HUD? Type: '.t HUD'.",
   "liquidbounce.command.client.subcommand.config.subcommand.backup.result.backingUp": "Backing up [%s]...",

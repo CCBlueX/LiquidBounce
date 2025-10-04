@@ -38,7 +38,7 @@
   "liquidbounce.command.client.subcommand.info.result.clientName": "客户端名字: %s",
   "liquidbounce.command.client.subcommand.info.result.clientVersion": "客户端版本: %s",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.showingAppearance": "客户端UI现在再次可见。享受视觉吧！",
-  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "客户端UI现在已隐藏。如果你想恢复它，请输入命令‘.client appearance show’或在任何非游戏GUI中按2x CRTL+SHIFT。",
+  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "客户端UI现在已隐藏。如果你想恢复它，请输入命令‘.client appearance show’或在任何非游戏GUI中按2x CTRL+SHIFT。",
   "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.alreadyHidingAppearance": "客户端UI并非可见。如果你想恢复它，请输入命令‘.client appearance show’。",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.alreadyShowingAppearance": "客户端UI并未隐藏。你想重新开启HUD？输入：'.t HUD'。",
   "liquidbounce.command.client.subcommand.config.subcommand.backup.result.backingUp": "正在备份 [%s]...",

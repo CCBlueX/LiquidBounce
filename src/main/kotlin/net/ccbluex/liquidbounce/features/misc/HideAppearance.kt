@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.misc
 
 import com.terraformersmc.modmenu.util.mod.Mod
 import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.LiquidBounce.isInitialized
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -40,7 +40,6 @@ import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
 import net.minecraft.client.util.Icons
 import org.lwjgl.glfw.GLFW
-import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 private val modMenuPresent = runCatching {
@@ -51,7 +50,7 @@ private val modMenuPresent = runCatching {
 /**
  * Hides client appearance
  *
- * using 2x CRTL + SHIFT to hide and unhide the client
+ * using 2x CTRL + SHIFT to hide and unhide the client
  */
 object HideAppearance : EventListener {
 
@@ -128,7 +127,6 @@ object HideAppearance : EventListener {
      */
     fun destructClient() {
         isHidingNow = true
-        isDestructed = true
 
         mc.inGameHud.chatHud.messageHistory.removeIf {
             it.startsWith(CommandManager.Options.prefix)
@@ -138,7 +136,12 @@ object HideAppearance : EventListener {
         ioScope.cancel()
 
         callEvent(ClientShutdownEvent)
-        EventManager.unregisterAll()
+
+        while (isInitialized) {
+            // Wait for the client shutdown
+        }
+
+        isDestructed = true
 
         // Disable all modules
         // Be careful to not trigger ConfigManager saving, but this should be prevented by [isDestructed]
@@ -150,8 +153,6 @@ object HideAppearance : EventListener {
     }
 
     fun wipeClient() = thread(name = "wipe-client") {
-        // Wait for the client to be destructed
-        sleep(1000L)
 
         // Clear log folder
         mc.runDirectory.resolve("logs").listFiles()?.forEach {

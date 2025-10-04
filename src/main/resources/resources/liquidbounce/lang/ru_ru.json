@@ -42,7 +42,7 @@
   "liquidbounce.command.clear.description": "Очищает чат.",
   "liquidbounce.command.client.description": "Позволяет управлять клиентом.",
   "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.alreadyHidingAppearance": "Внешний вид клиента уже скрыт. Если вы хотите восстановить его, введите команду '.client appearance show'.",
-  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "Внешний вид клиента теперь скрыт. Если вы хотите восстановить его, введите команду '.client appearance show' или нажмите два раза CRTL+SHIFT в любом неигровом граф. интерфейсе.",
+  "liquidbounce.command.client.subcommand.appearance.subcommand.hide.result.hidingAppearance": "Внешний вид клиента теперь скрыт. Если вы хотите восстановить его, введите команду '.client appearance show' или нажмите два раза CTRL+SHIFT в любом неигровом граф. интерфейсе.",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.alreadyShowingAppearance": "Внешний вид клиента уже виден. Вы хотите снова включить HUD? Введите: '.t HUD'.",
   "liquidbounce.command.client.subcommand.appearance.subcommand.show.result.showingAppearance": "Теперь внешний вид клиента снова виден. Наслаждайтесь видом!",
   "liquidbounce.command.client.subcommand.config.subcommand.backup.result.backedUp": "Резервная копия успешно сохранена в %s.",

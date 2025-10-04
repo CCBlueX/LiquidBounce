@@ -381,7 +381,7 @@
 	"liquidbounce.module.fullBright.description": "暗所での視認性を高めます。",
 	"liquidbounce.module.ghostHand.description": "選択したブロックを壁越しに操作できるようにします。",
 	"liquidbounce.module.handDerp.description": "メインハンドとオフハンドを常時切り替えます。",
-	"liquidbounce.module.hideClient.description": "クライアント自身の外観を隠します。どのGUIでもCRTL+SHIFTを二回押すことでで切り替え可能です。",
+	"liquidbounce.module.hideClient.description": "クライアント自身の外観を隠します。どのGUIでもCTRL+SHIFTを二回押すことでで切り替え可能です。",
 	"liquidbounce.module.highJump.description": "より高くジャンプできます。",
 	"liquidbounce.module.hitbox.description": "他のエンティティの当たり判定を拡大します。",
 	"liquidbounce.module.holeESP.description": "クリスタルPvPのための安全な場所を表示します。",
