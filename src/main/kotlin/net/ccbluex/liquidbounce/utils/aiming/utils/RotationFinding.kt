@@ -183,7 +183,7 @@ private class PrePlaningTracker(
 
 }
 
-interface VisibilityPredicate {
+fun interface VisibilityPredicate {
     fun isVisible(
         eyesPos: Vec3d,
         targetSpot: Vec3d,
@@ -208,7 +208,7 @@ class BoxVisibilityPredicate : VisibilityPredicate {
     }
 }
 
-fun pointOnBlockSide(
+private fun pointOnBlockSide(
     side: Direction,
     a: Double,
     b: Double,
@@ -445,20 +445,19 @@ private inline fun scanBoxPoints(
 
     // We cannot project points on something if we are inside the hitbox
     if (!isOutsideBox) {
-        scanBoxPoints3D(box, fn, 0.1)
+        box.scanBoxPoints3D(0.1, fn)
     }
 }
 
-private inline fun scanBoxPoints3D(
-    box: Box,
+private inline fun Box.scanBoxPoints3D(
+    step: Double,
     fn: (Vec3d) -> Unit,
-    step: Double
 ) {
     forEach3D(Vec3d(0.1, 0.1, 0.1), Vec3d(0.9, 0.9, 0.9), step) { x, y, z ->
         val vec3 = Vec3d(
-            box.minX + (box.maxX - box.minX) * x,
-            box.minY + (box.maxY - box.minY) * y,
-            box.minZ + (box.maxZ - box.minZ) * z,
+            minX + (maxX - minX) * x,
+            minY + (maxY - minY) * y,
+            minZ + (maxZ - minZ) * z,
         )
 
         fn(vec3)

@@ -132,7 +132,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
         return when (aimMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
-            AimMode.RANDOM -> RandomTargetPositionFactory(config)
+            AimMode.RANDOM -> RandomTargetPositionFactory
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
             AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)

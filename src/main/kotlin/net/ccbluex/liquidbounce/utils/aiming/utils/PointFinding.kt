@@ -66,7 +66,7 @@ fun getRotationMatricesForVec(vec: Vec3d): Pair<Matrix3f, Matrix3f> {
  *
  * @return a list of projected points, or null if the virtual eye is inside the target box.
  */
-fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128): ArrayList<Vec3d>? {
+fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128): MutableList<Vec3d>? {
     val list = ArrayList<Vec3d>()
 
     val success = projectPointsOnBox(virtualEye, targetBox, maxPoints) {
