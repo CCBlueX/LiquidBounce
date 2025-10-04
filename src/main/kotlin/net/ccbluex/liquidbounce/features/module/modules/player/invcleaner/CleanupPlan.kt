@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.component.ComponentChanges
@@ -50,10 +52,12 @@ class InventoryCleanupPlan(
 ) {
     /**
      * Replaces the slot from key to value
+     *
+     * This method modifies all members.
      */
     fun remapSlots(slotMap: Map<ItemSlot, ItemSlot>) {
-        val usefulItemsToAdd = mutableSetOf<ItemSlot>()
-        val usefulItemsToRemove = hashSetOf<ItemSlot>()
+        val usefulItemsToAdd = ObjectLinkedOpenHashSet<ItemSlot>()
+        val usefulItemsToRemove = ObjectOpenHashSet<ItemSlot>()
 
         for ((from, to) in slotMap) {
             if (from in usefulItems) {

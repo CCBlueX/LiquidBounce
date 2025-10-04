@@ -95,6 +95,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
 
     init {
+        tree(ScaffoldBlockItemSelection)
         tree(ScaffoldAutoBlockFeature)
         tree(ScaffoldMovementPrediction)
     }
@@ -466,8 +467,15 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         val target = currentTarget
 
+
+        val computedRotation = if (target != null) {
+            technique.activeChoice.getRotations(target)
+        } else {
+            null
+        }
+
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            target.rotation
+            computedRotation ?: (RotationManager.currentRotation ?: player.rotation)
         } else {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()

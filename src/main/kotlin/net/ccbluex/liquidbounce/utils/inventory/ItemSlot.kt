@@ -63,6 +63,14 @@ sealed interface ItemSlot {
                 else -> 0
             }
         }
+
+        @JvmField
+        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
+            left.itemStack.count.compareTo(right.itemStack.count)
+        }
+
+        @JvmField
+        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PREFER_FEWER_ITEM.reversed()
     }
 }
 

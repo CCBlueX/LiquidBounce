@@ -309,7 +309,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         cleanupPlan: InventoryCleanupPlan,
         screen: HandledScreen<*>
     ): Boolean? {
-        for (hotbarSwap in cleanupPlan.swaps) {
+        for (i in cleanupPlan.swaps.indices) {
+            val hotbarSwap = cleanupPlan.swaps[i]
             // We only care about swaps from the chest to the hotbar
             if (hotbarSwap.from.slotType != ItemSlotType.CONTAINER) {
                 continue

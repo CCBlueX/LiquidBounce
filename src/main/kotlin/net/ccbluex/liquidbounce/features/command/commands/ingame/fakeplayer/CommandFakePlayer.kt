@@ -96,6 +96,9 @@ object CommandFakePlayer : Command.Factory, EventListener {
                 ParameterBuilder
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .autocompletedFrom {
+                        fakePlayers.map { fakePlayer -> fakePlayer.name.string }
+                    }
                     .optional()
                     .build()
             )

@@ -57,6 +57,9 @@ object InventoryManager : EventListener {
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
+    val isHandledScreenOpen
+        get() = mc.currentScreen is HandledScreen<*> || isInventoryOpenServerSide
+
     var isInventoryOpenServerSide = false
         internal set(value) {
             if (!field && value) {
@@ -271,8 +274,7 @@ object InventoryManager : EventListener {
 
         if (screen is HandledScreen<*>) {
             debugParameter("Screen Handler Type") {
-                val type = runCatching { screen.screenHandler.type }.getOrNull()
-                type?.let {
+                screen.screenHandler.typeOrNull?.let {
                     Registries.SCREEN_HANDLER.getId(it)
                 }
             }

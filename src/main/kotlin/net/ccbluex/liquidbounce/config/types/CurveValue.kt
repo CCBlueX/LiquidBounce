@@ -36,8 +36,10 @@ open class CurveValue(
     Vector2f::class.java
 ) {
 
+    @JvmRecord
     data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>) {
         companion object {
+            @JvmStatic
             infix fun String.axis(range: ClosedFloatingPointRange<Float>) = Axis(this, range)
         }
     }
