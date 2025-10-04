@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet
 import it.unimi.dsi.fastutil.ints.IntSet
+import java.security.SecureRandom
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.mapToIntArray
 import java.util.*
@@ -74,13 +75,15 @@ inline fun range(
 fun ClosedFloatingPointRange<Float>.random(): Float {
     require(start.isFinite())
     require(endInclusive.isFinite())
-    return (start + (endInclusive - start) * Math.random()).toFloat()
+    if (start == endInclusive) return start
+    return SecureRandom().nextFloat(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Double>.random(): Double {
     require(start.isFinite())
     require(endInclusive.isFinite())
-    return start + (endInclusive - start) * Math.random()
+    if (start == endInclusive) return start
+    return SecureRandom().nextDouble(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
