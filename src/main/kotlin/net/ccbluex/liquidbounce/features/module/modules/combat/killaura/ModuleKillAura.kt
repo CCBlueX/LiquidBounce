@@ -65,12 +65,12 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import kotlin.math.pow
 
 /**
  * KillAura module
@@ -86,11 +86,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     // Range
     internal val range by float("Range", 4.2f, 1f..8f)
     internal val wallRange by float("WallRange", 3f, 0f..8f).onChange { wallRange ->
-        if (wallRange > range) {
-            range
-        } else {
-            wallRange
-        }
+        minOf(wallRange, range)
     }
 
     private val scanExtraRange by floatRange("ScanExtraRange", 2.0f..3.0f, 0.0f..7.0f).onChanged { range ->
@@ -263,7 +259,8 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         // Check if our target is in range, otherwise deal with auto block
         if (!isFacingEnemy) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= (range + currentScanExtraRange).pow(2)) {
+                player.squaredBoxedDistanceTo(target) <= (range + currentScanExtraRange).sq()
+            ) {
                 KillAuraAutoBlock.startBlocking()
                 return
             }
@@ -314,7 +311,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     private fun updateTarget() {
         // Calculate maximum range based on enemy distance
-        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.pow(2)) {
+        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.sq()) {
             range + currentScanExtraRange
         } else {
             range
@@ -322,8 +319,8 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
         debugParameter("Maximum Range") { maximumRange }
         debugParameter("Range") { range }
-        val squaredMaxRange = maximumRange.pow(2)
-        val squaredNormalRange = range.pow(2)
+        val squaredMaxRange = maximumRange.sq()
+        val squaredNormalRange = range.sq()
 
         // Find suitable target
         val target = targetTracker.targets()
@@ -396,7 +393,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
      *
      * @param entity The entity to attack
      * @param range The range to attack the entity (NOT SQUARED)
-     * @param ticks The ticks until we attack
      *
      *  @return The best spot to attack the entity
      */
@@ -415,7 +411,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val rotation = raytraceBox(
             eyes = eyes,
             box = point.box,
-            // Since [range] is squared, we need to square root
             range = range,
             wallsRange = wallRange.toDouble(),
             rotationPreference = rotationPreference
