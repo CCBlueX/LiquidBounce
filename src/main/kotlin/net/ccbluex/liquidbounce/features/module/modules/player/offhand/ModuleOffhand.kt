@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -44,6 +45,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.lwjgl.glfw.GLFW
@@ -63,6 +65,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     )
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
     private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
+    private val cycleOnEnd by boolean("CycleOnEnd", false)
 
     private object Gapple : ToggleableConfigurable(this, "Gapple", true) {
         object WhileHoldingSword : ToggleableConfigurable(this, "WhileHoldingSword", true) {
@@ -74,6 +77,10 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         init {
             tree(WhileHoldingSword)
         }
+    }
+
+    private object Head : ToggleableConfigurable(this, "Head", true) {
+        val headBind by key("HeadBind")
     }
 
     private object Crystal : ToggleableConfigurable(this, "Crystal", true) {
@@ -106,6 +113,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     private val INVENTORY_MAIN_PRIORITY = Slots.Inventory + Slots.Hotbar
     private val INVENTORY_HOTBAR_PRIORITY = Slots.Hotbar + Slots.Inventory
     private val chronometer = Chronometer()
+    private var awaitSmart = false
     private var activeMode: Mode = Mode.NONE
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
@@ -116,12 +124,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         get() = activeMode.modeName
 
     override fun onEnabled() {
-        staticMode = when {
-            Crystal.enabled && Mode.CRYSTAL.canCycleTo() -> Mode.CRYSTAL
-            Gapple.enabled -> Mode.GAPPLE
-            Totem.enabled && !Totem.Health.enabled -> Mode.TOTEM
-            else -> Mode.NONE
-        }
+        staticMode = Mode.NONE
     }
 
     @Suppress("unused")
@@ -132,6 +135,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
 
         when (it.key.code) {
             Gapple.gappleBind.code -> Mode.GAPPLE.onBindPress()
+            Head.headBind.code -> Mode.HEAD.onBindPress()
             Crystal.crystalBind.code -> Mode.CRYSTAL.onBindPress()
             Strength.strengthBind.code -> {
                 // since we can't cycle to strength, its status has to be checked here
@@ -141,25 +145,14 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             }
 
             cycleSlots.code -> {
-                val entries = Mode.entries
-                val startIndex = staticMode.ordinal
-                var index = (startIndex + 1) % entries.size
-
-                while (index != startIndex) {
-                    val mode = entries[index]
-                    if (mode.canCycleTo()) {
-                        staticMode = mode
-                        return@handler
-                    }
-
-                    index = (index + 1) % entries.size
-                }
+                cycle()
             }
         }
     }
 
     @Suppress("unused")
     private val autoTotemHandler = handler<ScheduleInventoryActionEvent>(priority = 100) {
+
         activeMode = Mode.entries.firstOrNull(Mode::shouldEquip) ?: staticMode
         if (activeMode == Mode.NONE && Totem.Health.switchBack && lastMode == Mode.TOTEM) {
             activeMode = Mode.BACK
@@ -187,7 +180,11 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             return@handler
         }
 
-        val slot = activeMode.getSlot() ?: return@handler
+        val slot = activeMode.getSlot()
+        if (slot == null) {
+            if (cycleOnEnd) cycle()
+            return@handler
+        }
         lastMode = activeMode
 
         // the item is already located in Off-hand slot
@@ -212,30 +209,41 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         chronometer.reset()
     }
 
-    private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
+    private fun performSwitch(from: ItemSlot, smart: Boolean, switch: Boolean): List<InventoryAction.Click> {
         return if (smart && from is HotbarItemSlot) {
-            val selectedSlot = player.inventory.selectedSlot
-            val targetSlot = from.hotbarSlot
-            if (selectedSlot != targetSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(targetSlot))
-            }
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                    BlockPos.ORIGIN,
-                    Direction.DOWN
+            if (!awaitSmart) {
+                val selectedSlot = player.inventory.selectedSlot
+                val targetSlot = from.hotbarSlot
+                if (selectedSlot != targetSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(targetSlot))
+                }
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
+                    )
                 )
-            )
-            if (selectedSlot != targetSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
+                if (selectedSlot != targetSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
+                }
             }
             emptyList()
         } else {
-            buildList(3) {
-                this += InventoryAction.Click.performPickup(slot = from)
-                this += InventoryAction.Click.performPickup(slot = OffHandSlot)
-                if (!OffHandSlot.itemStack.isEmpty) {
+            if (switch) {
+                listOf(
+                    InventoryAction.Click.performSwap(
+                        from = from,
+                        to = OffHandSlot
+                    )
+                )
+            } else {
+                buildList(3) {
                     this += InventoryAction.Click.performPickup(slot = from)
+                    this += InventoryAction.Click.performPickup(slot = OffHandSlot)
+                    if (!OffHandSlot.itemStack.isEmpty) {
+                        this += InventoryAction.Click.performPickup(slot = from)
+                    }
                 }
             }
         }
@@ -296,6 +304,9 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             }
 
             override fun canCycleTo() = Gapple.enabled
+        },
+        HEAD("Head", Items.PLAYER_HEAD) {
+            override fun canCycleTo() = Head.enabled
         },
         CRYSTAL("Crystal", Items.END_CRYSTAL) {
             override fun canCycleTo() = Crystal.enabled && (!Crystal.onlyWhileCa || ModuleCrystalAura.running)
@@ -379,14 +390,18 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     @Suppress("unused")
     private enum class SwitchMode(override val choiceName: String) : NamedChoice {
         /**
-         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
+         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
          * Works on all versions.
          *
-         * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action
-         * often and quickly.
+         * It's not the default because it resets item cooldown and some servers kick
+         * you when you perform a SWAP_ITEM_WITH_OFFHAND action often and quickly.
          */
         SMART("Smart") {
-            override fun performSwitch(from: ItemSlot) = performSwitch(from, true)
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, smart = true, switch = false)
+        },
+
+        SWITCHSMART("SwitchSmart") {
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, smart = true, switch = true)
         },
 
         /**
@@ -394,12 +409,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
          * The best method on newer servers.
          */
         SWITCH("Switch") {
-            override fun performSwitch(from: ItemSlot) = listOf(
-                InventoryAction.Click.performSwap(
-                    from = from,
-                    to = OffHandSlot
-                )
-            )
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, smart = false, switch = true)
         },
 
         /**
@@ -407,7 +417,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
          * Works on all versions.
          */
         PICKUP("PickUp") {
-            override fun performSwitch(from: ItemSlot) = performSwitch(from, false)
+            override fun performSwitch(from: ItemSlot) = performSwitch(from, smart = false, switch = false)
         },
 
         /**
@@ -424,6 +434,30 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         };
 
         abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
+    }
+
+    private fun cycle() {
+        val entries = Mode.entries
+        val startIndex = staticMode.ordinal
+        var index = (startIndex + 1) % entries.size
+
+        while (index != startIndex) {
+            val mode = entries[index]
+            if (mode.canCycleTo()) {
+                staticMode = mode
+                return
+            }
+
+            index = (index + 1) % entries.size
+        }
+    }
+
+    @Suppress("unused")
+    private val updateSmart = handler<PacketEvent> { event ->
+        val packet = event.packet
+        if (packet is ScreenHandlerSlotUpdateS2CPacket && packet.slot == 45) {
+            awaitSmart = false
+        }
     }
 
 }

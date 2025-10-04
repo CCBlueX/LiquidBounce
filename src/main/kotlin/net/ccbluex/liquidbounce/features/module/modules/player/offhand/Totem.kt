@@ -132,7 +132,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
         fun healthBelowThreshold(): Boolean {
             if (!enabled) {
-                return true
+                return false
             }
 
             if (missingArmor && Slots.Armor.any { it.itemStack.isEmpty }) {
