@@ -15,7 +15,7 @@
     function startHideTimeout() {
         hideTimeout = setTimeout(() => {
             visible = false;
-        }, 500);
+        }, 1000);
     }
 
     listen("targetChange", (data: TargetChangeEvent) => {
