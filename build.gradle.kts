@@ -203,7 +203,7 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // Kotlin add-on for Java library
-    includeDependency("net.ccbluex:fastutil-kt-ext:0.1.2")
+    includeDependency("net.ccbluex:fastutil-kt-ext:0.1.3")
 
     // Test libraries
     testImplementation(kotlin("test"))
