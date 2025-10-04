@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.Screen
@@ -114,7 +115,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isInventoryOpen) {
+        if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
             return@handler
         }
 
@@ -122,7 +123,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
         if (isContainerPacket(packet) && player.input.playerInput.any) {
             event.cancelEvent()
-            once<MovementInputEvent>(FIRST_PRIORITY) {
+            once<MovementInputEvent>(READ_FINAL_STATE) {
                 it.sneak = false
                 it.jump = false
                 it.directionalInput = DirectionalInput.NONE
