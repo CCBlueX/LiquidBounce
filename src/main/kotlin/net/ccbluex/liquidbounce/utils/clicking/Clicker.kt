@@ -110,32 +110,25 @@ open class Clicker<T>(
 
     val ticksUntilClick: Int
         get() {
-            for (i in 0 until clickArray.iterations) {
+            for (i in 0 until clickArray.array.size) {
                 if (willClickAt(i)) {
                     return i
                 }
             }
 
-            return clickArray.iterations
+            return clickArray.array.size
         }
 
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
     fun getClickAmount(tick: Int = 0): Int {
-        if (isEnforcedClick()) {
-            return 1
-        }
-        return clickArray.get(tick)
-    }
-
-    private fun isEnforcedClick(tick: Int = 0): Boolean {
         val hasCooldown = player.hasCooldown
         debugParameter("HasCooldown") { hasCooldown }
-        if (hasCooldown && itemCooldown?.isCooldownPassed(tick) == true) {
-            return true
+        return if (hasCooldown) {
+            if (itemCooldown?.isCooldownPassed(tick) == true) 1 else 0
+        } else {
+            clickArray.get(tick)
         }
-
-        return lastClickPassed + (tick * 50L) >= 1000L
     }
 
     @Suppress("unused")
