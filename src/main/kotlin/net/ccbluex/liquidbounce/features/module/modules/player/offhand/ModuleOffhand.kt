@@ -124,7 +124,12 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         get() = activeMode.modeName
 
     override fun onEnabled() {
-        staticMode = Mode.NONE
+        staticMode = when {
+            Crystal.enabled && Mode.CRYSTAL.canCycleTo() -> Mode.CRYSTAL
+            Gapple.enabled -> Mode.GAPPLE
+            Totem.enabled && !Totem.Health.enabled -> Mode.TOTEM
+            else -> Mode.NONE
+        }
     }
 
     @Suppress("unused")
