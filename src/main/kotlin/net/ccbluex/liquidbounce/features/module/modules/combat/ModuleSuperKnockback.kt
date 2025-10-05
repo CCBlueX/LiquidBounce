@@ -114,14 +114,14 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val delayTicks by intRange("DelayTicks", 1..2,0..10)
-        private val resetTicks by intRange("ResetTicks", 1..2,0..10)
+        private val delayTicks by intRange("Delay", 1..2, 0..10, suffix = "ticks")
+        private val resetTicks by intRange("Reset", 1..2, 0..10, suffix = "ticks")
 
-        var delay = 0
-        var reset = 0
+        private var delay = 0
+        private var reset = 0
 
         @Suppress("unused")
-        private val tickHandler = sequenceHandler<GameTickEvent> {
+        private val tickHandler = handler<GameTickEvent> {
             val target = ModuleKillAura.targetTracker.target
 
             if (target != null && target.hurtTime == 10) {
@@ -133,7 +133,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         }
 
         @Suppress("unused")
-        private val movementHandler = sequenceHandler<SprintEvent> { event ->
+        private val movementHandler = handler<SprintEvent> { event ->
             if (delay == 0 && reset > 0 && (event.source == SprintEvent.Source.MOVEMENT_TICK ||
                     event.source == SprintEvent.Source.INPUT)) {
                 event.sprint = false
