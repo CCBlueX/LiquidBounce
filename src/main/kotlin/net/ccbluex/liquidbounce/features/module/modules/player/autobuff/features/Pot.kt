@@ -170,8 +170,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
     /**
      * Check if splash potion is nearby to prevent throwing a potion that is not needed
      */
-    private fun
-        isSplashNearby() =
+    private fun isSplashNearby() =
         world.entities.filterIsInstance<PotionEntity>().any {
             it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE
         }
