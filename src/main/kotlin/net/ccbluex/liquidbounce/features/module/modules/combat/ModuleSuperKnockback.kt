@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback.SprintTap.cancelSprint
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -122,7 +121,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
-            val target = ModuleKillAura.targetTracker.target
+            val target = ModuleKillAura.targetTracker.target ?: ModuleAimbot.targetTracker.target
 
             if (target != null && target.hurtTime == 10) {
                 delay = delayTicks.random()
