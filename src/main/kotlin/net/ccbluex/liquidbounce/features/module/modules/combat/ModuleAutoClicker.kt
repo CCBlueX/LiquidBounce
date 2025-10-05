@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.entity.Entity
 import net.minecraft.item.BlockItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
@@ -97,6 +96,10 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 Weapon.BOTH -> stack.isSword || stack.isAxe
                 Weapon.ANY -> true
             }
+        }
+
+        fun isCriticalHit(): Boolean {
+            return criticalsSelectionMode.isCriticalHit()
         }
 
         suspend fun encounterItemUse(): Boolean {
@@ -177,7 +180,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
-                if (!criticalsSelectionMode.isCriticalHit()) {
+                if (!isCriticalHit()) {
                     return@run
                 }
             }
