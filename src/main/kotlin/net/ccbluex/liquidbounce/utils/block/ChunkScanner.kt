@@ -198,7 +198,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                     if (subscriber.shouldCallRecordBlockOnChunkUpdate) {
                         for (i in 0 until chunkCount) {
                             scanChunkSections(chunks[i]) { pos, state ->
-                                subscriber.recordBlock(pos, state)
+                                subscriber.recordBlock(pos, state, cleared = true)
                             }
                         }
                     }
@@ -232,7 +232,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                     }
 
                     scanChunkSections(chunk) { pos, state ->
-                        subscribersForRecordBlock.forEach { it.recordBlock(pos, state) }
+                        subscribersForRecordBlock.forEach { it.recordBlock(pos, state, cleared = true) }
                     }
                 }
 
@@ -246,7 +246,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             override suspend fun run() {
                 packet.visitUpdates { blockPos, state ->
                     subscribers.forEach {
-                        it.recordBlock(blockPos, state)
+                        it.recordBlock(blockPos, state, cleared = false)
                     }
                 }
             }
@@ -263,7 +263,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         class BlockUpdate(val blockPos: BlockPos, val newState: BlockState) : UpdateRequest {
             override suspend fun run() {
                 subscribers.forEach {
-                    it.recordBlock(blockPos, newState)
+                    it.recordBlock(blockPos, newState, cleared = false)
                 }
             }
         }
@@ -281,9 +281,11 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          * This method must be **thread-safe**.
          *
-         * @param pos DON'T directly save it to a container Property (Field in Java), save a copy instead
+         * @param pos Might be [BlockPos.Mutable]. Use copy if it needs to be saved.
+         * @param state The new [BlockState] of [pos].
+         * @param cleared If the block is in section already cleared. Or, does it not need to check existing records
          */
-        fun recordBlock(pos: BlockPos, state: BlockState)
+        fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
 
         /**
          * Is called when a chunk is initially loaded or entirely updated.

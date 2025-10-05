@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
@@ -74,11 +75,13 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      */
     abstract fun isEmpty(): Boolean
 
-    final override fun recordBlock(pos: BlockPos, state: BlockState) {
+    final override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
         val newState = this.getStateFor(pos, state)
 
         if (newState == null) {
-            untrack(pos)
+            if (!cleared) {
+                untrack(pos)
+            }
         } else {
             track(pos, newState)
         }
@@ -99,7 +102,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see AbstractBlockLocationTracker
      */
     abstract class State2BlockPos<T> : AbstractBlockLocationTracker<T>() {
-        private val stateAndPositions = hashMapOf<T, LongSet>()
+        private val stateAndPositions = Object2ObjectOpenHashMap<T, LongSet>()
 
         private val lock = ReentrantReadWriteLock()
 
