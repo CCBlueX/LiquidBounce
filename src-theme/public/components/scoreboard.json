@@ -8,5 +8,22 @@
     "verticalAlignment": "CenterTranslated",
     "verticalOffset": 0
   },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "Numbers",
+      "value": false
+    },
+    {
+      "type": "TEXT",
+      "name": "Address",
+      "value": "www.liquidbounce.net"
+    },
+    {
+      "type": "COLOR",
+      "name": "AddressColor",
+      "value": 4282062335
+    }
+  ],
   "tweaks": ["DISABLE_SCOREBOARD"]
 }

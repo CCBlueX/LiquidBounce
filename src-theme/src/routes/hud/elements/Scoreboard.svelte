@@ -3,6 +3,9 @@
     import type {PlayerData, Scoreboard} from "../../../integration/types";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import {intToRgba, rgbaToHex} from "../../../integration/util";
+
+    export let settings: { [name: string]: any };
 
     let scoreboard: Scoreboard | null = null;
 
@@ -19,11 +22,21 @@
                 <TextComponent fontSize={14} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
         {/if}
+
         <div class="entries">
-            {#each scoreboard.entries as {name, score}}
+            {#each scoreboard.entries as {name, score}, i}
                 <div class="row">
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {#if i === scoreboard.entries.length - 1 && settings?.address}
+                        <div class="custom-ip" style="color: {rgbaToHex(intToRgba(settings.addressColor))}">
+                            {settings.address}
+                        </div>
+                    {:else}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
+                    {/if}
+
+                    <div class:hidden={!settings?.numbers}>
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    </div>
                 </div>
             {/each}
         </div>
@@ -56,4 +69,17 @@
     background-color: rgba($scoreboard-base-color, 0.68);
     padding: 7px 10px;
   }
+
+  .hidden {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .custom-ip {
+    display: block;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+  }
 </style>
+
