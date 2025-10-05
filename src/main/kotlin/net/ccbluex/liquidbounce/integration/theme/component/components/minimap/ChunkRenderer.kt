@@ -64,7 +64,6 @@ object ChunkRenderer {
         override fun recordBlock(
             pos: BlockPos,
             state: BlockState,
-            cleared: Boolean,
         ) {
             val heightmapUpdated = heightmapManager.updatePosition(pos, state)
 

@@ -63,7 +63,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     override val shouldCallRecordBlockOnChunkUpdate: Boolean
         get() = false
 
-    override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
+    override fun recordBlock(pos: BlockPos, state: BlockState) {
         // Invalidate old ones
         if (state.isAir) {
             // if one of the neighbor blocks becomes air, invalidate the hole

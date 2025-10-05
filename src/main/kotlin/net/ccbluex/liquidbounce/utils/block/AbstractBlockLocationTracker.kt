@@ -74,13 +74,11 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      */
     abstract fun isEmpty(): Boolean
 
-    final override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
+    final override fun recordBlock(pos: BlockPos, state: BlockState) {
         val newState = this.getStateFor(pos, state)
 
         if (newState == null) {
-            if (!cleared) {
-                untrack(pos)
-            }
+            untrack(pos)
         } else {
             track(pos, newState)
         }
