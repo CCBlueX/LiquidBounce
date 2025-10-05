@@ -38,7 +38,7 @@ class UnobservedAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Unobse
         )
     }
 
-    private val observationTime by int("ObservationTime", 8, 1..300, "ticks")
+    private val observationTime by int("ObservationTime", 10, 1..300, "ticks")
 
     override fun process(
         rotationTarget: RotationTarget,
