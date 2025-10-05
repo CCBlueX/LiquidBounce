@@ -32,14 +32,11 @@ import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.chunk.WorldChunk
 import java.util.concurrent.CopyOnWriteArrayList
 
 object ChunkScanner : EventListener, MinecraftShortcuts {
-
-    init {
-        ChunkScannerThread
-    }
 
     private val subscribers = CopyOnWriteArrayList<BlockChangeSubscriber>()
 
@@ -61,7 +58,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 UpdateRequest.BlockUpdate(packet.pos, packet.state)
             )
 
-            // All updates are in same
+            // All updates are in one section
             is ChunkDeltaUpdateS2CPacket -> ChunkScannerThread.process(
                 UpdateRequest.ChunkSectionUpdate(packet)
             )
@@ -138,9 +135,10 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 when (request) {
                     is UpdateRequest.ChunkLoad -> scanChunk(request)
 
-                    is UpdateRequest.ChunkSectionUpdate -> {
-                        request.packet.sectionPos
-                        // TODO
+                    is UpdateRequest.ChunkSectionUpdate -> request.packet.visitUpdates { blockPos, state ->
+                        subscribers.forEach {
+                            it.recordBlock(blockPos, state, cleared = false)
+                        }
                     }
 
                     is UpdateRequest.ChunkUnload -> subscribers.forEach {
@@ -219,6 +217,10 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             }.joinAll()
 
             logger.debug("Scanning chunk (${chunk.pos.x}, ${chunk.pos.z}) took ${(System.nanoTime() - start) / 1000}us")
+        }
+
+        private fun scanChunkSection(section: ChunkSection) {
+
         }
 
         fun stopThread() {
