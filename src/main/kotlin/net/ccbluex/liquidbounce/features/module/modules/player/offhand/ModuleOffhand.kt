@@ -214,7 +214,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         chronometer.reset()
     }
 
-    private fun performSmart(from: ItemSlot) {
+    private fun performSmart(from: HotbarItemSlot) {
         if (!awaitSmart) {
             val selectedSlot = player.inventory.selectedSlot
             val targetSlot = from.hotbarSlot
