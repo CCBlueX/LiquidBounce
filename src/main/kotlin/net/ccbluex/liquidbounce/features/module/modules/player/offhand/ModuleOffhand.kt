@@ -132,6 +132,22 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         }
     }
 
+    private fun cycle() {
+        val entries = Mode.entries
+        val startIndex = staticMode.ordinal
+        var index = (startIndex + 1) % entries.size
+
+        while (index != startIndex) {
+            val mode = entries[index]
+            if (mode.canCycleTo()) {
+                staticMode = mode
+                return
+            }
+
+            index = (index + 1) % entries.size
+        }
+    }
+
     @Suppress("unused")
     val keyHandler = handler<KeyEvent> {
         if (it.action != GLFW.GLFW_PRESS) {
@@ -231,9 +247,10 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             if (selectedSlot != targetSlot) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
             }
+            awaitSmart = true
         }
     }
-    
+
     private fun performSwitch(from: ItemSlot, smart: Boolean, switch: Boolean): List<InventoryAction.Click> {
         return if (smart && from is HotbarItemSlot) {
             performSmart(from)
@@ -399,7 +416,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
     @Suppress("unused")
     private enum class SwitchMode(override val choiceName: String) : NamedChoice {
         /**
-         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
+         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possibly send fewer packets.
          * Works on all versions.
          *
          * It's not the default because it resets item cooldown and some servers kick
@@ -443,22 +460,6 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         };
 
         abstract fun performSwitch(from: ItemSlot): List<InventoryAction.Click>
-    }
-
-    private fun cycle() {
-        val entries = Mode.entries
-        val startIndex = staticMode.ordinal
-        var index = (startIndex + 1) % entries.size
-
-        while (index != startIndex) {
-            val mode = entries[index]
-            if (mode.canCycleTo()) {
-                staticMode = mode
-                return
-            }
-
-            index = (index + 1) % entries.size
-        }
     }
 
     @Suppress("unused")
