@@ -35,8 +35,11 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private val cooldown by int("Cooldown", 20, 0..300, "ticks")
 
-    private val slotsToSearch = if (ConsiderInventory.enabled) Slots.OffHand + Slots.Hotbar + Slots.Inventory
-    else Slots.OffHand + Slots.Hotbar
+    private val slotsToSearch = if (ConsiderInventory.enabled) {
+        Slots.OffHand + Slots.Hotbar + Slots.Inventory
+    } else {
+        Slots.OffHand + Slots.Hotbar
+    }
 
     fun getShooter(firework: FireworkRocketEntity): Any? {
         val shooterField: Field = firework.javaClass.getDeclaredField("shooter")
