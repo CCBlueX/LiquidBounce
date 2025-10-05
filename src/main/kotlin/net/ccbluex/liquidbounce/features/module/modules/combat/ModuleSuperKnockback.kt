@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +32,9 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback.SprintTap.cancelSprint
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -48,7 +51,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 @Suppress("MagicNumber")
 object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = listOf("WTap")) {
 
-    val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
+    val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, LegitFast, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)
     val chance by int("Chance", 100, 0..100, "%")
     private val conditions by multiEnumChoice("Conditions", Conditions.NOT_IN_WATER)
@@ -104,6 +107,44 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
                 player.isSprinting = true
                 player.lastSprinting = true
             }
+        }
+    }
+
+    object LegitFast : Choice("LegitFast") {
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        private val delayTicks by intRange("DelayTicks", 1..2,0..10)
+        private val resetTicks by intRange("ResetTicks", 1..2,0..10)
+
+        var delay = 0
+        var reset = 0
+
+        @Suppress("unused")
+        private val tickHandler = sequenceHandler<GameTickEvent> {
+            val target = ModuleKillAura.targetTracker.target
+
+            if (target != null && target.hurtTime == 10) {
+                delay = delayTicks.random()
+                reset = resetTicks.random()
+            }
+
+            if (delay > 0) delay--
+        }
+
+        @Suppress("unused")
+        private val movementHandler = sequenceHandler<SprintEvent> { event ->
+            if (delay == 0 && reset > 0 && (event.source == SprintEvent.Source.MOVEMENT_TICK ||
+                    event.source == SprintEvent.Source.INPUT)) {
+                event.sprint = false
+                reset--
+            }
+        }
+
+        override fun disable() {
+            reset = 0
+            delay = 0
+            super.disable()
         }
     }
 
