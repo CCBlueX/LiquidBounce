@@ -136,7 +136,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             val target = ModuleKillAura.targetTracker.target
                 ?: ModuleAimbot.targetTracker.target
                 ?: targetSelector.targets().firstOrNull() ?: return@handler
-            val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
+            val distance = hypot(player.pos.x - target.pos.x, player.pos.z - target.pos.z)
 
             // return if we're too far
             if (distance > followRange) {

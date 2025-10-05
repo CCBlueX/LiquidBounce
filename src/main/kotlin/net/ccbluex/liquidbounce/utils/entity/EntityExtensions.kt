@@ -66,6 +66,7 @@ import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -230,7 +231,7 @@ val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
 val Vec3d.sqrtSpeed: Double
-    get() = sqrt(x * x + z * z)
+    get() = hypot(x, z)
 
 fun Vec3d.withStrafe(
     speed: Double = sqrtSpeed,
