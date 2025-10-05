@@ -76,7 +76,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @Inject(method = "onChunkDeltaUpdate", at = @At("HEAD"))
     private void onChunkDeltaUpdateStart(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
-        ChunkUpdateFlag.chunkUpdate = true;
+        ChunkUpdateFlag.chunkDeltaUpdating = true;
     }
 
     @Inject(method = "onEntityPosition", at = @At("RETURN"))
@@ -111,9 +111,8 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @Inject(method = "onChunkDeltaUpdate", at = @At("RETURN"))
     private void onChunkDeltaUpdateEnd(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
-        var chunkPosition = packet.sectionPos.toChunkPos();
-        EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(chunkPosition.x, chunkPosition.z));
-        ChunkUpdateFlag.chunkUpdate = false;
+        EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(packet));
+        ChunkUpdateFlag.chunkDeltaUpdating = false;
     }
 
     @ModifyExpressionValue(method = "onTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/TitleS2CPacket;text()Lnet/minecraft/text/Text;"))
