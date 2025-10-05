@@ -401,7 +401,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
          * It's not the default because it resets item cooldown and some servers kick
          * you when you perform a SWAP_ITEM_WITH_OFFHAND action often and quickly.
          */
-        SMART("Smart") {
+        PICKUPSMART("PickupSmart") {
             override fun performSwitch(from: ItemSlot) = performSwitch(from, smart = true, switch = false)
         },
 
