@@ -125,7 +125,7 @@ open class Clicker<T>(
         val hasCooldown = player.hasCooldown
         debugParameter("HasCooldown") { hasCooldown }
         return if (hasCooldown) {
-            if (itemCooldown?.isCooldownPassed(tick) == true) 1 else 0
+            if (itemCooldown?.isCooldownPassed(tick + 0.5f) == true) 1 else 0
         } else {
             clickArray.get(tick)
         }

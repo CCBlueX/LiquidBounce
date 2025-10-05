@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.clicking
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import kotlin.math.floor
+import kotlin.math.round
 
 open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldown")) {
 
@@ -32,15 +32,16 @@ open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldow
 
     private var nextCooldown = minimumCooldown.random()
 
-    open fun isCooldownPassed(ticks: Int = 0) = cooldownProgress(ticks) >= nextCooldown
+    open fun isCooldownPassed(ticks: Float = 0.5f) = cooldownProgress(ticks) >= nextCooldown
 
     /**
      * Calculates the current cooldown progress.
      *
      * This can be out of percentage range [0, 1] to allow for higher minimum cooldowns.
      */
-    fun cooldownProgress(baseTime: Int = 0) =
-        (player.lastAttackedTicks + baseTime) / floor(player.attackCooldownProgressPerTick)
+    private val tolerancy = 100f
+    fun cooldownProgress(baseTime: Float = 0.5f) =
+        round((player.lastAttackedTicks + baseTime) / player.attackCooldownProgressPerTick * tolerancy) / tolerancy
 
     /**
      * Generates a new cooldown based on the range that was set by the user.

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
@@ -59,7 +58,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         private val ignoreOnMaceSmash by boolean("IgnoreOnMaceSmash", true)
         private val ignoreWhenExitingRange by boolean("IgnoreWhenExitingRange", true)
 
-        override fun isCooldownPassed(ticks: Int) = when {
+        override fun isCooldownPassed(ticks: Float) = when {
             super.isCooldownPassed(ticks) -> true
             ignoreOnShieldBreak && ModuleKillAura.targetTracker.target?.wouldBlockHit == true
                 && ModuleAutoWeapon.willShieldBreak -> true
