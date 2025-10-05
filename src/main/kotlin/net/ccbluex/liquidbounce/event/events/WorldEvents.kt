@@ -30,6 +30,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.shape.VoxelShape
@@ -44,7 +45,7 @@ class ChunkUnloadEvent(val pos: ChunkPos) : Event()
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
 @Nameable("chunkDeltaUpdate")
-class ChunkDeltaUpdateEvent(val x: Int, val z: Int) : Event()
+class ChunkDeltaUpdateEvent(val packet: ChunkDeltaUpdateS2CPacket) : Event()
 
 @Nameable("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
