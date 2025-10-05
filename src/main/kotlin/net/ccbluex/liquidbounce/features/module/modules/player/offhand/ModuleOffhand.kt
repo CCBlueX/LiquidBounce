@@ -214,25 +214,29 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
         chronometer.reset()
     }
 
+    private fun performSmart(from: ItemSlot) {
+        if (!awaitSmart) {
+            val selectedSlot = player.inventory.selectedSlot
+            val targetSlot = from.hotbarSlot
+            if (selectedSlot != targetSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(targetSlot))
+            }
+            network.sendPacket(
+                PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+                    BlockPos.ORIGIN,
+                    Direction.DOWN
+                )
+            )
+            if (selectedSlot != targetSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
+            }
+        }
+    }
+    
     private fun performSwitch(from: ItemSlot, smart: Boolean, switch: Boolean): List<InventoryAction.Click> {
         return if (smart && from is HotbarItemSlot) {
-            if (!awaitSmart) {
-                val selectedSlot = player.inventory.selectedSlot
-                val targetSlot = from.hotbarSlot
-                if (selectedSlot != targetSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(targetSlot))
-                }
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                        BlockPos.ORIGIN,
-                        Direction.DOWN
-                    )
-                )
-                if (selectedSlot != targetSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
-                }
-            }
+            performSmart(from)
             emptyList()
         } else {
             if (switch) {
