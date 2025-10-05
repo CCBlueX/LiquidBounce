@@ -99,10 +99,6 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
         }
 
-        fun isCriticalHit(entity: Entity): Boolean {
-            return criticalsSelectionMode.isCriticalHit()
-        }
-
         suspend fun encounterItemUse(): Boolean {
             return when (onItemUse) {
                 Use.WAIT -> {
@@ -181,7 +177,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
-                if (!isCriticalHit(crosshairTarget.entity)) {
+                if (!criticalsSelectionMode.isCriticalHit()) {
                     return@run
                 }
             }
