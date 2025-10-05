@@ -167,7 +167,7 @@ fun useHotbarSlotOrOffhand(
     item: HotbarItemSlot,
     ticksUntilReset: Int = 1,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch, swingMode)
@@ -181,7 +181,7 @@ fun useHotbarSlotOrOffhand(
 fun interactItem(
     hand: Hand,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult {
     val result = interaction.interactItem(player, hand, yaw, pitch)
