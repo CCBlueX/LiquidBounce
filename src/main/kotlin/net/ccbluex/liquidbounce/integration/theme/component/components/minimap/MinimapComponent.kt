@@ -44,6 +44,7 @@ import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
@@ -52,7 +53,6 @@ import org.joml.Quaternionf
 import org.joml.Vector2i
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
-import kotlin.math.sqrt
 
 object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     horizontalAlignment = Alignment.ScreenAxisX.LEFT,
@@ -109,7 +109,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         val playerOffX = (playerPos.x / 16.0) % 1.0
         val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-        val chunksToRenderAround = ceil(sqrt(2.0) * (viewDistance + 1)).toInt()
+        val chunksToRenderAround = ceil(MathHelper.SQUARE_ROOT_OF_TWO * (viewDistance + 1)).toInt()
 
         val scale = minimapSize / (2.0F * viewDistance)
 

@@ -72,6 +72,7 @@ import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -294,7 +295,7 @@ val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
 val Vec3d.sqrtSpeed: Double
-    get() = sqrt(x * x + z * z)
+    get() = hypot(x, z)
 
 fun Vec3d.withStrafe(
     speed: Double = sqrtSpeed,
@@ -432,12 +433,17 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
             return 0.0F
 
         if (source.isScaledWithDifficulty) {
-            if (world.difficulty == Difficulty.PEACEFUL) {
-                amount = 0.0f
-            } else if (world.difficulty == Difficulty.EASY) {
-                amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
-            } else if (world.difficulty == Difficulty.HARD) {
-                amount = amount * 3.0f / 2.0f
+            when (world.difficulty) {
+                Difficulty.PEACEFUL -> {
+                    amount = 0.0f
+                }
+                Difficulty.EASY -> {
+                    amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
+                }
+                Difficulty.HARD -> {
+                    amount = amount * 3.0f / 2.0f
+                }
+                else -> {}
             }
         }
     }
@@ -620,15 +626,18 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
-private fun LivingEntity.getHealthFromScoreboard(): Float? {
-    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return null
-    val score = objective.scoreboard.getScore(this, objective) ?: return null
-
+fun LivingEntity.hasHealthScoreboard(): Boolean {
+    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
     val displayName = objective.displayName
 
-    if (score.score <= 0 || displayName?.string?.contains("❤") != true) {
-        return null
-    }
+    return (displayName?.string.let { name -> name != null && listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+        .any { name.contains(it) } })
+}
+
+private fun LivingEntity.getHealthFromScoreboard(): Float? {
+    if (!this.hasHealthScoreboard()) return null
+    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)
+    val score = objective?.scoreboard?.getScore(this, objective) ?: return null
 
     return score.score.toFloat()
 }

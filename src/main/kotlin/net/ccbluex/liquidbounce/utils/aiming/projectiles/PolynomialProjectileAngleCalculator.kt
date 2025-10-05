@@ -8,6 +8,7 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan
 import kotlin.math.atan2
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
@@ -28,7 +29,7 @@ object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator() {
 
         val diff: Vec3d = targetPosFunction.getPositionInTicks(estimatedTicksUntilImpact).subtract(sourcePos)
 
-        val horizontalDistance = MathHelper.sqrt((diff.x * diff.x + diff.z * diff.z).toFloat()).toDouble()
+        val horizontalDistance = hypot(diff.x, diff.z)
         val pearlInfo = TrajectoryInfo.GENERIC
 
         val velocity = pearlInfo.initialVelocity
