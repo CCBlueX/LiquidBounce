@@ -18,50 +18,64 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.inventory.*
+
+import net.minecraft.entity.projectile.FireworkRocketEntity
 import net.minecraft.item.Items
-import kotlin.math.hypot
+import java.lang.reflect.Field
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
-    private val minSpeed by float("MinSpeed", 0.8f, 0.1f..2.0f)
-    private val fireDelay by float("FireDelay", 1.5f, 0.5f..3.0f, "seconds")
+    private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+        val constraints = tree(PlayerInventoryConstraints())
+    }
 
-    private var lastFireworkTime = 0L
+    private val cooldown by int("Cooldown", 20, 0..300)
 
-    private fun findFireworkSlot() = Slots.OffhandWithHotbar.findClosestSlot(Items.FIREWORK_ROCKET)
+    private val slotsToSearch = if (ConsiderInventory.enabled) Slots.OffHand + Slots.Hotbar + Slots.Inventory
+    else Slots.OffHand + Slots.Hotbar
 
-    private fun getCurrentSpeed(): Double {
-        val velocity = player.velocity
-        return hypot(velocity.x, velocity.z)
+    fun getShooter(firework: FireworkRocketEntity): Any? {
+        val shooterField: Field = firework.javaClass.getDeclaredField("shooter")
+        shooterField.isAccessible = true
+        return shooterField.get(firework)
     }
 
     private fun shouldUseFirework(): Boolean {
-        if (!player.isGliding) return false
-        
-        val currentTime = System.currentTimeMillis()
-        val timeSinceLastFirework = (currentTime - lastFireworkTime) / 1000.0f
-        
-        if (timeSinceLastFirework < fireDelay) return false
-        
-        val currentSpeed = getCurrentSpeed()
-        return currentSpeed < minSpeed
+        if (!player.isGliding or player.isUsingItem) return false
+
+        for (i in world.entities) {
+            if (i is FireworkRocketEntity) {
+                if (getShooter(i) == player) return false
+            }
+        }
+        return true
     }
 
-    private fun useFirework() {
-        val fireworkSlot = findFireworkSlot() ?: return
-        
-        useHotbarSlotOrOffhand(fireworkSlot)
-        lastFireworkTime = System.currentTimeMillis()
-    }
+    private var skipTicks = 0
 
-    override fun onTick() {
-        if (!player.isGliding) return
-
+    @Suppress("unused")
+    private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
+        if (skipTicks > 0) {
+            skipTicks--
+            return@handler
+        }
         if (shouldUseFirework()) {
-            useFirework()
+            val fireworkSlot = slotsToSearch.findSlot(Items.FIREWORK_ROCKET) ?: return@handler
+            if (fireworkSlot is HotbarItemSlot) {
+                useHotbarSlotOrOffhand(fireworkSlot)
+            } else {
+                val actions = listOfNotNull(
+                    InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
+                    InventoryAction.UseItem(OffHandSlot),
+                    InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
+                )
+                event.schedule( ConsiderInventory.constraints, actions)
+            }
+            skipTicks = cooldown
         }
     }
 }
