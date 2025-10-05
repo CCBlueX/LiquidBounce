@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner.ChunkScannerThread.scope
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -48,6 +49,18 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         ChunkScannerThread.process(UpdateRequest.ChunkUpdate(chunk))
 
         this.loadedChunks.add(ChunkPos.toLong(event.x, event.z))
+    }
+
+    @Suppress("unused")
+    private val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
+        event.packet.visitUpdates { pos, state ->
+            ChunkScannerThread.process(
+                UpdateRequest.BlockUpdate(
+                    pos,
+                    state
+                )
+            )
+        }
     }
 
     @Suppress("unused")
