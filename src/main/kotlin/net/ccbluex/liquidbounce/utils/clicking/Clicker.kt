@@ -124,10 +124,15 @@ open class Clicker<T>(
     fun getClickAmount(tick: Int = 0): Int {
         val hasCooldown = player.hasCooldown
         debugParameter("HasCooldown") { hasCooldown }
-        return if (hasCooldown) {
-            if (itemCooldown?.isCooldownPassed(tick + 0.5f) == true) 1 else 0
+        
+        if (hasCooldown) {
+            return if (itemCooldown?.isCooldownPassed(tick + 0.5f) == true) 1 else 0
         } else {
-            clickArray.get(tick)
+            val clicks = clickArray.get(tick)
+            if (clicks < 1) {
+                if (lastClickPassed + (tick * 50L) >= 1000L) return 1
+            }
+            return clicks
         }
     }
 
