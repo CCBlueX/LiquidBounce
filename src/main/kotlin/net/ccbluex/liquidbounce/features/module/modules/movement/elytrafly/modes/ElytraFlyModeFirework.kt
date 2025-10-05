@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
+import net.ccbluex.liquidbounce.additions.shooter
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.inventory.*
-
 import net.minecraft.entity.projectile.FireworkRocketEntity
 import net.minecraft.item.Items
-import java.lang.reflect.Field
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
@@ -35,27 +34,17 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private val cooldown by int("Cooldown", 20, 0..300, "ticks")
 
-    private val slotsToSearch = if (ConsiderInventory.enabled) {
-        Slots.OffHand + Slots.Hotbar + Slots.Inventory
-    } else {
-        Slots.OffHand + Slots.Hotbar
-    }
-
-    fun getShooter(firework: FireworkRocketEntity): Any? {
-        val shooterField: Field = firework.javaClass.getDeclaredField("shooter")
-        shooterField.isAccessible = true
-        return shooterField.get(firework)
-    }
+    private val ALL_WITHOUT_ARMOR = Slots.OffHand + Slots.Hotbar + Slots.Inventory
+    private val slotsToSearch get() = if (ConsiderInventory.enabled) ALL_WITHOUT_ARMOR else Slots.OffhandWithHotbar
 
     private fun shouldUseFirework(): Boolean {
-        if (!player.isGliding or player.isUsingItem) return false
-
-        for (i in world.entities) {
-            if (i is FireworkRocketEntity) {
-                if (getShooter(i) == player) return false
+        return if (!player.isGliding or player.isUsingItem) {
+            false
+        } else {
+            world.entities.none {
+                it is FireworkRocketEntity && it.shooter === player
             }
         }
-        return true
     }
 
     private var skipTicks = 0
@@ -66,16 +55,18 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
             skipTicks--
             return@handler
         }
+
         if (shouldUseFirework()) {
             val fireworkSlot = slotsToSearch.findSlot(Items.FIREWORK_ROCKET) ?: return@handler
             if (fireworkSlot is HotbarItemSlot) {
                 useHotbarSlotOrOffhand(fireworkSlot)
             } else {
-                val actions = listOfNotNull(
-                    InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
-                    InventoryAction.UseItem(OffHandSlot),
-                    InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
-                )
+                val actions = ArrayList<InventoryAction>(3)
+                actions += InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
+                actions += InventoryAction.UseItem(OffHandSlot)
+                if (!player.offHandStack.isEmpty) {
+                    actions += InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
+                }
                 event.schedule( ConsiderInventory.constraints, actions)
             }
             skipTicks = cooldown
