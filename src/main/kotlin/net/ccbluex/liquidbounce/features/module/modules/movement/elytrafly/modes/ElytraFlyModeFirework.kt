@@ -67,12 +67,11 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         if (fireworkSlot is HotbarItemSlot) {
             useHotbarSlotOrOffhand(fireworkSlot)
         } else {
-            val actions = ArrayList<InventoryAction>(3)
-            actions += InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
-            actions += InventoryAction.UseItem(OffHandSlot)
-            if (!player.offHandStack.isEmpty) {
-                actions += InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot)
-            }
+            val actions = listOf<InventoryAction>(
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
+                InventoryAction.UseItem(OffHandSlot),
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
+            )
             event.schedule(ConsiderInventory.constraints, actions)
         }
 
