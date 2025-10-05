@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import com.github.gradle.bun.task.BunTask
+import com.github.gradle.node.bun.task.BunTask
 import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
