@@ -125,7 +125,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val beds = ArrayList<BedStateAndDistance>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: player).pos
+        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).pos
         beds.forEach {
             it.distance = it.bedState.pos.distanceTo(cameraPos)
         }

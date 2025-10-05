@@ -38,7 +38,7 @@ public class MixinWorld {
 
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;II)Z", at = @At("RETURN"))
     private void injectBlockStateChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
-        if (MinecraftClient.getInstance().world != (Object) this || ChunkUpdateFlag.chunkUpdate) {
+        if (MinecraftClient.getInstance().world != (Object) this || ChunkUpdateFlag.chunkDeltaUpdating) {
             return;
         }
 

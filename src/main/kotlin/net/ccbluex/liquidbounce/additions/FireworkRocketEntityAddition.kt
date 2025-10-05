@@ -16,11 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.common;
 
-public final class ChunkUpdateFlag {
-    /**
-     * Marks if the client world is processing a {@link net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket}.
-     */
-    public static volatile boolean chunkDeltaUpdating = false;
+@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+
+package net.ccbluex.liquidbounce.additions
+
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.projectile.FireworkRocketEntity
+
+interface FireworkRocketEntityAddition {
+    fun `liquidbounce$getShooter`(): LivingEntity?
 }
+
+internal inline val FireworkRocketEntity.shooter: LivingEntity?
+    get() = (this as FireworkRocketEntityAddition).`liquidbounce$getShooter`()

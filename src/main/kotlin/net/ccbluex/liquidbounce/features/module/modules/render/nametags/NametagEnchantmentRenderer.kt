@@ -40,6 +40,10 @@ import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.joml.Vector2f
+import org.joml.component1
+import org.joml.component2
+import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
     private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
@@ -199,7 +203,7 @@ object NametagEnchantmentRenderer {
 
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
-            ModuleNametags.drawnEnchantmentAreas.add(Pair(worldX, worldY))
+            ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
             drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
         }
     }
@@ -209,10 +213,7 @@ object NametagEnchantmentRenderer {
         val OCCLUSION_THRESHOLD = 2f
 
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
-            val distance = Math.sqrt(
-                ((existingX - x) * (existingX - x) +
-                                     (existingY - y) * (existingY - y)).toDouble()).toFloat()
-            distance < OCCLUSION_THRESHOLD
+            hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
         }
     }
 
