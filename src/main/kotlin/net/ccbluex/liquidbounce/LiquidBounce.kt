@@ -364,7 +364,7 @@ object LiquidBounce : EventListener {
         logger.info("Shutting down client...")
 
         // Unregister all event listener and stop all running tasks
-        ChunkScanner.ChunkScannerThread.stopThread()
+        ChunkScanner.stopThread()
         EventManager.unregisterAll()
 
         // Save all configurations

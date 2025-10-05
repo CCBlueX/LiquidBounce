@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.reflect.KProperty
@@ -33,3 +34,5 @@ inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KPrope
 val MinecraftDispatcher = mc.asCoroutineDispatcher()
 
 inline val Dispatchers.Minecraft get() = MinecraftDispatcher
+
+suspend inline fun Array<out Job>.joinAll() = forEach { it.join() }
