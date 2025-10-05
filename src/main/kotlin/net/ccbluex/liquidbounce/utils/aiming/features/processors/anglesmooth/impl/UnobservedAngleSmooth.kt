@@ -32,12 +32,9 @@ class UnobservedAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Unobse
     private var observedRotation = choices(this, "ObservedRotation") {
         arrayOf(
             MinaraiAngleSmooth(it, InterpolationAngleSmooth(it)),
-            InterpolationAngleSmooth(it, 2..5, 2..5, 95..100),
+            InterpolationAngleSmooth(it),
             SigmoidAngleSmooth(it),
-            LinearAngleSmooth(it,
-                horizontalTurnSpeed = 5f..5f,
-                verticalTurnSpeed = 5f..5f
-            )
+            LinearAngleSmooth(it)
         )
     }
 
