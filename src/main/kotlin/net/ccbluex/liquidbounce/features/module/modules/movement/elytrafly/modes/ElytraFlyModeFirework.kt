@@ -33,7 +33,7 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         val constraints = tree(PlayerInventoryConstraints())
     }
 
-    private val cooldown by int("Cooldown", 20, 0..300)
+    private val cooldown by int("Cooldown", 20, 0..300, "ticks")
 
     private val slotsToSearch = if (ConsiderInventory.enabled) Slots.OffHand + Slots.Hotbar + Slots.Inventory
     else Slots.OffHand + Slots.Hotbar
