@@ -53,6 +53,11 @@ public abstract class MixinInput implements InputAddition {
     }
 
     @Override
+    public void liquid_bounce$setMovementInput(Vec2f movementVector) {
+        this.movementVector = movementVector;
+    }
+
+    @Override
     public PlayerInput liquid_bounce$getInitial() {
         return initial;
     }

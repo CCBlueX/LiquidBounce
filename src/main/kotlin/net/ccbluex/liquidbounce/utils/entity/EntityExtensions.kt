@@ -83,13 +83,13 @@ val Entity.isInsideWaterOrBubbleColumn: Boolean
 inline var Input.movementForward: Float
     get() = movementInput.y
     set(value) {
-        movementInput.y = value // TODO: it's not joml vec, setter should be changed
+        (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(movementSideways, value))
     }
 
 inline var Input.movementSideways: Float
     get() = movementInput.x
     set(value) {
-        movementInput.x = value
+        (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(value, movementForward))
     }
 
 val PlayerEntity.handItems: Iterable<ItemStack>
