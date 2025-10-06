@@ -40,6 +40,7 @@ public abstract class MixinDownloader {
     @Final
     private Path directory;
 
+    // FIXME: method name
     @ModifyExpressionValue(method = "method_55485", at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"))
     private Path hookResolve(Path original, @Local(argsOnly = true) UUID id) {
         if (SpooferFingerprint.INSTANCE.getRunning()) {

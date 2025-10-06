@@ -30,6 +30,7 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -40,7 +41,10 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public class ClientLogoTexture extends ReloadableTexture {
 
-    public static final Identifier CLIENT_LOGO = Identifier.of("liquidbounce", "logo");
+    public static final Identifier CLIENT_LOGO = Identifier.of(
+            LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT),
+            "logo"
+    );
     public static final int WIDTH = 1920;
     public static final int HEIGHT = 721;
 

@@ -18,6 +18,6 @@
  */
 package net.ccbluex.liquidbounce.common;
 
-public class OutlineFlag {
+public final class OutlineFlag {
     public static boolean drawOutline = false;
 }

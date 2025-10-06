@@ -38,6 +38,8 @@ import static net.minecraft.client.render.RenderPhase.*;
 
 /**
  * Extensions to RenderLayer for custom render layers.
+ *
+ * FIXME: rewrite
  */
 public class RenderLayerExtensions {
 

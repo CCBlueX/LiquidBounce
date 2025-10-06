@@ -18,6 +18,6 @@
  */
 package net.ccbluex.liquidbounce.common;
 
-public class ShapeFlag {
+public final class ShapeFlag {
     public static boolean noShapeChange = false;
 }

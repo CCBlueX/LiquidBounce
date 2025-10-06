@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = RenderSystem.class, remap = false)
 public abstract class MixinRenderSystem {
 
+    // FIXME: Maybe hook into GlStateManager. Or rewrite
     @Inject(method = "clearColor", at = @At(value = "HEAD"), cancellable = true)
     private static void injectFog(float red, float green, float blue, float alpha, CallbackInfo ci) {
         if (ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor()) {
