@@ -40,6 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LightmapTextureManager.class)
 public abstract class MixinLightmapTextureManager implements LightmapTextureManagerAddition {
 
+    // FIXME: rewrite rendering
     @Final
     @Shadow
     private SimpleFramebuffer lightmapFramebuffer;

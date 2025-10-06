@@ -240,7 +240,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     /**
      * Hook custom sneaking multiplier
      */
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
+    @ModifyExpressionValue(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
     private double hookCustomSneakingMultiplier(double original) {
         var playerSneakMultiplier = new PlayerSneakMultiplier(original);
         EventManager.INSTANCE.callEvent(playerSneakMultiplier);
@@ -342,6 +342,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
     }
 
+    // FIXME: sprintKey not found?
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookSprintStart(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
@@ -349,6 +350,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return event.getSprint();
     }
 
+    // FIXME: split into shouldStopSwimSprinting & shouldStopSprinting
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
     private boolean hookSprintStop(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
@@ -361,21 +363,24 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
     }
 
+    // FIXME: in shouldStopSprinting?
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;horizontalCollision:Z"))
     private boolean hookSprintIgnoreCollision(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
-    @ModifyReturnValue(method = "isWalking", at = @At("RETURN"))
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Input;hasForwardMovement()Z"))
     private boolean hookIsWalking(boolean original) {
         if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
             return original;
         }
 
-        var hasMovement = Math.abs(input.movementForward) > 1.0E-5F ||
-                Math.abs(input.movementSideways) > 1.0E-5F;
-        var isWalking = (double) Math.abs(input.movementForward) >= 0.8 ||
-                (double) Math.abs(input.movementSideways) >= 0.8;
+        float movementForward = input.getMovementInput().y;
+        float movementSideways = input.getMovementInput().x;
+        var hasMovement = Math.abs(movementForward) > 1.0E-5F ||
+                Math.abs(movementSideways) > 1.0E-5F;
+        var isWalking = (double) Math.abs(movementForward) >= 0.8 ||
+                (double) Math.abs(movementSideways) >= 0.8;
         return this.isSubmergedInWater() ? hasMovement : isWalking;
     }
 

@@ -70,6 +70,7 @@ public abstract class MixinWorldRenderer {
     @Shadow
     protected abstract void renderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers);
 
+    // FIXME: rewrite rendering
     @Shadow
     @Nullable
     public Framebuffer entityOutlineFramebuffer;

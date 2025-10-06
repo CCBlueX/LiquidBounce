@@ -37,6 +37,7 @@ public abstract class MixinEntityRenderDispatcher {
     @Unique
     private static Entity entity;
 
+    // FIXME: param `entity` is gone
     @Inject(method = "renderHitbox", at = @At(value = "HEAD"))
     private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, CallbackInfo ci) {
         MixinEntityRenderDispatcher.entity = entity;

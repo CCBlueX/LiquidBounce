@@ -28,7 +28,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 import net.minecraft.util.math.BlockPos
@@ -66,8 +66,8 @@ class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Ev
 class BlockSlipperinessMultiplierEvent(val block: Block, var slipperiness: Float) : Event()
 
 @Nameable("entityEquipmentChange")
-class PlayerEquipmentChangeEvent(
-    val player: PlayerEntity, val equipmentSlot: EquipmentSlot, val itemStack: ItemStack
+class EntityEquipmentChangeEvent(
+    val entity: LivingEntity, val equipmentSlot: EquipmentSlot, val itemStack: ItemStack
 ) : Event()
 
 @Nameable("fluidPush")

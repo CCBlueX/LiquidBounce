@@ -200,7 +200,7 @@ public abstract class MixinEntity {
      *
      * @return false if the entity is the client's player, otherwise returns the original value
      */
-    @ModifyExpressionValue(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isControlledByPlayer()Z"))
+    @ModifyExpressionValue(method = "isLogicalSideForUpdatingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isControlledByPlayer()Z"))
     private boolean fixFallDistanceCalculation(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
             return false;

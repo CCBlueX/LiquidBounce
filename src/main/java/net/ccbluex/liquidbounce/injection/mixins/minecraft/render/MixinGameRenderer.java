@@ -200,7 +200,7 @@ public abstract class MixinGameRenderer {
 
         float g = playerEntity.distanceMoved - playerEntity.lastDistanceMoved;
         float h = -(playerEntity.distanceMoved + g * f);
-        float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
+        float i = MathHelper.lerp(f, playerEntity.lastStrideDistance, playerEntity.strideDistance);
         matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));

@@ -22,6 +22,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
+import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
@@ -34,10 +35,12 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -344,4 +347,10 @@ public abstract class MixinLivingEntity extends MixinEntity {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
         }
     }
+
+    @Inject(method = "equipStack", at = @At("HEAD"))
+    private void hookEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, stack));
+    }
+
 }
