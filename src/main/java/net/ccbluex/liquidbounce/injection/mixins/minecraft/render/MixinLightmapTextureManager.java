@@ -95,6 +95,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     @Unique
     @Override
     public void liquid_bounce$restoreLightMap() {
+        // FIXME: gputexture...
         if (RenderSystem.getShaderTexture(2) != 0) {
             RenderSystem.setShaderTexture(2, lightmapFramebuffer.getColorAttachment());
         }

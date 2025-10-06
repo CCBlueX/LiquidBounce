@@ -150,6 +150,7 @@ public abstract class MixinWorldRenderer {
         framebufferSet.entityOutlineFramebuffer = originalBuffer;
     }
 
+    // FIXME: obf method name
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(Fog fog, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Matrix4f matrix4f2, Handle handle, Handle handle2, Handle handle3, Handle handle4, boolean bl, Frustum frustum, Handle handle5, CallbackInfo ci) {
         if (OutlineShader.INSTANCE.getDirty()) {

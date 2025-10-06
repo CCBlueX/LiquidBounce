@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(AbstractHorseEntity.class)
 public class MixinAbstractHorseEntity {
 
+    // FIXME: AbstractHorseEntity#isSaddled -> MobEntity#hasSaddleEquipped, all entities can have saddle now
     @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
     private boolean isSaddled(boolean original) {
         return ModuleEntityControl.getEnforceSaddled() || original;

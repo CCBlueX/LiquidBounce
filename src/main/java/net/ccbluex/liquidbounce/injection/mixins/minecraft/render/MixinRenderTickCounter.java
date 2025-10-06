@@ -30,16 +30,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinRenderTickCounter {
 
     @Shadow
-    private float lastFrameDuration;
+    private float dynamicDeltaTicks;
 
     /**
      * Hook timer speed to modify frame duration
      */
-    @Inject(method = "beginRenderTick(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter$Dynamic;lastFrameDuration:F", shift = At.Shift.AFTER))
+    @Inject(method = "beginRenderTick(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter$Dynamic;dynamicDeltaTicks:F", shift = At.Shift.AFTER))
     private void hookTimer(CallbackInfoReturnable<Integer> callback) {
         float customTimer = Timer.INSTANCE.getTimerSpeed();
         if (customTimer > 0) {
-            lastFrameDuration *= customTimer;
+            dynamicDeltaTicks *= customTimer;
         }
     }
 

@@ -229,7 +229,7 @@ public abstract class MixinInGameHud {
         for (int m = 0; m < 9; ++m) {
             var x = center - offset + m * itemWidth;
             this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
-                    playerEntity.getInventory().main.get(m), l++);
+                    playerEntity.getInventory().getMainStacks().get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffHandStack();
