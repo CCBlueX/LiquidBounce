@@ -19,15 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.until
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -36,10 +33,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * @author XeContrast
  */
-internal object NoFallGrim2371 : Choice("Grim2371-1.9+") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallGrim2371 : NoFallMode("Grim2371-1.9+") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {

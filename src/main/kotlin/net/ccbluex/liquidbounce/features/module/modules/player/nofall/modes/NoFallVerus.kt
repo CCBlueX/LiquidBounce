@@ -18,11 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -30,10 +27,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @anticheatVersion b3896
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVerus : Choice("Verus") {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
+internal object NoFallVerus : NoFallMode("Verus") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {

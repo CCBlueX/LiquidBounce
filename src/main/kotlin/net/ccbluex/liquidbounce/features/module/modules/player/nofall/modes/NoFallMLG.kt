@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -44,10 +42,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 
-internal object NoFallMLG : Choice("MLG") {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
+internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
     private object PickupWater : ToggleableConfigurable(NoFallMLG, "PickUpWater", true) {

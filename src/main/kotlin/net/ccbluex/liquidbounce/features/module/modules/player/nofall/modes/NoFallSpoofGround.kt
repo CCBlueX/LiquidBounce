@@ -22,21 +22,15 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
  * SpoofGround mode for the NoFall module.
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
-internal object NoFallSpoofGround : Choice("SpoofGround") {
+internal object NoFallSpoofGround : NoFallMode("SpoofGround") {
     private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
     private val resetFallDistance by boolean("ResetFallDistance", true)
-
-    // Specify the parent configuration for this mode
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     // Packet handler to intercept and modify PlayerMoveC2SPacket
     val packetHandler = handler<PacketEvent> {
@@ -62,7 +56,7 @@ internal object NoFallSpoofGround : Choice("SpoofGround") {
 
     private object Smart : DistanceMode("Smart") {
         override val value: Float
-            get() = player.getAttributeValue(EntityAttributes.SAFE_FALL_DISTANCE).toFloat()
+            get() = playerSafeFallDistance.toFloat()
     }
 
     private object Constant : DistanceMode("Constant") {
