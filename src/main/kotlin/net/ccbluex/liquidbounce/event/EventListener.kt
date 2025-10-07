@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
@@ -126,7 +127,7 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
 inline fun EventListener.tickHandler(
     dispatcher: CoroutineDispatcher? = null,
     onCancellation: Runnable? = null,
-    crossinline eventHandler: SuspendableHandler,
+    crossinline eventHandler: suspend CoroutineScope.() -> Unit,
 ) = suspendHandler<GameTickEvent>(
     context = wrapContinuationInterceptor(dispatcher),
     behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)

@@ -67,7 +67,7 @@ inline fun <reified T : Event> EventListener.suspendHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     priority: Short = 0,
     behavior: SuspendHandlerBehavior = SuspendHandlerBehavior.Parallel.Default,
-    noinline handler: suspend CoroutineScope.(T) -> Unit
+    noinline handler: SuspendableEventHandler<T>
 ): EventHook<T> {
     // Support auto-cancel
     val context = context[ContinuationInterceptor]?.let { context + wrapContinuationInterceptor(it) } ?: context
@@ -82,7 +82,7 @@ sealed interface SuspendHandlerBehavior {
         eventClass: Class<T>,
         wrappedContext: CoroutineContext,
         priority: Short,
-        handler: suspend CoroutineScope.(T) -> Unit
+        handler: SuspendableEventHandler<T>
     ): EventHook<T>
 
     /**
@@ -94,7 +94,7 @@ sealed interface SuspendHandlerBehavior {
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
             priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
+            handler: SuspendableEventHandler<T>
         ): EventHook<T> = handler(eventClass, priority) { event ->
             eventListenerScope.launch(wrappedContext, start) {
                 handler(event)
@@ -115,7 +115,7 @@ sealed interface SuspendHandlerBehavior {
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
             priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
+            handler: SuspendableEventHandler<T>
         ): EventHook<T> {
             var channel: Channel<T>? = null
 
@@ -152,7 +152,7 @@ sealed interface SuspendHandlerBehavior {
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
             priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
+            handler: SuspendableEventHandler<T>
         ): EventHook<T> {
             val jobRef = atomic<Job?>(null)
             return handler(eventClass, priority) { event ->
@@ -172,7 +172,7 @@ sealed interface SuspendHandlerBehavior {
             eventClass: Class<T>,
             wrappedContext: CoroutineContext,
             priority: Short,
-            handler: suspend CoroutineScope.(T) -> Unit
+            handler: SuspendableEventHandler<T>
         ): EventHook<T> {
             val jobRef = atomic<Job?>(null)
             return handler(eventClass, priority) { event ->
