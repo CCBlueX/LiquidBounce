@@ -37,7 +37,11 @@ object AutoQueueTriggerMessage : AutoQueueTrigger("Message") {
         mutableListOf("Новая игра", "游戏结束")
     )
 
-    private val chatTypes by multiEnumChoice("ChatTypes", EnumSet.of(ChatReceiveEvent.ChatType.GAME_MESSAGE))
+    private val chatTypes by multiEnumChoice(
+        "ChatTypes",
+        EnumSet.of(ChatReceiveEvent.ChatType.GAME_MESSAGE),
+        canBeNone = false,
+    )
 
     @Suppress("unused")
     private val chatReceive = handler<ChatReceiveEvent> { event ->
