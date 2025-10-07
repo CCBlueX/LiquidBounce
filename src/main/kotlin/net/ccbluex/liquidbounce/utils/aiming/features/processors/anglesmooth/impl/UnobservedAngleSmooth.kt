@@ -34,7 +34,8 @@ class UnobservedAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Unobse
             MinaraiAngleSmooth(it, InterpolationAngleSmooth(it)),
             InterpolationAngleSmooth(it),
             SigmoidAngleSmooth(it),
-            LinearAngleSmooth(it)
+            LinearAngleSmooth(it),
+            NoneAngleSmooth(it)
         )
     }
 
