@@ -127,7 +127,7 @@ fun EventListener.tickHandler(
 ): EventHook<GameTickEvent> {
     return suspendHandler<GameTickEvent>(
         context = continuationInterceptor(dispatcher),
-        behavior = SuspendHandlerBehavior.DISCARD_LATEST
+        behavior = SuspendHandlerBehavior.DiscardLatest
     ) {
         onCancellation?.let { r ->
             this.coroutineContext[Job]!!.invokeOnCompletion { if (it is CancellationException) r.run() }

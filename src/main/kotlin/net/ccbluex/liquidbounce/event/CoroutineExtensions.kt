@@ -19,14 +19,11 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.update
-import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
 import kotlin.time.Duration
 
@@ -64,12 +61,12 @@ val EventListener.eventListenerScope: CoroutineScope
  *
  * @param context the coroutine context to use for the job, defaults to [EmptyCoroutineContext].
  * @param priority the priority of the event hook, defaults to 0.
- * @param behavior the behavior of the event handler, defaults to [SuspendHandlerBehavior.PARALLEL].
+ * @param behavior the behavior of the event handler, defaults to [SuspendHandlerBehavior.Parallel].
  */
 inline fun <reified T : Event> EventListener.suspendHandler(
     context: CoroutineContext = EmptyCoroutineContext,
     priority: Short = 0,
-    behavior: SuspendHandlerBehavior = SuspendHandlerBehavior.PARALLEL,
+    behavior: SuspendHandlerBehavior = SuspendHandlerBehavior.Parallel,
     noinline handler: suspend CoroutineScope.(T) -> Unit
 ): EventHook<T> = `@internal-suspendHandler`(T::class.java, context, priority, behavior, handler)
 
@@ -87,10 +84,10 @@ fun <T : Event> EventListener.`@internal-suspendHandler`(
     // Support auto-cancel
     val context = context[ContinuationInterceptor]?.let { context + continuationInterceptor(it) } ?: context
     return when (behavior) {
-        SuspendHandlerBehavior.PARALLEL -> suspendHandlerParallel(eventClass, context, priority, handler)
-        SuspendHandlerBehavior.SUSPEND -> suspendHandlerSuspend(eventClass, context, priority, handler)
-        SuspendHandlerBehavior.CANCEL_PREVIOUS -> suspendHandlerCancelPrevious(eventClass, context, priority, handler)
-        SuspendHandlerBehavior.DISCARD_LATEST -> suspendHandlerDiscardLatest(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.Parallel -> suspendHandlerParallel(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.Suspend -> suspendHandlerSuspend(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.CancelPrevious -> suspendHandlerCancelPrevious(eventClass, context, priority, handler)
+        SuspendHandlerBehavior.DiscardLatest -> suspendHandlerDiscardLatest(eventClass, context, priority, handler)
     }
 }
 
@@ -185,22 +182,22 @@ sealed interface SuspendHandlerBehavior {
     /**
      * Starts a new job for each event.
      */
-    object PARALLEL : SuspendHandlerBehavior
+    object Parallel : SuspendHandlerBehavior
 
     /**
      * Suspends the new event if a job is active. Thus, all events will be handled one by one.
      */
-    object SUSPEND : SuspendHandlerBehavior
+    object Suspend : SuspendHandlerBehavior
 
     /**
      * Cancels the previous job if it's active.
      */
-    object CANCEL_PREVIOUS : SuspendHandlerBehavior
+    object CancelPrevious : SuspendHandlerBehavior
 
     /**
      * Discards the new event if a job is active.
      */
-    object DISCARD_LATEST : SuspendHandlerBehavior
+    object DiscardLatest : SuspendHandlerBehavior
 }
 
 /**
