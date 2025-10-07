@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -40,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.ChestBlock
@@ -50,6 +52,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
+import java.util.function.BooleanSupplier
 
 /**
  * ChestAura feature
@@ -72,6 +75,18 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
     private val trackManualInteractions by boolean("TrackManualInteractions", true)
+
+    private val pauseOn by multiEnumChoice("PauseOn", emptyEnumSet<PauseCondition>())
+
+    @Suppress("unused")
+    private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {
+        COMBAT("Combat") {
+            override fun getAsBoolean() = CombatManager.isInCombat
+        },
+        USING_ITEM("UsingItem"){
+            override fun getAsBoolean() = player.isUsingItem
+        };
+    }
 
     // Sub-configurable for managing the await container settings
     private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
@@ -104,6 +119,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     // Counter for the number of tries performed to interact with a block
     private var interactionAttempts = 0
+
+    override val running: Boolean
+        get() = super.running && pauseOn.none { it.asBoolean }
 
     override fun onDisabled() {
         interactedBlocksSet.clear()
