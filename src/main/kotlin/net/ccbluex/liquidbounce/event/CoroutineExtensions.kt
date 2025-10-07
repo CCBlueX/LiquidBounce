@@ -181,26 +181,26 @@ private fun <T : Event> EventListener.suspendHandlerDiscardLatest(
     }
 }
 
-enum class SuspendHandlerBehavior {
+sealed interface SuspendHandlerBehavior {
     /**
      * Starts a new job for each event.
      */
-    PARALLEL,
+    object PARALLEL : SuspendHandlerBehavior
 
     /**
      * Suspends the new event if a job is active. Thus, all events will be handled one by one.
      */
-    SUSPEND,
+    object SUSPEND : SuspendHandlerBehavior
 
     /**
      * Cancels the previous job if it's active.
      */
-    CANCEL_PREVIOUS,
+    object CANCEL_PREVIOUS : SuspendHandlerBehavior
 
     /**
      * Discards the new event if a job is active.
      */
-    DISCARD_LATEST,
+    object DISCARD_LATEST : SuspendHandlerBehavior
 }
 
 /**

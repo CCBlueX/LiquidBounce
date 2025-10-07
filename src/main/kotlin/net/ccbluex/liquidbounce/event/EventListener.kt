@@ -23,6 +23,7 @@ import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import java.util.concurrent.CancellationException
 import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -112,7 +113,9 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
     dispatcher: CoroutineDispatcher? = null,
     onCancellation: Runnable? = null,
     crossinline eventHandler: SuspendableEventHandler<T>,
-) = handler<T>(priority) { event -> launchSequence(dispatcher, onCancellation) { eventHandler(event) } }
+) = handler<T>(priority) { event ->
+    launchSequence(dispatcher, onCancellation) { eventHandler(event) }
+}
 
 /**
  * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
@@ -122,13 +125,14 @@ fun EventListener.tickHandler(
     onCancellation: Runnable? = null,
     eventHandler: SuspendableHandler,
 ): EventHook<GameTickEvent> {
-    var sequence: Job? = null
-
-    return handler<GameTickEvent> {
-        // Check if the sequence is already running (completed or null)
-        if (sequence == null || !sequence!!.isActive) {
-            sequence = launchSequence(dispatcher, onCancellation, eventHandler)
+    return suspendHandler<GameTickEvent>(
+        context = continuationInterceptor(dispatcher),
+        behavior = SuspendHandlerBehavior.DISCARD_LATEST
+    ) {
+        onCancellation?.let { r ->
+            this.coroutineContext[Job]!!.invokeOnCompletion { if (it is CancellationException) r.run() }
         }
+        eventHandler()
     }
 }
 
