@@ -18,10 +18,6 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import java.util.function.Consumer
@@ -103,36 +99,6 @@ inline fun <reified T : Event> EventListener.once(
 ): EventHook<T> = until(priority) { event ->
     handler(event)
     true // This will unregister the handler after the first call
-}
-
-/**
- * Registers an event hook for events of type [T] and launches a sequence
- */
-inline fun <reified T : Event> EventListener.sequenceHandler(
-    priority: Short = 0,
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
-    crossinline eventHandler: SuspendableEventHandler<T>,
-) = suspendHandler<T>(
-    context = wrapContinuationInterceptor(dispatcher),
-    priority = priority,
-    behavior = SuspendHandlerBehavior.Parallel(CoroutineStart.UNDISPATCHED, onCancellation),
-) {
-    eventHandler(it)
-}
-
-/**
- * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
- */
-inline fun EventListener.tickHandler(
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
-    crossinline eventHandler: suspend CoroutineScope.() -> Unit,
-) = suspendHandler<GameTickEvent>(
-    context = wrapContinuationInterceptor(dispatcher),
-    behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)
-) {
-    eventHandler()
 }
 
 /**
