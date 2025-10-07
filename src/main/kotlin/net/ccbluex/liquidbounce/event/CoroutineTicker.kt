@@ -133,7 +133,7 @@ fun EventListener.launchSequence(
     handler: SuspendableHandler,
 ): Job =
     eventListenerScope.launch(
-        context = continuationInterceptor(dispatcher),
+        context = wrapContinuationInterceptor(dispatcher),
         start = CoroutineStart.UNDISPATCHED
     ) {
         if (running) {
