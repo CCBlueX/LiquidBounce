@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
 import net.minecraft.block.BlockState
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
@@ -73,7 +75,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     @Suppress("unused")
-    private val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
+    private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
         if (subscribers.isEmpty()) return@handler
 
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
@@ -84,8 +86,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (subscribers.isEmpty()) return@handler
+    private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
+        if (subscribers.isEmpty() || event.isCancelled) return@handler
 
         when (val packet = event.packet) {
             is BlockUpdateS2CPacket ->
@@ -95,13 +97,15 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             is ChunkDeltaUpdateS2CPacket ->
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
 
-            is UnloadChunkS2CPacket ->
+            is UnloadChunkS2CPacket -> {
+                mc.execute { loadedChunks.remove(packet.pos.toLong()) }
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
+            }
         }
     }
 
     @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent>(FIRST_PRIORITY) {
         cancelCurrentJobs()
         subscribers.forEach(BlockChangeSubscriber::clearAllChunks)
         loadedChunks.clear()
