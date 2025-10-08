@@ -38,7 +38,7 @@ fun formatAvatarUrl(uuid: UUID?, username: String): String {
  *
  * @param baseUrl The base URL of the API
  */
-abstract class BaseApi(protected val baseUrl: String) {
+abstract class BaseApi(protected val baseUrl: String, val defaultHeaders: Headers = Headers.EMPTY) {
 
     /**
      * Makes a request and parses the response to the specified type
@@ -50,6 +50,7 @@ abstract class BaseApi(protected val baseUrl: String) {
         body: RequestBody? = null
     ): T = HttpClient.request("$baseUrl$endpoint", method, headers = {
         add("X-Session-Token", config.sessionToken)
+        addAll(defaultHeaders)
         headers(this)
     }, body = body).parse()
 

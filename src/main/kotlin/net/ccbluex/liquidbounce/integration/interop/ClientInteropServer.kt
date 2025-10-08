@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -62,19 +63,22 @@ object ClientInteropServer {
     fun start() {
         runCatching {
             // RestAPI
-            httpServer.routeController.apply {
-                get("/", ::getRootResponse)
-                registerInteropFunctions(this)
+            httpServer.apply {
+                routeController.apply {
+                    get("/", ::getRootResponse)
+                    registerInteropFunctions(this)
 
-                resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
-                    zip("/resource/liquidbounce", stream)
+                    resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
+                        zip("/resource/liquidbounce", stream)
+                    }
+                    file("/local", ThemeManager.themesFolder)
+                    file("/marketplace", MarketplaceManager.marketplaceRoot)
                 }
-                file("/local", ThemeManager.themesFolder)
-                file("/marketplace", MarketplaceManager.marketplaceRoot)
-            }
 
-            // Add CORS middleware
-            httpServer.middleware(CorsMiddleware())
+                // Add CORS and auth middleware
+                middleware(CorsMiddleware())
+                middleware(AuthMiddleware())
+            }
 
             // Register events with @WebSocketEvent annotation
             SocketEventListener.registerAll()
