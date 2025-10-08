@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.*
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.EventListener
@@ -38,6 +39,7 @@ import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.chunk.WorldChunk
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.BiConsumer
+import java.util.function.Predicate
 import kotlin.time.measureTime
 
 object ChunkScanner : EventListener, MinecraftShortcuts {
@@ -50,20 +52,21 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
         if (!this.subscribers.addIfAbsent(newSubscriber)) {
-            error("Subscriber ${newSubscriber.javaClass.simpleName} already registered")
+            error("Subscriber ${newSubscriber.debugName} already registered")
         }
 
         val world = mc.world ?: return
         if (this.loadedChunks.isEmpty()) return
 
-        logger.info("Scanning ${this.loadedChunks.size} chunks for ${newSubscriber.javaClass.simpleName}")
-
-        val chunks = this.loadedChunks.mapToArray { longChunkPos ->
+        val chunkArray = this.loadedChunks.mapToArray { longChunkPos ->
             world.getChunk(
                 ChunkPos.getPackedX(longChunkPos),
                 ChunkPos.getPackedZ(longChunkPos)
             )
         }
+        val chunks = ObjectArrayList.wrap(chunkArray)
+        chunks.removeIf(Predicate(WorldChunk::isEmpty))
+        if (chunks.isEmpty) return
 
         UpdateRequest.NewSubscriber(newSubscriber, chunks)
             .runAsync()
@@ -82,7 +85,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
         UpdateRequest.ChunkLoad(chunk).runAsync()
 
-        this.loadedChunks.add(ChunkPos.toLong(event.x, event.z))
+        loadedChunks.add(ChunkPos.toLong(event.x, event.z))
     }
 
     @Suppress("unused")
@@ -97,8 +100,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             is ChunkDeltaUpdateS2CPacket ->
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
 
-            is UnloadChunkS2CPacket -> {
-                mc.execute { loadedChunks.remove(packet.pos.toLong()) }
+            is UnloadChunkS2CPacket -> mc.execute {
+                loadedChunks.remove(packet.pos.toLong())
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
             }
         }
@@ -184,24 +187,15 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          *
          * @param chunks should be non-empty
          */
-        class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: Array<WorldChunk>) : UpdateRequest {
+        class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: List<WorldChunk>) : UpdateRequest {
             override suspend fun run() {
-                // Check empty chunks (@see ObjectArrayList.removeIf)
-                var j = 0
-                for (i in chunks.indices) {
-                    if (!chunks[i].isEmpty) {
-                        chunks[j++] = chunks[i]
-                    }
-                }
-                val chunkCount = j
-
                 val duration = measureTime {
-                    for (i in 0 until chunkCount) {
-                        subscriber.chunkUpdate(chunks[i])
+                    chunks.forEach {
+                        subscriber.chunkUpdate(it)
                     }
                     if (subscriber.shouldCallRecordBlockOnChunkUpdate) {
-                        for (i in 0 until chunkCount) {
-                            scanChunkSections(chunks[i]) { pos, state ->
+                        chunks.forEach {
+                            scanChunkSections(it) { pos, state ->
                                 subscriber.recordBlock(pos, state, cleared = true)
                             }
                         }
@@ -209,7 +203,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 }
 
                 logger.debug(
-                    "Scanning chunks for ${subscriber.javaClass.simpleName} took ${duration.inWholeMicroseconds}us"
+                    "Scanning ${chunks.size} chunks for ${subscriber.debugName} took ${duration.inWholeMicroseconds}us"
                 )
             }
         }
@@ -274,6 +268,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     interface BlockChangeSubscriber {
+        val debugName: String get() = javaClass.simpleName
+
         /**
          * If this is true [recordBlock] is called on chunk updates and on single block updates.
          * This might be inefficient for some modules, so they can choose to not call that method on chunk updates.
