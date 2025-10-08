@@ -93,7 +93,7 @@ class NameProtectMappings {
     /**
      * Returns a list of all emits, sorted by their start
      */
-    fun findReplacements(text: String): List<Pair<Emit, MappingData>> {
+    fun findReplacements(text: CharSequence): List<Pair<Emit, MappingData>> {
         val currentInstructions = this.replacementInstructions ?: return emptyList()
 
         return currentInstructions.matcher.parseText(text)

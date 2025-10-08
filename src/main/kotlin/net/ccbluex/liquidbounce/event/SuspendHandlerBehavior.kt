@@ -20,8 +20,11 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlin.coroutines.CoroutineContext
 
 sealed interface SuspendHandlerBehavior {
@@ -66,29 +69,25 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            var channel: Channel<T>? = null
+            val channelRef = atomic<Channel<T>?>(null)
 
-            fun restartReceiver() {
-                channel = Channel(Channel.BUFFERED) // Default buffered
-                eventListenerScope.launch(wrappedContext) {
-                    for (event in channel ?: error("Channel is null")) {
-                        handler(event)
-                    }
-                }.invokeOnCompletion {
-                    channel?.close(it) ?: error("Channel is null")
-                    channel = null
-                }
-            }
-
-            restartReceiver()
-
-            // Producer
             return handler(eventClass, priority) { event ->
-                channel?.let {
-                    eventListenerScope.launch(wrappedContext) {
-                        it.send(event)
+                val channel = channelRef.updateAndGet { old ->
+                    old ?: Channel<T>(
+                        capacity = Channel.BUFFERED,
+                        onBufferOverflow = BufferOverflow.SUSPEND,
+                    ).also { channel ->
+                        eventListenerScope.launch {
+                            channel.consumeEach { handler(it) }
+                        }.invokeOnCompletion {
+                            channelRef.getAndSet(null)?.close(it)
+                        }
                     }
-                } ?: restartReceiver() // Old consumer has been closed
+                }
+
+                eventListenerScope.launch(wrappedContext) {
+                    channel!!.send(event)
+                }
             }
         }
     }

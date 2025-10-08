@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.collection
 
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.math.BlockPos
 import java.util.ArrayDeque
 import java.util.Queue
@@ -86,19 +87,43 @@ class Pool<T : Any> @JvmOverloads constructor(
 
     companion object {
         @JvmField
-        val MutableBlockPos = Pool(
+        val MutableBlockPos: Pool<BlockPos.Mutable> = Pool(
             queue = ConcurrentLinkedQueue(),
             initializer = BlockPos::Mutable,
         ) { it.set(0, 0, 0) }
 
-        /**
-         * Only for render thread
-         */
         @JvmField
-        val StringBuilder = Pool(
-            queue = ArrayDeque(),
-            initializer = ::StringBuilder,
+        val StringBuilder: Pool<StringBuilder> = Pool(
+            queue = ConcurrentLinkedQueue(),
+            initializer = { StringBuilder(128) },
         ) { it.setLength(0) }
+
+        /**
+         * Use [Pool.StringBuilder] to build [String].
+         */
+        inline fun buildStringPooled(
+            builderAction: StringBuilder.() -> Unit,
+        ): String {
+            val sb = StringBuilder.take()
+            sb.builderAction()
+            return sb.toString().also {
+                StringBuilder.offer(sb)
+            }
+        }
+
+        /**
+         * Use [Pool.StringBuilder] to build [String].
+         */
+        inline fun buildStringPooled(
+            capacity: Int,
+            builderAction: StringBuilder.() -> Unit,
+        ): String {
+            val sb = StringBuilder.take().apply { ensureCapacity(capacity) }
+            sb.builderAction()
+            return sb.toString().also {
+                StringBuilder.offer(sb)
+            }
+        }
     }
 
 }
