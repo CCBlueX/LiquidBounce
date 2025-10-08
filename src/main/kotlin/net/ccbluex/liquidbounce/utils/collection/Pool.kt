@@ -20,28 +20,31 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 import net.minecraft.util.math.BlockPos
+import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.function.Consumer
+import java.util.function.Supplier
 
 /**
- * A thread-safe object pool for reusing mutable objects.
+ * A object pool for reusing mutable objects.
  *
  * @param T Type of objects to be pooled
+ * @property queue The backend queue, determines if the instance is thread-safe.
  * @property initializer Function to create new instances when pool is empty
  * @property finalizer Function to reset object state before returning to pool
  */
-class ObjectPool<T : Any> @JvmOverloads constructor(
-    private val initializer: () -> T,
-    private val finalizer: (T) -> Unit = {},
+class Pool<T : Any> @JvmOverloads constructor(
+    private val queue: Queue<T>,
+    private val initializer: Supplier<T>,
+    private val finalizer: Consumer<T> = Consumer {},
 ) {
-
-    private val pool = ConcurrentLinkedQueue<T>()
 
     /**
      * Retrieves an object from the pool or creates a new one if pool is empty
      *
      * @return Reusable object instance processed by finalizer
      */
-    fun take(): T = pool.poll() ?: initializer().apply(finalizer)
+    fun take(): T = queue.poll() ?: initializer.get()
 
     /**
      * Returns an object to the pool after processing it with the finalizer
@@ -49,7 +52,7 @@ class ObjectPool<T : Any> @JvmOverloads constructor(
      * @param value Object to be returned to the pool
      * @return True if object was successfully added to the pool (always true)
      */
-    fun offer(value: T): Boolean = pool.add(value.apply(finalizer))
+    fun offer(value: T): Boolean = queue.add(value.apply(finalizer::accept))
 
     /**
      * Scoped function that automatically returns the object to the pool after use
@@ -68,7 +71,10 @@ class ObjectPool<T : Any> @JvmOverloads constructor(
 
     companion object {
         @JvmField
-        val MutableBlockPos = ObjectPool(BlockPos::Mutable) { it.set(0, 0, 0) }
+        val MutableBlockPos = Pool(
+            queue = ConcurrentLinkedQueue(),
+            initializer = BlockPos::Mutable,
+        ) { it.set(0, 0, 0) }
     }
 
 }

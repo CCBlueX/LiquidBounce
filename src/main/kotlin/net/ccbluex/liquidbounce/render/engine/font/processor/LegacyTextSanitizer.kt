@@ -73,11 +73,11 @@ class LegacyTextSanitizer(
     class SanitizedLegacyText(private val text: Text): OrderedText {
         override fun accept(visitor: CharacterVisitor): Boolean {
             val degenerator = LegacyTextSanitizer { style, text ->
-                var idx = 0
-
-                text.chars().forEach { codePoint ->
-                    visitor.accept(idx, style, codePoint)
-                    idx++
+                var index = 0
+                while (index < text.length) {
+                    val codePoint = text.codePointAt(index)
+                    visitor.accept(index, style, codePoint)
+                    index += Character.charCount(codePoint)
                 }
 
                 Optional.empty()
