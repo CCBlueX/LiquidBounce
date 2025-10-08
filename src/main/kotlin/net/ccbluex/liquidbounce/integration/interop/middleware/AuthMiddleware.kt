@@ -24,6 +24,7 @@ import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.cookie.DefaultCookie
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.netty.http.middleware.Middleware
 import net.ccbluex.netty.http.model.RequestContext
 import net.ccbluex.netty.http.util.httpUnauthorized
@@ -72,7 +73,8 @@ class AuthMiddleware : Middleware {
             return response
         }
 
-        if (!PUBLIC_PATHS.contains(path) && !isAuthenticated(context)) {
+        if (!PUBLIC_PATHS.contains(path) && !isAuthenticated(context)
+            && !ThemeManager.theme.origin.external) {
             return httpUnauthorized("Code required")
         }
         return response

@@ -59,11 +59,11 @@ class Theme private constructor(val origin: Origin, url: String) :
             .build()
     ), Closeable {
 
-    enum class Origin(override val choiceName: String) : NamedChoice {
-        RESOURCE("resource"),
-        LOCAL("local"),
-        MARKETPLACE("marketplace"),
-        REMOTE("remote")
+    enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
+        RESOURCE("resource", false),
+        LOCAL("local", false),
+        MARKETPLACE("marketplace", false),
+        REMOTE("remote", true)
     }
 
     var metadata: ThemeMetadata
@@ -203,8 +203,12 @@ class Theme private constructor(val origin: Origin, url: String) :
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
         val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
             "${AuthMiddleware.AUTH_CODE}#/${name.orEmpty()}"
-        val staticParam = if (markAsStatic) "?static" else ""
-        return "$baseUrlWithFragment$staticParam"
+        val params = buildList {
+            if (origin.external) add("port=${ClientInteropServer.port}")
+            if (markAsStatic) add("static")
+        }.joinToString("&")
+
+        return if (params.isNotEmpty()) "$baseUrlWithFragment?$params" else baseUrlWithFragment
     }
 
     fun isSupported(name: String?) = isScreenSupported(name) || isOverlaySupported(name)

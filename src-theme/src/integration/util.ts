@@ -1,4 +1,4 @@
-import type { Module, GroupedModules } from "./types"
+import type {GroupedModules, Module} from "./types"
 
 export function groupByCategory(modules: Module[]): GroupedModules {
     return modules.reduce((acc: GroupedModules, current: Module) => {
@@ -36,3 +36,8 @@ export function intToRgba(value: number): number[] {
     const alpha = (value >> 24) & 0xff;
     return [red, green, blue, alpha];
 }
+
+export const getHashParams = (): URLSearchParams => {
+    const hash = window.location.hash.split('?')[1] || '';
+    return new URLSearchParams(hash);
+};

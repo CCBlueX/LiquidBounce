@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
+import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
@@ -52,13 +53,19 @@ object CommandClientThemeSubcommand {
                 .autocompletedFrom { ThemeManager.themeIds }
                 .build()
         )
-        .handler {
+        .suspendHandler {
             val id = args[0] as String
-            val theme = ThemeManager.themes.find { it.metadata.id.equals(id, true) } ?:
-                throw CommandException("No theme found with name \"$id\"!".asText())
+
+            // Check if ID is a URL
+            val theme = if (id.startsWith("http")) {
+                Theme.load(id)
+            } else {
+                ThemeManager.themes.find { it.metadata.id.equals(id, true) }
+                    ?: throw CommandException("No theme found with name \"$id\"!".asText())
+            }
 
             runCatching {
-                ThemeManager.currentTheme = theme.metadata.id
+                ThemeManager.theme = theme
                 ConfigSystem.store(ThemeManager)
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))
