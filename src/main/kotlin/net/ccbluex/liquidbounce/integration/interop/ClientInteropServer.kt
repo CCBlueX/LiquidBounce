@@ -34,7 +34,7 @@ import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import java.net.BindException
-import java.net.Socket
+import java.net.ServerSocket
 
 /**
  * A client server implementation.
@@ -45,18 +45,7 @@ object ClientInteropServer {
 
     internal val httpServer = HttpServer()
 
-    private const val DEFAULT_PORT = 15000
-
-    var port = try {
-        Socket("127.0.0.1", DEFAULT_PORT).use {
-            logger.info("Default port unavailable. Falling back to random port.")
-            (15001..17000).random()
-        }
-    } catch (_: Exception) {
-        logger.info("Default port $DEFAULT_PORT available.")
-
-        DEFAULT_PORT
-    }
+    var port = ServerSocket(0).use { socket -> socket.localPort }
 
     val url get() = "http://127.0.0.1:$port"
 
