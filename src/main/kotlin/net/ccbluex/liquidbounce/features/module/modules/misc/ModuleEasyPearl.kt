@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -71,6 +72,8 @@ object ModuleEasyPearl :
      */
     @Suppress("unused")
     private val interactItemHandler = handler<PlayerInteractItemEvent> { event ->
+        if (ModuleFreeze.enabled) return@handler
+
         if (!isHoldingPearl() || !mc.options.useKey.isPressed) {
             return@handler
         }
@@ -97,6 +100,7 @@ object ModuleEasyPearl :
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
+        if (ModuleFreeze.enabled) return@handler
         /**
          * handler for rotation update event,and rotate to the target rotation
          */
@@ -111,6 +115,8 @@ object ModuleEasyPearl :
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        if (ModuleFreeze.enabled) return@tickHandler
+
         /**
          * handler for tick event,and check if we are rotating to the target rotation correctly,if yes,throw the pearl
          */
@@ -132,6 +138,8 @@ object ModuleEasyPearl :
      */
     @Suppress("unused")
     private val worldRenderHandler = handler<WorldRenderEvent> { event ->
+        if (ModuleFreeze.enabled) return@handler
+
         if (!isHoldingPearl()) {
             return@handler
         }

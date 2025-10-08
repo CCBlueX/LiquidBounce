@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -97,9 +98,10 @@ internal object NoFallMLG : NoFallMode("MLG") {
         }
 
     @Suppress("unused")
-    private val tickHandler =
-        tickHandler {
-            val target = currentTarget ?: return@tickHandler
+    private val tickHandler = tickHandler {
+        if (ModuleFreeze.enabled) return@tickHandler
+
+        val target = currentTarget ?: return@tickHandler
 
             val rayTraceResult = raycast()
 

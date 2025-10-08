@@ -32,9 +32,10 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.Vec3d
 
 /**
- * Doesn't work on 1.8.x
+ * Bypassing 1.18.2+ Matrix7 and More (10/09/2025)
+ * Bypassing Grim Anti Cheat (10/09/2025)
  *
- * @author Chasteful
+ * @author jiuxian_baka
  */
 internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 

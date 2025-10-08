@@ -315,7 +315,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
-            ModuleStuck,
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,

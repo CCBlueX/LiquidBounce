@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -36,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
 
 /**
  * MiddleClickAction module
@@ -61,11 +65,16 @@ object ModuleMiddleClickAction : ClientModule(
     object Pearl : Choice("Pearl") {
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
-
-        private var wasPressed = false
+        private val stopOnSubmit by floatRange("StopOnSubmit",85F..90F,60F..90F,"Pitch")
+        var wasPressed = false
 
         val repeatable = tickHandler {
             if (mc.currentScreen != null) {
+                wasPressed = false
+                return@tickHandler
+            }
+
+            if ( player.pitch in stopOnSubmit) {
                 wasPressed = false
                 return@tickHandler
             }
@@ -81,12 +90,19 @@ object ModuleMiddleClickAction : ClientModule(
                 Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
-
+//                EventManager.callEvent(
+//                    PlayerInteractedItemEvent(
+//                        player = mc.player!!,
+//                        hand = Hand.MAIN_HAND,
+//                        actionResult = ActionResult.SUCCESS,
+//                    )
+//                )
                 wasPressed = false
             }
         }
 
-        val handler = handler<WorldChangeEvent> {
+        @Suppress("unused")
+        private val handler = handler<WorldChangeEvent> {
             wasPressed = false
         }
 

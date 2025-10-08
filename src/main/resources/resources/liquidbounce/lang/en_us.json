@@ -615,6 +615,7 @@
   "liquidbounce.module.smoothCamera.description": "Makes your camera move smoother.",
   "liquidbounce.module.freeLook.description": "Allows you to move the camera freely around your character.",
   "liquidbounce.module.freeze.description": "Allows you to freeze yourself in your current position without the server knowing.",
+  "liquidbounce.module.freeze.messages.disabledOnFlag": "Module disabled due to flag.",
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s was successfully added to the friends list.",
   "liquidbounce.module.middleClickAction.description": "Allows you to perform actions with middle clicks.",
   "liquidbounce.module.middleClickAction.messages.removedFriend": "%s was successfully removed from the friends list.",
@@ -818,7 +819,5 @@
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
   "liquidbounce.module.guiCloser.description": "Closes GUIs if their title matches specified patterns.",
-  "liquidbounce.module.stuck.description": "Allow your position and rotation to be paused without affecting interaction.",
-  "liquidbounce.module.stuck.messages.disabledOnFlag": "Module disabled due to flag.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers."
 }
