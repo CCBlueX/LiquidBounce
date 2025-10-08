@@ -30,9 +30,8 @@
         "/browser": Browser
     };
 
-    const url = window.location.href;
-    const staticTag = url.split("?")[1];
-    const isStatic = staticTag === "static";
+    const hash = window.location.hash;
+    const isStatic = hash.includes("?static") || hash.includes("&static");
 
     async function changeRoute(name: string) {
         cleanupListeners();

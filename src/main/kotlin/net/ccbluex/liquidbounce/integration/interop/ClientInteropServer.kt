@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.integration.interop
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -33,7 +34,7 @@ import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import java.net.BindException
-import java.net.Socket
+import java.net.ServerSocket
 
 /**
  * A client server implementation.
@@ -44,37 +45,29 @@ object ClientInteropServer {
 
     internal val httpServer = HttpServer()
 
-    private const val DEFAULT_PORT = 15000
-
-    var port = try {
-        Socket("127.0.0.1", DEFAULT_PORT).use {
-            logger.info("Default port unavailable. Falling back to random port.")
-            (15001..17000).random()
-        }
-    } catch (_: Exception) {
-        logger.info("Default port $DEFAULT_PORT available.")
-
-        DEFAULT_PORT
-    }
+    var port = ServerSocket(0).use { socket -> socket.localPort }
 
     val url get() = "http://127.0.0.1:$port"
 
     fun start() {
         runCatching {
             // RestAPI
-            httpServer.routeController.apply {
-                get("/", ::getRootResponse)
-                registerInteropFunctions(this)
+            httpServer.apply {
+                routeController.apply {
+                    get("/", ::getRootResponse)
+                    registerInteropFunctions(this)
 
-                resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
-                    zip("/resource/liquidbounce", stream)
+                    resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
+                        zip("/resource/liquidbounce", stream)
+                    }
+                    file("/local", ThemeManager.themesFolder)
+                    file("/marketplace", MarketplaceManager.marketplaceRoot)
                 }
-                file("/local", ThemeManager.themesFolder)
-                file("/marketplace", MarketplaceManager.marketplaceRoot)
-            }
 
-            // Add CORS middleware
-            httpServer.middleware(CorsMiddleware())
+                // Add CORS and auth middleware
+                middleware(CorsMiddleware())
+                middleware(AuthMiddleware())
+            }
 
             // Register events with @WebSocketEvent annotation
             SocketEventListener.registerAll()

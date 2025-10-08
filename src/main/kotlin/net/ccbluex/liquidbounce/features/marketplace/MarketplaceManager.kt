@@ -48,7 +48,7 @@ object MarketplaceManager : Configurable("marketplace"), EventListener {
     fun isSubscribed(itemId: Int) = subscribedItems.any { it.id == itemId }
 
     suspend fun updateAll(task: Task? = null, command: Command? = null) {
-         subscribedItems.forEach { item ->
+         subscribedItems.toList().forEach { item ->
              update(item, task, command)
          }
     }

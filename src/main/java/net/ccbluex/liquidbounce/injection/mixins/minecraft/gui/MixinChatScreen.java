@@ -21,24 +21,18 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
-import net.ccbluex.liquidbounce.event.events.NotificationEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
-import net.ccbluex.liquidbounce.utils.client.ClientChat;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.text.CharacterVisitor;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.List;
 
 @Mixin(ChatScreen.class)
 public abstract class MixinChatScreen extends MixinScreen {
@@ -97,48 +91,7 @@ public abstract class MixinChatScreen extends MixinScreen {
         if (messageParts.isEmpty())
             return;
 
-        copyMessage(messageParts, button);
-    }
-
-    @Unique
-    private void copyMessage(List<ChatHudLine.Visible> messageParts, int button) {
-        final StringBuilder builder = new StringBuilder();
-
-        CharacterVisitor visitor = (index, style, codePoint) -> {
-            builder.append((char) codePoint);
-            return true;
-        };
-
-        for (ChatHudLine.Visible line : messageParts) {
-            line.content().accept(visitor);
-        }
-
-        if (isPressed(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT) && button == GLFW.GLFW_MOUSE_BUTTON_1) {
-            client.keyboard.setClipboard(builder.toString());
-
-            if (ModuleBetterChat.Copy.INSTANCE.getNotification()) {
-                ClientChat.notification(
-                        "ChatCopy",
-                        "The line is copied",
-                        NotificationEvent.Severity.SUCCESS
-                );
-            }
-        } else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
-            if (client.currentScreen instanceof ChatScreen chat) {
-                ((MixinChatScreenAccessor) chat).getChatField().setText(builder.toString());
-            }
-        }
-    }
-
-    @Unique
-    private boolean isPressed(int... keys) {
-        for (int key : keys) {
-            if (GLFW.glfwGetKey(client.getWindow().getHandle(), key) == GLFW.GLFW_PRESS) {
-                return true;
-            }
-        }
-
-        return false;
+        ModuleBetterChat.Copy.copyMessage(messageParts, button);
     }
 
     // [0] - y,

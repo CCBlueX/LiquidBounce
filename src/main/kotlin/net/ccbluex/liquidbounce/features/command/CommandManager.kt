@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.collection.Pool.Companion.buildStringPooled
 import net.ccbluex.liquidbounce.utils.math.levenshtein
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
@@ -239,7 +240,7 @@ object CommandManager : Collection<Command> by commandSet {
                     }
                     distance
                 }.take(Options.hintCount).map { command ->
-                    buildString {
+                    buildStringPooled {
                         append(command.name)
                         if (command.aliases.isNotEmpty()) {
                             command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")

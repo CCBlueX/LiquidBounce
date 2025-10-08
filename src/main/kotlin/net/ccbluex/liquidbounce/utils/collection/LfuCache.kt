@@ -24,13 +24,15 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.fastIterator
+import java.util.function.BiConsumer
 
 /**
  * A simple least frequency used cache. Non-thread-safe.
  */
-class LfuCache<K : Any, V : Any>(
+class LfuCache<K : Any, V : Any> @JvmOverloads constructor(
     @get:JvmName("capacity")
     val capacity: Int,
+    val onDiscard: BiConsumer<K, V> = BiConsumer { _, _ -> },
 ) {
     init {
         require(capacity > 0) { "capacity should be positive" }
@@ -96,12 +98,14 @@ class LfuCache<K : Any, V : Any>(
             if (iter.hasNext()) {
                 val toRemove = iter.next()
                 iter.remove()
-                cache.remove(toRemove)
+                val removedValue = cache.remove(toRemove)!!
                 counts.removeInt(toRemove)
                 if (!iter.hasNext()) {
                     setPool.add(set)
                     entryIter.remove()
                 }
+
+                onDiscard.accept(toRemove, removedValue)
 
                 break
             }
