@@ -125,11 +125,6 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     }
 
     private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
-    private val stringBuilderPool = Pool(
-        queue = ArrayDeque(),
-        initializer = ::StringBuilder,
-        finalizer = StringBuilder::clear,
-    )
     private val orderedTextMappingCache = LfuCache<OrderedText, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
         mappedCharsPool.offer(v.mappedCharacters)
     }
@@ -153,7 +148,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             return original
         }
 
-        val output = stringBuilderPool.take()
+        val output = Pool.StringBuilder.take()
 
         var currReplacementIndex = 0
         var currentIndex = 0
@@ -177,7 +172,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             }
         }
 
-        return output.toString().also { stringBuilderPool.offer(output) }
+        return output.toString().also { Pool.StringBuilder.offer(output) }
     }
 
     fun wrap(original: OrderedText): OrderedText =
@@ -205,7 +200,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             true
         }
 
-        val text = stringBuilderPool.use {
+        val text = Pool.StringBuilder.use {
             it.ensureCapacity(originalCharacters.size)
             originalCharacters.forEach { c -> it.appendCodePoint(c.codePoint) }
             it.toString()

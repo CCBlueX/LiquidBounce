@@ -22,17 +22,19 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.openChat
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.minecraft.client.gui.hud.ChatHudLine
 import net.minecraft.client.gui.screen.DeathScreen
+import net.minecraft.text.CharacterVisitor
+import org.lwjgl.glfw.GLFW
 
 /**
  * BetterChat Module
@@ -74,16 +76,56 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
 
     private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
 
+    object Copy : ToggleableConfigurable(this, "Copy", true) {
+        private val notification by boolean("Notificate", true)
+        val highlight by boolean("Highlight", true)
+
+        @JvmStatic
+        fun copyMessage(parts: List<ChatHudLine.Visible>, button: Int) {
+            val builder = Pool.StringBuilder.take()
+
+            val visitor = CharacterVisitor { _, _, codePoint ->
+                builder.appendCodePoint(codePoint)
+                true
+            }
+
+            for (line in parts) {
+                line.content().accept(visitor)
+            }
+
+            val content = builder.toString()
+            Pool.StringBuilder.offer(builder)
+
+            if (isAnyPressed(
+                    GLFW.GLFW_KEY_LEFT_SHIFT,
+                    GLFW.GLFW_KEY_RIGHT_SHIFT
+                ) && button == GLFW.GLFW_MOUSE_BUTTON_1
+            ) {
+                mc.keyboard.clipboard = content
+
+                if (notification) {
+                    notification(
+                        "ChatCopy",
+                        "The line is copied",
+                        NotificationEvent.Severity.SUCCESS
+                    )
+                }
+            } else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
+                mc.openChat(content)
+            }
+        }
+
+        private fun isAnyPressed(vararg keys: Int): Boolean =
+            keys.any {
+                GLFW.glfwGetKey(mc.window.handle, it) == GLFW.GLFW_PRESS
+            }
+    }
+
     init {
         tree(AppendPrefix)
         tree(AppendSuffix)
         tree(AntiSpam)
         tree(Copy)
-    }
-
-    object Copy : ToggleableConfigurable(this, "Copy", true) {
-        val notification by boolean("Notificate", true)
-        val highlight by boolean("Highlight", true)
     }
 
     var antiChatClearPaused = false

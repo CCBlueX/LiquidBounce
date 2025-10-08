@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 import net.minecraft.util.math.BlockPos
+import java.util.ArrayDeque
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Consumer
@@ -75,6 +76,15 @@ class Pool<T : Any> @JvmOverloads constructor(
             queue = ConcurrentLinkedQueue(),
             initializer = BlockPos::Mutable,
         ) { it.set(0, 0, 0) }
+
+        /**
+         * Only for render thread
+         */
+        @JvmField
+        val StringBuilder = Pool(
+            queue = ArrayDeque(),
+            initializer = ::StringBuilder,
+        ) { it.setLength(0) }
     }
 
 }
