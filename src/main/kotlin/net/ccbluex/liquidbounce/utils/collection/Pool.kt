@@ -51,9 +51,23 @@ class Pool<T : Any> @JvmOverloads constructor(
      * Returns an object to the pool after processing it with the finalizer
      *
      * @param value Object to be returned to the pool
-     * @return True if object was successfully added to the pool (always true)
      */
-    fun offer(value: T): Boolean = queue.add(value.apply(finalizer::accept))
+    fun offer(value: T) {
+        queue.add(value.apply(finalizer::accept))
+    }
+
+    /**
+     * Returns objects to the pool after processing it with the finalizer
+     *
+     * @param values Objects to be returned to the pool
+     */
+    fun offerAll(values: Iterable<T>) {
+        if (values is Collection) {
+            queue.addAll(values.onEach(finalizer::accept))
+        } else {
+            values.forEach(::offer)
+        }
+    }
 
     /**
      * Scoped function that automatically returns the object to the pool after use
