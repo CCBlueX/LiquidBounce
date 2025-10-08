@@ -90,13 +90,6 @@ object ModuleMiddleClickAction : ClientModule(
                 Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
-//                EventManager.callEvent(
-//                    PlayerInteractedItemEvent(
-//                        player = mc.player!!,
-//                        hand = Hand.MAIN_HAND,
-//                        actionResult = ActionResult.SUCCESS,
-//                    )
-//                )
                 wasPressed = false
             }
         }

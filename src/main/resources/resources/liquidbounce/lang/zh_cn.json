@@ -676,6 +676,7 @@
   "liquidbounce.module.noClip.messages.setbackDetected": "检测到回弹，请确保你已经站在一个方块里面。",
   "liquidbounce.module.noFOV.description": "禁用移动时的视场角变化。",
   "liquidbounce.module.noFall.description": "保护你不受到跌落伤害。",
+  "liquidbounce.module.noFall.messages.spoofLanding": "NoFall SpoofLanding模式仅在1.8+工作！",
   "liquidbounce.module.noHurtCam.description": "禁用受伤时的视角摇晃动画。",
   "liquidbounce.module.noJumpDelay.description": "取消跳跃的间隔(例如在顶头时按住空格自动跳跃)。",
   "liquidbounce.module.noPitchLimit.description": "取消纵向的旋转视角限制。",

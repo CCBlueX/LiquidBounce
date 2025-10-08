@@ -190,7 +190,10 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
     object Stationary : Choice("Stationary") {
-        private val cancelC0B by boolean("CancelC0B",false)
+        /**
+         * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
+         */
+        private val cancelC0B by boolean("CancelC0B",true)
         private var lastYawOffset = 0f
         private var lastPitchOffset = 0f
 
