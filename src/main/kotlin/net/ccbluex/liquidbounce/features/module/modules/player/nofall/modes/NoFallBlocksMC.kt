@@ -18,25 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
-internal object NoFallBlocksMC : Choice("BlocksMC") {
+internal object NoFallBlocksMC : NoFallMode("BlocksMC") {
 
     private var shouldClip = false
     private var fallMotion = 0.0
 
     // Prevents this from running during AntiBot verification
     const val MIN_AGE = 20 * 5
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     override val running: Boolean
         get() = super.running && player.age > MIN_AGE

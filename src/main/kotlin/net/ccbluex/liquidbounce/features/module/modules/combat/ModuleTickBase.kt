@@ -75,12 +75,17 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
     private var ticksToSkip = 0
+
+    @Volatile
     private var tickBalance = 0f
     private var reachedTheLimit = false
 
-    private val tickBuffer = mutableListOf<TickData>()
+    private val tickBuffer = ArrayList<TickData>()
 
     override fun onDisabled() {
+        ticksToSkip = 0
+        tickBalance = 0f
+        reachedTheLimit = false
         tickBuffer.clear()
     }
 
@@ -193,7 +198,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         if (tickBalance <= 0) {
             reachedTheLimit = true
         }
-        if (tickBalance > balanceMaxValue / 2) {
+        if (tickBalance * 2 > balanceMaxValue) {
             reachedTheLimit = false
         }
         if (tickBalance <= balanceMaxValue) {
@@ -207,6 +212,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         val tickRange = 0 until min(tickBalance.toInt(), maxTicksAtATime)
         val snapshots = simulatedPlayer.getSnapshotsBetween(tickRange)
 
+        tickBuffer.ensureCapacity(snapshots.size)
         snapshots.mapTo(tickBuffer) { snapshot ->
             TickData(
                 snapshot.pos,
@@ -256,7 +262,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @Suppress("unused")
     private enum class TickBaseCall(
         override val choiceName: String,
-        val tick: () -> Unit
+        private val tick: Runnable
     ) : NamedChoice {
 
         /**
@@ -275,7 +281,9 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
          * This was the previous default behavior of the TickBase,
          * so it is kept for compatibility reasons.
          */
-        PLAYER("Player", { player.tick() })
+        PLAYER("Player", { player.tick() });
+
+        fun tick() = tick.run()
     }
 
 }

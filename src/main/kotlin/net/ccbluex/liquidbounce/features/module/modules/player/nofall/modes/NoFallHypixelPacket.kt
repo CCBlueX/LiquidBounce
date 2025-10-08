@@ -18,22 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
-internal object NoFallHypixelPacket : Choice("HypixelPacket") {
+internal object NoFallHypixelPacket : NoFallMode("HypixelPacket") {
 
     private val void by boolean("OverVoid", false)
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     private fun voidCheck(): Boolean {
         return (!player.doesNotCollideBelow() && !void || void)

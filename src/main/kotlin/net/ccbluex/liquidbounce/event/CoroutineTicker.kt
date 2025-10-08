@@ -28,7 +28,6 @@ import java.util.function.IntPredicate
 import kotlin.coroutines.resume
 
 typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
-typealias SuspendableHandler = suspend CoroutineScope.() -> Unit
 
 object CoroutineTicker : EventListener {
 
@@ -125,26 +124,3 @@ suspend fun waitTicks(ticks: Int) {
  * Note: When TPS is not 20, this won't be actual `seconds`.
  */
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
-
-// A special version of [suspendHandler]...
-fun EventListener.launchSequence(
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable?,
-    handler: SuspendableHandler,
-): Job =
-    eventListenerScope.launch(
-        context = continuationInterceptor(dispatcher),
-        start = CoroutineStart.UNDISPATCHED
-    ) {
-        if (running) {
-            handler()
-        }
-    }.apply {
-        onCancellation?.let {
-            this.invokeOnCompletion { t ->
-                if (t is CancellationException) {
-                    it.run()
-                }
-            }
-        }
-    }

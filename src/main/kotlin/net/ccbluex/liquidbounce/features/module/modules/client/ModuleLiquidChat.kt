@@ -23,8 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CANCEL_PREVIOUS
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.DISCARD_LATEST
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
@@ -140,7 +139,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    private val sessionChange = suspendHandler<SessionEvent>(behavior = CANCEL_PREVIOUS) {
+    private val sessionChange = suspendHandler<SessionEvent>(behavior = CancelPrevious) {
         chatClient.reconnect()
     }
 
@@ -171,7 +170,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CANCEL_PREVIOUS) { event ->
+    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CancelPrevious) { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }

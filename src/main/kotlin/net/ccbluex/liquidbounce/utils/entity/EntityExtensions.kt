@@ -70,11 +70,7 @@ import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
 import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.hypot
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 // Copied from 1.21.4
 val Entity.isInsideWaterOrBubbleColumn: Boolean
@@ -627,6 +623,8 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
 }
 
 fun LivingEntity.hasHealthScoreboard(): Boolean {
+    if (this == player) return false
+
     val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
     val displayName = objective.displayName
 
