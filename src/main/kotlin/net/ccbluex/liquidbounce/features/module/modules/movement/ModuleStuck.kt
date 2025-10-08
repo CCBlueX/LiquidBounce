@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -33,10 +34,27 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import kotlin.math.abs
+import kotlin.random.Random
 
 object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = true) {
 
     private val disableOnFlag by boolean("DisableOnFlag", true)
+    private val notification by boolean("Notification",false)
+    private val offsetRotation by boolean("OffsetRotation",true)
+
+    private var lastYawOffset = 0f
+    private var lastPitchOffset = 0f
+
+    private fun randomOffset(last: Float): Float {
+        if (!offsetRotation) return 0f
+
+        var offset: Float
+        do {
+            offset = Random.nextDouble(0.002, 0.01).toFloat()
+        } while (abs(offset - last) < 1.0E-6)
+        return offset
+    }
 
     @Suppress("unused")
     private val movementInputEventHandler = handler<MovementInputEvent> {
@@ -48,13 +66,22 @@ object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = tr
 
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
+        val yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw
+        val pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch
+        val yawOffset = randomOffset(lastYawOffset)
+        val pitchOffset = randomOffset(lastPitchOffset)
+        lastYawOffset = yawOffset
+        lastPitchOffset = pitchOffset
+
         when (val packet = event.packet) {
             is PlayerPositionLookS2CPacket if disableOnFlag -> {
-                notification(
-                    this.name,
-                    message("disabledOnFlag"),
-                    NotificationEvent.Severity.INFO
-                )
+                if (notification) {
+                    notification(
+                        this.name,
+                        message("disabledOnFlag"),
+                        NotificationEvent.Severity.INFO
+                    )
+                }
                 enabled = false
             }
 
@@ -66,12 +93,18 @@ object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = tr
                 event.cancelEvent()
                 sendPacketSilently(
                     PlayerMoveC2SPacket.LookAndOnGround(
-                        player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                        player.yaw + yawOffset,
+                        player.pitch + pitchOffset,
+                        player.isOnGround,
+                        player.horizontalCollision
                     )
                 )
                 sendPacketSilently(
                     PlayerInteractItemC2SPacket(
-                        packet.hand, packet.sequence, player.yaw, player.pitch
+                        packet.hand,
+                        packet.sequence,
+                        yaw + yawOffset,
+                        pitch + pitchOffset,
                     )
                 )
             }
@@ -80,7 +113,10 @@ object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = tr
                 event.cancelEvent()
                 sendPacketSilently(
                     PlayerMoveC2SPacket.LookAndOnGround(
-                        player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                        yaw + yawOffset,
+                        pitch + pitchOffset,
+                        player.isOnGround,
+                        player.horizontalCollision
                     )
                 )
                 sendPacketSilently(packet)
@@ -90,7 +126,10 @@ object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = tr
                 event.cancelEvent()
                 sendPacketSilently(
                     PlayerMoveC2SPacket.LookAndOnGround(
-                        player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                        yaw + yawOffset,
+                        pitch + pitchOffset,
+                        player.isOnGround,
+                        player.horizontalCollision
                     )
                 )
                 sendPacketSilently(packet)
@@ -98,3 +137,4 @@ object ModuleStuck : ClientModule("Stuck", Category.MOVEMENT, disableOnQuit = tr
         }
     }
 }
+
