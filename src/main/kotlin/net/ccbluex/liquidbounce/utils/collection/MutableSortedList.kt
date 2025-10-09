@@ -28,7 +28,9 @@ private const val LEGAL = 0
 @Suppress("TooManyFunctions")
 class MutableSortedList<E, K : Comparable<K>>(
     private val list : MutableList<E> = objectMutableListOf(),
+    // Includes
     private val lowerBound: K? = null,
+    // Excludes
     private val upperBound: K? = null,
     private val keySelector: (E) -> K,
 ) : MutableList<E> by list {
@@ -127,5 +129,7 @@ class MutableSortedList<E, K : Comparable<K>>(
             keySelector,
         )
     }
+
+    override fun toString() = list.toString()
 
 }

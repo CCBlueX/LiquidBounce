@@ -55,7 +55,7 @@ class MutableSortedListTest {
         list.add(10)
         list.add(15)
         list.add(20)
-        assertEquals(listOf(10, 15, 20), list)
+        assertEquals(listOf(10, 15), list)
 
         assertFalse { list.add(5) }
         assertFalse { list.add(25) }
