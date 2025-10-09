@@ -60,7 +60,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
 
         @Suppress("unused")
         private val repeatable = tickHandler(Dispatchers.Default) {
-            flagCount.value = 0
+            flagCount.getAndSet(0)
             delay(afterSeconds.seconds)
         }
 
@@ -185,7 +185,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         }
     }
 
-    private fun alert(reason: AlertReason, extra: String? = null) = mc.execute {
+    private fun alert(reason: AlertReason, extra: String? = null) {
         val message = if (StringUtils.isEmpty(extra)) {
             message("alert", message(reason.key), flagCount)
         } else {
