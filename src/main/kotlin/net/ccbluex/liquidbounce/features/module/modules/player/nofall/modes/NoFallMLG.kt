@@ -99,7 +99,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (ModuleFreeze.enabled) return@tickHandler
+        if (ModuleFreeze.running) return@tickHandler
 
         val target = currentTarget ?: return@tickHandler
 

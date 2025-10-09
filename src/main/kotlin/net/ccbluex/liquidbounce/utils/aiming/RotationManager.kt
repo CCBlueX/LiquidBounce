@@ -86,7 +86,7 @@ object RotationManager : EventListener {
         get() = PacketQueueManager.isLagging || ModuleBacktrack.isLagging()
 
     private val freezing
-        get() = ModuleFreeze.enabled
+        get() = ModuleFreeze.running
 
     val serverRotation: Rotation
         get() = if (fakeLagging || freezing) theoreticalServerRotation else actualServerRotation
