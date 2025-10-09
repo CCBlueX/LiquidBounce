@@ -98,7 +98,7 @@ class TrajectoryInfoRenderer(
             ).normalize().scale(trajectoryInfo.initialVelocity)
 
             //In Freeze, this momentum is the residual value before freezing.
-            if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running){
+            if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
             velocity.move(
                     x = entity.velocity.x,
                     y = if (entity.isOnGround) 0.0 else entity.velocity.y,
