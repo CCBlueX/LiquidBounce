@@ -122,8 +122,8 @@ class MutableSortedList<E, K : Comparable<K>>(
     override fun subList(fromIndex: Int, toIndex: Int): MutableList<E> {
         return MutableSortedList(
             list.subList(fromIndex, toIndex),
-            lowerBound = lowerBound?.let { maxOf(it, keySelector(list[fromIndex])) } ?: keySelector(list[fromIndex]),
-            upperBound = upperBound?.let { minOf(it, keySelector(list[toIndex - 1])) } ?: keySelector(list[toIndex - 1]),
+            lowerBound?.let { maxOf(it, keySelector(list[fromIndex])) } ?: keySelector(list[fromIndex]),
+            upperBound?.let { minOf(it, keySelector(list[toIndex - 1])) } ?: keySelector(list[toIndex - 1]),
             keySelector,
         )
     }
